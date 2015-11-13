@@ -7,16 +7,44 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		270FA2601BF53CAD005DCB13 /* Fleece.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 270FA25F1BF53CAD005DCB13 /* Fleece.hpp */; };
-		270FA2621BF53CAD005DCB13 /* FleecePriv.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2611BF53CAD005DCB13 /* FleecePriv.hpp */; };
-		270FA2641BF53CAD005DCB13 /* Fleece.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 270FA2631BF53CAD005DCB13 /* Fleece.cpp */; };
+		270FA2781BF53CEA005DCB13 /* Value.cc in Sources */ = {isa = PBXBuildFile; fileRef = 270FA26A1BF53CEA005DCB13 /* Value.cc */; };
+		270FA2791BF53CEA005DCB13 /* Value.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA26B1BF53CEA005DCB13 /* Value.hh */; };
+		270FA27A1BF53CEA005DCB13 /* Value+JSON.cc in Sources */ = {isa = PBXBuildFile; fileRef = 270FA26C1BF53CEA005DCB13 /* Value+JSON.cc */; };
+		270FA27B1BF53CEA005DCB13 /* Value+ObjC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 270FA26D1BF53CEA005DCB13 /* Value+ObjC.mm */; };
+		270FA27C1BF53CEA005DCB13 /* Encoder.cc in Sources */ = {isa = PBXBuildFile; fileRef = 270FA26E1BF53CEA005DCB13 /* Encoder.cc */; };
+		270FA27D1BF53CEA005DCB13 /* Encoder.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA26F1BF53CEA005DCB13 /* Encoder.hh */; };
+		270FA27E1BF53CEA005DCB13 /* Encoder+ObjC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 270FA2701BF53CEA005DCB13 /* Encoder+ObjC.mm */; };
+		270FA27F1BF53CEA005DCB13 /* Writer.cc in Sources */ = {isa = PBXBuildFile; fileRef = 270FA2711BF53CEA005DCB13 /* Writer.cc */; };
+		270FA2801BF53CEA005DCB13 /* Writer.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2721BF53CEA005DCB13 /* Writer.hh */; };
+		270FA2811BF53CEA005DCB13 /* Endian.h in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2731BF53CEA005DCB13 /* Endian.h */; };
+		270FA2821BF53CEA005DCB13 /* slice.cc in Sources */ = {isa = PBXBuildFile; fileRef = 270FA2741BF53CEA005DCB13 /* slice.cc */; };
+		270FA2831BF53CEA005DCB13 /* slice.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2751BF53CEA005DCB13 /* slice.hh */; };
+		270FA2841BF53CEA005DCB13 /* varint.cc in Sources */ = {isa = PBXBuildFile; fileRef = 270FA2761BF53CEA005DCB13 /* varint.cc */; };
+		270FA2851BF53CEA005DCB13 /* varint.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2771BF53CEA005DCB13 /* varint.hh */; };
+		270FA2871BF53D32005DCB13 /* forestdb_endian.h in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2861BF53D32005DCB13 /* forestdb_endian.h */; };
+		270FA28B1BF53E4D005DCB13 /* murmurhash3_x86_32.c in Sources */ = {isa = PBXBuildFile; fileRef = 270FA2891BF53E4D005DCB13 /* murmurhash3_x86_32.c */; };
+		270FA28C1BF53E4D005DCB13 /* murmurhash3_x86_32.h in Headers */ = {isa = PBXBuildFile; fileRef = 270FA28A1BF53E4D005DCB13 /* murmurhash3_x86_32.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		270FA25C1BF53CAD005DCB13 /* libFleece.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libFleece.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		270FA25F1BF53CAD005DCB13 /* Fleece.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Fleece.hpp; sourceTree = "<group>"; };
-		270FA2611BF53CAD005DCB13 /* FleecePriv.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FleecePriv.hpp; sourceTree = "<group>"; };
-		270FA2631BF53CAD005DCB13 /* Fleece.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Fleece.cpp; sourceTree = "<group>"; };
+		270FA26A1BF53CEA005DCB13 /* Value.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Value.cc; sourceTree = "<group>"; };
+		270FA26B1BF53CEA005DCB13 /* Value.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Value.hh; sourceTree = "<group>"; };
+		270FA26C1BF53CEA005DCB13 /* Value+JSON.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "Value+JSON.cc"; sourceTree = "<group>"; };
+		270FA26D1BF53CEA005DCB13 /* Value+ObjC.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "Value+ObjC.mm"; sourceTree = "<group>"; };
+		270FA26E1BF53CEA005DCB13 /* Encoder.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Encoder.cc; sourceTree = "<group>"; };
+		270FA26F1BF53CEA005DCB13 /* Encoder.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Encoder.hh; sourceTree = "<group>"; };
+		270FA2701BF53CEA005DCB13 /* Encoder+ObjC.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "Encoder+ObjC.mm"; sourceTree = "<group>"; };
+		270FA2711BF53CEA005DCB13 /* Writer.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Writer.cc; sourceTree = "<group>"; };
+		270FA2721BF53CEA005DCB13 /* Writer.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Writer.hh; sourceTree = "<group>"; };
+		270FA2731BF53CEA005DCB13 /* Endian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Endian.h; sourceTree = "<group>"; };
+		270FA2741BF53CEA005DCB13 /* slice.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = slice.cc; sourceTree = "<group>"; };
+		270FA2751BF53CEA005DCB13 /* slice.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = slice.hh; sourceTree = "<group>"; };
+		270FA2761BF53CEA005DCB13 /* varint.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = varint.cc; sourceTree = "<group>"; };
+		270FA2771BF53CEA005DCB13 /* varint.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = varint.hh; sourceTree = "<group>"; };
+		270FA2861BF53D32005DCB13 /* forestdb_endian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = forestdb_endian.h; sourceTree = "<group>"; };
+		270FA2891BF53E4D005DCB13 /* murmurhash3_x86_32.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = murmurhash3_x86_32.c; sourceTree = "<group>"; };
+		270FA28A1BF53E4D005DCB13 /* murmurhash3_x86_32.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = murmurhash3_x86_32.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -34,6 +62,7 @@
 			isa = PBXGroup;
 			children = (
 				270FA25E1BF53CAD005DCB13 /* Fleece */,
+				270FA2881BF53E4D005DCB13 /* murmurhash */,
 				270FA25D1BF53CAD005DCB13 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -49,11 +78,41 @@
 		270FA25E1BF53CAD005DCB13 /* Fleece */ = {
 			isa = PBXGroup;
 			children = (
-				270FA25F1BF53CAD005DCB13 /* Fleece.hpp */,
-				270FA2611BF53CAD005DCB13 /* FleecePriv.hpp */,
-				270FA2631BF53CAD005DCB13 /* Fleece.cpp */,
+				270FA26A1BF53CEA005DCB13 /* Value.cc */,
+				270FA26B1BF53CEA005DCB13 /* Value.hh */,
+				270FA26C1BF53CEA005DCB13 /* Value+JSON.cc */,
+				270FA26D1BF53CEA005DCB13 /* Value+ObjC.mm */,
+				270FA26E1BF53CEA005DCB13 /* Encoder.cc */,
+				270FA26F1BF53CEA005DCB13 /* Encoder.hh */,
+				270FA2701BF53CEA005DCB13 /* Encoder+ObjC.mm */,
+				270FA28D1BF53FB0005DCB13 /* Utilities */,
 			);
 			path = Fleece;
+			sourceTree = "<group>";
+		};
+		270FA2881BF53E4D005DCB13 /* murmurhash */ = {
+			isa = PBXGroup;
+			children = (
+				270FA2891BF53E4D005DCB13 /* murmurhash3_x86_32.c */,
+				270FA28A1BF53E4D005DCB13 /* murmurhash3_x86_32.h */,
+			);
+			name = murmurhash;
+			path = vendor/murmurhash;
+			sourceTree = "<group>";
+		};
+		270FA28D1BF53FB0005DCB13 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				270FA2711BF53CEA005DCB13 /* Writer.cc */,
+				270FA2721BF53CEA005DCB13 /* Writer.hh */,
+				270FA2731BF53CEA005DCB13 /* Endian.h */,
+				270FA2741BF53CEA005DCB13 /* slice.cc */,
+				270FA2751BF53CEA005DCB13 /* slice.hh */,
+				270FA2761BF53CEA005DCB13 /* varint.cc */,
+				270FA2771BF53CEA005DCB13 /* varint.hh */,
+				270FA2861BF53D32005DCB13 /* forestdb_endian.h */,
+			);
+			name = Utilities;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -63,8 +122,14 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				270FA2601BF53CAD005DCB13 /* Fleece.hpp in Headers */,
-				270FA2621BF53CAD005DCB13 /* FleecePriv.hpp in Headers */,
+				270FA2831BF53CEA005DCB13 /* slice.hh in Headers */,
+				270FA2851BF53CEA005DCB13 /* varint.hh in Headers */,
+				270FA28C1BF53E4D005DCB13 /* murmurhash3_x86_32.h in Headers */,
+				270FA2791BF53CEA005DCB13 /* Value.hh in Headers */,
+				270FA2811BF53CEA005DCB13 /* Endian.h in Headers */,
+				270FA2871BF53D32005DCB13 /* forestdb_endian.h in Headers */,
+				270FA2801BF53CEA005DCB13 /* Writer.hh in Headers */,
+				270FA27D1BF53CEA005DCB13 /* Encoder.hh in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -124,7 +189,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				270FA2641BF53CAD005DCB13 /* Fleece.cpp in Sources */,
+				270FA27C1BF53CEA005DCB13 /* Encoder.cc in Sources */,
+				270FA27E1BF53CEA005DCB13 /* Encoder+ObjC.mm in Sources */,
+				270FA27B1BF53CEA005DCB13 /* Value+ObjC.mm in Sources */,
+				270FA28B1BF53E4D005DCB13 /* murmurhash3_x86_32.c in Sources */,
+				270FA27A1BF53CEA005DCB13 /* Value+JSON.cc in Sources */,
+				270FA2841BF53CEA005DCB13 /* varint.cc in Sources */,
+				270FA2821BF53CEA005DCB13 /* slice.cc in Sources */,
+				270FA2781BF53CEA005DCB13 /* Value.cc in Sources */,
+				270FA27F1BF53CEA005DCB13 /* Writer.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
