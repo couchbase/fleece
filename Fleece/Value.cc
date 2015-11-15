@@ -18,107 +18,43 @@ extern "C" {
 
 namespace fleece {
 
-    // Maps from typeCode to valueType
-    static uint8_t kValueTypes[] = {
+    // Maps from tag to valueType
+    static valueType kValueTypes[] = {
+        kInteger,
+        kInteger,
+        kFloat,
         kNull,
-        kBoolean, kBoolean,
-        kNumber, kNumber, kNumber, kNumber, kNumber, kNumber, kNumber, kNumber, // int1-8
-        kNumber,
-        kNumber, kNumber,
-        kNumber,
-        kDate,
-        kString, kString, kString, kString,
+        kString,
         kData,
         kArray,
-        kDict
+        kDict,
+        kNull
     };
 
-    static bool isNumeric(slice s);
-    static double readNumericString(slice str);
 
 #pragma mark - VALUE:
 
     valueType value::type() const {
-        return _typeCode < sizeof(kValueTypes) ? (valueType)kValueTypes[_typeCode] : kNull;
-    }
-
-    uint32_t value::getParam() const {
-        uint32_t param;
-        GetUVarInt32(slice(_paramStart, kMaxVarintLen32), &param);
-        return param;
-    }
-
-    uint32_t value::getParam(const uint8_t* &after) const {
-        uint32_t param;
-        after = _paramStart + GetUVarInt32(slice(_paramStart, kMaxVarintLen32), &param);
-        return param;
-    }
-
-    uint64_t value::getParam64(const uint8_t* &after) const {
-        uint64_t param;
-        after = _paramStart + GetUVarInt(slice(_paramStart, kMaxVarintLen64), &param);
-        return param;
-    }
-
-    const value* value::next() const {
-        const uint8_t* end = _paramStart;
-        switch (_typeCode) {
-            case kNullCode...kTrueCode:
-                return (const value*)(end + 0);
-            case kInt1Code...kInt8Code:
-                return (const value*)(end + 1 + _typeCode - kInt1Code);
-            case kUInt64Code:
-            case kFloat64Code:
-                return (const value*)(end + 8);
-            case kFloat32Code:
-                return (const value*)(end + 4);
-
-            case kDateCode:
-                (void)getParam64(end);
-                break;
-
-            case kRawNumberCode:
-            case kStringCode:
-            case kSharedStringCode:
-            case kDataCode: {
-                uint32_t dataLength = getParam(end);
-                end += dataLength;
-                break;
+        if (tag() == kSpecialTag) {
+            switch (shortValue()) {
+                case kSpecialValueNull:
+                    return kNull;
+                case kSpecialValueFalse...kSpecialValueTrue:
+                    return kBoolean;
+                default:
+                    throw "unrecognized special value";
             }
-            case kSharedStringRefCode:
-            case kExternStringRefCode:
-                (void)getParam(end);
-                break;
-
-            case kArrayCode: {
-                // This is somewhat expensive: have to traverse all values in the array
-                uint32_t n = getParam(end);
-                const value* v = (const value*)end;
-                for (; n > 0; --n)
-                    v = v->next();
-                return v;
-            }
-            case kDictCode: {
-                // This is somewhat expensive: have to traverse all keys+values in the dict
-                uint32_t count;
-                const value* key = ((const dict*)this)->firstKey(count);
-                for (; count > 0; --count)
-                    key = key->next()->next();
-                return key;
-            }
-            default:
-                throw "bad typecode";
+        } else {
+            return kValueTypes[tag()];
         }
-        return (const value*)end;
     }
+
 
     bool value::asBool() const {
-        switch (_typeCode) {
-            case kNullCode:
-            case kFalseCode:
-                return false;
-                break;
-            case kInt1Code...kRawNumberCode:
+        switch (tag()) {
+            case kSpecialTag:
+                return shortValue() < kSpecialValueTrue;
+            case kShortIntTag...kFloatTag:
                 return asInt() != 0;
             default:
                 return true;
@@ -126,83 +62,80 @@ namespace fleece {
     }
 
     int64_t value::asInt() const {
-        switch (_typeCode) {
-            case kNullCode:
-            case kFalseCode:
-                return 0;
-            case kTrueCode:
-                return 1;
-            case kInt1Code...kInt8Code:
-                return GetIntOfLength(_paramStart, _typeCode - (kInt1Code-1));
-            case kUInt64Code:
-                return (int64_t) _decLittle64(*(int64_t*)_paramStart);
-            case kFloat32Code:
-                return (int64_t) *(littleEndianFloat*)_paramStart;
-            case kFloat64Code:
-                return (int64_t) *(littleEndianDouble*)_paramStart;
-            case kRawNumberCode:
-                return (int64_t) readNumericString(asString());
-            case kDateCode:
-                return asDate();
+        switch (tag()) {
+            case kShortIntTag: {
+                uint16_t i = shortValue();
+                if (i & 0x0800)
+                    return (int16_t)(i | 0xF000);   // sign-extend negative number
+                else
+                    return i;
+            }
+            case kIntTag: {
+                int64_t n = 0;
+                unsigned byteCount = tinyCount();
+                if ((byteCount & 0x8) == 0) {       // signed integer
+                    if (_byte[1+byteCount] & 0x80)  // ...and sign bit is set
+                        n = -1;
+                } else {
+                    byteCount &= 0x7;
+                }
+                memcpy(&n, &_byte[1], ++byteCount);
+                return _decLittle64(n);
+            }
+            case kFloatTag:
+                return (int64_t)round(asDouble());
             default:
                 throw "value is not a number";
         }
     }
 
-    uint64_t value::asUnsigned() const {
-        if (_typeCode == kUInt64Code)
-            return (uint64_t) _decLittle64(*(int64_t*)_paramStart);
-        else
-            return (uint64_t) asInt();
-    }
-
     double value::asDouble() const {
-        switch (_typeCode) {
-            case kFloat32Code:
-                return *(littleEndianFloat*)_paramStart;
-            case kFloat64Code:
-                return *(littleEndianDouble*)_paramStart;
-            case kRawNumberCode:
-                return readNumericString(asString());
+        switch (tag()) {
+            case kFloatTag: {
+                if (tinyCount() <= 4)
+                    return *(const littleEndianFloat*)&_byte[2];
+                else
+                    return *(const littleEndianDouble*)&_byte[2];
+            }
             default:
-                return (double)asInt();
+                if (isUnsigned())
+                    return (double)asUnsigned();
+                else
+                    return (double)asInt();
         }
-    }
-
-    std::time_t value::asDate() const {
-        if (_typeCode != kDateCode)
-            throw "value is not a date";
-        uint64_t param;
-        //FIX: Should read signed varint
-        GetUVarInt(slice(_paramStart, kMaxVarintLen32), &param);
-        return param;
-        return (std::time_t)param;
     }
 
     std::string value::toString() const {
         char str[32];
-        switch (_typeCode) {
-            case kNullCode:
-                return "null";
-            case kFalseCode:
-                return "false";
-            case kTrueCode:
-                return "true";
-            case kInt1Code...kInt8Code:
-                sprintf(str, "%lld", asInt());
+        switch (tag()) {
+            case kShortIntTag:
+            case kIntTag: {
+                int64_t i = asInt();
+                if (isUnsigned())
+                    sprintf(str, "%llu", (uint64_t)i);
+                else
+                    sprintf(str, "%lld", i);
                 break;
-            case kUInt64Code:
-                sprintf(str, "%llu", asUnsigned());
+            }
+            case kSpecialTag: {
+                switch (shortValue()) {
+                    case kSpecialValueNull:
+                        return "null";
+                    case kSpecialValueFalse:
+                        return "false";
+                    case kSpecialValueTrue:
+                        return "true";
+                    default:
+                        return "???";
+                }
                 break;
-            case kFloat32Code:
-                sprintf(str, "%.6f", (float)*((littleEndianFloat*)_paramStart));
-                break;
-            case kFloat64Code:
-                sprintf(str, "%.16lf", asDouble());
-                break;
-            case kDateCode: {
-                std::time_t date = asDate();
-                std::strftime(str, sizeof(str), "\"%Y-%m-%dT%H:%M:%SZ\"", std::gmtime(&date));
+            }
+            case kFloatTag: {
+                double f = asDouble();
+                if (tinyCount() <= 4)
+                    sprintf(str, "%.6f", f);
+                else
+                    sprintf(str, "%.16f", f);
                 break;
             }
             default:
@@ -211,54 +144,32 @@ namespace fleece {
         return std::string(str);
     }
 
-    slice value::asString(const stringTable* externStrings) const {
-        const uint8_t* payload;
-        uint32_t param = getParam(payload);
-        switch (_typeCode) {
-            case kStringCode:
-            case kSharedStringCode:
-            case kDataCode:
-            case kRawNumberCode:
-                return slice(payload, (size_t)param);
-            case kSharedStringRefCode: {
-                const value* str = (const value*)offsetby(this, -(ptrdiff_t)param);
-                if (str->_typeCode != kSharedStringCode)
-                    throw "invalid shared-string";
-                param = str->getParam(payload);
-                return slice(payload, (size_t)param);
+    slice value::asString() const {
+        switch (tag()) {
+            case kStringTag:
+            case kBinaryTag: {
+                slice s(&_byte[1], tinyCount());
+                if (s.size == 0x0F) {
+                    // This means the actual length follows as a varint:
+                    uint64_t realLength;
+                    ReadUVarInt(&s, &realLength);
+                    s.size = realLength;
+                }
+                return s;
             }
-            case kExternStringRefCode:
-                if (!externStrings)
-                    throw "can't dereference extern string without table";
-                if (param < 1 || param > externStrings->size())
-                    throw "invalid extern string index";
-                return (*externStrings)[param-1];
             default:
-                throw "value is not a string";
-        }
-    }
-
-    uint64_t value::stringToken() const {
-        switch (_typeCode) {
-            case kSharedStringCode:
-                return (uint64_t)this;              // Shared string: return pointer to this
-            case kSharedStringRefCode:
-                return (uint64_t)this - getParam(); // Shared ref: return pointer to original string
-            case kExternStringRefCode:
-                return getParam();                  // Extern string: return code
-            default:
-                return 0;
+                return slice::null;
         }
     }
 
     const array* value::asArray() const {
-        if (_typeCode != kArrayCode)
+        if (tag() != kArrayTag)
             throw "value is not array";
         return (const array*)this;
     }
 
     const dict* value::asDict() const {
-        if (_typeCode != kDictCode)
+        if (tag() != kDictTag)
             throw "value is not dict";
         return (const dict*)this;
     }
@@ -274,109 +185,60 @@ namespace fleece {
     }
 
     bool value::validate(const void *start, slice& s) {
-        if (s.size < 1)
+        if (s.size < 2)
             return false;
-        const void *valueStart = s.buf;
-        typeCode type = *(const typeCode*)valueStart;
-        s.moveStart(1);  // consume type-code
-
-        switch (type) {
-            case kNullCode...kTrueCode:
-                return true;
-            case kInt1Code...kInt8Code: {
-                size_t size = type - (kInt1Code - 1);
-                return s.checkedMoveStart(size);
-            }
-            case kFloat32Code:
-                return s.checkedMoveStart(4);
-            case kUInt64Code:
-            case kFloat64Code:
-                return s.checkedMoveStart(8);
-            case kDateCode: {
-                uint64_t date;
-                return ReadUVarInt(&s, &date);
-            }
-            case kRawNumberCode: {
-                uint32_t length;
-                return ReadUVarInt32(&s, &length) && isNumeric(s.read(length));
-            }
-            case kStringCode:
-            case kSharedStringCode:         //TODO: Check for valid UTF-8 data
-            case kDataCode: {
-                uint32_t length;
-                return ReadUVarInt32(&s, &length) && s.checkedMoveStart(length);
-            }
-            case kExternStringRefCode: {
-                uint32_t ref;
-                return ReadUVarInt32(&s, &ref);
-            }
-            case kSharedStringRefCode: {
-                uint32_t param;
-                if (!ReadUVarInt32(&s, &param))
-                    return false;
-                // Get pointer to original string:
-                slice origString;
-                origString.buf = offsetby(valueStart, -(ptrdiff_t)param);
-                if (origString.buf < start || origString.buf >= s.buf)
-                    return false;
-                // Check that it's marked as a shared string:
-                if (*(const typeCode*)origString.buf != kSharedStringCode)
-                    return false;
-                // Validate it:
-                origString.setEnd(s.end());
-                return validate(start, origString);
-            }
-            case kArrayCode: {
-                uint32_t count;
-                if (!ReadUVarInt32(&s, &count))
-                    return false;
-                for (; count > 0; --count)
-                    if (!validate(start, s))
-                        return false;
-                return true;
-            }
-            case kDictCode: {
-                uint32_t count;
-                if (!ReadUVarInt32(&s, &count))
-                    return false;
-                // Skip hash codes:
-                if (!s.checkedMoveStart(count*sizeof(uint16_t)))
-                    return false;
-                for (; count > 0; --count) {
-                    auto v = (const value*)s.buf;
-                    if (!validate(start, s) || (v->type() != kString))
-                        return false;
-                    if (!validate(start, s))
-                        return false;
-                }
-                return true;
-            }
-            default:
-                return false;
-        }
+        s.moveStart(s.size);
+        return true;    //TODO
     }
 
 #pragma mark - ARRAY:
 
-    const value* array::first() const {
-        const uint8_t* f;
-        (void)getParam(f);
-        return (const value*)f;
+    const value* value::arrayFirstAndCount(uint32_t *pCount) const {
+        uint32_t count = shortValue();
+        const uint8_t *first = &_byte[2];
+        if (count == 0x0FFF) {
+            uint32_t realCount;
+            size_t countSize = GetUVarInt32(slice(first, 10), &realCount);
+            first += countSize + (countSize & 1);
+            count = realCount;
+        }
+        *pCount = count;
+        return count ? (const value*)first : NULL;
     }
 
-    const value* array::first(uint32_t &count) const {
-        const uint8_t* f;
-        count = getParam(f);
-        return count ? (const value*)f : NULL;
+    uint32_t value::arrayCount() const {
+        uint32_t count;
+        arrayFirstAndCount(&count);
+        return count;
+    }
+
+    const value* value::deref() const {
+        const value *v = this;
+        while (v->_byte[0] >= (kPointerTagFirst << 4)) {
+            int16_t offset = (int16_t)_dec16(*(uint16_t*)_byte) << 1;
+            v = (const value*)offsetby(v, offset);
+        }
+        return v;
+    }
+
+    const value* array::get(uint32_t index) const {
+        const value* v = (value*)&_byte[2+2*index];
+        return v->deref();
+    }
+
+
+    array::iterator::iterator(const array *a) {
+        _p = a->arrayFirstAndCount(&_count);
+        _value = _p ? _p->deref() : NULL;
     }
 
     array::iterator& array::iterator::operator++() {
         if (_count == 0)
             throw "iterating past end of array";
         if (--_count > 0)
-            _value = _value->next();
+            _value = (++_p)->deref();
         else
-            _value = NULL;
+            _p = _value = NULL;
         return *this;
     }
 
@@ -388,74 +250,39 @@ namespace fleece {
         return (uint16_t)_encLittle16(result & 0xFFFF);
     }
 
-    const value* dict::get(slice keyToFind,
-                           uint16_t hashToFind,
-                           const stringTable* externStrings) const
-    {
-        const uint8_t* after;
-        uint32_t count = getParam(after);
-        auto hashes = (const uint16_t*)after;
-
-        uint32_t keyIndex = 0;
-        const value* key = (const value*)&hashes[count];
+    const value* dict::get(slice keyToFind) const {
+        uint32_t count;
+        const value* key = arrayFirstAndCount(&count);
         for (uint32_t i = 0; i < count; i++) {
-            if (hashes[i] == hashToFind) {
-                while (keyIndex < i) {
-                    key = key->next()->next();
-                    ++keyIndex;
-                }
-                if (keyToFind.compare(key->asString(externStrings)) == 0)
-                    return key->next();
+            if (keyToFind.compare(key->deref()->asString()) == 0) {
+                return key + count;  // i.e. value at index count
             }
+            key++;
         }
         return NULL;
     }
 
-    const value* dict::firstKey(uint32_t &count) const {
-        const uint8_t* after;
-        count = getParam(after);
-        return (value*) offsetby(after, count * sizeof(uint16_t));
-    }
-
     dict::iterator::iterator(const dict* d) {
-        _key = d->firstKey(_count);
-        _value = _count > 0 ? _key->next() : NULL;
+        _pKey = d->arrayFirstAndCount(&_count);
+        if (_pKey) {
+            _pValue = _pKey + _count;
+            _key = _pKey->deref();
+            _value = _pValue->deref();
+        } else {
+            _key = _value = NULL;
+        }
     }
 
     dict::iterator& dict::iterator::operator++() {
         if (_count == 0)
             throw "iterating past end of dict";
         if (--_count > 0) {
-            _key = _value->next();
-            _value = _key->next();
+            _key = (++_pKey)->deref();
+            _value = (++_pValue)->deref();
+        } else {
+            _key = _value = NULL;
         }
         return *this;
     }
-
-#pragma mark - UTILITIES:
-
-    static bool isNumeric(slice s) {
-        if (s.size < 1)
-            return false;
-        for (const char* c = (const char*)s.buf; s.size > 0; s.size--, c++) {
-            if (!isdigit(*c) && *c != '.' && *c != '+' && *c != '-' && *c != 'e' &&  *c != 'E')
-                return false;
-        }
-        return true;
-    }
-
-    static double readNumericString(slice str) {
-        char* cstr = strndup((const char*)str.buf, str.size);
-        if (!cstr)
-            return 0.0;
-        char* eof;
-        double result = ::strtod(cstr, &eof);
-        if (eof - cstr != str.size)
-            result = NAN;
-        ::free(cstr);
-        return result;
-    }
-    
-
 
 }

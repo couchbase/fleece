@@ -20,76 +20,56 @@ namespace fleece {
 
     class encoder {
     public:
-        encoder(Writer&,
-                   value::stringTable *externStrings = NULL,
-                   uint32_t maxExternStrings = 0);
+        encoder(Writer&);
 
-        void enableSharedStrings(bool e)            {_enableSharedStrings = e;}
+        void reset();
 
         void writeNull();
         void writeBool (bool);
 
-        void writeInt(int64_t);
-        void writeUInt(uint64_t);
+        void writeInt(int64_t i)                {writeInt(i, false);}
+        void writeUInt(uint64_t i)              {writeInt((int64_t)i, true);}
         void writeFloat(float);
         void writeDouble(double);
-        void writeRawNumber(slice);
-        void writeRawNumber(std::string str)        {writeRawNumber(slice(str));}
 
-        void writeDate(std::time_t);
+        void writeString(std::string);
+        void writeString(slice s);
+        void writeData(slice s);
 
-        void writeString(std::string, bool canAddExtern =false);
-        void writeString(slice, bool canAddExtern =false);
-        void writeExternString(uint32_t externRef);
+        encoder writeArray(uint32_t count)      {return writeArrayOrDict(value::kArrayTag, count);}
+        encoder writeDict(uint32_t count)       {return writeArrayOrDict(value::kDictTag, count);}
 
-        void writeData(slice);
-
-        void beginArray(uint32_t count);
-        void endArray()                             {popState();}
-
-        void beginDict(uint32_t count);
-        void writeKey(std::string, bool canAddExtern =true);
-        void writeKey(slice, bool canAddExtern =true);
-        void writeExternKey(uint32_t externRef, uint16_t hash);
-        void endDict();
+        void writeKey(std::string);
+        void writeKey(slice);
 
         // Note: overriding <<(bool) would be dangerous due to implicit conversion
-        encoder& operator<< (int64_t i)          {writeInt(i); return *this;}
-        encoder& operator<< (double d)           {writeDouble(d); return *this;}
-        encoder& operator<< (float f)            {writeFloat(f); return *this;}
-        encoder& operator<< (std::string str)    {writeString(str); return *this;}
-        encoder& operator<< (slice s)            {writeString(s); return *this;}
+        encoder& operator<< (int64_t i)         {writeInt(i); return *this;}
+        encoder& operator<< (double d)          {writeDouble(d); return *this;}
+        encoder& operator<< (float f)           {writeFloat(f); return *this;}
+        encoder& operator<< (std::string str)   {writeString(str); return *this;}
+        encoder& operator<< (slice s)           {writeString(s); return *this;} // string not data!
 
+        void end();
+        
 #ifdef __OBJC__
         void write(id);
 #endif
 
     private:
-        void addTypeCode(value::typeCode code)      {_out << code; ++_state->i;}
-        void addUVarint(uint64_t);
-        bool canShareString(size_t len) const;
+        encoder(encoder *parent, size_t offset, size_t keyOffset, size_t count);
+        void writeValue(value::tags, uint8_t *buf, size_t size, bool canInline =true);
+        void writeSpecial(uint8_t special);
+        void writeInt(int64_t i, bool isUnsigned);
+        void writeData(value::tags, slice s);
+        encoder writeArrayOrDict(value::tags, uint32_t count);
 
-        struct state {
-            uint32_t count;
-            uint32_t i;
-            size_t indexPos;
-            uint16_t* hashes;
-        };
-
-        void pushState();
-        void popState();
-        void pushCount(uint32_t count);
-
-        typedef std::unordered_map<std::string, uint32_t> stringLookupTable;
-
-        Writer& _out;
-        state* _state;
-        std::vector<state> _states;
-        bool _enableSharedStrings;
-        stringLookupTable _sharedStrings;
-        stringLookupTable _externStringsLookup;
-        value::stringTable* _externStrings;
-        uint32_t _maxExternStrings;
+        encoder *_parent;       // Encoder that created this one
+        size_t _offset;         // Offset in _out to write next inline value
+        size_t _keyOffset;      // Offset in _out to write next dictionary key
+        size_t _count;          // Count of collection I'm adding to
+        Writer& _out;           // Where output is written to
+        bool _blockedOnKey :1;  // True if writes should be refused
+        bool _writingKey :1;    // True if value being written is a key
     };
 
 

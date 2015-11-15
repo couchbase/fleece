@@ -64,49 +64,30 @@ namespace fleece {
 
 
     void value::writeJSON(std::ostream &out, const std::vector<std::string> *externStrings) const {
-        switch (_typeCode) {
-            case kNullCode:
+        switch (type()) {
+            case kNull:
                 out << "null";
                 return;
-            case kFalseCode:
-                out << "false";
+            case kBoolean:
+                out << (asBool() ? "true" : "false");
                 return;
-            case kTrueCode:
-                out << "true";
+            case kInteger: {
+                int64_t i = asInt();
+                if (isUnsigned())
+                    out << (uint64_t)i;
+                else
+                    out << i;
                 return;
-            case kInt1Code...kInt8Code:
-                out << asInt();
-                return;
-            case kUInt64Code:
-                out << (uint64_t)asInt();
-                return;
-            case kFloat32Code:
+            }
+            case kFloat:
                 out << std::setprecision(6) << asDouble();
                 return;
-            case kFloat64Code:
-                out << std::setprecision(15) << asDouble();
-                return;
-            case kRawNumberCode: {
-                slice str = asString();
-                out.write((const char*)str.buf, str.size);
-            }
-            case kDateCode: {
-                std::time_t date = asDate();
-                out << std::put_time(std::gmtime(&date), "\"%Y-%m-%dT%H:%M:%SZ\"");
-                return;
-            }
-            case kStringCode:
-            case kSharedStringCode:
-            case kSharedStringRefCode:
+            case kString:
                 writeEscaped(out, asString());
                 return;
-            case kExternStringRefCode:
-                if (!externStrings)
-                    throw "unexpected extern string";
-                return writeEscaped(out, (*externStrings)[(size_t)stringToken() - 1]);
-            case kDataCode:
+            case kData:
                 return writeBase64(out, asString());
-            case kArrayCode: {
+            case kArray: {
                 out << '[';
                 const array* a = asArray();
                 bool first = true;
@@ -120,7 +101,7 @@ namespace fleece {
                 out << ']';
                 return;
             }
-            case kDictCode: {
+            case kDict: {
                 out << '{';
                 const dict* d = asDict();
                 bool first = true;

@@ -41,6 +41,11 @@ namespace fleece {
         Writer& operator<< (uint8_t byte)       {return operator<<(slice(&byte,1));}
         Writer& operator<< (slice s)            {write(s.buf, s.size); return *this;}
 
+        /** Reserves space for data without actually writing anything yet.
+            The data must be written later using rewrite() otherwise there will be garbage in
+            the output. */
+        size_t reserveSpace(size_t length);
+
         /** Overwrites already-written data.
             @param pos  The position in the output at which to start overwriting
             @param newData  The data that replaces the old */

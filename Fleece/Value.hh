@@ -26,8 +26,8 @@ namespace fleece {
     enum valueType : uint8_t {
         kNull = 0,
         kBoolean,
-        kNumber,
-        kDate,
+        kInteger,
+        kFloat,
         kString,
         kData,
         kArray,
@@ -47,36 +47,17 @@ namespace fleece {
             This is a lot faster, but "undefined behavior" occurs if the data is corrupt... */
         static const value* fromTrustedData(slice s)    {return (const value*)s.buf;}
 
-        /** Returns true if the contents of the slice might be a value (just based on 1st byte) */
-        static bool mayBeValue(slice s)         {return s.size > 0 && s[0] <= kDictCode;}
-
         valueType type() const;
 
         bool asBool() const;
         int64_t asInt() const;
-        uint64_t asUnsigned() const;
+        uint64_t asUnsigned() const             {return (uint64_t)asInt();}
         double asDouble() const;
-        bool isInteger() const                  {return _typeCode >= kInt1Code
-                                                     && _typeCode <= kUInt64Code;}
-        bool isUnsigned() const                 {return _typeCode == kUInt64Code;}
+        bool isInteger() const                  {return tag() <= kIntTag;}
+        bool isUnsigned() const                 {return tag() == kIntTag && (_byte[0] & 0x08) != 0;}
 
-        std::time_t asDate() const;
-        std::string asDateString() const;
-
-        typedef std::vector<std::string> stringTable;
-
-        /** Returns the exact contents of a string, data, or raw number.
-            If the string is extern, a stringTable must be provided. */
-        slice asString(const stringTable* externStrings =NULL) const;
-
-        bool isExternString() const             {return _typeCode == kExternStringRefCode;}
-        bool isSharedString() const             {return _typeCode == kSharedStringCode
-                                                     || _typeCode == kSharedStringRefCode;}
-
-        /** If this is an extern string, returns its external identifier.
-            If this is a shared string, returns an opaque value identifying it; all instances of
-            the same shared string in the same document will have the same identifier. */
-        uint64_t stringToken() const;
+        /** Returns the exact contents of a string or data. */
+        slice asString() const;
 
         const array* asArray() const;
         const dict* asDict() const;
@@ -96,32 +77,40 @@ namespace fleece {
 #endif
 
     protected:
-        // The actual type codes used in the encoded data:
-        enum typeCode : uint8_t {
-            kNullCode = 0,
-            kFalseCode, kTrueCode,
-            kInt1Code, // kInt2Code, kInt3Code, ...
-            kInt8Code = kInt1Code + 7,
-            kUInt64Code,
-            kFloat32Code, kFloat64Code,
-            kRawNumberCode,
-            kDateCode,
-            kStringCode, kSharedStringCode, kSharedStringRefCode, kExternStringRefCode,
-            kDataCode,
-            kArrayCode,
-            kDictCode,
+        // The actual tags used in the encoded data:
+        enum tags : uint8_t {
+            kShortIntTag = 0,
+            kIntTag,
+            kFloatTag,
+            kSpecialTag,
+            kStringTag,
+            kBinaryTag,
+            kArrayTag,
+            kDictTag,
+            kPointerTagFirst = 8,
+            kPointerTagLast = 15
         };
-        
-        typeCode _typeCode;
-        uint8_t _paramStart[1];
 
-        uint32_t getParam() const;
-        uint32_t getParam(const uint8_t* &after) const;
-        uint64_t getParam64(const uint8_t* &after) const;
+        enum {
+            kSpecialValueNull = 0,
+            kSpecialValueFalse,
+            kSpecialValueTrue
+        };
 
-        const value* next() const;
+        tags tag() const             {return (tags)(_byte[0] >> 4);}
+
+        const value* deref() const;
+
+        uint16_t shortValue() const  {return (((uint16_t)_byte[0] << 8) | _byte[1]) & 0x0FFF;}
+        unsigned tinyCount() const   {return _byte[0] & 0x0F;}
+
+        const value* arrayFirstAndCount(uint32_t *pCount) const;
+        uint32_t arrayCount() const;
+
+        uint8_t _byte[2];
 
         static bool validate(const void* start, slice&);
+
         friend class encoder;
         friend class array;
         friend class dict;
@@ -131,12 +120,12 @@ namespace fleece {
     /** A value that's an array. */
     class array : public value {
     public:
-        uint32_t count() const                      {return getParam();}
-        const value* first() const;
+        uint32_t count() const                      {return arrayCount();}
+        const value* get(uint32_t index) const;
 
         class iterator {
         public:
-            iterator(const array* a)                {_value = a->first(_count);}
+            iterator(const array* a);
             const class value* value() const        {return _value;}
             operator const class value* const ()    {return _value;}
             const class value* operator-> ()        {return _value;}
@@ -145,18 +134,20 @@ namespace fleece {
             iterator& operator++();
 
         private:
-            const class value* _value;
+            const class value *_p, *_value;
             uint32_t _count;
         };
-
-    private:
-        const value* first(uint32_t &count) const;
     };
 
 
     /** A value that's a dictionary/map */
     class dict : public value {
     public:
+        uint32_t count() const                      {return arrayCount();}
+
+        /** Looks up the value for a key. */
+        const value* get(slice key) const;
+
         class iterator {
         public:
             iterator(const dict*);
@@ -167,27 +158,13 @@ namespace fleece {
             iterator& operator++();
 
         private:
-            const class value* _value;
-            const class value* _key;
+            const class value *_pKey, *_pValue, *_key, *_value;
             uint32_t _count;
         };
-
-        uint32_t count() const              {return getParam();}
-
-        /** Looks up the value for a key. */
-        const value* get(slice key,
-                         const stringTable* externStrings =NULL) const
-                                            {return get(key, hashCode(key), externStrings);}
-
-        /** Looks up the value for a key whose hashCode you already know. Slightly faster. */
-        const value* get(slice key,
-                         uint16_t hashCode,
-                         const stringTable* externStrings =NULL) const;
 
         static uint16_t hashCode(slice);
 
     private:
-        const value* firstKey(uint32_t &count) const;
         friend class value;
     };
 

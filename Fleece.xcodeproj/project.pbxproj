@@ -24,7 +24,34 @@
 		270FA2871BF53D32005DCB13 /* forestdb_endian.h in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2861BF53D32005DCB13 /* forestdb_endian.h */; };
 		270FA28B1BF53E4D005DCB13 /* murmurhash3_x86_32.c in Sources */ = {isa = PBXBuildFile; fileRef = 270FA2891BF53E4D005DCB13 /* murmurhash3_x86_32.c */; };
 		270FA28C1BF53E4D005DCB13 /* murmurhash3_x86_32.h in Headers */ = {isa = PBXBuildFile; fileRef = 270FA28A1BF53E4D005DCB13 /* murmurhash3_x86_32.h */; };
+		272E5A521BF7FE7100848580 /* FleeceTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 272E5A451BF7FD8F00848580 /* FleeceTests.cc */; };
+		272E5A551BF7FE9C00848580 /* libFleece.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 270FA25C1BF53CAD005DCB13 /* libFleece.a */; };
+		272E5A571BF7FEB200848580 /* libstdc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 272E5A561BF7FEB200848580 /* libstdc++.tbd */; };
+		272E5A591BF7FED600848580 /* libcppunit-1.13.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 272E5A581BF7FED600848580 /* libcppunit-1.13.0.dylib */; };
+		272E5A5D1BF800A100848580 /* EncoderTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 272E5A5B1BF800A100848580 /* EncoderTests.cc */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		272E5A531BF7FE8200848580 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 270FA2541BF53CAD005DCB13 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 270FA25B1BF53CAD005DCB13;
+			remoteInfo = Fleece;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		272E5A491BF7FE5600848580 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		270FA25C1BF53CAD005DCB13 /* libFleece.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libFleece.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -45,6 +72,13 @@
 		270FA2861BF53D32005DCB13 /* forestdb_endian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = forestdb_endian.h; sourceTree = "<group>"; };
 		270FA2891BF53E4D005DCB13 /* murmurhash3_x86_32.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = murmurhash3_x86_32.c; sourceTree = "<group>"; };
 		270FA28A1BF53E4D005DCB13 /* murmurhash3_x86_32.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = murmurhash3_x86_32.h; sourceTree = "<group>"; };
+		270FA28E1BF68EBA005DCB13 /* fleece2 format.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "fleece2 format.txt"; sourceTree = "<group>"; };
+		272E5A451BF7FD8F00848580 /* FleeceTests.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FleeceTests.cc; sourceTree = "<group>"; };
+		272E5A4B1BF7FE5600848580 /* Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Test; sourceTree = BUILT_PRODUCTS_DIR; };
+		272E5A561BF7FEB200848580 /* libstdc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libstdc++.tbd"; path = "usr/lib/libstdc++.tbd"; sourceTree = SDKROOT; };
+		272E5A581BF7FED600848580 /* libcppunit-1.13.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libcppunit-1.13.0.dylib"; path = "../../usr/local/Cellar/cppunit/1.13.2/lib/libcppunit-1.13.0.dylib"; sourceTree = "<group>"; };
+		272E5A5A1BF8004100848580 /* FleeceTests.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FleeceTests.hh; sourceTree = "<group>"; };
+		272E5A5B1BF800A100848580 /* EncoderTests.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EncoderTests.cc; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,13 +89,27 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		272E5A481BF7FE5600848580 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				272E5A591BF7FED600848580 /* libcppunit-1.13.0.dylib in Frameworks */,
+				272E5A571BF7FEB200848580 /* libstdc++.tbd in Frameworks */,
+				272E5A551BF7FE9C00848580 /* libFleece.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		270FA2531BF53CAD005DCB13 = {
 			isa = PBXGroup;
 			children = (
+				272E5A581BF7FED600848580 /* libcppunit-1.13.0.dylib */,
+				272E5A561BF7FEB200848580 /* libstdc++.tbd */,
+				270FA28E1BF68EBA005DCB13 /* fleece2 format.txt */,
 				270FA25E1BF53CAD005DCB13 /* Fleece */,
+				272E5A441BF7FD1700848580 /* Tests */,
 				270FA2881BF53E4D005DCB13 /* murmurhash */,
 				270FA25D1BF53CAD005DCB13 /* Products */,
 			);
@@ -71,6 +119,7 @@
 			isa = PBXGroup;
 			children = (
 				270FA25C1BF53CAD005DCB13 /* libFleece.a */,
+				272E5A4B1BF7FE5600848580 /* Test */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -115,6 +164,16 @@
 			name = Utilities;
 			sourceTree = "<group>";
 		};
+		272E5A441BF7FD1700848580 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				272E5A451BF7FD8F00848580 /* FleeceTests.cc */,
+				272E5A5A1BF8004100848580 /* FleeceTests.hh */,
+				272E5A5B1BF800A100848580 /* EncoderTests.cc */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -153,6 +212,24 @@
 			productReference = 270FA25C1BF53CAD005DCB13 /* libFleece.a */;
 			productType = "com.apple.product-type.library.static";
 		};
+		272E5A4A1BF7FE5600848580 /* Test */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 272E5A4F1BF7FE5600848580 /* Build configuration list for PBXNativeTarget "Test" */;
+			buildPhases = (
+				272E5A471BF7FE5600848580 /* Sources */,
+				272E5A481BF7FE5600848580 /* Frameworks */,
+				272E5A491BF7FE5600848580 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				272E5A541BF7FE8200848580 /* PBXTargetDependency */,
+			);
+			name = Test;
+			productName = Test;
+			productReference = 272E5A4B1BF7FE5600848580 /* Test */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -163,6 +240,9 @@
 				ORGANIZATIONNAME = Couchbase;
 				TargetAttributes = {
 					270FA25B1BF53CAD005DCB13 = {
+						CreatedOnToolsVersion = 7.1.1;
+					};
+					272E5A4A1BF7FE5600848580 = {
 						CreatedOnToolsVersion = 7.1.1;
 					};
 				};
@@ -180,6 +260,7 @@
 			projectRoot = "";
 			targets = (
 				270FA25B1BF53CAD005DCB13 /* Fleece */,
+				272E5A4A1BF7FE5600848580 /* Test */,
 			);
 		};
 /* End PBXProject section */
@@ -201,7 +282,24 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		272E5A471BF7FE5600848580 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				272E5A5D1BF800A100848580 /* EncoderTests.cc in Sources */,
+				272E5A521BF7FE7100848580 /* FleeceTests.cc in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		272E5A541BF7FE8200848580 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 270FA25B1BF53CAD005DCB13 /* Fleece */;
+			targetProxy = 272E5A531BF7FE8200848580 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		270FA2651BF53CAD005DCB13 /* Debug */ = {
@@ -289,6 +387,7 @@
 				EXECUTABLE_PREFIX = lib;
 				GCC_ENABLE_CPP_EXCEPTIONS = YES;
 				GCC_ENABLE_CPP_RTTI = YES;
+				HEADER_SEARCH_PATHS = /usr/local/include/;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -299,6 +398,31 @@
 				EXECUTABLE_PREFIX = lib;
 				GCC_ENABLE_CPP_EXCEPTIONS = YES;
 				GCC_ENABLE_CPP_RTTI = YES;
+				HEADER_SEARCH_PATHS = /usr/local/include/;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		272E5A501BF7FE5600848580 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				HEADER_SEARCH_PATHS = /usr/local/include/;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/Cellar/cppunit/1.13.2/lib,
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		272E5A511BF7FE5600848580 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				HEADER_SEARCH_PATHS = /usr/local/include/;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/Cellar/cppunit/1.13.2/lib,
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -320,6 +444,15 @@
 			buildConfigurations = (
 				270FA2681BF53CAD005DCB13 /* Debug */,
 				270FA2691BF53CAD005DCB13 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		272E5A4F1BF7FE5600848580 /* Build configuration list for PBXNativeTarget "Test" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				272E5A501BF7FE5600848580 /* Debug */,
+				272E5A511BF7FE5600848580 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 		};

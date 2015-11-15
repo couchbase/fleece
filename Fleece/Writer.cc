@@ -50,6 +50,15 @@ namespace fleece {
         _available.moveStart(length);
     }
 
+    size_t Writer::reserveSpace(size_t length) {
+        size_t pos = this->length();
+        if (_available.size < length)
+            growToFit(length);
+        _available.moveStart(length);
+        return pos;
+    }
+
+
     void Writer::rewrite(size_t pos, slice data) {
         assert(pos+data.size <= length());
         ::memcpy((void*)&_buffer[pos], data.buf, data.size);
