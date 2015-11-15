@@ -219,6 +219,18 @@ public:
         }
     }
 
+    void testSharedStrings() {
+        encoder array = enc.writeArray(4);
+        array.writeString("a");
+        array.writeString("hello");
+        array.writeString("a");
+        array.writeString("hello");
+        array.end();
+        checkOutput("6004 4161 8003 4161 8001 4568 656C 6C6F");
+        auto a = checkArray(4);
+        AssertEqual(a->toJSON(), std::string("[\"a\",\"hello\",\"a\",\"hello\"]"));
+    }
+
     CPPUNIT_TEST_SUITE( EncoderTests );
     CPPUNIT_TEST( testSpecial );
     CPPUNIT_TEST( testInts );
@@ -226,6 +238,7 @@ public:
     CPPUNIT_TEST( testStrings );
     CPPUNIT_TEST( testArrays );
     CPPUNIT_TEST( testDictionaries );
+    CPPUNIT_TEST( testSharedStrings );
     CPPUNIT_TEST_SUITE_END();
 };
 

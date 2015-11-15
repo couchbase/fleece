@@ -15,6 +15,8 @@
 
 namespace fleece {
 
+    static const size_t kMaxSharedStringSize = 100;
+
     // root encoder
     encoder::encoder(Writer& out)
     :_parent(NULL),
@@ -22,8 +24,9 @@ namespace fleece {
      _keyOffset(0),
      _count(1),
      _out(out),
-     _blockedOnKey(false),
-     _writingKey(false)
+     _strings(new stringTable),
+     _writingKey(false),
+     _blockedOnKey(false)
     { }
 
     encoder::encoder(encoder *parent, size_t offset, size_t keyOffset, size_t count)
@@ -32,15 +35,23 @@ namespace fleece {
      _keyOffset(keyOffset),
      _count(count),
      _out(parent->_out),
-     _blockedOnKey(keyOffset > 0),
-     _writingKey(_blockedOnKey)
+     _strings(parent->_strings),
+     _writingKey(keyOffset > 0),
+     _blockedOnKey(_writingKey)
     { }
+
+    encoder::~encoder() {
+        if (!_parent)
+            delete _strings;
+    }
 
     void encoder::reset() {
         if (_parent)
             throw "can only reset root encoder";
         _count = 1;
         _out = Writer();
+        delete _strings;
+        _strings = new stringTable;
     }
 
     // primitive to write a value
@@ -49,22 +60,23 @@ namespace fleece {
             throw "no more space in collection";
         if (_blockedOnKey)
             throw "need a key before this value";
-        size_t &offset = _writingKey ? _keyOffset : _offset;
 
-        assert((buf[0] & 0xF0) == 0);
-        buf[0] |= tag<<4;
+        if (tag < value::kPointerTagFirst) {
+            assert((buf[0] & 0xF0) == 0);
+            buf[0] |= tag<<4;
+        }
 
         if (_parent) {
+            size_t &offset = _writingKey ? _keyOffset : _offset;
             if (size <= 2 && canInline) {
                 // Add directly to parent collection at offset:
                 _out.rewrite(offset, slice(buf,size));
             } else {
                 // Write to output, then add a pointer in the parent collection:
-                ssize_t delta = (_out.length() - offset) / 2;
-                if (delta < -0x4000 || delta >= 0x4000)
+                uint8_t ptr[2];
+                if (!makePointer(_out.length(), ptr))
                     throw "delta too large to write value";
-                int16_t pointer = _enc16(delta | 0x8000);
-                _out.rewrite(offset, slice(&pointer,2));
+                _out.rewrite(offset, slice(ptr,2));
                 _out.write(buf, size);
             }
             offset += 2;
@@ -80,6 +92,25 @@ namespace fleece {
             if (_keyOffset > 0)
                 _blockedOnKey = _writingKey = true;
         }
+    }
+
+    bool encoder::writePointerTo(uint64_t dstOffset) {
+        uint8_t buf[2];
+        if (!makePointer(dstOffset, buf))
+            return false;
+        writeValue(value::kPointerTagFirst, buf, 2);
+        return true;
+    }
+
+    bool encoder::makePointer(uint64_t toOffset, uint8_t buf[2]) {
+        size_t fromOffset = _writingKey ? _keyOffset : _offset;
+        ssize_t delta = (toOffset - fromOffset) / 2;
+        if (delta < -0x4000 || delta >= 0x4000)
+            return false;
+        int16_t ptr = _enc16(delta);
+        memcpy(buf, &ptr, 2);
+        buf[0] |= 0x80;  // tag it
+        return true;
     }
 
     inline void encoder::writeSpecial(uint8_t special) {
@@ -162,11 +193,28 @@ namespace fleece {
         }
     }
 
-    void encoder::writeString(std::string s) {writeData(value::kStringTag, slice(s));}
-    void encoder::writeString(slice s)       {writeData(value::kStringTag, s);}
-    void encoder::writeData(slice s)         {writeData(value::kBinaryTag, s);}
+    void encoder::writeString(std::string s) {
+        // Check whether this string's already been written:
+        if (s.size() > 1 && s.size() < kMaxSharedStringSize) {
+            auto entry = _strings->find(s);
+            if (entry != _strings->end()) {
+                uint64_t offset = entry->second;
+                if (writePointerTo(offset))
+                    return;
+                entry->second = _out.length();      // update with offset of new instance of string
+            } else {
+                _strings->insert({s, _out.length()});
+            }
+        }
+        writeData(value::kStringTag, slice(s));
+    }
+
+    void encoder::writeString(slice s)      {writeString((std::string)s);}
+
+    void encoder::writeData(slice s)        {writeData(value::kBinaryTag, s);}
 
     encoder encoder::writeArrayOrDict(value::tags tag, uint32_t count) {
+        // Write the array/dict header (2 bytes):
         uint8_t buf[2 + kMaxVarintLen32];
         uint32_t inlineCount = std::min(count, (uint32_t)0x0FFF);
         buf[0] = inlineCount >> 8;
@@ -179,6 +227,7 @@ namespace fleece {
         }
         writeValue(tag, buf, bufLen, (count==0));          // can inline only if empty
 
+        // Reserve space for the values (and keys, for dicts):
         size_t offset = _out.length();
         size_t keyOffset = 0;
         size_t space = 2*count;
