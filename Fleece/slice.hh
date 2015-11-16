@@ -22,6 +22,10 @@
 #include <string>
 #include <memory>
 
+#ifdef __OBJC__
+#import <Foundation/NSData.h>
+#import <Foundation/NSString.h>
+#endif
 
 #define offsetby(PTR,OFFSET) (void*)((uint8_t*)(PTR)+(ptrdiff_t)(OFFSET))
 

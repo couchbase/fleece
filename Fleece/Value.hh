@@ -22,12 +22,11 @@ namespace fleece {
     class dictIterator;
         
 
-    /* Types of values */
+    /* Types of values -- same as JSON types, plus binary data */
     enum valueType : uint8_t {
         kNull = 0,
         kBoolean,
-        kInteger,
-        kFloat,
+        kNumber,
         kString,
         kData,
         kArray,
@@ -52,9 +51,15 @@ namespace fleece {
         bool asBool() const;
         int64_t asInt() const;
         uint64_t asUnsigned() const             {return (uint64_t)asInt();}
-        double asDouble() const;
+
+        template<typename T> T asFloatOfType() const;
+
+        float asFloat() const                   {return asFloatOfType<float>();}
+        double asDouble() const                 {return asFloatOfType<double>();}
+
         bool isInteger() const                  {return tag() <= kIntTag;}
         bool isUnsigned() const                 {return tag() == kIntTag && (_byte[0] & 0x08) != 0;}
+        bool isDouble() const                   {return tag() == kFloatTag && tinyValue() == 8;}
 
         /** Returns the exact contents of a string or data. */
         slice asString() const;
@@ -62,17 +67,17 @@ namespace fleece {
         const array* asArray() const;
         const dict* asDict() const;
 
-        /** Converts any non-collection type (except externString) to string form. */
+        /** Converts any non-collection type to string form. */
         std::string toString() const;
 
         /** Writes a JSON representation to an ostream. */
-        void writeJSON(std::ostream&, const std::vector<std::string> *externStrings) const;
+        void writeJSON(std::ostream&) const;
         /** Returns a JSON representation. */
-        std::string toJSON(const std::vector<std::string> *externStrings =NULL) const;
+        std::string toJSON() const;
 
 #ifdef __OBJC__
-        id asNSObject(NSArray* externStrings =nil) const;
-        id asNSObject(NSMapTable *sharedStrings, NSArray* externStrings =nil) const;
+        id asNSObject() const;
+        id asNSObject(NSMapTable *sharedStrings) const;
         static NSMapTable* createSharedStringsTable();
 #endif
 
@@ -92,24 +97,24 @@ namespace fleece {
         };
 
         enum {
-            kSpecialValueNull = 0,
-            kSpecialValueFalse,
-            kSpecialValueTrue
+            kSpecialValueNull = 0x00,       // 0000
+            kSpecialValueFalse= 0x04,       // 0100
+            kSpecialValueTrue = 0x08,       // 1000
         };
 
         tags tag() const             {return (tags)(_byte[0] >> 4);}
 
         const value* deref() const;
 
+        unsigned tinyValue() const   {return _byte[0] & 0x0F;}
         uint16_t shortValue() const  {return (((uint16_t)_byte[0] << 8) | _byte[1]) & 0x0FFF;}
-        unsigned tinyCount() const   {return _byte[0] & 0x0F;}
 
-        const value* arrayFirstAndCount(uint32_t *pCount) const;
         uint32_t arrayCount() const;
-
-        uint8_t _byte[2];
+        const value* arrayFirstAndCount(uint32_t *pCount) const;
 
         static bool validate(const void* start, slice&);
+
+        uint8_t _byte[2];
 
         friend class encoder;
         friend class array;

@@ -28,8 +28,8 @@ namespace fleece {
         void writeNull();
         void writeBool (bool);
 
-        void writeInt(int64_t i)                {writeInt(i, false);}
-        void writeUInt(uint64_t i)              {writeInt((int64_t)i, true);}
+        void writeInt(int64_t i);
+        void writeUInt(uint64_t i);
         void writeFloat(float);
         void writeDouble(double);
 
@@ -63,7 +63,7 @@ namespace fleece {
         bool makePointer(uint64_t toOffset, uint8_t buf[2]);
 
         void writeSpecial(uint8_t special);
-        void writeInt(int64_t i, bool isUnsigned);
+        void writeInt(uint64_t i, bool isShort, bool isUnsigned);
         void writeData(value::tags, slice s);
         encoder writeArrayOrDict(value::tags, uint32_t count);
 

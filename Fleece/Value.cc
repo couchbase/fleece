@@ -20,15 +20,15 @@ namespace fleece {
 
     // Maps from tag to valueType
     static valueType kValueTypes[] = {
-        kInteger,
-        kInteger,
-        kFloat,
-        kNull,
+        kNumber, // small int
+        kNumber, // int
+        kNumber, // float
+        kNull,   // special -- may also be kBoolean
         kString,
         kData,
         kArray,
         kDict,
-        kNull
+        kNull   // pointer; should never be seen
     };
 
 
@@ -36,7 +36,7 @@ namespace fleece {
 
     valueType value::type() const {
         if (tag() == kSpecialTag) {
-            switch (shortValue()) {
+            switch (tinyValue()) {
                 case kSpecialValueNull:
                     return kNull;
                 case kSpecialValueFalse...kSpecialValueTrue:
@@ -53,7 +53,7 @@ namespace fleece {
     bool value::asBool() const {
         switch (tag()) {
             case kSpecialTag:
-                return shortValue() < kSpecialValueTrue;
+                return tinyValue() >= kSpecialValueTrue;
             case kShortIntTag...kFloatTag:
                 return asInt() != 0;
             default:
@@ -63,6 +63,8 @@ namespace fleece {
 
     int64_t value::asInt() const {
         switch (tag()) {
+            case kSpecialTag:
+                return tinyValue() >= kSpecialValueTrue;
             case kShortIntTag: {
                 uint16_t i = shortValue();
                 if (i & 0x0800)
@@ -72,7 +74,7 @@ namespace fleece {
             }
             case kIntTag: {
                 int64_t n = 0;
-                unsigned byteCount = tinyCount();
+                unsigned byteCount = tinyValue();
                 if ((byteCount & 0x8) == 0) {       // signed integer
                     if (_byte[1+byteCount] & 0x80)  // ...and sign bit is set
                         n = -1;
@@ -89,19 +91,25 @@ namespace fleece {
         }
     }
 
-    double value::asDouble() const {
+    // Explicitly instantiate both needed versions:
+    template float value::asFloatOfType<float>() const;
+    template double value::asFloatOfType<double>() const;
+
+
+    template<typename T>
+    T value::asFloatOfType() const {
         switch (tag()) {
             case kFloatTag: {
-                if (tinyCount() <= 4)
+                if (tinyValue() <= 4)
                     return *(const littleEndianFloat*)&_byte[2];
                 else
                     return *(const littleEndianDouble*)&_byte[2];
             }
             default:
                 if (isUnsigned())
-                    return (double)asUnsigned();
+                    return asUnsigned();
                 else
-                    return (double)asInt();
+                    return asInt();
         }
     }
 
@@ -118,7 +126,7 @@ namespace fleece {
                 break;
             }
             case kSpecialTag: {
-                switch (shortValue()) {
+                switch (tinyValue()) {
                     case kSpecialValueNull:
                         return "null";
                     case kSpecialValueFalse:
@@ -132,7 +140,7 @@ namespace fleece {
             }
             case kFloatTag: {
                 double f = asDouble();
-                if (tinyCount() <= 4)
+                if (tinyValue() <= 4)
                     sprintf(str, "%.6f", f);
                 else
                     sprintf(str, "%.16f", f);
@@ -148,7 +156,7 @@ namespace fleece {
         switch (tag()) {
             case kStringTag:
             case kBinaryTag: {
-                slice s(&_byte[1], tinyCount());
+                slice s(&_byte[1], tinyValue());
                 if (s.size == 0x0F) {
                     // This means the actual length follows as a varint:
                     uint64_t realLength;

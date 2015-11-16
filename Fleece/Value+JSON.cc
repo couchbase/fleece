@@ -19,35 +19,39 @@ namespace fleece {
                               unsigned char const* bytes_to_encode,
                               unsigned int in_len);
 
-    static void writeEscaped(std::ostream &out, slice s) {
-        const char *str = (const char*)s.buf;
-        out << '"';
-        for (size_t i=0; i < s.size; i++) {
-            char c = str[i];
-            if (c < ' ') {
-                switch (c) {
-                    case '\t':
-                        out << "\\t";
+    static void writeEscaped(std::ostream &out, slice str) {
+        out << "\"";
+        auto start = (const uint8_t*)str.buf;
+        auto end = (const uint8_t*)str.end();
+        for (auto p = start; p < end; p++) {
+            uint8_t ch = *p;
+            if (ch == '"' || ch == '\\' || ch < 32 || ch == 127) {
+                // Write characters from start up to p-1:
+                out << std::string((char*)start, p-start);
+                start = p + 1;
+                switch (ch) {
+                    case '"':
+                    case '\\':
+                        out << "\\";
+                        --start; // ch will be written in next pass
                         break;
                     case '\n':
                         out << "\\n";
                         break;
-                    case '\r':
-                        out << "\\r";
+                    case '\t':
+                        out << "\\t";
                         break;
                     default: {
-                        char buf[6];
-                        auto len = sprintf(buf, "\\u%04x", c);
-                        out.write(buf, len);
+                        char buf[7];
+                        sprintf(buf, "\\u%04u", (unsigned)ch);
+                        out << buf;
+                        break;
                     }
                 }
-            } else {
-                if (c == '"' || c == '\\')
-                    out << '\\';
-                out << c;
             }
         }
-        out << '"';
+        out << std::string((char*)start, end-start);
+        out << "\"";
     }
 
     static void writeBase64(std::ostream &out, slice data) {
@@ -56,14 +60,14 @@ namespace fleece {
         out << '"';
     }
 
-    std::string value::toJSON(const std::vector<std::string> *externStrings) const {
+    std::string value::toJSON() const {
         std::stringstream s;
-        writeJSON(s, externStrings);
+        writeJSON(s);
         return s.str();
     }
 
 
-    void value::writeJSON(std::ostream &out, const std::vector<std::string> *externStrings) const {
+    void value::writeJSON(std::ostream &out) const {
         switch (type()) {
             case kNull:
                 out << "null";
@@ -71,16 +75,19 @@ namespace fleece {
             case kBoolean:
                 out << (asBool() ? "true" : "false");
                 return;
-            case kInteger: {
-                int64_t i = asInt();
-                if (isUnsigned())
-                    out << (uint64_t)i;
-                else
-                    out << i;
-                return;
-            }
-            case kFloat:
-                out << std::setprecision(6) << asDouble();
+            case kNumber:
+                if (isInteger()) {
+                    int64_t i = asInt();
+                    if (isUnsigned())
+                        out << (uint64_t)i;
+                    else
+                        out << i;
+                } else {
+                    if (isDouble())
+                        out << std::setprecision(16) << asDouble();
+                    else
+                        out << std::setprecision(6) << asFloat();
+                }
                 return;
             case kString:
                 writeEscaped(out, asString());
@@ -96,7 +103,7 @@ namespace fleece {
                         first = false;
                     else
                         out << ',';
-                    iter->writeJSON(out, externStrings);
+                    iter->writeJSON(out);
                 }
                 out << ']';
                 return;
@@ -110,9 +117,9 @@ namespace fleece {
                         first = false;
                     else
                         out << ',';
-                    iter.key()->writeJSON(out, externStrings);
+                    iter.key()->writeJSON(out);
                     out << ':';
-                    iter.value()->writeJSON(out, externStrings);
+                    iter.value()->writeJSON(out);
                 }
                 out << '}';
                 return;

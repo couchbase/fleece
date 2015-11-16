@@ -73,6 +73,8 @@ namespace fleece {
                 _out.rewrite(offset, slice(buf,size));
             } else {
                 // Write to output, then add a pointer in the parent collection:
+                if (_out.length() & 1)
+                    _out.write("\0", 1);
                 uint8_t ptr[2];
                 if (!makePointer(_out.length(), ptr))
                     throw "delta too large to write value";
@@ -114,7 +116,8 @@ namespace fleece {
     }
 
     inline void encoder::writeSpecial(uint8_t special) {
-        uint8_t buf[2] = {0, special};
+        assert(special <= 0x0F);
+        uint8_t buf[2] = {special, 0};
         writeValue(value::kSpecialTag, buf, 2);
     }
 
@@ -126,14 +129,14 @@ namespace fleece {
         writeSpecial(b ? value::kSpecialValueTrue : value::kSpecialValueFalse);
     }
 
-    void encoder::writeInt(int64_t i, bool isUnsigned) {
-        if (i >= -2048 && i < 2048) {
+    void encoder::writeInt(uint64_t i, bool isShort, bool isUnsigned) {
+        if (isShort) {
             uint8_t buf[2] = {(uint8_t)((i >> 8) & 0x0F),
                               (uint8_t)(i & 0xFF)};
             writeValue(value::kShortIntTag, buf, 2);
         } else {
             uint8_t buf[10];
-            size_t size = PutIntOfLength(&buf[1], i);
+            size_t size = PutIntOfLength(&buf[1], i, isUnsigned);
             buf[0] = size - 1;
             if (isUnsigned)
                 buf[0] |= 0x08;
@@ -143,6 +146,9 @@ namespace fleece {
             writeValue(value::kIntTag, buf, size);
         }
     }
+
+    void encoder::writeInt(int64_t i)   {writeInt(i, (i >= -2048 && i < 2048), false);}
+    void encoder::writeUInt(uint64_t i) {writeInt(i, i < 2048, true);}
 
     void encoder::writeDouble(double n) {
         if (isnan(n))

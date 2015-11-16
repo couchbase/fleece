@@ -38,10 +38,18 @@ public:
         enc.reset();
     }
 
+    void checkReadBool(bool b) {
+        auto v = value::fromData(result);
+        Assert(v != NULL);
+        Assert(v->type() == kBoolean);
+        AssertEqual(v->asBool(), b);
+        AssertEqual(v->asInt(), (int64_t)b);
+    }
+
     void checkRead(int64_t i) {
         auto v = value::fromData(result);
         Assert(v != NULL);
-        Assert(v->type() == kInteger);
+        Assert(v->type() == kNumber);
         Assert(v->isInteger());
         Assert(!v->isUnsigned());
         AssertEqual(v->asInt(), i);
@@ -50,19 +58,33 @@ public:
 
     void checkReadU(uint64_t i) {
         auto v = value::fromData(result);
-        Assert(v->type() == kInteger);
+        Assert(v->type() == kNumber);
         Assert(v->isInteger());
         Assert(v->isUnsigned());
         AssertEqual(v->asUnsigned(), i);
         AssertEqual(v->asDouble(), (double)i);
     }
 
+    void checkReadFloat(float f) {
+        auto v = value::fromData(result);
+        Assert(v != NULL);
+        Assert(v->type() == kNumber);
+        Assert(!v->isInteger());
+        Assert(!v->isDouble());
+        AssertEqual(v->asInt(), (int64_t)round(f));
+        AssertEqual(v->asFloat(), f);
+        AssertEqual(v->asDouble(), (double)f);
+    }
+
     void checkReadDouble(double f) {
         auto v = value::fromData(result);
         Assert(v != NULL);
-        Assert(v->type() == kFloat);
+        Assert(v->type() == kNumber);
+        Assert(!v->isInteger());
+        Assert(v->isDouble());
         AssertEqual(v->asInt(), (int64_t)round(f));
         AssertEqual(v->asDouble(), f);
+        AssertEqual(v->asFloat(), (float)f);
     }
 
     void checkReadString(const char *str) {
@@ -96,8 +118,8 @@ public:
 
     void testSpecial() {
         enc.writeNull();        checkOutput("3000");
-        enc.writeBool(false);   checkOutput("3001");
-        enc.writeBool(true);    checkOutput("3002");
+        enc.writeBool(false);   checkOutput("3400");    checkReadBool(false);
+        enc.writeBool(true);    checkOutput("3800");    checkReadBool(true);
     }
 
     void testInts() {
@@ -118,11 +140,14 @@ public:
         checkRead(-0x1122334455667788);
         enc.writeUInt(0xCCBBAA9988776655); checkOutput("1F55 6677 8899 AABB CC00");
         checkReadU(0xCCBBAA9988776655);
+        enc.writeUInt(UINT64_MAX);         checkOutput("1FFF FFFF FFFF FFFF FF00");
+        checkReadU(UINT64_MAX);
     }
 
     void testFloats() {
-        enc.writeFloat( 0.5);   checkOutput("2400 0000 003F");           checkReadDouble( 0.5);
-        enc.writeFloat(-0.5);   checkOutput("2400 0000 00BF");           checkReadDouble(-0.5);
+        enc.writeFloat( 0.5);   checkOutput("2400 0000 003F");           checkReadFloat( 0.5);
+        enc.writeFloat(-0.5);   checkOutput("2400 0000 00BF");           checkReadFloat(-0.5);
+        enc.writeFloat(M_PI);   checkOutput("2400 DB0F 4940");           checkReadFloat(M_PI);
         enc.writeDouble(M_PI);  checkOutput("2800 182D 4454 FB21 0940"); checkReadDouble(M_PI);
     }
 
@@ -136,6 +161,9 @@ public:
         checkReadString("abcdefghijklmno");
         enc.writeString("abcdefghijklmnop"); checkOutput("4F10 6162 6364 6566 6768 696A 6B6C 6D6E 6F70");
         checkReadString("abcdefghijklmnop");
+
+        enc.writeString("müßchop"); checkOutput("496D C3BC C39F 6368 6F70");
+        checkReadString("müßchop");
 
         // Check a long string (long enough that length has multi-byte varint encoding):
         char cstr[667];

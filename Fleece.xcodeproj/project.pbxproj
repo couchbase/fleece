@@ -29,6 +29,8 @@
 		272E5A571BF7FEB200848580 /* libstdc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 272E5A561BF7FEB200848580 /* libstdc++.tbd */; };
 		272E5A591BF7FED600848580 /* libcppunit-1.13.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 272E5A581BF7FED600848580 /* libcppunit-1.13.0.dylib */; };
 		272E5A5D1BF800A100848580 /* EncoderTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 272E5A5B1BF800A100848580 /* EncoderTests.cc */; };
+		272E5A5F1BF91DBE00848580 /* ObjCTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 272E5A5E1BF91DBE00848580 /* ObjCTests.mm */; };
+		272E5A611BF91F6C00848580 /* slice.mm in Sources */ = {isa = PBXBuildFile; fileRef = 272E5A601BF91F6C00848580 /* slice.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -72,13 +74,16 @@
 		270FA2861BF53D32005DCB13 /* forestdb_endian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = forestdb_endian.h; sourceTree = "<group>"; };
 		270FA2891BF53E4D005DCB13 /* murmurhash3_x86_32.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = murmurhash3_x86_32.c; sourceTree = "<group>"; };
 		270FA28A1BF53E4D005DCB13 /* murmurhash3_x86_32.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = murmurhash3_x86_32.h; sourceTree = "<group>"; };
-		270FA28E1BF68EBA005DCB13 /* fleece2 format.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "fleece2 format.txt"; sourceTree = "<group>"; };
+		270FA28E1BF68EBA005DCB13 /* fleece format.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "fleece format.txt"; sourceTree = "<group>"; };
 		272E5A451BF7FD8F00848580 /* FleeceTests.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FleeceTests.cc; sourceTree = "<group>"; };
 		272E5A4B1BF7FE5600848580 /* Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Test; sourceTree = BUILT_PRODUCTS_DIR; };
 		272E5A561BF7FEB200848580 /* libstdc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libstdc++.tbd"; path = "usr/lib/libstdc++.tbd"; sourceTree = SDKROOT; };
-		272E5A581BF7FED600848580 /* libcppunit-1.13.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libcppunit-1.13.0.dylib"; path = "../../usr/local/Cellar/cppunit/1.13.2/lib/libcppunit-1.13.0.dylib"; sourceTree = "<group>"; };
+		272E5A581BF7FED600848580 /* libcppunit-1.13.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libcppunit-1.13.0.dylib"; path = "/usr/local/Cellar/cppunit/1.13.2/lib/libcppunit-1.13.0.dylib"; sourceTree = "<absolute>"; };
 		272E5A5A1BF8004100848580 /* FleeceTests.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FleeceTests.hh; sourceTree = "<group>"; };
 		272E5A5B1BF800A100848580 /* EncoderTests.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EncoderTests.cc; sourceTree = "<group>"; };
+		272E5A5E1BF91DBE00848580 /* ObjCTests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ObjCTests.mm; sourceTree = "<group>"; };
+		272E5A601BF91F6C00848580 /* slice.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = slice.mm; sourceTree = "<group>"; };
+		272E5A661BFA4BC900848580 /* fleece-wide.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "fleece-wide.txt"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -105,12 +110,12 @@
 		270FA2531BF53CAD005DCB13 = {
 			isa = PBXGroup;
 			children = (
-				272E5A581BF7FED600848580 /* libcppunit-1.13.0.dylib */,
-				272E5A561BF7FEB200848580 /* libstdc++.tbd */,
-				270FA28E1BF68EBA005DCB13 /* fleece2 format.txt */,
+				270FA28E1BF68EBA005DCB13 /* fleece format.txt */,
+				272E5A661BFA4BC900848580 /* fleece-wide.txt */,
 				270FA25E1BF53CAD005DCB13 /* Fleece */,
 				272E5A441BF7FD1700848580 /* Tests */,
 				270FA2881BF53E4D005DCB13 /* murmurhash */,
+				272E5A651BFA4B5300848580 /* Libraries */,
 				270FA25D1BF53CAD005DCB13 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -157,6 +162,7 @@
 				270FA2731BF53CEA005DCB13 /* Endian.h */,
 				270FA2741BF53CEA005DCB13 /* slice.cc */,
 				270FA2751BF53CEA005DCB13 /* slice.hh */,
+				272E5A601BF91F6C00848580 /* slice.mm */,
 				270FA2761BF53CEA005DCB13 /* varint.cc */,
 				270FA2771BF53CEA005DCB13 /* varint.hh */,
 				270FA2861BF53D32005DCB13 /* forestdb_endian.h */,
@@ -170,8 +176,18 @@
 				272E5A451BF7FD8F00848580 /* FleeceTests.cc */,
 				272E5A5A1BF8004100848580 /* FleeceTests.hh */,
 				272E5A5B1BF800A100848580 /* EncoderTests.cc */,
+				272E5A5E1BF91DBE00848580 /* ObjCTests.mm */,
 			);
 			path = Tests;
+			sourceTree = "<group>";
+		};
+		272E5A651BFA4B5300848580 /* Libraries */ = {
+			isa = PBXGroup;
+			children = (
+				272E5A581BF7FED600848580 /* libcppunit-1.13.0.dylib */,
+				272E5A561BF7FEB200848580 /* libstdc++.tbd */,
+			);
+			name = Libraries;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -276,6 +292,7 @@
 				270FA28B1BF53E4D005DCB13 /* murmurhash3_x86_32.c in Sources */,
 				270FA27A1BF53CEA005DCB13 /* Value+JSON.cc in Sources */,
 				270FA2841BF53CEA005DCB13 /* varint.cc in Sources */,
+				272E5A611BF91F6C00848580 /* slice.mm in Sources */,
 				270FA2821BF53CEA005DCB13 /* slice.cc in Sources */,
 				270FA2781BF53CEA005DCB13 /* Value.cc in Sources */,
 				270FA27F1BF53CEA005DCB13 /* Writer.cc in Sources */,
@@ -288,6 +305,7 @@
 			files = (
 				272E5A5D1BF800A100848580 /* EncoderTests.cc in Sources */,
 				272E5A521BF7FE7100848580 /* FleeceTests.cc in Sources */,
+				272E5A5F1BF91DBE00848580 /* ObjCTests.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

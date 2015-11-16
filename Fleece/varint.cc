@@ -111,17 +111,16 @@ bool WriteUVarInt(slice *buf, uint64_t n) {
         return _decLittle64(result);
     }
 
-    size_t PutIntOfLength(void *buf, int64_t n) {
+    size_t PutIntOfLength(void *buf, int64_t n, bool isUnsigned) {
         int64_t littlen = _encLittle64(n);
         memcpy(buf, &littlen, 8);
         size_t size;
-        uint8_t trim = (n >= 0) ? 0 : 0xFF;
+        uint8_t trim = (n >= 0 || isUnsigned) ? 0 : 0xFF;
         for (size = 8; size > 1; --size) {
             if (((uint8_t*)buf)[size-1] != trim)
                 break;
         }
         return size;
     }
-
 
 }

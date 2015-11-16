@@ -59,8 +59,12 @@ bool ReadUVarInt32(slice *buf, uint32_t *n);
 bool WriteUVarInt(slice *buf, uint64_t n);
 
 
-/** Encodes a signed integer `n` to `buf` and returns the number of bytes used (1-8). */
-size_t PutIntOfLength(void *buf, int64_t n);
+/** Encodes an integer `n` to `buf` and returns the number of bytes used (1-8).
+    if `isUnsigned` is true, the number is treated as unsigned (uint64_t.) */
+size_t PutIntOfLength(void *buf, int64_t n, bool isUnsigned =false);
+
+/** Encodes an unsigned integer `n` to `buf` and returns the number of bytes used (1-8). */
+inline size_t PutUIntOfLength(void *buf, uint64_t n) {return PutIntOfLength(buf, n, true);}
 
 /** Returns a signed integer decoded from `length` bytes starting at `buf`. */
 int64_t GetIntOfLength(const void *buf, unsigned length);
