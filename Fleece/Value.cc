@@ -7,6 +7,7 @@
 //
 
 #include "Value.hh"
+#include "Internal.hh"
 #include "Endian.h"
 #include "varint.hh"
 extern "C" {
@@ -18,8 +19,10 @@ extern "C" {
 
 namespace fleece {
 
+    using namespace internal;
+
     // Maps from tag to valueType
-    static valueType kValueTypes[] = {
+    static const valueType kValueTypes[] = {
         kNumber, // small int
         kNumber, // int
         kNumber, // float

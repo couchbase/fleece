@@ -37,8 +37,8 @@ namespace fleece {
         void writeString(slice s);
         void writeData(slice s);
 
-        encoder writeArray(uint32_t count)      {return writeArrayOrDict(value::kArrayTag, count);}
-        encoder writeDict(uint32_t count)       {return writeArrayOrDict(value::kDictTag, count);}
+        encoder writeArray(uint32_t count)      {return writeArrayOrDict(internal::kArrayTag, count);}
+        encoder writeDict(uint32_t count)       {return writeArrayOrDict(internal::kDictTag, count);}
 
         void writeKey(std::string);
         void writeKey(slice);
@@ -58,14 +58,14 @@ namespace fleece {
 
     private:
         encoder(encoder *parent, size_t offset, size_t keyOffset, size_t count);
-        void writeValue(value::tags, uint8_t *buf, size_t size, bool canInline =true);
+        void writeValue(internal::tags, uint8_t *buf, size_t size, bool canInline =true);
         bool writePointerTo(uint64_t dstOffset);
         bool makePointer(uint64_t toOffset, uint8_t buf[2]);
 
         void writeSpecial(uint8_t special);
         void writeInt(uint64_t i, bool isShort, bool isUnsigned);
-        void writeData(value::tags, slice s);
-        encoder writeArrayOrDict(value::tags, uint32_t count);
+        void writeData(internal::tags, slice s);
+        encoder writeArrayOrDict(internal::tags, uint32_t count);
 
         typedef std::unordered_map<std::string, uint64_t> stringTable;
 

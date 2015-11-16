@@ -12,6 +12,8 @@
 
 namespace fleece {
 
+    using namespace internal;
+    
 
     NSMapTable* value::createSharedStringsTable() {
         return [[NSMapTable alloc] initWithKeyOptions: NSPointerFunctionsOpaquePersonality |
@@ -42,7 +44,8 @@ namespace fleece {
                 }
             case kString: {
                 slice strSlice = asString();
-                bool shareable = (strSlice.size > 1 && strSlice.size < 100);
+                bool shareable = (strSlice.size >= kMinSharedStringSize
+                               && strSlice.size <= kMaxSharedStringSize);
                 if (shareable) {
                     NSString* str = (__bridge NSString*)NSMapGet(sharedStrings, this);
                     if (str)
@@ -59,7 +62,7 @@ namespace fleece {
                 return asString().copiedNSData();
             case kArray: {
                 const array* a = asArray();
-                NSMutableArray* result = [NSMutableArray arrayWithCapacity: a->count()];
+                NSMutableArray* result = [[NSMutableArray alloc] initWithCapacity: a->count()];
                 for (array::iterator iter(a); iter; ++iter) {
                     [result addObject: iter->asNSObject(sharedStrings)];
                 }
@@ -68,7 +71,7 @@ namespace fleece {
             case kDict: {
                 const dict* d = asDict();
                 size_t count = d->count();
-                NSMutableDictionary* result = [NSMutableDictionary dictionaryWithCapacity: count];
+                NSMutableDictionary* result = [[NSMutableDictionary alloc] initWithCapacity: count];
                 for (dict::iterator iter(d); iter; ++iter) {
                     NSString* key = iter.key()->asNSObject(sharedStrings);
                     result[key] = iter.value()->asNSObject(sharedStrings);

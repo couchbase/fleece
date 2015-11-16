@@ -74,7 +74,6 @@
 		270FA2861BF53D32005DCB13 /* forestdb_endian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = forestdb_endian.h; sourceTree = "<group>"; };
 		270FA2891BF53E4D005DCB13 /* murmurhash3_x86_32.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = murmurhash3_x86_32.c; sourceTree = "<group>"; };
 		270FA28A1BF53E4D005DCB13 /* murmurhash3_x86_32.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = murmurhash3_x86_32.h; sourceTree = "<group>"; };
-		270FA28E1BF68EBA005DCB13 /* fleece format.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "fleece format.txt"; sourceTree = "<group>"; };
 		272E5A451BF7FD8F00848580 /* FleeceTests.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FleeceTests.cc; sourceTree = "<group>"; };
 		272E5A4B1BF7FE5600848580 /* Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Test; sourceTree = BUILT_PRODUCTS_DIR; };
 		272E5A561BF7FEB200848580 /* libstdc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libstdc++.tbd"; path = "usr/lib/libstdc++.tbd"; sourceTree = SDKROOT; };
@@ -83,7 +82,7 @@
 		272E5A5B1BF800A100848580 /* EncoderTests.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EncoderTests.cc; sourceTree = "<group>"; };
 		272E5A5E1BF91DBE00848580 /* ObjCTests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ObjCTests.mm; sourceTree = "<group>"; };
 		272E5A601BF91F6C00848580 /* slice.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = slice.mm; sourceTree = "<group>"; };
-		272E5A661BFA4BC900848580 /* fleece-wide.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "fleece-wide.txt"; sourceTree = "<group>"; };
+		272E5A671BFA7C3100848580 /* Internal.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Internal.hh; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -110,8 +109,6 @@
 		270FA2531BF53CAD005DCB13 = {
 			isa = PBXGroup;
 			children = (
-				270FA28E1BF68EBA005DCB13 /* fleece format.txt */,
-				272E5A661BFA4BC900848580 /* fleece-wide.txt */,
 				270FA25E1BF53CAD005DCB13 /* Fleece */,
 				272E5A441BF7FD1700848580 /* Tests */,
 				270FA2881BF53E4D005DCB13 /* murmurhash */,
@@ -132,6 +129,7 @@
 		270FA25E1BF53CAD005DCB13 /* Fleece */ = {
 			isa = PBXGroup;
 			children = (
+				272E5A671BFA7C3100848580 /* Internal.hh */,
 				270FA26A1BF53CEA005DCB13 /* Value.cc */,
 				270FA26B1BF53CEA005DCB13 /* Value.hh */,
 				270FA26C1BF53CEA005DCB13 /* Value+JSON.cc */,

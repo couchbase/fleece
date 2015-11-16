@@ -15,7 +15,7 @@
 
 namespace fleece {
 
-    static const size_t kMaxSharedStringSize = 100;
+    using namespace internal;
 
     // root encoder
     encoder::encoder(Writer& out)
@@ -55,13 +55,13 @@ namespace fleece {
     }
 
     // primitive to write a value
-    void encoder::writeValue(value::tags tag, uint8_t *buf, size_t size, bool canInline) {
+    void encoder::writeValue(tags tag, uint8_t *buf, size_t size, bool canInline) {
         if (_count == 0)
             throw "no more space in collection";
         if (_blockedOnKey)
             throw "need a key before this value";
 
-        if (tag < value::kPointerTagFirst) {
+        if (tag < kPointerTagFirst) {
             assert((buf[0] & 0xF0) == 0);
             buf[0] |= tag<<4;
         }
@@ -100,7 +100,7 @@ namespace fleece {
         uint8_t buf[2];
         if (!makePointer(dstOffset, buf))
             return false;
-        writeValue(value::kPointerTagFirst, buf, 2);
+        writeValue(kPointerTagFirst, buf, 2);
         return true;
     }
 
@@ -118,22 +118,22 @@ namespace fleece {
     inline void encoder::writeSpecial(uint8_t special) {
         assert(special <= 0x0F);
         uint8_t buf[2] = {special, 0};
-        writeValue(value::kSpecialTag, buf, 2);
+        writeValue(internal::kSpecialTag, buf, 2);
     }
 
     void encoder::writeNull() {
-        writeSpecial(value::kSpecialValueNull);
+        writeSpecial(internal::kSpecialValueNull);
     }
 
     void encoder::writeBool(bool b) {
-        writeSpecial(b ? value::kSpecialValueTrue : value::kSpecialValueFalse);
+        writeSpecial(b ? internal::kSpecialValueTrue : internal::kSpecialValueFalse);
     }
 
     void encoder::writeInt(uint64_t i, bool isShort, bool isUnsigned) {
         if (isShort) {
             uint8_t buf[2] = {(uint8_t)((i >> 8) & 0x0F),
                               (uint8_t)(i & 0xFF)};
-            writeValue(value::kShortIntTag, buf, 2);
+            writeValue(internal::kShortIntTag, buf, 2);
         } else {
             uint8_t buf[10];
             size_t size = PutIntOfLength(&buf[1], i, isUnsigned);
@@ -143,7 +143,7 @@ namespace fleece {
             ++size;
             if (size & 1)
                 buf[size++] = 0;  // pad to even size
-            writeValue(value::kIntTag, buf, size);
+            writeValue(internal::kIntTag, buf, size);
         }
     }
 
@@ -161,7 +161,7 @@ namespace fleece {
             buf[0] = sizeof(swapped);
             buf[1] = 0;
             memcpy(&buf[2], &swapped, sizeof(swapped));
-            writeValue(value::kFloatTag, buf, sizeof(buf));
+            writeValue(internal::kFloatTag, buf, sizeof(buf));
         }
     }
 
@@ -176,12 +176,12 @@ namespace fleece {
             buf[0] = sizeof(swapped);
             buf[1] = 0;
             memcpy(&buf[2], &swapped, sizeof(swapped));
-            writeValue(value::kFloatTag, buf, sizeof(buf));
+            writeValue(internal::kFloatTag, buf, sizeof(buf));
         }
     }
 
     // used for strings and binary data
-    void encoder::writeData(value::tags tag, slice s) {
+    void encoder::writeData(tags tag, slice s) {
         uint8_t buf[2 + kMaxVarintLen64];
         buf[0] = std::min(s.size, (size_t)0xF);
         if (s.size <= 1) {
@@ -201,7 +201,7 @@ namespace fleece {
 
     void encoder::writeString(std::string s) {
         // Check whether this string's already been written:
-        if (s.size() > 1 && s.size() < kMaxSharedStringSize) {
+        if (s.size() >= kMinSharedStringSize && s.size() <= kMaxSharedStringSize) {
             auto entry = _strings->find(s);
             if (entry != _strings->end()) {
                 uint64_t offset = entry->second;
@@ -212,14 +212,14 @@ namespace fleece {
                 _strings->insert({s, _out.length()});
             }
         }
-        writeData(value::kStringTag, slice(s));
+        writeData(internal::kStringTag, slice(s));
     }
 
     void encoder::writeString(slice s)      {writeString((std::string)s);}
 
-    void encoder::writeData(slice s)        {writeData(value::kBinaryTag, s);}
+    void encoder::writeData(slice s)        {writeData(internal::kBinaryTag, s);}
 
-    encoder encoder::writeArrayOrDict(value::tags tag, uint32_t count) {
+    encoder encoder::writeArrayOrDict(internal::tags tag, uint32_t count) {
         // Write the array/dict header (2 bytes):
         uint8_t buf[2 + kMaxVarintLen32];
         uint32_t inlineCount = std::min(count, (uint32_t)0x0FFF);
@@ -237,7 +237,7 @@ namespace fleece {
         size_t offset = _out.length();
         size_t keyOffset = 0;
         size_t space = 2*count;
-        if (tag == value::kDictTag) {
+        if (tag == internal::kDictTag) {
             keyOffset = offset;
             offset += 2*count;
             space *= 2;

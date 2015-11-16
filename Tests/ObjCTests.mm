@@ -22,8 +22,10 @@ public:
         auto v = value::fromData(result);
         Assert(v != NULL);
         AssertEqual(v->toJSON(), std::string(json));
+        Assert([v->asNSObject() isEqual: obj]);
     }
 
+    
     void testSpecial() {
         checkIt([NSNull null], "null");
         checkIt(@NO,  "false");

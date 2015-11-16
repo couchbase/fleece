@@ -8,6 +8,7 @@
 
 #ifndef Fleece_Value_h
 #define Fleece_Value_h
+#include "Internal.hh"
 #include "slice.hh"
 #include <ctime>
 #include <stdint.h>
@@ -54,12 +55,12 @@ namespace fleece {
 
         template<typename T> T asFloatOfType() const;
 
-        float asFloat() const                   {return asFloatOfType<float>();}
-        double asDouble() const                 {return asFloatOfType<double>();}
+        float asFloat() const      {return asFloatOfType<float>();}
+        double asDouble() const    {return asFloatOfType<double>();}
 
-        bool isInteger() const                  {return tag() <= kIntTag;}
-        bool isUnsigned() const                 {return tag() == kIntTag && (_byte[0] & 0x08) != 0;}
-        bool isDouble() const                   {return tag() == kFloatTag && tinyValue() == 8;}
+        bool isInteger() const     {return tag() <= internal::kIntTag;}
+        bool isUnsigned() const    {return tag() == internal::kIntTag && (_byte[0] & 0x08) != 0;}
+        bool isDouble() const      {return tag() == internal::kFloatTag && tinyValue() == 8;}
 
         /** Returns the exact contents of a string or data. */
         slice asString() const;
@@ -82,27 +83,7 @@ namespace fleece {
 #endif
 
     protected:
-        // The actual tags used in the encoded data:
-        enum tags : uint8_t {
-            kShortIntTag = 0,
-            kIntTag,
-            kFloatTag,
-            kSpecialTag,
-            kStringTag,
-            kBinaryTag,
-            kArrayTag,
-            kDictTag,
-            kPointerTagFirst = 8,
-            kPointerTagLast = 15
-        };
-
-        enum {
-            kSpecialValueNull = 0x00,       // 0000
-            kSpecialValueFalse= 0x04,       // 0100
-            kSpecialValueTrue = 0x08,       // 1000
-        };
-
-        tags tag() const             {return (tags)(_byte[0] >> 4);}
+        internal::tags tag() const             {return (internal::tags)(_byte[0] >> 4);}
 
         const value* deref() const;
 
