@@ -16,7 +16,7 @@
 		270FA27E1BF53CEA005DCB13 /* Encoder+ObjC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 270FA2701BF53CEA005DCB13 /* Encoder+ObjC.mm */; };
 		270FA27F1BF53CEA005DCB13 /* Writer.cc in Sources */ = {isa = PBXBuildFile; fileRef = 270FA2711BF53CEA005DCB13 /* Writer.cc */; };
 		270FA2801BF53CEA005DCB13 /* Writer.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2721BF53CEA005DCB13 /* Writer.hh */; };
-		270FA2811BF53CEA005DCB13 /* Endian.h in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2731BF53CEA005DCB13 /* Endian.h */; };
+		270FA2811BF53CEA005DCB13 /* Endian.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2731BF53CEA005DCB13 /* Endian.hh */; };
 		270FA2821BF53CEA005DCB13 /* slice.cc in Sources */ = {isa = PBXBuildFile; fileRef = 270FA2741BF53CEA005DCB13 /* slice.cc */; };
 		270FA2831BF53CEA005DCB13 /* slice.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2751BF53CEA005DCB13 /* slice.hh */; };
 		270FA2841BF53CEA005DCB13 /* varint.cc in Sources */ = {isa = PBXBuildFile; fileRef = 270FA2761BF53CEA005DCB13 /* varint.cc */; };
@@ -64,7 +64,7 @@
 		270FA2701BF53CEA005DCB13 /* Encoder+ObjC.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "Encoder+ObjC.mm"; sourceTree = "<group>"; };
 		270FA2711BF53CEA005DCB13 /* Writer.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Writer.cc; sourceTree = "<group>"; };
 		270FA2721BF53CEA005DCB13 /* Writer.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Writer.hh; sourceTree = "<group>"; };
-		270FA2731BF53CEA005DCB13 /* Endian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Endian.h; sourceTree = "<group>"; };
+		270FA2731BF53CEA005DCB13 /* Endian.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Endian.hh; sourceTree = "<group>"; };
 		270FA2741BF53CEA005DCB13 /* slice.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = slice.cc; sourceTree = "<group>"; };
 		270FA2751BF53CEA005DCB13 /* slice.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = slice.hh; sourceTree = "<group>"; };
 		270FA2761BF53CEA005DCB13 /* varint.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = varint.cc; sourceTree = "<group>"; };
@@ -146,7 +146,7 @@
 			children = (
 				270FA2711BF53CEA005DCB13 /* Writer.cc */,
 				270FA2721BF53CEA005DCB13 /* Writer.hh */,
-				270FA2731BF53CEA005DCB13 /* Endian.h */,
+				270FA2731BF53CEA005DCB13 /* Endian.hh */,
 				270FA2741BF53CEA005DCB13 /* slice.cc */,
 				270FA2751BF53CEA005DCB13 /* slice.hh */,
 				272E5A601BF91F6C00848580 /* slice.mm */,
@@ -187,7 +187,7 @@
 				270FA2831BF53CEA005DCB13 /* slice.hh in Headers */,
 				270FA2851BF53CEA005DCB13 /* varint.hh in Headers */,
 				270FA2791BF53CEA005DCB13 /* Value.hh in Headers */,
-				270FA2811BF53CEA005DCB13 /* Endian.h in Headers */,
+				270FA2811BF53CEA005DCB13 /* Endian.hh in Headers */,
 				270FA2871BF53D32005DCB13 /* forestdb_endian.h in Headers */,
 				270FA2801BF53CEA005DCB13 /* Writer.hh in Headers */,
 				270FA27D1BF53CEA005DCB13 /* Encoder.hh in Headers */,
