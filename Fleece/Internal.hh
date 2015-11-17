@@ -16,7 +16,7 @@
 
  0000iiii iiiiiiii       small integer (12-bit, signed, range ±2048)
  0001uccc iiiiiiii...    long integer (u = unsigned?; ccc = byte count - 1) LE integer follows
- 0010cc-- --------...    floating point (s = 0:float, 1:double). LE float data follows.
+ 0010s--- --------...    floating point (s = 0:float, 1:double). LE float data follows.
  0011ss-- --------       special (s = 0:null, 1:false, 2:true)
  0100cccc ssssssss...    string (cccc is byte count, or if it’s 15 then count follows as varint)
  0101cccc dddddddd...    binary data (same as string)

@@ -100,10 +100,10 @@ namespace fleece {
     T value::asFloatOfType() const {
         switch (tag()) {
             case kFloatTag: {
-                if (tinyValue() <= 4)
-                    return *(const littleEndianFloat*)&_byte[2];
-                else
+                if (_byte[0] & 0x8)
                     return *(const littleEndianDouble*)&_byte[2];
+                else
+                    return *(const littleEndianFloat*)&_byte[2];
             }
             default:
                 if (isUnsigned())

@@ -182,7 +182,7 @@ namespace fleece {
         } else {
             littleEndianDouble swapped = n;
             uint8_t buf[2 + sizeof(swapped)];
-            buf[0] = sizeof(swapped);
+            buf[0] = 0x08; // 'double' size flag
             buf[1] = 0;
             memcpy(&buf[2], &swapped, sizeof(swapped));
             writeValue(internal::kFloatTag, buf, sizeof(buf));
@@ -197,7 +197,7 @@ namespace fleece {
         } else {
             littleEndianFloat swapped = n;
             uint8_t buf[2 + sizeof(swapped)];
-            buf[0] = sizeof(swapped);
+            buf[0] = 0x00; // 'float' size flag
             buf[1] = 0;
             memcpy(&buf[2], &swapped, sizeof(swapped));
             writeValue(internal::kFloatTag, buf, sizeof(buf));

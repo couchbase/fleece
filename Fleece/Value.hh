@@ -60,7 +60,7 @@ namespace fleece {
 
         bool isInteger() const     {return tag() <= internal::kIntTag;}
         bool isUnsigned() const    {return tag() == internal::kIntTag && (_byte[0] & 0x08) != 0;}
-        bool isDouble() const      {return tag() == internal::kFloatTag && tinyValue() == 8;}
+        bool isDouble() const      {return tag() == internal::kFloatTag && (_byte[0] & 0x8);}
 
         /** Returns the exact contents of a string or data. */
         slice asString() const;
