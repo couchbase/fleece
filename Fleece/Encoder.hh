@@ -37,8 +37,10 @@ namespace fleece {
         void writeString(slice s);
         void writeData(slice s);
 
-        encoder writeArray(uint32_t count)      {return writeArrayOrDict(internal::kArrayTag, count);}
-        encoder writeDict(uint32_t count)       {return writeArrayOrDict(internal::kDictTag, count);}
+        encoder writeArray(uint32_t count, bool wide =false)
+                    {return writeArrayOrDict(internal::kArrayTag, count, wide);}
+        encoder writeDict(uint32_t count, bool wide =false)
+                    {return writeArrayOrDict(internal::kDictTag, count, wide);}
 
         void writeKey(std::string);
         void writeKey(slice);
@@ -57,15 +59,15 @@ namespace fleece {
 #endif
 
     private:
-        encoder(encoder *parent, size_t offset, size_t keyOffset, size_t count);
+        encoder(encoder *parent, size_t offset, size_t keyOffset, size_t count, uint8_t width);
         void writeValue(internal::tags, uint8_t *buf, size_t size, bool canInline =true);
         bool writePointerTo(uint64_t dstOffset);
-        bool makePointer(uint64_t toOffset, uint8_t buf[2]);
+        bool makePointer(uint64_t toOffset, uint8_t buf[]);
 
         void writeSpecial(uint8_t special);
         void writeInt(uint64_t i, bool isShort, bool isUnsigned);
         void writeData(internal::tags, slice s);
-        encoder writeArrayOrDict(internal::tags, uint32_t count);
+        encoder writeArrayOrDict(internal::tags, uint32_t count, bool wide);
 
         typedef std::unordered_map<std::string, uint64_t> stringTable;
 
@@ -75,8 +77,9 @@ namespace fleece {
         size_t _count;          // Count of collection I'm adding to
         Writer& _out;           // Where output is written to
         stringTable *_strings;  // Maps strings to offsets where they appear as values
-        bool _writingKey :1;    // True if value being written is a key
-        bool _blockedOnKey :1;  // True if writes should be refused
+        uint8_t _width;         // Byte width of array/dict values (2 or 4)
+        bool _writingKey    :1; // True if value being written is a key
+        bool _blockedOnKey  :1; // True if writes should be refused
     };
 
 

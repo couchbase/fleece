@@ -205,9 +205,9 @@ namespace fleece {
 #pragma mark - ARRAY:
 
     const value* value::arrayFirstAndCount(uint32_t *pCount) const {
-        uint32_t count = shortValue();
         const uint8_t *first = &_byte[2];
-        if (count == 0x0FFF) {
+        uint32_t count = shortValue() & 0x07FF;
+        if (count == 0x07FF) {
             uint32_t realCount;
             size_t countSize = GetUVarInt32(slice(first, 10), &realCount);
             first += countSize + (countSize & 1);
@@ -223,32 +223,48 @@ namespace fleece {
         return count;
     }
 
-    const value* value::deref() const {
+    const value* value::deref(bool wide) const {
         const value *v = this;
         while (v->_byte[0] >= (kPointerTagFirst << 4)) {
-            int16_t offset = (int16_t)_dec16(*(uint16_t*)_byte) << 1;
+            int32_t offset;
+            if (wide) {
+                offset = (int32_t)_dec32(*(uint32_t*)_byte) << 1;
+            } else {
+                int16_t off16 = _dec16(*(uint16_t*)_byte) << 1;
+                offset = off16;
+            }
             v = (const value*)offsetby(v, offset);
         }
         return v;
     }
 
     const value* array::get(uint32_t index) const {
-        const value* v = (value*)&_byte[2+2*index];
-        return v->deref();
+        uint32_t count;
+        const value* v = arrayFirstAndCount(&count);
+        if (index >= count)
+            throw "array index out of range";
+        v += index;
+        bool wide = isWideArray();
+        if (wide)
+            v += index;
+        return v->deref(wide);
     }
 
 
     array::iterator::iterator(const array *a) {
         _p = a->arrayFirstAndCount(&_count);
-        _value = _p ? _p->deref() : NULL;
+        _wide = a->isWideArray();
+        _value = _p ? _p->deref(_wide) : NULL;
     }
 
     array::iterator& array::iterator::operator++() {
         if (_count == 0)
             throw "iterating past end of array";
-        if (--_count > 0)
-            _value = (++_p)->deref();
-        else
+        if (--_count > 0) {
+            if (_wide)
+                ++_p;
+            _value = (++_p)->deref(_wide);
+        } else
             _p = _value = NULL;
         return *this;
     }
@@ -262,23 +278,26 @@ namespace fleece {
     }
 
     const value* dict::get(slice keyToFind) const {
+        bool wide = isWideArray();
+        unsigned scale = wide ? 2 : 1;
         uint32_t count;
         const value* key = arrayFirstAndCount(&count);
         for (uint32_t i = 0; i < count; i++) {
-            if (keyToFind.compare(key->deref()->asString()) == 0) {
-                return key + count;  // i.e. value at index count
+            if (keyToFind.compare(key->deref(wide)->asString()) == 0) {
+                return key + scale*count;  // i.e. value at index i
             }
-            key++;
+            key += scale;
         }
         return NULL;
     }
 
     dict::iterator::iterator(const dict* d) {
         _pKey = d->arrayFirstAndCount(&_count);
+        _wide = d->isWideArray();
         if (_pKey) {
             _pValue = _pKey + _count;
-            _key = _pKey->deref();
-            _value = _pValue->deref();
+            _key = _pKey->deref(_wide);
+            _value = _pValue->deref(_wide);
         } else {
             _key = _value = NULL;
         }
@@ -288,8 +307,12 @@ namespace fleece {
         if (_count == 0)
             throw "iterating past end of dict";
         if (--_count > 0) {
-            _key = (++_pKey)->deref();
-            _value = (++_pValue)->deref();
+            if (_wide) {
+                ++_pKey;
+                ++_pValue;
+            }
+            _key = (++_pKey)->deref(_wide);
+            _value = (++_pValue)->deref(_wide);
         } else {
             _key = _value = NULL;
         }

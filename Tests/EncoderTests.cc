@@ -152,7 +152,7 @@ public:
     }
 
     void testStrings() {
-        enc.writeString("");    checkOutput("4000");        checkReadString("");
+        enc.writeString("");    checkOutput("4000");          checkReadString("");
         enc.writeString("a");   checkOutput("4161");        checkReadString("a");
         enc.writeString("ab");  checkOutput("4261 62");     checkReadString("ab");
         enc.writeString("abcdefghijklmn");  checkOutput("4E61 6263 6465 6667 6869 6A6B 6C6D 6E");
@@ -175,29 +175,30 @@ public:
         checkReadString(cstr);
     }
 
-    void testArrays() {
+    void _testArrays(bool wide) {
         {
-            encoder array = enc.writeArray(0);
+            encoder array = enc.writeArray(0, wide);
             array.end();
-            checkOutput("6000");
+            checkOutput(wide ? "6800" : "6000");
             checkArray(0);
         }
         {
-            encoder array = enc.writeArray(1);
+            encoder array = enc.writeArray(1, wide);
             array.writeNull();
             array.end();
-            checkOutput("6001 3000");
+            checkOutput(wide ? "6801 3000 0000" : "6001 3000");
             auto a = checkArray(1);
             auto v = a->get(0);
             Assert(v);
             AssertEqual(v->type(), kNull);
         }
         {
-            encoder array = enc.writeArray(2);
+            encoder array = enc.writeArray(2, wide);
             array.writeString("a");
             array.writeString("hello");
             array.end();
-            checkOutput("6002 4161 8001 4568 656C 6C6F");
+            checkOutput(wide ? "6802 4161 0000 8000 0002 4568 656C 6C6F"
+                             : "6002 4161 8001 4568 656C 6C6F");
             // Check the contents:
             auto a = checkArray(2);
             auto v = a->get(0);
@@ -223,7 +224,19 @@ public:
 
             AssertEqual(a->toJSON(), std::string("[\"a\",\"hello\"]"));
         }
+        {
+            // Strings that can be inlined in a wide array:
+            encoder array = enc.writeArray(2, wide);
+            array.writeString("ab");
+            array.writeString("cde");
+            array.end();
+            checkOutput(wide ? "6802 4261 6200 4363 6465"
+                             : "6002 8002 8003 4261 6200 4363 6465");
+        }
     }
+
+    void testArrays()       {_testArrays(false);}
+    void testWideArrays()   {_testArrays(true);}
 
     void testDictionaries() {
         {
@@ -265,6 +278,7 @@ public:
     CPPUNIT_TEST( testFloats );
     CPPUNIT_TEST( testStrings );
     CPPUNIT_TEST( testArrays );
+    CPPUNIT_TEST( testWideArrays );
     CPPUNIT_TEST( testDictionaries );
     CPPUNIT_TEST( testSharedStrings );
     CPPUNIT_TEST_SUITE_END();

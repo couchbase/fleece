@@ -85,11 +85,12 @@ namespace fleece {
     protected:
         internal::tags tag() const             {return (internal::tags)(_byte[0] >> 4);}
 
-        const value* deref() const;
+        const value* deref(bool wide) const;
 
         unsigned tinyValue() const   {return _byte[0] & 0x0F;}
         uint16_t shortValue() const  {return (((uint16_t)_byte[0] << 8) | _byte[1]) & 0x0FFF;}
 
+        unsigned isWideArray() const {return (_byte[0] & 0x08) != 0;}
         uint32_t arrayCount() const;
         const value* arrayFirstAndCount(uint32_t *pCount) const;
 
@@ -122,6 +123,7 @@ namespace fleece {
         private:
             const class value *_p, *_value;
             uint32_t _count;
+            bool _wide;
         };
     };
 
@@ -146,6 +148,7 @@ namespace fleece {
         private:
             const class value *_pKey, *_pValue, *_key, *_value;
             uint32_t _count;
+            bool _wide;
         };
 
         static uint16_t hashCode(slice);

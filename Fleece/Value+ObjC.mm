@@ -12,9 +12,6 @@
 
 namespace fleece {
 
-    using namespace internal;
-    
-
     NSMapTable* value::createSharedStringsTable() {
         return [[NSMapTable alloc] initWithKeyOptions: NSPointerFunctionsOpaquePersonality |
                                                        NSPointerFunctionsOpaqueMemory
@@ -44,8 +41,8 @@ namespace fleece {
                 }
             case kString: {
                 slice strSlice = asString();
-                bool shareable = (strSlice.size >= kMinSharedStringSize
-                               && strSlice.size <= kMaxSharedStringSize);
+                bool shareable = (strSlice.size >= internal::kMinSharedStringSize
+                               && strSlice.size <= internal::kMaxSharedStringSize);
                 if (shareable) {
                     NSString* str = (__bridge NSString*)NSMapGet(sharedStrings, this);
                     if (str)

@@ -20,9 +20,11 @@
  0011ssss --------       special (null, false, true)
  0100cccc ssssssss...    string (cccc is byte count, or if 15 then count follows as varint)
  0101cccc dddddddd...    binary data (same as string)
- 0110cccc cccccccc...    array (c is 12-bit item count, if 4095 then count follows as varint)
- 0111cccc cccccccc...    dictionary (ditto)
+ 0110wccc cccccccc...    array (c = 11-bit item count, if 2047 then count follows as varint;
+                                w = wide; if 1 then following values are 4 bytes wide, not 2)
+ 0111wccc cccccccc...    dictionary (same as array)
  1ooooooo oooooooo       pointer (o = BE signed offset in units of 2 bytes: ±32k bytes)
+                                NOTE: In a wide collection, offset field is 31 bits wide
 */
 
 namespace fleece {
