@@ -83,16 +83,16 @@ namespace fleece {
 #endif
 
     protected:
-        internal::tags tag() const             {return (internal::tags)(_byte[0] >> 4);}
-
-        const value* deref(bool wide) const;
-
-        unsigned tinyValue() const   {return _byte[0] & 0x0F;}
-        uint16_t shortValue() const  {return (((uint16_t)_byte[0] << 8) | _byte[1]) & 0x0FFF;}
-
         unsigned isWideArray() const {return (_byte[0] & 0x08) != 0;}
         uint32_t arrayCount() const;
         const value* arrayFirstAndCount(uint32_t *pCount) const;
+        const value* deref(bool wide) const;
+
+    private:
+        internal::tags tag() const             {return (internal::tags)(_byte[0] >> 4);}
+        unsigned tinyValue() const   {return _byte[0] & 0x0F;}
+        uint16_t shortValue() const  {return (((uint16_t)_byte[0] << 8) | _byte[1]) & 0x0FFF;}
+
 
         static bool validate(const void* start, slice&);
 
@@ -150,8 +150,6 @@ namespace fleece {
             uint32_t _count;
             bool _wide;
         };
-
-        static uint16_t hashCode(slice);
 
     private:
         friend class value;

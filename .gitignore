@@ -1,0 +1,8 @@
+.DS_Store
+*.pbxuser
+*.xcscmblueprint
+*.xccheckout
+*~
+xcuserdata/
+/build/
+DerivedData/

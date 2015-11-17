@@ -16,21 +16,23 @@
 
  0000iiii iiiiiiii       small integer (12-bit, signed, range ±2048)
  0001uccc iiiiiiii...    long integer (u = unsigned?; ccc = byte count - 1) LE integer follows
- 0010cccc --------       floating point (cccc is byte count, always 4 or 8). LE float data follows.
- 0011ssss --------       special (null, false, true)
- 0100cccc ssssssss...    string (cccc is byte count, or if 15 then count follows as varint)
+ 0010cc-- --------...    floating point (s = 0:float, 1:double). LE float data follows.
+ 0011ss-- --------       special (s = 0:null, 1:false, 2:true)
+ 0100cccc ssssssss...    string (cccc is byte count, or if it’s 15 then count follows as varint)
  0101cccc dddddddd...    binary data (same as string)
  0110wccc cccccccc...    array (c = 11-bit item count, if 2047 then count follows as varint;
-                                w = wide; if 1 then following values are 4 bytes wide, not 2)
+                                w = wide, if 1 then following values are 4 bytes wide, not 2)
  0111wccc cccccccc...    dictionary (same as array)
  1ooooooo oooooooo       pointer (o = BE signed offset in units of 2 bytes: ±32k bytes)
                                 NOTE: In a wide collection, offset field is 31 bits wide
+
+ Bits marked "-" are reserved and should be set to zero.
 */
 
 namespace fleece {
     namespace internal {
 
-        // The actual tags used in the encoded data:
+        // The actual tags used in the encoded data, i.e. high 4 bits of 1st byte:
         enum tags : uint8_t {
             kShortIntTag = 0,
             kIntTag,
@@ -43,7 +45,7 @@ namespace fleece {
             kPointerTagFirst = 8            // 9...15 are also pointers
         };
 
-        // Interpretation of ssss in a special value:
+        // Interpretation of ss-- in a special value:
         enum {
             kSpecialValueNull = 0x00,       // 0000
             kSpecialValueFalse= 0x04,       // 0100
@@ -51,6 +53,7 @@ namespace fleece {
         };
 
         // Min/max length of string that will be considered for sharing
+        // (not part of the format, just a heuristic used by the encoder & Obj-C decoder)
         static const size_t kMinSharedStringSize =  2;
         static const size_t kMaxSharedStringSize = 99;
 

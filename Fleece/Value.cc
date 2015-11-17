@@ -10,9 +10,6 @@
 #include "Internal.hh"
 #include "Endian.h"
 #include "varint.hh"
-extern "C" {
-#include "murmurhash3_x86_32.h"
-}
 #include <math.h>
 #include <assert.h>
 
@@ -270,12 +267,6 @@ namespace fleece {
     }
 
 #pragma mark - DICT:
-
-    uint16_t dict::hashCode(slice s) {
-        uint32_t result;
-        ::MurmurHash3_x86_32(s.buf, (int)s.size, 0, &result);
-        return (uint16_t)_encLittle16(result & 0xFFFF);
-    }
 
     const value* dict::get(slice keyToFind) const {
         bool wide = isWideArray();
