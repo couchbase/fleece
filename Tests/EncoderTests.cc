@@ -147,7 +147,7 @@ public:
     void testFloats() {
         enc.writeFloat( 0.5);   checkOutput("2000 0000 003F");           checkReadFloat( 0.5);
         enc.writeFloat(-0.5);   checkOutput("2000 0000 00BF");           checkReadFloat(-0.5);
-        enc.writeFloat(M_PI);   checkOutput("2000 DB0F 4940");           checkReadFloat(M_PI);
+        enc.writeFloat((float)M_PI);   checkOutput("2000 DB0F 4940");           checkReadFloat((float)M_PI);
         enc.writeDouble(M_PI);  checkOutput("2800 182D 4454 FB21 0940"); checkReadDouble(M_PI);
     }
 

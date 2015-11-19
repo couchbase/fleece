@@ -89,7 +89,6 @@ namespace fleece {
         bool _blockedOnKey  :1; // True if writes should be refused
     };
 
-
 }
 
 #endif /* Fleece_Encoder_hh */

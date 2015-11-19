@@ -14,10 +14,6 @@
 using namespace fleece;
 
 
-bool operator== (slice s1, slice s2) {
-    return s1.size == s2.size && memcmp(s1.buf, s2.buf, s1.size) == 0;
-}
-
 std::ostream& operator<< (std::ostream& o, slice s) {
     o << "slice[";
     if (s.buf == NULL)

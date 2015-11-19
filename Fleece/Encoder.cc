@@ -131,13 +131,13 @@ namespace fleece {
         if (_width == 2) {
             if (delta < -0x4000 || delta >= 0x4000)
                 return false;
-            int16_t ptr = _enc16(delta);
+            auto ptr = (int16_t)_enc16(delta);
             memcpy(buf, &ptr, 2);
         } else {
             assert(_width == 4);
             if (delta < -0x40000000 || delta >= 0x40000000)
                 return false;
-            int32_t ptr = (int32_t)_enc32(delta);
+            auto ptr = (int32_t)_enc32(delta);
             memcpy(buf, &ptr, 4);
         }
         buf[0] |= 0x80;  // tag it
@@ -168,7 +168,7 @@ namespace fleece {
         } else {
             uint8_t buf[10];
             size_t size = PutIntOfLength(&buf[1], i, isUnsigned);
-            buf[0] = size - 1;
+            buf[0] = (uint8_t)size - 1;
             if (isUnsigned)
                 buf[0] |= 0x08;
             ++size;
@@ -216,7 +216,7 @@ namespace fleece {
     // used for strings and binary data
     void encoder::writeData(tags tag, slice s) {
         uint8_t buf[4 + kMaxVarintLen64];
-        buf[0] = std::min(s.size, (size_t)0xF);
+        buf[0] = (uint8_t)std::min(s.size, (size_t)0xF);
         if (s.size < _width) {
             // Tiny data fits inline:
             memcpy(&buf[1], s.buf, s.size);
@@ -259,8 +259,8 @@ namespace fleece {
         // Write the array/dict header (2 bytes):
         uint8_t buf[2 + kMaxVarintLen32];
         uint32_t inlineCount = std::min(count, (uint32_t)0x07FF);
-        buf[0] = inlineCount >> 8;
-        buf[1] = inlineCount & 0xFF;
+        buf[0] = (uint8_t)(inlineCount >> 8);
+        buf[1] = (uint8_t)(inlineCount & 0xFF);
         size_t bufLen = 2;
         if (count >= 0x0FFF) {
             bufLen += PutUVarInt(&buf[2], count);
@@ -272,7 +272,7 @@ namespace fleece {
         writeValue(tag, buf, bufLen, (count==0));          // can inline only if empty
 
         // Reserve space for the values (and keys, for dicts):
-        unsigned width = (wide ? 4 : 2);
+        uint8_t width = (wide ? 4 : 2);
         size_t offset = _out.length();
         size_t keyOffset = 0;
         size_t space = count * width;

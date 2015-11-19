@@ -107,9 +107,9 @@ namespace fleece {
         switch (tag()) {
             case kFloatTag: {
                 if (_byte[0] & 0x8)
-                    return *(const littleEndianDouble*)&_byte[2];
+                    return (T)*(const littleEndianDouble*)&_byte[2];
                 else
-                    return *(const littleEndianFloat*)&_byte[2];
+                    return (T)*(const littleEndianFloat*)&_byte[2];
             }
             default:
                 if (isUnsigned())

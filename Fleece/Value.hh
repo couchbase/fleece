@@ -24,8 +24,7 @@ namespace fleece {
 
     class array;
     class dict;
-    class dictIterator;
-        
+
 
     /* Types of values -- same as JSON types, plus binary data */
     enum valueType : uint8_t {
@@ -56,8 +55,6 @@ namespace fleece {
         bool asBool() const;
         int64_t asInt() const;
         uint64_t asUnsigned() const             {return (uint64_t)asInt();}
-
-        template<typename T> T asFloatOfType() const;
 
         float asFloat() const      {return asFloatOfType<float>();}
         double asDouble() const    {return asFloatOfType<double>();}
@@ -93,16 +90,15 @@ namespace fleece {
         const value* deref(bool wide) const;
 
     private:
-        internal::tags tag() const             {return (internal::tags)(_byte[0] >> 4);}
+        internal::tags tag() const   {return (internal::tags)(_byte[0] >> 4);}
         unsigned tinyValue() const   {return _byte[0] & 0x0F;}
         uint16_t shortValue() const  {return (((uint16_t)_byte[0] << 8) | _byte[1]) & 0x0FFF;}
-
+        template<typename T> T asFloatOfType() const;
 
         static bool validate(const void* start, slice&);
 
         uint8_t _byte[2];
 
-        friend class encoder;
         friend class array;
         friend class dict;
     };

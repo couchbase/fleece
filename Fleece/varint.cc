@@ -53,7 +53,7 @@ size_t PutUVarInt(void *buf, uint64_t n) {
 size_t GetUVarInt(slice buf, uint64_t *n) {
     uint64_t result = 0;
     int shift = 0;
-    for (int i = 0; i < buf.size; i++) {
+    for (size_t i = 0; i < buf.size; i++) {
         uint8_t byte = ((const uint8_t*)buf.buf)[i];
         result |= (uint64_t)(byte & 0x7f) << shift;
         if (byte >= 0x80) {

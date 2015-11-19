@@ -73,5 +73,4 @@ namespace fleece {
             ::free((void*)buf);
     }
 
-
 }
