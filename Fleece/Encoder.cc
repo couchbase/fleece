@@ -49,6 +49,18 @@ namespace fleece {
      _blockedOnKey(_writingKey)
     { }
 
+    encoder::encoder(encoder &parent, valueType type, uint32_t count, bool wide)
+    :_parent(&parent),
+     _count(count),
+     _out(_parent->_out),
+     _strings(_parent->_strings),
+     _width(wide ? 4 : 2)
+    {
+        bool dict = type==kDict;
+        _parent->writeArrayOrDict((dict ? kDictTag : kArrayTag), count, wide, this);
+        _writingKey = _blockedOnKey = dict;
+    }
+
     encoder::~encoder() {
         if (!_parent)
             delete _strings;
@@ -255,7 +267,8 @@ namespace fleece {
 
 #pragma mark - ARRAYS / DICTIONARIES:
 
-    encoder encoder::writeArrayOrDict(internal::tags tag, uint32_t count, bool wide) {
+    void encoder::writeArrayOrDict(internal::tags tag, uint32_t count, bool wide,
+                                   encoder *childEncoder) {
         // Write the array/dict header (2 bytes):
         uint8_t buf[2 + kMaxVarintLen32];
         uint32_t inlineCount = std::min(count, (uint32_t)0x07FF);
@@ -283,7 +296,8 @@ namespace fleece {
         }
         _out.reserveSpace(space);
 
-        return encoder(this, offset, keyOffset, count, width);
+        childEncoder->_offset = offset;
+        childEncoder->_keyOffset = keyOffset;
     }
 
     void encoder::writeKey(std::string s)   {writeKey(slice(s));}

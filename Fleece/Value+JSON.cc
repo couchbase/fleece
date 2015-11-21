@@ -77,35 +77,18 @@ namespace fleece {
     void value::writeJSON(std::ostream &out) const {
         switch (type()) {
             case kNull:
-                out << "null";
-                return;
             case kBoolean:
-                out << (asBool() ? "true" : "false");
-                return;
             case kNumber:
-                if (isInteger()) {
-                    int64_t i = asInt();
-                    if (isUnsigned())
-                        out << (uint64_t)i;
-                    else
-                        out << i;
-                } else {
-                    if (isDouble())
-                        out << std::setprecision(16) << asDouble();
-                    else
-                        out << std::setprecision(6) << asFloat();
-                }
+                out << toString();
                 return;
             case kString:
-                writeEscaped(out, asString());
-                return;
+                return writeEscaped(out, asString());
             case kData:
                 return writeBase64(out, asString());
             case kArray: {
                 out << '[';
-                const array* a = asArray();
                 bool first = true;
-                for (array::iterator iter(a); iter; ++iter) {
+                for (array::iterator iter(asArray()); iter; ++iter) {
                     if (first)
                         first = false;
                     else
@@ -117,9 +100,8 @@ namespace fleece {
             }
             case kDict: {
                 out << '{';
-                const dict* d = asDict();
                 bool first = true;
-                for (dict::iterator iter(d); iter; ++iter) {
+                for (dict::iterator iter(asDict()); iter; ++iter) {
                     if (first)
                         first = false;
                     else

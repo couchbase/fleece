@@ -41,17 +41,17 @@ namespace fleece {
 #pragma mark - VALUE:
 
     valueType value::type() const {
-        if (tag() == kSpecialTag) {
+        auto t = tag();
+        if (t == kSpecialTag) {
             switch (tinyValue()) {
-                case kSpecialValueNull:
-                    return kNull;
                 case kSpecialValueFalse...kSpecialValueTrue:
                     return kBoolean;
+                case kSpecialValueNull:
                 default:
-                    throw "unrecognized special value";
+                    return kNull;
             }
         } else {
-            return kValueTypes[tag()];
+            return kValueTypes[t];
         }
     }
 
@@ -59,7 +59,7 @@ namespace fleece {
     bool value::asBool() const {
         switch (tag()) {
             case kSpecialTag:
-                return tinyValue() >= kSpecialValueTrue;
+                return tinyValue() == kSpecialValueTrue;
             case kShortIntTag...kFloatTag:
                 return asInt() != 0;
             default:
@@ -70,7 +70,7 @@ namespace fleece {
     int64_t value::asInt() const {
         switch (tag()) {
             case kSpecialTag:
-                return tinyValue() >= kSpecialValueTrue;
+                return tinyValue() == kSpecialValueTrue;
             case kShortIntTag: {
                 uint16_t i = shortValue();
                 if (i & 0x0800)
@@ -93,14 +93,13 @@ namespace fleece {
             case kFloatTag:
                 return (int64_t)round(asDouble());
             default:
-                throw "value is not a number";
+                return 0;
         }
     }
 
     // Explicitly instantiate both needed versions:
     template float value::asFloatOfType<float>() const;
     template double value::asFloatOfType<double>() const;
-
 
     template<typename T>
     T value::asFloatOfType() const {
@@ -120,7 +119,7 @@ namespace fleece {
     }
 
     std::string value::toString() const {
-        char str[32];
+        char buf[32], *str = buf;
         switch (tag()) {
             case kShortIntTag:
             case kIntTag: {
@@ -134,22 +133,25 @@ namespace fleece {
             case kSpecialTag: {
                 switch (tinyValue()) {
                     case kSpecialValueNull:
-                        return "null";
+                        str = (char*)"null";
+                        break;
                     case kSpecialValueFalse:
-                        return "false";
+                        str = (char*)"false";
+                        break;
                     case kSpecialValueTrue:
-                        return "true";
+                        str = (char*)"true";
+                        break;
                     default:
-                        return "???";
+                        str = (char*)"???";
+                        break;
                 }
                 break;
             }
             case kFloatTag: {
-                double f = asDouble();
-                if (tinyValue() <= 4)
-                    sprintf(str, "%.6f", f);
+                if (_byte[0] & 0x8)
+                    sprintf(str, "%.16g", asDouble());
                 else
-                    sprintf(str, "%.16f", f);
+                    sprintf(str, "%.6g", asFloat());
                 break;
             }
             default:
@@ -178,13 +180,13 @@ namespace fleece {
 
     const array* value::asArray() const {
         if (tag() != kArrayTag)
-            throw "value is not array";
+            return NULL;
         return (const array*)this;
     }
 
     const dict* value::asDict() const {
         if (tag() != kDictTag)
-            throw "value is not dict";
+            return NULL;
         return (const dict*)this;
     }
 
@@ -205,72 +207,79 @@ namespace fleece {
         return true;    //TODO
     }
 
-#pragma mark - ARRAY:
+#pragma mark - POINTERS:
 
-    const value* value::arrayFirstAndCount(uint32_t *pCount) const {
-        const uint8_t *first = &_byte[2];
-        uint32_t count = shortValue() & 0x07FF;
-        if (count == 0x07FF) {
-            uint32_t realCount;
-            size_t countSize = GetUVarInt32(slice(first, 10), &realCount);
-            first += countSize + (countSize & 1);
-            count = realCount;
-        }
-        *pCount = count;
-        return count ? (const value*)first : NULL;
+    template <bool WIDE>
+    const value* value::derefPointer(const value *v) {
+        if (WIDE)
+            return offsetby(v, _dec32(*(uint32_t*)v->_byte) << 1);
+        else
+            return offsetby(v, (int16_t)(_dec16(*(uint16_t*)v->_byte) << 1));
     }
 
-    uint32_t value::arrayCount() const {
-        uint32_t count;
-        arrayFirstAndCount(&count);
-        return count;
-    }
-
-    const value* value::deref(bool wide) const {
-        const value *v = this;
-        while (v->_byte[0] >= (kPointerTagFirst << 4)) {
-            int32_t offset;
-            if (wide) {
-                offset = (int32_t)_dec32(*(uint32_t*)_byte) << 1;
-            } else {
-                int16_t off16 = _dec16(*(uint16_t*)_byte) << 1;
-                offset = off16;
-            }
-            v = (const value*)offsetby(v, offset);
-        }
+    const value* value::deref(const value *v, bool wide) {
+        while (v->isPointer())
+            v = wide ? derefPointer<true>(v) : derefPointer<false>(v);
         return v;
     }
 
+    template <bool WIDE>
+    const value* value::deref(const value *v) {
+        while (v->isPointer())
+            v = derefPointer<WIDE>(v);
+        return v;
+    }
+
+#pragma mark - ARRAY:
+
+    value::arrayInfo value::getArrayInfo() const {
+        const uint8_t *first = &_byte[2];
+        uint32_t count = shortValue() & 0x07FF;
+        if (count == 0x07FF) {
+            size_t countSize = GetUVarInt32(slice(first, 10), &count);
+            first += countSize + (countSize & 1);
+        }
+        return arrayInfo{(const value*)first, count};
+    }
+
     const value* array::get(uint32_t index) const {
-        uint32_t count;
-        const value* v = arrayFirstAndCount(&count);
-        if (index >= count)
+        auto info = getArrayInfo();
+        if (index >= info.count)
             throw "array index out of range";
-        v += index;
+        auto v = info.first + index;
         bool wide = isWideArray();
         if (wide)
             v += index;
-        return v->deref(wide);
+        return deref(v, wide);
     }
 
 
     array::iterator::iterator(const array *a) {
-        _p = a->arrayFirstAndCount(&_count);
+        _a = a->getArrayInfo();
         _wide = a->isWideArray();
-        _value = _p ? _p->deref(_wide) : NULL;
+        _value = _a.count ? deref(_a.first, _wide) : NULL;
     }
 
     array::iterator& array::iterator::operator++() {
-        if (_count == 0)
+        if (_a.count == 0)
             throw "iterating past end of array";
-        if (--_count > 0) {
+        if (--_a.count > 0) {
             if (_wide)
-                ++_p;
-            _value = (++_p)->deref(_wide);
+                ++_a.first;
+            _value = deref(++_a.first, _wide);
         } else
-            _p = _value = NULL;
+            _a.first = _value = NULL;
         return *this;
     }
+
+    const value* array::iterator::operator[] (unsigned index) {
+        if (index >= _a.count)
+            throw "array index out of range";
+        if (_wide)
+            index <<= 1;
+        return deref(_a.first + index, _wide);
+    }
+
 
 #pragma mark - DICT:
 
@@ -278,9 +287,10 @@ namespace fleece {
         bool wide = isWideArray();
         unsigned scale = wide ? 2 : 1;
         uint32_t count;
-        const value* key = arrayFirstAndCount(&count);
-        for (uint32_t i = 0; i < count; i++) {
-            if (keyToFind.compare(key->deref(wide)->asString()) == 0) {
+        auto info = getArrayInfo();
+        const value *key = info.first;
+        for (uint32_t i = 0; i < info.count; i++) {
+            if (keyToFind.compare(deref(key, wide)->asString()) == 0) {
                 return key + scale*count;  // i.e. value at index i
             }
             key += scale;
@@ -288,28 +298,50 @@ namespace fleece {
         return NULL;
     }
 
+    template <bool WIDE>
+    int dict::keyCmp(const void* keyToFindP, const void* keyP) {
+        const value *key = value::deref<WIDE>((const value*)keyP);
+        return ((slice*)keyToFindP)->compare(key->asString());
+    }
+
+    template <bool WIDE>
+    inline const value* dict::get_sorted(slice keyToFind) const {
+        uint32_t count;
+        auto info = getArrayInfo();
+        auto key = (const value*) ::bsearch(&keyToFind, info.first, info.count,
+                                            (WIDE ?4 :2), &keyCmp<WIDE>);
+        if (key)
+            key += count * (WIDE ?2 :1);
+        return key;
+    }
+
+    const value* dict::get_sorted(slice keyToFind) const {
+        return isWideArray() ? get_sorted<true>(keyToFind) : get_sorted<false>(keyToFind);
+    }
+
+
     dict::iterator::iterator(const dict* d) {
-        _pKey = d->arrayFirstAndCount(&_count);
+        _a = d->getArrayInfo();
         _wide = d->isWideArray();
-        if (_pKey) {
-            _pValue = _pKey + _count;
-            _key = _pKey->deref(_wide);
-            _value = _pValue->deref(_wide);
+        if (_a.count) {
+            _pValue = _a.first + _a.count;
+            _key = deref(_a.first, _wide);
+            _value = deref(_pValue, _wide);
         } else {
             _key = _value = NULL;
         }
     }
 
     dict::iterator& dict::iterator::operator++() {
-        if (_count == 0)
+        if (_a.count == 0)
             throw "iterating past end of dict";
-        if (--_count > 0) {
+        if (--_a.count > 0) {
             if (_wide) {
-                ++_pKey;
+                ++_a.first;
                 ++_pValue;
             }
-            _key = (++_pKey)->deref(_wide);
-            _value = (++_pValue)->deref(_wide);
+            _key = deref(++_a.first, _wide);
+            _value = deref(++_pValue, _wide);
         } else {
             _key = _value = NULL;
         }

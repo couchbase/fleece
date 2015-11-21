@@ -65,18 +65,17 @@ namespace fleece {
             case kData:
                 return asString().copiedNSData();
             case kArray: {
-                const array* a = asArray();
-                NSMutableArray* result = [[NSMutableArray alloc] initWithCapacity: a->count()];
-                for (array::iterator iter(a); iter; ++iter) {
+                array::iterator iter(asArray());
+                auto result = [[NSMutableArray alloc] initWithCapacity: iter.count()];
+                for (; iter; ++iter) {
                     [result addObject: iter->asNSObject(sharedStrings)];
                 }
                 return result;
             }
             case kDict: {
-                const dict* d = asDict();
-                size_t count = d->count();
-                NSMutableDictionary* result = [[NSMutableDictionary alloc] initWithCapacity: count];
-                for (dict::iterator iter(d); iter; ++iter) {
+                dict::iterator iter(asDict());
+                auto result = [[NSMutableDictionary alloc] initWithCapacity: iter.count()];
+                for (; iter; ++iter) {
                     NSString* key = iter.key()->asNSObject(sharedStrings);
                     result[key] = iter.value()->asNSObject(sharedStrings);
                 }

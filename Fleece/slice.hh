@@ -27,7 +27,10 @@
 #import <Foundation/NSString.h>
 #endif
 
-#define offsetby(PTR,OFFSET) (void*)((uint8_t*)(PTR)+(ptrdiff_t)(OFFSET))
+template <typename T>
+const T* offsetby(const T *t, ptrdiff_t offset) {
+    return (const T*)((uint8_t*)t + offset);
+}
 
 
 namespace fleece {

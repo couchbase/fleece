@@ -28,6 +28,8 @@ namespace fleece {
     class encoder {
     public:
         encoder(Writer&);
+        encoder(encoder &parent, valueType, uint32_t count, bool wide =false);
+        encoder(encoder&&);
         ~encoder();
 
         void reset();
@@ -45,9 +47,9 @@ namespace fleece {
         void writeData(slice s);
 
         encoder writeArray(uint32_t count, bool wide =false)
-                    {return writeArrayOrDict(internal::kArrayTag, count, wide);}
+                    {return encoder(*this, kArray, count, wide);}
         encoder writeDict(uint32_t count, bool wide =false)
-                    {return writeArrayOrDict(internal::kDictTag, count, wide);}
+                    {return encoder(*this, kDict, count, wide);}
 
         void writeKey(std::string);
         void writeKey(slice);
@@ -60,7 +62,7 @@ namespace fleece {
         encoder& operator<< (slice s)           {writeString(s); return *this;} // string not data!
 
         void end();
-        
+
 #ifdef __OBJC__
         void write(id);
 #endif
@@ -74,7 +76,10 @@ namespace fleece {
         void writeSpecial(uint8_t special);
         void writeInt(uint64_t i, bool isShort, bool isUnsigned);
         void writeData(internal::tags, slice s);
-        encoder writeArrayOrDict(internal::tags, uint32_t count, bool wide);
+        void writeArrayOrDict(internal::tags, uint32_t count, bool wide, encoder *childEncoder);
+
+        encoder(); // forbidden
+        encoder(const encoder&); // forbidden
 
         typedef std::unordered_map<std::string, uint64_t> stringTable;
 

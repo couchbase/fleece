@@ -84,10 +84,20 @@ namespace fleece {
 #endif
 
     protected:
+        bool isPointer() const       {return (_byte[0] >= (internal::kPointerTagFirst << 4));}
+        template <bool WIDE>
+            static const value* derefPointer(const value *v);
+        static const value* deref(const value *v, bool wide);
+        template <bool WIDE>
+            static const value* deref(const value *v);
+
+        struct arrayInfo {
+            const value* first;
+            uint32_t count;
+        };
         unsigned isWideArray() const {return (_byte[0] & 0x08) != 0;}
-        uint32_t arrayCount() const;
-        const value* arrayFirstAndCount(uint32_t *pCount) const;
-        const value* deref(bool wide) const;
+        arrayInfo getArrayInfo() const;
+        uint32_t arrayCount() const  {return getArrayInfo().count;}
 
     private:
         internal::tags tag() const   {return (internal::tags)(_byte[0] >> 4);}
@@ -113,16 +123,18 @@ namespace fleece {
         class iterator {
         public:
             iterator(const array* a);
+            uint32_t count() const                  {return _a.count;}
             const class value* value() const        {return _value;}
             operator const class value* const ()    {return _value;}
             const class value* operator-> ()        {return _value;}
+            const class value* operator[] (unsigned);
 
-            explicit operator bool() const          {return _count > 0;}
+            explicit operator bool() const          {return _a.count > 0;}
             iterator& operator++();
 
         private:
-            const class value *_p, *_value;
-            uint32_t _count;
+            arrayInfo _a;
+            const class value *_value;
             bool _wide;
         };
     };
@@ -136,22 +148,30 @@ namespace fleece {
         /** Looks up the value for a key. */
         const value* get(slice key) const;
 
+        const value* get_sorted(slice keyToFind) const;
+
         class iterator {
         public:
             iterator(const dict*);
-            const value* key() const        {return _key;}
-            const value* value() const      {return _value;}
+            uint32_t count() const                  {return _a.count;}
+            const value* key() const                {return _key;}
+            const value* value() const              {return _value;}
 
-            explicit operator bool() const  {return _count > 0;}
+            explicit operator bool() const          {return _a.count > 0;}
             iterator& operator++();
 
         private:
-            const class value *_pKey, *_pValue, *_key, *_value;
-            uint32_t _count;
+            arrayInfo _a;
+            const class value *_pValue, *_key, *_value;
             bool _wide;
         };
 
     private:
+        template <bool WIDE>
+            static int keyCmp(const void* keyToFindP, const void* keyP);
+        template <bool WIDE>
+            const value* get_sorted(slice keyToFind) const;
+
         friend class value;
     };
 
