@@ -7,6 +7,7 @@
 //
 
 #include "FleeceTests.hh"
+#include "JSONReader.hh"
 
 
 class EncoderTests : public CppUnit::TestFixture {
@@ -272,6 +273,18 @@ public:
         AssertEqual(a->toJSON(), std::string("[\"a\",\"hello\",\"a\",\"hello\"]"));
     }
 
+    void testJSON() {
+        std::string json = "{\"foo\":123,"
+                           "\"\\\"ironic\\\"\":[null,false,true,-100,0,100,123.456,6.02e+23],"
+                           "\"\":\"hello\\nt\\\\here\"}";
+        JSONReader j(enc);
+        j.writeJSON(slice(json));
+        endEncoding();
+        auto d = checkDict(3);
+        auto output = d->toJSON();
+        AssertEqual(output, json);
+    }
+
     CPPUNIT_TEST_SUITE( EncoderTests );
     CPPUNIT_TEST( testSpecial );
     CPPUNIT_TEST( testInts );
@@ -281,6 +294,7 @@ public:
     CPPUNIT_TEST( testWideArrays );
     CPPUNIT_TEST( testDictionaries );
     CPPUNIT_TEST( testSharedStrings );
+    CPPUNIT_TEST( testJSON );
     CPPUNIT_TEST_SUITE_END();
 };
 

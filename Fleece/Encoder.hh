@@ -77,6 +77,7 @@ namespace fleece {
         void writeInt(uint64_t i, bool isShort, bool isUnsigned);
         void writeData(internal::tags, slice s);
         void writeArrayOrDict(internal::tags, uint32_t count, bool wide, encoder *childEncoder);
+        void sortKeys();
 
         encoder(); // forbidden
         encoder(const encoder&); // forbidden

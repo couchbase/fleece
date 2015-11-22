@@ -1,0 +1,3 @@
+[submodule "vendor/jsonsl"]
+	path = vendor/jsonsl
+	url = git@github.com:mnunberg/jsonsl.git

@@ -308,5 +308,19 @@ namespace fleece {
         _blockedOnKey = false;
         writeString(s);
     }
+/*
+    static int keyCmp(void *thunk, const void *a, const void *b) {
+        auto self = (encoder*)thunk;
+        auto i1 = *(uint32*)a, i2 = *(uint32*)b;
+        auto key1 = (const value*)a, key2 = (const value*)b;
+        return key1->asString().compare(key2->asString());
+    }
 
+    void encoder::sortKeys() {
+        uint32_t indexes[_count];
+        for (uint32_t i = 0; i < _count; i++)
+            indexes[i] = i;
+        qsort_r(indexes, _count, sizeof(indexes[0]), this, keyCmp);
+    }
+*/
 }
