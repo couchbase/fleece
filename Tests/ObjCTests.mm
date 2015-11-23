@@ -10,6 +10,8 @@
 #include "FleeceTests.hh"
 
 
+#define kDir "/Couchbase/Fleece/Tests/"
+
 class ObjCTests : public CppUnit::TestFixture {
 public:
 
@@ -85,6 +87,29 @@ public:
                 "{\"a\":\"flumpety\",\"b\":\"flumpety\",\"c\":\"flumpety\"}");
     }
 
+    void testPerfParse1000PeopleNS() {
+        const int kSamples = 50;
+        double total = 0, minTime = 1e99, maxTime = -1;
+        NSData *data = [NSData dataWithContentsOfFile: @kDir "1000people.json"];
+
+        fprintf(stderr, "Parsing JSON to NSObjects (ms):");
+        for (int i = 0; i < kSamples; i++) {
+            Stopwatch st;
+
+            @autoreleasepool {
+                id j = [NSJSONSerialization JSONObjectWithData: data options: 0 error: NULL];
+                assert(j);
+            }
+
+            double elapsed = st.elapsedMS();
+            fprintf(stderr, " %g", elapsed);
+            total += elapsed;
+            minTime = std::min(minTime, elapsed);
+            maxTime = std::max(maxTime, elapsed);
+        }
+        fprintf(stderr, "\nAverage time is %g ms\n", (total - minTime - maxTime)/(kSamples-2));
+    }
+
     CPPUNIT_TEST_SUITE( ObjCTests );
     CPPUNIT_TEST( testSpecial );
     CPPUNIT_TEST( testInts );
@@ -92,6 +117,7 @@ public:
     CPPUNIT_TEST( testStrings );
     CPPUNIT_TEST( testArrays );
     CPPUNIT_TEST( testDictionaries );
+//    CPPUNIT_TEST( testPerfParse1000PeopleNS );
     CPPUNIT_TEST_SUITE_END();
 };
 

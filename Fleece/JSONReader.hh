@@ -36,10 +36,14 @@ namespace fleece {
                                  jsonsl_error_t err,
                                  struct jsonsl_state_st *state,
                                  char *errat);
-        static void writeCallback(jsonsl_t jsn,
-                                  jsonsl_action_t action,
-                                  struct jsonsl_state_st *state,
-                                  const char *buf);
+        static void writePushCallback(jsonsl_t jsn,
+                                      jsonsl_action_t action,
+                                      struct jsonsl_state_st *state,
+                                      const char *buf);
+        static void writePopCallback(jsonsl_t jsn,
+                                     jsonsl_action_t action,
+                                     struct jsonsl_state_st *state,
+                                     const char *buf);
 
         typedef std::map<size_t, uint64_t> startToLengthMap;
 

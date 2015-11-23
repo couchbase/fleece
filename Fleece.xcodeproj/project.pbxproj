@@ -25,6 +25,7 @@
 		27298E3C1C00F812000CFBA8 /* JSONReader.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27298E3A1C00F812000CFBA8 /* JSONReader.cc */; };
 		27298E651C00F8A9000CFBA8 /* jsonsl.c in Sources */ = {isa = PBXBuildFile; fileRef = 27298E491C00F8A9000CFBA8 /* jsonsl.c */; };
 		27298E661C00F8A9000CFBA8 /* jsonsl.h in Headers */ = {isa = PBXBuildFile; fileRef = 27298E4A1C00F8A9000CFBA8 /* jsonsl.h */; };
+		27298E781C01A461000CFBA8 /* PerfTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27298E771C01A461000CFBA8 /* PerfTests.cc */; };
 		272E5A521BF7FE7100848580 /* FleeceTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 272E5A451BF7FD8F00848580 /* FleeceTests.cc */; };
 		272E5A551BF7FE9C00848580 /* libFleece.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 270FA25C1BF53CAD005DCB13 /* libFleece.a */; };
 		272E5A571BF7FEB200848580 /* libstdc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 272E5A561BF7FEB200848580 /* libstdc++.tbd */; };
@@ -77,6 +78,7 @@
 		27298E491C00F8A9000CFBA8 /* jsonsl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jsonsl.c; sourceTree = "<group>"; };
 		27298E4A1C00F8A9000CFBA8 /* jsonsl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = jsonsl.h; sourceTree = "<group>"; };
 		27298E761C00FB48000CFBA8 /* JSONReader.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = JSONReader.hh; sourceTree = "<group>"; };
+		27298E771C01A461000CFBA8 /* PerfTests.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PerfTests.cc; sourceTree = "<group>"; };
 		272E5A451BF7FD8F00848580 /* FleeceTests.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FleeceTests.cc; sourceTree = "<group>"; };
 		272E5A4B1BF7FE5600848580 /* Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Test; sourceTree = BUILT_PRODUCTS_DIR; };
 		272E5A561BF7FEB200848580 /* libstdc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libstdc++.tbd"; path = "usr/lib/libstdc++.tbd"; sourceTree = SDKROOT; };
@@ -190,6 +192,7 @@
 				272E5A451BF7FD8F00848580 /* FleeceTests.cc */,
 				272E5A5A1BF8004100848580 /* FleeceTests.hh */,
 				272E5A5B1BF800A100848580 /* EncoderTests.cc */,
+				27298E771C01A461000CFBA8 /* PerfTests.cc */,
 				272E5A5E1BF91DBE00848580 /* ObjCTests.mm */,
 			);
 			path = Tests;
@@ -320,6 +323,7 @@
 			files = (
 				272E5A5D1BF800A100848580 /* EncoderTests.cc in Sources */,
 				272E5A521BF7FE7100848580 /* FleeceTests.cc in Sources */,
+				27298E781C01A461000CFBA8 /* PerfTests.cc in Sources */,
 				272E5A5F1BF91DBE00848580 /* ObjCTests.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -381,6 +385,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				RUN_CLANG_STATIC_ANALYZER = YES;
 				SDKROOT = macosx;
 			};
 			name = Debug;
@@ -424,6 +429,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				RUN_CLANG_STATIC_ANALYZER = YES;
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -459,6 +465,7 @@
 					/usr/local/Cellar/cppunit/1.13.2/lib,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				RUN_CLANG_STATIC_ANALYZER = NO;
 			};
 			name = Debug;
 		};
@@ -471,6 +478,7 @@
 					/usr/local/Cellar/cppunit/1.13.2/lib,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				RUN_CLANG_STATIC_ANALYZER = NO;
 			};
 			name = Release;
 		};

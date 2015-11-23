@@ -62,7 +62,7 @@ namespace fleece {
         // Min/max length of string that will be considered for sharing
         // (not part of the format, just a heuristic used by the encoder & Obj-C decoder)
         static const size_t kMinSharedStringSize =  2;
-        static const size_t kMaxSharedStringSize = 99;
+        static const size_t kMaxSharedStringSize = 15;
 
     }
 }

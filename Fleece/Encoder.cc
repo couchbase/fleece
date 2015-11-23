@@ -61,11 +61,6 @@ namespace fleece {
         _writingKey = _blockedOnKey = dict;
     }
 
-    encoder::~encoder() {
-        if (!_parent)
-            delete _strings;
-    }
-
     void encoder::reset() {
         if (_parent)
             throw "can only reset root encoder";
@@ -139,7 +134,7 @@ namespace fleece {
 
     bool encoder::makePointer(uint64_t toOffset, uint8_t buf[]) {
         size_t fromOffset = _writingKey ? _keyOffset : _offset;
-        ssize_t delta = (toOffset - fromOffset) / 2;
+        ssize_t delta = ((ssize_t)toOffset - (ssize_t)fromOffset) / 2;
         if (_width == 2) {
             if (delta < -0x4000 || delta >= 0x4000)
                 return false;
@@ -247,7 +242,7 @@ namespace fleece {
 
     void encoder::writeString(std::string s) {
         // Check whether this string's already been written:
-        if (s.size() >= kMinSharedStringSize && s.size() <= kMaxSharedStringSize) {
+        if (s.size() >= _width && s.size() <= kMaxSharedStringSize) {
             auto entry = _strings->find(s);
             if (entry != _strings->end()) {
                 uint64_t offset = entry->second;
@@ -261,9 +256,18 @@ namespace fleece {
         writeData(internal::kStringTag, slice(s));
     }
 
-    void encoder::writeString(slice s)      {writeString((std::string)s);}
+    void encoder::writeString(slice s) {
+        if (s.size >= _width && s.size <= kMaxSharedStringSize) {
+            writeString((std::string)s);
+        } else {
+            // String isn't cacheable so skip creating a std::string for it
+            writeData(internal::kStringTag, s);
+        }
+    }
 
-    void encoder::writeData(slice s)        {writeData(internal::kBinaryTag, s);}
+    void encoder::writeData(slice s) {
+        writeData(internal::kBinaryTag, s);
+    }
 
 #pragma mark - ARRAYS / DICTIONARIES:
 

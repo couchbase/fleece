@@ -286,12 +286,11 @@ namespace fleece {
     const value* dict::get(slice keyToFind) const {
         bool wide = isWideArray();
         unsigned scale = wide ? 2 : 1;
-        uint32_t count;
         auto info = getArrayInfo();
         const value *key = info.first;
         for (uint32_t i = 0; i < info.count; i++) {
             if (keyToFind.compare(deref(key, wide)->asString()) == 0) {
-                return key + scale*count;  // i.e. value at index i
+                return key + scale*info.count;  // i.e. value at index i
             }
             key += scale;
         }
@@ -306,12 +305,11 @@ namespace fleece {
 
     template <bool WIDE>
     inline const value* dict::get_sorted(slice keyToFind) const {
-        uint32_t count;
         auto info = getArrayInfo();
         auto key = (const value*) ::bsearch(&keyToFind, info.first, info.count,
                                             (WIDE ?4 :2), &keyCmp<WIDE>);
         if (key)
-            key += count * (WIDE ?2 :1);
+            key += info.count * (WIDE ?2 :1);
         return key;
     }
 

@@ -38,7 +38,8 @@ namespace fleece {
             throw "JSON parse error";
 
         _jsn->data = this;
-        _jsn->action_callback = writeCallback;
+        _jsn->action_callback_PUSH = writePushCallback;
+        _jsn->action_callback_POP  = writePopCallback;
         _jsn->error_callback = NULL;
         jsonsl_enable_all_callbacks(_jsn);
 
@@ -48,16 +49,22 @@ namespace fleece {
         return true;
     }
     
-    void JSONReader::writeCallback(jsonsl_t jsn,
-                                   jsonsl_action_t action,
-                                   struct jsonsl_state_st *state,
-                                   const char *buf)
+    void JSONReader::writePushCallback(jsonsl_t jsn,
+                                       jsonsl_action_t action,
+                                       struct jsonsl_state_st *state,
+                                       const char *buf)
     {
         auto self = (JSONReader*)jsn->data;
-        if (action == JSONSL_ACTION_PUSH)
-            self->push(state);
-        else
-            self->pop(state);
+        self->push(state);
+    }
+
+    void JSONReader::writePopCallback(jsonsl_t jsn,
+                                      jsonsl_action_t action,
+                                      struct jsonsl_state_st *state,
+                                      const char *buf)
+    {
+        auto self = (JSONReader*)jsn->data;
+        self->pop(state);
     }
 
     void JSONReader::push(struct jsonsl_state_st *state) {
@@ -68,10 +75,10 @@ namespace fleece {
                 slice input = _input;
                 input.moveStart(state->pos_begin);
                 auto count = _startToLength[state->pos_begin];
+                bool wide = (_input.size > 60000);
                 _encoders.push_back(new encoder(e,
                                                 (state->type == JSONSL_T_LIST ? kArray : kDict),
-                                                (uint32_t)count, false));
-                //TODO: use wide when needed
+                                                (uint32_t)count, wide));
                 break;
         }
     }
@@ -81,11 +88,7 @@ namespace fleece {
         switch (state->type) {
             case JSONSL_T_SPECIAL: {
                 unsigned f = state->special_flags;
-                if (f & JSONSL_SPECIALf_NULL) {
-                    e.writeNull();
-                } else if (f & JSONSL_SPECIALf_BOOLEAN) {
-                    e.writeBool( (f & JSONSL_SPECIALf_TRUE) != 0);
-                } else if (f & JSONSL_SPECIALf_FLOAT) {
+                if (f & JSONSL_SPECIALf_FLOAT) {
                     char *start = (char*)&_input[state->pos_begin];
                     char *end;
                     double n = ::strtod(start, &end);
@@ -94,6 +97,12 @@ namespace fleece {
                     e.writeUInt(state->nelem);
                 } else if (f & JSONSL_SPECIALf_SIGNED) {
                     e.writeInt(-(int64_t)state->nelem);
+                } else if (f & JSONSL_SPECIALf_TRUE) {
+                    e.writeBool(true);
+                } else if (f & JSONSL_SPECIALf_FALSE) {
+                    e.writeBool(false);
+                } else if (f & JSONSL_SPECIALf_NULL) {
+                    e.writeNull();
                 }
                 break;
             }
@@ -102,9 +111,11 @@ namespace fleece {
                 slice str(&_input[state->pos_begin + 1],
                           state->pos_cur - state->pos_begin - 1);
                 char *buf = NULL;
+                bool mallocedBuf = false;
                 if (state->nescapes > 0) {
                     // De-escape str:
-                    buf = (char*)malloc(str.size);
+                    mallocedBuf = str.size > 100;
+                    buf = (char*)(mallocedBuf ? malloc(str.size) : alloca(str.size));
                     char *dst = buf;
                     auto end = str.end();
                     for (auto src = (const char*)str.buf; src < end; ++src) {
@@ -131,7 +142,8 @@ namespace fleece {
                     e.writeString(str);
                 else
                     e.writeKey(str);
-                free(buf);
+                if (mallocedBuf)
+                    free(buf);
                 break;
             }
             case JSONSL_T_LIST:
@@ -147,7 +159,7 @@ namespace fleece {
 
     // Pre-parses the JSON to compute the count of every array/dict in it.
     bool JSONReader::countJSONItems(slice json) {
-        _jsn->action_callback = countCallback;
+        _jsn->action_callback_POP = countCallback;
         _jsn->error_callback = errorCallback;
         _jsn->call_OBJECT = _jsn->call_LIST = 1;
         _jsn->call_SPECIAL = _jsn->call_STRING = _jsn->call_HKEY = 0;
@@ -161,13 +173,11 @@ namespace fleece {
                                    struct jsonsl_state_st *state,
                                    const char *buf)
     {
-        if (action == JSONSL_ACTION_POP) {
-            auto self = (JSONReader*)jsn->data;
-            auto count = state->nelem;
-            if (state->type == JSONSL_T_OBJECT)
-                count /= 2;
-            self->_startToLength[state->pos_begin] = count;
-        }
+        auto self = (JSONReader*)jsn->data;
+        auto count = state->nelem;
+        if (state->type == JSONSL_T_OBJECT)
+            count /= 2;
+        self->_startToLength[state->pos_begin] = count;
     }
 
     int JSONReader::errorCallback(jsonsl_t jsn,

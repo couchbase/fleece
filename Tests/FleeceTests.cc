@@ -10,6 +10,10 @@
 #include "slice.hh"
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
+#include <assert.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
 
 using namespace fleece;
 
@@ -40,9 +44,55 @@ std::string sliceToHex(slice result) {
 }
 
 
+mmap_slice::mmap_slice(const char *path)
+:_fd(-1),
+_mapped(MAP_FAILED)
+{
+    _fd = ::open(path, O_RDONLY);
+    assert(_fd != -1);
+    struct stat stat;
+    ::fstat(_fd, &stat);
+    size = stat.st_size;
+    _mapped = ::mmap(NULL, size, PROT_READ, MAP_PRIVATE, _fd, 0);
+    assert(_mapped != MAP_FAILED);
+    buf = _mapped;
+}
+
+mmap_slice::~mmap_slice() {
+    if (_mapped != MAP_FAILED)
+        munmap((void*)buf, size);
+    if (_fd != -1)
+        close(_fd);
+}
+
+
+alloc_slice readFile(const char *path) {
+    int fd = ::open(path, O_RDONLY);
+    assert(fd != -1);
+    struct stat stat;
+    fstat(fd, &stat);
+    alloc_slice data(stat.st_size);
+    ssize_t bytesRead = ::read(fd, (void*)data.buf, data.size);
+    assert(bytesRead == (ssize_t)data.size);
+    ::close(fd);
+    return data;
+}
+
+void writeToFile(slice s, const char *path) {
+    int fd = ::open(path, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    assert(fd != -1);
+    ssize_t written = ::write(fd, s.buf, s.size);
+    assert(written == (ssize_t)s.size);
+    ::close(fd);
+}
+
+
+using namespace CppUnit;
+
+
 int main( int argc, char **argv) {
-    CppUnit::TextUi::TestRunner runner;
-    CppUnit::TestFactoryRegistry &registry = CppUnit::TestFactoryRegistry::getRegistry();
+    TextTestRunner runner;
+    TestFactoryRegistry &registry = TestFactoryRegistry::getRegistry();
     runner.addTest( registry.makeTest() );
     return runner.run( "", false ) ? 0 : -1;
 }

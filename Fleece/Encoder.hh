@@ -30,7 +30,7 @@ namespace fleece {
         encoder(Writer&);
         encoder(encoder &parent, valueType, uint32_t count, bool wide =false);
         encoder(encoder&&);
-        ~encoder();
+        ~encoder()                              {if (!_parent) delete _strings;}
 
         void reset();
 
