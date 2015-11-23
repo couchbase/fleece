@@ -27,26 +27,14 @@ namespace fleece {
     // root encoder
     encoder::encoder(Writer& out)
     :_parent(NULL),
-     _offset(0),
-     _keyOffset(0),
+     _valPtr(NULL),
+     _keyPtr(NULL),
      _count(1),
      _out(out),
      _strings(new stringTable),
      _width(0),
      _writingKey(false),
      _blockedOnKey(false)
-    { }
-
-    encoder::encoder(encoder *parent, size_t offset, size_t keyOffset, size_t count, uint8_t width)
-    :_parent(parent),
-     _offset(offset),
-     _keyOffset(keyOffset),
-     _count(count),
-     _out(parent->_out),
-     _strings(parent->_strings),
-     _width(width),
-     _writingKey(keyOffset > 0),
-     _blockedOnKey(_writingKey)
     { }
 
     encoder::encoder(encoder &parent, valueType type, uint32_t count, bool wide)
@@ -78,7 +66,7 @@ namespace fleece {
 #pragma mark - WRITING VALUES:
 
     // primitive to write a value
-    void encoder::writeValue(tags tag, uint8_t *buf, size_t size, bool canInline) {
+    const void* encoder::writeValue(tags tag, uint8_t *buf, size_t size, bool canInline) {
         if (_count == 0)
             throw "no more space in collection";
         if (_blockedOnKey)
@@ -90,38 +78,46 @@ namespace fleece {
             buf[0] |= tag<<4;
         }
 
+        const void *result;
         if (_parent) {
-            size_t &offset = _writingKey ? _keyOffset : _offset;
+            const void* valPtr = _writingKey ? _keyPtr : _valPtr;
             if (size <= _width && canInline) {
                 // Add directly to parent collection at offset:
-                _out.rewrite(offset, slice(buf,size));
+                result = valPtr;
+                _out.rewrite(valPtr, slice(buf,size));
                 if (size < _width) {
                     int32_t zero = 0;
-                    _out.rewrite(offset + size, slice(&zero, _width-size));
+                    _out.rewrite(offsetby(valPtr, size), slice(&zero, _width-size));
                 }
             } else {
                 // Write to output, then add a pointer in the parent collection:
                 if (_out.length() & 1)
                     _out.write("\0", 1);
-                uint8_t ptr[_width];
-                if (!makePointer(_out.length(), ptr))
+                if (!makePointer(_out.length(), valPtr))
                     throw "delta too large to write value";
-                _out.rewrite(offset, slice(ptr,_width));
-                _out.write(buf, size);
+                result = _out.write(buf, size);
             }
-            offset += _width;
+            valPtr = offsetby(valPtr, _width);
+            if (_writingKey) {
+                _keyPtr = valPtr;
+                _keyOff += _width;
+            } else {
+                _valPtr = valPtr;
+                _valOff += _width;
+            }
         } else {
             // Root element: just write it
-            _out.write(buf, size);
+            result = _out.write(buf, size);
         }
 
         if (_writingKey) {
             _writingKey = false;
         } else {
             --_count;
-            if (_keyOffset > 0)
+            if (_keyPtr > 0)
                 _blockedOnKey = _writingKey = true;
         }
+        return result;
     }
 
     bool encoder::writePointerTo(uint64_t dstOffset) {
@@ -132,22 +128,20 @@ namespace fleece {
         return true;
     }
 
-    bool encoder::makePointer(uint64_t toOffset, uint8_t buf[]) {
-        size_t fromOffset = _writingKey ? _keyOffset : _offset;
-        ssize_t delta = ((ssize_t)toOffset - (ssize_t)fromOffset) / 2;
+    bool encoder::makePointer(uint64_t toOffset, const void *dstPtr) {
+        const size_t fromPos = _writingKey ? _keyOff : _valOff;
+        ssize_t delta = ((ssize_t)toOffset - (ssize_t)fromPos) / 2;
         if (_width == 2) {
             if (delta < -0x4000 || delta >= 0x4000)
                 return false;
-            auto ptr = (int16_t)_enc16(delta);
-            memcpy(buf, &ptr, 2);
+            *(int16_t*)dstPtr = (int16_t)_enc16(delta);
         } else {
             assert(_width == 4);
             if (delta < -0x40000000 || delta >= 0x40000000)
                 return false;
-            auto ptr = (int32_t)_enc32(delta);
-            memcpy(buf, &ptr, 4);
+            *(int32_t*)dstPtr = (int32_t)_enc32(delta);
         }
-        buf[0] |= 0x80;  // tag it
+        *(uint8_t*)dstPtr |= 0x80;  // tag it
         return true;
     }
 
@@ -221,13 +215,15 @@ namespace fleece {
 #pragma mark - STRINGS / DATA:
 
     // used for strings and binary data
-    void encoder::writeData(tags tag, slice s) {
+    slice encoder::writeData(tags tag, slice s) {
         uint8_t buf[4 + kMaxVarintLen64];
         buf[0] = (uint8_t)std::min(s.size, (size_t)0xF);
+        const void *dst;
         if (s.size < _width) {
             // Tiny data fits inline:
             memcpy(&buf[1], s.buf, s.size);
-            writeValue(tag, buf, 1 + s.size, true);
+            const void *ptr = writeValue(tag, buf, 1 + s.size, true);
+            dst = offsetby(ptr, 1);
         } else {
             // Large data doesn't:
             size_t bufLen = 1;
@@ -236,13 +232,14 @@ namespace fleece {
             if (s.size == 0)
                 buf[bufLen++] = 0;
             writeValue(tag, buf, bufLen, false);
-            _out << s;
+            dst = _out.write(s.buf, s.size);
         }
+        return slice(dst, s.size);
     }
 
-    void encoder::writeString(std::string s) {
+    void encoder::writeString(slice s) {
         // Check whether this string's already been written:
-        if (s.size() >= _width && s.size() <= kMaxSharedStringSize) {
+        if (s.size >= _width && s.size <= kMaxSharedStringSize) {
             auto entry = _strings->find(s);
             if (entry != _strings->end()) {
                 uint64_t offset = entry->second;
@@ -250,19 +247,18 @@ namespace fleece {
                     return;
                 entry->second = _out.length();      // update with offset of new instance of string
             } else {
-                _strings->insert({s, _out.length()});
+                size_t offset = _out.length();
+                s = writeData(internal::kStringTag, s);
+                //fprintf(stderr, "Caching `%.*s` --> %zu\n", (int)s.size, s.buf, offset);
+                _strings->insert({s, offset});
             }
-        }
-        writeData(internal::kStringTag, slice(s));
-    }
-
-    void encoder::writeString(slice s) {
-        if (s.size >= _width && s.size <= kMaxSharedStringSize) {
-            writeString((std::string)s);
         } else {
-            // String isn't cacheable so skip creating a std::string for it
             writeData(internal::kStringTag, s);
         }
+    }
+
+    void encoder::writeString(std::string s) {
+        writeString(slice(s));
     }
 
     void encoder::writeData(slice s) {
@@ -290,25 +286,30 @@ namespace fleece {
 
         // Reserve space for the values (and keys, for dicts):
         uint8_t width = (wide ? 4 : 2);
-        size_t offset = _out.length();
-        size_t keyOffset = 0;
         size_t space = count * width;
-        if (tag == internal::kDictTag) {
-            keyOffset = offset;
-            offset += 2*count;
+        if (tag == internal::kDictTag)
             space *= 2;
-        }
-        _out.reserveSpace(space);
 
-        childEncoder->_offset = offset;
-        childEncoder->_keyOffset = keyOffset;
+        size_t valOff = _out.length(), keyOff = 0;
+        const void *valPtr = _out.reserveSpace(space), *keyPtr = NULL;
+        if (tag == internal::kDictTag) {
+            keyPtr = valPtr;
+            keyOff = valOff;
+            valPtr = offsetby(valPtr, count*width);
+            valOff += count*width;
+        }
+
+        childEncoder->_valPtr = valPtr;
+        childEncoder->_keyPtr = keyPtr;
+        childEncoder->_valOff = valOff;
+        childEncoder->_keyOff = keyOff;
     }
 
     void encoder::writeKey(std::string s)   {writeKey(slice(s));}
 
     void encoder::writeKey(slice s) {
         if (!_blockedOnKey)
-            throw _keyOffset>0 ? "need a value after a key" : "not a dictionary";
+            throw _keyPtr>0 ? "need a value after a key" : "not a dictionary";
         _blockedOnKey = false;
         writeString(s);
     }

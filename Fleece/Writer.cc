@@ -20,77 +20,78 @@
 namespace fleece {
 
     Writer::Writer(size_t initialCapacity)
-    :_buffer(::malloc(initialCapacity), initialCapacity),
-     _available(_buffer)
+    :_chunkSize(initialCapacity),
+     _length(0)
     {
-        if (!_buffer.buf)
-            throw std::bad_alloc();
+        addChunk(initialCapacity);
     }
 
-    Writer::Writer(const Writer& w)
-    :_buffer(w.output().copy()),
-     _available(_buffer.end(), (size_t)0)
-    { }
-
     Writer::Writer(Writer&& w)
-    :_buffer(w._buffer),
-     _available(w._available)
+    :_chunks(w._chunks)
     {
-        w._buffer = slice::null; // stop w's destructor from freeing the buffer
+        w._chunks.resize(0);
     }
 
     Writer::~Writer() {
-        ::free((void*)_buffer.buf);
+        for (auto i = _chunks.begin(); i != _chunks.end(); ++i)
+            (*i)->free();
     }
 
     Writer& Writer::operator= (Writer&& w) {
-        _buffer = w._buffer;
-        _available = w._available;
-        w._buffer = slice::null; // stop w's destructor from freeing the buffer
+        _chunks = w._chunks;
+        w._chunks.resize(0);
         return *this;
     }
 
-    void Writer::write(const void* data, size_t length) {
-        if (_available.size < length)
-            growToFit(length);
-        ::memcpy((void*)_available.buf, data, length);
-        _available.moveStart(length);
+    const void* Writer::curPos() const {
+        return _chunks.back()->available().buf;
     }
 
-    size_t Writer::reserveSpace(size_t length) {
-        size_t pos = this->length();
-        if (_available.size < length)
-            growToFit(length);
-        _available.moveStart(length);
-        return pos;
+    size_t Writer::posToOffset(const void *pos) const {
+        size_t offset = 0;
+        for (auto i = _chunks.begin(); i != _chunks.end(); ++i) {
+            if ((*i)->contains(pos))
+                return offset + (*i)->offsetOf(pos);
+            offset += (*i)->length();
+        }
+        throw "invalid pos for posToOffset";
     }
 
-
-    void Writer::rewrite(size_t pos, slice data) {
-        assert(pos+data.size <= length());
-        ::memcpy((void*)&_buffer[pos], data.buf, data.size);
+    const void* Writer::write(const void* data, size_t length) {
+        const void* result = _chunks.back()->write(data, length);
+        if (!result) {
+            if (_chunkSize <= 32*1024)
+                _chunkSize *= 2;
+            auto newChunk = addChunk(std::max(length, _chunkSize));
+            result = newChunk->write(data, length);
+        }
+        _length += length;
+        return result;
     }
 
-    void Writer::growToFit(size_t amount) {
-        size_t len = length();
-        size_t newSize = _buffer.size ?: kDefaultInitialCapacity/2;
-        do {
-            newSize *= 2;
-        } while (len + amount > newSize);
-        void* newBuf = ::realloc((void*)_buffer.buf, newSize);
-        if (!newBuf)
-            throw std::bad_alloc();
-        _buffer = _available = slice(newBuf, newSize);
-        _available.moveStart(len);
+    void Writer::rewrite(const void *pos, slice data) {
+        assert(pos); //FIX: Check that it's actually inside a chunk
+        ::memcpy((void*)pos, data.buf, data.size);
     }
 
-    slice Writer::extractOutput() {
-        void* buf = (void*)_buffer.buf;
-        size_t len = length();
-        if (len < _buffer.size)
-            buf = ::realloc(buf, len);
-        _buffer = _available = slice::null;
-        return slice(buf, len);
+    Writer::Chunk* Writer::addChunk(size_t capacity) {
+        auto chunk = Chunk::create(capacity);
+        _chunks.push_back(chunk);
+        return chunk;
+    }
+
+    alloc_slice Writer::extractOutput() {
+        alloc_slice output(length());
+        void* dst = (void*)output.buf;
+        for (auto i = _chunks.begin(); i != _chunks.end(); ++i) {
+            auto contents = (*i)->contents();
+            memcpy(dst, contents.buf, contents.size);
+            dst = offsetby(dst, contents.size);
+            (*i)->free();
+        }
+        _chunks.resize(0);
+        _length = 0;
+        return output;
     }
 
 }

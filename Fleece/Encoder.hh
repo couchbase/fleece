@@ -28,7 +28,6 @@ namespace fleece {
     class encoder {
     public:
         encoder(Writer&);
-        encoder(encoder &parent, valueType, uint32_t count, bool wide =false);
         encoder(encoder&&);
         ~encoder()                              {if (!_parent) delete _strings;}
 
@@ -68,31 +67,35 @@ namespace fleece {
 #endif
 
     private:
-        encoder(encoder *parent, size_t offset, size_t keyOffset, size_t count, uint8_t width);
-        void writeValue(internal::tags, uint8_t *buf, size_t size, bool canInline =true);
+        encoder(encoder &parent, valueType, uint32_t count, bool wide =false);
+        const void* writeValue(internal::tags, uint8_t *buf, size_t size, bool canInline =true);
         bool writePointerTo(uint64_t dstOffset);
-        bool makePointer(uint64_t toOffset, uint8_t buf[]);
+        bool makePointer(uint64_t toOffset, const void *dstPtr);
 
         void writeSpecial(uint8_t special);
         void writeInt(uint64_t i, bool isShort, bool isUnsigned);
-        void writeData(internal::tags, slice s);
+        slice writeData(internal::tags, slice s);
         void writeArrayOrDict(internal::tags, uint32_t count, bool wide, encoder *childEncoder);
         void sortKeys();
 
         encoder(); // forbidden
         encoder(const encoder&); // forbidden
 
-        typedef std::unordered_map<std::string, uint64_t> stringTable;
+
+        typedef std::unordered_map<slice, uint64_t, sliceHash> stringTable;
 
         encoder *_parent;       // Encoder that created this one
-        size_t _offset;         // Offset in _out to write next inline value
-        size_t _keyOffset;      // Offset in _out to write next dictionary key
+        const void *_valPtr;    // Offset in _out to write next inline value
+        const void *_keyPtr;    // Position in _out to write next dictionary key
+        size_t _valOff, _keyOff;// _valPtr and _keyPtr as offsets into the output
         size_t _count;          // Count of collection I'm adding to
         Writer& _out;           // Where output is written to
         stringTable *_strings;  // Maps strings to offsets where they appear as values
         uint8_t _width;         // Byte width of array/dict values (2 or 4)
-        bool _writingKey    :1; // True if value being written is a key
-        bool _blockedOnKey  :1; // True if writes should be refused
+        bool _writingKey;       // True if value being written is a key
+        bool _blockedOnKey;     // True if writes should be refused
+
+        friend class JSONReader;
     };
 
 }

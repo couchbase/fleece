@@ -20,7 +20,7 @@ public:
         encoder enc(writer);
         enc.write(obj);
         enc.end();
-        auto result = alloc_slice::adopt(writer.extractOutput());
+        auto result = writer.extractOutput();
         auto v = value::fromData(result);
         Assert(v != NULL);
         AssertEqual(v->toJSON(), std::string(json));
@@ -117,7 +117,7 @@ public:
     CPPUNIT_TEST( testStrings );
     CPPUNIT_TEST( testArrays );
     CPPUNIT_TEST( testDictionaries );
-//    CPPUNIT_TEST( testPerfParse1000PeopleNS );
+    CPPUNIT_TEST( testPerfParse1000PeopleNS );
     CPPUNIT_TEST_SUITE_END();
 };
 

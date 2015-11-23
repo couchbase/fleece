@@ -28,8 +28,13 @@
 #endif
 
 template <typename T>
-const T* offsetby(const T *t, ptrdiff_t offset) {
+inline const T* offsetby(const T *t, ptrdiff_t offset) {
     return (const T*)((uint8_t*)t + offset);
+}
+
+template <typename T>
+inline T* offsetby(T *t, ptrdiff_t offset) {
+    return (T*)((uint8_t*)t + offset);
 }
 
 
@@ -135,6 +140,18 @@ namespace fleece {
         bool _needsFree;
     };
 #endif
+
+    /** Functor class for hashing the contents of a slice (using the djb2 hash algorithm.)
+        Suitable for use with std::unordered_map. */
+    struct sliceHash {
+        std::size_t operator()(slice const& s) const {
+            size_t hash = 5381;
+            for (size_t i = 0; i < s.size; i++)
+                hash = (hash<<5) + hash + s[i];
+            return hash;
+        }
+    };
+
 }
 
 #endif

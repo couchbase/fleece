@@ -31,7 +31,7 @@ class PerfTests : public CppUnit::TestFixture {
 
             jr.writeJSON(input);
             e.end();
-            auto result = alloc_slice::adopt(writer.extractOutput());
+            auto result = writer.extractOutput();
 
             double elapsed = st.elapsedMS();
             fprintf(stderr, " %g", elapsed);

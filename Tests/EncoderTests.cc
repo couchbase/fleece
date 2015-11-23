@@ -22,7 +22,7 @@ public:
 
     void endEncoding() {
         enc.end();
-        result = alloc_slice::adopt(writer.extractOutput());
+        result = writer.extractOutput();
     }
 
     void checkOutput(const char *expected) {
