@@ -59,47 +59,28 @@ namespace fleece {
     private:
         class Chunk {
         public:
-            static Chunk* create(size_t capacity) {
-                auto chunk = (Chunk*)::malloc(sizeof(Chunk) + capacity);
-                if (!chunk)
-                    throw std::bad_alloc();
-                chunk->_start = chunk+1;
-                chunk->_available = slice(chunk->_start, capacity);
-                return chunk;
-            }
-
-            void free() {
-                ::free(this);
-            }
-
-            const void* write(const void* data, size_t length) {
-                if (_available.size < length)
-                    return NULL;
-                const void *result = _available.buf;
-                if (data != NULL)
-                    ::memcpy((void*)result, data, length);
-                _available.moveStart(length);
-                return result;
-            }
-
-            size_t length()     {return (int8_t*)_available.buf - (int8_t*)_start;}
-            size_t capacity()   {return (int8_t*)_available.end() - (int8_t*)_start;}
-            slice contents()    {return slice(_start, _available.buf);}
-            slice available()   {return _available;}
-
-            bool contains(const void *ptr)      {return ptr >= _start && ptr <= _available.buf;}
-            size_t offsetOf(const void *ptr)    {return (int8_t*)ptr - (int8_t*)_start;}
-            
+            Chunk(size_t capacity);
+            Chunk(const Chunk&);
+            Chunk();
+            void free();
+            const void* write(const void* data, size_t length);
+            void resizeToFit();
+            size_t length() const     {return (int8_t*)_available.buf - (int8_t*)_start;}
+            size_t capacity() const   {return (int8_t*)_available.end() - (int8_t*)_start;}
+            slice contents() const    {return slice(_start, _available.buf);}
+            slice available() const   {return _available;}
+            bool contains(const void *ptr) const   {return ptr >= _start && ptr <= _available.buf;}
+            size_t offsetOf(const void *ptr) const {return (int8_t*)ptr - (int8_t*)_start;}
         private:
             void *_start;
             slice _available;
         };
 
-        Chunk* addChunk(size_t capacity);
+        void addChunk(size_t capacity);
         Writer(const Writer&);  // forbidden
         const Writer& operator=(const Writer&); // forbidden
 
-        std::vector<Chunk*> _chunks;
+        std::vector<Chunk> _chunks;
         size_t _chunkSize;
         size_t _length;
     };

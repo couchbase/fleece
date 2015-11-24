@@ -24,7 +24,7 @@ class PerfTests : public CppUnit::TestFixture {
 
         fprintf(stderr, "Converting JSON to Fleece (ms):");
         for (int i = 0; i < kSamples; i++) {
-            Writer writer;
+            Writer writer(input.size);
             encoder e(writer);
             JSONReader jr(e);
             Stopwatch st;

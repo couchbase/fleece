@@ -33,8 +33,8 @@ namespace fleece {
     }
 
     Writer::~Writer() {
-        for (auto i = _chunks.begin(); i != _chunks.end(); ++i)
-            (*i)->free();
+        for (auto chunk = _chunks.begin(); chunk != _chunks.end(); ++chunk)
+            chunk->free();
     }
 
     Writer& Writer::operator= (Writer&& w) {
@@ -44,26 +44,27 @@ namespace fleece {
     }
 
     const void* Writer::curPos() const {
-        return _chunks.back()->available().buf;
+        return _chunks.back().available().buf;
     }
 
     size_t Writer::posToOffset(const void *pos) const {
         size_t offset = 0;
-        for (auto i = _chunks.begin(); i != _chunks.end(); ++i) {
-            if ((*i)->contains(pos))
-                return offset + (*i)->offsetOf(pos);
-            offset += (*i)->length();
+        for (auto chunk = _chunks.begin(); chunk != _chunks.end(); ++chunk) {
+            if (chunk->contains(pos))
+                return offset + chunk->offsetOf(pos);
+            offset += chunk->length();
         }
         throw "invalid pos for posToOffset";
     }
 
     const void* Writer::write(const void* data, size_t length) {
-        const void* result = _chunks.back()->write(data, length);
+        const void* result = _chunks.back().write(data, length);
         if (!result) {
-            if (_chunkSize <= 32*1024)
+            if (_chunkSize <= 64*1024)
                 _chunkSize *= 2;
-            auto newChunk = addChunk(std::max(length, _chunkSize));
-            result = newChunk->write(data, length);
+            addChunk(std::max(length, _chunkSize));
+            result = _chunks.back().write(data, length);
+            assert(result);
         }
         _length += length;
         return result;
@@ -74,24 +75,73 @@ namespace fleece {
         ::memcpy((void*)pos, data.buf, data.size);
     }
 
-    Writer::Chunk* Writer::addChunk(size_t capacity) {
-        auto chunk = Chunk::create(capacity);
+    void Writer::addChunk(size_t capacity) {
+        auto chunk(capacity);
         _chunks.push_back(chunk);
-        return chunk;
     }
 
     alloc_slice Writer::extractOutput() {
-        alloc_slice output(length());
-        void* dst = (void*)output.buf;
-        for (auto i = _chunks.begin(); i != _chunks.end(); ++i) {
-            auto contents = (*i)->contents();
-            memcpy(dst, contents.buf, contents.size);
-            dst = offsetby(dst, contents.size);
-            (*i)->free();
+        alloc_slice output;
+        if (_chunks.size() == 1) {
+            _chunks[0].resizeToFit();
+            output = alloc_slice::adopt(_chunks[0].contents());
+        } else {
+            output = alloc_slice(length());
+            void* dst = (void*)output.buf;
+            for (auto chunk = _chunks.begin(); chunk != _chunks.end(); ++chunk) {
+                auto contents = chunk->contents();
+                memcpy(dst, contents.buf, contents.size);
+                dst = offsetby(dst, contents.size);
+                chunk->free();
+            }
         }
         _chunks.resize(0);
         _length = 0;
         return output;
+    }
+
+
+#pragma mark - CHUNK:
+
+    Writer::Chunk::Chunk()
+    :_start(NULL)
+    { }
+
+    Writer::Chunk::Chunk(size_t capacity)
+    :_start(::malloc(capacity)),
+    _available(_start, capacity)
+    {
+        if (!_start)
+            throw std::bad_alloc();
+    }
+
+    Writer::Chunk::Chunk(const Chunk& c)
+    :_start(c._start),
+     _available(c._available)
+    { }
+
+    void Writer::Chunk::free() {
+        ::free(_start);
+        _start = NULL;
+    }
+
+    const void* Writer::Chunk::write(const void* data, size_t length) {
+        if (_available.size < length)
+            return NULL;
+        const void *result = _available.buf;
+        if (data != NULL)
+            ::memcpy((void*)result, data, length);
+        _available.moveStart(length);
+        return result;
+    }
+
+    void Writer::Chunk::resizeToFit() {
+        size_t len = length();
+        void *newStart = ::realloc(_start, len);
+        if (!newStart)
+            throw std::bad_alloc();
+        _start = newStart;
+        _available = slice(offsetby(newStart,len), (size_t)0);
     }
 
 }
