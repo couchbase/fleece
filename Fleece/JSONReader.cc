@@ -12,7 +12,7 @@
 
 namespace fleece {
 
-    JSONReader::JSONReader(class encoder &e)
+    JSONReader::JSONReader(encoder &e)
     :_jsn(jsonsl_new(0x2000)),
      _encoder(e),
      _error(0),
@@ -21,7 +21,6 @@ namespace fleece {
         if (!_jsn)
             throw std::bad_alloc();
         _jsn->data = this;
-        _encoders.push_back(&e);
     }
 
     JSONReader::~JSONReader() {
@@ -34,18 +33,14 @@ namespace fleece {
         _error = 0;
         _errorPos = 0;
 
-        if (!countJSONItems(json))
-            throw "JSON parse error";
-
         _jsn->data = this;
         _jsn->action_callback_PUSH = writePushCallback;
         _jsn->action_callback_POP  = writePopCallback;
-        _jsn->error_callback = NULL;
+        _jsn->error_callback = errorCallback;
         jsonsl_enable_all_callbacks(_jsn);
 
         jsonsl_feed(_jsn, (char*)json.buf, json.size);
         jsonsl_reset(_jsn);
-        _startToLength.clear();
         return true;
     }
     
@@ -68,23 +63,17 @@ namespace fleece {
     }
 
     void JSONReader::push(struct jsonsl_state_st *state) {
-        encoder &e = *_encoders.back();
         switch (state->type) {
             case JSONSL_T_LIST:
+                _encoder.beginArray();
+                break;
             case JSONSL_T_OBJECT:
-                slice input = _input;
-                input.moveStart(state->pos_begin);
-                auto count = _startToLength[state->pos_begin];
-                bool wide = (_input.size > 60000);
-                _encoders.push_back(new encoder(e,
-                                                (state->type == JSONSL_T_LIST ? kArray : kDict),
-                                                (uint32_t)count, wide));
+                _encoder.beginDictionary();
                 break;
         }
     }
 
     void JSONReader::pop(struct jsonsl_state_st *state) {
-        encoder &e = *_encoders.back();
         switch (state->type) {
             case JSONSL_T_SPECIAL: {
                 unsigned f = state->special_flags;
@@ -92,17 +81,17 @@ namespace fleece {
                     char *start = (char*)&_input[state->pos_begin];
                     char *end;
                     double n = ::strtod(start, &end);
-                    e.writeDouble(n);
+                    _encoder.writeDouble(n);
                 } else if (f & JSONSL_SPECIALf_UNSIGNED) {
-                    e.writeUInt(state->nelem);
+                    _encoder.writeUInt(state->nelem);
                 } else if (f & JSONSL_SPECIALf_SIGNED) {
-                    e.writeInt(-(int64_t)state->nelem);
+                    _encoder.writeInt(-(int64_t)state->nelem);
                 } else if (f & JSONSL_SPECIALf_TRUE) {
-                    e.writeBool(true);
+                    _encoder.writeBool(true);
                 } else if (f & JSONSL_SPECIALf_FALSE) {
-                    e.writeBool(false);
+                    _encoder.writeBool(false);
                 } else if (f & JSONSL_SPECIALf_NULL) {
-                    e.writeNull();
+                    _encoder.writeNull();
                 }
                 break;
             }
@@ -139,45 +128,20 @@ namespace fleece {
                     str = slice(buf, dst);
                 }
                 if (state->type == JSONSL_T_STRING)
-                    e.writeString(str);
+                    _encoder.writeString(str);
                 else
-                    e.writeKey(str);
+                    _encoder.writeKey(str);
                 if (mallocedBuf)
                     free(buf);
                 break;
             }
             case JSONSL_T_LIST:
+                _encoder.endArray();
+                break;
             case JSONSL_T_OBJECT:
-                e.end();
-                delete &e;
-                _encoders.pop_back();
+                _encoder.endDictionary();
                 break;
         }
-    }
-
-#pragma mark COUNTER:
-
-    // Pre-parses the JSON to compute the count of every array/dict in it.
-    bool JSONReader::countJSONItems(slice json) {
-        _jsn->action_callback_POP = countCallback;
-        _jsn->error_callback = errorCallback;
-        _jsn->call_OBJECT = _jsn->call_LIST = 1;
-        _jsn->call_SPECIAL = _jsn->call_STRING = _jsn->call_HKEY = 0;
-        jsonsl_feed(_jsn, (char*)json.buf, json.size);
-        jsonsl_reset(_jsn);
-        return _error == 0;
-    }
-
-    void JSONReader::countCallback(jsonsl_t jsn,
-                                   jsonsl_action_t action,
-                                   struct jsonsl_state_st *state,
-                                   const char *buf)
-    {
-        auto self = (JSONReader*)jsn->data;
-        auto count = state->nelem;
-        if (state->type == JSONSL_T_OBJECT)
-            count /= 2;
-        self->_startToLength[state->pos_begin] = count;
     }
 
     int JSONReader::errorCallback(jsonsl_t jsn,

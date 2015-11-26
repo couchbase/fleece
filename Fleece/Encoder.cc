@@ -22,165 +22,154 @@
 
 namespace fleece {
 
+    typedef uint8_t byte;
+
     using namespace internal;
 
-    // root encoder
-    encoder::encoder(Writer& out)
-    :_parent(NULL),
-     _valPtr(NULL),
-     _keyPtr(NULL),
-     _count(1),
-     _out(out),
-     _strings(new stringTable),
-     _width(0),
+    encoder::encoder(Writer &out)
+    :_out(out),
+     _items(new valueArray(kSpecialTag)),      // Top-level 'array' is just a single item
      _writingKey(false),
      _blockedOnKey(false)
-    { }
-
-    encoder::encoder(encoder &parent, valueType type, uint32_t count, bool wide)
-    :_parent(&parent),
-     _count(count),
-     _out(_parent->_out),
-     _strings(_parent->_strings),
-     _width(wide ? 4 : 2)
     {
-        bool dict = type==kDict;
-        _parent->writeArrayOrDict((dict ? kDictTag : kArrayTag), count, wide, this);
-        _writingKey = _blockedOnKey = dict;
+        _strings.reserve(100);
     }
 
-    void encoder::reset() {
-        if (_parent)
-            throw "can only reset root encoder";
-        _count = 1;
-        _out = Writer();
-        delete _strings;
-        _strings = new stringTable;
+    encoder::~encoder() {
+        end();
     }
 
     void encoder::end() {
-        if (_count > 0)
-            throw "not all items were written";
+        if (!_items)
+            return;
+        if (_pushed.size() > 0)
+            throw "unclosed array/dict";
+        if (_items->size() > 1)
+            throw "top level must have only one value";
+
+        fixPointers(_items);
+        value &root = (*_items)[0];
+        if (_items->wide) {
+            _out.write(&root, kWide);
+            // Top level value is 4 bytes, so append a 2-byte pointer to it, because the trailer
+            // needs to be a 2-byte value:
+            value ptr(4, kNarrow);
+            _out.write(&ptr, kNarrow);
+        } else {
+            _out.write(&root, kNarrow);
+        }
+        delete _items;
+        _items = NULL;
     }
 
-#pragma mark - WRITING VALUES:
+    // Returns position in the stream of the next write. Pads stream to even pos if necessary.
+    size_t encoder::nextWritePos() {
+        size_t pos = _out.length();
+        if (pos & 1) {
+            byte zero = 0;
+            _out.write(&zero, 1);
+            pos++;
+        }
+        return pos;
+    }
 
-    // primitive to write a value
-    const void* encoder::writeValue(tags tag, uint8_t *buf, size_t size, bool canInline) {
-        if (_count == 0)
-            throw "no more space in collection";
+    // Check whether any pointers in _items can't fit in a narrow value:
+    void encoder::checkPointerWidths(valueArray *items) {
+        if (!items->wide) {
+            size_t base = nextWritePos();
+            for (auto v = items->begin(); v != items->end(); ++v) {
+                if (v->isPointer()) {
+                    size_t pos = v->pointerValue<true>();
+                    pos = base - pos;
+                    if (pos >= 0x8000) {
+                        items->wide = true;
+                        break;
+                    }
+                }
+                base += kNarrow;
+            }
+        }
+    }
+
+    void encoder::fixPointers(valueArray *items) {
+        // Convert absolute offsets to relative:
+        size_t base = nextWritePos();
+        int width = items->wide ? kWide : kNarrow;
+        for (auto v = items->begin(); v != items->end(); ++v) {
+            if (v->isPointer()) {
+                size_t pos = v->pointerValue<true>();
+                assert(pos < base);
+                pos = base - pos;
+                *v = value(pos, width);
+            }
+            base += width;
+        }
+    }
+
+    void encoder::reset() {
+        end();
+        _out = Writer();
+        _strings.erase(_strings.begin(), _strings.end());
+        _items = new valueArray(kSpecialTag);
+        _writingKey = _blockedOnKey = false;
+    }
+
+
+#pragma mark - WRITING:
+
+    void encoder::addItem(value v) {
         if (_blockedOnKey)
             throw "need a key before this value";
-
-        if (tag < kPointerTagFirst) {
-            // Add (non-pointer) tag:
-            assert((buf[0] & 0xF0) == 0);
-            buf[0] |= tag<<4;
-        }
-
-        const void *result;
-        if (_parent) {
-            const void* valPtr = _writingKey ? _keyPtr : _valPtr;
-            if (size <= _width && canInline) {
-                // Add directly to parent collection at offset:
-                result = valPtr;
-                _out.rewrite(valPtr, slice(buf,size));
-                if (size < _width) {
-                    int32_t zero = 0;
-                    _out.rewrite(offsetby(valPtr, size), slice(&zero, _width-size));
-                }
-            } else {
-                // Write to output, then add a pointer in the parent collection:
-                if (_out.length() & 1)
-                    _out.write("\0", 1);
-                if (!makePointer(_out.length(), valPtr))
-                    throw "delta too large to write value";
-                result = _out.write(buf, size);
-            }
-            valPtr = offsetby(valPtr, _width);
-            if (_writingKey) {
-                _keyPtr = valPtr;
-                _keyOff += _width;
-            } else {
-                _valPtr = valPtr;
-                _valOff += _width;
-            }
-        } else {
-            // Root element: just write it
-            result = _out.write(buf, size);
-        }
-
         if (_writingKey) {
             _writingKey = false;
         } else {
-            --_count;
-            if (_keyPtr > 0)
+            if (_items->tag == kDictTag)
                 _blockedOnKey = _writingKey = true;
         }
-        return result;
+
+        _items->push_back(v);
     }
 
-    bool encoder::writePointerTo(uint64_t dstOffset) {
-        uint8_t buf[_width];
-        if (!makePointer(dstOffset, buf))
-            return false;
-        writeValue(kPointerTagFirst, buf, _width);
-        return true;
-    }
-
-    bool encoder::makePointer(uint64_t toOffset, const void *dstPtr) {
-        const size_t fromPos = _writingKey ? _keyOff : _valOff;
-        ssize_t delta = ((ssize_t)toOffset - (ssize_t)fromPos) / 2;
-        if (_width == 2) {
-            if (delta < -0x4000 || delta >= 0x4000)
-                return false;
-            *(int16_t*)dstPtr = (int16_t)_enc16(delta);
+    void encoder::writeValue(tags tag, byte buf[], size_t size, bool canInline) {
+        buf[0] |= tag << 4;
+        if (canInline && size <= 4) {
+            if (size < 4)
+                memset(&buf[size], 0, 4-size); // zero unused bytes
+            addItem(*(value*)buf);
+            if (size > 2)
+                _items->wide = true;
         } else {
-            assert(_width == 4);
-            if (delta < -0x40000000 || delta >= 0x40000000)
-                return false;
-            *(int32_t*)dstPtr = (int32_t)_enc32(delta);
+            writePointer(nextWritePos());
+            _out.write(buf, size);
         }
-        *(uint8_t*)dstPtr |= 0x80;  // tag it
-        return true;
     }
+
+    void encoder::writePointer(size_t p)   {addItem(value(p, kWide));}
+
 
 #pragma mark - SCALARS:
 
-    inline void encoder::writeSpecial(uint8_t special) {
-        assert(special <= 0x0F);
-        uint8_t buf[2] = {special, 0};
-        writeValue(internal::kSpecialTag, buf, 2);
-    }
-
-    void encoder::writeNull() {
-        writeSpecial(internal::kSpecialValueNull);
-    }
-
-    void encoder::writeBool(bool b) {
-        writeSpecial(b ? internal::kSpecialValueTrue : internal::kSpecialValueFalse);
-    }
-
-    void encoder::writeInt(uint64_t i, bool isShort, bool isUnsigned) {
-        if (isShort) {
-            uint8_t buf[2] = {(uint8_t)((i >> 8) & 0x0F),
-                              (uint8_t)(i & 0xFF)};
-            writeValue(internal::kShortIntTag, buf, 2);
+    void encoder::writeNull()              {addItem(value(kSpecialTag, kSpecialValueNull));}
+    void encoder::writeBool(bool b)        {addItem(value(kSpecialTag, b ? kSpecialValueTrue
+                                                                       : kSpecialValueFalse));}
+    void encoder::writeInt(uint64_t i, bool isSmall, bool isUnsigned) {
+        if (isSmall) {
+            addItem(value(kShortIntTag, (i >> 8) & 0x0F, i & 0xFF));
         } else {
-            uint8_t buf[10];
+            byte buf[10];
             size_t size = PutIntOfLength(&buf[1], i, isUnsigned);
-            buf[0] = (uint8_t)size - 1;
+            buf[0] = (byte)size - 1;
             if (isUnsigned)
                 buf[0] |= 0x08;
             ++size;
             if (size & 1)
                 buf[size++] = 0;  // pad to even size
-            writeValue(internal::kIntTag, buf, size);
+            writeValue(kIntTag, buf, size);
         }
     }
 
-    void encoder::writeInt(int64_t i)   {writeInt(i, (i >= -2048 && i < 2048), false);}
-    void encoder::writeUInt(uint64_t i) {writeInt(i, i < 2048, true);}
+    void encoder::writeInt(int64_t i)   {writeInt(i, (i < 2048 && i >= -2048), false);}
+    void encoder::writeUInt(uint64_t i) {writeInt(i, (i < 2048),               true);}
 
     void encoder::writeDouble(double n) {
         if (isnan(n))
@@ -193,7 +182,7 @@ namespace fleece {
             buf[0] = 0x08; // 'double' size flag
             buf[1] = 0;
             memcpy(&buf[2], &swapped, sizeof(swapped));
-            writeValue(internal::kFloatTag, buf, sizeof(buf));
+            writeValue(kFloatTag, buf, sizeof(buf));
         }
     }
 
@@ -201,16 +190,17 @@ namespace fleece {
         if (isnan(n))
             throw "Can't write NaN";
         if (n == (int32_t)n) {
-            return writeInt((int32_t)n);
+            writeInt((int32_t)n);
         } else {
             littleEndianFloat swapped = n;
             uint8_t buf[2 + sizeof(swapped)];
             buf[0] = 0x00; // 'float' size flag
             buf[1] = 0;
             memcpy(&buf[2], &swapped, sizeof(swapped));
-            writeValue(internal::kFloatTag, buf, sizeof(buf));
+            writeValue(kFloatTag, buf, sizeof(buf));
         }
     }
+
 
 #pragma mark - STRINGS / DATA:
 
@@ -219,11 +209,11 @@ namespace fleece {
         uint8_t buf[4 + kMaxVarintLen64];
         buf[0] = (uint8_t)std::min(s.size, (size_t)0xF);
         const void *dst;
-        if (s.size < _width) {
+        if (s.size < kWide) {
             // Tiny data fits inline:
             memcpy(&buf[1], s.buf, s.size);
-            const void *ptr = writeValue(tag, buf, 1 + s.size, true);
-            dst = offsetby(ptr, 1);
+            writeValue(tag, buf, 1 + s.size);
+            dst = NULL;     // ?????
         } else {
             // Large data doesn't:
             size_t bufLen = 1;
@@ -231,7 +221,7 @@ namespace fleece {
                 bufLen += PutUVarInt(&buf[1], s.size);
             if (s.size == 0)
                 buf[bufLen++] = 0;
-            writeValue(tag, buf, bufLen, false);
+            writeValue(tag, buf, bufLen, false);       // write header/count
             dst = _out.write(s.buf, s.size);
         }
         return slice(dst, s.size);
@@ -239,21 +229,20 @@ namespace fleece {
 
     void encoder::writeString(slice s) {
         // Check whether this string's already been written:
-        if (s.size >= _width && s.size <= kMaxSharedStringSize) {
-            auto entry = _strings->find(s);
-            if (entry != _strings->end()) {
-                uint64_t offset = entry->second;
-                if (writePointerTo(offset))
-                    return;
-                entry->second = _out.length();      // update with offset of new instance of string
+        if (s.size >= kWide && s.size <= kMaxSharedStringSize) {
+            auto entry = _strings.find(s);
+            if (entry != _strings.end()) {
+                writePointer(entry->second);
             } else {
-                size_t offset = _out.length();
-                s = writeData(internal::kStringTag, s);
-                //fprintf(stderr, "Caching `%.*s` --> %zu\n", (int)s.size, s.buf, offset);
-                _strings->insert({s, offset});
+                size_t offset = nextWritePos();
+                s = writeData(kStringTag, s);
+                if (s.buf) {
+                    //fprintf(stderr, "Caching `%.*s` --> %zu\n", (int)s.size, s.buf, offset);
+                    _strings.insert({s, offset});
+                }
             }
         } else {
-            writeData(internal::kStringTag, s);
+            writeData(kStringTag, s);
         }
     }
 
@@ -262,14 +251,55 @@ namespace fleece {
     }
 
     void encoder::writeData(slice s) {
-        writeData(internal::kBinaryTag, s);
+        writeData(kBinaryTag, s);
     }
+
 
 #pragma mark - ARRAYS / DICTIONARIES:
 
-    void encoder::writeArrayOrDict(internal::tags tag, uint32_t count, bool wide,
-                                   encoder *childEncoder) {
-        // Write the array/dict header (2 bytes):
+    void encoder::beginArray(size_t reserve) {
+        _pushed.push_back(_items);
+        _items = new valueArray(kArrayTag);
+        if (reserve > 0)
+            _items->reserve(reserve);
+    }
+
+    void encoder::beginDictionary(size_t reserve) {
+        _pushed.push_back(_items);
+        _items = new valueArray(kDictTag);
+        if (reserve > 0) {
+            _items->reserve(2 * reserve);
+        }
+        _writingKey = _blockedOnKey = true;
+    }
+
+    void encoder::endArray() {
+        endCollection(internal::kArrayTag);
+    }
+
+    void encoder::endDictionary() {
+        if (!_writingKey)
+            throw "need a value";
+        endCollection(internal::kDictTag);
+    }
+
+    void encoder::endCollection(tags tag) {
+        if (_items->tag != tag)
+            throw "ending wrong type of collection";
+
+        // Pop _items off the stack:
+        valueArray *items = _items;
+        _items = _pushed.back();
+        _pushed.pop_back();
+        _writingKey = _blockedOnKey = false;
+
+        checkPointerWidths(items);
+
+        auto count = (uint32_t)items->size();    // includes keys if this is a dict!
+        if (items->tag == kDictTag)
+            count /= 2;
+
+        // Write the array header to the outer value:
         uint8_t buf[2 + kMaxVarintLen32];
         uint32_t inlineCount = std::min(count, (uint32_t)0x07FF);
         buf[0] = (uint8_t)(inlineCount >> 8);
@@ -280,52 +310,40 @@ namespace fleece {
             if (bufLen & 1)
                 buf[bufLen++] = 0;
         }
-        if (wide)
+        if (items->wide)
             buf[0] |= 0x08;     // "wide" flag
-        writeValue(tag, buf, bufLen, (count==0));          // can inline only if empty
+        writeValue(items->tag, buf, bufLen, (count==0));          // can inline only if empty
 
-        // Reserve space for the values (and keys, for dicts):
-        uint8_t width = (wide ? 4 : 2);
-        size_t space = count * width;
-        if (tag == internal::kDictTag)
-            space *= 2;
+        fixPointers(items);
 
-        size_t valOff = _out.length(), keyOff = 0;
-        const void *valPtr = _out.reserveSpace(space), *keyPtr = NULL;
-        if (tag == internal::kDictTag) {
-            keyPtr = valPtr;
-            keyOff = valOff;
-            valPtr = offsetby(valPtr, count*width);
-            valOff += count*width;
+        // Write the values:
+        if (count > 0) {
+            auto nValues = items->size();
+            if (items->wide) {
+                _out.write(&(*items)[0], kWide*nValues);
+            } else {
+                uint16_t narrow[nValues];
+                int i = 0;
+                for (auto v = items->begin(); v != items->end(); ++v, ++i) {
+                    ::memcpy(&narrow[i], &*v, kNarrow);
+                }
+                _out.write(narrow, kNarrow*nValues);
+            }
         }
-
-        childEncoder->_valPtr = valPtr;
-        childEncoder->_keyPtr = keyPtr;
-        childEncoder->_valOff = valOff;
-        childEncoder->_keyOff = keyOff;
+        delete items;
     }
 
     void encoder::writeKey(std::string s)   {writeKey(slice(s));}
 
     void encoder::writeKey(slice s) {
-        if (!_blockedOnKey)
-            throw _keyPtr>0 ? "need a value after a key" : "not a dictionary";
+        if (!_blockedOnKey) {
+            if (_items->tag == kDictTag)
+                throw "need a value after a key";
+            else
+                throw "not writing a dictionary";
+        }
         _blockedOnKey = false;
         writeString(s);
     }
-/*
-    static int keyCmp(void *thunk, const void *a, const void *b) {
-        auto self = (encoder*)thunk;
-        auto i1 = *(uint32*)a, i2 = *(uint32*)b;
-        auto key1 = (const value*)a, key2 = (const value*)b;
-        return key1->asString().compare(key2->asString());
-    }
 
-    void encoder::sortKeys() {
-        uint32_t indexes[_count];
-        for (uint32_t i = 0; i < _count; i++)
-            indexes[i] = i;
-        qsort_r(indexes, _count, sizeof(indexes[0]), this, keyCmp);
-    }
-*/
 }

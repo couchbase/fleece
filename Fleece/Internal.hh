@@ -39,6 +39,11 @@
 namespace fleece {
     namespace internal {
 
+        enum {
+            kNarrow = 2,
+            kWide   = 4
+        };
+
         // The actual tags used in the encoded data, i.e. high 4 bits of 1st byte:
         enum tags : uint8_t {
             kShortIntTag = 0,

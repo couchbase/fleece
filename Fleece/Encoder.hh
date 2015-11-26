@@ -29,7 +29,7 @@ namespace fleece {
     public:
         encoder(Writer&);
         encoder(encoder&&);
-        ~encoder()                              {if (!_parent) delete _strings;}
+        ~encoder();
 
         void reset();
 
@@ -45,13 +45,18 @@ namespace fleece {
         void writeString(slice s);
         void writeData(slice s);
 
-        encoder writeArray(uint32_t count, bool wide =false)
-                    {return encoder(*this, kArray, count, wide);}
-        encoder writeDict(uint32_t count, bool wide =false)
-                    {return encoder(*this, kDict, count, wide);}
+//        encoder writeArray(uint32_t count, bool wide =false)
+//                    {return encoder(*this, kArray, count, wide);}
+//        encoder writeDict(uint32_t count, bool wide =false)
+//                    {return encoder(*this, kDict, count, wide);}
 
+        void beginArray(size_t reserve =0);
+        void endArray();
+
+        void beginDictionary(size_t reserve =0);
         void writeKey(std::string);
         void writeKey(slice);
+        void endDictionary();
 
         // Note: overriding <<(bool) would be dangerous due to implicit conversion
         encoder& operator<< (int64_t i)         {writeInt(i); return *this;}
@@ -67,33 +72,44 @@ namespace fleece {
 #endif
 
     private:
-        encoder(encoder &parent, valueType, uint32_t count, bool wide =false);
-        const void* writeValue(internal::tags, uint8_t *buf, size_t size, bool canInline =true);
-        bool writePointerTo(uint64_t dstOffset);
-        bool makePointer(uint64_t toOffset, const void *dstPtr);
+        class valueArray : public std::vector<value> {
+        public:
+            valueArray(internal::tags t) :tag(t), wide(false) { }
+            const internal::tags tag;
+            bool wide;
+        };
 
+        void addItem(value v);
+        void writeValue(internal::tags, uint8_t buf[], size_t size, bool canInline =true);
+        void writePointer(size_t pos);
         void writeSpecial(uint8_t special);
         void writeInt(uint64_t i, bool isShort, bool isUnsigned);
         slice writeData(internal::tags, slice s);
-        void writeArrayOrDict(internal::tags, uint32_t count, bool wide, encoder *childEncoder);
-        void sortKeys();
+        size_t nextWritePos();
+        void checkPointerWidths(valueArray *items);
+        void fixPointers(valueArray *items);
+        void endCollection(internal::tags tag);
 
         encoder(); // forbidden
         encoder(const encoder&); // forbidden
 
-
         typedef std::unordered_map<slice, uint64_t, sliceHash> stringTable;
 
+        Writer& _out;           // Where output is written to
+        stringTable _strings;   // Maps strings to offsets where they appear as values
+        valueArray *_items;
+        std::vector<valueArray*> _pushed;
+        bool _writingKey;       // True if value being written is a key
+        bool _blockedOnKey;     // True if writes should be refused
+        /*
         encoder *_parent;       // Encoder that created this one
         const void *_valPtr;    // Offset in _out to write next inline value
         const void *_keyPtr;    // Position in _out to write next dictionary key
         size_t _valOff, _keyOff;// _valPtr and _keyPtr as offsets into the output
         size_t _count;          // Count of collection I'm adding to
-        Writer& _out;           // Where output is written to
-        stringTable *_strings;  // Maps strings to offsets where they appear as values
-        uint8_t _width;         // Byte width of array/dict values (2 or 4)
         bool _writingKey;       // True if value being written is a key
         bool _blockedOnKey;     // True if writes should be refused
+         */
 
         friend class JSONReader;
     };

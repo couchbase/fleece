@@ -28,10 +28,6 @@ namespace fleece {
         bool countJSONItems(slice json);
         void push(struct jsonsl_state_st *state);
         void pop(struct jsonsl_state_st *state);
-        static void countCallback(jsonsl_t jsn,
-                                  jsonsl_action_t action,
-                                  struct jsonsl_state_st *state,
-                                  const char *buf);
         static int errorCallback(jsonsl_t jsn,
                                  jsonsl_error_t err,
                                  struct jsonsl_state_st *state,
@@ -47,13 +43,11 @@ namespace fleece {
 
         typedef std::map<size_t, uint64_t> startToLengthMap;
 
-        jsonsl_t _jsn;
-        startToLengthMap _startToLength;    // Maps JSON byte index to collection count
+        encoder &_encoder;                  // encoder to write to
+        jsonsl_t _jsn;                      // JSON parser
         int _error;                         // Parse error from jsonsl
         size_t _errorPos;                   // Byte index where parse error occurred
         slice _input;                       // Current JSON being parsed
-        encoder &_encoder;                  // encoder to write to
-        std::vector<encoder*> _encoders;    // Stack of encoders for collections
     };
 
 }

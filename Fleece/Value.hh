@@ -17,6 +17,7 @@
 #define Fleece_Value_hh
 #include "Internal.hh"
 #include "slice.hh"
+#include "Endian.hh"
 #include <stdint.h>
 
 
@@ -48,7 +49,7 @@ namespace fleece {
 
         /** Returns a pointer to the root value in the encoded data, without validating.
             This is a lot faster, but "undefined behavior" occurs if the data is corrupt... */
-        static const value* fromTrustedData(slice s)    {return (const value*)s.buf;}
+        static const value* fromTrustedData(slice s);
 
         valueType type() const;
 
@@ -83,34 +84,86 @@ namespace fleece {
         static NSMapTable* createSharedStringsTable();
 #endif
 
-    protected:
+//    protected:
         bool isPointer() const       {return (_byte[0] >= (internal::kPointerTagFirst << 4));}
+
         template <bool WIDE>
-            static const value* derefPointer(const value *v);
-        static const value* deref(const value *v, bool wide);
+        uint32_t pointerValue() const {
+            if (WIDE)
+                return (_dec32(*(uint32_t*)_byte) & ~0x80000000) << 1;
+            else
+                return (_dec16(*(uint16_t*)_byte) & ~0x8000) << 1;
+        }
+
+        void shrinkPointer() {
+            _byte[0] = _byte[2] | 0x80;
+            _byte[1] = _byte[3];
+        }
+    protected:
+
+        template <bool WIDE>
+        static const value* derefPointer(const value *v) {
+            return offsetby(v, -(ptrdiff_t)v->pointerValue<WIDE>());
+        }
         template <bool WIDE>
             static const value* deref(const value *v);
+        static const value* deref(const value *v, bool wide);
+
+
+        const value* next(bool wide) const
+                                {return offsetby(this, wide ? internal::kWide : internal::kNarrow);}
+        template <bool WIDE>
+        const value* next() const       {return next(WIDE);}
 
         struct arrayInfo {
             const value* first;
             uint32_t count;
+            bool wide;
+
+            bool next();
+            const value* firstValue() const  {return count ? deref(first, wide) : NULL;}
+            const value* operator[] (unsigned index);
         };
-        unsigned isWideArray() const {return (_byte[0] & 0x08) != 0;}
+
+        bool isWideArray() const {return (_byte[0] & 0x08) != 0;}
         arrayInfo getArrayInfo() const;
         uint32_t arrayCount() const  {return getArrayInfo().count;}
 
     private:
+        value(internal::tags tag, int tiny, int byte1 = 0) {
+            _byte[0] = (uint8_t)((tag<<4) | tiny);
+            _byte[1] = (uint8_t)byte1;
+        }
+
+        // pointer:
+        value(size_t offset, int width) {
+            offset >>= 1;
+            if (width < internal::kWide) {
+                if (offset >= 0x8000)
+                    throw "offset too large";
+                int16_t n = (uint16_t)_enc16(offset | 0x8000); // big-endian, high bit set
+                memcpy(_byte, &n, sizeof(n));
+            } else {
+                if (offset >= 0x80000000)
+                    throw "offset too large";
+                uint32_t n = (uint32_t)_enc32(offset | 0x80000000);
+                memcpy(_byte, &n, sizeof(n));
+            }
+        }
+
         internal::tags tag() const   {return (internal::tags)(_byte[0] >> 4);}
         unsigned tinyValue() const   {return _byte[0] & 0x0F;}
         uint16_t shortValue() const  {return (((uint16_t)_byte[0] << 8) | _byte[1]) & 0x0FFF;}
         template<typename T> T asFloatOfType() const;
 
-        static bool validate(const void* start, slice&);
+        static bool validate(slice);
 
-        uint8_t _byte[2];
+        uint8_t _byte[internal::kWide];
 
         friend class array;
         friend class dict;
+        friend class encoder;
+        friend class ValueTests;
     };
 
 
@@ -120,6 +173,7 @@ namespace fleece {
         uint32_t count() const                      {return arrayCount();}
         const value* get(uint32_t index) const;
 
+        /** A stack-based array iterator */
         class iterator {
         public:
             iterator(const array* a);
@@ -135,7 +189,6 @@ namespace fleece {
         private:
             arrayInfo _a;
             const class value *_value;
-            bool _wide;
         };
     };
 
@@ -150,6 +203,7 @@ namespace fleece {
 
         const value* get_sorted(slice keyToFind) const;
 
+        /** A stack-based dict iterator */
         class iterator {
         public:
             iterator(const dict*);
@@ -161,9 +215,10 @@ namespace fleece {
             iterator& operator++();
 
         private:
+            void readKV();
+
             arrayInfo _a;
-            const class value *_pValue, *_key, *_value;
-            bool _wide;
+            const class value *_key, *_value;
         };
 
     private:

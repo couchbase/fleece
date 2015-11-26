@@ -50,17 +50,19 @@ namespace fleece {
                     break;
             }
         } else if ([obj isKindOfClass: [NSDictionary class]]) {
-            encoder dict = writeDict((uint32_t)[obj count]);
+            beginDictionary((uint32_t)[obj count]);
             for (NSString* key in obj) {
                 nsstring_slice slice(key);
-                dict.writeKey(slice);
-                dict.write([obj objectForKey: key]);
+                writeKey(slice);
+                write([obj objectForKey: key]);
             }
+            endDictionary();
         } else if ([obj isKindOfClass: [NSArray class]]) {
-            encoder array = writeArray((uint32_t)[obj count]);
+            beginArray((uint32_t)[obj count]);
             for (NSString* item in obj) {
-                array.write(item);
+                write(item);
             }
+            endArray();
         } else if ([obj isKindOfClass: [NSData class]]) {
             writeData(slice((NSData*)obj));
         } else if ([obj isKindOfClass: [NSNull class]]) {

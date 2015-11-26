@@ -17,6 +17,7 @@
 #include "Internal.hh"
 #include "Endian.hh"
 #include "varint.hh"
+#include <assert.h>
 #include <math.h>
 
 
@@ -192,34 +193,29 @@ namespace fleece {
 
 #pragma mark - VALIDATION:
 
-    const value* value::fromData(slice s) {
-        slice s2 = s;
-        if (validate(s.buf, s2) && s2.size == 0)
-            return (const value*)s.buf;
-        else
-            return NULL;
+    const value* value::fromTrustedData(slice s) {
+        // Root value is at the end of the data and is two bytes wide:
+        assert(validate(s));
+        return deref<false>( (const value*)offsetby(s.buf, s.size - kNarrow) );
     }
 
-    bool value::validate(const void *start, slice& s) {
-        if (s.size < 2)
+    const value* value::fromData(slice s) {
+        return validate(s) ? fromTrustedData(s) : NULL;
+    }
+
+    bool value::validate(slice s) {
+        if (s.size < 2 || (s.size % 2))
             return false;
-        s.moveStart(s.size);
         return true;    //TODO
     }
 
 #pragma mark - POINTERS:
 
-    template <bool WIDE>
-    const value* value::derefPointer(const value *v) {
-        if (WIDE)
-            return offsetby(v, _dec32(*(uint32_t*)v->_byte) << 1);
-        else
-            return offsetby(v, (int16_t)(_dec16(*(uint16_t*)v->_byte) << 1));
-    }
-
     const value* value::deref(const value *v, bool wide) {
-        while (v->isPointer())
+        while (v->isPointer()) {
             v = wide ? derefPointer<true>(v) : derefPointer<false>(v);
+            wide = true;
+        }
         return v;
     }
 
@@ -232,6 +228,25 @@ namespace fleece {
 
 #pragma mark - ARRAY:
 
+    bool value::arrayInfo::next() {
+        if (count == 0)
+            throw "iterating past end of array";
+        if (--count == 0)
+            return false;
+        first = first->next(wide);
+        return true;
+    }
+
+    const value* value::arrayInfo::operator[] (unsigned index) {
+        if (index >= count)
+            throw "array index out of range";
+        if (wide)
+            return deref<true> (offsetby(first, kWide   * index));
+        else
+            return deref<false>(offsetby(first, kNarrow * index));
+    }
+
+
     value::arrayInfo value::getArrayInfo() const {
         const uint8_t *first = &_byte[2];
         uint32_t count = shortValue() & 0x07FF;
@@ -239,64 +254,45 @@ namespace fleece {
             size_t countSize = GetUVarInt32(slice(first, 10), &count);
             first += countSize + (countSize & 1);
         }
-        return arrayInfo{(const value*)first, count};
+        return arrayInfo{(const value*)first, count, isWideArray()};
     }
 
     const value* array::get(uint32_t index) const {
-        auto info = getArrayInfo();
-        if (index >= info.count)
-            throw "array index out of range";
-        auto v = info.first + index;
-        bool wide = isWideArray();
-        if (wide)
-            v += index;
-        return deref(v, wide);
+        return getArrayInfo()[index];
     }
 
 
     array::iterator::iterator(const array *a) {
         _a = a->getArrayInfo();
-        _wide = a->isWideArray();
-        _value = _a.count ? deref(_a.first, _wide) : NULL;
+        _value = _a.firstValue();
     }
 
     array::iterator& array::iterator::operator++() {
-        if (_a.count == 0)
-            throw "iterating past end of array";
-        if (--_a.count > 0) {
-            if (_wide)
-                ++_a.first;
-            _value = deref(++_a.first, _wide);
-        } else
-            _a.first = _value = NULL;
+        _a.next();
+        _value = _a.firstValue();
         return *this;
     }
 
     const value* array::iterator::operator[] (unsigned index) {
-        if (index >= _a.count)
-            throw "array index out of range";
-        if (_wide)
-            index <<= 1;
-        return deref(_a.first + index, _wide);
+        return _a[index];
     }
 
 
 #pragma mark - DICT:
 
     const value* dict::get(slice keyToFind) const {
-        bool wide = isWideArray();
-        unsigned scale = wide ? 2 : 1;
         auto info = getArrayInfo();
         const value *key = info.first;
         for (uint32_t i = 0; i < info.count; i++) {
-            if (keyToFind.compare(deref(key, wide)->asString()) == 0) {
-                return key + scale*info.count;  // i.e. value at index i
-            }
-            key += scale;
+            auto value = key->next(info.wide);
+            if (keyToFind.compare(deref(key, info.wide)->asString()) == 0)
+                return value;
+            key = value->next(info.wide);
         }
         return NULL;
     }
 
+#if 0
     template <bool WIDE>
     int dict::keyCmp(const void* keyToFindP, const void* keyP) {
         const value *key = value::deref<WIDE>((const value*)keyP);
@@ -316,34 +312,29 @@ namespace fleece {
     const value* dict::get_sorted(slice keyToFind) const {
         return isWideArray() ? get_sorted<true>(keyToFind) : get_sorted<false>(keyToFind);
     }
-
+#endif
 
     dict::iterator::iterator(const dict* d) {
         _a = d->getArrayInfo();
-        _wide = d->isWideArray();
-        if (_a.count) {
-            _pValue = _a.first + _a.count;
-            _key = deref(_a.first, _wide);
-            _value = deref(_pValue, _wide);
-        } else {
-            _key = _value = NULL;
-        }
+        readKV();
     }
 
     dict::iterator& dict::iterator::operator++() {
         if (_a.count == 0)
             throw "iterating past end of dict";
-        if (--_a.count > 0) {
-            if (_wide) {
-                ++_a.first;
-                ++_pValue;
-            }
-            _key = deref(++_a.first, _wide);
-            _value = deref(++_pValue, _wide);
+        --_a.count;
+        _a.first = offsetby(_a.first, _a.wide ? 2*kWide : 2*kNarrow);
+        readKV();
+        return *this;
+    }
+
+    void dict::iterator::readKV() {
+        if (_a.count) {
+            _key   = deref(_a.first,                _a.wide);
+            _value = deref(_a.first->next(_a.wide), _a.wide);
         } else {
             _key = _value = NULL;
         }
-        return *this;
     }
 
 }

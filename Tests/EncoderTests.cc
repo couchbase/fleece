@@ -23,6 +23,7 @@ public:
     void endEncoding() {
         enc.end();
         result = writer.extractOutput();
+        enc.reset();
     }
 
     void checkOutput(const char *expected) {
@@ -36,7 +37,6 @@ public:
                 hex.append(" ");
         }
         AssertEqual(hex, std::string(expected));
-        enc.reset();
     }
 
     void checkReadBool(bool b) {
@@ -117,6 +117,12 @@ public:
 
 #pragma mark - TESTS
 
+    void testPointer() {
+        uint8_t data[2] = {0x80, 0x02};
+        auto v = (const value*)data;
+        AssertEqual(v->pointerValue<false>(), 4u);
+    }
+
     void testSpecial() {
         enc.writeNull();        checkOutput("3000");
         enc.writeBool(false);   checkOutput("3400");    checkReadBool(false);
@@ -130,40 +136,43 @@ public:
         enc.writeInt( 2047);    checkOutput("07FF");    checkRead(2047);
         enc.writeInt(-2048);    checkOutput("0800");    checkRead(-2048);
 
-        enc.writeInt( 2048);    checkOutput("1100 0800");    checkRead(2048);
-        enc.writeInt(-2049);    checkOutput("11FF F700");    checkRead(-2049);
-        enc.writeInt(0x223344); checkOutput("1244 3322");    checkRead(0x223344);
-        enc.writeInt(0x11223344556677);    checkOutput("1677 6655 4433 2211");
+        enc.writeInt( 2048);    checkOutput("1100 0800 8002");    checkRead(2048);
+        enc.writeInt(-2049);    checkOutput("11FF F700 8002");    checkRead(-2049);
+        enc.writeInt(0x223344); checkOutput("1244 3322 8002");    checkRead(0x223344);
+        enc.writeInt(0x11223344556677);    checkOutput("1677 6655 4433 2211 8004");
         checkRead(0x11223344556677);
-        enc.writeInt(0x1122334455667788);  checkOutput("1788 7766 5544 3322 1100");
+        enc.writeInt(0x1122334455667788);  checkOutput("1788 7766 5544 3322 1100 8005");
         checkRead(0x1122334455667788);
-        enc.writeInt(-0x1122334455667788); checkOutput("1778 8899 AABB CCDD EE00");
+        enc.writeInt(-0x1122334455667788); checkOutput("1778 8899 AABB CCDD EE00 8005");
         checkRead(-0x1122334455667788);
-        enc.writeUInt(0xCCBBAA9988776655); checkOutput("1F55 6677 8899 AABB CC00");
+        enc.writeUInt(0xCCBBAA9988776655); checkOutput("1F55 6677 8899 AABB CC00 8005");
         checkReadU(0xCCBBAA9988776655);
-        enc.writeUInt(UINT64_MAX);         checkOutput("1FFF FFFF FFFF FFFF FF00");
+        enc.writeUInt(UINT64_MAX);         checkOutput("1FFF FFFF FFFF FFFF FF00 8005");
         checkReadU(UINT64_MAX);
     }
 
     void testFloats() {
-        enc.writeFloat( 0.5);   checkOutput("2000 0000 003F");           checkReadFloat( 0.5);
-        enc.writeFloat(-0.5);   checkOutput("2000 0000 00BF");           checkReadFloat(-0.5);
-        enc.writeFloat((float)M_PI);   checkOutput("2000 DB0F 4940");           checkReadFloat((float)M_PI);
-        enc.writeDouble(M_PI);  checkOutput("2800 182D 4454 FB21 0940"); checkReadDouble(M_PI);
+        enc.writeFloat( 0.5);   checkOutput("2000 0000 003F 8003");           checkReadFloat( 0.5);
+        enc.writeFloat(-0.5);   checkOutput("2000 0000 00BF 8003");           checkReadFloat(-0.5);
+        enc.writeFloat((float)M_PI);   checkOutput("2000 DB0F 4940 8003");           checkReadFloat((float)M_PI);
+        enc.writeDouble(M_PI);  checkOutput("2800 182D 4454 FB21 0940 8005"); checkReadDouble(M_PI);
     }
 
     void testStrings() {
-        enc.writeString("");    checkOutput("4000");          checkReadString("");
-        enc.writeString("a");   checkOutput("4161");        checkReadString("a");
-        enc.writeString("ab");  checkOutput("4261 62");     checkReadString("ab");
-        enc.writeString("abcdefghijklmn");  checkOutput("4E61 6263 6465 6667 6869 6A6B 6C6D 6E");
+        enc.writeString("");    checkOutput("4000");            checkReadString("");
+        enc.writeString("a");   checkOutput("4161");            checkReadString("a");
+        enc.writeString("ab");  checkOutput("4261 6200 8002");  checkReadString("ab");
+        enc.writeString("abcdefghijklmn");
+        checkOutput("4E61 6263 6465 6667 6869 6A6B 6C6D 6E00 8008");
         checkReadString("abcdefghijklmn");
-        enc.writeString("abcdefghijklmno"); checkOutput("4F0F 6162 6364 6566 6768 696A 6B6C 6D6E 6F");
+        enc.writeString("abcdefghijklmno");
+        checkOutput("4F0F 6162 6364 6566 6768 696A 6B6C 6D6E 6F00 8009");
         checkReadString("abcdefghijklmno");
-        enc.writeString("abcdefghijklmnop"); checkOutput("4F10 6162 6364 6566 6768 696A 6B6C 6D6E 6F70");
+        enc.writeString("abcdefghijklmnop");
+        checkOutput("4F10 6162 6364 6566 6768 696A 6B6C 6D6E 6F70 8009");
         checkReadString("abcdefghijklmnop");
 
-        enc.writeString("müßchop"); checkOutput("496D C3BC C39F 6368 6F70");
+        enc.writeString("müßchop"); checkOutput("496D C3BC C39F 6368 6F70 8005");
         checkReadString("müßchop");
 
         // Check a long string (long enough that length has multi-byte varint encoding):
@@ -176,30 +185,29 @@ public:
         checkReadString(cstr);
     }
 
-    void _testArrays(bool wide) {
+    void testArrays() {
         {
-            encoder array = enc.writeArray(0, wide);
-            array.end();
-            checkOutput(wide ? "6800" : "6000");
+            enc.beginArray();
+            enc.endArray();
+            checkOutput("6000");
             checkArray(0);
         }
         {
-            encoder array = enc.writeArray(1, wide);
-            array.writeNull();
-            array.end();
-            checkOutput(wide ? "6801 3000 0000" : "6001 3000");
+            enc.beginArray(1);
+            enc.writeNull();
+            enc.endArray();
+            checkOutput("6001 3000 8002");
             auto a = checkArray(1);
             auto v = a->get(0);
             Assert(v);
             AssertEqual(v->type(), kNull);
         }
         {
-            encoder array = enc.writeArray(2, wide);
-            array.writeString("a");
-            array.writeString("hello");
-            array.end();
-            checkOutput(wide ? "6802 4161 0000 8000 0002 4568 656C 6C6F"
-                             : "6002 4161 8001 4568 656C 6C6F");
+            enc.beginArray(2);
+            enc.writeString("a");
+            enc.writeString("hello");
+            enc.endArray();
+            checkOutput("4568 656C 6C6F 6002 4161 8005 8003");
             // Check the contents:
             auto a = checkArray(2);
             auto v = a->get(0);
@@ -227,31 +235,27 @@ public:
         }
         {
             // Strings that can be inlined in a wide array:
-            encoder array = enc.writeArray(2, wide);
-            array.writeString("ab");
-            array.writeString("cde");
-            array.end();
-            checkOutput(wide ? "6802 4261 6200 4363 6465"
-                             : "6002 8002 8003 4261 6200 4363 6465");
+            enc.beginArray(2);
+            enc.writeString("ab");
+            enc.writeString("cde");
+            enc.endArray();
+            checkOutput("6802 4261 6200 4363 6465 8005");
         }
     }
 
-    void testArrays()       {_testArrays(false);}
-    void testWideArrays()   {_testArrays(true);}
-
     void testDictionaries() {
         {
-            encoder dict = enc.writeDict(0);
-            dict.end();
+            enc.beginDictionary();
+            enc.endDictionary();
             checkOutput("7000");
             checkDict(0);
         }
         {
-            encoder dict = enc.writeDict(1);
-            dict.writeKey("foo");
-            dict.writeInt(42);
-            dict.end();
-            checkOutput("7001 8002 002A 4366 6F6F");
+            enc.beginDictionary();
+            enc.writeKey("foo");
+            enc.writeInt(42);
+            enc.endDictionary();
+            checkOutput("7801 4366 6F6F 002A 0000 8005");
             auto d = checkDict(1);
             auto v = d->get(slice("foo"));
             Assert(v);
@@ -262,13 +266,13 @@ public:
     }
 
     void testSharedStrings() {
-        encoder array = enc.writeArray(4);
-        array.writeString("a");
-        array.writeString("hello");
-        array.writeString("a");
-        array.writeString("hello");
-        array.end();
-        checkOutput("6004 4161 8003 4161 8001 4568 656C 6C6F");
+        enc.beginArray(4);
+        enc.writeString("a");
+        enc.writeString("hello");
+        enc.writeString("a");
+        enc.writeString("hello");
+        enc.endArray();
+        checkOutput("4568 656C 6C6F 6004 4161 8005 4161 8007 8005");
         auto a = checkArray(4);
         AssertEqual(a->toJSON(), std::string("[\"a\",\"hello\",\"a\",\"hello\"]"));
     }
@@ -291,7 +295,6 @@ public:
     CPPUNIT_TEST( testFloats );
     CPPUNIT_TEST( testStrings );
     CPPUNIT_TEST( testArrays );
-    CPPUNIT_TEST( testWideArrays );
     CPPUNIT_TEST( testDictionaries );
     CPPUNIT_TEST( testSharedStrings );
     CPPUNIT_TEST( testJSON );
