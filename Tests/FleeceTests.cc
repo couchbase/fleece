@@ -73,7 +73,7 @@ alloc_slice readFile(const char *path) {
     fstat(fd, &stat);
     alloc_slice data(stat.st_size);
     ssize_t bytesRead = ::read(fd, (void*)data.buf, data.size);
-    assert(bytesRead == (ssize_t)data.size);
+    AssertEqual(bytesRead, (ssize_t)data.size);
     ::close(fd);
     return data;
 }
@@ -82,7 +82,7 @@ void writeToFile(slice s, const char *path) {
     int fd = ::open(path, O_WRONLY | O_CREAT | O_TRUNC, 0600);
     assert(fd != -1);
     ssize_t written = ::write(fd, s.buf, s.size);
-    assert(written == (ssize_t)s.size);
+    AssertEqual(written, (ssize_t)s.size);
     ::close(fd);
 }
 

@@ -19,6 +19,9 @@
 #include "slice.hh"
 #include "Endian.hh"
 #include <stdint.h>
+#ifdef __OBJC__
+#import <Foundation/NSMapTable.h>
+#endif
 
 
 namespace fleece {

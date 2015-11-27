@@ -105,17 +105,7 @@ namespace fleece {
         unsigned _stackSize;
         bool _writingKey;       // True if value being written is a key
         bool _blockedOnKey;     // True if writes should be refused
-        /*
-        encoder *_parent;       // Encoder that created this one
-        const void *_valPtr;    // Offset in _out to write next inline value
-        const void *_keyPtr;    // Position in _out to write next dictionary key
-        size_t _valOff, _keyOff;// _valPtr and _keyPtr as offsets into the output
-        size_t _count;          // Count of collection I'm adding to
-        bool _writingKey;       // True if value being written is a key
-        bool _blockedOnKey;     // True if writes should be refused
-         */
 
-        friend class JSONReader;
     };
 
 }

@@ -221,8 +221,11 @@ namespace fleece {
 
     template <bool WIDE>
     const value* value::deref(const value *v) {
-        while (v->isPointer())
+        if (v->isPointer()) {
             v = derefPointer<WIDE>(v);
+            while (v->isPointer())
+                v = derefPointer<true>(v);      // subsequent pointers must be wide
+        }
         return v;
     }
 

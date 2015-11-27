@@ -23,7 +23,7 @@ namespace fleece {
         return [[NSMapTable alloc] initWithKeyOptions: NSPointerFunctionsOpaquePersonality |
                                                        NSPointerFunctionsOpaqueMemory
                                          valueOptions: NSPointerFunctionsStrongMemory
-                                             capacity: 10];
+                                             capacity: 1000];
     }
 
 

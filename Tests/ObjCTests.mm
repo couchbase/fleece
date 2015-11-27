@@ -98,7 +98,7 @@ public:
 
             @autoreleasepool {
                 id j = [NSJSONSerialization JSONObjectWithData: data options: 0 error: NULL];
-                assert(j);
+                Assert(j);
             }
 
             double elapsed = st.elapsedMS();
