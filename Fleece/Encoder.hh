@@ -31,6 +31,8 @@ namespace fleece {
         encoder(encoder&&);
         ~encoder();
 
+        void uniqueStrings(bool b)      {_uniqueStrings = b;}
+
         void reset();
 
         void writeNull();
@@ -103,9 +105,14 @@ namespace fleece {
         valueArray *_items;
         std::vector<valueArray> _stack;
         unsigned _stackSize;
+        bool _uniqueStrings;
         bool _writingKey;       // True if value being written is a key
         bool _blockedOnKey;     // True if writes should be refused
 
+#ifndef NDEBUG
+    public:
+        unsigned _numNarrow, _numWide, _narrowCount, _wideCount, _numSavedStrings;
+#endif
     };
 
 }

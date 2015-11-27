@@ -29,11 +29,15 @@ namespace fleece {
     encoder::encoder(Writer &out)
     :_out(out),
      _stackSize(0),
+     _uniqueStrings(true),
      _writingKey(false),
      _blockedOnKey(false)
     {
         _strings.reserve(100);
         push(kSpecialTag, 1);                   // Top-level 'array' is just a single item
+#ifndef NDEBUG
+        _numNarrow = _numWide = _narrowCount = _wideCount = _numSavedStrings = 0;
+#endif
     }
 
     encoder::~encoder() {
@@ -234,10 +238,14 @@ namespace fleece {
 
     void encoder::writeString(slice s) {
         // Check whether this string's already been written:
-        if (__builtin_expect(s.size >= kWide && s.size <= kMaxSharedStringSize, true)) {
+        if (__builtin_expect(_uniqueStrings && s.size >= kWide && s.size <= kMaxSharedStringSize,
+                             true)) {
             auto entry = _strings.find(s);
             if (entry != _strings.end()) {
                 writePointer(entry->second);
+#ifndef NDEBUG
+                _numSavedStrings++;
+#endif
             } else {
                 size_t offset = nextWritePos();
                 s = writeData(kStringTag, s);
@@ -337,6 +345,16 @@ namespace fleece {
                 _out.write(narrow, kNarrow*nValues);
             }
         }
+
+#ifndef NDEBUG
+        if (items->wide) {
+            _numWide++;
+            _wideCount += count;
+        } else {
+            _numNarrow++;
+            _narrowCount += count;
+        }
+#endif
 
         items->clear();
     }

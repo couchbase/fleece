@@ -26,6 +26,7 @@ class PerfTests : public CppUnit::TestFixture {
         for (int i = 0; i < kSamples; i++) {
             Writer writer(input.size);
             encoder e(writer);
+            e.uniqueStrings(true);
             JSONReader jr(e);
             Stopwatch st;
 
@@ -43,8 +44,13 @@ class PerfTests : public CppUnit::TestFixture {
                 fprintf(stderr, "\nJSON size: %zu bytes; Fleece size: %zu bytes (%.2f%%)\n",
                         input.size, result.size, (result.size*100.0/input.size));
                 writeToFile(result, "1000people.fleece");
+#ifndef NDEBUG
+                fprintf(stderr, "Narrow: %u, Wide: %u (total %u)\n", e._numNarrow, e._numWide, e._numNarrow+e._numWide);
+                fprintf(stderr, "Narrow count: %u, Wide count: %u (total %u)\n", e._narrowCount, e._wideCount, e._narrowCount+e._wideCount);
+                fprintf(stderr, "Used %u pointers to shared strings\n", e._numSavedStrings);
+#endif
             }
-}
+        }
         fprintf(stderr, "Average time is %g ms\n", (total - minTime - maxTime)/(kSamples-2));
     }
     
