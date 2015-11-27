@@ -28,11 +28,12 @@ namespace fleece {
 
     encoder::encoder(Writer &out)
     :_out(out),
-     _items(new valueArray(kSpecialTag)),      // Top-level 'array' is just a single item
+     _stackSize(0),
      _writingKey(false),
      _blockedOnKey(false)
     {
         _strings.reserve(100);
+        push(kSpecialTag, 1);                   // Top-level 'array' is just a single item
     }
 
     encoder::~encoder() {
@@ -42,24 +43,27 @@ namespace fleece {
     void encoder::end() {
         if (!_items)
             return;
-        if (_pushed.size() > 0)
+        if (_stackSize > 1)
             throw "unclosed array/dict";
         if (_items->size() > 1)
             throw "top level must have only one value";
 
-        fixPointers(_items);
-        value &root = (*_items)[0];
-        if (_items->wide) {
-            _out.write(&root, kWide);
-            // Top level value is 4 bytes, so append a 2-byte pointer to it, because the trailer
-            // needs to be a 2-byte value:
-            value ptr(4, kNarrow);
-            _out.write(&ptr, kNarrow);
-        } else {
-            _out.write(&root, kNarrow);
+        if (_items->size() > 0) {
+            fixPointers(_items);
+            value &root = (*_items)[0];
+            if (_items->wide) {
+                _out.write(&root, kWide);
+                // Top level value is 4 bytes, so append a 2-byte pointer to it, because the trailer
+                // needs to be a 2-byte value:
+                value ptr(4, kNarrow);
+                _out.write(&ptr, kNarrow);
+            } else {
+                _out.write(&root, kNarrow);
+            }
+            _items->clear();
         }
-        delete _items;
         _items = NULL;
+        _stackSize = 0;
     }
 
     // Returns position in the stream of the next write. Pads stream to even pos if necessary.
@@ -109,8 +113,9 @@ namespace fleece {
     void encoder::reset() {
         end();
         _out = Writer();
+        _stackSize = 0;
+        push(kSpecialTag, 1);
         _strings.erase(_strings.begin(), _strings.end());
-        _items = new valueArray(kSpecialTag);
         _writingKey = _blockedOnKey = false;
     }
 
@@ -229,7 +234,7 @@ namespace fleece {
 
     void encoder::writeString(slice s) {
         // Check whether this string's already been written:
-        if (s.size >= kWide && s.size <= kMaxSharedStringSize) {
+        if (__builtin_expect(s.size >= kWide && s.size <= kMaxSharedStringSize, true)) {
             auto entry = _strings.find(s);
             if (entry != _strings.end()) {
                 writePointer(entry->second);
@@ -257,19 +262,21 @@ namespace fleece {
 
 #pragma mark - ARRAYS / DICTIONARIES:
 
-    void encoder::beginArray(size_t reserve) {
-        _pushed.push_back(_items);
-        _items = new valueArray(kArrayTag);
+    void encoder::push(tags tag, size_t reserve) {
+        if (_stackSize >= _stack.size())
+            _stack.emplace_back();
+        _items = &_stack[_stackSize++];
+        _items->reset(tag);
         if (reserve > 0)
             _items->reserve(reserve);
     }
 
+    void encoder::beginArray(size_t reserve) {
+        push(kArrayTag, reserve);
+    }
+
     void encoder::beginDictionary(size_t reserve) {
-        _pushed.push_back(_items);
-        _items = new valueArray(kDictTag);
-        if (reserve > 0) {
-            _items->reserve(2 * reserve);
-        }
+        push(kDictTag, 2*reserve);
         _writingKey = _blockedOnKey = true;
     }
 
@@ -289,8 +296,8 @@ namespace fleece {
 
         // Pop _items off the stack:
         valueArray *items = _items;
-        _items = _pushed.back();
-        _pushed.pop_back();
+        --_stackSize;
+        _items = &_stack[_stackSize - 1];
         _writingKey = _blockedOnKey = false;
 
         checkPointerWidths(items);
@@ -330,7 +337,8 @@ namespace fleece {
                 _out.write(narrow, kNarrow*nValues);
             }
         }
-        delete items;
+
+        items->clear();
     }
 
     void encoder::writeKey(std::string s)   {writeKey(slice(s));}

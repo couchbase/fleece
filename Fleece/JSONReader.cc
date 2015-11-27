@@ -109,7 +109,7 @@ namespace fleece {
                     auto end = str.end();
                     for (auto src = (const char*)str.buf; src < end; ++src) {
                         char c = *src;
-                        if (c != '\\') {
+                        if (__builtin_expect(c != '\\', true)) {
                             *dst++ = c;
                         } else {
                             switch (*++src) {

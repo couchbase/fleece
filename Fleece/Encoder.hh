@@ -72,10 +72,12 @@ namespace fleece {
 #endif
 
     private:
+        // Stores the pending values to be written to an in-progress array/dict
         class valueArray : public std::vector<value> {
         public:
-            valueArray(internal::tags t) :tag(t), wide(false) { }
-            const internal::tags tag;
+            valueArray()                    { }
+            void reset(internal::tags t)    {tag = t; wide = false;}
+            internal::tags tag;
             bool wide;
         };
 
@@ -89,6 +91,7 @@ namespace fleece {
         void checkPointerWidths(valueArray *items);
         void fixPointers(valueArray *items);
         void endCollection(internal::tags tag);
+        void push(internal::tags tag, size_t reserve);
 
         encoder(); // forbidden
         encoder(const encoder&); // forbidden
@@ -98,7 +101,8 @@ namespace fleece {
         Writer& _out;           // Where output is written to
         stringTable _strings;   // Maps strings to offsets where they appear as values
         valueArray *_items;
-        std::vector<valueArray*> _pushed;
+        std::vector<valueArray> _stack;
+        unsigned _stackSize;
         bool _writingKey;       // True if value being written is a key
         bool _blockedOnKey;     // True if writes should be refused
         /*
