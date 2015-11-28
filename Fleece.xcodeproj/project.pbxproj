@@ -34,6 +34,8 @@
 		272E5A5F1BF91DBE00848580 /* ObjCTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 272E5A5E1BF91DBE00848580 /* ObjCTests.mm */; };
 		272E5A611BF91F6C00848580 /* slice.mm in Sources */ = {isa = PBXBuildFile; fileRef = 272E5A601BF91F6C00848580 /* slice.mm */; };
 		279AC52B1C07776A002C80DB /* ValueTests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 279AC52A1C07776A002C80DB /* ValueTests.cpp */; };
+		279AC5341C096872002C80DB /* fleece_tool.cc in Sources */ = {isa = PBXBuildFile; fileRef = 279AC5331C096872002C80DB /* fleece_tool.cc */; };
+		279AC5381C096B5C002C80DB /* libFleece.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 270FA25C1BF53CAD005DCB13 /* libFleece.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -44,10 +46,26 @@
 			remoteGlobalIDString = 270FA25B1BF53CAD005DCB13;
 			remoteInfo = Fleece;
 		};
+		279AC5391C09759C002C80DB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 270FA2541BF53CAD005DCB13 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 270FA25B1BF53CAD005DCB13;
+			remoteInfo = Fleece;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		272E5A491BF7FE5600848580 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		279AC52F1C096872002C80DB /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = /usr/share/man/man1/;
@@ -93,6 +111,8 @@
 		275C67DB1BFBA0F4008AA9E7 /* Fleece.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Fleece.md; sourceTree = "<group>"; };
 		275C67DC1BFBA128008AA9E7 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		279AC52A1C07776A002C80DB /* ValueTests.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ValueTests.cpp; sourceTree = "<group>"; };
+		279AC5311C096872002C80DB /* fleece */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = fleece; sourceTree = BUILT_PRODUCTS_DIR; };
+		279AC5331C096872002C80DB /* fleece_tool.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = fleece_tool.cc; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -113,6 +133,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		279AC52E1C096872002C80DB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				279AC5381C096B5C002C80DB /* libFleece.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -122,6 +150,7 @@
 				275C67DB1BFBA0F4008AA9E7 /* Fleece.md */,
 				275C67DC1BFBA128008AA9E7 /* README.md */,
 				270FA25E1BF53CAD005DCB13 /* Fleece */,
+				279AC5321C096872002C80DB /* Tool */,
 				272E5A441BF7FD1700848580 /* Tests */,
 				27298E3E1C00F8A9000CFBA8 /* vendor */,
 				272E5A651BFA4B5300848580 /* Libraries */,
@@ -134,6 +163,7 @@
 			children = (
 				270FA25C1BF53CAD005DCB13 /* libFleece.a */,
 				272E5A4B1BF7FE5600848580 /* Test */,
+				279AC5311C096872002C80DB /* fleece */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -212,6 +242,14 @@
 			name = Libraries;
 			sourceTree = "<group>";
 		};
+		279AC5321C096872002C80DB /* Tool */ = {
+			isa = PBXGroup;
+			children = (
+				279AC5331C096872002C80DB /* fleece_tool.cc */,
+			);
+			path = Tool;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -268,6 +306,24 @@
 			productReference = 272E5A4B1BF7FE5600848580 /* Test */;
 			productType = "com.apple.product-type.tool";
 		};
+		279AC5301C096872002C80DB /* Tool */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 279AC5351C096872002C80DB /* Build configuration list for PBXNativeTarget "Tool" */;
+			buildPhases = (
+				279AC52D1C096872002C80DB /* Sources */,
+				279AC52E1C096872002C80DB /* Frameworks */,
+				279AC52F1C096872002C80DB /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				279AC53A1C09759C002C80DB /* PBXTargetDependency */,
+			);
+			name = Tool;
+			productName = Tool;
+			productReference = 279AC5311C096872002C80DB /* fleece */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -281,6 +337,9 @@
 						CreatedOnToolsVersion = 7.1.1;
 					};
 					272E5A4A1BF7FE5600848580 = {
+						CreatedOnToolsVersion = 7.1.1;
+					};
+					279AC5301C096872002C80DB = {
 						CreatedOnToolsVersion = 7.1.1;
 					};
 				};
@@ -299,6 +358,7 @@
 			targets = (
 				270FA25B1BF53CAD005DCB13 /* Fleece */,
 				272E5A4A1BF7FE5600848580 /* Test */,
+				279AC5301C096872002C80DB /* Tool */,
 			);
 		};
 /* End PBXProject section */
@@ -334,6 +394,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		279AC52D1C096872002C80DB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				279AC5341C096872002C80DB /* fleece_tool.cc in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -341,6 +409,11 @@
 			isa = PBXTargetDependency;
 			target = 270FA25B1BF53CAD005DCB13 /* Fleece */;
 			targetProxy = 272E5A531BF7FE8200848580 /* PBXContainerItemProxy */;
+		};
+		279AC53A1C09759C002C80DB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 270FA25B1BF53CAD005DCB13 /* Fleece */;
+			targetProxy = 279AC5391C09759C002C80DB /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -492,6 +565,20 @@
 			};
 			name = Release;
 		};
+		279AC5361C096872002C80DB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = fleece;
+			};
+			name = Debug;
+		};
+		279AC5371C096872002C80DB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = fleece;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -521,6 +608,14 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		279AC5351C096872002C80DB /* Build configuration list for PBXNativeTarget "Tool" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				279AC5361C096872002C80DB /* Debug */,
+				279AC5371C096872002C80DB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 /* End XCConfigurationList section */
 	};
