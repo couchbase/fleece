@@ -18,11 +18,17 @@ class PerfTests : public CppUnit::TestFixture {
     public:
 
     void testConvert1000People() {
-        const int kSamples = 50;
+        int kSamples = 50;
+#ifndef NDEBUG
+        kSamples = 1;
+#endif
+
         double total = 0, minTime = 1e99, maxTime = -1;
         alloc_slice input = readFile(kDir "1000people.json");
 
+#ifdef NDEBUG
         fprintf(stderr, "Converting JSON to Fleece (ms):");
+#endif
         for (int i = 0; i < kSamples; i++) {
             Writer writer(input.size);
             encoder e(writer);
@@ -35,7 +41,9 @@ class PerfTests : public CppUnit::TestFixture {
             auto result = writer.extractOutput();
 
             double elapsed = st.elapsedMS();
+#ifdef NDEBUG
             fprintf(stderr, " %g", elapsed);
+#endif
             total += elapsed;
             minTime = std::min(minTime, elapsed);
             maxTime = std::max(maxTime, elapsed);
@@ -51,7 +59,9 @@ class PerfTests : public CppUnit::TestFixture {
 #endif
             }
         }
+#ifdef NDEBUG
         fprintf(stderr, "Average time is %g ms\n", (total - minTime - maxTime)/(kSamples-2));
+#endif
     }
     
     CPPUNIT_TEST_SUITE( PerfTests );

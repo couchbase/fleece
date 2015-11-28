@@ -1,6 +1,6 @@
 # Fleece
 
-Jens Alfke — 17 Nov 2015
+Jens Alfke — 27 Nov 2015
 
 __Fleece__ is a new binary encoding for semi-structured data. Its data model is a superset of JSON, adding support for binary values. It is designed to be:
 
@@ -10,7 +10,7 @@ __Fleece__ is a new binary encoding for semi-structured data. Its data model is 
 
 ## Format
 
-Fleece data consists of __values__. The value at the start of the data is the primary top-level object, usually a dictionary.
+Fleece data consists of **values**. The value at the _end_ of the data is the primary top-level object, usually a dictionary.
 
 Values are always 2-byte aligned and occupy at least two bytes, with some common values fitting into exactly two bytes:
 
@@ -19,21 +19,25 @@ Values are always 2-byte aligned and occupy at least two bytes, with some common
 * Empty or one-byte strings
 * Empty arrays and dictionaries
 
-An array consists of a two-byte header, an item count (which fits in the header if it's less than 4096), and then a contiguous sequence of values. For fast random access, each value is the same length: 2 bytes in a regular “narrow” array, 4 bytes in a **wide** array.
+An array consists of a two-byte header, an item count (which fits in the header if it's less than 4096), and then a contiguous sequence of values. For fast random access, each value is the same length: 2 bytes in a regular **narrow** array, 4 bytes in a **wide** array.
 
-Dictionaries are like arrays except that they contain one sequence of keys, then another of values. (For JSON compatibility the keys must be strings, but the format allows other types.)
+Dictionaries are like arrays except that each item consists of two values: a key followed by the value it maps to. (For JSON compatibility the keys must be strings, but the format allows other types.)
 
 ### Pointers
 
-How do values longer than 2 bytes fit in a collection? By using __pointers__. A pointer is a special value that represents a relative offset from itself to another value. Pointers are transparently dereferenced, like symlinks. So if a long value needs to be added to a collection, it's written outside the collection, then a pointer to it is added.
+How do values longer than 2 bytes fit in a collection? By using **pointers**. A pointer is a special value that represents a relative offset from itself to another value. Pointers always point back (toward lower addresses) to previously-written values.
 
-(Narrow collections have 2-byte pointers with a range of ±32768 bytes. Wide collections have 4-byte pointers with a range of ±2 gigabytes.)
+Pointers are transparently dereferenced, like symlinks. So if a long value needs to be added to a collection, it's written outside the collection, then a pointer to it is added.
+
+(Narrow collections have 2-byte pointers with a range of up to 65534 bytes back. Wide collections have 4-byte pointers with a range of 4 gigabytes.)
 
 Pointers also allow already-written values to be reused later on. If a string appears multiple times (very common for dictionary keys), it only has to be written once, and all the references to it can be pointers. The same can be done with numbers, though that’s not implemented yet. It's also possible to use pointers for repeated arrays or dictionaries, but detecting the duplicates will slow down writing.
 
->**Note:** The limited range of narrow pointers means that some very long arrays or dictionaries cannot be represented in narrow form, because in the middle of the collection the nearest free space is more than 32k bytes away, making it impossible to add a >2-byte value there. This is the main reason wide collections exist.
+Because the root value is at the end of the data, it's necessary to know how wide that value is, in order to find its starting address. The root value is defined as always being two bytes wide. Since the actual root value will almost always be wider than that, the value written at the end is usually a (narrow) pointer to the real root value.
 
->**Note:** The trade-offs between narrow and wide collections are subtle. Narrow collections are generally more space-efficient, although 3- or 4-byte values use less space in a wide collection since they can be inlined. Narrow collections have limits on sharing of values due to limited pointer range; a string may have to be written twice if the two occurrances are >32kbytes apart. And of course, in some cases only a wide collection will work, as discussed in the previous note. A sufficiently smart encoder could make these decisions, but in the current API it’s left up to the caller to choose the width of a collection.
+>**Note:** The limited range of narrow pointers means that some very long arrays or dictionaries cannot be represented in narrow form, because at the end of the collection the free space before the collection is more than 32k bytes away, making it impossible to add a >2-byte value there. This is the main reason wide collections exist.
+
+>**Note:** The trade-offs between narrow and wide collections are subtle. Narrow collections are generally more space-efficient, although 3- or 4-byte values use less space in a wide collection since they can be inlined. Narrow collections have limits on sharing of values due to limited pointer range; a string may have to be written twice if the two occurrances are >64kbytes apart. And of course, in some cases only a wide collection will work, as discussed in the previous note. The current encoder doesn't use all these criteria to decide, so it sometimes errs on the side of caution and emits a wide value when it could have been narrow.
 
 ### Details
 
@@ -46,8 +50,9 @@ Pointers also allow already-written values to be reused later on. If a string ap
  0101cccc dddddddd...    binary data (same as string)
  0110wccc cccccccc...    array (c = 11-bit item count, if 2047 then count follows as varint;
                                 w = wide, if 1 then following values are 4 bytes wide, not 2)
- 0111wccc cccccccc...    dictionary (same as array)
- 1ooooooo oooooooo       pointer (o = BE signed offset in units of 2 bytes: ±32k bytes)
+ 0111wccc cccccccc...    dictionary (same as array, but each item is a key (string) followed by
+                                     a value.)
+ 1ooooooo oooooooo       pointer (o = BE unsigned offset in units of 2 bytes _backwards_, 0-64kb)
                                 NOTE: In a wide collection, offset field is 31 bits wide
 ```
 Bits marked “-“ are reserved and should be set to zero.
@@ -58,14 +63,24 @@ I’ve tried to make the encoding little-endian-friendly since nearly all mainst
 
 Here is JSON `{“foo”: 123}` converted to Fleece:
 
-| Offset | Bytes | Explanation
-|--------|-------|-------------|
-| 00 | 70 01 | Start of dictionary, count=1 |
-| 02 | 80 02 | Key: Pointer, offset=+4 bytes |
-| 04 | 00 7B | Value: Integer = 123 |
-| 06 | 43 ‘f’ ‘o’ ‘o’ | String “foo””
+| Offset | Bytes          | Explanation                   |
+|--------|----------------|-------------------------------|
+| 00     | 43 ‘f’ ‘o’ ‘o’ | String “foo””                 |
+| 04     | 70 01          | Start of dictionary, count=1  |
+| 06     | 80 03          | Key: Pointer, offset -6 bytes |
+| 08     | 00 7B          | Value: Integer = 123          |
+| 0A     | 80 03          | Trailing ptr, offset -6 bytes |
 
-This occupies 10 bytes — one byte shorter than JSON.
+This occupies 12 bytes — one byte longer than JSON.
+
+Using a wide dictionary, this would be:
+
+| Offset | Bytes          | Explanation                   |
+|--------|----------------|-------------------------------|
+| 00     | 78 01          | Start of dictionary, count=1  |
+| 02     | 43 ‘f’ ‘o’ ‘o’ | Key: String “foo””            |
+| 06     | 00 7B 00 00    | Value: Integer = 123          |
+| 0A     | 80 05          | Trailing ptr, offset -10 bytes|
 
 ## API
 
@@ -77,4 +92,6 @@ Collections provide iterators for sequential access, and getters for random acce
 
 ### Writing
 
-Fleece documents are created using an Encoder object that produces a data blob when it's done. Values are added one by one; the root encoder only allows adding a single value, which is usually a dictionary. Adding a collection produces a new nested encoder, into which you write the items of the collection. (A dictionary encoder requires a key to be written before each value.)
+Fleece documents are created using an Encoder object that produces a data blob when it's done. Values are added one by one. A collection is added by making a `begin` call, then adding the values, then calling `end`. (A dictionary encoder requires a key to be written before each value.)
+
+Behind the scenes, the data is written in bottom-up order: the values in a collection are written before the collection itself. The inline data in the collection is buffered while out-of-line values are written, then the collection object is written at the end.

@@ -28,7 +28,7 @@ namespace fleece {
 
     encoder::encoder(Writer &out)
     :_out(out),
-     _stackSize(0),
+     _stackDepth(0),
      _uniqueStrings(true),
      _writingKey(false),
      _blockedOnKey(false)
@@ -47,7 +47,7 @@ namespace fleece {
     void encoder::end() {
         if (!_items)
             return;
-        if (_stackSize > 1)
+        if (_stackDepth > 1)
             throw "unclosed array/dict";
         if (_items->size() > 1)
             throw "top level must have only one value";
@@ -67,7 +67,7 @@ namespace fleece {
             _items->clear();
         }
         _items = NULL;
-        _stackSize = 0;
+        _stackDepth = 0;
     }
 
     // Returns position in the stream of the next write. Pads stream to even pos if necessary.
@@ -81,43 +81,10 @@ namespace fleece {
         return pos;
     }
 
-    // Check whether any pointers in _items can't fit in a narrow value:
-    void encoder::checkPointerWidths(valueArray *items) {
-        if (!items->wide) {
-            size_t base = nextWritePos();
-            for (auto v = items->begin(); v != items->end(); ++v) {
-                if (v->isPointer()) {
-                    size_t pos = v->pointerValue<true>();
-                    pos = base - pos;
-                    if (pos >= 0x8000) {
-                        items->wide = true;
-                        break;
-                    }
-                }
-                base += kNarrow;
-            }
-        }
-    }
-
-    void encoder::fixPointers(valueArray *items) {
-        // Convert absolute offsets to relative:
-        size_t base = nextWritePos();
-        int width = items->wide ? kWide : kNarrow;
-        for (auto v = items->begin(); v != items->end(); ++v) {
-            if (v->isPointer()) {
-                size_t pos = v->pointerValue<true>();
-                assert(pos < base);
-                pos = base - pos;
-                *v = value(pos, width);
-            }
-            base += width;
-        }
-    }
-
     void encoder::reset() {
         end();
         _out = Writer();
-        _stackSize = 0;
+        _stackDepth = 0;
         push(kSpecialTag, 1);
         _strings.erase(_strings.begin(), _strings.end());
         _writingKey = _blockedOnKey = false;
@@ -152,8 +119,6 @@ namespace fleece {
             _out.write(buf, size);
         }
     }
-
-    void encoder::writePointer(size_t p)   {addItem(value(p, kWide));}
 
 
 #pragma mark - SCALARS:
@@ -268,12 +233,49 @@ namespace fleece {
     }
 
 
+#pragma mark - POINTERS:
+
+    // Pointers are added here as absolute positions in the stream (and fixed up before writing)
+    void encoder::writePointer(size_t p)   {addItem(value(p, kWide));}
+
+    // Check whether any pointers in _items can't fit in a narrow value:
+    void encoder::checkPointerWidths(valueArray *items) {
+        if (!items->wide) {
+            size_t base = nextWritePos();
+            for (auto v = items->begin(); v != items->end(); ++v) {
+                if (v->isPointer()) {
+                    size_t pos = v->pointerValue<true>();
+                    if (base - pos >= 0x10000) {
+                        items->wide = true;
+                        break;
+                    }
+                }
+                base += kNarrow;
+            }
+        }
+    }
+
+    // Convert absolute offsets to relative in _items:
+    void encoder::fixPointers(valueArray *items) {
+        size_t base = nextWritePos();
+        int width = items->wide ? kWide : kNarrow;
+        for (auto v = items->begin(); v != items->end(); ++v) {
+            if (v->isPointer()) {
+                size_t pos = v->pointerValue<true>();
+                assert(pos < base);
+                pos = base - pos;
+                *v = value(pos, width);
+            }
+            base += width;
+        }
+    }
+
 #pragma mark - ARRAYS / DICTIONARIES:
 
     void encoder::push(tags tag, size_t reserve) {
-        if (_stackSize >= _stack.size())
+        if (_stackDepth >= _stack.size())
             _stack.emplace_back();
-        _items = &_stack[_stackSize++];
+        _items = &_stack[_stackDepth++];
         _items->reset(tag);
         if (reserve > 0)
             _items->reserve(reserve);
@@ -304,8 +306,8 @@ namespace fleece {
 
         // Pop _items off the stack:
         valueArray *items = _items;
-        --_stackSize;
-        _items = &_stack[_stackSize - 1];
+        --_stackDepth;
+        _items = &_stack[_stackDepth - 1];
         _writingKey = _blockedOnKey = false;
 
         checkPointerWidths(items);
@@ -338,7 +340,7 @@ namespace fleece {
                 _out.write(&(*items)[0], kWide*nValues);
             } else {
                 uint16_t narrow[nValues];
-                int i = 0;
+                size_t i = 0;
                 for (auto v = items->begin(); v != items->end(); ++v, ++i) {
                     ::memcpy(&narrow[i], &*v, kNarrow);
                 }

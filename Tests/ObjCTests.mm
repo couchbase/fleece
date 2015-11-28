@@ -117,7 +117,9 @@ public:
     CPPUNIT_TEST( testStrings );
     CPPUNIT_TEST( testArrays );
     CPPUNIT_TEST( testDictionaries );
+#ifdef NDEBUG
     CPPUNIT_TEST( testPerfParse1000PeopleNS );
+#endif
     CPPUNIT_TEST_SUITE_END();
 };
 

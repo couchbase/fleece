@@ -47,11 +47,6 @@ namespace fleece {
         void writeString(slice s);
         void writeData(slice s);
 
-//        encoder writeArray(uint32_t count, bool wide =false)
-//                    {return encoder(*this, kArray, count, wide);}
-//        encoder writeDict(uint32_t count, bool wide =false)
-//                    {return encoder(*this, kDict, count, wide);}
-
         void beginArray(size_t reserve =0);
         void endArray();
 
@@ -101,11 +96,11 @@ namespace fleece {
         typedef std::unordered_map<slice, uint64_t, sliceHash> stringTable;
 
         Writer& _out;           // Where output is written to
-        stringTable _strings;   // Maps strings to offsets where they appear as values
-        valueArray *_items;
-        std::vector<valueArray> _stack;
-        unsigned _stackSize;
-        bool _uniqueStrings;
+        valueArray *_items;     // Values of the currently-open array/dict; == &_stack[_stackDepth]
+        std::vector<valueArray> _stack; // Stack of open arrays/dicts
+        unsigned _stackDepth;   // Current depth of _stack
+        stringTable _strings;   // Maps strings to the offsets where they appear as values
+        bool _uniqueStrings;    // Should strings be uniqued before writing?
         bool _writingKey;       // True if value being written is a key
         bool _blockedOnKey;     // True if writes should be refused
 
