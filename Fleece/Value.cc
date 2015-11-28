@@ -287,10 +287,10 @@ namespace fleece {
         auto info = getArrayInfo();
         const value *key = info.first;
         for (uint32_t i = 0; i < info.count; i++) {
-            auto value = key->next(info.wide);
+            auto val = key->next(info.wide);
             if (keyToFind.compare(deref(key, info.wide)->asString()) == 0)
-                return value;
-            key = value->next(info.wide);
+                return deref(val, info.wide);
+            key = val->next(info.wide);
         }
         return NULL;
     }
