@@ -17,6 +17,8 @@
 
 using namespace fleece;
 
+//FIX: Stop hardcoding path
+#define kDir "/Couchbase/Fleece/Tests/"
 
 // Less-obnoxious names for assertions:
 #define Assert CPPUNIT_ASSERT

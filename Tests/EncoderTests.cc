@@ -289,6 +289,43 @@ public:
         AssertEqual(output, json);
     }
 
+    void testConvertPeople() {
+        alloc_slice input = readFile(kDir "1000people.json");
+
+        enc.uniqueStrings(true);
+        JSONReader jr(enc);
+        jr.writeJSON(input);
+        enc.end();
+        result = writer.extractOutput();
+        
+        Assert(result.buf);
+        writeToFile(result, "1000people.fleece");
+
+        fprintf(stderr, "\nJSON size: %zu bytes; Fleece size: %zu bytes (%.2f%%)\n",
+                input.size, result.size, (result.size*100.0/input.size));
+#ifndef NDEBUG
+        fprintf(stderr, "Narrow: %u, Wide: %u (total %u)\n", enc._numNarrow, enc._numWide, enc._numNarrow+enc._numWide);
+        fprintf(stderr, "Narrow count: %u, Wide count: %u (total %u)\n", enc._narrowCount, enc._wideCount, enc._narrowCount+enc._wideCount);
+        fprintf(stderr, "Used %u pointers to shared strings\n", enc._numSavedStrings);
+#endif
+    }
+
+    void testFindPersonByIndex() {
+        mmap_slice doc(kDir "1000people.fleece");
+        auto root = value::fromTrustedData(doc)->asArray();
+        Assert(root);
+        auto person = root->get(123)->asDict();
+#if 0
+        for (dict::iterator iter(person); iter; ++iter) {
+            std::cerr << std::string(iter.key()->asString()) << ": " << iter.value()->toJSON() << "\n";
+        }
+#endif
+        auto name = person->get(slice("name"));
+        Assert(name);
+        std::string nameStr = (std::string)name->asString();
+        AssertEqual(nameStr, std::string("Concepcion Burns"));
+    }
+
     CPPUNIT_TEST_SUITE( EncoderTests );
     CPPUNIT_TEST( testSpecial );
     CPPUNIT_TEST( testInts );
@@ -298,6 +335,8 @@ public:
     CPPUNIT_TEST( testDictionaries );
     CPPUNIT_TEST( testSharedStrings );
     CPPUNIT_TEST( testJSON );
+    CPPUNIT_TEST( testConvertPeople );
+    CPPUNIT_TEST( testFindPersonByIndex );
     CPPUNIT_TEST_SUITE_END();
 };
 
