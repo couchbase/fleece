@@ -196,7 +196,7 @@ namespace fleece {
     const value* value::fromTrustedData(slice s) {
         // Root value is at the end of the data and is two bytes wide:
         assert(validate(s));
-        return deref<false>( (const value*)offsetby(s.buf, s.size - kNarrow) );
+        return deref<false>(rootPointer(s));
     }
 
     const value* value::fromData(slice s) {
@@ -240,7 +240,7 @@ namespace fleece {
         return true;
     }
 
-    const value* value::arrayInfo::operator[] (unsigned index) {
+    const value* value::arrayInfo::operator[] (unsigned index) const {
         if (index >= count)
             throw "array index out of range";
         if (wide)

@@ -289,6 +289,40 @@ public:
         AssertEqual(output, json);
     }
 
+    void testDump() {
+        std::string json = "{\"foo\":123,"
+                           "\"\\\"ironic\\\"\":[null,false,true,-100,0,100,123.456,6.02e+23],"
+                           "\"\":\"hello\\nt\\\\here\"}";
+        JSONReader j(enc);
+        j.writeJSON(slice(json));
+        endEncoding();
+        std::string dumped = value::dump(result);
+        //std::cerr << dumped;
+        AssertEqual(dumped, std::string("\
+0000: 48 22 69 72…: \"\\\"ironic\\\"\"\n\
+000a: 28 00 77 be…: 123.456\n\
+0014: 28 00 61 d3…: 6.02e+23\n\
+001e: 60 08       : Array[8]:\n\
+0020: 30 00       :   null\n\
+0022: 34 00       :   false\n\
+0024: 38 00       :   true\n\
+0026: 0f 9c       :   -100\n\
+0028: 00 00       :   0\n\
+002a: 00 64       :   100\n\
+002c: 80 11       :   &123.456 (@000a)\n\
+002e: 80 0d       :   &6.02e+23 (@0014)\n\
+0030: 4c 68 65 6c…: \"hello\\nt\\\\here\"\n\
+003e: 78 03       : Dict[3]:\n\
+0040: 43 66 6f 6f :   \"foo\"\n\
+0044: 00 7b 00 00 :     123\n\
+0048: 80 00 00 24 :   &\"\\\"ironic\\\"\" (@0000)\n\
+004c: 80 00 00 17 :     &Array[8] (@001e)\n\
+0050: 40 00 00 00 :   \"\"\n\
+0054: 80 00 00 12 :     &\"hello\\nt\\\\here\" (@0030)\n\
+0058: 80 0d       : &Dict[3] (@003e)\n\
+"));
+    }
+
     void testConvertPeople() {
         alloc_slice input = readFile(kDir "1000people.json");
 
@@ -335,6 +369,7 @@ public:
     CPPUNIT_TEST( testDictionaries );
     CPPUNIT_TEST( testSharedStrings );
     CPPUNIT_TEST( testJSON );
+    CPPUNIT_TEST( testDump );
     CPPUNIT_TEST( testConvertPeople );
     CPPUNIT_TEST( testFindPersonByIndex );
     CPPUNIT_TEST_SUITE_END();

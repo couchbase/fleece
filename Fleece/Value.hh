@@ -19,6 +19,7 @@
 #include "slice.hh"
 #include "Endian.hh"
 #include <stdint.h>
+#include <map>
 #ifdef __OBJC__
 #import <Foundation/NSMapTable.h>
 #endif
@@ -81,6 +82,9 @@ namespace fleece {
         /** Returns a JSON representation. */
         std::string toJSON() const;
 
+        static bool writeDump(slice data, std::ostream&);
+        static std::string dump(slice data);
+
 #ifdef __OBJC__
         id asNSObject() const;
         id asNSObject(NSMapTable *sharedStrings) const;
@@ -123,9 +127,10 @@ namespace fleece {
             uint32_t count;
             bool wide;
 
+            const value* second() const      {return first->next(wide);}
             bool next();
             const value* firstValue() const  {return count ? deref(first, wide) : NULL;}
-            const value* operator[] (unsigned index);
+            const value* operator[] (unsigned index) const;
         };
 
         bool isWideArray() const {return (_byte[0] & 0x08) != 0;}
@@ -159,6 +164,16 @@ namespace fleece {
         uint16_t shortValue() const  {return (((uint16_t)_byte[0] << 8) | _byte[1]) & 0x0FFF;}
         template<typename T> T asFloatOfType() const;
 
+        // dump:
+        static const value* rootPointer(slice s) {
+            return (const value*)offsetby(s.buf, s.size - internal::kNarrow);
+        }
+        size_t dataSize() const;
+        typedef std::map<size_t, const value*> mapByAddress;
+        void mapAddresses(mapByAddress&) const;
+        void writeDump(std::ostream &out, bool wide, int indent, const void *base) const;
+        void writeDumpBrief(std::ostream &out, const void *base, bool wide =false) const;
+
         static bool validate(slice);
 
         uint8_t _byte[internal::kWide];
@@ -190,8 +205,11 @@ namespace fleece {
             iterator& operator++();
 
         private:
+            const class value* rawValue()           {return _a.first;}
+
             arrayInfo _a;
             const class value *_value;
+            friend class value;
         };
     };
 
@@ -219,9 +237,12 @@ namespace fleece {
 
         private:
             void readKV();
+            const class value* rawKey()             {return _a.first;}
+            const class value* rawValue()           {return _a.second();}
 
             arrayInfo _a;
             const class value *_key, *_value;
+            friend class value;
         };
 
     private:

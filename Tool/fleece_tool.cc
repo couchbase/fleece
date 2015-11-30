@@ -17,6 +17,7 @@ using namespace std;
 static void usage(void) {
     fprintf(stderr, "usage: fleece --encode [JSON file]\n");
     fprintf(stderr, "       fleece --decode [Fleece file]\n");
+    fprintf(stderr, "       fleece --dump [Fleece file]\n");
     fprintf(stderr, "  Reads stdin unless a file is given; always writes to stdout.\n");
 }
 
@@ -36,7 +37,7 @@ static alloc_slice readInput(FILE *in) {
 
 int main(int argc, const char * argv[]) {
     try {
-        bool encode = false, decode = false;
+        bool encode = false, decode = false, dump = false;
 
         int i;
         for (i = 1; i < argc; ++i) {
@@ -50,6 +51,8 @@ int main(int argc, const char * argv[]) {
                 encode = true;
             } else if (strcmp(arg, "--decode") == 0) {
                 decode = true;
+            } else if (strcmp(arg, "--dump") == 0) {
+                dump = true;
             } else if (strcmp(arg, "--help") == 0) {
                 usage();
                 return 0;
@@ -60,8 +63,8 @@ int main(int argc, const char * argv[]) {
             }
         }
 
-        if (encode == decode) {
-            fprintf(stderr, "Use --encode or --decode, but not both\n");
+        if (encode + decode + dump != 1) {
+            fprintf(stderr, "Choose one of --encode, --decode, or --dump\n");
             usage();
             return 1;
         }
@@ -101,6 +104,9 @@ int main(int argc, const char * argv[]) {
             if (!root)
                 throw "Couldn't parse input as Fleece";
             root->writeJSON(cout);
+        } else if (dump) {
+            if (!value::writeDump(input, cout))
+                throw "Couldn't parse input as Fleece";
         }
 
         return 0;
