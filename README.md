@@ -14,6 +14,7 @@ __Fleece__ is a new binary encoding for semi-structured data. Its data model is 
   * A transcoder into JSON
   * Extensions for encoding from and decoding to Objective-C (Foundation) object trees.
   * Unit tests
+* A command-line tool, `fleece`, that can convert JSON to Fleece or vice versa, or dump Fleece data in a human-readable form that shows the internal structure
 
 ## Status
 
