@@ -112,6 +112,9 @@ namespace fleece {
         static const value* derefPointer(const value *v) {
             return offsetby(v, -(ptrdiff_t)v->pointerValue<WIDE>());
         }
+        static const value* derefPointer(const value *v, bool wide) {
+            return wide ? derefPointer<true>(v) : derefPointer<false>(v);
+        }
         template <bool WIDE>
             static const value* deref(const value *v);
         static const value* deref(const value *v, bool wide);
@@ -175,6 +178,7 @@ namespace fleece {
         void writeDumpBrief(std::ostream &out, const void *base, bool wide =false) const;
 
         static bool validate(slice);
+        bool validate(const void* dataStart, const void *dataEnd, bool wide) const;
 
         uint8_t _byte[internal::kWide];
 

@@ -195,7 +195,7 @@ namespace fleece {
 
     const value* value::fromTrustedData(slice s) {
         // Root value is at the end of the data and is two bytes wide:
-        assert(validate(s));
+        assert(validate(s)); // validate anyway, in debug builds; abort if invalid
         return deref<false>(rootPointer(s));
     }
 
@@ -206,8 +206,45 @@ namespace fleece {
     bool value::validate(slice s) {
         if (s.size < 2 || (s.size % 2))
             return false;
-        return true;    //TODO
+        return rootPointer(s)->validate(s.buf, s.end(), false);
     }
+
+    bool value::validate(const void *dataStart, const void *dataEnd, bool wide) const {
+        // TODO: watch out for integer overflow/wraparound in 32-bit.
+        // First dereference a pointer:
+        if (isPointer()) {
+            auto derefed = derefPointer(this, wide);
+            return derefed >= dataStart && derefed->validate(dataStart, this, true);
+        }
+        auto t = tag();
+        size_t size = dataSize();
+        if (t == kArrayTag || t == kDictTag) {
+            wide = isWideArray();
+            size_t itemCount = arrayCount();
+            if (t == kDictTag)
+                itemCount *= 2;
+            // Check that size fits:
+            size += itemCount * (wide ? kWide : kNarrow);
+            if (offsetby(this, size) > dataEnd)
+                return false;
+
+            // Check each array/dict element:
+            if (itemCount > 0) {
+                auto item = getArrayInfo().first;
+                while (itemCount-- > 0) {
+                    auto second = item->next(wide);
+                    if (!item->validate(dataStart, second, wide))
+                        return false;
+                    item = second;
+                }
+            }
+            return true;
+        } else {
+            // Non-collection; just check that size fits:
+            return offsetby(this, size) <= dataEnd;
+        }
+    }
+
 
 #pragma mark - POINTERS:
 
