@@ -25,14 +25,27 @@
 
 namespace fleece {
 
-    class encoder {
+    /** Generates Fleece-encoded data. */
+    class Encoder {
     public:
-        encoder(Writer&);
-        encoder(encoder&&);
-        ~encoder();
+        /** Constructs an encoder that will write to the given Writer. */
+        Encoder(Writer&);
 
+        Encoder(Encoder&&);  // Move constructor
+        ~Encoder();
+
+        /** Returns the Writer that the encoded data is written to. */
+        Writer& writer() const          {return _out;}
+
+        /** Sets the uniqueStrings property. If true (the default), the encoder tries to write
+            each unique string only once. This saves space but makes the encoder slightly slower. */
         void uniqueStrings(bool b)      {_uniqueStrings = b;}
 
+        /** Ends encoding, writing the last of the data to the Writer. */
+        void end();
+
+        /** Resets the encoder so it can be used again. This creates a new empty Writer,
+            which can be accessed via the writer() method. */
         void reset();
 
         void writeNull();
@@ -47,24 +60,42 @@ namespace fleece {
         void writeString(slice s);
         void writeData(slice s);
 
+        /** Begins creating an array. Until endArray is called, values written to the encoder are
+            added to this array.
+            @param reserve  If nonzero, space is preallocated for this many values. This has no
+                            effect on the output but can speed up encoding slightly. */
         void beginArray(size_t reserve =0);
+
+        /** Ends creating an array. The array is written to the output and added as a value to
+            the next outermost collection (or made the root if there is no collection active.) */
         void endArray();
 
+        /** Begins creating a dictionary. Until endDict is called, values written to the encoder
+            are added to this dictionary.
+            While creating a dictionary, writeKey must be called before every value.
+            @param reserve  If nonzero, space is preallocated for this many values. This has no
+                            effect on the output but can speed up encoding slightly. */
         void beginDictionary(size_t reserve =0);
+
+        /** Writes a key to the current dictionary. This must be called before adding a value. */
         void writeKey(std::string);
+        /** Writes a key to the current dictionary. This must be called before adding a value. */
         void writeKey(slice);
+
+        /** Ends creating a dictionary. The dict is written to the output and added as a value to
+            the next outermost collection (or made the root if there is no collection active.) */
         void endDictionary();
 
         // Note: overriding <<(bool) would be dangerous due to implicit conversion
-        encoder& operator<< (int64_t i)         {writeInt(i); return *this;}
-        encoder& operator<< (double d)          {writeDouble(d); return *this;}
-        encoder& operator<< (float f)           {writeFloat(f); return *this;}
-        encoder& operator<< (std::string str)   {writeString(str); return *this;}
-        encoder& operator<< (slice s)           {writeString(s); return *this;} // string not data!
-
-        void end();
+        Encoder& operator<< (int64_t i)         {writeInt(i); return *this;}
+        Encoder& operator<< (double d)          {writeDouble(d); return *this;}
+        Encoder& operator<< (float f)           {writeFloat(f); return *this;}
+        Encoder& operator<< (std::string str)   {writeString(str); return *this;}
+        Encoder& operator<< (slice s)           {writeString(s); return *this;} // string not data!
 
 #ifdef __OBJC__
+        /** Writes an Objective-C object. Supported classes are the ones allowed by
+            NSJSONSerialization, as well as NSData. */
         void write(id);
 #endif
 
@@ -90,8 +121,8 @@ namespace fleece {
         void endCollection(internal::tags tag);
         void push(internal::tags tag, size_t reserve);
 
-        encoder(); // forbidden
-        encoder(const encoder&); // forbidden
+        Encoder(); // forbidden
+        Encoder(const Encoder&); // forbidden
 
         typedef std::unordered_map<slice, uint64_t, sliceHash> stringTable;
 

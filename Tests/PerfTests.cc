@@ -7,7 +7,7 @@
 //
 
 #include "FleeceTests.hh"
-#include "JSONReader.hh"
+#include "JSONConverter.hh"
 #include <assert.h>
 
 using namespace fleece;
@@ -19,17 +19,17 @@ class PerfTests : public CppUnit::TestFixture {
         int kSamples = 50;
 
         double total = 0, minTime = 1e99, maxTime = -1;
-        alloc_slice input = readFile(kDir "1000people.json");
+        alloc_slice input = readFile(kTestFilesDir "1000people.json");
 
         fprintf(stderr, "Converting JSON to Fleece (ms):");
         for (int i = 0; i < kSamples; i++) {
             Writer writer(input.size);
-            encoder e(writer);
+            Encoder e(writer);
             e.uniqueStrings(true);
-            JSONReader jr(e);
+            JSONConverter jr(e);
             Stopwatch st;
 
-            jr.writeJSON(input);
+            jr.convertJSON(input);
             e.end();
             auto result = writer.extractOutput();
 
@@ -58,7 +58,7 @@ class PerfTests : public CppUnit::TestFixture {
             Stopwatch st;
 
             for (int j = 0; j < 1000; j++) {
-                mmap_slice doc(kDir "1000people.fleece");
+                mmap_slice doc(kTestFilesDir "1000people.fleece");
                 auto root = value::fromTrustedData(doc)->asArray();
                 auto person = root->get(123)->asDict();
                 auto name = person->get(slice("name"));

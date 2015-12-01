@@ -6,16 +6,16 @@
 //  Copyright © 2015 Couchbase. All rights reserved.
 //
 
-#include "JSONReader.hh"
+#include "JSONConverter.hh"
 #include "jsonsl.h"
 #include <map>
 
 namespace fleece {
 
-    JSONReader::JSONReader(encoder &e)
+    JSONConverter::JSONConverter(Encoder &e)
     :_jsn(jsonsl_new(0x2000)),
      _encoder(e),
-     _error(0),
+     _error(JSONSL_ERROR_SUCCESS),
      _errorPos(0)
     {
         if (!_jsn)
@@ -23,14 +23,14 @@ namespace fleece {
         _jsn->data = this;
     }
 
-    JSONReader::~JSONReader() {
+    JSONConverter::~JSONConverter() {
         if (_jsn)
             jsonsl_destroy(_jsn);
     }
 
-    bool JSONReader::writeJSON(slice json) {
+    bool JSONConverter::convertJSON(slice json) {
         _input = json;
-        _error = 0;
+        _error = JSONSL_ERROR_SUCCESS;
         _errorPos = 0;
 
         _jsn->data = this;
@@ -44,25 +44,25 @@ namespace fleece {
         return true;
     }
     
-    void JSONReader::writePushCallback(jsonsl_t jsn,
+    void JSONConverter::writePushCallback(jsonsl_t jsn,
                                        jsonsl_action_t action,
                                        struct jsonsl_state_st *state,
                                        const char *buf)
     {
-        auto self = (JSONReader*)jsn->data;
+        auto self = (JSONConverter*)jsn->data;
         self->push(state);
     }
 
-    void JSONReader::writePopCallback(jsonsl_t jsn,
+    void JSONConverter::writePopCallback(jsonsl_t jsn,
                                       jsonsl_action_t action,
                                       struct jsonsl_state_st *state,
                                       const char *buf)
     {
-        auto self = (JSONReader*)jsn->data;
+        auto self = (JSONConverter*)jsn->data;
         self->pop(state);
     }
 
-    void JSONReader::push(struct jsonsl_state_st *state) {
+    void JSONConverter::push(struct jsonsl_state_st *state) {
         switch (state->type) {
             case JSONSL_T_LIST:
                 _encoder.beginArray();
@@ -73,7 +73,7 @@ namespace fleece {
         }
     }
 
-    void JSONReader::pop(struct jsonsl_state_st *state) {
+    void JSONConverter::pop(struct jsonsl_state_st *state) {
         switch (state->type) {
             case JSONSL_T_SPECIAL: {
                 unsigned f = state->special_flags;
@@ -144,12 +144,12 @@ namespace fleece {
         }
     }
 
-    int JSONReader::errorCallback(jsonsl_t jsn,
+    int JSONConverter::errorCallback(jsonsl_t jsn,
                                   jsonsl_error_t err,
                                   struct jsonsl_state_st *state,
                                   char *errat)
     {
-        auto self = (JSONReader*)jsn->data;
+        auto self = (JSONConverter*)jsn->data;
         self->_error = err;
         self->_errorPos = errat - (char*)self->_input.buf;
         jsonsl_stop(jsn);

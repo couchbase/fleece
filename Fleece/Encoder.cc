@@ -26,7 +26,7 @@ namespace fleece {
 
     using namespace internal;
 
-    encoder::encoder(Writer &out)
+    Encoder::Encoder(Writer &out)
     :_out(out),
      _stackDepth(0),
      _uniqueStrings(true),
@@ -40,11 +40,11 @@ namespace fleece {
 #endif
     }
 
-    encoder::~encoder() {
+    Encoder::~Encoder() {
         end();
     }
 
-    void encoder::end() {
+    void Encoder::end() {
         if (!_items)
             return;
         if (_stackDepth > 1)
@@ -71,7 +71,7 @@ namespace fleece {
     }
 
     // Returns position in the stream of the next write. Pads stream to even pos if necessary.
-    size_t encoder::nextWritePos() {
+    size_t Encoder::nextWritePos() {
         size_t pos = _out.length();
         if (pos & 1) {
             byte zero = 0;
@@ -81,7 +81,7 @@ namespace fleece {
         return pos;
     }
 
-    void encoder::reset() {
+    void Encoder::reset() {
         end();
         _out = Writer();
         _stackDepth = 0;
@@ -93,7 +93,7 @@ namespace fleece {
 
 #pragma mark - WRITING:
 
-    void encoder::addItem(value v) {
+    void Encoder::addItem(value v) {
         if (_blockedOnKey)
             throw "need a key before this value";
         if (_writingKey) {
@@ -106,7 +106,7 @@ namespace fleece {
         _items->push_back(v);
     }
 
-    void encoder::writeValue(tags tag, byte buf[], size_t size, bool canInline) {
+    void Encoder::writeValue(tags tag, byte buf[], size_t size, bool canInline) {
         buf[0] |= tag << 4;
         if (canInline && size <= 4) {
             if (size < 4)
@@ -123,10 +123,10 @@ namespace fleece {
 
 #pragma mark - SCALARS:
 
-    void encoder::writeNull()              {addItem(value(kSpecialTag, kSpecialValueNull));}
-    void encoder::writeBool(bool b)        {addItem(value(kSpecialTag, b ? kSpecialValueTrue
+    void Encoder::writeNull()              {addItem(value(kSpecialTag, kSpecialValueNull));}
+    void Encoder::writeBool(bool b)        {addItem(value(kSpecialTag, b ? kSpecialValueTrue
                                                                        : kSpecialValueFalse));}
-    void encoder::writeInt(uint64_t i, bool isSmall, bool isUnsigned) {
+    void Encoder::writeInt(uint64_t i, bool isSmall, bool isUnsigned) {
         if (isSmall) {
             addItem(value(kShortIntTag, (i >> 8) & 0x0F, i & 0xFF));
         } else {
@@ -142,10 +142,10 @@ namespace fleece {
         }
     }
 
-    void encoder::writeInt(int64_t i)   {writeInt(i, (i < 2048 && i >= -2048), false);}
-    void encoder::writeUInt(uint64_t i) {writeInt(i, (i < 2048),               true);}
+    void Encoder::writeInt(int64_t i)   {writeInt(i, (i < 2048 && i >= -2048), false);}
+    void Encoder::writeUInt(uint64_t i) {writeInt(i, (i < 2048),               true);}
 
-    void encoder::writeDouble(double n) {
+    void Encoder::writeDouble(double n) {
         if (isnan(n))
             throw "Can't write NaN";
         if (n == (int64_t)n) {
@@ -160,7 +160,7 @@ namespace fleece {
         }
     }
 
-    void encoder::writeFloat(float n) {
+    void Encoder::writeFloat(float n) {
         if (isnan(n))
             throw "Can't write NaN";
         if (n == (int32_t)n) {
@@ -179,7 +179,7 @@ namespace fleece {
 #pragma mark - STRINGS / DATA:
 
     // used for strings and binary data
-    slice encoder::writeData(tags tag, slice s) {
+    slice Encoder::writeData(tags tag, slice s) {
         uint8_t buf[4 + kMaxVarintLen64];
         buf[0] = (uint8_t)std::min(s.size, (size_t)0xF);
         const void *dst;
@@ -201,7 +201,7 @@ namespace fleece {
         return slice(dst, s.size);
     }
 
-    void encoder::writeString(slice s) {
+    void Encoder::writeString(slice s) {
         // Check whether this string's already been written:
         if (__builtin_expect(_uniqueStrings && s.size >= kWide && s.size <= kMaxSharedStringSize,
                              true)) {
@@ -224,11 +224,11 @@ namespace fleece {
         }
     }
 
-    void encoder::writeString(std::string s) {
+    void Encoder::writeString(std::string s) {
         writeString(slice(s));
     }
 
-    void encoder::writeData(slice s) {
+    void Encoder::writeData(slice s) {
         writeData(kBinaryTag, s);
     }
 
@@ -236,10 +236,10 @@ namespace fleece {
 #pragma mark - POINTERS:
 
     // Pointers are added here as absolute positions in the stream (and fixed up before writing)
-    void encoder::writePointer(size_t p)   {addItem(value(p, kWide));}
+    void Encoder::writePointer(size_t p)   {addItem(value(p, kWide));}
 
     // Check whether any pointers in _items can't fit in a narrow value:
-    void encoder::checkPointerWidths(valueArray *items) {
+    void Encoder::checkPointerWidths(valueArray *items) {
         if (!items->wide) {
             size_t base = nextWritePos();
             for (auto v = items->begin(); v != items->end(); ++v) {
@@ -256,7 +256,7 @@ namespace fleece {
     }
 
     // Convert absolute offsets to relative in _items:
-    void encoder::fixPointers(valueArray *items) {
+    void Encoder::fixPointers(valueArray *items) {
         size_t base = nextWritePos();
         int width = items->wide ? kWide : kNarrow;
         for (auto v = items->begin(); v != items->end(); ++v) {
@@ -272,7 +272,7 @@ namespace fleece {
 
 #pragma mark - ARRAYS / DICTIONARIES:
 
-    void encoder::push(tags tag, size_t reserve) {
+    void Encoder::push(tags tag, size_t reserve) {
         if (_stackDepth >= _stack.size())
             _stack.emplace_back();
         _items = &_stack[_stackDepth++];
@@ -281,26 +281,26 @@ namespace fleece {
             _items->reserve(reserve);
     }
 
-    void encoder::beginArray(size_t reserve) {
+    void Encoder::beginArray(size_t reserve) {
         push(kArrayTag, reserve);
     }
 
-    void encoder::beginDictionary(size_t reserve) {
+    void Encoder::beginDictionary(size_t reserve) {
         push(kDictTag, 2*reserve);
         _writingKey = _blockedOnKey = true;
     }
 
-    void encoder::endArray() {
+    void Encoder::endArray() {
         endCollection(internal::kArrayTag);
     }
 
-    void encoder::endDictionary() {
+    void Encoder::endDictionary() {
         if (!_writingKey)
             throw "need a value";
         endCollection(internal::kDictTag);
     }
 
-    void encoder::endCollection(tags tag) {
+    void Encoder::endCollection(tags tag) {
         if (_items->tag != tag)
             throw "ending wrong type of collection";
 
@@ -361,9 +361,9 @@ namespace fleece {
         items->clear();
     }
 
-    void encoder::writeKey(std::string s)   {writeKey(slice(s));}
+    void Encoder::writeKey(std::string s)   {writeKey(slice(s));}
 
-    void encoder::writeKey(slice s) {
+    void Encoder::writeKey(slice s) {
         if (!_blockedOnKey) {
             if (_items->tag == kDictTag)
                 throw "need a value after a key";

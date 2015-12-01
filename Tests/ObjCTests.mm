@@ -10,21 +10,19 @@
 #include "FleeceTests.hh"
 
 
-#define kDir "/Couchbase/Fleece/Tests/"
-
 class ObjCTests : public CppUnit::TestFixture {
 public:
 
     void checkIt(id obj, const char* json) {
         Writer writer;
-        encoder enc(writer);
+        Encoder enc(writer);
         enc.write(obj);
         enc.end();
         auto result = writer.extractOutput();
         auto v = value::fromData(result);
         Assert(v != NULL);
         AssertEqual(v->toJSON(), std::string(json));
-        Assert([v->asNSObject() isEqual: obj]);
+        Assert([v->toNSObject() isEqual: obj]);
     }
 
     
@@ -90,7 +88,7 @@ public:
     void testPerfParse1000PeopleNS() {
         const int kSamples = 50;
         double total = 0, minTime = 1e99, maxTime = -1;
-        NSData *data = [NSData dataWithContentsOfFile: @kDir "1000people.json"];
+        NSData *data = [NSData dataWithContentsOfFile: @kTestFilesDir "1000people.json"];
 
         fprintf(stderr, "Parsing JSON to NSObjects (ms):");
         for (int i = 0; i < kSamples; i++) {

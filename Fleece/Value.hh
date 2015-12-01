@@ -55,43 +55,74 @@ namespace fleece {
             This is a lot faster, but "undefined behavior" occurs if the data is corrupt... */
         static const value* fromTrustedData(slice s);
 
+        /** The overall type of a value (JSON types plus Data) */
         valueType type() const;
 
+        /** Boolean value/conversion. Any value is considered true except false, null, 0. */
         bool asBool() const;
+
+        /** Integer value/conversion. Float values will be rounded. A true value returns 1.
+            Other non-numeric values return 0. */
         int64_t asInt() const;
+
+        /** Integer conversion, expressed as an unsigned type. Use this instead of asInt if
+            isUnsigned is true, otherwise large 64-bit numbers may look negative. */
         uint64_t asUnsigned() const             {return (uint64_t)asInt();}
 
+        /** 32-bit float value/conversion. Non-numeric values return 0, as with asInt. */
         float asFloat() const      {return asFloatOfType<float>();}
+
+        /** 64-bit float value/conversion. Non-numeric values return 0, as with asInt. */
         double asDouble() const    {return asFloatOfType<double>();}
 
+        /** Is this value an integer? */
         bool isInteger() const     {return tag() <= internal::kIntTag;}
+
+        /** Is this value an unsigned integer? (This does _not_ mean it's positive; it means
+            that you should treat it as possibly overflowing an int64_t.) */
         bool isUnsigned() const    {return tag() == internal::kIntTag && (_byte[0] & 0x08) != 0;}
+
+        /** Is this a 64-bit floating-point value? */
         bool isDouble() const      {return tag() == internal::kFloatTag && (_byte[0] & 0x8);}
 
-        /** Returns the exact contents of a string or data. */
+        /** Returns the exact contents of a string or data. Other types return a null slice. */
         slice asString() const;
 
+        /** If this value is an array, returns it cast to 'const array*', else returns NULL. */
         const array* asArray() const;
+
+        /** If this value is an array, returns it cast to 'const array*', else returns NULL. */
         const dict* asDict() const;
 
-        /** Converts any non-collection type to string form. */
+        /** Converts any _non-collection_ type to string form. */
         std::string toString() const;
 
         /** Writes a JSON representation to an ostream. */
-        void writeJSON(std::ostream&) const;
+        void toJSON(std::ostream&) const;
         /** Returns a JSON representation. */
         std::string toJSON() const;
 
-        static bool writeDump(slice data, std::ostream&);
+        /** Writes a full dump of the values in the data, including offsets and hex. */
+        static bool dump(slice data, std::ostream&);
+        /** Returns a full dump of the values in the data, including offsets and hex. */
         static std::string dump(slice data);
 
 #ifdef __OBJC__
-        id asNSObject() const;
-        id asNSObject(NSMapTable *sharedStrings) const;
+        // Convenience methods for Objective-C (Cocoa):
+
+        /** Converts a Fleece value to an Objective-C object. */
+        id toNSObject() const;
+
+        /** Converts a Fleece value to an Objective-C object, using a pre-existing shared-string
+            table. New strings will be added to the table. The table can be used for multiple calls
+            and will reduce the number of NSString objects created by the decoder. */
+        id toNSObject(NSMapTable *sharedStrings) const;
+
+        /** Creates a new shared-string table for use with toNSObject. */
         static NSMapTable* createSharedStringsTable();
 #endif
 
-//    protected:
+    protected:
         bool isPointer() const       {return (_byte[0] >= (internal::kPointerTagFirst << 4));}
 
         template <bool WIDE>
@@ -106,7 +137,6 @@ namespace fleece {
             _byte[0] = _byte[2] | 0x80;
             _byte[1] = _byte[3];
         }
-    protected:
 
         template <bool WIDE>
         static const value* derefPointer(const value *v) {
@@ -174,7 +204,7 @@ namespace fleece {
         size_t dataSize() const;
         typedef std::map<size_t, const value*> mapByAddress;
         void mapAddresses(mapByAddress&) const;
-        void writeDump(std::ostream &out, bool wide, int indent, const void *base) const;
+        void dump(std::ostream &out, bool wide, int indent, const void *base) const;
         void writeDumpBrief(std::ostream &out, const void *base, bool wide =false) const;
 
         static bool validate(slice);
@@ -184,26 +214,36 @@ namespace fleece {
 
         friend class array;
         friend class dict;
-        friend class encoder;
+        friend class Encoder;
         friend class ValueTests;
+        friend class EncoderTests;
     };
 
 
     /** A value that's an array. */
     class array : public value {
     public:
+        /** The number of items in the array. */
         uint32_t count() const                      {return arrayCount();}
+
+        /** Accesses an array item. Returns NULL for out of range index.
+            If you're accessing a lot of items of the same array, it's faster to make an
+            iterator and use its sequential or random-access accessors. */
         const value* get(uint32_t index) const;
 
         /** A stack-based array iterator */
         class iterator {
         public:
             iterator(const array* a);
+            /** Returns the number of remaining items. */
             uint32_t count() const                  {return _a.count;}
             const class value* value() const        {return _value;}
             operator const class value* const ()    {return _value;}
             const class value* operator-> ()        {return _value;}
-            const class value* operator[] (unsigned);
+
+            /** Random access to items. Index is relative to the current item.
+                This is very fast, faster than array::get(). */
+            const class value* operator[] (unsigned i) {return _a[i];}
 
             explicit operator bool() const          {return _a.count > 0;}
             iterator& operator++();
@@ -226,12 +266,16 @@ namespace fleece {
         /** Looks up the value for a key. */
         const value* get(slice key) const;
 
+        /** Looks up the value for a key, assuming the keys are sorted.
+            This is faster than get(), but will only work if the keys were actually sorted
+            (in simple lexicographic order, i.e. memcmp) when the dictionary was written. */
         const value* get_sorted(slice keyToFind) const;
 
         /** A stack-based dict iterator */
         class iterator {
         public:
             iterator(const dict*);
+            /** Returns the number of remaining items. */
             uint32_t count() const                  {return _a.count;}
             const value* key() const                {return _key;}
             const value* value() const              {return _value;}

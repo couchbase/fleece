@@ -7,8 +7,9 @@
 //
 
 #include "FleeceTests.hh"
-#include "JSONReader.hh"
+#include "JSONConverter.hh"
 
+namespace fleece {
 
 class EncoderTests : public CppUnit::TestFixture {
 public:
@@ -17,7 +18,7 @@ public:
     { }
 
     Writer writer;
-    encoder enc;
+    Encoder enc;
     alloc_slice result;
 
     void endEncoding() {
@@ -281,8 +282,8 @@ public:
         std::string json = "{\"foo\":123,"
                            "\"\\\"ironic\\\"\":[null,false,true,-100,0,100,123.456,6.02e+23],"
                            "\"\":\"hello\\nt\\\\here\"}";
-        JSONReader j(enc);
-        j.writeJSON(slice(json));
+        JSONConverter j(enc);
+        j.convertJSON(slice(json));
         endEncoding();
         auto d = checkDict(3);
         auto output = d->toJSON();
@@ -293,8 +294,8 @@ public:
         std::string json = "{\"foo\":123,"
                            "\"\\\"ironic\\\"\":[null,false,true,-100,0,100,123.456,6.02e+23],"
                            "\"\":\"hello\\nt\\\\here\"}";
-        JSONReader j(enc);
-        j.writeJSON(slice(json));
+        JSONConverter j(enc);
+        j.convertJSON(slice(json));
         endEncoding();
         std::string dumped = value::dump(result);
         //std::cerr << dumped;
@@ -324,11 +325,11 @@ public:
     }
 
     void testConvertPeople() {
-        alloc_slice input = readFile(kDir "1000people.json");
+        alloc_slice input = readFile(kTestFilesDir "1000people.json");
 
         enc.uniqueStrings(true);
-        JSONReader jr(enc);
-        jr.writeJSON(input);
+        JSONConverter jr(enc);
+        jr.convertJSON(input);
         enc.end();
         result = writer.extractOutput();
         
@@ -345,7 +346,7 @@ public:
     }
 
     void testFindPersonByIndex() {
-        mmap_slice doc(kDir "1000people.fleece");
+        mmap_slice doc(kTestFilesDir "1000people.fleece");
         auto root = value::fromTrustedData(doc)->asArray();
         Assert(root);
         auto person = root->get(123)->asDict();
@@ -376,3 +377,5 @@ public:
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(EncoderTests);
+
+}

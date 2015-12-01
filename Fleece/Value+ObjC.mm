@@ -27,12 +27,12 @@ namespace fleece {
     }
 
 
-    id value::asNSObject() const {
-        return asNSObject(createSharedStringsTable());
+    id value::toNSObject() const {
+        return toNSObject(createSharedStringsTable());
     }
 
 
-    id value::asNSObject(__unsafe_unretained NSMapTable *sharedStrings) const
+    id value::toNSObject(__unsafe_unretained NSMapTable *sharedStrings) const
     {
         switch (type()) {
             case kNull:
@@ -68,7 +68,7 @@ namespace fleece {
                 array::iterator iter(asArray());
                 auto result = [[NSMutableArray alloc] initWithCapacity: iter.count()];
                 for (; iter; ++iter) {
-                    [result addObject: iter->asNSObject(sharedStrings)];
+                    [result addObject: iter->toNSObject(sharedStrings)];
                 }
                 return result;
             }
@@ -76,8 +76,8 @@ namespace fleece {
                 dict::iterator iter(asDict());
                 auto result = [[NSMutableDictionary alloc] initWithCapacity: iter.count()];
                 for (; iter; ++iter) {
-                    NSString* key = iter.key()->asNSObject(sharedStrings);
-                    result[key] = iter.value()->asNSObject(sharedStrings);
+                    NSString* key = iter.key()->toNSObject(sharedStrings);
+                    result[key] = iter.value()->toNSObject(sharedStrings);
                 }
                 return result;
             }

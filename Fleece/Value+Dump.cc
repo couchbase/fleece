@@ -40,12 +40,12 @@ namespace fleece {
             case kIntTag:
             case kFloatTag:
             case kStringTag:
-                writeJSON(out);
+                toJSON(out);
                 break;
             case kBinaryTag:
                 // TODO: show data
                 out << "Binary[";
-                writeJSON(out);
+                toJSON(out);
                 out << "]";
                 break;
             case kArrayTag: {
@@ -71,7 +71,7 @@ namespace fleece {
     }
 
     // writes an ASCII dump of this value and its contained values (NOT following pointers).
-    void value::writeDump(std::ostream &out, bool wide, int indent, const void *base) const {
+    void value::dump(std::ostream &out, bool wide, int indent, const void *base) const {
         size_t pos = _byte - (uint8_t*)base;
         char buf[64];
         sprintf(buf, "%04zx: %02x %02x", pos, _byte[0], _byte[1]);
@@ -95,15 +95,15 @@ namespace fleece {
             case kArrayTag: {
                 out << ":\n";
                 for (array::iterator i(asArray()); i; ++i) {
-                    i.rawValue()->writeDump(out, isWideArray(), 1, base);
+                    i.rawValue()->dump(out, isWideArray(), 1, base);
                 }
                 break;
             }
             case kDictTag: {
                 out << ":\n";
                 for (dict::iterator i(asDict()); i; ++i) {
-                    i.rawKey()  ->writeDump(out, isWideArray(), 1, base);
-                    i.rawValue()->writeDump(out, isWideArray(), 2, base);
+                    i.rawKey()  ->dump(out, isWideArray(), 1, base);
+                    i.rawValue()->dump(out, isWideArray(), 2, base);
                 }
                 break;
             }
@@ -137,7 +137,7 @@ namespace fleece {
         }
     }
 
-    bool value::writeDump(slice data, std::ostream &out) {
+    bool value::dump(slice data, std::ostream &out) {
         auto root = fromData(data);
         if (!root)
             return false;
@@ -145,14 +145,14 @@ namespace fleece {
         root->mapAddresses(byAddress);
         rootPointer(data)->mapAddresses(byAddress); // add the root pointer explicitly
         for (auto i = byAddress.begin(); i != byAddress.end(); ++i) {
-            i->second->writeDump(out, false, 0, data.buf);
+            i->second->dump(out, false, 0, data.buf);
         }
         return true;
     }
 
     std::string value::dump(slice data) {
         std::stringstream out;
-        writeDump(data, out);
+        dump(data, out);
         return out.str();
     }
 

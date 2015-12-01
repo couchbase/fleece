@@ -1,13 +1,13 @@
 //
-//  JSONReader.hh
+//  JSONConverter.hh
 //  Fleece
 //
 //  Created by Jens Alfke on 11/21/15.
 //  Copyright © 2015 Couchbase. All rights reserved.
 //
 
-#ifndef Fleece_JSONReader_h
-#define Fleece_JSONReader_h
+#ifndef Fleece_JSONConverter_h
+#define Fleece_JSONConverter_h
 
 #include "Encoder.hh"
 #include "jsonsl.h"
@@ -16,13 +16,18 @@
 
 namespace fleece {
 
-    class JSONReader {
+    /** Parses JSON data and writes the values in it to a Fleece encoder. */
+    class JSONConverter {
     public:
-        JSONReader(encoder&);
-        ~JSONReader();
+        JSONConverter(Encoder&);
+        ~JSONConverter();
 
-        /** Parses JSON data and writes the value contained in it to the Fleece encoder. */
-        bool writeJSON(slice json);
+        /** Parses JSON data and writes the values to the encoder.
+            @return  True if parsing succeeded, false if the JSON is invalid. */
+        bool convertJSON(slice json);
+
+        jsonsl_error_t error()      {return _error;}
+        size_t errorPos()           {return _errorPos;}
 
     private:
         bool countJSONItems(slice json);
@@ -43,13 +48,13 @@ namespace fleece {
 
         typedef std::map<size_t, uint64_t> startToLengthMap;
 
-        encoder &_encoder;                  // encoder to write to
+        Encoder &_encoder;                  // encoder to write to
         jsonsl_t _jsn;                      // JSON parser
-        int _error;                         // Parse error from jsonsl
+        jsonsl_error_t _error;              // Parse error from jsonsl
         size_t _errorPos;                   // Byte index where parse error occurred
         slice _input;                       // Current JSON being parsed
     };
 
 }
 
-#endif /* Fleece_JSONReader_h */
+#endif /* Fleece_JSONConverter_h */

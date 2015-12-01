@@ -21,7 +21,7 @@
 		270FA2841BF53CEA005DCB13 /* varint.cc in Sources */ = {isa = PBXBuildFile; fileRef = 270FA2761BF53CEA005DCB13 /* varint.cc */; };
 		270FA2851BF53CEA005DCB13 /* varint.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2771BF53CEA005DCB13 /* varint.hh */; };
 		270FA2871BF53D32005DCB13 /* forestdb_endian.h in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2861BF53D32005DCB13 /* forestdb_endian.h */; };
-		27298E3C1C00F812000CFBA8 /* JSONReader.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27298E3A1C00F812000CFBA8 /* JSONReader.cc */; };
+		27298E3C1C00F812000CFBA8 /* JSONConverter.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27298E3A1C00F812000CFBA8 /* JSONConverter.cc */; };
 		27298E651C00F8A9000CFBA8 /* jsonsl.c in Sources */ = {isa = PBXBuildFile; fileRef = 27298E491C00F8A9000CFBA8 /* jsonsl.c */; };
 		27298E661C00F8A9000CFBA8 /* jsonsl.h in Headers */ = {isa = PBXBuildFile; fileRef = 27298E4A1C00F8A9000CFBA8 /* jsonsl.h */; };
 		27298E781C01A461000CFBA8 /* PerfTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27298E771C01A461000CFBA8 /* PerfTests.cc */; };
@@ -94,10 +94,10 @@
 		270FA2761BF53CEA005DCB13 /* varint.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = varint.cc; sourceTree = "<group>"; };
 		270FA2771BF53CEA005DCB13 /* varint.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = varint.hh; sourceTree = "<group>"; };
 		270FA2861BF53D32005DCB13 /* forestdb_endian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = forestdb_endian.h; sourceTree = "<group>"; };
-		27298E3A1C00F812000CFBA8 /* JSONReader.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSONReader.cc; sourceTree = "<group>"; };
+		27298E3A1C00F812000CFBA8 /* JSONConverter.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSONConverter.cc; sourceTree = "<group>"; };
 		27298E491C00F8A9000CFBA8 /* jsonsl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jsonsl.c; sourceTree = "<group>"; };
 		27298E4A1C00F8A9000CFBA8 /* jsonsl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = jsonsl.h; sourceTree = "<group>"; };
-		27298E761C00FB48000CFBA8 /* JSONReader.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = JSONReader.hh; sourceTree = "<group>"; };
+		27298E761C00FB48000CFBA8 /* JSONConverter.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = JSONConverter.hh; sourceTree = "<group>"; };
 		27298E771C01A461000CFBA8 /* PerfTests.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PerfTests.cc; sourceTree = "<group>"; };
 		27298E7F1C04E665000CFBA8 /* Encoder.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Encoder.cc; sourceTree = "<group>"; };
 		272E5A451BF7FD8F00848580 /* FleeceTests.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FleeceTests.cc; sourceTree = "<group>"; };
@@ -183,8 +183,8 @@
 				27298E7F1C04E665000CFBA8 /* Encoder.cc */,
 				270FA26F1BF53CEA005DCB13 /* Encoder.hh */,
 				270FA2701BF53CEA005DCB13 /* Encoder+ObjC.mm */,
-				27298E3A1C00F812000CFBA8 /* JSONReader.cc */,
-				27298E761C00FB48000CFBA8 /* JSONReader.hh */,
+				27298E3A1C00F812000CFBA8 /* JSONConverter.cc */,
+				27298E761C00FB48000CFBA8 /* JSONConverter.hh */,
 				270FA28D1BF53FB0005DCB13 /* Utilities */,
 			);
 			path = Fleece;
@@ -193,15 +193,15 @@
 		270FA28D1BF53FB0005DCB13 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
-				270FA2711BF53CEA005DCB13 /* Writer.cc */,
-				270FA2721BF53CEA005DCB13 /* Writer.hh */,
 				270FA2731BF53CEA005DCB13 /* Endian.hh */,
+				270FA2861BF53D32005DCB13 /* forestdb_endian.h */,
 				270FA2741BF53CEA005DCB13 /* slice.cc */,
 				270FA2751BF53CEA005DCB13 /* slice.hh */,
 				272E5A601BF91F6C00848580 /* slice.mm */,
 				270FA2761BF53CEA005DCB13 /* varint.cc */,
 				270FA2771BF53CEA005DCB13 /* varint.hh */,
-				270FA2861BF53D32005DCB13 /* forestdb_endian.h */,
+				270FA2711BF53CEA005DCB13 /* Writer.cc */,
+				270FA2721BF53CEA005DCB13 /* Writer.hh */,
 			);
 			name = Utilities;
 			sourceTree = "<group>";
@@ -379,7 +379,7 @@
 				270FA2821BF53CEA005DCB13 /* slice.cc in Sources */,
 				270FA2781BF53CEA005DCB13 /* Value.cc in Sources */,
 				27298E801C04E665000CFBA8 /* Encoder.cc in Sources */,
-				27298E3C1C00F812000CFBA8 /* JSONReader.cc in Sources */,
+				27298E3C1C00F812000CFBA8 /* JSONConverter.cc in Sources */,
 				279AC53C1C097941002C80DB /* Value+Dump.cc in Sources */,
 				27298E651C00F8A9000CFBA8 /* jsonsl.c in Sources */,
 				270FA27F1BF53CEA005DCB13 /* Writer.cc in Sources */,

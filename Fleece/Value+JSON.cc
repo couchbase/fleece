@@ -69,12 +69,12 @@ namespace fleece {
 
     std::string value::toJSON() const {
         std::stringstream s;
-        writeJSON(s);
+        toJSON(s);
         return s.str();
     }
 
 
-    void value::writeJSON(std::ostream &out) const {
+    void value::toJSON(std::ostream &out) const {
         switch (type()) {
             case kNull:
             case kBoolean:
@@ -93,7 +93,7 @@ namespace fleece {
                         first = false;
                     else
                         out << ',';
-                    iter->writeJSON(out);
+                    iter->toJSON(out);
                 }
                 out << ']';
                 return;
@@ -106,9 +106,9 @@ namespace fleece {
                         first = false;
                     else
                         out << ',';
-                    iter.key()->writeJSON(out);
+                    iter.key()->toJSON(out);
                     out << ':';
-                    iter.value()->writeJSON(out);
+                    iter.value()->toJSON(out);
                 }
                 out << '}';
                 return;

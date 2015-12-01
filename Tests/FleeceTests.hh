@@ -17,10 +17,10 @@
 
 using namespace fleece;
 
-//FIX: Stop hardcoding path
-#define kDir "/Couchbase/Fleece/Tests/"
+// Directory containing test files:
+#define kTestFilesDir "Tests/"
 
-// Less-obnoxious names for assertions:
+// Less-obnoxious names for cppunit assertions:
 #define Assert CPPUNIT_ASSERT
 #define AssertEqual(ACTUAL, EXPECTED) CPPUNIT_ASSERT_EQUAL(EXPECTED, ACTUAL)
 

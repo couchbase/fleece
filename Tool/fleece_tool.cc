@@ -6,7 +6,7 @@
 //  Copyright © 2015 Couchbase. All rights reserved.
 //
 
-#include "JSONReader.hh"
+#include "JSONConverter.hh"
 #include <stdio.h>
 #include <unistd.h>
 #include <sstream>
@@ -92,9 +92,9 @@ int main(int argc, const char * argv[]) {
 
         if (encode) {
             Writer writer;
-            encoder e(writer);
-            JSONReader reader(e);
-            if (!reader.writeJSON(input))
+            Encoder e(writer);
+            JSONConverter reader(e);
+            if (!reader.convertJSON(input))
                 throw "Couldn't parse input as JSON";
             e.end();
             auto output = writer.extractOutput();
@@ -103,9 +103,9 @@ int main(int argc, const char * argv[]) {
             auto root = value::fromData(input);
             if (!root)
                 throw "Couldn't parse input as Fleece";
-            root->writeJSON(cout);
+            root->toJSON(cout);
         } else if (dump) {
-            if (!value::writeDump(input, cout))
+            if (!value::dump(input, cout))
                 throw "Couldn't parse input as Fleece";
         }
 

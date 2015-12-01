@@ -250,7 +250,7 @@ namespace fleece {
 
     const value* value::deref(const value *v, bool wide) {
         while (v->isPointer()) {
-            v = wide ? derefPointer<true>(v) : derefPointer<false>(v);
+            v = derefPointer(v, wide);
             wide = true;
         }
         return v;
@@ -279,7 +279,7 @@ namespace fleece {
 
     const value* value::arrayInfo::operator[] (unsigned index) const {
         if (index >= count)
-            throw "array index out of range";
+            return NULL;
         if (wide)
             return deref<true> (offsetby(first, kWide   * index));
         else
@@ -311,10 +311,6 @@ namespace fleece {
         _a.next();
         _value = _a.firstValue();
         return *this;
-    }
-
-    const value* array::iterator::operator[] (unsigned index) {
-        return _a[index];
     }
 
 

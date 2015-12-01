@@ -20,7 +20,7 @@
 namespace fleece {
 
 
-    void encoder::write(__unsafe_unretained id obj) {
+    void Encoder::write(__unsafe_unretained id obj) {
         if ([obj isKindOfClass: [NSString class]]) {
             nsstring_slice slice(obj);
             writeString(slice);
