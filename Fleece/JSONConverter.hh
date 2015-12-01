@@ -26,8 +26,17 @@ namespace fleece {
             @return  True if parsing succeeded, false if the JSON is invalid. */
         bool convertJSON(slice json);
 
-        jsonsl_error_t error()      {return _error;}
+        /** See jsonsl_error_t for error codes, plus a few more defined below. */
+        int error()                 {return _error;}
+        
+        /** Byte offset in input where error occurred */
         size_t errorPos()           {return _errorPos;}
+
+        /** Extra error codes beyond those in jsonsl_error_t. */
+        enum {
+            kErrTruncatedJSON = 1000,
+            kErrInvalidUnicode
+        };
 
     private:
         bool countJSONItems(slice json);
@@ -50,7 +59,7 @@ namespace fleece {
 
         Encoder &_encoder;                  // encoder to write to
         jsonsl_t _jsn;                      // JSON parser
-        jsonsl_error_t _error;              // Parse error from jsonsl
+        int _error;                         // Parse error from jsonsl
         size_t _errorPos;                   // Byte index where parse error occurred
         slice _input;                       // Current JSON being parsed
     };

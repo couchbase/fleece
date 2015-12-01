@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "279AC5301C096872002C80DB"
-               BuildableName = "Tool"
+               BuildableName = "fleece"
                BlueprintName = "Tool"
                ReferencedContainer = "container:Fleece.xcodeproj">
             </BuildableReference>
@@ -33,7 +33,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "279AC5301C096872002C80DB"
-            BuildableName = "Tool"
+            BuildableName = "fleece"
             BlueprintName = "Tool"
             ReferencedContainer = "container:Fleece.xcodeproj">
          </BuildableReference>
@@ -57,7 +57,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "279AC5301C096872002C80DB"
-            BuildableName = "Tool"
+            BuildableName = "fleece"
             BlueprintName = "Tool"
             ReferencedContainer = "container:Fleece.xcodeproj">
          </BuildableReference>
@@ -86,7 +86,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "279AC5301C096872002C80DB"
-            BuildableName = "Tool"
+            BuildableName = "fleece"
             BlueprintName = "Tool"
             ReferencedContainer = "container:Fleece.xcodeproj">
          </BuildableReference>

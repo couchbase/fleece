@@ -17,6 +17,10 @@ public:
     :enc(writer)
     { }
 
+    ~EncoderTests() {
+        enc.reset();
+    }
+
     Writer writer;
     Encoder enc;
     alloc_slice result;
@@ -278,9 +282,11 @@ public:
         AssertEqual(a->toJSON(), std::string("[\"a\",\"hello\",\"a\",\"hello\"]"));
     }
 
+#pragma mark - JSON:
+
     void checkJSONStr(std::string json,
                       const char *expectedStr,
-                      jsonsl_error_t expectedErr = JSONSL_ERROR_SUCCESS)
+                      int expectedErr = JSONSL_ERROR_SUCCESS)
     {
         json = std::string("[\"") + json + std::string("\"]");
         JSONConverter j(enc);
@@ -301,12 +307,14 @@ public:
         checkJSONStr("", "");
         checkJSONStr("x", "x");
         checkJSONStr("\\\"", "\"");
-        checkJSONStr("\"", NULL, JSONSL_ERROR_BRACKET_MISMATCH); // unterminated string
-        checkJSONStr("\\", NULL, JSONSL_ERROR_BRACKET_MISMATCH);
+        checkJSONStr("\"", NULL, JSONConverter::kErrTruncatedJSON); // unterminated string
+        checkJSONStr("\\", NULL, JSONConverter::kErrTruncatedJSON);
         checkJSONStr("hi \\\"there\\\"", "hi \"there\"");
         checkJSONStr("hi\\nthere", "hi\nthere");
         checkJSONStr("H\\u0061ppy", "Happy");
         checkJSONStr("H\\u0061", "Ha");
+
+        // Unicode escapes:
         checkJSONStr("Price 50\\u00A2", "Price 50¢");
         checkJSONStr("Price \\u20ac250", "Price €250");
         checkJSONStr("Price \\uffff?", "Price \uffff?");
@@ -316,6 +324,16 @@ public:
         checkJSONStr("Price \\u2", NULL, JSONSL_ERROR_UESCAPE_TOOSHORT);
         checkJSONStr("Price \\u", NULL, JSONSL_ERROR_UESCAPE_TOOSHORT);
         checkJSONStr("\\uzoop!", NULL, JSONSL_ERROR_UESCAPE_TOOSHORT);
+        checkJSONStr("!\\u0000!", NULL, JSONSL_ERROR_FOUND_NULL_BYTE);
+
+        // UTF-16 surrogate pair decoding:
+        checkJSONStr("lmao\\uD87D\\uDE1C!", "lmao😜!");
+        checkJSONStr("lmao\\uD87D", NULL, JSONConverter::kErrInvalidUnicode);
+        checkJSONStr("lmao\\uD87D\\n", NULL, JSONConverter::kErrInvalidUnicode);
+        checkJSONStr("lmao\\uD87D\\u", NULL, JSONSL_ERROR_UESCAPE_TOOSHORT);
+        checkJSONStr("lmao\\uD87D\\u333", NULL, JSONSL_ERROR_UESCAPE_TOOSHORT);
+        checkJSONStr("lmao\\uD87D\\u3333", NULL, JSONConverter::kErrInvalidUnicode);
+        checkJSONStr("lmao\\uDE1C\\uD87D!", NULL, JSONConverter::kErrInvalidUnicode);
     }
 
     void testJSON() {
