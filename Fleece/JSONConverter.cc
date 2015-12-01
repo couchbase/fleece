@@ -12,6 +12,8 @@
 
 namespace fleece {
 
+    static bool decodeUnicodeEscape(uint8_t* &dst, const char *src);
+
     JSONConverter::JSONConverter(Encoder &e)
     :_jsn(jsonsl_new(0x2000)),
      _encoder(e),
@@ -40,8 +42,13 @@ namespace fleece {
         jsonsl_enable_all_callbacks(_jsn);
 
         jsonsl_feed(_jsn, (char*)json.buf, json.size);
+        if (_jsn->level > 0 && !_error) {
+            // Input is valid JSON so far, but truncated:
+            _error = JSONSL_ERROR_BRACKET_MISMATCH;
+            _errorPos = json.size;
+        }
         jsonsl_reset(_jsn);
-        return true;
+        return (_error == JSONSL_ERROR_SUCCESS);
     }
     
     void JSONConverter::writePushCallback(jsonsl_t jsn,
@@ -99,13 +106,13 @@ namespace fleece {
             case JSONSL_T_HKEY: {
                 slice str(&_input[state->pos_begin + 1],
                           state->pos_cur - state->pos_begin - 1);
-                char *buf = NULL;
+                uint8_t *buf = NULL;
                 bool mallocedBuf = false;
                 if (state->nescapes > 0) {
                     // De-escape str:
                     mallocedBuf = str.size > 100;
-                    buf = (char*)(mallocedBuf ? malloc(str.size) : alloca(str.size));
-                    char *dst = buf;
+                    buf = (uint8_t*)(mallocedBuf ? malloc(str.size) : alloca(str.size));
+                    uint8_t *dst = buf;
                     auto end = str.end();
                     for (auto src = (const char*)str.buf; src < end; ++src) {
                         char c = *src;
@@ -117,10 +124,13 @@ namespace fleece {
                                 case 'r':   *dst++ = '\r';  break;
                                 case 't':   *dst++ = '\t';  break;
                                 case 'b':   *dst++ = '\b';  break;
-                                case 'u': {
-                                    //TODO: Parse Unicode escape
-                                    break;
-                                }
+                                case 'u':
+                                    if (src + 4 >= end || !decodeUnicodeEscape(dst, src+1)) {
+                                        errorCallback(_jsn, JSONSL_ERROR_UESCAPE_TOOSHORT,
+                                                      state, (char*)src);
+                                        return;
+                                    }
+                                    src += 4; break;
                                 default:    *dst++ = *src;
                             }
                         }
@@ -154,6 +164,52 @@ namespace fleece {
         self->_errorPos = errat - (char*)self->_input.buf;
         jsonsl_stop(jsn);
         return 0;
+    }
+
+
+#pragma mark - UTILITIES:
+    
+    // similar to BSD digittoint, but returns -1 on failure
+    static int digit2int(char ch) {
+        int d = ch - '0';
+        if ((unsigned) d < 10) {
+            return d;
+        }
+        d = ch - 'a';
+        if ((unsigned) d < 6) {
+            return d + 10;
+        }
+        d = ch - 'A';
+        if ((unsigned) d < 6) {
+            return d + 10;
+        }
+        return -1;
+    }
+
+    // Writes a Unicode code point from 0000 to FFFF as a UTF-8 byte sequence
+    static void writeUTF8(uint8_t* &dst, unsigned u) {
+        // https://en.wikipedia.org/wiki/UTF-8#Description
+        if (u < 0x0080) {
+            *dst++ = (uint8_t)u;
+        } else if (u < 0x0800) {
+            *dst++ = (uint8_t)(0xC0 | (u >> 6));
+            *dst++ = (uint8_t)(0x80 | (u & 0x3F));
+        } else {
+            //assert(u < 0xFFFF);
+            *dst++ = (uint8_t)(0xE0 | (u >> 12));
+            *dst++ = (uint8_t)(0x80 | ((u >>  6) & 0x3F));
+            *dst++ = (uint8_t)(0x80 | (u & 0x3F));
+        }
+    }
+
+    static bool decodeUnicodeEscape(uint8_t* &dst, const char* src) {
+        int d0 = digit2int(src[0]), d1 = digit2int(src[1]),
+            d2 = digit2int(src[2]), d3 = digit2int(src[3]);
+        if (d0 < 0 || d1 < 0 || d2 < 0 || d3 < 0)
+            return false;
+        unsigned u = (d0 << 12) | (d1 << 8) | (d2 << 4) | (d3);
+        writeUTF8(dst, u);
+        return true;
     }
 
 }

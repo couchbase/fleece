@@ -278,12 +278,52 @@ public:
         AssertEqual(a->toJSON(), std::string("[\"a\",\"hello\",\"a\",\"hello\"]"));
     }
 
+    void checkJSONStr(std::string json,
+                      const char *expectedStr,
+                      jsonsl_error_t expectedErr = JSONSL_ERROR_SUCCESS)
+    {
+        json = std::string("[\"") + json + std::string("\"]");
+        JSONConverter j(enc);
+        j.convertJSON(slice(json));
+        AssertEqual(j.error(), expectedErr);
+        if (j.error()) {
+            enc.reset();
+            return;
+        }
+        endEncoding();
+        Assert(expectedStr); // expected success
+        auto a = checkArray(1);
+        auto output = a->get(0)->asString();
+        AssertEqual(output, slice(expectedStr));
+    }
+
+    void testJSONStrings() {
+        checkJSONStr("", "");
+        checkJSONStr("x", "x");
+        checkJSONStr("\\\"", "\"");
+        checkJSONStr("\"", NULL, JSONSL_ERROR_BRACKET_MISMATCH); // unterminated string
+        checkJSONStr("\\", NULL, JSONSL_ERROR_BRACKET_MISMATCH);
+        checkJSONStr("hi \\\"there\\\"", "hi \"there\"");
+        checkJSONStr("hi\\nthere", "hi\nthere");
+        checkJSONStr("H\\u0061ppy", "Happy");
+        checkJSONStr("H\\u0061", "Ha");
+        checkJSONStr("Price 50\\u00A2", "Price 50¢");
+        checkJSONStr("Price \\u20ac250", "Price €250");
+        checkJSONStr("Price \\uffff?", "Price \uffff?");
+        checkJSONStr("Price \\u20ac", "Price €");
+        checkJSONStr("Price \\u20a", NULL, JSONSL_ERROR_UESCAPE_TOOSHORT);
+        checkJSONStr("Price \\u20", NULL, JSONSL_ERROR_UESCAPE_TOOSHORT);
+        checkJSONStr("Price \\u2", NULL, JSONSL_ERROR_UESCAPE_TOOSHORT);
+        checkJSONStr("Price \\u", NULL, JSONSL_ERROR_UESCAPE_TOOSHORT);
+        checkJSONStr("\\uzoop!", NULL, JSONSL_ERROR_UESCAPE_TOOSHORT);
+    }
+
     void testJSON() {
         std::string json = "{\"foo\":123,"
                            "\"\\\"ironic\\\"\":[null,false,true,-100,0,100,123.456,6.02e+23],"
                            "\"\":\"hello\\nt\\\\here\"}";
         JSONConverter j(enc);
-        j.convertJSON(slice(json));
+        Assert(j.convertJSON(slice(json)));
         endEncoding();
         auto d = checkDict(3);
         auto output = d->toJSON();
@@ -369,6 +409,7 @@ public:
     CPPUNIT_TEST( testArrays );
     CPPUNIT_TEST( testDictionaries );
     CPPUNIT_TEST( testSharedStrings );
+    CPPUNIT_TEST( testJSONStrings );
     CPPUNIT_TEST( testJSON );
     CPPUNIT_TEST( testDump );
     CPPUNIT_TEST( testConvertPeople );
