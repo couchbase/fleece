@@ -82,7 +82,10 @@ namespace fleece {
     }
 
     void Encoder::reset() {
-        end();
+        if (_items) {
+            _items->clear();
+            _items = NULL;
+        }
         _out = Writer();
         _stackDepth = 0;
         push(kSpecialTag, 1);
