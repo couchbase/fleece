@@ -94,14 +94,14 @@ namespace fleece {
         switch (tag()) {
             case kArrayTag: {
                 out << ":\n";
-                for (array::iterator i(asArray()); i; ++i) {
+                for (auto i = asArray()->begin(); i; ++i) {
                     i.rawValue()->dump(out, isWideArray(), 1, base);
                 }
                 break;
             }
             case kDictTag: {
                 out << ":\n";
-                for (dict::iterator i(asDict()); i; ++i) {
+                for (auto i = asDict()->begin(); i; ++i) {
                     i.rawKey()  ->dump(out, isWideArray(), 1, base);
                     i.rawValue()->dump(out, isWideArray(), 2, base);
                 }
@@ -119,13 +119,13 @@ namespace fleece {
         byAddress[(size_t)this] = this;
         switch (type()) {
             case kArray:
-                for (auto iter = array::iterator(asArray()); iter; ++iter) {
+                for (auto iter = asArray()->begin(); iter; ++iter) {
                     if (iter.rawValue()->isPointer())
                         iter.value()->mapAddresses(byAddress);
                 }
                 break;
             case kDict:
-                for (auto iter = dict::iterator(asDict()); iter; ++iter) {
+                for (auto iter = asDict()->begin(); iter; ++iter) {
                     if (iter.rawKey()->isPointer())
                         iter.key()->mapAddresses(byAddress);
                     if (iter.rawValue()->isPointer())

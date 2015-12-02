@@ -88,7 +88,7 @@ namespace fleece {
             case kArray: {
                 out << '[';
                 bool first = true;
-                for (array::iterator iter(asArray()); iter; ++iter) {
+                for (auto iter = asArray()->begin(); iter; ++iter) {
                     if (first)
                         first = false;
                     else
@@ -101,7 +101,7 @@ namespace fleece {
             case kDict: {
                 out << '{';
                 bool first = true;
-                for (dict::iterator iter(asDict()); iter; ++iter) {
+                for (auto iter = asDict()->begin(); iter; ++iter) {
                     if (first)
                         first = false;
                     else

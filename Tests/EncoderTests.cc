@@ -409,7 +409,7 @@ public:
         Assert(root);
         auto person = root->get(123)->asDict();
 #if 0
-        for (dict::iterator iter(person); iter; ++iter) {
+        for (auto iter = person->begin(); iter; ++iter) {
             std::cerr << std::string(iter.key()->asString()) << ": " << iter.value()->toJSON() << "\n";
         }
 #endif

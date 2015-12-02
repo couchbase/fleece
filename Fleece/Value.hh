@@ -256,6 +256,8 @@ namespace fleece {
             const class value *_value;
             friend class value;
         };
+
+        iterator begin() const                      {return iterator(this);}
     };
 
 
@@ -293,6 +295,8 @@ namespace fleece {
             const class value *_key, *_value;
             friend class value;
         };
+        
+        iterator begin() const                      {return iterator(this);}
 
     private:
         template <bool WIDE>

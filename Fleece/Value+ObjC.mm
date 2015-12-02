@@ -65,7 +65,7 @@ namespace fleece {
             case kData:
                 return asString().copiedNSData();
             case kArray: {
-                array::iterator iter(asArray());
+                auto iter = asArray()->begin();
                 auto result = [[NSMutableArray alloc] initWithCapacity: iter.count()];
                 for (; iter; ++iter) {
                     [result addObject: iter->toNSObject(sharedStrings)];
