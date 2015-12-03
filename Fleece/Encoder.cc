@@ -30,12 +30,12 @@ namespace fleece {
     Encoder::Encoder(Writer &out)
     :_out(out),
      _stackDepth(0),
+     _strings(100),
      _uniqueStrings(true),
      _sortKeys(true),
      _writingKey(false),
      _blockedOnKey(false)
     {
-        _strings.reserve(100);
         push(kSpecialTag, 1);                   // Top-level 'array' is just a single item
 #ifndef NDEBUG
         _numNarrow = _numWide = _narrowCount = _wideCount = _numSavedStrings = 0;
@@ -91,7 +91,7 @@ namespace fleece {
         _out = Writer();
         _stackDepth = 0;
         push(kSpecialTag, 1);
-        _strings.erase(_strings.begin(), _strings.end());
+        _strings.clear();
         _writingKey = _blockedOnKey = false;
     }
 
@@ -189,7 +189,7 @@ namespace fleece {
         uint8_t buf[4 + kMaxVarintLen64];
         buf[0] = (uint8_t)std::min(s.size, (size_t)0xF);
         const void *dst;
-        if (s.size < kWide) {
+        if (s.size < kNarrow) {
             // Tiny data fits inline:
             memcpy(&buf[1], s.buf, s.size);
             writeValue(tag, buf, 1 + s.size);
@@ -208,23 +208,31 @@ namespace fleece {
     }
 
     // Returns the location where s got written to, if possible, just like writeData above.
-    slice Encoder::_writeString(slice s) {
+    slice Encoder::_writeString(slice s, bool asKey) {
         // Check whether this string's already been written:
-        if (__builtin_expect(_uniqueStrings && s.size >= kWide && s.size <= kMaxSharedStringSize,
+        if (__builtin_expect(_uniqueStrings && s.size >= kNarrow && s.size <= kMaxSharedStringSize,
                              true)) {
             auto entry = _strings.find(s);
-            if (entry != _strings.end()) {
-                writePointer(entry->second);
+            if (entry->first.buf != NULL) {
+//                fprintf(stderr, "Found `%.*s` --> %u\n", (int)s.size, s.buf, entry->second);
+                writePointer(entry->second.offset);
 #ifndef NDEBUG
                 _numSavedStrings++;
 #endif
+                if (asKey)
+                    entry->second.usedAsKey = true;
                 return entry->first;
             } else {
-                size_t offset = nextWritePos();
+                auto offset = (uint32_t)nextWritePos();
                 s = writeData(kStringTag, s);
                 if (s.buf) {
-                    //fprintf(stderr, "Caching `%.*s` --> %zu\n", (int)s.size, s.buf, offset);
-                    _strings.insert({s, offset});
+#if 0
+                    if (_strings.count() == 0)
+                        fprintf(stderr, "---- new encoder ----\n");
+                    fprintf(stderr, "Caching `%.*s` --> %u\n", (int)s.size, s.buf, offset);
+#endif
+                    StringTable::info i = {offset, asKey};
+                    _strings.addAt(entry, s, i);
                 }
                 return s;
             }
@@ -234,7 +242,7 @@ namespace fleece {
     }
 
     void Encoder::writeString(std::string s) {
-        _writeString(slice(s));
+        _writeString(slice(s), false);
     }
 
     void Encoder::writeData(slice s) {
@@ -291,7 +299,7 @@ namespace fleece {
                 throw "not writing a dictionary";
         }
         _blockedOnKey = false;
-        s = _writeString(s);
+        s = _writeString(s, true);
         if (_sortKeys)
             _items->keys.push_back(s);
     }
@@ -424,5 +432,23 @@ namespace fleece {
                 items[2*i+1] = old[2*j+1];
             }
         }
+    }
+
+    void Encoder::writeKeyTable() {
+        StringTable keys;
+        for (auto iter = _strings.begin(); iter != _strings.end(); ++iter) {
+            if (iter->buf && iter.value().usedAsKey)
+                keys.add(iter, iter.value());
+        }
+
+        beginArray();
+        for (auto iter = keys.begin(); iter != keys.end(); ++iter) {
+            if (iter->buf) {
+                writeString(iter);
+            } else {
+                writeNull();
+            }
+        }
+        endArray();
     }
 }

@@ -18,6 +18,7 @@
 
 #include "Value.hh"
 #include "Writer.hh"
+#include "StringTable.hh"
 #include <ctime>
 #include <iostream>
 #include <unordered_map>
@@ -61,7 +62,7 @@ namespace fleece {
         void writeDouble(double);
 
         void writeString(std::string);
-        void writeString(slice s)           {(void)_writeString(s);}
+        void writeString(slice s)           {(void)_writeString(s, false);}
         void writeData(slice s);
 
         /** Begins creating an array. Until endArray is called, values written to the encoder are
@@ -89,6 +90,8 @@ namespace fleece {
         /** Ends creating a dictionary. The dict is written to the output and added as a value to
             the next outermost collection (or made the root if there is no collection active.) */
         void endDictionary();
+
+        void writeKeyTable();
 
         // Note: overriding <<(bool) would be dangerous due to implicit conversion
         Encoder& operator<< (int64_t i)         {writeInt(i); return *this;}
@@ -120,7 +123,7 @@ namespace fleece {
         void writeSpecial(uint8_t special);
         void writeInt(uint64_t i, bool isShort, bool isUnsigned);
         slice writeData(internal::tags, slice s);
-        slice _writeString(slice);
+        slice _writeString(slice, bool asKey);
         size_t nextWritePos();
         void sortDict(valueArray &items);
         void checkPointerWidths(valueArray *items);
@@ -131,18 +134,17 @@ namespace fleece {
         Encoder(); // forbidden
         Encoder(const Encoder&); // forbidden
 
-        typedef std::unordered_map<slice, uint64_t, sliceHash> stringTable;
-
         Writer& _out;           // Where output is written to
         valueArray *_items;     // Values of the currently-open array/dict; == &_stack[_stackDepth]
         std::vector<valueArray> _stack; // Stack of open arrays/dicts
         unsigned _stackDepth;   // Current depth of _stack
-        stringTable _strings;   // Maps strings to the offsets where they appear as values
+        StringTable _strings;   // Maps strings to the offsets where they appear as values
         bool _uniqueStrings;    // Should strings be uniqued before writing?
         bool _sortKeys;         // Should dictionary keys be sorted?
         bool _writingKey;       // True if value being written is a key
         bool _blockedOnKey;     // True if writes should be refused
 
+        friend class EncoderTests;
 #ifndef NDEBUG
     public:
         unsigned _numNarrow, _numWide, _narrowCount, _wideCount, _numSavedStrings;

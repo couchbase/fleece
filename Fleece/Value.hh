@@ -274,6 +274,10 @@ namespace fleece {
             sorted keys. */
         const value* get_unsorted(slice key) const;
 
+        /** Looks up the value for a key, if you already have the key as a Fleece value.
+            This is super fast. */
+        const value* get(const value *key) const;
+
         /** A stack-based dict iterator */
         class iterator {
         public:
@@ -303,6 +307,8 @@ namespace fleece {
             static int keyCmp(const void* keyToFindP, const void* keyP);
         template <bool WIDE>
             const value* get(slice keyToFind) const;
+        template <bool WIDE>
+        const value* get(const arrayInfo &info, const value *keyToFind) const;
 
         friend class value;
     };

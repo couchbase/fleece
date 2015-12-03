@@ -238,6 +238,7 @@ public:
 
             AssertEqual(a->toJSON(), std::string("[\"a\",\"hello\"]"));
         }
+#if 0
         {
             // Strings that can be inlined in a wide array:
             enc.beginArray(2);
@@ -246,6 +247,7 @@ public:
             enc.endArray();
             checkOutput("6802 4261 6200 4363 6465 8005");
         }
+#endif
     }
 
     void testDictionaries() {
@@ -257,10 +259,23 @@ public:
         }
         {
             enc.beginDictionary();
+            enc.writeKey("f");
+            enc.writeInt(42);
+            enc.endDictionary();
+            checkOutput("7001 4166 002A 8003");
+            auto d = checkDict(1);
+            auto v = d->get(slice("f"));
+            Assert(v);
+            AssertEqual(v->asInt(), 42ll);
+            AssertEqual(d->get(slice("barrr")), (const value*)NULL);
+            AssertEqual(d->toJSON(), std::string("{\"f\":42}"));
+        }
+        {
+            enc.beginDictionary();
             enc.writeKey("foo");
             enc.writeInt(42);
             enc.endDictionary();
-            checkOutput("7801 4366 6F6F 002A 0000 8005");
+            checkOutput("4366 6F6F 7001 8003 002A 8003");
             auto d = checkDict(1);
             auto v = d->get(slice("foo"));
             Assert(v);
@@ -357,40 +372,75 @@ public:
         endEncoding();
         std::string dumped = value::dump(result);
         //std::cerr << dumped;
-        AssertEqual(dumped, std::string("\
-0000: 48 22 69 72…: \"\\\"ironic\\\"\"\n\
-000a: 28 00 77 be…: 123.456\n\
-0014: 28 00 61 d3…: 6.02e+23\n\
-001e: 60 08       : Array[8]:\n\
-0020: 30 00       :   null\n\
-0022: 34 00       :   false\n\
-0024: 38 00       :   true\n\
-0026: 0f 9c       :   -100\n\
-0028: 00 00       :   0\n\
-002a: 00 64       :   100\n\
-002c: 80 11       :   &123.456 (@000a)\n\
-002e: 80 0d       :   &6.02e+23 (@0014)\n\
-0030: 4c 68 65 6c…: \"hello\\nt\\\\here\"\n\
-003e: 78 03       : Dict[3]:\n\
-0040: 40 00 00 00 :   \"\"\n\
-0044: 80 00 00 0a :     &\"hello\\nt\\\\here\" (@0030)\n\
-0048: 80 00 00 24 :   &\"\\\"ironic\\\"\" (@0000)\n\
-004c: 80 00 00 17 :     &Array[8] (@001e)\n\
-0050: 43 66 6f 6f :   \"foo\"\n\
-0054: 00 7b 00 00 :     123\n\
-0058: 80 0d       : &Dict[3] (@003e)\n\
-"));
+        AssertEqual(dumped, std::string(
+            "0000: 43 66 6f 6f : \"foo\"\n"
+            "0004: 48 22 69 72…: \"\\\"ironic\\\"\"\n"
+            "000e: 28 00 77 be…: 123.456\n"
+            "0018: 28 00 61 d3…: 6.02e+23\n"
+            "0022: 60 08       : Array[8]:\n"
+            "0024: 30 00       :   null\n"
+            "0026: 34 00       :   false\n"
+            "0028: 38 00       :   true\n"
+            "002a: 0f 9c       :   -100\n"
+            "002c: 00 00       :   0\n"
+            "002e: 00 64       :   100\n"
+            "0030: 80 11       :   &123.456 (@000e)\n"
+            "0032: 80 0d       :   &6.02e+23 (@0018)\n"
+            "0034: 4c 68 65 6c…: \"hello\\nt\\\\here\"\n"
+            "0042: 70 03       : Dict[3]:\n"
+            "0044: 40 00       :   \"\"\n"
+            "0046: 80 09       :     &\"hello\\nt\\\\here\" (@0034)\n"
+            "0048: 80 22       :   &\"\\\"ironic\\\"\" (@0004)\n"
+            "004a: 80 14       :     &Array[8] (@0022)\n"
+            "004c: 80 26       :   &\"foo\" (@0000)\n"
+            "004e: 00 7b       :     123\n"
+            "0050: 80 07       : &Dict[3] (@0042)\n"));
     }
 
     void testConvertPeople() {
         alloc_slice input = readFile(kTestFilesDir "1000people.json");
 
         enc.uniqueStrings(true);
+
         JSONConverter jr(enc);
         jr.convertJSON(input);
+
+#if 0
+        // Dump the string table and some statistics:
+        auto &strings = enc._strings;
+        unsigned i = 0, totalMisses = 0, totalStrLength = 0, totalKeys = 0;
+        for (auto iter = strings.begin(); iter != strings.end(); ++iter) {
+            if (iter->buf) {
+                auto hash = StringTable::hash(iter);
+                auto shortHash = hash % strings.tableSize();
+                char x[20] = "   ";
+                int misses = (int)i - (int)shortHash;
+                if (misses < 0)
+                    misses += strings.tableSize();
+                if (misses) {
+                    sprintf(x, " +%d", misses);
+                    totalMisses += misses;
+                }
+                totalStrLength += iter->size;
+                if (iter.value().usedAsKey)
+                    totalKeys++;
+                fprintf(stderr, "\t%5X: (%08X%s) `%.*s` --> %u\n", i, hash, x, (int)iter->size, iter->buf, iter.value().offset);
+            } else {
+                fprintf(stderr, "\t%5X: ----\n", i);
+            }
+            ++i;
+        }
+        fprintf(stderr, "Capacity %zd, %zu occupied (%.0f%%), %zd keys, average of %.3g misses\n",
+                strings.tableSize(), strings.count(),
+                strings.count()/(double)strings.tableSize()*100.0,
+                totalKeys,
+                totalMisses / (double)strings.count());
+        fprintf(stderr, "Total string size %u bytes\n", totalStrLength);
+#endif
+
         enc.end();
         result = writer.extractOutput();
-        
+
         Assert(result.buf);
         writeToFile(result, kTestFilesDir "1000people.fleece");
 
@@ -403,18 +453,39 @@ public:
 #endif
     }
 
-    void testFindPersonByIndex() {
+    void testFindPersonByIndexUnsorted() {
         mmap_slice doc(kTestFilesDir "1000people.fleece");
         auto root = value::fromTrustedData(doc)->asArray();
-        Assert(root);
         auto person = root->get(123)->asDict();
-#if 0
-        for (auto iter = person->begin(); iter; ++iter) {
-            std::cerr << std::string(iter.key()->asString()) << ": " << iter.value()->toJSON() << "\n";
+        const value *name = person->get_unsorted(slice("name"));
+        std::string nameStr = (std::string)name->asString();
+        AssertEqual(nameStr, std::string("Concepcion Burns"));
+    }
+
+    void testFindPersonByIndexSorted() {
+        mmap_slice doc(kTestFilesDir "1000people.fleece");
+        auto root = value::fromTrustedData(doc)->asArray();
+        auto person = root->get(123)->asDict();
+        const value *name = person->get(slice("name"));
+        std::string nameStr = (std::string)name->asString();
+        AssertEqual(nameStr, std::string("Concepcion Burns"));
+    }
+
+    void testFindPersonByIndexKeyed() {
+        mmap_slice doc(kTestFilesDir "1000people.fleece");
+
+        const value *nameKey = NULL;
+        auto root = value::fromTrustedData(doc)->asArray();
+        auto person = root->get(123)->asDict();
+        for (auto i=person->begin(); i; ++i) {
+            if (i.key()->asString() == slice("name")) {
+                nameKey = i.key();
+                break;
+            }
         }
-#endif
-        auto name = person->get(slice("name"));
-        Assert(name);
+        Assert(nameKey);
+
+        const value *name = person->get(nameKey);
         std::string nameStr = (std::string)name->asString();
         AssertEqual(nameStr, std::string("Concepcion Burns"));
     }
@@ -431,7 +502,9 @@ public:
     CPPUNIT_TEST( testJSON );
     CPPUNIT_TEST( testDump );
     CPPUNIT_TEST( testConvertPeople );
-    CPPUNIT_TEST( testFindPersonByIndex );
+    CPPUNIT_TEST( testFindPersonByIndexUnsorted );
+    CPPUNIT_TEST( testFindPersonByIndexSorted );
+    CPPUNIT_TEST( testFindPersonByIndexKeyed );
     CPPUNIT_TEST_SUITE_END();
 };
 

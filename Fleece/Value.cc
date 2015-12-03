@@ -38,6 +38,8 @@ namespace fleece {
         kNull   // pointer; should never be seen
     };
 
+    static inline int width(bool wide) { return wide ? kWide : kNarrow; }
+
 
 #pragma mark - VALUE:
 
@@ -224,7 +226,7 @@ namespace fleece {
             if (t == kDictTag)
                 itemCount *= 2;
             // Check that size fits:
-            size += itemCount * (wide ? kWide : kNarrow);
+            size += itemCount * width(wide);
             if (offsetby(this, size) > dataEnd)
                 return false;
 
@@ -338,7 +340,7 @@ namespace fleece {
     inline const value* dict::get(slice keyToFind) const {
         auto info = getArrayInfo();
         auto key = (const value*) ::bsearch(&keyToFind, info.first, info.count,
-                                            (WIDE ?8 :4), &keyCmp<WIDE>);
+                                            2*width(WIDE), &keyCmp<WIDE>);
         if (!key)
             return NULL;
         return deref<WIDE>(key->next<WIDE>());
@@ -346,6 +348,32 @@ namespace fleece {
 
     const value* dict::get(slice keyToFind) const {
         return isWideArray() ? get<true>(keyToFind) : get<false>(keyToFind);
+    }
+
+    template <bool WIDE>
+    const value* dict::get(const arrayInfo &info, const value *keyToFind) const {
+        const value *key = info.first;
+        auto offset = (size_t)((uint8_t*)key - (uint8_t*)keyToFind);
+        if (offset > (WIDE ?0xFFFFFFFF : 0xFFFF))
+            return NULL;
+        // Raw integer key we're looking for (in native byte order):
+        auto rawKeyToFind = (uint32_t)((offset >> 1) | (WIDE ? 0x80000000 : 0x8000));
+
+        const value *end = offsetby(key, info.count*2*width(WIDE));
+        while (key < end) {
+            const value *val = key->next<WIDE>();
+            uint32_t k = WIDE ? _dec32(*(uint32_t*)key) : (uint16_t)_dec16(*(uint16_t*)key);
+            if (k == rawKeyToFind)
+                return deref<WIDE>(val);
+            rawKeyToFind += width(WIDE);    // relative offset to string increases as key advances
+            key = val->next<WIDE>();
+        }
+        return NULL;
+    }
+
+    const value* dict::get(const value *keyToFind) const {
+        auto info = getArrayInfo();
+        return info.wide ? get<true>(info, keyToFind) : get<false>(info, keyToFind);
     }
 
     dict::iterator::iterator(const dict* d) {
@@ -357,7 +385,7 @@ namespace fleece {
         if (_a.count == 0)
             throw "iterating past end of dict";
         --_a.count;
-        _a.first = offsetby(_a.first, _a.wide ? 2*kWide : 2*kNarrow);
+        _a.first = offsetby(_a.first, 2*width(_a.wide));
         readKV();
         return *this;
     }

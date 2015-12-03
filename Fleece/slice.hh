@@ -70,8 +70,9 @@ namespace fleece {
         const void* findByte(uint8_t byte) const    {return ::memchr(buf, byte, size);}
 
         int compare(slice) const;
-        bool operator==(const slice &s) const       {return compare(s)==0;}
-        bool operator!=(const slice &s) const       {return compare(s)!=0;}
+        bool operator==(const slice &s) const       {return size==s.size &&
+                                                     memcmp(buf, s.buf, size) == 0;}
+        bool operator!=(const slice &s) const       {return !(*this == s);}
         bool operator<(slice s) const               {return compare(s) < 0;}
         bool operator>(slice s) const               {return compare(s) > 0;}
 

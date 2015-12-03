@@ -20,15 +20,13 @@
 namespace fleece {
 
     int slice::compare(slice b) const {
-        size_t minSize = std::min(this->size, b.size);
-        int result = memcmp(this->buf, b.buf, minSize);
-        if (result == 0) {
-            if (this->size < b.size)
-                result = -1;
-            else if (this->size > b.size)
-                result = 1;
-        }
-        return result;
+        // Optimized for speed
+        if (this->size < b.size)
+            return memcmp(this->buf, b.buf, this->size) ?: -1;
+        else if (this->size > b.size)
+            return memcmp(this->buf, b.buf, b.size) ?: 1;
+        else
+            return memcmp(this->buf, b.buf, this->size);
     }
 
     slice slice::read(size_t nBytes) {
