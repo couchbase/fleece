@@ -41,6 +41,10 @@ namespace fleece {
             each unique string only once. This saves space but makes the encoder slightly slower. */
         void uniqueStrings(bool b)      {_uniqueStrings = b;}
 
+        /** Sets the sortKeys property. If true (the default), dictionary keys will be written in
+            sorted order. This makes dict::get faster but makes the encoder slightly slower. */
+        void sortKeys(bool b)           {_sortKeys = b;}
+
         /** Ends encoding, writing the last of the data to the Writer. */
         void end();
 
@@ -57,7 +61,7 @@ namespace fleece {
         void writeDouble(double);
 
         void writeString(std::string);
-        void writeString(slice s);
+        void writeString(slice s)           {(void)_writeString(s);}
         void writeData(slice s);
 
         /** Begins creating an array. Until endArray is called, values written to the encoder are
@@ -104,9 +108,10 @@ namespace fleece {
         class valueArray : public std::vector<value> {
         public:
             valueArray()                    { }
-            void reset(internal::tags t)    {tag = t; wide = false;}
+            void reset(internal::tags t)    {tag = t; wide = false; keys.clear();}
             internal::tags tag;
             bool wide;
+            std::vector<slice> keys;
         };
 
         void addItem(value v);
@@ -115,7 +120,9 @@ namespace fleece {
         void writeSpecial(uint8_t special);
         void writeInt(uint64_t i, bool isShort, bool isUnsigned);
         slice writeData(internal::tags, slice s);
+        slice _writeString(slice);
         size_t nextWritePos();
+        void sortDict(valueArray &items);
         void checkPointerWidths(valueArray *items);
         void fixPointers(valueArray *items);
         void endCollection(internal::tags tag);
@@ -132,6 +139,7 @@ namespace fleece {
         unsigned _stackDepth;   // Current depth of _stack
         stringTable _strings;   // Maps strings to the offsets where they appear as values
         bool _uniqueStrings;    // Should strings be uniqued before writing?
+        bool _sortKeys;         // Should dictionary keys be sorted?
         bool _writingKey;       // True if value being written is a key
         bool _blockedOnKey;     // True if writes should be refused
 

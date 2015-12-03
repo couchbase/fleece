@@ -30,7 +30,7 @@
  0110wccc cccccccc...    array (c = 11-bit item count, if 2047 then count follows as varint;
                                 w = wide, if 1 then following values are 4 bytes wide, not 2)
  0111wccc cccccccc...    dictionary (same as array)
- 1ooooooo oooooooo       pointer (o = BE signed offset in units of 2 bytes: ±32k bytes)
+ 1ooooooo oooooooo       pointer (o = BE unsigned offset in units of 2 bytes back; up to -64kbytes)
                                 NOTE: In a wide collection, offset field is 31 bits wide
 
  Bits marked "-" are reserved and should be set to zero.

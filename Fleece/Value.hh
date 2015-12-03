@@ -266,13 +266,13 @@ namespace fleece {
     public:
         uint32_t count() const                      {return arrayCount();}
 
-        /** Looks up the value for a key. */
-        const value* get(slice key) const;
+        /** Looks up the value for a key, assuming the keys are sorted (as they are by default.) */
+        const value* get(slice keyToFind) const;
 
-        /** Looks up the value for a key, assuming the keys are sorted.
-            This is faster than get(), but will only work if the keys were actually sorted
-            (in simple lexicographic order, i.e. memcmp) when the dictionary was written. */
-        const value* get_sorted(slice keyToFind) const;
+        /** Looks up the value for a key, without assuming the keys are sorted.
+            This is slower than get(), but works even if the Fleece data was generated without
+            sorted keys. */
+        const value* get_unsorted(slice key) const;
 
         /** A stack-based dict iterator */
         class iterator {
@@ -302,7 +302,7 @@ namespace fleece {
         template <bool WIDE>
             static int keyCmp(const void* keyToFindP, const void* keyP);
         template <bool WIDE>
-            const value* get_sorted(slice keyToFind) const;
+            const value* get(slice keyToFind) const;
 
         friend class value;
     };

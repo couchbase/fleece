@@ -15,6 +15,8 @@ using namespace fleece;
 class PerfTests : public CppUnit::TestFixture {
     public:
 
+    static const bool kSortKeys = true;
+
     void testConvert1000People() {
         int kSamples = 50;
 
@@ -26,6 +28,7 @@ class PerfTests : public CppUnit::TestFixture {
             Writer writer(input.size);
             Encoder e(writer);
             e.uniqueStrings(true);
+            e.sortKeys(kSortKeys);
             JSONConverter jr(e);
             Stopwatch st;
 
@@ -42,7 +45,7 @@ class PerfTests : public CppUnit::TestFixture {
             if (i == kSamples-1) {
                 fprintf(stderr, "\nJSON size: %zu bytes; Fleece size: %zu bytes (%.2f%%)\n",
                         input.size, result.size, (result.size*100.0/input.size));
-                writeToFile(result, "1000people.fleece");
+                writeToFile(result, kTestFilesDir "1000people.fleece");
             }
         }
         fprintf(stderr, "Average time is %g ms\n", (total - minTime - maxTime)/(kSamples-2));
@@ -50,20 +53,24 @@ class PerfTests : public CppUnit::TestFixture {
 
     void testFindPersonByIndex() {
         int kSamples = 50;
+        int kIterations = 10000;
 
         double total = 0, minTime = 1e99, maxTime = -1;
+        mmap_slice doc(kTestFilesDir "1000people.fleece");
 
         fprintf(stderr, "Looking up one value (µs):");
         for (int i = 0; i < kSamples; i++) {
             Stopwatch st;
 
-            for (int j = 0; j < 1000; j++) {
-                mmap_slice doc(kTestFilesDir "1000people.fleece");
+            for (int j = 0; j < kIterations; j++) {
                 auto root = value::fromTrustedData(doc)->asArray();
                 auto person = root->get(123)->asDict();
-                auto name = person->get(slice("name"));
+                auto name = kSortKeys ? person->get(slice("name"))
+                                      : person->get_unsorted(slice("name"));
                 std::string nameStr = (std::string)name->asString();
+#ifndef NDEBUG
                 AssertEqual(nameStr, std::string("Concepcion Burns"));
+#endif
             }
 
             double elapsed = st.elapsedMS();
@@ -72,7 +79,8 @@ class PerfTests : public CppUnit::TestFixture {
             minTime = std::min(minTime, elapsed);
             maxTime = std::max(maxTime, elapsed);
         }
-        fprintf(stderr, "\nAverage time is %g µs\n", (total - minTime - maxTime)/(kSamples-2));
+        fprintf(stderr, "\nAverage time is %g ns\n",
+                (total - minTime - maxTime)/(kSamples-2) / kIterations * 1e6);
     }
     
     CPPUNIT_TEST_SUITE( PerfTests );

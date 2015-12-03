@@ -316,7 +316,7 @@ namespace fleece {
 
 #pragma mark - DICT:
 
-    const value* dict::get(slice keyToFind) const {
+    const value* dict::get_unsorted(slice keyToFind) const {
         auto info = getArrayInfo();
         const value *key = info.first;
         for (uint32_t i = 0; i < info.count; i++) {
@@ -328,7 +328,6 @@ namespace fleece {
         return NULL;
     }
 
-#if 0
     template <bool WIDE>
     int dict::keyCmp(const void* keyToFindP, const void* keyP) {
         const value *key = value::deref<WIDE>((const value*)keyP);
@@ -336,19 +335,18 @@ namespace fleece {
     }
 
     template <bool WIDE>
-    inline const value* dict::get_sorted(slice keyToFind) const {
+    inline const value* dict::get(slice keyToFind) const {
         auto info = getArrayInfo();
         auto key = (const value*) ::bsearch(&keyToFind, info.first, info.count,
-                                            (WIDE ?4 :2), &keyCmp<WIDE>);
-        if (key)
-            key += info.count * (WIDE ?2 :1);
-        return key;
+                                            (WIDE ?8 :4), &keyCmp<WIDE>);
+        if (!key)
+            return NULL;
+        return deref<WIDE>(key->next<WIDE>());
     }
 
-    const value* dict::get_sorted(slice keyToFind) const {
-        return isWideArray() ? get_sorted<true>(keyToFind) : get_sorted<false>(keyToFind);
+    const value* dict::get(slice keyToFind) const {
+        return isWideArray() ? get<true>(keyToFind) : get<false>(keyToFind);
     }
-#endif
 
     dict::iterator::iterator(const dict* d) {
         _a = d->getArrayInfo();

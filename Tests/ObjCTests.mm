@@ -78,7 +78,7 @@ public:
         checkIt(@{}, "{}");
         checkIt(@{@"n":@123}, "{\"n\":123}");
         checkIt(@{@"n":@123, @"slang":@"howdy", @"long":@1234.5678},
-                "{\"n\":123,\"slang\":\"howdy\",\"long\":1234.5678}");
+                "{\"long\":1234.5678,\"n\":123,\"slang\":\"howdy\"}");
         checkIt(@{@"a":@{@"a":@{},@"b":@{}},@"c":@{}},
                 "{\"a\":{\"a\":{},\"b\":{}},\"c\":{}}");
         checkIt(@{@"a":@"flumpety", @"b":@"flumpety", @"c":@"flumpety"},

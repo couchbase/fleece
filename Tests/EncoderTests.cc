@@ -337,9 +337,9 @@ public:
     }
 
     void testJSON() {
-        std::string json = "{\"foo\":123,"
-                           "\"\\\"ironic\\\"\":[null,false,true,-100,0,100,123.456,6.02e+23],"
-                           "\"\":\"hello\\nt\\\\here\"}";
+        std::string json = "{\"\":\"hello\\nt\\\\here\","
+                            "\"\\\"ironic\\\"\":[null,false,true,-100,0,100,123.456,6.02e+23],"
+                            "\"foo\":123}";
         JSONConverter j(enc);
         Assert(j.convertJSON(slice(json)));
         endEncoding();
@@ -372,12 +372,12 @@ public:
 002e: 80 0d       :   &6.02e+23 (@0014)\n\
 0030: 4c 68 65 6c…: \"hello\\nt\\\\here\"\n\
 003e: 78 03       : Dict[3]:\n\
-0040: 43 66 6f 6f :   \"foo\"\n\
-0044: 00 7b 00 00 :     123\n\
+0040: 40 00 00 00 :   \"\"\n\
+0044: 80 00 00 0a :     &\"hello\\nt\\\\here\" (@0030)\n\
 0048: 80 00 00 24 :   &\"\\\"ironic\\\"\" (@0000)\n\
 004c: 80 00 00 17 :     &Array[8] (@001e)\n\
-0050: 40 00 00 00 :   \"\"\n\
-0054: 80 00 00 12 :     &\"hello\\nt\\\\here\" (@0030)\n\
+0050: 43 66 6f 6f :   \"foo\"\n\
+0054: 00 7b 00 00 :     123\n\
 0058: 80 0d       : &Dict[3] (@003e)\n\
 "));
     }
@@ -392,7 +392,7 @@ public:
         result = writer.extractOutput();
         
         Assert(result.buf);
-        writeToFile(result, "1000people.fleece");
+        writeToFile(result, kTestFilesDir "1000people.fleece");
 
         fprintf(stderr, "\nJSON size: %zu bytes; Fleece size: %zu bytes (%.2f%%)\n",
                 input.size, result.size, (result.size*100.0/input.size));

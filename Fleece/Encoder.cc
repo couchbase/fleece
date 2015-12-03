@@ -18,6 +18,7 @@
 #include "varint.hh"
 #include <algorithm>
 #include <assert.h>
+#include <stdlib.h>
 
 
 namespace fleece {
@@ -30,6 +31,7 @@ namespace fleece {
     :_out(out),
      _stackDepth(0),
      _uniqueStrings(true),
+     _sortKeys(true),
      _writingKey(false),
      _blockedOnKey(false)
     {
@@ -181,7 +183,8 @@ namespace fleece {
 
 #pragma mark - STRINGS / DATA:
 
-    // used for strings and binary data
+    // used for strings and binary data. Returns the location where s got written to, which
+    // can be used until the enoding is over. (Unless it's inline, in which case s.buf is NULL.)
     slice Encoder::writeData(tags tag, slice s) {
         uint8_t buf[4 + kMaxVarintLen64];
         buf[0] = (uint8_t)std::min(s.size, (size_t)0xF);
@@ -190,7 +193,7 @@ namespace fleece {
             // Tiny data fits inline:
             memcpy(&buf[1], s.buf, s.size);
             writeValue(tag, buf, 1 + s.size);
-            dst = NULL;     // ?????
+            dst = NULL;
         } else {
             // Large data doesn't:
             size_t bufLen = 1;
@@ -204,7 +207,8 @@ namespace fleece {
         return slice(dst, s.size);
     }
 
-    void Encoder::writeString(slice s) {
+    // Returns the location where s got written to, if possible, just like writeData above.
+    slice Encoder::_writeString(slice s) {
         // Check whether this string's already been written:
         if (__builtin_expect(_uniqueStrings && s.size >= kWide && s.size <= kMaxSharedStringSize,
                              true)) {
@@ -214,6 +218,7 @@ namespace fleece {
 #ifndef NDEBUG
                 _numSavedStrings++;
 #endif
+                return entry->first;
             } else {
                 size_t offset = nextWritePos();
                 s = writeData(kStringTag, s);
@@ -221,14 +226,15 @@ namespace fleece {
                     //fprintf(stderr, "Caching `%.*s` --> %zu\n", (int)s.size, s.buf, offset);
                     _strings.insert({s, offset});
                 }
+                return s;
             }
         } else {
-            writeData(kStringTag, s);
+            return writeData(kStringTag, s);
         }
     }
 
     void Encoder::writeString(std::string s) {
-        writeString(slice(s));
+        _writeString(slice(s));
     }
 
     void Encoder::writeData(slice s) {
@@ -275,6 +281,21 @@ namespace fleece {
 
 #pragma mark - ARRAYS / DICTIONARIES:
 
+    void Encoder::writeKey(std::string s)   {writeKey(slice(s));}
+
+    void Encoder::writeKey(slice s) {
+        if (!_blockedOnKey) {
+            if (_items->tag == kDictTag)
+                throw "need a value after a key";
+            else
+                throw "not writing a dictionary";
+        }
+        _blockedOnKey = false;
+        s = _writeString(s);
+        if (_sortKeys)
+            _items->keys.push_back(s);
+    }
+
     void Encoder::push(tags tag, size_t reserve) {
         if (_stackDepth >= _stack.size())
             _stack.emplace_back();
@@ -312,6 +333,9 @@ namespace fleece {
         --_stackDepth;
         _items = &_stack[_stackDepth - 1];
         _writingKey = _blockedOnKey = false;
+
+        if (_sortKeys && tag == kDictTag)
+            sortDict(*items);
 
         checkPointerWidths(items);
 
@@ -364,17 +388,41 @@ namespace fleece {
         items->clear();
     }
 
-    void Encoder::writeKey(std::string s)   {writeKey(slice(s));}
-
-    void Encoder::writeKey(slice s) {
-        if (!_blockedOnKey) {
-            if (_items->tag == kDictTag)
-                throw "need a value after a key";
-            else
-                throw "not writing a dictionary";
-        }
-        _blockedOnKey = false;
-        writeString(s);
+    static int compareKeysByIndex(const void *a, const void *b) {
+        auto &sa = **(const slice**)a;
+        auto &sb = **(const slice**)b;
+        assert(sa.buf && sb.buf);
+        return sa.compare(sb);
     }
 
+    void Encoder::sortDict(valueArray &items) {
+        auto &keys = items.keys;
+        size_t n = keys.size();
+        if (n < 2)
+            return;
+
+        // Fill in the pointers of any keys that refer to inline strings:
+        for (unsigned i = 0; i < n; i++)
+            if (keys[i].buf == NULL)
+                keys[i].buf = offsetby(&items[2*i], 1);
+
+        // Construct an array that describes the permutation of item indices:
+        const slice* indices[n];
+        const slice* base = &keys[0];
+        for (unsigned i = 0; i < n; i++)
+            indices[i] = base + i;
+        ::qsort(indices, n, sizeof(indices[0]), &compareKeysByIndex);
+        // indices[i] is now a pointer to the value that should go at index i
+
+        // Now rewrite items according to the permutation in indices:
+        value *old = (value*) alloca(2*n * sizeof(value));
+        memcpy(old, &items[0], 2*n * sizeof(value));
+        for (unsigned i = 0; i < n; i++) {
+            auto j = indices[i] - base;
+            if (i != j) {
+                items[2*i]   = old[2*j];
+                items[2*i+1] = old[2*j+1];
+            }
+        }
+    }
 }
