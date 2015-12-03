@@ -56,6 +56,7 @@ private:
     clock_t _start;
 };
 
+
 class Benchmark {
 public:
     void start()        {_st.reset();}
