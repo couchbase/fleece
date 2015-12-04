@@ -338,17 +338,17 @@ public:
         checkJSONStr("Price \\u20", NULL, JSONSL_ERROR_UESCAPE_TOOSHORT);
         checkJSONStr("Price \\u2", NULL, JSONSL_ERROR_UESCAPE_TOOSHORT);
         checkJSONStr("Price \\u", NULL, JSONSL_ERROR_UESCAPE_TOOSHORT);
-        checkJSONStr("\\uzoop!", NULL, JSONSL_ERROR_UESCAPE_TOOSHORT);
-        checkJSONStr("!\\u0000!", NULL, JSONSL_ERROR_FOUND_NULL_BYTE);
+        checkJSONStr("\\uzoop!", NULL, JSONSL_ERROR_PERCENT_BADHEX);
+        checkJSONStr("!\\u0000!", NULL, JSONSL_ERROR_INVALID_CODEPOINT);
 
         // UTF-16 surrogate pair decoding:
-        checkJSONStr("lmao\\uD87D\\uDE1C!", "lmao😜!");
-        checkJSONStr("lmao\\uD87D", NULL, JSONConverter::kErrInvalidUnicode);
-        checkJSONStr("lmao\\uD87D\\n", NULL, JSONConverter::kErrInvalidUnicode);
-        checkJSONStr("lmao\\uD87D\\u", NULL, JSONSL_ERROR_UESCAPE_TOOSHORT);
-        checkJSONStr("lmao\\uD87D\\u333", NULL, JSONSL_ERROR_UESCAPE_TOOSHORT);
-        checkJSONStr("lmao\\uD87D\\u3333", NULL, JSONConverter::kErrInvalidUnicode);
-        checkJSONStr("lmao\\uDE1C\\uD87D!", NULL, JSONConverter::kErrInvalidUnicode);
+        checkJSONStr("lmao\\uD83D\\uDE1C!", "lmao😜!");
+        checkJSONStr("lmao\\uD83D", NULL, JSONSL_ERROR_INVALID_CODEPOINT);
+        checkJSONStr("lmao\\uD83D\\n", NULL, JSONSL_ERROR_INVALID_CODEPOINT);
+        checkJSONStr("lmao\\uD83D\\u", NULL, JSONSL_ERROR_UESCAPE_TOOSHORT);
+        checkJSONStr("lmao\\uD83D\\u333", NULL, JSONSL_ERROR_UESCAPE_TOOSHORT);
+        checkJSONStr("lmao\\uD83D\\u3333", NULL, JSONSL_ERROR_INVALID_CODEPOINT);
+        checkJSONStr("lmao\\uDE1C\\uD83D!", NULL, JSONSL_ERROR_INVALID_CODEPOINT);
     }
 
     void testJSON() {

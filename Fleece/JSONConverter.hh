@@ -34,8 +34,7 @@ namespace fleece {
 
         /** Extra error codes beyond those in jsonsl_error_t. */
         enum {
-            kErrTruncatedJSON = 1000,
-            kErrInvalidUnicode
+            kErrTruncatedJSON = 1000
         };
 
     private:
