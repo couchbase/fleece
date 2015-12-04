@@ -36,7 +36,7 @@ namespace fleece {
         assert(key.buf != NULL);
         size_t index = hash(key) & (_size - 1);
         slot *s = &_table[index];
-        if (s->first != key && s->first.buf != NULL) {
+        if (__builtin_expect(s->first.buf != NULL && s->first != key, false)) {
             slot *end = &_table[_size];
             do {
                 if (++s >= end)
