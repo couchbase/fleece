@@ -315,6 +315,15 @@ namespace fleece {
         return *this;
     }
 
+    array::iterator& array::iterator::operator += (uint32_t n) {
+        if (n > _a.count)
+            throw "iterating past end of array";
+        _a.count -= n;
+        _a.first = offsetby(_a.first, width(_a.wide)*n);
+        _value = _a.firstValue();
+        return *this;
+    }
+
 
 #pragma mark - DICT:
 
@@ -386,6 +395,15 @@ namespace fleece {
             throw "iterating past end of dict";
         --_a.count;
         _a.first = offsetby(_a.first, 2*width(_a.wide));
+        readKV();
+        return *this;
+    }
+
+    dict::iterator& dict::iterator::operator += (uint32_t n) {
+        if (n > _a.count)
+            throw "iterating past end of dict";
+        _a.count -= n;
+        _a.first = offsetby(_a.first, 2*width(_a.wide)*n);
         readKV();
         return *this;
     }

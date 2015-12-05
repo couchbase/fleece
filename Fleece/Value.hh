@@ -248,6 +248,7 @@ namespace fleece {
 
             explicit operator bool() const          {return _a.count > 0;}
             iterator& operator++();
+            iterator& operator += (uint32_t);
 
         private:
             const class value* rawValue()           {return _a.first;}
@@ -278,6 +279,13 @@ namespace fleece {
             This is super fast. */
         const value* get(const value *key) const;
 
+#ifdef __OBJC__
+        const value* get(NSString* key) const {
+            nsstring_slice keyBytes(key);
+            return get(keyBytes);
+        }
+#endif
+
         /** A stack-based dict iterator */
         class iterator {
         public:
@@ -288,7 +296,8 @@ namespace fleece {
             const value* value() const              {return _value;}
 
             explicit operator bool() const          {return _a.count > 0;}
-            iterator& operator++();
+            iterator& operator ++();
+            iterator& operator += (uint32_t);
 
         private:
             void readKV();

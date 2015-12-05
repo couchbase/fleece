@@ -8,6 +8,7 @@
 
 #include <Foundation/Foundation.h>
 #include "FleeceTests.hh"
+#include "FleeceDocument.h"
 
 
 class ObjCTests : public CppUnit::TestFixture {
@@ -86,28 +87,115 @@ public:
     }
 
     void testPerfParse1000PeopleNS() {
-        const int kSamples = 50;
-        double total = 0, minTime = 1e99, maxTime = -1;
-        NSData *data = [NSData dataWithContentsOfFile: @kTestFilesDir "1000people.json"];
+        @autoreleasepool {
+            const int kSamples = 50;
+            double total = 0, minTime = 1e99, maxTime = -1;
+            NSData *data = [NSData dataWithContentsOfFile: @kTestFilesDir "1000people.json"];
 
-        fprintf(stderr, "Parsing JSON to NSObjects (ms):");
-        for (int i = 0; i < kSamples; i++) {
-            Stopwatch st;
+            fprintf(stderr, "Parsing JSON to NSObjects (ms):");
+            for (int i = 0; i < kSamples; i++) {
+                Stopwatch st;
 
-            @autoreleasepool {
-                id j = [NSJSONSerialization JSONObjectWithData: data options: 0 error: NULL];
-                Assert(j);
+                @autoreleasepool {
+                    id j = [NSJSONSerialization JSONObjectWithData: data options: 0 error: NULL];
+                    Assert(j);
+                }
+
+                double elapsed = st.elapsedMS();
+                fprintf(stderr, " %g", elapsed);
+                total += elapsed;
+                minTime = std::min(minTime, elapsed);
+                maxTime = std::max(maxTime, elapsed);
             }
-
-            double elapsed = st.elapsedMS();
-            fprintf(stderr, " %g", elapsed);
-            total += elapsed;
-            minTime = std::min(minTime, elapsed);
-            maxTime = std::max(maxTime, elapsed);
+            fprintf(stderr, "\nAverage time is %g ms\n", (total - minTime - maxTime)/(kSamples-2));
         }
-        fprintf(stderr, "\nAverage time is %g ms\n", (total - minTime - maxTime)/(kSamples-2));
     }
 
+    void testFleeceLazyDict() {
+        @autoreleasepool {
+            NSData *data = [NSData dataWithContentsOfFile: @kTestFilesDir "1000people.fleece"];
+            NSArray *people = [FleeceDocument objectWithFleeceData: data trusted: YES];
+            Assert([people isKindOfClass: [NSArray class]]);
+
+            int i = 0;
+            for (NSDictionary *person in people) {
+                Assert(person[@"name"] != nil);
+                //NSLog(@"#%3d: count=%2lu, name=`%@`", i, person.count, person[@"name"]);
+                //NSLog(@"%@", person);
+                i++;
+            }
+            AssertEqual(i, 1000);
+        }
+    }
+
+    void testPerfReadNameNS() {
+        @autoreleasepool {
+            NSData *data = [NSData dataWithContentsOfFile: @kTestFilesDir "1person.json"];
+            Stopwatch st;
+            for (int j = 0; j < 1e5; j++) {
+                @autoreleasepool {
+                    NSDictionary *person = [NSJSONSerialization JSONObjectWithData: data options: 0 error: NULL];
+                    if (person[@"name"] == nil)
+                        abort();
+                }
+            }
+            fprintf(stderr, "Getting name (NS) took %g µs\n", st.elapsedMS()/1e5*1000);
+        }
+    }
+
+    void testPerfReadName() {
+        @autoreleasepool {
+            NSData *data = [NSData dataWithContentsOfFile: @kTestFilesDir "1person.fleece"];
+            Stopwatch st;
+            for (int j = 0; j < 1e5; j++) {
+                @autoreleasepool {
+                    NSDictionary *person = [FleeceDocument objectWithFleeceData: data trusted: YES];
+                    if (person[@"name"] == nil)
+                        abort();
+                }
+            }
+            fprintf(stderr, "Getting name (Fleece) took %g µs\n", st.elapsedMS()/1e5*1000);
+        }
+    }
+    
+    void testPerfReadNamesNS() {
+        @autoreleasepool {
+            NSData *data = [NSData dataWithContentsOfFile: @kTestFilesDir "1000people.json"];
+            NSArray *people = [NSJSONSerialization JSONObjectWithData: data options: 0 error: NULL];
+            Assert([people isKindOfClass: [NSArray class]]);
+
+            Stopwatch st;
+            for (int j = 0; j < 10000; j++) {
+                int i = 0;
+                for (NSDictionary *person in people) {
+                    if (person[@"name"] == nil)
+                        abort();
+                    i++;
+                }
+            }
+            fprintf(stderr, "Iterating people (NS) took %g ms\n", st.elapsedMS()/10000);
+        }
+    }
+
+    void testPerfReadNames() {
+        @autoreleasepool {
+            NSData *data = [NSData dataWithContentsOfFile: @kTestFilesDir "1000people.fleece"];
+            NSArray *people = [FleeceDocument objectWithFleeceData: data trusted: YES];
+            Assert([people isKindOfClass: [NSArray class]]);
+
+            Stopwatch st;
+            for (int j = 0; j < 10000; j++) {
+                int i = 0;
+                for (NSDictionary *person in people) {
+                    if (person[@"name"] == nil)
+                        abort();
+                    i++;
+                }
+            }
+            fprintf(stderr, "Iterating people (Fleece) took %g ms\n", st.elapsedMS()/10000);
+        }
+    }
+    
     CPPUNIT_TEST_SUITE( ObjCTests );
     CPPUNIT_TEST( testSpecial );
     CPPUNIT_TEST( testInts );
@@ -115,8 +203,13 @@ public:
     CPPUNIT_TEST( testStrings );
     CPPUNIT_TEST( testArrays );
     CPPUNIT_TEST( testDictionaries );
+    CPPUNIT_TEST( testFleeceLazyDict );
 #ifdef NDEBUG
 //    CPPUNIT_TEST( testPerfParse1000PeopleNS );
+    CPPUNIT_TEST( testPerfReadName );
+    CPPUNIT_TEST( testPerfReadNameNS );
+    CPPUNIT_TEST( testPerfReadNames );
+    CPPUNIT_TEST( testPerfReadNamesNS );
 #endif
     CPPUNIT_TEST_SUITE_END();
 };
