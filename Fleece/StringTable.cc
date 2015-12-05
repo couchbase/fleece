@@ -32,9 +32,9 @@ namespace fleece {
         _count = 0;
     }
 
-    StringTable::slot* StringTable::find(fleece::slice key) {
+    StringTable::slot* StringTable::find(fleece::slice key, uint32_t hash) {
         assert(key.buf != NULL);
-        size_t index = hash(key) & (_size - 1);
+        size_t index = hash & (_size - 1);
         slot *s = &_table[index];
         if (__builtin_expect(s->first.buf != NULL && s->first != key, false)) {
             slot *end = &_table[_size];
@@ -43,17 +43,20 @@ namespace fleece {
                     s = &_table[0];
             } while (s->first.buf != NULL && s->first != key);
         }
+        if (s->first.buf == NULL) {
+            s->second.hash = hash;
+        }
         return s;
     }
 
-    bool StringTable::_add(fleece::slice key, const info& n) {
-        auto s = find(key);
+    bool StringTable::_add(fleece::slice key, uint32_t h, const info& n) {
+        auto s = find(key, h);
         if (s->first.buf)
             return false;
         else {
-            auto ss = const_cast<slot*>(s);
-            ss->first = key;
-            ss->second = n;
+            s->first = key;
+            s->second = n;
+            s->second.hash = h;
             return true;
         }
     }
@@ -63,12 +66,14 @@ namespace fleece {
         auto ss = const_cast<slot*>(s);
         assert(ss->first.buf == NULL);
         ss->first = key;
+        auto hash = ss->second.hash;
         ss->second = n;
+        ss->second.hash = hash;
         incCount();
     }
 
     void StringTable::add(fleece::slice key, const info& n) {
-        if (_add(key, n))
+        if (_add(key, hash(key), n))
             incCount();
     }
 
@@ -86,7 +91,7 @@ namespace fleece {
         allocTable(2*_size);
         for (auto s = oldTable; s < end; ++s) {
             if (s->first.buf != NULL)
-                _add(s->first, s->second);
+                _add(s->first, s->second.hash, s->second);
         }
         ::free(oldTable);
     }

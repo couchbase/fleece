@@ -22,6 +22,7 @@ namespace fleece {
 
         struct info {
             uint32_t offset;
+            uint32_t hash;
             bool usedAsKey;
         };
 
@@ -32,7 +33,7 @@ namespace fleece {
 
         void clear();
 
-        slot* find(slice);
+        slot* find(slice key)               {return find(key, hash(key));}
 
         void add(slice, const info&);
 
@@ -64,7 +65,8 @@ namespace fleece {
 
     private:
         void allocTable(size_t size);
-        bool _add(slice, const info&);
+        slot* find(fleece::slice key, uint32_t hash);
+        bool _add(slice, uint32_t h, const info&);
         void incCount()                     {if (++_count > _maxCount) grow();}
         void grow();
 
