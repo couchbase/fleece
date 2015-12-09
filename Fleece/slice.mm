@@ -28,6 +28,12 @@ namespace fleece {
         return [[NSData alloc] initWithBytesNoCopy: (void*)buf length: size freeWhenDone: NO];
     }
 
+    NSData* slice::convertToNSData() {
+        if (!buf)
+            return nil;
+        return [[NSData alloc] initWithBytesNoCopy: (void*)buf length: size freeWhenDone: YES];
+    }
+
 
     slice::operator NSString*() const {
         if (!buf)

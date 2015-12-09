@@ -110,26 +110,44 @@ namespace fleece {
         alloc_slice()
             :std::shared_ptr<char>(NULL), slice() {}
         explicit alloc_slice(size_t s)
-            :std::shared_ptr<char>((char*)malloc(s),::free), slice(get(),s) {}
+            :std::shared_ptr<char>((char*)malloc(s), freer()), slice(get(),s) {}
         explicit alloc_slice(slice s)
-            :std::shared_ptr<char>((char*)s.copy().buf,::free), slice(get(),s.size) {}
+            :std::shared_ptr<char>((char*)s.copy().buf, freer()), slice(get(),s.size) {}
         alloc_slice(const void* b, size_t s)
-            :std::shared_ptr<char>((char*)alloc(b,s),::free), slice(get(),s) {}
+            :std::shared_ptr<char>((char*)alloc(b,s), freer()), slice(get(),s) {}
         alloc_slice(const void* start, const void* end)
-            :std::shared_ptr<char>((char*)alloc(start,(uint8_t*)end-(uint8_t*)start),::free),
+            :std::shared_ptr<char>((char*)alloc(start,(uint8_t*)end-(uint8_t*)start), freer()),
              slice(get(),(uint8_t*)end-(uint8_t*)start) {}
         alloc_slice(std::string str)
-            :std::shared_ptr<char>((char*)alloc(&str[0], str.length()),::free), slice(get(), str.length()) {}
+            :std::shared_ptr<char>((char*)alloc(&str[0], str.length()), freer()), slice(get(), str.length()) {}
 
         static alloc_slice adopt(slice s)            {return alloc_slice((void*)s.buf,s.size,true);}
         static alloc_slice adopt(void* buf, size_t size) {return alloc_slice(buf,size,true);}
 
+        /** Prevents the memory from being freed after the last alloc_slice goes away.
+            Use this is something else (like an NSData) takes ownership of the heap block. */
+        void dontFree()             {std::get_deleter<freer>(*this)->detach();}
+
+#ifdef __OBJC__
+        NSData* convertToNSData()   {dontFree(); return slice::convertToNSData();}
+#endif
+
         alloc_slice& operator=(slice);
+
+        class freer {
+        public:
+            freer()                     :_detached(false){}
+            void detach()               {_detached = true;}
+            void operator()(char* ptr)  {if (!_detached) ::free(ptr);}
+        private:
+            bool _detached;
+        };
+
 
     private:
         static void* alloc(const void* src, size_t size);
-        explicit alloc_slice(void* adoptBuf, size_t size, bool)
-            :std::shared_ptr<char>((char*)adoptBuf,::free), slice(get(),size) {}
+        explicit alloc_slice(void* adoptBuf, size_t size, bool)     // called by adopt()
+            :std::shared_ptr<char>((char*)adoptBuf, freer()), slice(get(),size) {}
     };
 
 #ifdef __OBJC__
