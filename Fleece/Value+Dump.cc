@@ -15,22 +15,6 @@
 namespace fleece {
     using namespace internal;
 
-    // This does not include the inline items in arrays/dicts
-    size_t value::dataSize() const {
-        switch(tag()) {
-            case kShortIntTag:
-            case kSpecialTag:   return 2;
-            case kFloatTag:     return isDouble() ? 10 : 6;
-            case kIntTag:       return 2 + (tinyValue() & 0x07);
-            case kStringTag:
-            case kBinaryTag:    return (uint8_t*)asString().end() - (uint8_t*)this;
-            case kArrayTag:
-            case kDictTag:      return (uint8_t*)getArrayInfo().first - (uint8_t*)this;
-            case kPointerTagFirst:
-            default:            return 2;   // size might actually be 4; depends on context
-        }
-    }
-
     void value::writeDumpBrief(std::ostream &out, const void *base, bool wide) const {
         if (tag() >= kPointerTagFirst)
             out << "&";

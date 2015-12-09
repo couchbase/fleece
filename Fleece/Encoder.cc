@@ -425,9 +425,9 @@ namespace fleece {
         // Now rewrite items according to the permutation in indices:
         value *old = (value*) alloca(2*n * sizeof(value));
         memcpy(old, &items[0], 2*n * sizeof(value));
-        for (unsigned i = 0; i < n; i++) {
+        for (size_t i = 0; i < n; i++) {
             auto j = indices[i] - base;
-            if (i != j) {
+            if ((ssize_t)i != j) {
                 items[2*i]   = old[2*j];
                 items[2*i+1] = old[2*j+1];
             }

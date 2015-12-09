@@ -170,8 +170,8 @@ namespace fleece {
                 slice s(&_byte[1], tinyValue());
                 if (s.size == 0x0F) {
                     // This means the actual length follows as a varint:
-                    uint64_t realLength;
-                    ReadUVarInt(&s, &realLength);
+                    uint32_t realLength;
+                    ReadUVarInt32(&s, &realLength);
                     s.size = realLength;
                 }
                 return s;
@@ -244,6 +244,22 @@ namespace fleece {
         } else {
             // Non-collection; just check that size fits:
             return offsetby(this, size) <= dataEnd;
+        }
+    }
+
+    // This does not include the inline items in arrays/dicts
+    size_t value::dataSize() const {
+        switch(tag()) {
+            case kShortIntTag:
+            case kSpecialTag:   return 2;
+            case kFloatTag:     return isDouble() ? 10 : 6;
+            case kIntTag:       return 2 + (tinyValue() & 0x07);
+            case kStringTag:
+            case kBinaryTag:    return (uint8_t*)asString().end() - (uint8_t*)this;
+            case kArrayTag:
+            case kDictTag:      return (uint8_t*)getArrayInfo().first - (uint8_t*)this;
+            case kPointerTagFirst:
+            default:            return 2;   // size might actually be 4; depends on context
         }
     }
 

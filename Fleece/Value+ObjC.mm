@@ -51,15 +51,24 @@ namespace fleece {
                 bool shareable = (strSlice.size >= internal::kMinSharedStringSize
                                && strSlice.size <= internal::kMaxSharedStringSize);
                 if (shareable) {
+#if TARGET_OS_IPHONE
+                    NSString* str = [sharedStrings objectForKey: (__bridge id)this];
+#else
                     NSString* str = (__bridge NSString*)NSMapGet(sharedStrings, this);
+#endif
                     if (str)
                         return str;
                 }
                 NSString* str = (NSString*)strSlice;
                 if (!str)
                     throw "Invalid UTF-8 in string";
-                if (shareable)
+                if (shareable) {
+#if TARGET_OS_IPHONE
+                    [sharedStrings setObject: str forKey: (__bridge id)this];
+#else
                     NSMapInsert(sharedStrings, this, (__bridge void*)str);
+#endif
+                }
                 return str;
             }
             case kData:

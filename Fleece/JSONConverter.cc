@@ -13,8 +13,8 @@
 namespace fleece {
 
     JSONConverter::JSONConverter(Encoder &e)
-    :_jsn(jsonsl_new(0x2000)),
-     _encoder(e),
+    :_encoder(e),
+     _jsn(jsonsl_new(0x2000)),
      _error(JSONSL_ERROR_SUCCESS),
      _errorPos(0)
     {
