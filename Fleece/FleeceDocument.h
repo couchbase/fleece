@@ -16,6 +16,10 @@
 + (id) objectWithFleeceData: (NSData*)fleece
                     trusted: (BOOL)trusted;
 
++ (id) objectWithFleeceBytes: (const void*)bytes
+                      length: (size_t)length
+                     trusted: (BOOL)trusted;
+
 /** Converts an Objective-C object tree to Fleece data.
     Supported classes are the ones allowed by NSJSONSerialization, plus NSData. */
 + (NSData*) fleeceDataWithObject: (id)object;

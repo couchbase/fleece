@@ -81,13 +81,27 @@ using namespace fleece;
 }
 
 
++ (id) objectWithFleeceBytes: (const void*)bytes length: (size_t)length trusted: (BOOL)trusted {
+    slice s(bytes, length);
+    const value *root = trusted ? value::fromTrustedData(s) : value::fromData(s);
+    if (!root)
+        return nil;
+    auto type = root->type();
+    if (type == kArray || type == kDict)
+        return [self objectWithFleeceData: [NSData dataWithBytes: bytes length: length]
+                                  trusted: trusted];
+    else
+        return root->toNSObject();
+}
+
+
 + (NSData*) fleeceDataWithObject: (id)object {
     NSParameterAssert(object != nil);
     Writer writer;
     Encoder encoder(writer);
     encoder.write(object);
     encoder.end();
-    return writer.extractOutput().copiedNSData();
+    return writer.extractOutput().convertToNSData();
 }
 
 
