@@ -197,18 +197,35 @@ namespace fleece {
 
     const value* value::fromTrustedData(slice s) {
         // Root value is at the end of the data and is two bytes wide:
-        assert(validate(s)); // validate anyway, in debug builds; abort if invalid
-        return deref<false>(rootPointer(s));
+        assert(fromData(s) != NULL); // validate anyway, in debug builds; abort if invalid
+        auto root = fastValidate(s);
+        return root ? deref<true>(root) : NULL;
     }
 
     const value* value::fromData(slice s) {
-        return validate(s) ? fromTrustedData(s) : NULL;
+        auto root = fastValidate(s);
+        if (root && !root->validate(s.buf, s.end(), true))
+            root = NULL;
+        return root;
     }
 
-    bool value::validate(slice s) {
-        if (s.size < 2 || (s.size % 2))
-            return false;
-        return rootPointer(s)->validate(s.buf, s.end(), false);
+    const value* value::fastValidate(slice s) {
+        if (s.size < kNarrow || (s.size % kNarrow))
+            return NULL;
+        auto root = (const value*)offsetby(s.buf, s.size - internal::kNarrow);
+        if (root->isPointer()) {
+            // If the root is a pointer, sanity-check the destination:
+            auto derefed = derefPointer<false>(root);
+            // TODO: watch out for integer overflow/wraparound in 32-bit.
+            if (derefed == root || derefed < s.buf)
+                return NULL;
+            return derefed;
+        } else {
+            // If the root is a direct value there better not be any data before it:
+            if (s.size != kNarrow)
+                return NULL;
+            return root;
+        };
     }
 
     bool value::validate(const void *dataStart, const void *dataEnd, bool wide) const {

@@ -199,16 +199,13 @@ namespace fleece {
         template<typename T> T asFloatOfType() const;
 
         // dump:
-        static const value* rootPointer(slice s) {
-            return (const value*)offsetby(s.buf, s.size - internal::kNarrow);
-        }
         size_t dataSize() const;
         typedef std::map<size_t, const value*> mapByAddress;
         void mapAddresses(mapByAddress&) const;
         void dump(std::ostream &out, bool wide, int indent, const void *base) const;
         void writeDumpBrief(std::ostream &out, const void *base, bool wide =false) const;
 
-        static bool validate(slice);
+        static const value* fastValidate(slice);
         bool validate(const void* dataStart, const void *dataEnd, bool wide) const;
 
         uint8_t _byte[internal::kWide];
