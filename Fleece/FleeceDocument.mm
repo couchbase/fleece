@@ -246,7 +246,7 @@ using namespace fleece;
 - (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level {
     NSMutableString* desc = [@"{\n" mutableCopy];
     [self forEachKey: ^(NSString *key, const value* v, BOOL *stop) {
-        NSString* valStr = [[NSString alloc] initWithUTF8String: v->toJSON().c_str()];
+        NSString* valStr = (NSString*)v->toJSON();
         [desc appendFormat: @"    \"%@\": %@,\n", key, valStr];
     }];
     [desc appendString: @"}"];
@@ -346,7 +346,7 @@ using namespace fleece;
 - (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level {
     NSMutableString* desc = [@"[\n" mutableCopy];
     for (auto iter = _array->begin(); iter; ++iter) {
-        NSString* valStr = [[NSString alloc] initWithUTF8String: iter->toJSON().c_str()];
+        NSString* valStr = (NSString*)iter->toJSON();
         [desc appendFormat: @"    %@,\n", valStr];
     };
     [desc appendString: @"]"];

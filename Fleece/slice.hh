@@ -126,7 +126,7 @@ namespace fleece {
 
         /** Prevents the memory from being freed after the last alloc_slice goes away.
             Use this is something else (like an NSData) takes ownership of the heap block. */
-        void dontFree()             {std::get_deleter<freer>(*this)->detach();}
+        void dontFree()             {if (buf) std::get_deleter<freer>(*this)->detach();}
 
 #ifdef __OBJC__
         NSData* convertToNSData()   {dontFree(); return slice::convertToNSData();}

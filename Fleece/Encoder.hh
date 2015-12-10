@@ -33,7 +33,6 @@ namespace fleece {
         Encoder(Writer&);
 
         Encoder(Encoder&&);  // Move constructor
-        ~Encoder();
 
         /** Returns the Writer that the encoded data is written to. */
         Writer& writer() const          {return _out;}

@@ -42,10 +42,6 @@ namespace fleece {
 #endif
     }
 
-    Encoder::~Encoder() {
-        end();
-    }
-
     void Encoder::end() {
         if (!_items)
             return;

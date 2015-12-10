@@ -23,12 +23,7 @@ namespace fleece {
         return [[NSMapTable alloc] initWithKeyOptions: NSPointerFunctionsOpaquePersonality |
                                                        NSPointerFunctionsOpaqueMemory
                                          valueOptions: NSPointerFunctionsStrongMemory
-                                             capacity: 1000];
-    }
-
-
-    id value::toNSObject() const {
-        return toNSObject(createSharedStringsTable());
+                                             capacity: 8];
     }
 
 
@@ -40,15 +35,24 @@ namespace fleece {
             case kBoolean:
                 return @(asBool());
             case kNumber:
+                // It's faster to use CFNumber, than NSNumber or @(n)
                 if (isInteger()) {
                     int64_t i = asInt();
-                    return isUnsigned() ? @((uint64_t)i) : @(i);
+                    if (isUnsigned())
+                        return @((uint64_t)i);  // CFNumber can't do unsigned long long!
+                    else
+                        return CFBridgingRelease(CFNumberCreate(NULL, kCFNumberLongLongType,  &i));
+                } else if (isDouble()) {
+                    double d = asDouble();
+                    return CFBridgingRelease(CFNumberCreate(NULL, kCFNumberDoubleType,  &d));
                 } else {
-                    return @(asDouble());
+                    float f = asFloat();
+                    return CFBridgingRelease(CFNumberCreate(NULL, kCFNumberFloatType,  &f));
                 }
             case kString: {
                 slice strSlice = asString();
-                bool shareable = (strSlice.size >= internal::kMinSharedStringSize
+                bool shareable = (sharedStrings != nil
+                               && strSlice.size >= internal::kMinSharedStringSize
                                && strSlice.size <= internal::kMaxSharedStringSize);
                 if (shareable) {
 #if TARGET_OS_IPHONE

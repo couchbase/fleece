@@ -14,6 +14,7 @@
 //  and limitations under the License.
 
 #include "Value.hh"
+#include "Writer.hh"
 #include <ostream>
 #include <ctime>
 #include <iomanip>
@@ -22,12 +23,12 @@
 
 namespace fleece {
 
-    static void base64_encode(std::ostream &out,
+    static void base64_encode(Writer &out,
                               unsigned char const* bytes_to_encode,
                               unsigned int in_len);
 
-    static void writeEscaped(std::ostream &out, slice str) {
-        out << "\"";
+    static void writeEscaped(Writer &out, slice str) {
+        out << '"';
         auto start = (const uint8_t*)str.buf;
         auto end = (const uint8_t*)str.end();
         for (auto p = start; p < end; p++) {
@@ -39,42 +40,42 @@ namespace fleece {
                 switch (ch) {
                     case '"':
                     case '\\':
-                        out << "\\";
+                        out << '\\';
                         --start; // ch will be written in next pass
                         break;
                     case '\n':
-                        out << "\\n";
+                        out << slice("\\n");
                         break;
                     case '\t':
-                        out << "\\t";
+                        out << slice("\\t");
                         break;
                     default: {
                         char buf[7];
                         sprintf(buf, "\\u%04u", (unsigned)ch);
-                        out << buf;
+                        out << slice(buf);
                         break;
                     }
                 }
             }
         }
         out << std::string((char*)start, end-start);
-        out << "\"";
+        out << '"';
     }
 
-    static void writeBase64(std::ostream &out, slice data) {
+    static void writeBase64(Writer &out, slice data) {
         out << '"';
         base64_encode(out, (const uint8_t*)data.buf, (unsigned)data.size);
         out << '"';
     }
 
-    std::string value::toJSON() const {
-        std::stringstream s;
-        toJSON(s);
-        return s.str();
+    alloc_slice value::toJSON() const {
+        Writer writer;
+        toJSON(writer);
+        return writer.extractOutput();
     }
 
 
-    void value::toJSON(std::ostream &out) const {
+    void value::toJSON(Writer &out) const {
         switch (type()) {
             case kNull:
             case kBoolean:
@@ -157,7 +158,7 @@ namespace fleece {
     "abcdefghijklmnopqrstuvwxyz"
     "0123456789+/";
 
-    static void base64_encode(std::ostream &out,
+    static void base64_encode(Writer &out,
                               unsigned char const* bytes_to_encode,
                               unsigned int in_len)
     {

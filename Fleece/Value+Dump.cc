@@ -24,12 +24,12 @@ namespace fleece {
             case kIntTag:
             case kFloatTag:
             case kStringTag:
-                toJSON(out);
+                out << std::string(toJSON());
                 break;
             case kBinaryTag:
                 // TODO: show data
                 out << "Binary[";
-                toJSON(out);
+                out << std::string(toJSON());
                 out << "]";
                 break;
             case kArrayTag: {
@@ -125,9 +125,15 @@ namespace fleece {
         auto root = fromData(data);
         if (!root)
             return false;
+        // Walk the tree and collect every value with its address:
         mapByAddress byAddress;
         root->mapAddresses(byAddress);
-        rootPointer(data)->mapAddresses(byAddress); // add the root pointer explicitly
+
+        // add the root pointer explicitly (`root` has been derefed already)
+        auto actualRoot = (const value*)offsetby(data.buf, data.size - internal::kNarrow);
+        if (actualRoot != root)
+            actualRoot->mapAddresses(byAddress);
+        // Dump them ordered by address:
         for (auto i = byAddress.begin(); i != byAddress.end(); ++i) {
             i->second->dump(out, false, 0, data.buf);
         }

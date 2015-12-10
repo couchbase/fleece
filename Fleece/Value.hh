@@ -29,6 +29,7 @@ namespace fleece {
 
     class array;
     class dict;
+    class Writer;
 
 
     /* Types of values -- same as JSON types, plus binary data */
@@ -97,10 +98,10 @@ namespace fleece {
         /** Converts any _non-collection_ type to string form. */
         std::string toString() const;
 
-        /** Writes a JSON representation to an ostream. */
-        void toJSON(std::ostream&) const;
+        /** Writes a JSON representation to a Writer. */
+        void toJSON(Writer&) const;
         /** Returns a JSON representation. */
-        std::string toJSON() const;
+        alloc_slice toJSON() const;
 
         /** Writes a full dump of the values in the data, including offsets and hex. */
         static bool dump(slice data, std::ostream&);
@@ -110,13 +111,11 @@ namespace fleece {
 #ifdef __OBJC__
         // Convenience methods for Objective-C (Cocoa):
 
-        /** Converts a Fleece value to an Objective-C object. */
-        id toNSObject() const;
-
-        /** Converts a Fleece value to an Objective-C object, using a pre-existing shared-string
-            table. New strings will be added to the table. The table can be used for multiple calls
+        /** Converts a Fleece value to an Objective-C object.
+            Can optionally use a pre-existing shared-string table.
+            New strings will be added to the table. The table can be used for multiple calls
             and will reduce the number of NSString objects created by the decoder. */
-        id toNSObject(NSMapTable *sharedStrings) const;
+        id toNSObject(NSMapTable *sharedStrings =nil) const;
 
         /** Creates a new shared-string table for use with toNSObject. */
         static NSMapTable* createSharedStringsTable();

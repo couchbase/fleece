@@ -22,7 +22,7 @@ public:
         auto result = writer.extractOutput();
         auto v = value::fromData(result);
         Assert(v != NULL);
-        AssertEqual(v->toJSON(), std::string(json));
+        AssertEqual(v->toJSON(), alloc_slice(json));
         Assert([v->toNSObject() isEqual: obj]);
     }
 

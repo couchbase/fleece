@@ -51,11 +51,14 @@ namespace fleece {
             }
         } else if ([obj isKindOfClass: [NSDictionary class]]) {
             beginDictionary((uint32_t)[obj count]);
-            for (NSString* key in obj) {
+            [obj enumerateKeysAndObjectsUsingBlock:^(__unsafe_unretained id key,
+                                                     __unsafe_unretained id value, BOOL *stop) {
+                if (![key isKindOfClass: [NSString class]])
+                    throw "NSDictionary has non-string key";
                 nsstring_slice slice(key);
                 writeKey(slice);
-                write([obj objectForKey: key]);
-            }
+                write(value);
+            }];
             endDictionary();
         } else if ([obj isKindOfClass: [NSArray class]]) {
             beginArray((uint32_t)[obj count]);
@@ -68,7 +71,7 @@ namespace fleece {
         } else if ([obj isKindOfClass: [NSNull class]]) {
             writeNull();
         } else {
-            NSCAssert(NO, @"Objects of class %@ are not encodable", [obj class]);
+            throw "Un-encodable object type";
         }
     }
 

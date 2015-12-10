@@ -236,7 +236,7 @@ public:
             ++iter;
             Assert(!iter);
 
-            AssertEqual(a->toJSON(), std::string("[\"a\",\"hello\"]"));
+            AssertEqual(a->toJSON(), alloc_slice("[\"a\",\"hello\"]"));
         }
 #if 0
         {
@@ -268,7 +268,7 @@ public:
             Assert(v);
             AssertEqual(v->asInt(), 42ll);
             AssertEqual(d->get(slice("barrr")), (const value*)NULL);
-            AssertEqual(d->toJSON(), std::string("{\"f\":42}"));
+            AssertEqual(d->toJSON(), alloc_slice("{\"f\":42}"));
         }
         {
             enc.beginDictionary();
@@ -281,7 +281,7 @@ public:
             Assert(v);
             AssertEqual(v->asInt(), 42ll);
             AssertEqual(d->get(slice("barrr")), (const value*)NULL);
-            AssertEqual(d->toJSON(), std::string("{\"foo\":42}"));
+            AssertEqual(d->toJSON(), alloc_slice("{\"foo\":42}"));
         }
     }
 
@@ -294,7 +294,7 @@ public:
         enc.endArray();
         checkOutput("4568 656C 6C6F 6004 4161 8005 4161 8007 8005");
         auto a = checkArray(4);
-        AssertEqual(a->toJSON(), std::string("[\"a\",\"hello\",\"a\",\"hello\"]"));
+        AssertEqual(a->toJSON(), alloc_slice("[\"a\",\"hello\",\"a\",\"hello\"]"));
     }
 
 #pragma mark - JSON:
@@ -352,15 +352,15 @@ public:
     }
 
     void testJSON() {
-        std::string json = "{\"\":\"hello\\nt\\\\here\","
+        slice json("{\"\":\"hello\\nt\\\\here\","
                             "\"\\\"ironic\\\"\":[null,false,true,-100,0,100,123.456,6.02e+23],"
-                            "\"foo\":123}";
+                            "\"foo\":123}");
         JSONConverter j(enc);
-        Assert(j.convertJSON(slice(json)));
+        Assert(j.convertJSON(json));
         endEncoding();
         auto d = checkDict(3);
         auto output = d->toJSON();
-        AssertEqual(output, json);
+        AssertEqual((slice)output, json);
     }
 
     void testDump() {
