@@ -87,23 +87,49 @@ namespace fleece {
         
         explicit operator std::string() const;
         std::string hexString() const;
-        
+
+        /** djb2 hash algorithm */
+        uint32_t hash() const {
+            uint32_t h = 5381;
+            for (size_t i = 0; i < size; i++)
+                h = (h<<5) + h + (*this)[i];
+            return h;
+        }
+
+
 #ifdef __OBJC__
-        slice(NSData* data)                         :buf(data.bytes), size(data.length) {}
+        slice(NSData* data)
+        :buf(data.bytes), size(data.length) {}
 
-        explicit operator NSString*() const;
-
-        NSData* copiedNSData() const;
+        NSData* copiedNSData() const {
+            return buf ? [[NSData alloc] initWithBytes: buf length: size] : nil;
+        }
 
         /** Creates an NSData using initWithBytesNoCopy and freeWhenDone:NO.
             The data is not copied and does not belong to the NSData object. */
-        NSData* uncopiedNSData() const;
+        NSData* uncopiedNSData() const {
+            if (!buf)
+                return nil;
+            return [[NSData alloc] initWithBytesNoCopy: (void*)buf length: size freeWhenDone: NO];
+        }
 
         /** Creates an NSData using initWithBytesNoCopy but with freeWhenDone:YES.
             The data is not copied but it now belongs to the NSData object. */
-        NSData* convertToNSData();
+        NSData* convertToNSData() {
+            if (!buf)
+                return nil;
+            return [[NSData alloc] initWithBytesNoCopy: (void*)buf length: size freeWhenDone: YES];
+        }
+
+        explicit operator NSString*() const {
+            if (!buf)
+                return nil;
+            return [[NSString alloc] initWithBytes: buf length: size encoding: NSUTF8StringEncoding];
+        }
 #endif
     };
+
+
 
     /** An allocated range of memory. Constructors allocate, destructor frees. */
     struct alloc_slice : private std::shared_ptr<char>, public slice {
@@ -150,7 +176,10 @@ namespace fleece {
             :std::shared_ptr<char>((char*)adoptBuf, freer()), slice(get(),size) {}
     };
 
+
+
 #ifdef __OBJC__
+    /** A slice holding the data of an NSString (which may need to be heap-allocated.) */
     struct nsstring_slice : public slice {
         nsstring_slice(NSString*);
         ~nsstring_slice();
@@ -160,15 +189,11 @@ namespace fleece {
     };
 #endif
 
+
     /** Functor class for hashing the contents of a slice (using the djb2 hash algorithm.)
         Suitable for use with std::unordered_map. */
     struct sliceHash {
-        std::size_t operator()(slice const& s) const {
-            size_t hash = 5381;
-            for (size_t i = 0; i < s.size; i++)
-                hash = (hash<<5) + hash + s[i];
-            return hash;
-        }
+        std::size_t operator() (slice const& s) const {return s.hash();}
     };
 
 }

@@ -18,30 +18,6 @@
 
 namespace fleece {
 
-    NSData* slice::copiedNSData() const {
-        return buf ? [NSData dataWithBytes: buf length: size] : nil;
-    }
-
-    NSData* slice::uncopiedNSData() const {
-        if (!buf)
-            return nil;
-        return [[NSData alloc] initWithBytesNoCopy: (void*)buf length: size freeWhenDone: NO];
-    }
-
-    NSData* slice::convertToNSData() {
-        if (!buf)
-            return nil;
-        return [[NSData alloc] initWithBytesNoCopy: (void*)buf length: size freeWhenDone: YES];
-    }
-
-
-    slice::operator NSString*() const {
-        if (!buf)
-            return nil;
-        return [[NSString alloc] initWithBytes: buf length: size encoding: NSUTF8StringEncoding];
-    }
-
-
     nsstring_slice::nsstring_slice(__unsafe_unretained NSString* str)
     :_needsFree(false)
     {
