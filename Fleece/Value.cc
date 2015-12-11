@@ -108,10 +108,15 @@ namespace fleece {
     T value::asFloatOfType() const {
         switch (tag()) {
             case kFloatTag: {
-                if (_byte[0] & 0x8)
-                    return (T)*(const littleEndianDouble*)&_byte[2];
-                else
-                    return (T)*(const littleEndianFloat*)&_byte[2];
+                if (_byte[0] & 0x8) {
+                    littleEndianDouble d;
+                    memcpy(&d, &_byte[2], sizeof(d));
+                    return (T)d;
+                } else {
+                    littleEndianFloat f;
+                    memcpy(&f, &_byte[2], sizeof(f));
+                    return (T)f;
+                }
             }
             default:
                 if (isUnsigned())
