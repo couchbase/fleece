@@ -78,10 +78,27 @@ namespace fleece {
     void value::toJSON(Writer &out) const {
         switch (type()) {
             case kNull:
-            case kBoolean:
-            case kNumber:
-                out << toString();
+                out << slice("null");
                 return;
+            case kBoolean:
+                out << (asBool() ? slice("true") : slice("false"));
+                return;
+            case kNumber: {
+                char str[32];
+                if (isInteger()) {
+                    int64_t i = asInt();
+                    if (isUnsigned())
+                        sprintf(str, "%llu", (uint64_t)i);
+                    else
+                        sprintf(str, "%lld", i);
+                } else if (isDouble()) {
+                    sprintf(str, "%.16g", asDouble());
+                } else {
+                    sprintf(str, "%.6g", asFloat());
+                }
+                out << slice(str);
+                return;
+            }
             case kString:
                 return writeEscaped(out, asString());
             case kData:

@@ -150,7 +150,7 @@ namespace fleece {
                         str = (char*)"true";
                         break;
                     default:
-                        str = (char*)"???";
+                        throw "illegal special typecode";
                         break;
                 }
                 break;

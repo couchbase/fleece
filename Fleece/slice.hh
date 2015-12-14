@@ -25,6 +25,7 @@
 #ifdef __OBJC__
 #import <Foundation/NSData.h>
 #import <Foundation/NSString.h>
+#import <CoreFoundation/CFString.h>
 #endif
 
 template <typename T>
@@ -121,10 +122,11 @@ namespace fleece {
             return [[NSData alloc] initWithBytesNoCopy: (void*)buf length: size freeWhenDone: YES];
         }
 
-        explicit operator NSString*() const {
+        explicit operator NSString* () const {
             if (!buf)
                 return nil;
-            return [[NSString alloc] initWithBytes: buf length: size encoding: NSUTF8StringEncoding];
+            return CFBridgingRelease(CFStringCreateWithBytes(NULL, (const uint8_t*)buf, size,
+                                                             kCFStringEncodingUTF8, NO));
         }
 #endif
     };
@@ -179,7 +181,9 @@ namespace fleece {
 
 
 #ifdef __OBJC__
-    /** A slice holding the data of an NSString (which may need to be heap-allocated.) */
+    /** A slice holding the data of an NSString. It might point directly into the NSString, so
+        don't modify or release the NSString while this is in scope. Or instead it might copy
+        the data into a small internal buffer, or allocate it on the heap. */
     struct nsstring_slice : public slice {
         nsstring_slice(NSString*);
         ~nsstring_slice();
