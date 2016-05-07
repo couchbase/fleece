@@ -9,6 +9,7 @@
 #include "FleeceTests.hh"
 #include "JSONConverter.hh"
 #include <assert.h>
+#include <unistd.h>
 
 using namespace fleece;
 
