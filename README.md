@@ -9,6 +9,7 @@ __Fleece__ is a new binary encoding for semi-structured data. Its data model is 
 ## Contents
 
 * The [design document](Fleece.md), with details on the data format
+* An [example](Example.md) showing the details of the encoding of a specific data structure, and a walkthrough of what happens when a program works with the resulting Fleece objects
 * A C++ reference implementation, including
   * Encoder and decoder/accessors
   * Extensions for converting JSON directly to Fleece or vice versa
@@ -18,8 +19,7 @@ __Fleece__ is a new binary encoding for semi-structured data. Its data model is 
 
 ## Status
 
-It's early days! As of November 2015, this code is hot off the press and hasn't been put to
-any serious use yet.
+Fleece has been used in some experimental work at Couchbase, but hasn't gone into production use.
 
 ## License
 

@@ -65,7 +65,7 @@ Here is JSON `{“foo”: 123}` converted to Fleece:
 
 | Offset | Bytes          | Explanation                   |
 |--------|----------------|-------------------------------|
-| 00     | 43 ‘f’ ‘o’ ‘o’ | String “foo””                 |
+| 00     | 43 `f` `o` `o` | String `"foo"`                |
 | 04     | 70 01          | Start of dictionary, count=1  |
 | 06     | 80 03          | Key: Pointer, offset -6 bytes |
 | 08     | 00 7B          | Value: Integer = 123          |
@@ -78,7 +78,7 @@ Using a wide dictionary, this would be:
 | Offset | Bytes          | Explanation                   |
 |--------|----------------|-------------------------------|
 | 00     | 78 01          | Start of dictionary, count=1  |
-| 02     | 43 ‘f’ ‘o’ ‘o’ | Key: String “foo””            |
+| 02     | 43 `f` `o` `o` | Key: String `"foo"`           |
 | 06     | 00 7B 00 00    | Value: Integer = 123          |
 | 0A     | 80 05          | Trailing ptr, offset -10 bytes|
 
