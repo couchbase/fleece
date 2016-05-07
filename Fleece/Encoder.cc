@@ -151,6 +151,8 @@ namespace fleece {
             throw "Can't write NaN";
         if (n == (int64_t)n) {
             return writeInt((int64_t)n);
+        } else if (n == (float)n) {
+            return _writeFloat((float)n);
         } else {
             littleEndianDouble swapped = n;
             uint8_t buf[2 + sizeof(swapped)];
@@ -164,16 +166,19 @@ namespace fleece {
     void Encoder::writeFloat(float n) {
         if (isnan(n))
             throw "Can't write NaN";
-        if (n == (int32_t)n) {
+        if (n == (int32_t)n)
             writeInt((int32_t)n);
-        } else {
-            littleEndianFloat swapped = n;
-            uint8_t buf[2 + sizeof(swapped)];
-            buf[0] = 0x00; // 'float' size flag
-            buf[1] = 0;
-            memcpy(&buf[2], &swapped, sizeof(swapped));
-            writeValue(kFloatTag, buf, sizeof(buf));
-        }
+        else
+            _writeFloat(n);
+    }
+
+    void Encoder::_writeFloat(float n) {
+        littleEndianFloat swapped = n;
+        uint8_t buf[2 + sizeof(swapped)];
+        buf[0] = 0x00; // 'float' size flag
+        buf[1] = 0;
+        memcpy(&buf[2], &swapped, sizeof(swapped));
+        writeValue(kFloatTag, buf, sizeof(buf));
     }
 
 

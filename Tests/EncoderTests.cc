@@ -75,7 +75,6 @@ public:
         auto v = value::fromData(result);
         Assert(v != NULL);
         Assert(v->type() == kNumber);
-        Assert(!v->isInteger());
         Assert(!v->isDouble());
         AssertEqual(v->asInt(), (int64_t)round(f));
         AssertEqual(v->asFloat(), f);
@@ -86,8 +85,6 @@ public:
         auto v = value::fromData(result);
         Assert(v != NULL);
         Assert(v->type() == kNumber);
-        Assert(!v->isInteger());
-        Assert(v->isDouble());
         AssertEqual(v->asInt(), (int64_t)round(f));
         AssertEqual(v->asDouble(), f);
         AssertEqual(v->asFloat(), (float)f);
@@ -159,9 +156,24 @@ public:
     void testFloats() {
         enc.writeFloat( 0.5);   checkOutput("2000 0000 003F 8003");           checkReadFloat( 0.5);
         enc.writeFloat(-0.5);   checkOutput("2000 0000 00BF 8003");           checkReadFloat(-0.5);
-        enc.writeFloat((float)M_PI);   checkOutput("2000 DB0F 4940 8003");           checkReadFloat((float)M_PI);
+        enc.writeFloat((float)M_PI); checkOutput("2000 DB0F 4940 8003");      checkReadFloat((float)M_PI);
         enc.writeDouble(M_PI);  checkOutput("2800 182D 4454 FB21 0940 8005"); checkReadDouble(M_PI);
-    }
+
+        // Floats that get encoded as integers:
+        enc.writeFloat(0.0);       checkOutput("0000");              checkReadFloat(0.0);
+        enc.writeFloat(-2048.0);   checkOutput("0800");              checkReadFloat(-2048.0);
+        enc.writeFloat(0x223344);  checkOutput("1244 3322 8002");    checkReadFloat(0x223344);
+
+        // Doubles that get encoded as integers:
+        enc.writeDouble(0.0);       checkOutput("0000");              checkReadDouble(0.0);
+        enc.writeDouble(-2048.0);   checkOutput("0800");              checkReadDouble(-2048.0);
+        enc.writeDouble(0x223344);  checkOutput("1244 3322 8002");    checkReadDouble(0x223344);
+
+        // Doubles that get encoded as float:
+        enc.writeDouble( 0.5);   checkOutput("2000 0000 003F 8003");           checkReadDouble( 0.5);
+        enc.writeDouble(-0.5);   checkOutput("2000 0000 00BF 8003");           checkReadDouble(-0.5);
+        enc.writeDouble((float)M_PI); checkOutput("2000 DB0F 4940 8003");      checkReadDouble((float)M_PI);
+}
 
     void testStrings() {
         enc.writeString("");    checkOutput("4000");            checkReadString("");

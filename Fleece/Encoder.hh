@@ -121,6 +121,7 @@ namespace fleece {
         void writePointer(size_t pos);
         void writeSpecial(uint8_t special);
         void writeInt(uint64_t i, bool isShort, bool isUnsigned);
+        void _writeFloat(float);
         slice writeData(internal::tags, slice s);
         slice _writeString(slice, bool asKey);
         size_t nextWritePos();
