@@ -103,7 +103,8 @@ int main(int argc, const char * argv[]) {
             auto root = value::fromData(input);
             if (!root)
                 throw "Couldn't parse input as Fleece";
-            root->toJSON(cout);
+            auto json = root->toJSON();
+            cout.write((char*)json.buf, json.size);
         } else if (dump) {
             if (!value::dump(input, cout))
                 throw "Couldn't parse input as Fleece";
