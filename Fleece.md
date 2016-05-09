@@ -1,6 +1,6 @@
 # Fleece
 
-Jens Alfke — 27 Nov 2015
+Jens Alfke — 8 May 2015
 
 __Fleece__ is a new binary encoding for semi-structured data. Its data model is a superset of JSON, adding support for binary values. It is designed to be:
 
@@ -21,7 +21,7 @@ Values are always 2-byte aligned and occupy at least two bytes, with some common
 
 An array consists of a two-byte header, an item count (which fits in the header if it's less than 4096), and then a contiguous sequence of values. For fast random access, each value is the same length: 2 bytes in a regular **narrow** array, 4 bytes in a **wide** array.
 
-Dictionaries are like arrays except that each item consists of two values: a key followed by the value it maps to. (For JSON compatibility the keys must be strings, but the format allows other types.)
+Dictionaries are like arrays except that each item consists of two values: a key followed by the value it maps to. The items are sorted by increasing key, to allow lookup by binary search. (For JSON compatibility the keys must be strings, but the format allows other types.)
 
 ### Pointers
 
@@ -82,13 +82,15 @@ Using a wide dictionary, this would be:
 | 06     | 00 7B 00 00    | Value: Integer = 123          |
 | 0A     | 80 05          | Trailing ptr, offset -10 bytes|
 
+For a more complex case, see the [Example](Example.md) document.
+
 ## API
 
 ### Reading
 
 All Fleece values are self-contained: interpreting a value doesn't require accessing any external state. A value is also fast enough to parse that it's not necessary to keep a separate parsed form in memory. Because of this, the API can expose Fleece values as direct pointers into the document. These are opaque types, of course, but in C++ they are full-fledged objects of class Value (with subclasses Array and Dictionary). Working with Fleece data feels just like working with a (read-only) native object graph.
 
-Collections provide iterators for sequential access, and getters for random access. Array random access is O(1) since the stored format is simply a native array of 16-bit values. Dictionary random access is a bit slower because the keys have to be searched; storing the keys in sorted order would help speed this up.
+Collections provide iterators for sequential access, and getters for random access. Array random access is O(1) since the stored format is simply a native array of 16-bit values. Dictionary random access is O(log _n_), as it involves a binary search for the key.
 
 ### Writing
 

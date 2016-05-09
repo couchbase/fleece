@@ -26,33 +26,65 @@ class PerfTests : public CppUnit::TestFixture {
 
         Benchmark bench;
 
+        alloc_slice lastResult;
         fprintf(stderr, "Converting JSON to Fleece...\n");
         for (int i = 0; i < kSamples; i++) {
-            Writer writer(input.size);
-            Encoder e(writer);
-            e.uniqueStrings(true);
-            e.sortKeys(kSortKeys);
-            JSONConverter jr(e);
-            
             bench.start();
+            {
+                Writer writer(input.size);
+                Encoder e(writer);
+                e.uniqueStrings(true);
+                e.sortKeys(kSortKeys);
+                JSONConverter jr(e);
 
-            jr.convertJSON(input);
-            e.end();
-            auto result = writer.extractOutput();
-
+                jr.convertJSON(input);
+                e.end();
+                auto result = writer.extractOutput();
+                if (i == kSamples-1)
+                    lastResult = result;
+            }
             bench.stop();
 
             usleep(100);
+        }
+        bench.printReport(1000, "ms");
 
-            if (i == kSamples-1) {
-                fprintf(stderr, "\nJSON size: %zu bytes; Fleece size: %zu bytes (%.2f%%)\n",
-                        input.size, result.size, (result.size*100.0/input.size));
-                writeToFile(result, kTestFilesDir "1000people.fleece");
+        fprintf(stderr, "\nJSON size: %zu bytes; Fleece size: %zu bytes (%.2f%%)\n",
+                input.size, lastResult.size, (lastResult.size*100.0/input.size));
+        writeToFile(lastResult, kTestFilesDir "1000people.fleece");
+    }
+
+    void testLoadFleece() {
+        static const int kIterations = 1000;
+        alloc_slice doc = readFile(kTestFilesDir "1000people.fleece");
+
+        {
+            fprintf(stderr, "Scanning untrusted Fleece... ");
+            Benchmark bench;
+            for (int i = 0; i < kIterations; i++) {
+                bench.start();
+                __unused auto root = value::fromData(doc)->asArray();
+                Assert(root != NULL);
+                bench.stop();
             }
+            bench.printReport(1e3, "ms");
         }
 
-        bench.printReport(1000, "ms");
-    }
+        {
+            fprintf(stderr, "Scanning trusted Fleece... ");
+            static const int kIterationsPerSample = 1000;
+            Benchmark bench;
+            for (int i = 0; i < kIterations; i++) {
+                bench.start();
+                for (int j = 0; j < kIterationsPerSample; j++) {
+                    __unused auto root = value::fromTrustedData(doc)->asArray();
+                    Assert(root != NULL);
+                }
+                bench.stop();
+            }
+            bench.printReport(1e6 / kIterationsPerSample, "µs");
+        }
+}
 
     void testFindPersonByIndex(int sort) {
         int kSamples = 500;
@@ -105,6 +137,7 @@ class PerfTests : public CppUnit::TestFixture {
 
     CPPUNIT_TEST_SUITE( PerfTests );
     CPPUNIT_TEST( testConvert1000People );
+    CPPUNIT_TEST( testLoadFleece );
     CPPUNIT_TEST( testFindPersonByIndexUnsorted );
     CPPUNIT_TEST( testFindPersonByIndexSorted );
     CPPUNIT_TEST( testFindPersonByIndexKeyed );

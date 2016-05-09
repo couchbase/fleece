@@ -89,28 +89,60 @@ public:
     void testPerfParse1000PeopleNS() {
         @autoreleasepool {
             const int kSamples = 50;
-            double total = 0, minTime = 1e99, maxTime = -1;
             NSData *data = [NSData dataWithContentsOfFile: @kTestFilesDir "1000people.json"];
+
+            Benchmark bench;
 
             fprintf(stderr, "Parsing JSON to NSObjects (ms):");
             for (int i = 0; i < kSamples; i++) {
-                Stopwatch st;
+                bench.start();
 
                 @autoreleasepool {
                     id j = [NSJSONSerialization JSONObjectWithData: data options: 0 error: NULL];
                     Assert(j);
                 }
 
-                double elapsed = st.elapsedMS();
-                fprintf(stderr, " %g", elapsed);
-                total += elapsed;
-                minTime = std::min(minTime, elapsed);
-                maxTime = std::max(maxTime, elapsed);
+                bench.stop();
+
+                usleep(100);
             }
-            fprintf(stderr, "\nAverage time is %g ms\n", (total - minTime - maxTime)/(kSamples-2));
+            bench.printReport(1000, "ms");
         }
     }
 
+    void testPerfFindPersonByIndexNS() {
+        @autoreleasepool {
+            NSData *data = [NSData dataWithContentsOfFile: @kTestFilesDir "1000people.json"];
+            NSArray *people = [NSJSONSerialization JSONObjectWithData: data options: 0 error: NULL];
+            Assert([people isKindOfClass: [NSArray class]]);
+
+            int kSamples = 500;
+            int kIterations = 10000;
+            Benchmark bench;
+            fprintf(stderr, "Looking up one value (NS)...\n");
+
+            for (int i = 0; i < kSamples; i++) {
+                @autoreleasepool {
+                    bench.start();
+                    for (int j = 0; j < kIterations; j++) {
+                        // Check data types, since the Fleece version does so too
+                        if (![people isKindOfClass: [NSArray class]])
+                            people = nil;
+                        auto person = (NSDictionary*)people[123];
+                        if (![person isKindOfClass: [NSDictionary class]])
+                            person = nil;
+                        auto name = (NSString*)person[@"name"];
+                        if (![name isKindOfClass: [NSString class]])
+                            name = nil;
+                        Assert([name isEqualToString: @"Concepcion Burns"]);
+                    }
+                    bench.stop();
+                }
+            }
+            bench.printReport(1e9 / kIterations, "ns");
+        }
+    }
+    
     void testFleeceLazyDict() {
         @autoreleasepool {
             NSData *data = [NSData dataWithContentsOfFile: @kTestFilesDir "1000people.fleece"];
@@ -205,7 +237,8 @@ public:
     CPPUNIT_TEST( testDictionaries );
     CPPUNIT_TEST( testFleeceLazyDict );
 #ifdef NDEBUG
-//    CPPUNIT_TEST( testPerfParse1000PeopleNS );
+    CPPUNIT_TEST( testPerfParse1000PeopleNS );
+    CPPUNIT_TEST( testPerfFindPersonByIndexNS );
     CPPUNIT_TEST( testPerfReadName );
     CPPUNIT_TEST( testPerfReadNameNS );
     CPPUNIT_TEST( testPerfReadNames );
