@@ -288,10 +288,6 @@ namespace fleece {
             sorted keys. */
         const value* get_unsorted(slice key) const;
 
-        /** Looks up the value for a key, if you already have the key as a Fleece value.
-            This is super fast. */
-        const value* get(const value *key) const;
-
 #ifdef __OBJC__
         /** Looks up the value for a key given as an NSString object. */
         const value* get(NSString* key) const {
@@ -332,13 +328,28 @@ namespace fleece {
         
         iterator begin() const                      {return iterator(this);}
 
+        class key {
+        public:
+            key(slice rawString)                    :_rawString(rawString) { }
+            const value* asValue() const            {return _keyValue;}
+        private:
+            slice const _rawString;
+            const value* _keyValue {nullptr};
+
+            friend class dict;
+        };
+
+        /** Looks up the value for a key, in a form that can cache the key's Fleece object.
+            Using the Fleece object is significantly faster than a normal get. */
+        const value* get(key&) const;
+
     private:
         template <bool WIDE>
             static int keyCmp(const void* keyToFindP, const void* keyP);
         template <bool WIDE>
             const value* get(slice keyToFind) const;
         template <bool WIDE>
-        const value* get(const arrayInfo &info, const value *keyToFind) const;
+        const value* get(const arrayInfo&, key&) const;
 
         friend class value;
     };

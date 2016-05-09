@@ -484,21 +484,39 @@ public:
     }
 
     void testFindPersonByIndexKeyed() {
-        mmap_slice doc(kTestFilesDir "1000people.fleece");
+        // First build a small non-wide dict:
+        enc.beginDictionary();
+        enc.writeKey("f");
+        enc.writeInt(42);
+        enc.writeKey("name");
+        enc.writeString("Concepcion Burns");
+        enc.writeKey("x");
+        enc.writeBool(false);
+        enc.endDictionary();
+        endEncoding();
+        lookupName(value::fromData(result)->asDict());
 
-        const value *nameKey = NULL;
+        // Now try a wide dict:
+        mmap_slice doc(kTestFilesDir "1000people.fleece");
         auto root = value::fromTrustedData(doc)->asArray();
         auto person = root->get(123)->asDict();
-        for (auto i=person->begin(); i; ++i) {
-            if (i.key()->asString() == slice("name")) {
-                nameKey = i.key();
-                break;
-            }
-        }
-        Assert(nameKey);
+        lookupName(person);
+    }
 
+    void lookupName(const dict* person) {
+        Assert(person);
+        dict::key nameKey(slice("name"));
         const value *name = person->get(nameKey);
+        Assert(name);
         std::string nameStr = (std::string)name->asString();
+        AssertEqual(nameStr, std::string("Concepcion Burns"));
+        Assert(nameKey.asValue() != NULL);
+        AssertEqual(nameKey.asValue()->asString(), slice("name"));
+
+        // Second lookup (using cache)
+        name = person->get(nameKey);
+        Assert(name);
+        nameStr = (std::string)name->asString();
         AssertEqual(nameStr, std::string("Concepcion Burns"));
     }
 

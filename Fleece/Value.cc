@@ -398,29 +398,46 @@ namespace fleece {
     }
 
     template <bool WIDE>
-    const value* dict::get(const arrayInfo &info, const value *keyToFind) const {
-        const value *key = info.first;
-        auto offset = (size_t)((uint8_t*)key - (uint8_t*)keyToFind);
-        if (offset > (WIDE ?0xFFFFFFFF : 0xFFFF))
-            return NULL;
-        // Raw integer key we're looking for (in native byte order):
-        auto rawKeyToFind = (uint32_t)((offset >> 1) | (WIDE ? 0x80000000 : 0x8000));
+    const value* dict::get(const arrayInfo &info, dict::key &keyToFind) const {
+        // Check whether there is a cached key and, if so, whether it would be used in this dict:
+        if (keyToFind._keyValue && (keyToFind._rawString.size > (WIDE ? 3 : 1))) {
+            const value *key = info.first;
+            const value *end = offsetby(key, info.count*2*width(WIDE));
+            size_t maxOffset = (WIDE ?0xFFFFFFFF : 0xFFFF);
+            auto offset = (size_t)((uint8_t*)key - (uint8_t*)keyToFind._keyValue);
+            auto offsetAtEnd = (size_t)((uint8_t*)end - width(WIDE) - (uint8_t*)keyToFind._keyValue);
+            if (offset <= maxOffset && offsetAtEnd <= maxOffset) {
+                // OK, key value is in range so we can use it here.
+                // Raw integer key we're looking for (in native byte order):
+                auto rawKeyToFind16 = (uint16_t)((offset >> 1) | 0x8000);
+                auto rawKeyToFind32 = (uint32_t)((offset >> 1) | 0x80000000);
 
-        const value *end = offsetby(key, info.count*2*width(WIDE));
-        while (key < end) {
-            const value *val = key->next<WIDE>();
-            uint32_t k = WIDE ? _dec32(*(uint32_t*)key) : (uint16_t)_dec16(*(uint16_t*)key);
-            if (k == rawKeyToFind)
-                return deref<WIDE>(val);
-            rawKeyToFind += width(WIDE);    // relative offset to string increases as key advances
-            key = val->next<WIDE>();
+                while (key < end) {
+                    const value *val = key->next<WIDE>();
+                    if (WIDE ? (_dec32(*(uint32_t*)key) == rawKeyToFind32)
+                             : (_dec16(*(uint16_t*)key) == rawKeyToFind16))
+                        return deref<WIDE>(val);
+                    rawKeyToFind16 += 2;    // relative offset to string increases as key advances
+                    rawKeyToFind32 += 4;
+                    key = val->next<WIDE>();
+                }
+                return NULL;
+            }
         }
-        return NULL;
+
+        // Can't use the encoded key, so fall back to searching by string bytes:
+        auto key = (const value*) ::bsearch(&keyToFind._rawString, info.first, info.count,
+                                            2*width(WIDE), &keyCmp<WIDE>);
+        if (!key)
+            return NULL;
+        if (key->isPointer())
+            keyToFind._keyValue = deref<WIDE>(key);  // cache encoded key for next time
+        return deref<WIDE>(key->next<WIDE>());
     }
 
-    const value* dict::get(const value *keyToFind) const {
+    const value* dict::get(key &k) const {
         auto info = getArrayInfo();
-        return info.wide ? get<true>(info, keyToFind) : get<false>(info, keyToFind);
+        return info.wide ? get<true>(info, k) : get<false>(info, k);
     }
 
     dict::iterator::iterator(const dict* d) {

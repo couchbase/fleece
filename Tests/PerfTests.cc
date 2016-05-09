@@ -93,18 +93,7 @@ class PerfTests : public CppUnit::TestFixture {
 
         mmap_slice doc(kTestFilesDir "1000people.fleece");
 
-        const value *nameKey = NULL;
-        if (sort == 2) {
-            auto root = value::fromTrustedData(doc)->asArray();
-            auto person = root->get(123)->asDict();
-            for (auto i=person->begin(); i; ++i) {
-                if (i.key()->asString() == slice("name")) {
-                    nameKey = i.key();
-                    break;
-                }
-            }
-            Assert(nameKey);
-        }
+        dict::key nameKey(slice("name"));
 
         fprintf(stderr, "Looking up one value, sorted=%d...\n", sort);
         for (int i = 0; i < kSamples; i++) {
