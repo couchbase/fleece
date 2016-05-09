@@ -20,7 +20,7 @@ namespace fleece {
         size_t size;
         for (size = 8; size*kMaxLoad < capacity; size *= 2)
             ;
-        allocTable(size);
+        allocTable(size); // initializes _table, _size, _maxCount
     }
 
     StringTable::~StringTable() {

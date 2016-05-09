@@ -29,17 +29,9 @@ namespace fleece {
 
     Encoder::Encoder(Writer &out)
     :_out(out),
-     _stackDepth(0),
-     _strings(100),
-     _uniqueStrings(true),
-     _sortKeys(true),
-     _writingKey(false),
-     _blockedOnKey(false)
+     _strings(100)
     {
         push(kSpecialTag, 1);                   // Top-level 'array' is just a single item
-#ifndef NDEBUG
-        _numNarrow = _numWide = _narrowCount = _wideCount = _numSavedStrings = 0;
-#endif
     }
 
     void Encoder::end() {
@@ -126,7 +118,7 @@ namespace fleece {
 
     void Encoder::writeNull()              {addItem(value(kSpecialTag, kSpecialValueNull));}
     void Encoder::writeBool(bool b)        {addItem(value(kSpecialTag, b ? kSpecialValueTrue
-                                                                       : kSpecialValueFalse));}
+                                                                         : kSpecialValueFalse));}
     void Encoder::writeInt(uint64_t i, bool isSmall, bool isUnsigned) {
         if (isSmall) {
             addItem(value(kShortIntTag, (i >> 8) & 0x0F, i & 0xFF));
@@ -398,8 +390,8 @@ namespace fleece {
     }
 
     static int compareKeysByIndex(const void *a, const void *b) {
-        auto &sa = **(const slice**)a;
-        auto &sb = **(const slice**)b;
+        const slice &sa = **(const slice**)a;
+        const slice &sb = **(const slice**)b;
         assert(sa.buf && sb.buf);
         return sa.compare(sb);
     }
@@ -435,6 +427,10 @@ namespace fleece {
         }
     }
 
+    // Writes an array of strings, containing all the strings that have appeared as dictionary keys
+    // so far. The array is structured as a hash table; it's literally organized as a dump of a
+    // StringTable. That means that a reader can use the same hash function and algorithm as
+    // StringTable to very quickly convert a platform string to a Fleece value.
     void Encoder::writeKeyTable() {
         StringTable keys;
         for (auto iter = _strings.begin(); iter != _strings.end(); ++iter) {

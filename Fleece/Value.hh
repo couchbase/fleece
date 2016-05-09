@@ -59,6 +59,8 @@ namespace fleece {
         /** The overall type of a value (JSON types plus Data) */
         valueType type() const;
 
+        //////// Scalar types:
+
         /** Boolean value/conversion. Any value is considered true except false, null, 0. */
         bool asBool() const;
 
@@ -86,6 +88,8 @@ namespace fleece {
         /** Is this a 64-bit floating-point value? */
         bool isDouble() const      {return tag() == internal::kFloatTag && (_byte[0] & 0x8);}
 
+        //////// Non-scalars:
+
         /** Returns the exact contents of a string or data. Other types return a null slice. */
         slice asString() const;
 
@@ -98,6 +102,8 @@ namespace fleece {
         /** Converts any _non-collection_ type to string form. */
         std::string toString() const;
 
+        //////// Conversion:
+
         /** Writes a JSON representation to a Writer. */
         void toJSON(Writer&) const;
         /** Returns a JSON representation. */
@@ -105,11 +111,12 @@ namespace fleece {
 
         /** Writes a full dump of the values in the data, including offsets and hex. */
         static bool dump(slice data, std::ostream&);
+
         /** Returns a full dump of the values in the data, including offsets and hex. */
         static std::string dump(slice data);
 
 #ifdef __OBJC__
-        // Convenience methods for Objective-C (Cocoa):
+        //////// Convenience methods for Objective-C (Cocoa):
 
         /** Converts a Fleece value to an Objective-C object.
             Can optionally use a pre-existing shared-string table.
@@ -207,6 +214,8 @@ namespace fleece {
         static const value* fastValidate(slice);
         bool validate(const void* dataStart, const void *dataEnd, bool wide) const;
 
+        //////// Here's the data:
+
         uint8_t _byte[internal::kWide];
 
         friend class array;
@@ -232,8 +241,10 @@ namespace fleece {
         class iterator {
         public:
             iterator(const array* a);
-            /** Returns the number of remaining items. */
+
+            /** Returns the number of _remaining_ items. */
             uint32_t count() const                  {return _a.count;}
+
             const class value* value() const        {return _value;}
             operator const class value* const ()    {return _value;}
             const class value* operator-> ()        {return _value;}
@@ -242,8 +253,13 @@ namespace fleece {
                 This is very fast, faster than array::get(). */
             const class value* operator[] (unsigned i) {return _a[i];}
 
+            /** Returns false when the iterator reaches the end. */
             explicit operator bool() const          {return _a.count > 0;}
+
+            /** Steps to the next item. (Throws if there are no more items.) */
             iterator& operator++();
+
+            /** Steps forward by one or more items. (Throws if stepping past the end.) */
             iterator& operator += (uint32_t);
 
         private:
@@ -261,6 +277,7 @@ namespace fleece {
     /** A value that's a dictionary/map */
     class dict : public value {
     public:
+        /** The number of items in the dictionary. */
         uint32_t count() const                      {return arrayCount();}
 
         /** Looks up the value for a key, assuming the keys are sorted (as they are by default.) */
@@ -276,23 +293,31 @@ namespace fleece {
         const value* get(const value *key) const;
 
 #ifdef __OBJC__
+        /** Looks up the value for a key given as an NSString object. */
         const value* get(NSString* key) const {
             nsstring_slice keyBytes(key);
             return get(keyBytes);
         }
 #endif
 
-        /** A stack-based dict iterator */
+        /** A stack-based dictionary iterator */
         class iterator {
         public:
             iterator(const dict*);
-            /** Returns the number of remaining items. */
+
+            /** Returns the number of _remaining_ items. */
             uint32_t count() const                  {return _a.count;}
+
             const value* key() const                {return _key;}
             const value* value() const              {return _value;}
 
+            /** Returns false when the iterator reaches the end. */
             explicit operator bool() const          {return _a.count > 0;}
+
+            /** Steps to the next item. (Throws if there are no more items.) */
             iterator& operator ++();
+
+            /** Steps forward by one or more items. (Throws if stepping past the end.) */
             iterator& operator += (uint32_t);
 
         private:

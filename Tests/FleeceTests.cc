@@ -28,7 +28,7 @@ std::ostream& operator<< (std::ostream& o, slice s) {
         if (buf[i] < 32 || buf[i] > 126)
             return o << sliceToHex(s) << "]";
     }
-    return o << std::string((char*)s.buf, s.size) << "\"]";
+    return o << "\"" << std::string((char*)s.buf, s.size) << "\"]";
 }
 
 

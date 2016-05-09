@@ -71,6 +71,9 @@ namespace fleece {
         };
     }
 
+    // Floating-point types whose storage is reliably big- or little-endian,
+    // but which can be read and written as native numbers.
+
     typedef internal::endian<float,  uint32_t, internal::_swapLittle> littleEndianFloat;
     typedef internal::endian<float,  uint32_t, internal::_swapBig>    bigEndianFloat;
     typedef internal::endian<double, uint64_t, internal::_swapLittle> littleEndianDouble;

@@ -22,7 +22,7 @@
 namespace fleece {
 
 // Based on varint implementation from the Go language (src/pkg/encoding/binary/varint.go)
-// This file implements "varint" encoding of 64-bit integers.
+// This file implements "varint" encoding of unsigned 64-bit integers.
 // The encoding is:
 // - unsigned integers are serialized 7 bits at a time, starting with the
 //   least significant bits
@@ -58,6 +58,8 @@ bool ReadUVarInt32(slice *buf, uint32_t *n);
     Returns false if there isn't enough room. */
 bool WriteUVarInt(slice *buf, uint64_t n);
 
+
+//////// Non-varint variable-length int functions:
 
 /** Encodes an integer `n` to `buf` and returns the number of bytes used (1-8).
     if `isUnsigned` is true, the number is treated as unsigned (uint64_t.) */

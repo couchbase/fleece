@@ -28,17 +28,17 @@ namespace fleece {
         static const size_t kDefaultInitialCapacity = 256;
 
         Writer(size_t initialCapacity =kDefaultInitialCapacity);
-        Writer(Writer&&);
         ~Writer();
 
+        Writer(Writer&&);
         Writer& operator= (Writer&&);
 
         size_t length() const                   {return _length;}
         const void* curPos() const;
         size_t posToOffset(const void *pos) const;
 
-        /** Returns the data written. The Writer stops managing the memory; it is the caller's
-            responsibility to free the returned slice's buf! */
+        /** Returns the data written. The Writer stops managing this memory; it now belongs to
+            the caller and will be freed when no more alloc_slices refer to it. */
         alloc_slice extractOutput();
 
         const void* write(const void* data, size_t length);
@@ -77,8 +77,9 @@ namespace fleece {
         };
 
         void addChunk(size_t capacity);
-        Writer(const Writer&);  // forbidden
-        const Writer& operator=(const Writer&); // forbidden
+
+        Writer(const Writer&) = delete;
+        const Writer& operator=(const Writer&) = delete;
 
         std::vector<Chunk> _chunks;
         size_t _chunkSize;
