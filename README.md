@@ -32,6 +32,18 @@ A: It's a reference to the mythical [Golden Fleece](https://en.wikipedia.org/wik
 
 Fleece has been used in some experimental work at Couchbase, but hasn't gone into production use.
 
+Thus far it's only been compiled with Xcode and run on Mac OS and iOS.
+
+## Requirements / Compatibility
+
+* Fleece _should_ be buildable with any C++11 compiler, such as current versions of Xcode, Clang, GCC or MSVC. (Yes, there are some Objective-C++ source files (`.mm`), but those are only used to provide Objective-C glue and Mac/iOS specific benchmarks. You can ignore them on other platforms.)
+* There _should_ be no dependencies on any libraries, other than the standard C library and the C++ STL.
+* It _should_ work correctly, and create interoperable data, on both little-endian and big-endian CPUs.
+
+However, none of those "should"s have been put to test yet, so it's likely they're not 100% true. If you encounter problems on non-Apple platforms, please file an issue and we'll fix it.
+
+Yes, it would be very nice to have a non-C++ API; we just haven't written one yet. A C wrapper would come first, and then that can be glued to other languages. Contributions are welcome :)
+
 ## License
 
 Apache 2.0
