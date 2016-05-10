@@ -41,8 +41,6 @@
 		279AC5341C096872002C80DB /* fleece_tool.cc in Sources */ = {isa = PBXBuildFile; fileRef = 279AC5331C096872002C80DB /* fleece_tool.cc */; };
 		279AC5381C096B5C002C80DB /* libFleece.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 270FA25C1BF53CAD005DCB13 /* libFleece.a */; };
 		279AC53C1C097941002C80DB /* Value+Dump.cc in Sources */ = {isa = PBXBuildFile; fileRef = 279AC53B1C097941002C80DB /* Value+Dump.cc */; };
-		27C4AC951CDE843F00938365 /* Example.md in Sources */ = {isa = PBXBuildFile; fileRef = 27C4AC941CDE843F00938365 /* Example.md */; };
-		27C4AC971CDFFDA100938365 /* Performance.md in Sources */ = {isa = PBXBuildFile; fileRef = 27C4AC961CDFFDA100938365 /* Performance.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -392,7 +390,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				270FA27E1BF53CEA005DCB13 /* Encoder+ObjC.mm in Sources */,
-				27C4AC951CDE843F00938365 /* Example.md in Sources */,
 				270FA27B1BF53CEA005DCB13 /* Value+ObjC.mm in Sources */,
 				270FA27A1BF53CEA005DCB13 /* Value+JSON.cc in Sources */,
 				270FA2841BF53CEA005DCB13 /* varint.cc in Sources */,
@@ -406,7 +403,6 @@
 				2797BCAC1C0FBFDE00E5C991 /* StringTable.cc in Sources */,
 				27298E651C00F8A9000CFBA8 /* jsonsl.c in Sources */,
 				270FA27F1BF53CEA005DCB13 /* Writer.cc in Sources */,
-				27C4AC971CDFFDA100938365 /* Performance.md in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
