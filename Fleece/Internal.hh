@@ -44,6 +44,8 @@ namespace fleece {
             kWide   = 4
         };
 
+        static inline int width(bool wide) { return wide ? kWide : kNarrow; }
+
         // The actual tags used in the encoded data, i.e. high 4 bits of 1st byte:
         enum tags : uint8_t {
             kShortIntTag = 0,
@@ -68,6 +70,9 @@ namespace fleece {
         // (not part of the format, just a heuristic used by the encoder & Obj-C decoder)
         static const size_t kMinSharedStringSize =  2;
         static const size_t kMaxSharedStringSize = 15;
+
+        // Minimum array count that has to be stored outside the header
+        static const uint32_t kLongArrayCount = 0x07FF;
 
     }
 }

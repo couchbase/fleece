@@ -14,6 +14,7 @@
 //  and limitations under the License.
 
 #include "Value.hh"
+#include "Array.hh"
 #include "Writer.hh"
 #include <ostream>
 #include <ctime>

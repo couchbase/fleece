@@ -10,6 +10,7 @@
 #define FleeceTests_h
 
 #include "Value.hh"
+#include "Array.hh"
 #include "Encoder.hh"
 #include "Writer.hh"
 #include <ostream>

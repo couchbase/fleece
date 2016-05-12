@@ -15,6 +15,7 @@
 
 #import <Foundation/Foundation.h>
 #import "Value.hh"
+#include "Array.hh"
 
 
 namespace fleece {

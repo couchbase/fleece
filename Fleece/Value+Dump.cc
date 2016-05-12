@@ -7,6 +7,7 @@
 //
 
 #include "Value.hh"
+#include "Array.hh"
 #include <ostream>
 #include <iomanip>
 #include <map>

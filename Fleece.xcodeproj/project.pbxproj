@@ -41,6 +41,8 @@
 		279AC5341C096872002C80DB /* fleece_tool.cc in Sources */ = {isa = PBXBuildFile; fileRef = 279AC5331C096872002C80DB /* fleece_tool.cc */; };
 		279AC5381C096B5C002C80DB /* libFleece.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 270FA25C1BF53CAD005DCB13 /* libFleece.a */; };
 		279AC53C1C097941002C80DB /* Value+Dump.cc in Sources */ = {isa = PBXBuildFile; fileRef = 279AC53B1C097941002C80DB /* Value+Dump.cc */; };
+		27C4ACAC1CE5146500938365 /* Array.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27C4ACAA1CE5146500938365 /* Array.cc */; };
+		27C4ACAD1CE5146500938365 /* Array.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C4ACAB1CE5146500938365 /* Array.hh */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -125,6 +127,8 @@
 		279AC53B1C097941002C80DB /* Value+Dump.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "Value+Dump.cc"; sourceTree = "<group>"; };
 		27C4AC941CDE843F00938365 /* Example.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = Example.md; sourceTree = "<group>"; };
 		27C4AC961CDFFDA100938365 /* Performance.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = Performance.md; sourceTree = "<group>"; };
+		27C4ACAA1CE5146500938365 /* Array.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Array.cc; sourceTree = "<group>"; };
+		27C4ACAB1CE5146500938365 /* Array.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Array.hh; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -188,6 +192,8 @@
 				272E5A671BFA7C3100848580 /* Internal.hh */,
 				270FA26A1BF53CEA005DCB13 /* Value.cc */,
 				270FA26B1BF53CEA005DCB13 /* Value.hh */,
+				27C4ACAA1CE5146500938365 /* Array.cc */,
+				27C4ACAB1CE5146500938365 /* Array.hh */,
 				270FA26C1BF53CEA005DCB13 /* Value+JSON.cc */,
 				279AC53B1C097941002C80DB /* Value+Dump.cc */,
 				270FA26D1BF53CEA005DCB13 /* Value+ObjC.mm */,
@@ -277,6 +283,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				27298E661C00F8A9000CFBA8 /* jsonsl.h in Headers */,
+				27C4ACAD1CE5146500938365 /* Array.hh in Headers */,
 				2797BCAD1C0FBFDE00E5C991 /* StringTable.hh in Headers */,
 				270FA2831BF53CEA005DCB13 /* slice.hh in Headers */,
 				270FA2851BF53CEA005DCB13 /* varint.hh in Headers */,
@@ -391,6 +398,7 @@
 			files = (
 				270FA27E1BF53CEA005DCB13 /* Encoder+ObjC.mm in Sources */,
 				270FA27B1BF53CEA005DCB13 /* Value+ObjC.mm in Sources */,
+				27C4ACAC1CE5146500938365 /* Array.cc in Sources */,
 				270FA27A1BF53CEA005DCB13 /* Value+JSON.cc in Sources */,
 				270FA2841BF53CEA005DCB13 /* varint.cc in Sources */,
 				272E5A611BF91F6C00848580 /* slice.mm in Sources */,

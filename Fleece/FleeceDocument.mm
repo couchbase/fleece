@@ -8,6 +8,7 @@
 
 #import "FleeceDocument.h"
 #import "Value.hh"
+#import "Array.hh"
 #import "Encoder.hh"
 using namespace fleece;
 
