@@ -43,6 +43,7 @@ namespace fleece {
             throw "top level must have only one value";
 
         if (_items->size() > 0) {
+            checkPointerWidths(_items);
             fixPointers(_items);
             value &root = (*_items)[0];
             if (_items->wide) {
@@ -346,12 +347,12 @@ namespace fleece {
 
         // Write the array header to the outer value:
         uint8_t buf[2 + kMaxVarintLen32];
-        uint32_t inlineCount = std::min(count, (uint32_t)0x07FF);
+        uint32_t inlineCount = std::min(count, (uint32_t)kLongArrayCount);
         buf[0] = (uint8_t)(inlineCount >> 8);
         buf[1] = (uint8_t)(inlineCount & 0xFF);
         size_t bufLen = 2;
-        if (count >= 0x0FFF) {
-            bufLen += PutUVarInt(&buf[2], count);
+        if (count >= kLongArrayCount) {
+            bufLen += PutUVarInt(&buf[2], count - kLongArrayCount);
             if (bufLen & 1)
                 buf[bufLen++] = 0;
         }

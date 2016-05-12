@@ -262,6 +262,31 @@ public:
 #endif
     }
 
+    void testLongArrays() {
+        testArrayOfLength(0x7FE);
+        testArrayOfLength(0x7FF);
+        testArrayOfLength(0x800);
+        testArrayOfLength(0x801);
+        testArrayOfLength(0xFFFF);
+    }
+
+    void testArrayOfLength(unsigned length) {
+        enc.beginArray();
+        for (unsigned i = 0; i < length; ++i)
+            enc.writeUInt(i);
+        enc.endArray();
+        endEncoding();
+
+        // Check the contents:
+        auto a = checkArray(length);
+        for (unsigned i = 0; i < length; ++i) {
+            auto v = a->get(i);
+            Assert(v);
+            AssertEqual(v->type(), kNumber);
+            AssertEqual(v->asUnsigned(), (uint64_t)i);
+        }
+    }
+
     void testDictionaries() {
         {
             enc.beginDictionary();
@@ -552,6 +577,7 @@ public:
     CPPUNIT_TEST( testFloats );
     CPPUNIT_TEST( testStrings );
     CPPUNIT_TEST( testArrays );
+    CPPUNIT_TEST( testLongArrays );
     CPPUNIT_TEST( testDictionaries );
     CPPUNIT_TEST( testSharedStrings );
     CPPUNIT_TEST( testJSONStrings );

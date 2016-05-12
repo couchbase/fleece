@@ -219,24 +219,31 @@ namespace fleece {
         if (root->isPointer()) {
             // If the root is a pointer, sanity-check the destination:
             auto derefed = derefPointer<false>(root);
-            // TODO: watch out for integer overflow/wraparound in 32-bit.
-            if (derefed == root || derefed < s.buf)
+            if (derefed >= root || derefed < s.buf)
+                return NULL;
+            root = derefed;
+            // The root itself might point to a wide pointer, if the actual value is too far away:
+            if (root->isPointer()) {
+                derefed = derefPointer<true>(root);
+                if (derefed >= root || derefed < s.buf)
                     return NULL;
-            return derefed;
+                root = derefed;
+            }
         } else {
             // If the root is a direct value there better not be any data before it:
             if (s.size != kNarrow)
                 return NULL;
-            return root;
         };
+        return root;
     }
 
     bool value::validate(const void *dataStart, const void *dataEnd, bool wide) const {
-        // TODO: watch out for integer overflow/wraparound in 32-bit.
         // First dereference a pointer:
         if (isPointer()) {
             auto derefed = derefPointer(this, wide);
-            return derefed >= dataStart && derefed->validate(dataStart, this, true);
+            return derefed >= dataStart
+                && derefed < this  // could fail if ptr wraps around past 0
+                && derefed->validate(dataStart, this, true);
         }
         auto t = tag();
         size_t size = dataSize();
