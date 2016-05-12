@@ -170,6 +170,7 @@ namespace fleece {
             bool next();
             const value* firstValue() const  {return count ? deref(first, wide) : NULL;}
             const value* operator[] (unsigned index) const;
+            size_t indexOf(const value *v) const;
         };
 
         bool isWideArray() const {return (_byte[0] & 0x08) != 0;}
@@ -328,13 +329,19 @@ namespace fleece {
         
         iterator begin() const                      {return iterator(this);}
 
+        /** An abstracted key for dictionaries. It will cache the key as an encoded value, and it
+            will cache the index at which the key was last found, which speeds up succssive
+            lookups.
+            Warning: An instance of this should be used only on a single thread, and only with
+            dictionaries that are stored in the same encoded data. */
         class key {
         public:
             key(slice rawString)                    :_rawString(rawString) { }
             const value* asValue() const            {return _keyValue;}
         private:
             slice const _rawString;
-            const value* _keyValue {nullptr};
+            const value* _keyValue  {nullptr};
+            uint32_t _hint          {0xFFFFFFFF};
 
             friend class dict;
         };

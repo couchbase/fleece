@@ -484,32 +484,58 @@ public:
     }
 
     void testFindPersonByIndexKeyed() {
-        // First build a small non-wide dict:
-        enc.beginDictionary();
-        enc.writeKey("f");
-        enc.writeInt(42);
-        enc.writeKey("name");
-        enc.writeString("Concepcion Burns");
-        enc.writeKey("x");
-        enc.writeBool(false);
-        enc.endDictionary();
-        endEncoding();
-        lookupName(value::fromData(result)->asDict());
+        {
+            dict::key nameKey(slice("name"));
 
-        // Now try a wide dict:
-        mmap_slice doc(kTestFilesDir "1000people.fleece");
-        auto root = value::fromTrustedData(doc)->asArray();
-        auto person = root->get(123)->asDict();
-        lookupName(person);
+            // First build a small non-wide dict:
+            enc.beginArray();
+                enc.beginDictionary();
+                    enc.writeKey("f");
+                    enc.writeInt(42);
+                    enc.writeKey("name");
+                    enc.writeString("Concepcion Burns");
+                    enc.writeKey("x");
+                    enc.writeBool(false);
+                enc.endDictionary();
+                enc.beginDictionary();
+                    enc.writeKey("name");
+                    enc.writeString("Carmen Miranda");
+                    enc.writeKey("x");
+                    enc.writeBool(false);
+                enc.endDictionary();
+                enc.beginDictionary();
+                    enc.writeKey("nxme");
+                    enc.writeString("Carmen Miranda");
+                    enc.writeKey("x");
+                    enc.writeBool(false);
+                enc.endDictionary();
+            enc.endArray();
+            endEncoding();
+            auto smol = value::fromData(result)->asArray();
+            lookupNameWithKey(smol->get(0)->asDict(), nameKey, "Concepcion Burns");
+            lookupNameWithKey(smol->get(1)->asDict(), nameKey, "Carmen Miranda");
+            Assert(smol->get(2)->asDict()->get(nameKey) == NULL);
+        }
+        {
+            // Now try a wide dict:
+            dict::key nameKey(slice("name"));
+
+            mmap_slice doc(kTestFilesDir "1000people.fleece");
+            auto root = value::fromTrustedData(doc)->asArray();
+            auto person = root->get(123)->asDict();
+            lookupNameWithKey(person, nameKey, "Concepcion Burns");
+
+            person = root->get(3)->asDict();
+            lookupNameWithKey(person, nameKey, "Isabella Compton");
+        }
     }
 
-    void lookupName(const dict* person) {
+    void lookupNameWithKey(const dict* person, dict::key &nameKey, std::string expectedName) {
         Assert(person);
-        dict::key nameKey(slice("name"));
         const value *name = person->get(nameKey);
         Assert(name);
         std::string nameStr = (std::string)name->asString();
-        AssertEqual(nameStr, std::string("Concepcion Burns"));
+        AssertEqual(nameStr, expectedName);
         Assert(nameKey.asValue() != NULL);
         AssertEqual(nameKey.asValue()->asString(), slice("name"));
 
@@ -517,7 +543,7 @@ public:
         name = person->get(nameKey);
         Assert(name);
         nameStr = (std::string)name->asString();
-        AssertEqual(nameStr, std::string("Concepcion Burns"));
+        AssertEqual(nameStr, expectedName);
     }
 
     CPPUNIT_TEST_SUITE( EncoderTests );
