@@ -13,9 +13,25 @@
 
 namespace fleece {
 
+    class dict;
+
     /** A value that's an array. */
     class array : public value {
+        struct impl {
+            const value* first;
+            uint32_t count;
+            bool wide;
+
+            impl(const value*);
+            const value* second() const      {return first->next(wide);}
+            bool next();
+            const value* firstValue() const  {return count ? value::deref(first, wide) : NULL;}
+            const value* operator[] (unsigned index) const;
+            size_t indexOf(const value *v) const;
+        };
+
     public:
+
         /** The number of items in the array. */
         uint32_t count() const                      {return arrayCount();}
 
@@ -52,12 +68,16 @@ namespace fleece {
         private:
             const class value* rawValue()           {return _a.first;}
 
-            arrayInfo _a;
+            impl _a;
             const class value *_value;
             friend class value;
         };
 
         iterator begin() const                      {return iterator(this);}
+
+        friend class value;
+        friend class dict;
+        template <bool WIDE> friend class dictImpl;
     };
 
 
@@ -108,7 +128,7 @@ namespace fleece {
             const class value* rawKey()             {return _a.first;}
             const class value* rawValue()           {return _a.second();}
 
-            arrayInfo _a;
+            array::impl _a;
             const class value *_key, *_value;
             friend class value;
         };
@@ -129,20 +149,12 @@ namespace fleece {
             const value* _keyValue  {nullptr};
             uint32_t _hint          {0xFFFFFFFF};
 
-            friend class dict;
+            template <bool WIDE> friend struct dictImpl;
         };
 
         /** Looks up the value for a key, in a form that can cache the key's Fleece object.
             Using the Fleece object is significantly faster than a normal get. */
         const value* get(key&) const;
-
-    private:
-        template <bool WIDE>
-            static int keyCmp(const void* keyToFindP, const void* keyP);
-        template <bool WIDE>
-            const value* get(slice keyToFind) const;
-        template <bool WIDE>
-        const value* get(const arrayInfo&, key&) const;
 
         friend class value;
     };

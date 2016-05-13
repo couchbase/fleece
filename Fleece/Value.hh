@@ -170,21 +170,8 @@ namespace fleece {
         template <bool WIDE>
         const value* next() const       {return next(WIDE);}
 
-        struct arrayInfo {
-            const value* first;
-            uint32_t count;
-            bool wide;
-
-            arrayInfo(const value*);
-            const value* second() const      {return first->next(wide);}
-            bool next();
-            const value* firstValue() const  {return count ? deref(first, wide) : NULL;}
-            const value* operator[] (unsigned index) const;
-            size_t indexOf(const value *v) const;
-        };
-
         bool isWideArray() const {return (_byte[0] & 0x08) != 0;}
-        uint32_t arrayCount() const  {return arrayInfo(this).count;}
+        uint32_t arrayCount() const;
 
     private:
         value(internal::tags tag, int tiny, int byte1 = 0) {
@@ -233,6 +220,7 @@ namespace fleece {
         friend class Encoder;
         friend class ValueTests;
         friend class EncoderTests;
+        template <bool WIDE> friend struct dictImpl;
     };
 
 }

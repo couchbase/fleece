@@ -14,6 +14,7 @@
 //  and limitations under the License.
 
 #include "Value.hh"
+#include "Array.hh"
 #include "Internal.hh"
 #include "Endian.hh"
 #include "varint.hh"
@@ -259,7 +260,7 @@ namespace fleece {
 
             // Check each array/dict element:
             if (itemCount > 0) {
-                auto item = arrayInfo(this).first;
+                auto item = array::impl(this).first;
                 while (itemCount-- > 0) {
                     auto second = item->next(wide);
                     if (!item->validate(dataStart, second, wide))
@@ -284,7 +285,7 @@ namespace fleece {
             case kStringTag:
             case kBinaryTag:    return (uint8_t*)asString().end() - (uint8_t*)this;
             case kArrayTag:
-            case kDictTag:      return (uint8_t*)arrayInfo(this).first - (uint8_t*)this;
+            case kDictTag:      return (uint8_t*)array::impl(this).first - (uint8_t*)this;
             case kPointerTagFirst:
             default:            return 2;   // size might actually be 4; depends on context
         }

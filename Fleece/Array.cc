@@ -15,8 +15,8 @@
 namespace fleece {
     using namespace internal;
 
-    
-    value::arrayInfo::arrayInfo(const value* v) {
+
+    array::impl::impl(const value* v) {
         first = (const value*)(&v->_byte[2]);
         wide = v->isWideArray();
         count = v->shortValue() & 0x07FF;
@@ -30,7 +30,7 @@ namespace fleece {
         }
     }
 
-    bool value::arrayInfo::next() {
+    bool array::impl::next() {
         if (count == 0)
             throw "iterating past end of array";
         if (--count == 0)
@@ -39,22 +39,27 @@ namespace fleece {
         return true;
     }
 
-    const value* value::arrayInfo::operator[] (unsigned index) const {
+    const value* array::impl::operator[] (unsigned index) const {
         if (index >= count)
             return NULL;
         if (wide)
-            return deref<true> (offsetby(first, kWide   * index));
+            return value::deref<true> (offsetby(first, kWide   * index));
         else
-            return deref<false>(offsetby(first, kNarrow * index));
+            return value::deref<false>(offsetby(first, kNarrow * index));
     }
 
-    size_t value::arrayInfo::indexOf(const value *v) const {
+    size_t array::impl::indexOf(const value *v) const {
         return ((size_t)v - (size_t)first) / width(wide);
     }
 
 
+    uint32_t value::arrayCount() const {
+        return array::impl(this).count;
+    }
+
+
     const value* array::get(uint32_t index) const {
-        return arrayInfo(this)[index];
+        return impl(this)[index];
     }
 
 
@@ -81,97 +86,125 @@ namespace fleece {
 
 #pragma mark - DICT:
 
-    const value* dict::get_unsorted(slice keyToFind) const {
-        arrayInfo info(this);
-        const value *key = info.first;
-        for (uint32_t i = 0; i < info.count; i++) {
-            auto val = key->next(info.wide);
-            if (keyToFind.compare(deref(key, info.wide)->asString()) == 0)
-                return deref(val, info.wide);
-            key = val->next(info.wide);
-        }
-        return NULL;
-    }
-
     template <bool WIDE>
-    int dict::keyCmp(const void* keyToFindP, const void* keyP) {
-        const value *key = value::deref<WIDE>((const value*)keyP);
-        return ((slice*)keyToFindP)->compare(key->asString());
-    }
+    struct dictImpl : public array::impl {
 
-    template <bool WIDE>
-    inline const value* dict::get(slice keyToFind) const {
-        arrayInfo info(this);
-        auto key = (const value*) ::bsearch(&keyToFind, info.first, info.count,
-                                            2*width(WIDE), &keyCmp<WIDE>);
-        if (!key)
+        dictImpl(const dict *d)
+        :impl(d)
+        { }
+
+        const value* get_unsorted(slice keyToFind) const {
+            const value *key = first;
+            for (uint32_t i = 0; i < count; i++) {
+                const value *val = next(key);
+                if (keyToFind.compare(deref(key)->asString()) == 0)
+                    return deref(val);
+                key = next(val);
+            }
             return NULL;
-        return deref<WIDE>(key->next<WIDE>());
+        }
+
+        inline const value* get(slice keyToFind) const {
+            auto key = (const value*) ::bsearch(&keyToFind, first, count, 2*kWidth, &keyCmp);
+            if (!key)
+                return NULL;
+            return deref(next(key));
+        }
+
+        const value* get(dict::key &keyToFind) const {
+            const value *start = first;
+
+            // Use the index hint to possibly find the key in one probe:
+            if (keyToFind._hint < count) {
+                const value *key  = offsetby(start, keyToFind._hint * 2 * kWidth);
+                if ((keyToFind._keyValue && key->isPointer() && deref(key) == keyToFind._keyValue)
+                        || (keyCmp(&keyToFind._rawString, key) == 0)) {
+                    return deref(next(key));
+                }
+                // If the hint failed, look it up the slow way...
+            }
+
+            // Check whether there is a cached key and, if so, whether it would be used in this dict:
+            if (keyToFind._keyValue && (keyToFind._rawString.size >= kWidth)) {
+                const value *key = start;
+                const value *end = offsetby(key, count*2*kWidth);
+                size_t maxOffset = (WIDE ?0xFFFFFFFF : 0xFFFF);
+                auto offset = (size_t)((uint8_t*)key - (uint8_t*)keyToFind._keyValue);
+                auto offsetAtEnd = (size_t)((uint8_t*)end - kWidth - (uint8_t*)keyToFind._keyValue);
+                if (offset <= maxOffset && offsetAtEnd <= maxOffset) {
+                    // OK, key value is in range so we can use it here, for a linear scan.
+                    // Raw integer key we're looking for (in native byte order):
+                    auto rawKeyToFind16 = (uint16_t)((offset >> 1) | 0x8000);
+                    auto rawKeyToFind32 = (uint32_t)((offset >> 1) | 0x80000000);
+
+                    while (key < end) {
+                        const value *val = next(key);
+                        if (WIDE ? (_dec32(*(uint32_t*)key) == rawKeyToFind32)
+                                 : (_dec16(*(uint16_t*)key) == rawKeyToFind16)) {
+                            // Found it! Cache the dict index as a hint for next time:
+                            keyToFind._hint = (uint32_t)indexOf(key) / 2;
+                            return deref(val);
+                        }
+                        rawKeyToFind16 += kNarrow;      // offset to string increases as key advances
+                        rawKeyToFind32 += kWide;
+                        key = next(val);
+                    }
+                    return NULL;
+                }
+            }
+
+            // Can't use the encoded key, so fall back to binary search by string bytes:
+            auto key = (const value*) ::bsearch(&keyToFind._rawString, start, count,
+                                                2*kWidth, &keyCmp);
+            if (!key)
+                return NULL;
+
+            // Found it! Cache dict index and encoded key as optimizations for next time:
+            if (key->isPointer())
+                keyToFind._keyValue = deref(key);
+            keyToFind._hint = (uint32_t)indexOf(key) / 2;
+            return deref(next(key));
+        }
+
+    private:
+        static inline const value* next(const value *v) {
+            return v->next<WIDE>();
+        }
+
+        static inline const value* deref(const value *v) {
+            return value::deref<WIDE>(v);
+        }
+
+        static int keyCmp(const void* keyToFindP, const void* keyP) {
+            const value *key = deref((const value*)keyP);
+            return ((slice*)keyToFindP)->compare(key->asString());
+        }
+
+        static const size_t kWidth = (WIDE ? 4 : 2);
+
+    };
+
+
+
+    const value* dict::get_unsorted(slice keyToFind) const {
+        if (isWideArray())
+            return dictImpl<true>(this).get_unsorted(keyToFind);
+        else
+            return dictImpl<false>(this).get_unsorted(keyToFind);
     }
 
     const value* dict::get(slice keyToFind) const {
-        return isWideArray() ? get<true>(keyToFind) : get<false>(keyToFind);
+        if (isWideArray())
+            return dictImpl<true>(this).get(keyToFind);
+        else
+            return dictImpl<false>(this).get(keyToFind);
     }
 
-    template <bool WIDE>
-    const value* dict::get(const arrayInfo &info, dict::key &keyToFind) const {
-        const value *start = info.first;
-
-        // Use the index hint to possibly find the key in one probe:
-        if (keyToFind._hint < info.count) {
-            const value *key  = offsetby(start, keyToFind._hint * 2 * width(WIDE));
-            if ((keyToFind._keyValue && key->isPointer() && deref<WIDE>(key) == keyToFind._keyValue)
-                    || (dict::keyCmp<WIDE>(&keyToFind._rawString, key) == 0)) {
-                return deref<WIDE>(key->next<WIDE>());
-            }
-            // If the hint failed, look it up the slow way...
-        }
-
-        // Check whether there is a cached key and, if so, whether it would be used in this dict:
-        if (keyToFind._keyValue && (keyToFind._rawString.size > (WIDE ? 3 : 1))) {
-            const value *key = start;
-            const value *end = offsetby(key, info.count*2*width(WIDE));
-            size_t maxOffset = (WIDE ?0xFFFFFFFF : 0xFFFF);
-            auto offset = (size_t)((uint8_t*)key - (uint8_t*)keyToFind._keyValue);
-            auto offsetAtEnd = (size_t)((uint8_t*)end - width(WIDE) - (uint8_t*)keyToFind._keyValue);
-            if (offset <= maxOffset && offsetAtEnd <= maxOffset) {
-                // OK, key value is in range so we can use it here, for a linear scan.
-                // Raw integer key we're looking for (in native byte order):
-                auto rawKeyToFind16 = (uint16_t)((offset >> 1) | 0x8000);
-                auto rawKeyToFind32 = (uint32_t)((offset >> 1) | 0x80000000);
-
-                while (key < end) {
-                    const value *val = key->next<WIDE>();
-                    if (WIDE ? (_dec32(*(uint32_t*)key) == rawKeyToFind32)
-                             : (_dec16(*(uint16_t*)key) == rawKeyToFind16)) {
-                        // Found it! Cache the dict index as a hint for next time:
-                        keyToFind._hint = (uint32_t)info.indexOf(key) / 2;
-                        return deref<WIDE>(val);
-                    }
-                    rawKeyToFind16 += kNarrow;      // offset to string increases as key advances
-                    rawKeyToFind32 += kWide;
-                    key = val->next<WIDE>();
-                }
-                return NULL;
-            }
-        }
-
-        // Can't use the encoded key, so fall back to binary search by string bytes:
-        auto key = (const value*) ::bsearch(&keyToFind._rawString, start, info.count,
-                                            2*width(WIDE), &keyCmp<WIDE>);
-        if (!key)
-            return NULL;
-
-        // Found it! Cache dict index and encoded key as optimizations for next time:
-        if (key->isPointer())
-            keyToFind._keyValue = deref<WIDE>(key);
-        keyToFind._hint = (uint32_t)info.indexOf(key) / 2;
-        return deref<WIDE>(key->next<WIDE>());
-    }
-
-    const value* dict::get(key &k) const {
-        arrayInfo info(this);
-        return info.wide ? get<true>(info, k) : get<false>(info, k);
+    const value* dict::get(key &keyToFind) const {
+        if (isWideArray())
+            return dictImpl<true>(this).get(keyToFind);
+        else
+            return dictImpl<false>(this).get(keyToFind);
     }
 
     dict::iterator::iterator(const dict* d)
