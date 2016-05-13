@@ -34,11 +34,11 @@ namespace fleece {
                 out << "]";
                 break;
             case kArrayTag: {
-                out << "Array[" << arrayCount() << "]";
+                out << "Array[" << asArray()->count() << "]";
                 break;
             }
             case kDictTag: {
-                out << "Dict[" << arrayCount() << "]";
+                out << "Dict[" << asDict()->count() << "]";
                 break;
             }
             default: { // Pointer:

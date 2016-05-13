@@ -33,7 +33,7 @@ namespace fleece {
     public:
 
         /** The number of items in the array. */
-        uint32_t count() const                      {return arrayCount();}
+        uint32_t count() const;
 
         /** Accesses an array item. Returns NULL for out of range index.
             If you're accessing a lot of items of the same array, it's faster to make an
@@ -70,6 +70,7 @@ namespace fleece {
 
             impl _a;
             const class value *_value;
+            
             friend class value;
         };
 
@@ -85,7 +86,7 @@ namespace fleece {
     class dict : public value {
     public:
         /** The number of items in the dictionary. */
-        uint32_t count() const                      {return arrayCount();}
+        uint32_t count() const;
 
         /** Looks up the value for a key, assuming the keys are sorted (as they are by default.) */
         const value* get(slice keyToFind) const;

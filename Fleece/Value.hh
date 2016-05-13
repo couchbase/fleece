@@ -154,16 +154,7 @@ namespace fleece {
         static const value* deref(const value *v, bool wide);
 
         template <bool WIDE>
-        static const value* deref(const value *v) {
-            if (v->isPointer()) {
-                v = derefPointer<WIDE>(v);
-                while (v->isPointer())
-                    v = derefPointer<true>(v);      // subsequent pointers must be wide
-            }
-            return v;
-        }
-
-
+        static const value* deref(const value *v);
 
         const value* next(bool wide) const
                                 {return offsetby(this, wide ? internal::kWide : internal::kNarrow);}
@@ -171,7 +162,6 @@ namespace fleece {
         const value* next() const       {return next(WIDE);}
 
         bool isWideArray() const {return (_byte[0] & 0x08) != 0;}
-        uint32_t arrayCount() const;
 
     private:
         value(internal::tags tag, int tiny, int byte1 = 0) {

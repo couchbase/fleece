@@ -40,7 +40,7 @@ namespace fleece {
     };
 
 
-#pragma mark - VALUE:
+#pragma mark - TYPE CHECK / CONVERSION:
 
     valueType value::type() const {
         auto t = tag();
@@ -197,8 +197,10 @@ namespace fleece {
         return (const dict*)this;
     }
 
+
 #pragma mark - VALIDATION:
 
+    
     const value* value::fromTrustedData(slice s) {
         // Root value is at the end of the data and is two bytes wide:
         assert(fromData(s) != NULL); // validate anyway, in debug builds; abort if invalid
@@ -250,7 +252,7 @@ namespace fleece {
         size_t size = dataSize();
         if (t == kArrayTag || t == kDictTag) {
             wide = isWideArray();
-            size_t itemCount = arrayCount();
+            size_t itemCount = ((const array*)this)->count();
             if (t == kDictTag)
                 itemCount *= 2;
             // Check that size fits:
@@ -289,17 +291,6 @@ namespace fleece {
             case kPointerTagFirst:
             default:            return 2;   // size might actually be 4; depends on context
         }
-    }
-
-
-#pragma mark - POINTERS:
-
-    const value* value::deref(const value *v, bool wide) {
-        while (v->isPointer()) {
-            v = derefPointer(v, wide);
-            wide = true;
-        }
-        return v;
     }
 
 }

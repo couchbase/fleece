@@ -16,6 +16,28 @@ namespace fleece {
     using namespace internal;
 
 
+    const value* value::deref(const value *v, bool wide) {
+        while (v->isPointer()) {
+            v = derefPointer(v, wide);
+            wide = true;                        // subsequent pointers must be wide
+        }
+        return v;
+    }
+
+    template <bool WIDE>
+    const value* value::deref(const value *v) {
+        if (v->isPointer()) {
+            v = derefPointer<WIDE>(v);
+            while (v->isPointer())
+                v = derefPointer<true>(v);      // subsequent pointers must be wide
+        }
+        return v;
+    }
+
+
+#pragma mark - ARRAY:
+
+
     array::impl::impl(const value* v) {
         first = (const value*)(&v->_byte[2]);
         wide = v->isWideArray();
@@ -53,14 +75,15 @@ namespace fleece {
     }
 
 
-    uint32_t value::arrayCount() const {
+
+    uint32_t array::count() const {
         return array::impl(this).count;
     }
-
 
     const value* array::get(uint32_t index) const {
         return impl(this)[index];
     }
+
 
 
     array::iterator::iterator(const array *a)
@@ -85,6 +108,7 @@ namespace fleece {
 
 
 #pragma mark - DICT:
+
 
     template <bool WIDE>
     struct dictImpl : public array::impl {
@@ -134,19 +158,16 @@ namespace fleece {
                 if (offset <= maxOffset && offsetAtEnd <= maxOffset) {
                     // OK, key value is in range so we can use it here, for a linear scan.
                     // Raw integer key we're looking for (in native byte order):
-                    auto rawKeyToFind16 = (uint16_t)((offset >> 1) | 0x8000);
-                    auto rawKeyToFind32 = (uint32_t)((offset >> 1) | 0x80000000);
-
+                    auto rawKeyToFind = (uint32_t)((offset >> 1) | kPtrMask);
                     while (key < end) {
                         const value *val = next(key);
-                        if (WIDE ? (_dec32(*(uint32_t*)key) == rawKeyToFind32)
-                                 : (_dec16(*(uint16_t*)key) == rawKeyToFind16)) {
+                        if (WIDE ? (_dec32(*(uint32_t*)key) == rawKeyToFind)
+                                 : (_dec16(*(uint16_t*)key) == (uint16_t)rawKeyToFind)) {
                             // Found it! Cache the dict index as a hint for next time:
                             keyToFind._hint = (uint32_t)indexOf(key) / 2;
                             return deref(val);
                         }
-                        rawKeyToFind16 += kNarrow;      // offset to string increases as key advances
-                        rawKeyToFind32 += kWide;
+                        rawKeyToFind += kWidth;      // offset to string increases as key advances
                         key = next(val);
                     }
                     return NULL;
@@ -181,11 +202,15 @@ namespace fleece {
         }
 
         static const size_t kWidth = (WIDE ? 4 : 2);
-
+        static const uint32_t kPtrMask = (WIDE ? 0x80000000 : 0x8000);
     };
 
 
 
+    uint32_t dict::count() const {
+        return array::impl(this).count;
+    }
+    
     const value* dict::get_unsorted(slice keyToFind) const {
         if (isWideArray())
             return dictImpl<true>(this).get_unsorted(keyToFind);
@@ -206,6 +231,8 @@ namespace fleece {
         else
             return dictImpl<false>(this).get(keyToFind);
     }
+
+
 
     dict::iterator::iterator(const dict* d)
     :_a(d)
