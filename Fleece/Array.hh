@@ -13,21 +13,21 @@
 
 namespace fleece {
 
-    class dict;
+    class Dict;
 
-    /** A value that's an array. */
-    class array : public value {
+    /** A Value that's an array. */
+    class Array : public Value {
         struct impl {
-            const value* first;
+            const Value* first;
             uint32_t count;
             bool wide;
 
-            impl(const value*);
-            const value* second() const      {return first->next(wide);}
+            impl(const Value*);
+            const Value* second() const      {return first->next(wide);}
             bool next();
-            const value* firstValue() const  {return count ? value::deref(first, wide) : NULL;}
-            const value* operator[] (unsigned index) const;
-            size_t indexOf(const value *v) const;
+            const Value* firstValue() const  {return count ? Value::deref(first, wide) : NULL;}
+            const Value* operator[] (unsigned index) const;
+            size_t indexOf(const Value *v) const;
         };
 
     public:
@@ -38,23 +38,23 @@ namespace fleece {
         /** Accesses an array item. Returns NULL for out of range index.
             If you're accessing a lot of items of the same array, it's faster to make an
             iterator and use its sequential or random-access accessors. */
-        const value* get(uint32_t index) const;
+        const Value* get(uint32_t index) const;
 
         /** A stack-based array iterator */
         class iterator {
         public:
-            iterator(const array* a);
+            iterator(const Array* a);
 
             /** Returns the number of _remaining_ items. */
             uint32_t count() const                  {return _a.count;}
 
-            const class value* value() const        {return _value;}
-            operator const class value* const ()    {return _value;}
-            const class value* operator-> ()        {return _value;}
+            const Value* value() const        {return _value;}
+            operator const Value* const ()    {return _value;}
+            const Value* operator-> ()        {return _value;}
 
             /** Random access to items. Index is relative to the current item.
                 This is very fast, faster than array::get(). */
-            const class value* operator[] (unsigned i) {return _a[i];}
+            const Value* operator[] (unsigned i) {return _a[i];}
 
             /** Returns false when the iterator reaches the end. */
             explicit operator bool() const          {return _a.count > 0;}
@@ -66,39 +66,39 @@ namespace fleece {
             iterator& operator += (uint32_t);
 
         private:
-            const class value* rawValue()           {return _a.first;}
+            const Value* rawValue()           {return _a.first;}
 
             impl _a;
-            const class value *_value;
+            const Value *_value;
             
-            friend class value;
+            friend class Value;
         };
 
         iterator begin() const                      {return iterator(this);}
 
-        friend class value;
-        friend class dict;
+        friend class Value;
+        friend class Dict;
         template <bool WIDE> friend class dictImpl;
     };
 
 
-    /** A value that's a dictionary/map */
-    class dict : public value {
+    /** A Value that's a dictionary/map */
+    class Dict : public Value {
     public:
         /** The number of items in the dictionary. */
         uint32_t count() const;
 
-        /** Looks up the value for a key, assuming the keys are sorted (as they are by default.) */
-        const value* get(slice keyToFind) const;
+        /** Looks up the Value for a key, assuming the keys are sorted (as they are by default.) */
+        const Value* get(slice keyToFind) const;
 
-        /** Looks up the value for a key, without assuming the keys are sorted.
+        /** Looks up the Value for a key, without assuming the keys are sorted.
             This is slower than get(), but works even if the Fleece data was generated without
             sorted keys. */
-        const value* get_unsorted(slice key) const;
+        const Value* get_unsorted(slice key) const;
 
 #ifdef __OBJC__
-        /** Looks up the value for a key given as an NSString object. */
-        const value* get(NSString* key) const {
+        /** Looks up the Value for a key given as an NSString object. */
+        const Value* get(NSString* key) const {
             nsstring_slice keyBytes(key);
             return get(keyBytes);
         }
@@ -107,13 +107,13 @@ namespace fleece {
         /** A stack-based dictionary iterator */
         class iterator {
         public:
-            iterator(const dict*);
+            iterator(const Dict*);
 
             /** Returns the number of _remaining_ items. */
             uint32_t count() const                  {return _a.count;}
 
-            const value* key() const                {return _key;}
-            const value* value() const              {return _value;}
+            const Value* key() const                {return _key;}
+            const Value* value() const              {return _value;}
 
             /** Returns false when the iterator reaches the end. */
             explicit operator bool() const          {return _a.count > 0;}
@@ -126,17 +126,17 @@ namespace fleece {
 
         private:
             void readKV();
-            const class value* rawKey()             {return _a.first;}
-            const class value* rawValue()           {return _a.second();}
+            const Value* rawKey()             {return _a.first;}
+            const Value* rawValue()           {return _a.second();}
 
-            array::impl _a;
-            const class value *_key, *_value;
-            friend class value;
+            Array::impl _a;
+            const Value *_key, *_value;
+            friend class Value;
         };
         
         iterator begin() const                      {return iterator(this);}
 
-        /** An abstracted key for dictionaries. It will cache the key as an encoded value, and it
+        /** An abstracted key for dictionaries. It will cache the key as an encoded Value, and it
             will cache the index at which the key was last found, which speeds up succssive
             lookups.
             Warning: An instance of this should be used only on a single thread, and only with
@@ -144,20 +144,20 @@ namespace fleece {
         class key {
         public:
             key(slice rawString)                    :_rawString(rawString) { }
-            const value* asValue() const            {return _keyValue;}
+            const Value* asValue() const            {return _keyValue;}
         private:
             slice const _rawString;
-            const value* _keyValue  {nullptr};
+            const Value* _keyValue  {nullptr};
             uint32_t _hint          {0xFFFFFFFF};
 
             template <bool WIDE> friend struct dictImpl;
         };
 
-        /** Looks up the value for a key, in a form that can cache the key's Fleece object.
+        /** Looks up the Value for a key, in a form that can cache the key's Fleece object.
             Using the Fleece object is significantly faster than a normal get. */
-        const value* get(key&) const;
+        const Value* get(key&) const;
 
-        friend class value;
+        friend class Value;
     };
 
 }

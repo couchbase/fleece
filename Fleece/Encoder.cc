@@ -45,12 +45,12 @@ namespace fleece {
         if (_items->size() > 0) {
             checkPointerWidths(_items);
             fixPointers(_items);
-            value &root = (*_items)[0];
+            Value &root = (*_items)[0];
             if (_items->wide) {
                 _out.write(&root, kWide);
-                // Top level value is 4 bytes, so append a 2-byte pointer to it, because the trailer
-                // needs to be a 2-byte value:
-                value ptr(4, kNarrow);
+                // Top level Value is 4 bytes, so append a 2-byte pointer to it, because the trailer
+                // needs to be a 2-byte Value:
+                Value ptr(4, kNarrow);
                 _out.write(&ptr, kNarrow);
             } else {
                 _out.write(&root, kNarrow);
@@ -87,7 +87,7 @@ namespace fleece {
 
 #pragma mark - WRITING:
 
-    void Encoder::addItem(value v) {
+    void Encoder::addItem(Value v) {
         if (_blockedOnKey)
             throw "need a key before this value";
         if (_writingKey) {
@@ -105,7 +105,7 @@ namespace fleece {
         if (canInline && size <= 4) {
             if (size < 4)
                 memset(&buf[size], 0, 4-size); // zero unused bytes
-            addItem(*(value*)buf);
+            addItem(*(Value*)buf);
             if (size > 2)
                 _items->wide = true;
         } else {
@@ -117,12 +117,12 @@ namespace fleece {
 
 #pragma mark - SCALARS:
 
-    void Encoder::writeNull()              {addItem(value(kSpecialTag, kSpecialValueNull));}
-    void Encoder::writeBool(bool b)        {addItem(value(kSpecialTag, b ? kSpecialValueTrue
+    void Encoder::writeNull()              {addItem(Value(kSpecialTag, kSpecialValueNull));}
+    void Encoder::writeBool(bool b)        {addItem(Value(kSpecialTag, b ? kSpecialValueTrue
                                                                          : kSpecialValueFalse));}
     void Encoder::writeInt(uint64_t i, bool isSmall, bool isUnsigned) {
         if (isSmall) {
-            addItem(value(kShortIntTag, (i >> 8) & 0x0F, i & 0xFF));
+            addItem(Value(kShortIntTag, (i >> 8) & 0x0F, i & 0xFF));
         } else {
             byte buf[10];
             size_t size = PutIntOfLength(&buf[1], i, isUnsigned);
@@ -247,9 +247,9 @@ namespace fleece {
 #pragma mark - POINTERS:
 
     // Pointers are added here as absolute positions in the stream (and fixed up before writing)
-    void Encoder::writePointer(size_t p)   {addItem(value(p, kWide));}
+    void Encoder::writePointer(size_t p)   {addItem(Value(p, kWide));}
 
-    // Check whether any pointers in _items can't fit in a narrow value:
+    // Check whether any pointers in _items can't fit in a narrow Value:
     void Encoder::checkPointerWidths(valueArray *items) {
         if (!items->wide) {
             size_t base = nextWritePos();
@@ -275,7 +275,7 @@ namespace fleece {
                 size_t pos = v->pointerValue<true>();
                 assert(pos < base);
                 pos = base - pos;
-                *v = value(pos, width);
+                *v = Value(pos, width);
             }
             base += width;
         }
@@ -345,7 +345,7 @@ namespace fleece {
         if (items->tag == kDictTag)
             count /= 2;
 
-        // Write the array header to the outer value:
+        // Write the array header to the outer Value:
         uint8_t buf[2 + kMaxVarintLen32];
         uint32_t inlineCount = std::min(count, (uint32_t)kLongArrayCount);
         buf[0] = (uint8_t)(inlineCount >> 8);
@@ -414,11 +414,11 @@ namespace fleece {
         for (unsigned i = 0; i < n; i++)
             indices[i] = base + i;
         ::qsort(indices, n, sizeof(indices[0]), &compareKeysByIndex);
-        // indices[i] is now a pointer to the value that should go at index i
+        // indices[i] is now a pointer to the Value that should go at index i
 
         // Now rewrite items according to the permutation in indices:
-        value *old = (value*) alloca(2*n * sizeof(value));
-        memcpy(old, &items[0], 2*n * sizeof(value));
+        Value *old = (Value*) alloca(2*n * sizeof(Value));
+        memcpy(old, &items[0], 2*n * sizeof(Value));
         for (size_t i = 0; i < n; i++) {
             auto j = indices[i] - base;
             if ((ssize_t)i != j) {
@@ -431,7 +431,7 @@ namespace fleece {
     // Writes an array of strings, containing all the strings that have appeared as dictionary keys
     // so far. The array is structured as a hash table; it's literally organized as a dump of a
     // StringTable. That means that a reader can use the same hash function and algorithm as
-    // StringTable to very quickly convert a platform string to a Fleece value.
+    // StringTable to very quickly convert a platform string to a Fleece Value.
     void Encoder::writeKeyTable() {
         StringTable keys;
         for (auto iter = _strings.begin(); iter != _strings.end(); ++iter) {

@@ -16,7 +16,7 @@
 namespace fleece {
     using namespace internal;
 
-    void value::writeDumpBrief(std::ostream &out, const void *base, bool wide) const {
+    void Value::writeDumpBrief(std::ostream &out, const void *base, bool wide) const {
         if (tag() >= kPointerTagFirst)
             out << "&";
         switch (tag()) {
@@ -56,7 +56,7 @@ namespace fleece {
     }
 
     // writes an ASCII dump of this value and its contained values (NOT following pointers).
-    void value::dump(std::ostream &out, bool wide, int indent, const void *base) const {
+    void Value::dump(std::ostream &out, bool wide, int indent, const void *base) const {
         size_t pos = _byte - (uint8_t*)base;
         char buf[64];
         sprintf(buf, "%04zx: %02x %02x", pos, _byte[0], _byte[1]);
@@ -100,7 +100,7 @@ namespace fleece {
 
 
     // Recursively adds addresses of v and its children to byAddress map
-    void value::mapAddresses(mapByAddress &byAddress) const {
+    void Value::mapAddresses(mapByAddress &byAddress) const {
         byAddress[(size_t)this] = this;
         switch (type()) {
             case kArray:
@@ -122,7 +122,7 @@ namespace fleece {
         }
     }
 
-    bool value::dump(slice data, std::ostream &out) {
+    bool Value::dump(slice data, std::ostream &out) {
         auto root = fromData(data);
         if (!root)
             return false;
@@ -131,7 +131,7 @@ namespace fleece {
         root->mapAddresses(byAddress);
 
         // add the root pointer explicitly (`root` has been derefed already)
-        auto actualRoot = (const value*)offsetby(data.buf, data.size - internal::kNarrow);
+        auto actualRoot = (const Value*)offsetby(data.buf, data.size - internal::kNarrow);
         if (actualRoot != root)
             actualRoot->mapAddresses(byAddress);
         // Dump them ordered by address:
@@ -141,7 +141,7 @@ namespace fleece {
         return true;
     }
 
-    std::string value::dump(slice data) {
+    std::string Value::dump(slice data) {
         std::stringstream out;
         dump(data, out);
         return out.str();

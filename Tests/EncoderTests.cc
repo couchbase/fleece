@@ -45,7 +45,7 @@ public:
     }
 
     void checkReadBool(bool b) {
-        auto v = value::fromData(result);
+        auto v = Value::fromData(result);
         Assert(v != NULL);
         Assert(v->type() == kBoolean);
         AssertEqual(v->asBool(), b);
@@ -53,7 +53,7 @@ public:
     }
 
     void checkRead(int64_t i) {
-        auto v = value::fromData(result);
+        auto v = Value::fromData(result);
         Assert(v != NULL);
         Assert(v->type() == kNumber);
         Assert(v->isInteger());
@@ -63,7 +63,7 @@ public:
     }
 
     void checkReadU(uint64_t i) {
-        auto v = value::fromData(result);
+        auto v = Value::fromData(result);
         Assert(v->type() == kNumber);
         Assert(v->isInteger());
         Assert(v->isUnsigned());
@@ -72,7 +72,7 @@ public:
     }
 
     void checkReadFloat(float f) {
-        auto v = value::fromData(result);
+        auto v = Value::fromData(result);
         Assert(v != NULL);
         Assert(v->type() == kNumber);
         Assert(!v->isDouble());
@@ -82,7 +82,7 @@ public:
     }
 
     void checkReadDouble(double f) {
-        auto v = value::fromData(result);
+        auto v = Value::fromData(result);
         Assert(v != NULL);
         Assert(v->type() == kNumber);
         AssertEqual(v->asInt(), (int64_t)round(f));
@@ -91,14 +91,14 @@ public:
     }
 
     void checkReadString(const char *str) {
-        auto v = value::fromData(result);
+        auto v = Value::fromData(result);
         Assert(v != NULL);
         Assert(v->type() == kString);
         AssertEqual(v->asString(), slice(str, strlen(str)));
     }
 
-    const array* checkArray(uint32_t count) {
-        auto v = value::fromData(result);
+    const Array* checkArray(uint32_t count) {
+        auto v = Value::fromData(result);
         Assert(v != NULL);
         Assert(v->type() == kArray);
         auto a = v->asArray();
@@ -107,8 +107,8 @@ public:
         return a;
     }
 
-    const dict* checkDict(uint32_t count) {
-        auto v = value::fromData(result);
+    const Dict* checkDict(uint32_t count) {
+        auto v = Value::fromData(result);
         Assert(v != NULL);
         Assert(v->type() == kDict);
         auto d = v->asDict();
@@ -121,7 +121,7 @@ public:
 
     void testPointer() {
         uint8_t data[2] = {0x80, 0x02};
-        auto v = (const value*)data;
+        auto v = (const Value*)data;
         AssertEqual(v->pointerValue<false>(), 4u);
     }
 
@@ -237,7 +237,7 @@ public:
             AssertEqual(v->asString(), slice("hello"));
 
             // Now use an iterator:
-            array::iterator iter(a);
+            Array::iterator iter(a);
             Assert(iter);
             AssertEqual(iter->type(), kString);
             AssertEqual(iter->asString(), slice("a"));
@@ -304,7 +304,7 @@ public:
             auto v = d->get(slice("f"));
             Assert(v);
             AssertEqual(v->asInt(), 42ll);
-            AssertEqual(d->get(slice("barrr")), (const value*)NULL);
+            AssertEqual(d->get(slice("barrr")), (const Value*)NULL);
             AssertEqual(d->toJSON(), alloc_slice("{\"f\":42}"));
         }
         {
@@ -317,7 +317,7 @@ public:
             auto v = d->get(slice("foo"));
             Assert(v);
             AssertEqual(v->asInt(), 42ll);
-            AssertEqual(d->get(slice("barrr")), (const value*)NULL);
+            AssertEqual(d->get(slice("barrr")), (const Value*)NULL);
             AssertEqual(d->toJSON(), alloc_slice("{\"foo\":42}"));
         }
     }
@@ -407,7 +407,7 @@ public:
         JSONConverter j(enc);
         j.convertJSON(slice(json));
         endEncoding();
-        std::string dumped = value::dump(result);
+        std::string dumped = Value::dump(result);
         //std::cerr << dumped;
         AssertEqual(dumped, std::string(
             "0000: 43 66 6f 6f : \"foo\"\n"
@@ -459,9 +459,9 @@ public:
                     totalMisses += misses;
                 }
                 totalStrLength += iter->size;
-                if (iter.value().usedAsKey)
+                if (iter.Value().usedAsKey)
                     totalKeys++;
-                fprintf(stderr, "\t%5X: (%08X%s) `%.*s` --> %u\n", i, hash, x, (int)iter->size, iter->buf, iter.value().offset);
+                fprintf(stderr, "\t%5X: (%08X%s) `%.*s` --> %u\n", i, hash, x, (int)iter->size, iter->buf, iter.Value().offset);
             } else {
                 fprintf(stderr, "\t%5X: ----\n", i);
             }
@@ -492,27 +492,27 @@ public:
 
     void testFindPersonByIndexUnsorted() {
         mmap_slice doc(kTestFilesDir "1000people.fleece");
-        auto root = value::fromTrustedData(doc)->asArray();
+        auto root = Value::fromTrustedData(doc)->asArray();
         auto person = root->get(123)->asDict();
-        const value *name = person->get_unsorted(slice("name"));
+        const Value *name = person->get_unsorted(slice("name"));
         std::string nameStr = (std::string)name->asString();
         AssertEqual(nameStr, std::string("Concepcion Burns"));
     }
 
     void testFindPersonByIndexSorted() {
         mmap_slice doc(kTestFilesDir "1000people.fleece");
-        auto root = value::fromTrustedData(doc)->asArray();
+        auto root = Value::fromTrustedData(doc)->asArray();
         auto person = root->get(123)->asDict();
-        const value *name = person->get(slice("name"));
+        const Value *name = person->get(slice("name"));
         std::string nameStr = (std::string)name->asString();
         AssertEqual(nameStr, std::string("Concepcion Burns"));
     }
 
     void testFindPersonByIndexKeyed() {
         {
-            dict::key nameKey(slice("name"));
+            Dict::key nameKey(slice("name"));
 
-            // First build a small non-wide dict:
+            // First build a small non-wide Dict:
             enc.beginArray();
                 enc.beginDictionary();
                     enc.writeKey("f");
@@ -536,17 +536,17 @@ public:
                 enc.endDictionary();
             enc.endArray();
             endEncoding();
-            auto smol = value::fromData(result)->asArray();
+            auto smol = Value::fromData(result)->asArray();
             lookupNameWithKey(smol->get(0)->asDict(), nameKey, "Concepcion Burns");
             lookupNameWithKey(smol->get(1)->asDict(), nameKey, "Carmen Miranda");
             Assert(smol->get(2)->asDict()->get(nameKey) == NULL);
         }
         {
-            // Now try a wide dict:
-            dict::key nameKey(slice("name"));
+            // Now try a wide Dict:
+            Dict::key nameKey(slice("name"));
 
             mmap_slice doc(kTestFilesDir "1000people.fleece");
-            auto root = value::fromTrustedData(doc)->asArray();
+            auto root = Value::fromTrustedData(doc)->asArray();
             auto person = root->get(123)->asDict();
             lookupNameWithKey(person, nameKey, "Concepcion Burns");
 
@@ -555,9 +555,9 @@ public:
         }
     }
 
-    void lookupNameWithKey(const dict* person, dict::key &nameKey, std::string expectedName) {
+    void lookupNameWithKey(const Dict* person, Dict::key &nameKey, std::string expectedName) {
         Assert(person);
-        const value *name = person->get(nameKey);
+        const Value *name = person->get(nameKey);
         Assert(name);
         std::string nameStr = (std::string)name->asString();
         AssertEqual(nameStr, expectedName);

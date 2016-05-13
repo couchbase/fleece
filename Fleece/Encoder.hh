@@ -75,7 +75,7 @@ namespace fleece {
                             effect on the output but can speed up encoding slightly. */
         void beginArray(size_t reserve =0);
 
-        /** Ends creating an array. The array is written to the output and added as a value to
+        /** Ends creating an array. The array is written to the output and added as a Value to
             the next outermost collection (or made the root if there is no collection active.) */
         void endArray();
 
@@ -110,7 +110,7 @@ namespace fleece {
 
     private:
         // Stores the pending values to be written to an in-progress array/dict
-        class valueArray : public std::vector<value> {
+        class valueArray : public std::vector<Value> {
         public:
             valueArray()                    { }
             void reset(internal::tags t)    {tag = t; wide = false; keys.clear();}
@@ -119,7 +119,7 @@ namespace fleece {
             std::vector<slice> keys;
         };
 
-        void addItem(value v);
+        void addItem(Value v);
         void writeValue(internal::tags, uint8_t buf[], size_t size, bool canInline =true);
         void writePointer(size_t pos);
         void writeSpecial(uint8_t special);
@@ -149,7 +149,7 @@ namespace fleece {
         StringTable _strings;        // Maps strings to the offsets where they appear as values
         bool _uniqueStrings {true};  // Should strings be uniqued before writing?
         bool _sortKeys      {true};  // Should dictionary keys be sorted?
-        bool _writingKey    {false}; // True if value being written is a key
+        bool _writingKey    {false}; // True if Value being written is a key
         bool _blockedOnKey  {false}; // True if writes should be refused
 
         friend class EncoderTests;

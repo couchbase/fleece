@@ -27,8 +27,8 @@
 
 namespace fleece {
 
-    class array;
-    class dict;
+    class Array;
+    class Dict;
     class Writer;
 
 
@@ -45,16 +45,16 @@ namespace fleece {
 
 
     /* An encoded data value */
-    class value {
+    class Value {
     public:
 
         /** Returns a pointer to the root value in the encoded data.
             Validates the data first; if it's invalid, returns NULL. */
-        static const value* fromData(slice);
+        static const Value* fromData(slice);
 
         /** Returns a pointer to the root value in the encoded data, without validating.
             This is a lot faster, but "undefined behavior" occurs if the data is corrupt... */
-        static const value* fromTrustedData(slice s);
+        static const Value* fromTrustedData(slice s);
 
         /** The overall type of a value (JSON types plus Data) */
         valueType type() const;
@@ -93,11 +93,11 @@ namespace fleece {
         /** Returns the exact contents of a string or data. Other types return a null slice. */
         slice asString() const;
 
-        /** If this value is an array, returns it cast to 'const array*', else returns NULL. */
-        const array* asArray() const;
+        /** If this value is an array, returns it cast to 'const Array*', else returns NULL. */
+        const Array* asArray() const;
 
-        /** If this value is an array, returns it cast to 'const array*', else returns NULL. */
-        const dict* asDict() const;
+        /** If this value is a dictionary, returns it cast to 'const Dict*', else returns NULL. */
+        const Dict* asDict() const;
 
         /** Converts any _non-collection_ type to string form. */
         std::string toString() const;
@@ -145,33 +145,33 @@ namespace fleece {
         }
 
         template <bool WIDE>
-        static const value* derefPointer(const value *v) {
+        static const Value* derefPointer(const Value *v) {
             return offsetby(v, -(ptrdiff_t)v->pointerValue<WIDE>());
         }
-        static const value* derefPointer(const value *v, bool wide) {
+        static const Value* derefPointer(const Value *v, bool wide) {
             return wide ? derefPointer<true>(v) : derefPointer<false>(v);
         }
-        static const value* deref(const value *v, bool wide);
+        static const Value* deref(const Value *v, bool wide);
 
         template <bool WIDE>
-        static const value* deref(const value *v);
+        static const Value* deref(const Value *v);
 
-        const value* next(bool wide) const
+        const Value* next(bool wide) const
                                 {return offsetby(this, wide ? internal::kWide : internal::kNarrow);}
         template <bool WIDE>
-        const value* next() const       {return next(WIDE);}
+        const Value* next() const       {return next(WIDE);}
 
         bool isWideArray() const {return (_byte[0] & 0x08) != 0;}
 
     private:
-        value(internal::tags tag, int tiny, int byte1 = 0) {
+        Value(internal::tags tag, int tiny, int byte1 = 0) {
             _byte[0] = (uint8_t)((tag<<4) | tiny);
             _byte[1] = (uint8_t)byte1;
             _byte[2] = _byte[3] = 0;
         }
 
         // pointer:
-        value(size_t offset, int width) {
+        Value(size_t offset, int width) {
             offset >>= 1;
             if (width < internal::kWide) {
                 if (offset >= 0x8000)
@@ -193,20 +193,20 @@ namespace fleece {
 
         // dump:
         size_t dataSize() const;
-        typedef std::map<size_t, const value*> mapByAddress;
+        typedef std::map<size_t, const Value*> mapByAddress;
         void mapAddresses(mapByAddress&) const;
         void dump(std::ostream &out, bool wide, int indent, const void *base) const;
         void writeDumpBrief(std::ostream &out, const void *base, bool wide =false) const;
 
-        static const value* fastValidate(slice);
+        static const Value* fastValidate(slice);
         bool validate(const void* dataStart, const void *dataEnd, bool wide) const;
 
         //////// Here's the data:
 
         uint8_t _byte[internal::kWide];
 
-        friend class array;
-        friend class dict;
+        friend class Array;
+        friend class Dict;
         friend class Encoder;
         friend class ValueTests;
         friend class EncoderTests;

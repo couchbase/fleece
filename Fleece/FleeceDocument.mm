@@ -16,16 +16,16 @@ using namespace fleece;
 
 
 @interface FleeceDictionary ()
-- (instancetype) initWithDict: (const fleece::dict*)dictValue
+- (instancetype) initWithDict: (const fleece::Dict*)dictValue
                      document: (FleeceDocument*)document;
-@property (readonly, nonatomic) const dict* fleeceDict;
+@property (readonly, nonatomic) const Dict* fleeceDict;
 @end
 
 
 @interface FleeceArray ()
-- (instancetype) initWithArray: (const fleece::array*)arrayValue
+- (instancetype) initWithArray: (const fleece::Array*)arrayValue
                       document: (FleeceDocument*)document;
-@property (readonly, nonatomic) const array* fleeceArray;
+@property (readonly, nonatomic) const Array* fleeceArray;
 @end
 
 
@@ -47,8 +47,8 @@ using namespace fleece;
     if (self) {
         _fleeceData = [fleece copy];
         slice data(fleece);
-        const value *root = trusted ? value::fromTrustedData(data) : value::fromData(data);
-        _sharedStrings = value::createSharedStringsTable();
+        const Value *root = trusted ? Value::fromTrustedData(data) : Value::fromData(data);
+        _sharedStrings = Value::createSharedStringsTable();
         _root = [self objectForValue: root];
         if (!_root)
             return nil;
@@ -57,7 +57,7 @@ using namespace fleece;
 }
 
 
-- (id) objectForValue: (const value*)v {
+- (id) objectForValue: (const Value*)v {
     if (!v)
         return nil;
     switch (v->type()) {
@@ -84,7 +84,7 @@ using namespace fleece;
 
 + (id) objectWithFleeceBytes: (const void*)bytes length: (size_t)length trusted: (BOOL)trusted {
     slice s(bytes, length);
-    const value *root = trusted ? value::fromTrustedData(s) : value::fromData(s);
+    const Value *root = trusted ? Value::fromTrustedData(s) : Value::fromData(s);
     if (!root)
         return nil;
     auto type = root->type();
@@ -117,7 +117,7 @@ using namespace fleece;
 
 @implementation FleeceDictionary
 {
-    const dict* _dict;
+    const Dict* _dict;
     NSUInteger _count;
     FleeceDocument *_document;
 }
@@ -125,7 +125,7 @@ using namespace fleece;
 @synthesize fleeceDict=_dict;
 
 
-- (instancetype) initWithDict: (const dict*)dictValue
+- (instancetype) initWithDict: (const Dict*)dictValue
                      document: (UU FleeceDocument*)document
 {
     NSParameterAssert(dictValue);
@@ -146,7 +146,7 @@ using namespace fleece;
 
 - (NSMutableDictionary*) mutableCopy {
     NSMutableDictionary* m = [[NSMutableDictionary alloc] initWithCapacity: _count];
-    for (dict::iterator iter(_dict); iter; ++iter) {
+    for (Dict::iterator iter(_dict); iter; ++iter) {
         id key = [_document objectForValue: iter.key()];
         m[key] = [_document objectForValue: iter.value()];
     }
@@ -170,7 +170,7 @@ using namespace fleece;
 - (id) objectForKey: (UU id)key {
     if (![key isKindOfClass: [NSString class]])
         return nil;
-    const value* v = _dict->get((NSString*)key);
+    const Value* v = _dict->get((NSString*)key);
     return [_document objectForValue: v];
 }
 
@@ -178,8 +178,8 @@ using namespace fleece;
 #pragma mark ENUMERATION:
 
 
-- (void) forEachKey: (void(^)(NSString*, const value*, BOOL*))block {
-    for (dict::iterator iter(_dict); iter; ++iter) {
+- (void) forEachKey: (void(^)(NSString*, const Value*, BOOL*))block {
+    for (Dict::iterator iter(_dict); iter; ++iter) {
         BOOL stop = NO;
         block([_document objectForValue: iter.key()], iter.value(), &stop);
         if (stop)
@@ -190,7 +190,7 @@ using namespace fleece;
 
 - (NSArray*) allKeys {
     NSMutableArray* keys = [NSMutableArray arrayWithCapacity: _dict->count()];
-    [self forEachKey: ^(NSString *key, const value* v, BOOL* stop) {
+    [self forEachKey: ^(NSString *key, const Value* v, BOOL* stop) {
         [keys addObject: key];
     }];
     return keys;
@@ -203,7 +203,7 @@ using namespace fleece;
 
 
 - (void) enumerateKeysAndObjectsUsingBlock: (void (^)(UU id key, UU id obj, BOOL *stop))block {
-    [self forEachKey:^(NSString* key, const value* v, BOOL* stop) {
+    [self forEachKey:^(NSString* key, const Value* v, BOOL* stop) {
         if (v) {
             id object = [_document objectForValue: v];
             if (object)
@@ -246,7 +246,7 @@ using namespace fleece;
 // This is what the %@ substitution calls.
 - (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level {
     NSMutableString* desc = [@"{\n" mutableCopy];
-    [self forEachKey: ^(NSString *key, const value* v, BOOL *stop) {
+    [self forEachKey: ^(NSString *key, const Value* v, BOOL *stop) {
         NSString* valStr = (NSString*)v->toJSON();
         [desc appendFormat: @"    \"%@\": %@,\n", key, valStr];
     }];
@@ -265,7 +265,7 @@ using namespace fleece;
 
 @implementation FleeceArray
 {
-    const array* _array;
+    const Array* _array;
     NSUInteger _count;
     FleeceDocument *_document;
 }
@@ -273,7 +273,7 @@ using namespace fleece;
 @synthesize fleeceArray=_array;
 
 
-- (instancetype) initWithArray: (const fleece::array*)arrayValue
+- (instancetype) initWithArray: (const fleece::Array*)arrayValue
                       document: (UU FleeceDocument*)document
 {
     NSParameterAssert(arrayValue);
@@ -294,7 +294,7 @@ using namespace fleece;
 
 - (NSMutableArray*) mutableCopy {
     NSMutableArray* m = [[NSMutableArray alloc] initWithCapacity: _count];
-    for (array::iterator iter(_array); iter; ++iter) {
+    for (Array::iterator iter(_array); iter; ++iter) {
         [m addObject: [_document objectForValue: iter.value()]];
     }
     return m;

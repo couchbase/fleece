@@ -16,7 +16,7 @@ namespace fleece {
     using namespace internal;
 
 
-    const value* value::deref(const value *v, bool wide) {
+    const Value* Value::deref(const Value *v, bool wide) {
         while (v->isPointer()) {
             v = derefPointer(v, wide);
             wide = true;                        // subsequent pointers must be wide
@@ -25,7 +25,7 @@ namespace fleece {
     }
 
     template <bool WIDE>
-    const value* value::deref(const value *v) {
+    const Value* Value::deref(const Value *v) {
         if (v->isPointer()) {
             v = derefPointer<WIDE>(v);
             while (v->isPointer())
@@ -34,12 +34,16 @@ namespace fleece {
         return v;
     }
 
+    // Explicitly instantiate both needed versions:
+    template const Value* Value::deref<false>(const Value *v);
+    template const Value* Value::deref<true>(const Value *v);
+
 
 #pragma mark - ARRAY:
 
 
-    array::impl::impl(const value* v) {
-        first = (const value*)(&v->_byte[2]);
+    Array::impl::impl(const Value* v) {
+        first = (const Value*)(&v->_byte[2]);
         wide = v->isWideArray();
         count = v->shortValue() & 0x07FF;
         if (count == kLongArrayCount) {
@@ -52,7 +56,7 @@ namespace fleece {
         }
     }
 
-    bool array::impl::next() {
+    bool Array::impl::next() {
         if (count == 0)
             throw "iterating past end of array";
         if (--count == 0)
@@ -61,43 +65,43 @@ namespace fleece {
         return true;
     }
 
-    const value* array::impl::operator[] (unsigned index) const {
+    const Value* Array::impl::operator[] (unsigned index) const {
         if (index >= count)
             return NULL;
         if (wide)
-            return value::deref<true> (offsetby(first, kWide   * index));
+            return Value::deref<true> (offsetby(first, kWide   * index));
         else
-            return value::deref<false>(offsetby(first, kNarrow * index));
+            return Value::deref<false>(offsetby(first, kNarrow * index));
     }
 
-    size_t array::impl::indexOf(const value *v) const {
+    size_t Array::impl::indexOf(const Value *v) const {
         return ((size_t)v - (size_t)first) / width(wide);
     }
 
 
 
-    uint32_t array::count() const {
-        return array::impl(this).count;
+    uint32_t Array::count() const {
+        return Array::impl(this).count;
     }
 
-    const value* array::get(uint32_t index) const {
+    const Value* Array::get(uint32_t index) const {
         return impl(this)[index];
     }
 
 
 
-    array::iterator::iterator(const array *a)
+    Array::iterator::iterator(const Array *a)
     :_a(a),
      _value(_a.firstValue())
     { }
 
-    array::iterator& array::iterator::operator++() {
+    Array::iterator& Array::iterator::operator++() {
         _a.next();
         _value = _a.firstValue();
         return *this;
     }
 
-    array::iterator& array::iterator::operator += (uint32_t n) {
+    Array::iterator& Array::iterator::operator += (uint32_t n) {
         if (n > _a.count)
             throw "iterating past end of array";
         _a.count -= n;
@@ -111,16 +115,16 @@ namespace fleece {
 
 
     template <bool WIDE>
-    struct dictImpl : public array::impl {
+    struct dictImpl : public Array::impl {
 
-        dictImpl(const dict *d)
+        dictImpl(const Dict *d)
         :impl(d)
         { }
 
-        const value* get_unsorted(slice keyToFind) const {
-            const value *key = first;
+        const Value* get_unsorted(slice keyToFind) const {
+            const Value *key = first;
             for (uint32_t i = 0; i < count; i++) {
-                const value *val = next(key);
+                const Value *val = next(key);
                 if (keyToFind.compare(deref(key)->asString()) == 0)
                     return deref(val);
                 key = next(val);
@@ -128,19 +132,19 @@ namespace fleece {
             return NULL;
         }
 
-        inline const value* get(slice keyToFind) const {
-            auto key = (const value*) ::bsearch(&keyToFind, first, count, 2*kWidth, &keyCmp);
+        inline const Value* get(slice keyToFind) const {
+            auto key = (const Value*) ::bsearch(&keyToFind, first, count, 2*kWidth, &keyCmp);
             if (!key)
                 return NULL;
             return deref(next(key));
         }
 
-        const value* get(dict::key &keyToFind) const {
-            const value *start = first;
+        const Value* get(Dict::key &keyToFind) const {
+            const Value *start = first;
 
             // Use the index hint to possibly find the key in one probe:
             if (keyToFind._hint < count) {
-                const value *key  = offsetby(start, keyToFind._hint * 2 * kWidth);
+                const Value *key  = offsetby(start, keyToFind._hint * 2 * kWidth);
                 if ((keyToFind._keyValue && key->isPointer() && deref(key) == keyToFind._keyValue)
                         || (keyCmp(&keyToFind._rawString, key) == 0)) {
                     return deref(next(key));
@@ -150,17 +154,17 @@ namespace fleece {
 
             // Check whether there is a cached key and, if so, whether it would be used in this dict:
             if (keyToFind._keyValue && (keyToFind._rawString.size >= kWidth)) {
-                const value *key = start;
-                const value *end = offsetby(key, count*2*kWidth);
+                const Value *key = start;
+                const Value *end = offsetby(key, count*2*kWidth);
                 size_t maxOffset = (WIDE ?0xFFFFFFFF : 0xFFFF);
                 auto offset = (size_t)((uint8_t*)key - (uint8_t*)keyToFind._keyValue);
                 auto offsetAtEnd = (size_t)((uint8_t*)end - kWidth - (uint8_t*)keyToFind._keyValue);
                 if (offset <= maxOffset && offsetAtEnd <= maxOffset) {
-                    // OK, key value is in range so we can use it here, for a linear scan.
+                    // OK, key Value is in range so we can use it here, for a linear scan.
                     // Raw integer key we're looking for (in native byte order):
                     auto rawKeyToFind = (uint32_t)((offset >> 1) | kPtrMask);
                     while (key < end) {
-                        const value *val = next(key);
+                        const Value *val = next(key);
                         if (WIDE ? (_dec32(*(uint32_t*)key) == rawKeyToFind)
                                  : (_dec16(*(uint16_t*)key) == (uint16_t)rawKeyToFind)) {
                             // Found it! Cache the dict index as a hint for next time:
@@ -175,7 +179,7 @@ namespace fleece {
             }
 
             // Can't use the encoded key, so fall back to binary search by string bytes:
-            auto key = (const value*) ::bsearch(&keyToFind._rawString, start, count,
+            auto key = (const Value*) ::bsearch(&keyToFind._rawString, start, count,
                                                 2*kWidth, &keyCmp);
             if (!key)
                 return NULL;
@@ -188,16 +192,16 @@ namespace fleece {
         }
 
     private:
-        static inline const value* next(const value *v) {
+        static inline const Value* next(const Value *v) {
             return v->next<WIDE>();
         }
 
-        static inline const value* deref(const value *v) {
-            return value::deref<WIDE>(v);
+        static inline const Value* deref(const Value *v) {
+            return Value::deref<WIDE>(v);
         }
 
         static int keyCmp(const void* keyToFindP, const void* keyP) {
-            const value *key = deref((const value*)keyP);
+            const Value *key = deref((const Value*)keyP);
             return ((slice*)keyToFindP)->compare(key->asString());
         }
 
@@ -207,25 +211,25 @@ namespace fleece {
 
 
 
-    uint32_t dict::count() const {
-        return array::impl(this).count;
+    uint32_t Dict::count() const {
+        return Array::impl(this).count;
     }
     
-    const value* dict::get_unsorted(slice keyToFind) const {
+    const Value* Dict::get_unsorted(slice keyToFind) const {
         if (isWideArray())
             return dictImpl<true>(this).get_unsorted(keyToFind);
         else
             return dictImpl<false>(this).get_unsorted(keyToFind);
     }
 
-    const value* dict::get(slice keyToFind) const {
+    const Value* Dict::get(slice keyToFind) const {
         if (isWideArray())
             return dictImpl<true>(this).get(keyToFind);
         else
             return dictImpl<false>(this).get(keyToFind);
     }
 
-    const value* dict::get(key &keyToFind) const {
+    const Value* Dict::get(key &keyToFind) const {
         if (isWideArray())
             return dictImpl<true>(this).get(keyToFind);
         else
@@ -234,13 +238,13 @@ namespace fleece {
 
 
 
-    dict::iterator::iterator(const dict* d)
+    Dict::iterator::iterator(const Dict* d)
     :_a(d)
     {
         readKV();
     }
 
-    dict::iterator& dict::iterator::operator++() {
+    Dict::iterator& Dict::iterator::operator++() {
         if (_a.count == 0)
             throw "iterating past end of dict";
         --_a.count;
@@ -249,7 +253,7 @@ namespace fleece {
         return *this;
     }
 
-    dict::iterator& dict::iterator::operator += (uint32_t n) {
+    Dict::iterator& Dict::iterator::operator += (uint32_t n) {
         if (n > _a.count)
             throw "iterating past end of dict";
         _a.count -= n;
@@ -258,7 +262,7 @@ namespace fleece {
         return *this;
     }
 
-    void dict::iterator::readKV() {
+    void Dict::iterator::readKV() {
         if (_a.count) {
             _key   = deref(_a.first,                _a.wide);
             _value = deref(_a.first->next(_a.wide), _a.wide);

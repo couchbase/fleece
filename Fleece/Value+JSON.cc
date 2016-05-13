@@ -69,14 +69,14 @@ namespace fleece {
         out << '"';
     }
 
-    alloc_slice value::toJSON() const {
+    alloc_slice Value::toJSON() const {
         Writer writer;
         toJSON(writer);
         return writer.extractOutput();
     }
 
 
-    void value::toJSON(Writer &out) const {
+    void Value::toJSON(Writer &out) const {
         switch (type()) {
             case kNull:
                 out << slice("null");

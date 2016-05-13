@@ -100,13 +100,13 @@ int main(int argc, const char * argv[]) {
             auto output = writer.extractOutput();
             fwrite(output.buf, 1, output.size, stdout);
         } else if (decode) {
-            auto root = value::fromData(input);
+            auto root = Value::fromData(input);
             if (!root)
                 throw "Couldn't parse input as Fleece";
             auto json = root->toJSON();
             cout.write((char*)json.buf, json.size);
         } else if (dump) {
-            if (!value::dump(input, cout))
+            if (!Value::dump(input, cout))
                 throw "Couldn't parse input as Fleece";
         }
 

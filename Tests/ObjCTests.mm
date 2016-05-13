@@ -20,7 +20,7 @@ public:
         enc.write(obj);
         enc.end();
         auto result = writer.extractOutput();
-        auto v = value::fromData(result);
+        auto v = Value::fromData(result);
         Assert(v != NULL);
         AssertEqual(v->toJSON(), alloc_slice(json));
         Assert([v->toNSObject() isEqual: obj]);

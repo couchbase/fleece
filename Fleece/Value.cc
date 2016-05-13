@@ -42,7 +42,7 @@ namespace fleece {
 
 #pragma mark - TYPE CHECK / CONVERSION:
 
-    valueType value::type() const {
+    valueType Value::type() const {
         auto t = tag();
         if (t == kSpecialTag) {
             switch (tinyValue()) {
@@ -58,7 +58,7 @@ namespace fleece {
     }
 
 
-    bool value::asBool() const {
+    bool Value::asBool() const {
         switch (tag()) {
             case kSpecialTag:
                 return tinyValue() == kSpecialValueTrue;
@@ -69,7 +69,7 @@ namespace fleece {
         }
     }
 
-    int64_t value::asInt() const {
+    int64_t Value::asInt() const {
         switch (tag()) {
             case kSpecialTag:
                 return tinyValue() == kSpecialValueTrue;
@@ -100,11 +100,11 @@ namespace fleece {
     }
 
     // Explicitly instantiate both needed versions:
-    template float value::asFloatOfType<float>() const;
-    template double value::asFloatOfType<double>() const;
+    template float Value::asFloatOfType<float>() const;
+    template double Value::asFloatOfType<double>() const;
 
     template<typename T>
-    T value::asFloatOfType() const {
+    T Value::asFloatOfType() const {
         switch (tag()) {
             case kFloatTag: {
                 if (_byte[0] & 0x8) {
@@ -125,7 +125,7 @@ namespace fleece {
         }
     }
 
-    std::string value::toString() const {
+    std::string Value::toString() const {
         char buf[32], *str = buf;
         switch (tag()) {
             case kShortIntTag:
@@ -167,7 +167,7 @@ namespace fleece {
         return std::string(str);
     }
 
-    slice value::asString() const {
+    slice Value::asString() const {
         switch (tag()) {
             case kStringTag:
             case kBinaryTag: {
@@ -185,40 +185,40 @@ namespace fleece {
         }
     }
 
-    const array* value::asArray() const {
+    const Array* Value::asArray() const {
         if (tag() != kArrayTag)
             return NULL;
-        return (const array*)this;
+        return (const Array*)this;
     }
 
-    const dict* value::asDict() const {
+    const Dict* Value::asDict() const {
         if (tag() != kDictTag)
             return NULL;
-        return (const dict*)this;
+        return (const Dict*)this;
     }
 
 
 #pragma mark - VALIDATION:
 
     
-    const value* value::fromTrustedData(slice s) {
+    const Value* Value::fromTrustedData(slice s) {
         // Root value is at the end of the data and is two bytes wide:
         assert(fromData(s) != NULL); // validate anyway, in debug builds; abort if invalid
         auto root = fastValidate(s);
         return root ? deref<true>(root) : NULL;
     }
 
-    const value* value::fromData(slice s) {
+    const Value* Value::fromData(slice s) {
         auto root = fastValidate(s);
         if (root && !root->validate(s.buf, s.end(), true))
             root = NULL;
         return root;
     }
 
-    const value* value::fastValidate(slice s) {
+    const Value* Value::fastValidate(slice s) {
         if (s.size < kNarrow || (s.size % kNarrow))
             return NULL;
-        auto root = (const value*)offsetby(s.buf, s.size - internal::kNarrow);
+        auto root = (const Value*)offsetby(s.buf, s.size - internal::kNarrow);
         if (root->isPointer()) {
             // If the root is a pointer, sanity-check the destination:
             auto derefed = derefPointer<false>(root);
@@ -240,7 +240,7 @@ namespace fleece {
         return root;
     }
 
-    bool value::validate(const void *dataStart, const void *dataEnd, bool wide) const {
+    bool Value::validate(const void *dataStart, const void *dataEnd, bool wide) const {
         // First dereference a pointer:
         if (isPointer()) {
             auto derefed = derefPointer(this, wide);
@@ -252,7 +252,7 @@ namespace fleece {
         size_t size = dataSize();
         if (t == kArrayTag || t == kDictTag) {
             wide = isWideArray();
-            size_t itemCount = ((const array*)this)->count();
+            size_t itemCount = ((const Array*)this)->count();
             if (t == kDictTag)
                 itemCount *= 2;
             // Check that size fits:
@@ -260,9 +260,9 @@ namespace fleece {
             if (offsetby(this, size) > dataEnd)
                 return false;
 
-            // Check each array/dict element:
+            // Check each Array/Dict element:
             if (itemCount > 0) {
-                auto item = array::impl(this).first;
+                auto item = Array::impl(this).first;
                 while (itemCount-- > 0) {
                     auto second = item->next(wide);
                     if (!item->validate(dataStart, second, wide))
@@ -278,7 +278,7 @@ namespace fleece {
     }
 
     // This does not include the inline items in arrays/dicts
-    size_t value::dataSize() const {
+    size_t Value::dataSize() const {
         switch(tag()) {
             case kShortIntTag:
             case kSpecialTag:   return 2;
@@ -287,7 +287,7 @@ namespace fleece {
             case kStringTag:
             case kBinaryTag:    return (uint8_t*)asString().end() - (uint8_t*)this;
             case kArrayTag:
-            case kDictTag:      return (uint8_t*)array::impl(this).first - (uint8_t*)this;
+            case kDictTag:      return (uint8_t*)Array::impl(this).first - (uint8_t*)this;
             case kPointerTagFirst:
             default:            return 2;   // size might actually be 4; depends on context
         }

@@ -63,7 +63,7 @@ class PerfTests : public CppUnit::TestFixture {
             Benchmark bench;
             for (int i = 0; i < kIterations; i++) {
                 bench.start();
-                __unused auto root = value::fromData(doc)->asArray();
+                __unused auto root = Value::fromData(doc)->asArray();
                 Assert(root != NULL);
                 bench.stop();
             }
@@ -77,7 +77,7 @@ class PerfTests : public CppUnit::TestFixture {
             for (int i = 0; i < kIterations; i++) {
                 bench.start();
                 for (int j = 0; j < kIterationsPerSample; j++) {
-                    __unused auto root = value::fromTrustedData(doc)->asArray();
+                    __unused auto root = Value::fromTrustedData(doc)->asArray();
                     Assert(root != NULL);
                 }
                 bench.stop();
@@ -93,16 +93,16 @@ class PerfTests : public CppUnit::TestFixture {
 
         mmap_slice doc(kTestFilesDir "1000people.fleece");
 
-        dict::key nameKey(slice("name"));
+        Dict::key nameKey(slice("name"));
 
         fprintf(stderr, "Looking up one value, sorted=%d...\n", sort);
         for (int i = 0; i < kSamples; i++) {
             bench.start();
 
             for (int j = 0; j < kIterations; j++) {
-                auto root = value::fromTrustedData(doc)->asArray();
+                auto root = Value::fromTrustedData(doc)->asArray();
                 auto person = root->get(123)->asDict();
-                const value *name;
+                const Value *name;
                 switch (sort) {
                     case 0: name = person->get_unsorted(slice("name")); break;
                     case 1: name = person->get(slice("name")); break;

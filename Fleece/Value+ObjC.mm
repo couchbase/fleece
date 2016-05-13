@@ -20,7 +20,7 @@
 
 namespace fleece {
 
-    NSMapTable* value::createSharedStringsTable() {
+    NSMapTable* Value::createSharedStringsTable() {
         return [[NSMapTable alloc] initWithKeyOptions: NSPointerFunctionsOpaquePersonality |
                                                        NSPointerFunctionsOpaqueMemory
                                          valueOptions: NSPointerFunctionsStrongMemory
@@ -28,7 +28,7 @@ namespace fleece {
     }
 
 
-    id value::toNSObject(__unsafe_unretained NSMapTable *sharedStrings) const
+    id Value::toNSObject(__unsafe_unretained NSMapTable *sharedStrings) const
     {
         switch (type()) {
             case kNull:
@@ -87,7 +87,7 @@ namespace fleece {
                 return result;
             }
             case kDict: {
-                dict::iterator iter(asDict());
+                Dict::iterator iter(asDict());
                 auto result = [[NSMutableDictionary alloc] initWithCapacity: iter.count()];
                 for (; iter; ++iter) {
                     NSString* key = iter.key()->toNSObject(sharedStrings);
