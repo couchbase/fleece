@@ -13,6 +13,7 @@
 #include "Array.hh"
 #include "Encoder.hh"
 #include "Writer.hh"
+#include <math.h>
 #include <ostream>
 #include <time.h>
 

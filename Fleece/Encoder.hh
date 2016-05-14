@@ -19,9 +19,6 @@
 #include "Value.hh"
 #include "Writer.hh"
 #include "StringTable.hh"
-#include <ctime>
-#include <iostream>
-#include <unordered_map>
 
 
 namespace fleece {
@@ -31,8 +28,6 @@ namespace fleece {
     public:
         /** Constructs an encoder. */
         Encoder(size_t reserveOutputSize =256);
-
-        Encoder(Encoder&&);  // Move constructor
 
         /** Sets the uniqueStrings property. If true (the default), the encoder tries to write
             each unique string only once. This saves space but makes the encoder slightly slower. */
@@ -138,6 +133,7 @@ namespace fleece {
         void writeKeyTable();
 
         Encoder(const Encoder&) = delete;
+        Encoder& operator=(const Encoder&) = delete;
 
         //////// Data members:
 

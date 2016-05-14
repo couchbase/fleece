@@ -10,7 +10,6 @@
 #define stringTable_hh
 
 #include "slice.hh"
-#include <utility>
 
 namespace fleece {
 
