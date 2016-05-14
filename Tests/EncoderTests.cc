@@ -14,20 +14,19 @@ namespace fleece {
 class EncoderTests : public CppUnit::TestFixture {
 public:
     EncoderTests()
-    :enc(writer)
+    :enc()
     { }
 
     ~EncoderTests() {
         enc.reset();
     }
 
-    Writer writer;
     Encoder enc;
     alloc_slice result;
 
     void endEncoding() {
         enc.end();
-        result = writer.extractOutput();
+        result = enc.extractOutput();
         enc.reset();
     }
 
@@ -476,7 +475,7 @@ public:
 #endif
 
         enc.end();
-        result = writer.extractOutput();
+        result = enc.extractOutput();
 
         Assert(result.buf);
         writeToFile(result, kTestFilesDir "1000people.fleece");

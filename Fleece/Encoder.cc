@@ -27,8 +27,8 @@ namespace fleece {
 
     using namespace internal;
 
-    Encoder::Encoder(Writer &out)
-    :_out(out),
+    Encoder::Encoder(size_t reserveSize)
+    :_out(reserveSize),
      _strings(100)
     {
         push(kSpecialTag, 1);                   // Top-level 'array' is just a single item
@@ -59,6 +59,11 @@ namespace fleece {
         }
         _items = NULL;
         _stackDepth = 0;
+    }
+
+    alloc_slice Encoder::extractOutput() {
+        end();
+        return _out.extractOutput();
     }
 
     // Returns position in the stream of the next write. Pads stream to even pos if necessary.

@@ -29,13 +29,10 @@ namespace fleece {
     /** Generates Fleece-encoded data. */
     class Encoder {
     public:
-        /** Constructs an encoder that will write to the given Writer. */
-        Encoder(Writer&);
+        /** Constructs an encoder. */
+        Encoder(size_t reserveOutputSize =256);
 
         Encoder(Encoder&&);  // Move constructor
-
-        /** Returns the Writer that the encoded data is written to. */
-        Writer& writer() const          {return _out;}
 
         /** Sets the uniqueStrings property. If true (the default), the encoder tries to write
             each unique string only once. This saves space but makes the encoder slightly slower. */
@@ -47,6 +44,9 @@ namespace fleece {
 
         /** Ends encoding, writing the last of the data to the Writer. */
         void end();
+
+        /** Returns the encoded data. This implicitly calls end(). */
+        alloc_slice extractOutput();
 
         /** Resets the encoder so it can be used again. This creates a new empty Writer,
             which can be accessed via the writer() method. */
@@ -137,12 +137,11 @@ namespace fleece {
         // experimental, may become public in some form
         void writeKeyTable();
 
-        Encoder() = delete;
         Encoder(const Encoder&) = delete;
 
         //////// Data members:
 
-        Writer& _out;           // Where output is written to
+        Writer _out;            // Where output is written to
         valueArray *_items;     // Values of the currently-open array/dict; == &_stack[_stackDepth]
         std::vector<valueArray> _stack; // Stack of open arrays/dicts
         unsigned _stackDepth {0};    // Current depth of _stack

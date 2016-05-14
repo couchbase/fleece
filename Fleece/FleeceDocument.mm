@@ -98,11 +98,10 @@ using namespace fleece;
 
 + (NSData*) fleeceDataWithObject: (id)object {
     NSParameterAssert(object != nil);
-    Writer writer;
-    Encoder encoder(writer);
+    Encoder encoder;
     encoder.write(object);
     encoder.end();
-    return writer.extractOutput().convertToNSData();
+    return encoder.extractOutput().convertToNSData();
 }
 
 

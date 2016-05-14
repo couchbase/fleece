@@ -31,15 +31,14 @@ class PerfTests : public CppUnit::TestFixture {
         for (int i = 0; i < kSamples; i++) {
             bench.start();
             {
-                Writer writer(input.size);
-                Encoder e(writer);
+                Encoder e(input.size);
                 e.uniqueStrings(true);
                 e.sortKeys(kSortKeys);
                 JSONConverter jr(e);
 
                 jr.convertJSON(input);
                 e.end();
-                auto result = writer.extractOutput();
+                auto result = e.extractOutput();
                 if (i == kSamples-1)
                     lastResult = result;
             }

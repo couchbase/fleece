@@ -15,11 +15,10 @@ class ObjCTests : public CppUnit::TestFixture {
 public:
 
     void checkIt(id obj, const char* json) {
-        Writer writer;
-        Encoder enc(writer);
+        Encoder enc;
         enc.write(obj);
         enc.end();
-        auto result = writer.extractOutput();
+        auto result = enc.extractOutput();
         auto v = Value::fromData(result);
         Assert(v != NULL);
         AssertEqual(v->toJSON(), alloc_slice(json));
