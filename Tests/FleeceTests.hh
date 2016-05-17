@@ -31,6 +31,7 @@ using namespace fleece;
 std::ostream& operator<< (std::ostream& o, slice s);
 
 std::string sliceToHex(slice);
+std::string sliceToHexDump(slice, size_t width = 16);
 
 
 alloc_slice readFile(const char *path);

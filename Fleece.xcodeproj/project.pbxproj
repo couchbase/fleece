@@ -36,6 +36,8 @@
 		278163B51CE69CA800B94E32 /* Fleece_C_impl.cc in Sources */ = {isa = PBXBuildFile; fileRef = 278163B31CE69CA800B94E32 /* Fleece_C_impl.cc */; settings = {COMPILER_FLAGS = "-Wno-return-type-c-linkage"; }; };
 		278163B61CE69CA800B94E32 /* Fleece.h in Headers */ = {isa = PBXBuildFile; fileRef = 278163B41CE69CA800B94E32 /* Fleece.h */; };
 		278163B91CE6BB8C00B94E32 /* C_Test.c in Sources */ = {isa = PBXBuildFile; fileRef = 278163B81CE6BB8C00B94E32 /* C_Test.c */; };
+		278163BC1CE7A72300B94E32 /* KeyTree.cc in Sources */ = {isa = PBXBuildFile; fileRef = 278163BA1CE7A72300B94E32 /* KeyTree.cc */; };
+		278163BD1CE7A72300B94E32 /* KeyTree.hh in Headers */ = {isa = PBXBuildFile; fileRef = 278163BB1CE7A72300B94E32 /* KeyTree.hh */; };
 		2797BCAC1C0FBFDE00E5C991 /* StringTable.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2797BCAA1C0FBFDE00E5C991 /* StringTable.cc */; };
 		2797BCAD1C0FBFDE00E5C991 /* StringTable.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2797BCAB1C0FBFDE00E5C991 /* StringTable.hh */; };
 		2797BCD11C122E9200E5C991 /* FleeceDocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 2797BCCF1C122E9200E5C991 /* FleeceDocument.h */; };
@@ -46,6 +48,7 @@
 		279AC53C1C097941002C80DB /* Value+Dump.cc in Sources */ = {isa = PBXBuildFile; fileRef = 279AC53B1C097941002C80DB /* Value+Dump.cc */; };
 		27C4ACAC1CE5146500938365 /* Array.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27C4ACAA1CE5146500938365 /* Array.cc */; };
 		27C4ACAD1CE5146500938365 /* Array.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C4ACAB1CE5146500938365 /* Array.hh */; };
+		27EC8D5C1CEBA72E00199FE6 /* mn_wordlist.h in Sources */ = {isa = PBXBuildFile; fileRef = 27EC8D5B1CEBA72E00199FE6 /* mn_wordlist.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -124,6 +127,8 @@
 		278163B41CE69CA800B94E32 /* Fleece.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Fleece.h; sourceTree = "<group>"; };
 		278163B71CE6A07A00B94E32 /* Fleece.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Fleece.hh; sourceTree = "<group>"; };
 		278163B81CE6BB8C00B94E32 /* C_Test.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = C_Test.c; sourceTree = "<group>"; };
+		278163BA1CE7A72300B94E32 /* KeyTree.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = KeyTree.cc; sourceTree = "<group>"; };
+		278163BB1CE7A72300B94E32 /* KeyTree.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = KeyTree.hh; sourceTree = "<group>"; };
 		2797BCAA1C0FBFDE00E5C991 /* StringTable.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StringTable.cc; sourceTree = "<group>"; };
 		2797BCAB1C0FBFDE00E5C991 /* StringTable.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = StringTable.hh; sourceTree = "<group>"; };
 		2797BCCF1C122E9200E5C991 /* FleeceDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FleeceDocument.h; sourceTree = "<group>"; };
@@ -136,6 +141,7 @@
 		27C4AC961CDFFDA100938365 /* Performance.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = Performance.md; sourceTree = "<group>"; };
 		27C4ACAA1CE5146500938365 /* Array.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Array.cc; sourceTree = "<group>"; };
 		27C4ACAB1CE5146500938365 /* Array.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Array.hh; sourceTree = "<group>"; };
+		27EC8D5B1CEBA72E00199FE6 /* mn_wordlist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mn_wordlist.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -233,6 +239,8 @@
 				270FA2771BF53CEA005DCB13 /* varint.hh */,
 				270FA2711BF53CEA005DCB13 /* Writer.cc */,
 				270FA2721BF53CEA005DCB13 /* Writer.hh */,
+				278163BA1CE7A72300B94E32 /* KeyTree.cc */,
+				278163BB1CE7A72300B94E32 /* KeyTree.hh */,
 			);
 			name = Utilities;
 			sourceTree = "<group>";
@@ -264,6 +272,7 @@
 				27298E771C01A461000CFBA8 /* PerfTests.cc */,
 				272E5A5E1BF91DBE00848580 /* ObjCTests.mm */,
 				278163B81CE6BB8C00B94E32 /* C_Test.c */,
+				27EC8D5B1CEBA72E00199FE6 /* mn_wordlist.h */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -303,6 +312,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				27298E661C00F8A9000CFBA8 /* jsonsl.h in Headers */,
+				278163BD1CE7A72300B94E32 /* KeyTree.hh in Headers */,
 				27C4ACAD1CE5146500938365 /* Array.hh in Headers */,
 				2797BCAD1C0FBFDE00E5C991 /* StringTable.hh in Headers */,
 				270FA2831BF53CEA005DCB13 /* slice.hh in Headers */,
@@ -427,6 +437,7 @@
 				2797BCD21C122E9200E5C991 /* FleeceDocument.mm in Sources */,
 				270FA2821BF53CEA005DCB13 /* slice.cc in Sources */,
 				270FA2781BF53CEA005DCB13 /* Value.cc in Sources */,
+				278163BC1CE7A72300B94E32 /* KeyTree.cc in Sources */,
 				27298E801C04E665000CFBA8 /* Encoder.cc in Sources */,
 				27298E3C1C00F812000CFBA8 /* JSONConverter.cc in Sources */,
 				279AC53C1C097941002C80DB /* Value+Dump.cc in Sources */,
@@ -442,6 +453,7 @@
 			files = (
 				272E5A5D1BF800A100848580 /* EncoderTests.cc in Sources */,
 				272E5A521BF7FE7100848580 /* FleeceTests.cc in Sources */,
+				27EC8D5C1CEBA72E00199FE6 /* mn_wordlist.h in Sources */,
 				27298E781C01A461000CFBA8 /* PerfTests.cc in Sources */,
 				272E5A5F1BF91DBE00848580 /* ObjCTests.mm in Sources */,
 				279AC52B1C07776A002C80DB /* ValueTests.cpp in Sources */,

@@ -8,6 +8,8 @@
 
 #include "FleeceTests.hh"
 #include "JSONConverter.hh"
+#include "KeyTree.hh"
+#include "mn_wordlist.h"
 
 namespace fleece {
 
@@ -570,6 +572,68 @@ public:
         AssertEqual(nameStr, expectedName);
     }
 
+#pragma mark - KEY TREE:
+
+    void testKeyTree() {
+        char eeeeeeee[1024] = "";
+        memset(&eeeeeeee[0], 'e', sizeof(eeeeeeee)-1);
+
+#if 1
+        size_t n = sizeof(mn_words)/sizeof(char*);
+        const char* rawStrings[n];
+        memcpy(rawStrings, mn_words, sizeof(mn_words));
+        rawStrings[0] = eeeeeeee;
+#else
+        const char* rawStrings[] = {"alphabetically first", "bravo", "charlie", "delta", eeeeeeee,
+            "foxtrot", "ganon in pig form as slain by link at the end of ocarina of time", "hi",
+            "i", "jodhpur",
+            "kale is not one of my favorite vegetables, too bitter, though I respect its high vitamin/mineral content",
+            "lemon", "maxwell edison, majoring in medicine, calls her on the phone", "naomi",
+            "obey", "purple", "quorum", "roger", "snake", "tango", "umpqua", "vector", "whiskey",
+            "xerxes", "yellow", "zebra"};
+        size_t n = sizeof(rawStrings)/sizeof(char*);
+#endif
+        std::vector<slice> strings(n);
+        size_t totalLen = 0;
+        for (size_t i = 0; i < n; ++i) {
+            strings[i] = slice(rawStrings[i]);
+            totalLen += strings[i].size;
+        }
+
+        KeyTree keys = KeyTree::fromStrings(strings);
+        slice output = keys.encodedData();
+        std::cerr << "\n" << sliceToHexDump(output, 32);
+        std::cerr << "Size = " << output.size << "; that's " << output.size-totalLen << " bytes overhead for " << n << " strings, i.e." << (output.size-totalLen)/(double)n << " bytes/string.\n";
+
+        std::vector<bool> ids(n+1);
+        for (size_t i = 0; i < n; ++i) {
+            std::cerr << "Checking '" << rawStrings[i] << "' ... ";
+            unsigned id = keys[strings[i]];
+            std::cerr << id << " ... ";
+            Assert(id);
+            Assert(!ids[id]);
+            ids[id] = true;
+
+            slice lookup = keys[id];
+            std::cerr << lookup << "\n";
+            Assert(lookup.buf);
+            AssertEqual(lookup, strings[i]);
+        }
+
+        Assert(keys[slice("")] == 0);
+        Assert(keys[slice("foo")] == 0);
+        Assert(keys[slice("~")] == 0);
+        Assert(keys[slice("whiske")] == 0);
+        Assert(keys[slice("whiskex")] == 0);
+        Assert(keys[slice("whiskez")] == 0);
+
+        Assert(keys[0].buf == NULL);
+        Assert(keys[(unsigned)n+1].buf == NULL);
+        Assert(keys[(unsigned)n+2].buf == NULL);
+        Assert(keys[(unsigned)n+28].buf == NULL);
+        Assert(keys[(unsigned)9999].buf == NULL);
+    }
+
     CPPUNIT_TEST_SUITE( EncoderTests );
     CPPUNIT_TEST( testSpecial );
     CPPUNIT_TEST( testInts );
@@ -586,6 +650,7 @@ public:
     CPPUNIT_TEST( testFindPersonByIndexUnsorted );
     CPPUNIT_TEST( testFindPersonByIndexSorted );
     CPPUNIT_TEST( testFindPersonByIndexKeyed );
+    CPPUNIT_TEST( testKeyTree );
     CPPUNIT_TEST_SUITE_END();
 };
 
