@@ -16,7 +16,7 @@
 extern "C" {
 #endif
 
-    // This is the C API. For the C++ API, see Fleece.hh.
+    // This is the C API! For the C++ API, see Fleece.hh.
 
 
     //////// TYPES
@@ -27,19 +27,24 @@ extern "C" {
     typedef const struct _FLDict*  FLDict;
     typedef struct _FLEncoder* FLEncoder;
 
+    /** A simple reference to a block of memory. Does not imply ownership. */
     typedef struct {
         const void *buf;
         size_t size;
     } FLSlice;
 #endif
 
+    /** A block of memory returned from a function. The caller assumes ownership, may modify the
+        bytes, and must call FLSliceFree when done. */
     typedef struct {
         void *buf;
         size_t size;
     } FLSliceResult;
 
+    /** Frees the memory of a FLSliceResult. */
     void FLSliceFree(FLSliceResult);
 
+    /** Types of Fleece values. Basically JSON, with the addition of Data (raw blob). */
     typedef enum {
         kFLNull = 0,
         kFLBoolean,
@@ -53,9 +58,17 @@ extern "C" {
 
     //////// VALUE
 
+    /** Returns a reference to the root value in the encoded data.
+        Validates the data first; if it's invalid, returns NULL.
+        Does NOT copy or take ownership of the data; the caller is responsible for keeping it
+        intact. Any changes to the data will invalidate any FLValues obtained from it. */
     FLValue FLValueFromData(FLSlice data);
+
+    /** Returns a pointer to the root value in the encoded data, without validating.
+        This is a lot faster, but "undefined behavior" occurs if the data is corrupt... */
     FLValue FLValueFromTrustedData(FLSlice data);
 
+    /** Produces a human-readable dump of the data. */
     FLSliceResult FLDataDump(FLSlice data);
 
     FLValueType FLValueGetType(FLValue);
@@ -72,7 +85,11 @@ extern "C" {
     FLArray FLValueAsArray(FLValue);
     FLDict FLValueAsDict(FLValue);
 
+    /** Returns a string representation of a value. Data values are returned in raw form.
+        Arrays and dictionaries don't have a representation and will return NULL. */
     FLSliceResult FLValueToString(FLValue);
+
+    /** Encodes a Fleece value as JSON (or a JSON fragment.) Data will be base64-encoded. */
     FLSliceResult FLValueToJSON(FLValue);
 
 
@@ -81,6 +98,8 @@ extern "C" {
     uint32_t FLArrayCount(FLArray);
     FLValue FLArrayGet(FLArray, uint32_t index);
 
+    /** Opaque dictionary iterator. Put one on the stack and pass its address to
+        FLArrayIteratorBegin. */
     typedef struct {
         void* _private1;
         uint32_t _private2;
@@ -88,6 +107,8 @@ extern "C" {
         void* _private4;
     } FLArrayIterator;
 
+    /** Initializes a FLArrayIterator struct to iterate over an array.
+        Call FLArrayIteratorGetValue to get the first item, then FLArrayIteratorNext. */
     void FLArrayIteratorBegin(FLArray, FLArrayIterator*);
     FLValue FLArrayIteratorGetValue(const FLArrayIterator*);
     bool FLArrayIteratorNext(FLArrayIterator*);
@@ -99,6 +120,8 @@ extern "C" {
     FLValue FLDictGet(FLDict, FLSlice keyString);
     FLValue FLDictGetUnsorted(FLDict, FLSlice keyString);
 
+    /** Opaque dictionary iterator. Put one on the stack and pass its address to
+        FLDictIteratorBegin. */
     typedef struct {
         void* _private1;
         uint32_t _private2;
@@ -112,6 +135,7 @@ extern "C" {
     FLValue FLDictIteratorGetValue(const FLDictIterator*);
     bool FLDictIteratorNext(FLDictIterator*);
 
+    /** Opaque key for a dictionary. Put one on the stack and pass its address to FLDictKeyInit. */
     typedef struct {
         void* _private1[3];
         uint32_t _private2;
@@ -146,7 +170,7 @@ extern "C" {
 
     FLSliceResult FLEncoderEnd(FLEncoder);
 
-    /** Directly converts JSON data to Fleece data. */
+    /** Directly converts JSON data to Fleece data. Error codes are actually jsonsl_error_t */
     FLSliceResult FLConvertJSON(FLSlice json, int *outError);
 
 

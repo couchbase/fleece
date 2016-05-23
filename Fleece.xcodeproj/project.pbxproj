@@ -95,7 +95,6 @@
 		270FA26B1BF53CEA005DCB13 /* Value.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Value.hh; sourceTree = "<group>"; };
 		270FA26C1BF53CEA005DCB13 /* Value+JSON.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "Value+JSON.cc"; sourceTree = "<group>"; };
 		270FA26D1BF53CEA005DCB13 /* Value+ObjC.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "Value+ObjC.mm"; sourceTree = "<group>"; };
-		270FA26E1BF53CEA005DCB13 /* Encoder_old.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Encoder_old.cc; sourceTree = "<group>"; };
 		270FA26F1BF53CEA005DCB13 /* Encoder.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Encoder.hh; sourceTree = "<group>"; };
 		270FA2701BF53CEA005DCB13 /* Encoder+ObjC.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "Encoder+ObjC.mm"; sourceTree = "<group>"; };
 		270FA2711BF53CEA005DCB13 /* Writer.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Writer.cc; sourceTree = "<group>"; };
@@ -212,7 +211,6 @@
 				270FA26C1BF53CEA005DCB13 /* Value+JSON.cc */,
 				279AC53B1C097941002C80DB /* Value+Dump.cc */,
 				270FA26D1BF53CEA005DCB13 /* Value+ObjC.mm */,
-				270FA26E1BF53CEA005DCB13 /* Encoder_old.cc */,
 				27298E7F1C04E665000CFBA8 /* Encoder.cc */,
 				270FA26F1BF53CEA005DCB13 /* Encoder.hh */,
 				270FA2701BF53CEA005DCB13 /* Encoder+ObjC.mm */,

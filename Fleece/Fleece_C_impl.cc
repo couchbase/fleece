@@ -82,7 +82,7 @@ FLValue FLArrayIteratorGetValue(const FLArrayIterator* i) {
 }
 
 bool FLArrayIteratorNext(FLArrayIterator* i) {
-    auto iter = *(Array::iterator*)i;
+    auto& iter = *(Array::iterator*)i;
     ++iter;
     return (bool)iter;
 }
@@ -104,7 +104,7 @@ FLValue FLDictIteratorGetValue(const FLDictIterator* i) {
     return ((Dict::iterator*)i)->value();
 }
 bool FLDictIteratorNext(FLDictIterator* i) {
-    auto iter = *(Dict::iterator*)i;
+    auto& iter = *(Dict::iterator*)i;
     ++iter;
     return (bool)iter;
 }

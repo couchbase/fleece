@@ -49,7 +49,9 @@ namespace fleece {
     public:
 
         /** Returns a pointer to the root value in the encoded data.
-            Validates the data first; if it's invalid, returns NULL. */
+            Validates the data first; if it's invalid, returns NULL.
+            Does NOT copy or take ownership of the data; the caller is responsible for keeping it
+            intact. Any changes to the data will invalidate any FLValues obtained from it. */
         static const Value* fromData(slice);
 
         /** Returns a pointer to the root value in the encoded data, without validating.
