@@ -8,8 +8,10 @@
 
 #include "FleeceTests.hh"
 #include "JSONConverter.hh"
-#include <assert.h>
 #include <unistd.h>
+
+#undef Assert
+#define Assert(X) ({if(!(X)) CPPUNIT_ASSERT(X);})
 
 using namespace fleece;
 
@@ -123,12 +125,65 @@ class PerfTests : public CppUnit::TestFixture {
     void testFindPersonByIndexSorted()      {if (kSortKeys) testFindPersonByIndex(1);}
     void testFindPersonByIndexKeyed()       {testFindPersonByIndex(2);}
 
+    void testLoadPeople(bool multiKeyGet) {
+        int kSamples = 50;
+        int kIterations = 100;
+        Benchmark bench;
+
+        mmap_slice doc(kTestFilesDir "1000people.fleece");
+
+        Dict::key keys[10] = {
+            Dict::key(slice("about")),
+            Dict::key(slice("age")),
+            Dict::key(slice("balance")),
+            Dict::key(slice("guid")),
+            Dict::key(slice("isActive")),
+            Dict::key(slice("latitude")),
+            Dict::key(slice("longitude")),
+            Dict::key(slice("name")),
+            Dict::key(slice("registered")),
+            Dict::key(slice("tags")),
+        };
+        Dict::sortKeys(keys, 10);
+
+        fprintf(stderr, "Looking up 1000 people, multi-key get=%d...\n", multiKeyGet);
+        for (int i = 0; i < kSamples; i++) {
+            bench.start();
+
+            for (int j = 0; j < kIterations; j++) {
+                auto root = Value::fromTrustedData(doc)->asArray();
+                for (Array::iterator iter(root); iter; ++iter) {
+                    const Dict *person = iter->asDict();
+                    size_t n = 0;
+                    if (multiKeyGet) {
+                        const Value* values[10];
+                        n = person->get(keys, values, 10);
+                    } else {
+                        for (int k = 0; k < 10; k++)
+                            if (person->get(keys[k]) != NULL)
+                                n++;
+                    }
+                    Assert(n == 10);
+                }
+            }
+
+            bench.stop();
+        }
+        bench.printReport(1e9 / 1000 / kIterations, "ns per person");
+    }
+
+    void testLoadPeople() {testLoadPeople(false);}
+    void testLoadPeopleFast() {testLoadPeople(true);}
+
     CPPUNIT_TEST_SUITE( PerfTests );
     CPPUNIT_TEST( testConvert1000People );
     CPPUNIT_TEST( testLoadFleece );
     CPPUNIT_TEST( testFindPersonByIndexUnsorted );
     CPPUNIT_TEST( testFindPersonByIndexSorted );
     CPPUNIT_TEST( testFindPersonByIndexKeyed );
+    CPPUNIT_TEST( testFindPersonByIndexKeyed );
+    CPPUNIT_TEST( testLoadPeople );
+    CPPUNIT_TEST( testLoadPeopleFast );
     CPPUNIT_TEST_SUITE_END();
 };
 

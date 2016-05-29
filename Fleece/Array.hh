@@ -18,14 +18,14 @@ namespace fleece {
     /** A Value that's an array. */
     class Array : public Value {
         struct impl {
-            const Value* first;
-            uint32_t count;
-            bool wide;
+            const Value* _first;
+            uint32_t _count;
+            bool _wide;
 
             impl(const Value*);
-            const Value* second() const      {return first->next(wide);}
+            const Value* second() const      {return _first->next(_wide);}
             bool next();
-            const Value* firstValue() const  {return count ? Value::deref(first, wide) : NULL;}
+            const Value* firstValue() const  {return _count ? Value::deref(_first, _wide) : NULL;}
             const Value* operator[] (unsigned index) const;
             size_t indexOf(const Value *v) const;
         };
@@ -46,18 +46,18 @@ namespace fleece {
             iterator(const Array* a);
 
             /** Returns the number of _remaining_ items. */
-            uint32_t count() const                  {return _a.count;}
+            uint32_t count() const              {return _a._count;}
 
-            const Value* value() const        {return _value;}
-            operator const Value* const ()    {return _value;}
-            const Value* operator-> ()        {return _value;}
+            const Value* value() const          {return _value;}
+            operator const Value* const ()      {return _value;}
+            const Value* operator-> ()          {return _value;}
 
             /** Random access to items. Index is relative to the current item.
                 This is very fast, faster than array::get(). */
             const Value* operator[] (unsigned i) {return _a[i];}
 
             /** Returns false when the iterator reaches the end. */
-            explicit operator bool() const          {return _a.count > 0;}
+            explicit operator bool() const      {return _a._count > 0;}
 
             /** Steps to the next item. (Throws if there are no more items.) */
             iterator& operator++();
@@ -66,7 +66,7 @@ namespace fleece {
             iterator& operator += (uint32_t);
 
         private:
-            const Value* rawValue()           {return _a.first;}
+            const Value* rawValue()             {return _a._first;}
 
             impl _a;
             const Value *_value;
@@ -74,7 +74,7 @@ namespace fleece {
             friend class Value;
         };
 
-        iterator begin() const                      {return iterator(this);}
+        iterator begin() const                  {return iterator(this);}
 
         friend class Value;
         friend class Dict;
@@ -110,13 +110,13 @@ namespace fleece {
             iterator(const Dict*);
 
             /** Returns the number of _remaining_ items. */
-            uint32_t count() const                  {return _a.count;}
+            uint32_t count() const                  {return _a._count;}
 
             const Value* key() const                {return _key;}
             const Value* value() const              {return _value;}
 
             /** Returns false when the iterator reaches the end. */
-            explicit operator bool() const          {return _a.count > 0;}
+            explicit operator bool() const          {return _a._count > 0;}
 
             /** Steps to the next item. (Throws if there are no more items.) */
             iterator& operator ++();
@@ -126,7 +126,7 @@ namespace fleece {
 
         private:
             void readKV();
-            const Value* rawKey()             {return _a.first;}
+            const Value* rawKey()             {return _a._first;}
             const Value* rawValue()           {return _a.second();}
 
             Array::impl _a;
@@ -139,16 +139,22 @@ namespace fleece {
         /** An abstracted key for dictionaries. It will cache the key as an encoded Value, and it
             will cache the index at which the key was last found, which speeds up succssive
             lookups.
-            Warning: An instance of this should be used only on a single thread, and only with
-            dictionaries that are stored in the same encoded data. */
+            Warning: An instance of this should be used only on a single thread.
+            Warning: If you set the `cache` flag to true, the key will cache the Value
+            representation of the string, so it should only be used with dictionaries that are
+            stored in the same encoded data. */
         class key {
         public:
-            key(slice rawString)                    :_rawString(rawString) { }
+            key(slice rawString, bool cachePointer = false)
+            :_rawString(rawString), _cachePointer(cachePointer) { }
+
             const Value* asValue() const            {return _keyValue;}
+            int compare(const key &k) const         {return _rawString.compare(k._rawString);}
         private:
             slice const _rawString;
             const Value* _keyValue  {nullptr};
             uint32_t _hint          {0xFFFFFFFF};
+            bool _cachePointer;
 
             template <bool WIDE> friend struct dictImpl;
         };
@@ -157,6 +163,17 @@ namespace fleece {
             Using the Fleece object is significantly faster than a normal get. */
         const Value* get(key&) const;
 
+        /** Looks up multiple keys at once; this can be a lot faster than multiple gets.
+            @param keys  Array of key objects. MUST be sorted lexicographically in increasing order.
+            @param values  The corresponding values (or NULLs) will be written here.
+            @param count  The number of keys and values.
+            @return  The number of keys that were found. */
+        size_t get(key keys[], const Value* values[], size_t count) const;
+
+        /** Sorts an array of keys, a prerequisite of the multi-key get() method. */
+        static void sortKeys(key keys[], size_t count);
+
+    private:
         friend class Value;
     };
 

@@ -511,7 +511,7 @@ public:
 
     void testFindPersonByIndexKeyed() {
         {
-            Dict::key nameKey(slice("name"));
+            Dict::key nameKey(slice("name"), true);
 
             // First build a small non-wide Dict:
             enc.beginArray();
@@ -541,18 +541,24 @@ public:
             lookupNameWithKey(smol->get(0)->asDict(), nameKey, "Concepcion Burns");
             lookupNameWithKey(smol->get(1)->asDict(), nameKey, "Carmen Miranda");
             Assert(smol->get(2)->asDict()->get(nameKey) == NULL);
+
+            lookupNamesWithKeys(smol->get(0)->asDict(), "Concepcion Burns", false);
+            lookupNamesWithKeys(smol->get(1)->asDict(), "Carmen Miranda", false);
+            lookupNamesWithKeys(smol->get(2)->asDict(), NULL, false);
         }
         {
             // Now try a wide Dict:
-            Dict::key nameKey(slice("name"));
+            Dict::key nameKey(slice("name"), true);
 
             mmap_slice doc(kTestFilesDir "1000people.fleece");
             auto root = Value::fromTrustedData(doc)->asArray();
             auto person = root->get(123)->asDict();
             lookupNameWithKey(person, nameKey, "Concepcion Burns");
+            lookupNamesWithKeys(person, "Concepcion Burns", -1);
 
             person = root->get(3)->asDict();
             lookupNameWithKey(person, nameKey, "Isabella Compton");
+            lookupNamesWithKeys(person, "Isabella Compton", -1);
         }
     }
 
@@ -570,6 +576,26 @@ public:
         Assert(name);
         nameStr = (std::string)name->asString();
         AssertEqual(nameStr, expectedName);
+    }
+
+    void lookupNamesWithKeys(const Dict* person, const char *expectedName, int expectedX) {
+        Dict::key nameKey(slice("name"));
+        Dict::key xKey(slice("x"));
+        Dict::key keys[2] = {nameKey, xKey};
+        const Value* values[2];
+        auto found = person->get(keys, values, 2);
+        size_t expectedFound = (expectedName != NULL) + (expectedX >= false);
+        AssertEqual(found, expectedFound);
+        if (expectedName)
+            AssertEqual(values[0]->asString(), slice(expectedName));
+        else
+            Assert(values[0] == NULL);
+        if (expectedX >= false) {
+            AssertEqual(values[1]->type(), kBoolean);
+            AssertEqual(values[1]->asBool(), (bool)expectedX);
+        } else {
+            Assert(values[1] == NULL);
+        }
     }
 
 #pragma mark - KEY TREE:

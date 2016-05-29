@@ -110,14 +110,18 @@ bool FLDictIteratorNext(FLDictIterator* i) {
 }
 
 
-void FLDictKeyInit(FLDictKey* key, FLSlice string) {
+void FLDictKeyInit(FLDictKey* key, FLSlice string, bool cachePointers) {
     static_assert(sizeof(FLDictKey) >= sizeof(Dict::key), "FLDictKey is too small");
-    new (key) Dict::key(string);
+    new (key) Dict::key(string, cachePointers);
 }
 
 FLValue FLDictGetWithKey(FLDict d, FLDictKey *k) {
     auto key = *(Dict::key*)k;
     return d->get(key);
+}
+
+size_t FLDictGetWithKeys(FLDict d, FLDictKey keys[], FLValue values[], size_t count) {
+    return d->get((Dict::key*)keys, values, count);
 }
 
 

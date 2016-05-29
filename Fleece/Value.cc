@@ -262,7 +262,7 @@ namespace fleece {
 
             // Check each Array/Dict element:
             if (itemCount > 0) {
-                auto item = Array::impl(this).first;
+                auto item = Array::impl(this)._first;
                 while (itemCount-- > 0) {
                     auto second = item->next(wide);
                     if (!item->validate(dataStart, second, wide))
@@ -287,7 +287,7 @@ namespace fleece {
             case kStringTag:
             case kBinaryTag:    return (uint8_t*)asString().end() - (uint8_t*)this;
             case kArrayTag:
-            case kDictTag:      return (uint8_t*)Array::impl(this).first - (uint8_t*)this;
+            case kDictTag:      return (uint8_t*)Array::impl(this)._first - (uint8_t*)this;
             case kPointerTagFirst:
             default:            return 2;   // size might actually be 4; depends on context
         }

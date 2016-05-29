@@ -139,10 +139,13 @@ extern "C" {
     typedef struct {
         void* _private1[3];
         uint32_t _private2;
+        bool _private3;
     } FLDictKey;
 
-    void FLDictKeyInit(FLDictKey*, FLSlice string);
+    void FLDictKeyInit(FLDictKey*, FLSlice string, bool cachePointers);
     FLValue FLDictGetWithKey(FLDict, FLDictKey*);
+
+    size_t FLDictGetWithKeys(FLDict, FLDictKey[], FLValue[], size_t count);
 
 
     //////// ENCODER
