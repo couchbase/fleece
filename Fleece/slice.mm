@@ -48,9 +48,7 @@ namespace fleece {
 
         // Otherwise malloc a buffer to copy the UTF-8 into:
         NSUInteger maxByteCount = [str maximumLengthOfBytesUsingEncoding: NSUTF8StringEncoding];
-        buf = ::malloc(maxByteCount);
-        if (!buf)
-            throw std::bad_alloc();
+        buf = newBytes(maxByteCount);
         _needsFree = true;
         BOOL ok = [str getBytes: (void*)buf maxLength: maxByteCount usedLength: &byteCount
                        encoding: NSUTF8StringEncoding options: 0

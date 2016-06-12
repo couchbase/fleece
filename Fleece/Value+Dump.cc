@@ -50,12 +50,12 @@ namespace fleece {
             }
             default: { // Pointer:
                 deref(this, wide)->writeDumpBrief(out, base, true);
-                auto offset = - (ptrdiff_t)(wide ? pointerValue<true>() : pointerValue<false>());
+                auto offset = - (int64_t)(wide ? pointerValue<true>() : pointerValue<false>());
                 char buf[32];
                 if (base)
-                    sprintf(buf, " (@%04lx)", offset + _byte - (uint8_t*)base); // absolute
+                    sprintf(buf, " (@%04llx)", (int64_t)((_byte + offset) - (uint8_t*)base)); // absolute
                 else
-                    sprintf(buf, " (@-%04lx)", offset);
+                    sprintf(buf, " (@-%04llx)", -offset);
                 out << buf;
                 break;
             }

@@ -28,18 +28,20 @@
 #import <CoreFoundation/CFString.h>
 #endif
 
-template <typename T>
-inline const T* offsetby(const T *t, ptrdiff_t offset) {
-    return (const T*)((uint8_t*)t + offset);
-}
-
-template <typename T>
-inline T* offsetby(T *t, ptrdiff_t offset) {
-    return (T*)((uint8_t*)t + offset);
-}
-
 
 namespace fleece {
+
+    /** Adds a byte offset to a pointer. */
+    template <typename T>
+    inline const T* offsetby(const T *t, ptrdiff_t offset) {
+        return (const T*)((uint8_t*)t + offset);
+    }
+
+    template <typename T>
+    inline T* offsetby(T *t, ptrdiff_t offset) {
+        return (T*)((uint8_t*)t + offset);
+    }
+
 
     /** A simple range of memory. No ownership implied. */
     struct slice {
@@ -83,11 +85,27 @@ namespace fleece {
 
         slice copy() const;
         void free();
-        
+
+        /** Raw memory allocation. Just like malloc but throws on failure. */
+        static void* newBytes(size_t sz) {
+            void* result = ::malloc(sz);
+            if (!result) throw std::bad_alloc();
+            return result;
+        }
+
+        template <typename T>
+        static T* reallocBytes(T* bytes, size_t newSz) {
+            void* newBytes = (T*)::realloc(bytes, newSz);
+            if (!newBytes) throw std::bad_alloc();
+            return newBytes;
+        }
+
         bool hasPrefix(slice) const;
         
         explicit operator std::string() const;
         std::string hexString() const;
+
+        #define hexCString() hexString().c_str()    // has to be a macro else dtor called too early
 
         /** djb2 hash algorithm */
         uint32_t hash() const {
@@ -138,7 +156,7 @@ namespace fleece {
         alloc_slice()
             :std::shared_ptr<char>(NULL), slice() {}
         explicit alloc_slice(size_t s)
-            :std::shared_ptr<char>((char*)malloc(s), freer()), slice(get(),s) {}
+            :std::shared_ptr<char>((char*)newBytes(s), freer()), slice(get(),s) {}
         explicit alloc_slice(slice s)
             :std::shared_ptr<char>((char*)s.copy().buf, freer()), slice(get(),s.size) {}
         alloc_slice(const void* b, size_t s)
@@ -154,8 +172,8 @@ namespace fleece {
 
         /** Prevents the memory from being freed after the last alloc_slice goes away.
             Use this is something else (like an NSData) takes ownership of the heap block. */
-        void dontFree()             {if (buf) std::get_deleter<freer>(*this)->detach();}
-
+        slice dontFree()             {if (buf) std::get_deleter<freer>(*this)->detach();
+                                      return *this;}
 #ifdef __OBJC__
         NSData* convertToNSData()   {dontFree(); return slice::convertToNSData();}
 #endif
