@@ -127,7 +127,7 @@ class PerfTests : public CppUnit::TestFixture {
 
     void testLoadPeople(bool multiKeyGet) {
         int kSamples = 50;
-        int kIterations = 100;
+        int kIterations = 1000;
         Benchmark bench;
 
         mmap_slice doc(kTestFilesDir "1000people.fleece");

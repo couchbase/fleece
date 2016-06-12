@@ -21,12 +21,12 @@ namespace fleece {
 
     int slice::compare(slice b) const {
         // Optimized for speed
-        if (this->size < b.size)
-            return memcmp(this->buf, b.buf, this->size) ?: -1;
-        else if (this->size > b.size)
-            return memcmp(this->buf, b.buf, b.size) ?: 1;
-        else
+        if (this->size == b.size)
             return memcmp(this->buf, b.buf, this->size);
+        else if (this->size < b.size)
+            return memcmp(this->buf, b.buf, this->size) ?: -1;
+        else
+            return memcmp(this->buf, b.buf, b.size) ?: 1;
     }
 
     slice slice::read(size_t nBytes) {

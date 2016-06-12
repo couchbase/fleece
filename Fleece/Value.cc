@@ -170,18 +170,10 @@ namespace fleece {
     slice Value::asString() const {
         switch (tag()) {
             case kStringTag:
-            case kBinaryTag: {
-                slice s(&_byte[1], tinyValue());
-                if (s.size == 0x0F) {
-                    // This means the actual length follows as a varint:
-                    uint32_t realLength;
-                    ReadUVarInt32(&s, &realLength);
-                    s.size = realLength;
-                }
-                return s;
-            }
+            case kBinaryTag:
+                return getStringBytes();
             default:
-                return slice::null;
+                return slice();
         }
     }
 

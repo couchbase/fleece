@@ -17,10 +17,18 @@
 #include "Internal.hh"
 #include "varint.hh"
 #include <assert.h>
+#include <iostream>
 
 
 namespace fleece {
     using namespace internal;
+
+
+#ifndef NDEBUG
+    namespace internal {
+        unsigned gTotalComparisons;
+    }
+#endif
 
 
     const Value* Value::deref(const Value *v, bool wide) {
@@ -132,7 +140,7 @@ namespace fleece {
             const Value *key = _first;
             for (uint32_t i = 0; i < _count; i++) {
                 const Value *val = next(key);
-                if (keyToFind.compare(deref(key)->asString()) == 0)
+                if (keyToFind.compare(keyBytes(key)) == 0)
                     return deref(val);
                 key = next(val);
             }
@@ -156,8 +164,65 @@ namespace fleece {
             return key ? deref(next(key)) : NULL;
         }
 
+#ifdef NDEBUG
+#define log(FMT, PARAM...) ({})
+#else
+#define log(FMT, PARAM...) ({for (unsigned i_=0; i_<indent; i_++) std::cerr << "\t"; fprintf(stderr, FMT "\n", PARAM);})
+#endif
+
         size_t get(Dict::key keysToFind[], const Value* values[], size_t nKeys) {
             size_t nFound = 0;
+#if 1
+            unsigned indent = 0;
+            log("get(%zu keys; dict has %u)", nKeys, _count);
+            nFound = find(keysToFind, values, 0, (unsigned)nKeys, 0, _count, indent+1).nFound;
+            log("--> found %zu", nFound);
+#elif 0
+            // Algorithm A: Parallel linear search through both arrays.
+            if (nKeys == 0)
+                return 0;
+            size_t findIndex = 0;
+            Dict::key *keyToFind = &keysToFind[findIndex];
+
+            const Value *key = _first;
+            const Value *end = offsetby(_first, _count*2*kWidth);
+            if (key < end) {
+                slice keyStr = keyBytes(key);
+
+                while(true) {
+                    int cmp = keyToFind->_rawString.compare(keyStr);
+#ifndef NDEBUG
+                    ++gTotalComparisons;
+#endif
+                    if (cmp <= 0) {
+                        const Value *value;
+                        if (cmp == 0) {
+                            ++nFound;
+                            value = deref(next(key));
+                        } else {
+                            value = NULL;
+                        }
+                        values[findIndex++] = value;
+                        if (findIndex >= nKeys)
+                            break;
+                        ++keyToFind;
+                    }
+                    if (cmp >= 0) {
+                        key = next(next(key));
+                        if (key >= end)
+                            break;
+                        keyStr = keyBytes(key);
+                    }
+                }
+            }
+            while (findIndex < nKeys)
+                values[findIndex++] = NULL;
+
+#else
+            // Algorithm B: Binary search for each key to find, updating the start position
+            // after finding a key.
+            // This is half as fast as algorithm A, except that it uses findKeyByHint, which
+            // if it succeeds makes it faster than A...
             const Value *start = _first;
             const Value *end = offsetby(_first, _count*2*kWidth);
             for (size_t i = 0; i < nKeys; i++) {
@@ -175,8 +240,68 @@ namespace fleece {
                     values[i] = NULL;
                 }
             }
+#endif
             return nFound;
         }
+
+
+        struct findResult {
+            unsigned kMin, kMax;
+            unsigned nFound;
+        };
+
+
+        findResult find(Dict::key keysToFind[], const Value* values[],
+                        unsigned kf0, unsigned kf1,
+                        unsigned k0, unsigned k1,
+                        unsigned indent)
+        {
+            log("find( %u--%u in %u--%u )", kf0, kf1-1, k0, k1-1);
+            if (kf0 == kf1) {
+                return {k0, k1, 0};
+            }
+            if (k0 == k1) {
+                for (unsigned i = kf0; i < kf1; i++) {
+                    values[i] = NULL;
+                    log("[#%u] = missing", i);
+                }
+                return {k0, k1, 0};
+            }
+            unsigned midf = (kf0 + kf1) / 2;
+            unsigned midk = keysToFind[midf]._hint;
+            if (midk < k0 || midk >= k1)
+                midk = (k0 + k1 ) / 2;
+            const Value *key = offsetby(_first, 2*kWidth*midk);
+            int cmp = keysToFind[midf]._rawString.compare(keyBytes(key));
+#ifndef NDEBUG
+            ++gTotalComparisons;
+#endif
+            log("#%u '%s' ?vs? #%u '%s'",
+                    midf, ((std::string)keysToFind[midf]._rawString).c_str(),
+                    midk, ((std::string)keyBytes(key)).c_str());
+            findResult left, right, result = {0, 0, 0};
+            if (cmp == 0) {
+                log("[#%u] = #%u", midf, midk);
+                values[midf] = deref(next(key));
+                keysToFind[midf]._hint = midk;
+                left  = find(keysToFind, values, kf0,    midf, k0, midk, indent + 1);
+                right = find(keysToFind, values, midf+1, kf1,  midk+1, k1, indent + 1);
+                ++result.nFound;
+            } else if (cmp < 0) {
+                left  = find(keysToFind, values, kf0, midf+1, k0, midk, indent + 1);
+                right = find(keysToFind, values, midf+1, kf1, left.kMax, k1, indent + 1);
+            } else {
+                right = find(keysToFind, values, midf, kf1, midk+1, k1, indent + 1);
+                left  = find(keysToFind, values, kf0, midf, k0, right.kMin, indent + 1);
+            }
+
+            result.kMin = left.nFound ? left.kMin : (cmp==0 ? midk : right.kMin);
+            result.kMax = right.nFound ? right.kMax : (cmp==0 ? midk : left.kMax);
+            result.nFound += left.nFound + right.nFound;
+            log("--> {%u--%u, found %u}", result.kMin, result.kMax-1, result.nFound);
+            return result;
+        }
+
         
     private:
 
@@ -242,6 +367,10 @@ namespace fleece {
             return key;
         }
 
+        static inline slice keyBytes(const Value *key) {
+            return deref(key)->getStringBytes();
+        }
+
         static inline const Value* next(const Value *v) {
             return v->next<WIDE>();
         }
@@ -251,8 +380,10 @@ namespace fleece {
         }
 
         static int keyCmp(const void* keyToFindP, const void* keyP) {
-            const Value *key = deref((const Value*)keyP);
-            return ((slice*)keyToFindP)->compare(key->asString());
+#ifndef NDEBUG
+            ++gTotalComparisons;
+#endif
+            return ((slice*)keyToFindP)->compare(keyBytes((const Value*)keyP));
         }
 
         static const size_t kWidth = (WIDE ? 4 : 2);

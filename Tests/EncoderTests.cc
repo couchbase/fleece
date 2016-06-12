@@ -598,6 +598,59 @@ public:
         }
     }
 
+    void testLookupManyKeys() {
+        mmap_slice doc(kTestFilesDir "1person.fleece");
+        auto person = Value::fromTrustedData(doc)->asDict();
+
+        Dict::key keys[] = {
+            Dict::key(slice("about")),
+            Dict::key(slice("age")),
+            Dict::key(slice("balance")),
+            Dict::key(slice("guid")),
+            Dict::key(slice("isActive")),
+            Dict::key(slice("latitude")),
+            Dict::key(slice("longitude")),
+            Dict::key(slice("name")),
+            Dict::key(slice("registered")),
+            Dict::key(slice("tags")),
+
+//            Dict::key(slice("jUNK")),
+//            Dict::key(slice("abut")),
+//            Dict::key(slice("crud")),
+//            Dict::key(slice("lowrider")),
+//            Dict::key(slice("ocarina")),
+//            Dict::key(slice("time")),
+//            Dict::key(slice("tangle")),
+//            Dict::key(slice("b")),
+//            Dict::key(slice("f")),
+//            Dict::key(slice("g")),
+//            Dict::key(slice("m")),
+//            Dict::key(slice("n")),
+//            Dict::key(slice("z")),
+        };
+        unsigned nKeys = sizeof(keys) / sizeof(keys[0]);
+        Dict::sortKeys(keys, nKeys);
+
+#ifndef NDEBUG
+        internal::gTotalComparisons = 0;
+#endif
+        const Value* values[nKeys];
+        AssertEqual(person->get(keys, values, nKeys), 10ul);
+#ifndef NDEBUG
+        fprintf(stderr, "... that took %u comparisons, or %.1f/key\n",
+                internal::gTotalComparisons, internal::gTotalComparisons/(float)nKeys);
+        internal::gTotalComparisons = 0;
+#endif
+        for (unsigned i = 0; i < nKeys; ++i)
+            AssertEqual(values[i], person->get(keys[i]));
+
+        AssertEqual(person->get(keys, values, nKeys), 10ul);
+#ifndef NDEBUG
+        fprintf(stderr, "... second pass took %u comparisons, or %.1f/key\n",
+                internal::gTotalComparisons, internal::gTotalComparisons/(float)nKeys);
+#endif
+    }
+
 #pragma mark - KEY TREE:
 
     void testKeyTree() {
@@ -676,6 +729,7 @@ public:
     CPPUNIT_TEST( testFindPersonByIndexUnsorted );
     CPPUNIT_TEST( testFindPersonByIndexSorted );
     CPPUNIT_TEST( testFindPersonByIndexKeyed );
+    CPPUNIT_TEST( testLookupManyKeys );
     CPPUNIT_TEST( testKeyTree );
     CPPUNIT_TEST_SUITE_END();
 };
