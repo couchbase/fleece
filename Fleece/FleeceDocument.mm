@@ -103,12 +103,26 @@ using namespace fleece;
 }
 
 
-+ (NSData*) fleeceDataWithObject: (id)object {
+static void returnFleeceError(const char *msg, NSError **outError) {
+    if (outError)
+        *outError = [NSError errorWithDomain: @"Fleece" code: -1 userInfo: @{NSLocalizedDescriptionKey: @(msg)}];
+}
+
+
++ (NSData*) fleeceDataWithObject: (id)object error: (NSError**)outError {
     NSParameterAssert(object != nil);
-    Encoder encoder;
-    encoder.write(object);
-    encoder.end();
-    return encoder.extractOutput().convertToNSData();
+    try {
+        Encoder encoder;
+        encoder.write(object);
+        encoder.end();
+        return encoder.extractOutput().convertToNSData();
+    } catch(const char *msg) {
+        returnFleeceError(msg, outError);
+        return nil;
+    } catch (...) {
+        returnFleeceError("exception", outError);
+        return nil;
+    }
 }
 
 

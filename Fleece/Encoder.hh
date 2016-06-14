@@ -37,6 +37,8 @@ namespace fleece {
             sorted order. This makes dict::get faster but makes the encoder slightly slower. */
         void sortKeys(bool b)           {_sortKeys = b;}
 
+        bool isEmpty() const            {return _out.length() == 0;}
+
         /** Ends encoding, writing the last of the data to the Writer. */
         void end();
 
@@ -92,6 +94,9 @@ namespace fleece {
 
         // Note: overriding <<(bool) would be dangerous due to implicit conversion
         Encoder& operator<< (int64_t i)         {writeInt(i); return *this;}
+        Encoder& operator<< (int i)             {writeInt(i); return *this;}
+        Encoder& operator<< (unsigned i)        {writeUInt(i); return *this;}
+        Encoder& operator<< (unsigned long i)   {writeUInt(i); return *this;}
         Encoder& operator<< (double d)          {writeDouble(d); return *this;}
         Encoder& operator<< (float f)           {writeFloat(f); return *this;}
         Encoder& operator<< (std::string str)   {writeString(str); return *this;}

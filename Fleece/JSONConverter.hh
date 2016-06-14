@@ -10,9 +10,13 @@
 #define Fleece_JSONConverter_h
 
 #include "Encoder.hh"
-#include "jsonsl.h"
 #include <vector>
 #include <map>
+
+extern "C" {
+    struct jsonsl_state_st;
+    struct jsonsl_st;
+}
 
 namespace fleece {
 
@@ -37,27 +41,17 @@ namespace fleece {
             kErrTruncatedJSON = 1000
         };
 
-    private:
+    //private:
         bool countJSONItems(slice json);
         void push(struct jsonsl_state_st *state);
         void pop(struct jsonsl_state_st *state);
-        static int errorCallback(jsonsl_t jsn,
-                                 jsonsl_error_t err,
-                                 struct jsonsl_state_st *state,
-                                 char *errat);
-        static void writePushCallback(jsonsl_t jsn,
-                                      jsonsl_action_t action,
-                                      struct jsonsl_state_st *state,
-                                      const char *buf);
-        static void writePopCallback(jsonsl_t jsn,
-                                     jsonsl_action_t action,
-                                     struct jsonsl_state_st *state,
-                                     const char *buf);
+        int gotError(int err, char *errat);
 
+    private:
         typedef std::map<size_t, uint64_t> startToLengthMap;
 
         Encoder &_encoder;                  // encoder to write to
-        jsonsl_t _jsn;                      // JSON parser
+        struct jsonsl_st * _jsn;                      // JSON parser
         int _error;                         // Parse error from jsonsl
         size_t _errorPos;                   // Byte index where parse error occurred
         slice _input;                       // Current JSON being parsed

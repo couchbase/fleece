@@ -19,6 +19,19 @@
 
 namespace fleece {
 
+    static int errorCallback(struct jsonsl_st * jsn,
+                             jsonsl_error_t err,
+                             struct jsonsl_state_st *state,
+                             char *errat);
+    static void writePushCallback(struct jsonsl_st * jsn,
+                                  jsonsl_action_t action,
+                                  struct jsonsl_state_st *state,
+                                  const char *buf);
+    static void writePopCallback(struct jsonsl_st * jsn,
+                                 jsonsl_action_t action,
+                                 struct jsonsl_state_st *state,
+                                 const char *buf);
+
     JSONConverter::JSONConverter(Encoder &e)
     :_encoder(e),
      _jsn(jsonsl_new(0x2000)),
@@ -55,26 +68,8 @@ namespace fleece {
         jsonsl_reset(_jsn);
         return (_error == JSONSL_ERROR_SUCCESS);
     }
-    
-    void JSONConverter::writePushCallback(jsonsl_t jsn,
-                                       jsonsl_action_t action,
-                                       struct jsonsl_state_st *state,
-                                       const char *buf)
-    {
-        auto self = (JSONConverter*)jsn->data;
-        self->push(state);
-    }
 
-    void JSONConverter::writePopCallback(jsonsl_t jsn,
-                                      jsonsl_action_t action,
-                                      struct jsonsl_state_st *state,
-                                      const char *buf)
-    {
-        auto self = (JSONConverter*)jsn->data;
-        self->pop(state);
-    }
-
-    void JSONConverter::push(struct jsonsl_state_st *state) {
+    inline void JSONConverter::push(struct jsonsl_state_st *state) {
         switch (state->type) {
             case JSONSL_T_LIST:
                 _encoder.beginArray();
@@ -85,7 +80,7 @@ namespace fleece {
         }
     }
 
-    void JSONConverter::pop(struct jsonsl_state_st *state) {
+    inline void JSONConverter::pop(struct jsonsl_state_st *state) {
         switch (state->type) {
             case JSONSL_T_SPECIAL: {
                 unsigned f = state->special_flags;
@@ -146,16 +141,42 @@ namespace fleece {
         }
     }
 
-    int JSONConverter::errorCallback(jsonsl_t jsn,
-                                  jsonsl_error_t err,
-                                  struct jsonsl_state_st *state,
-                                  char *errat)
-    {
-        auto self = (JSONConverter*)jsn->data;
-        self->_error = err;
-        self->_errorPos = errat - (char*)self->_input.buf;
-        jsonsl_stop(jsn);
+    inline int JSONConverter::gotError(int err, char *errat) {
+        _error = err;
+        _errorPos = errat - (char*)_input.buf;
+        jsonsl_stop(_jsn);
         return 0;
+    }
+
+
+    // Callbacks:
+
+    static inline JSONConverter* converter(jsonsl_t jsn) {
+        return (JSONConverter*)jsn->data;
+    }
+    
+    static void writePushCallback(jsonsl_t jsn,
+                                  jsonsl_action_t action,
+                                  struct jsonsl_state_st *state,
+                                  const char *buf)
+    {
+        converter(jsn)->push(state);
+    }
+
+    static void writePopCallback(jsonsl_t jsn,
+                                 jsonsl_action_t action,
+                                 struct jsonsl_state_st *state,
+                                 const char *buf)
+    {
+        converter(jsn)->pop(state);
+    }
+
+    static int errorCallback(jsonsl_t jsn,
+                             jsonsl_error_t err,
+                             struct jsonsl_state_st *state,
+                             char *errat)
+    {
+        return converter(jsn)->gotError(err, errat);
     }
 
 }

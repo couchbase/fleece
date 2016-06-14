@@ -22,7 +22,8 @@
 
 /** Converts an Objective-C object tree to Fleece data.
     Supported classes are the ones allowed by NSJSONSerialization, plus NSData. */
-+ (NSData*) fleeceDataWithObject: (id)object;
++ (NSData*) fleeceDataWithObject: (id)object
+                           error: (NSError**)outError;
 
 @end
 

@@ -78,7 +78,7 @@ namespace fleece {
 
         friend class Value;
         friend class Dict;
-        template <bool WIDE> friend class dictImpl;
+        template <bool WIDE> friend struct dictImpl;
     };
 
 
