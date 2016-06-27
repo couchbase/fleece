@@ -15,6 +15,7 @@
 
 #include "slice.hh"
 #include <algorithm>
+#include <math.h>
 #include <stdlib.h>
 
 namespace fleece {
@@ -51,6 +52,62 @@ namespace fleece {
         ::memcpy((void*)buf, src.buf, src.size);
         moveStart(src.size);
         return true;
+    }
+
+    uint8_t slice::readByte() {
+        if (size == 0)
+            return 0;
+        uint8_t result = (*this)[0];
+        moveStart(1);
+        return result;
+    }
+
+    bool slice::writeByte(uint8_t n) {
+        if (size == 0)
+            return false;
+        *((char*)buf) = n;
+        moveStart(1);
+        return true;
+    }
+
+    uint64_t slice::readDecimal() {
+        uint64_t n = 0;
+        while (size > 0 && isdigit(*(char*)buf)) {
+            n = 10*n + (*(char*)buf - '0');
+            moveStart(1);
+        }
+        return n;
+    }
+
+    bool slice::writeDecimal(uint64_t n) {
+        // Optimized for speed
+        size_t len;
+        if (n < 10) {
+            if (size < 1)
+                return false;
+            *((char*)buf) = '0' + (char)n;
+            len = 1;
+        } else {
+            char temp[20]; // max length is 20 decimal digits
+            char *dst = &temp[20];
+            len = 0;
+            do {
+                *(--dst) = '0' + (n % 10);
+                n /= 10;
+                len++;
+            } while (n > 0);
+            if (size < len)
+                return false;
+            ::memcpy((void*)buf, dst, len);
+        }
+        moveStart(len);
+        return true;
+    }
+
+    unsigned slice::sizeOfDecimal(uint64_t n) {
+        if (n == 0)
+            return 1;
+        return 1 + (unsigned)::floor(::log10(n));
     }
 
     slice slice::copy() const {

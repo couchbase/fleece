@@ -62,6 +62,9 @@ namespace fleece {
         const void* end() const                     {return offset(size);}
         void setEnd(const void* e)                  {size = (uint8_t*)e - (uint8_t*)buf;}
 
+        slice upTo(const void* pos)                 {return slice(buf, pos);}
+        slice from(const void* pos)                 {return slice(pos, end());}
+
         const uint8_t& operator[](size_t i) const     {return ((const uint8_t*)buf)[i];}
         slice operator()(size_t i, unsigned n) const  {return slice(offset(i), n);}
 
@@ -69,6 +72,12 @@ namespace fleece {
         bool readInto(slice dst);
 
         bool writeFrom(slice);
+
+        uint8_t readByte();     // returns 0 if slice is empty
+        bool writeByte(uint8_t);
+        uint64_t readDecimal(); // reads until it hits a non-digit or the end
+        bool writeDecimal(uint64_t);
+        static unsigned sizeOfDecimal(uint64_t);
 
         const void* findByte(uint8_t byte) const    {return ::memchr(buf, byte, size);}
 
