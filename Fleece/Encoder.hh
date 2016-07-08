@@ -94,6 +94,7 @@ namespace fleece {
 
         // Note: overriding <<(bool) would be dangerous due to implicit conversion
         Encoder& operator<< (int64_t i)         {writeInt(i); return *this;}
+        Encoder& operator<< (uint64_t i)        {writeUInt(i); return *this;}
         Encoder& operator<< (int i)             {writeInt(i); return *this;}
         Encoder& operator<< (unsigned i)        {writeUInt(i); return *this;}
         Encoder& operator<< (unsigned long i)   {writeUInt(i); return *this;}

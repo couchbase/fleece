@@ -52,6 +52,9 @@ namespace fleece {
             operator const Value* const ()      {return _value;}
             const Value* operator-> ()          {return _value;}
 
+            /** Returns the current item and advances to the next. */
+            const Value* read()                 {auto v = _value; ++(*this); return v;}
+
             /** Random access to items. Index is relative to the current item.
                 This is very fast, faster than array::get(). */
             const Value* operator[] (unsigned i) {return _a[i];}
