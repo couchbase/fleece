@@ -59,6 +59,13 @@ namespace fleece {
 
 
     Array::impl::impl(const Value* v) {
+        if (v == nullptr) {
+            _first = NULL;
+            _wide = false;
+            _count = 0;
+            return;
+        }
+        
         _first = (const Value*)(&v->_byte[2]);
         _wide = v->isWideArray();
         _count = v->shortValue() & 0x07FF;
