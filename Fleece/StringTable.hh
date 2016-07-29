@@ -48,6 +48,7 @@ namespace fleece {
         class iterator {
         public:
             operator slice () const                 {return _slot->first;}
+            const slice* operator* () const         {return &_slot->first;}
             const slice* operator-> () const        {return &_slot->first;}
             info value()                            {return _slot->second;}
             iterator& operator++ ()                 {++_slot; return *this;}

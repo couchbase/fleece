@@ -142,8 +142,8 @@ namespace fleece {
         if (actualRoot != root)
             actualRoot->mapAddresses(byAddress);
         // Dump them ordered by address:
-        for (auto i = byAddress.begin(); i != byAddress.end(); ++i) {
-            i->second->dump(out, false, 0, data.buf);
+        for (auto &i : byAddress) {
+            i.second->dump(out, false, 0, data.buf);
         }
         return true;
     }

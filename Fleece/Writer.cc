@@ -33,8 +33,8 @@ namespace fleece {
     }
 
     Writer::~Writer() {
-        for (auto chunk = _chunks.begin(); chunk != _chunks.end(); ++chunk)
-            chunk->free();
+        for (auto &chunk : _chunks)
+            chunk.free();
     }
 
     Writer& Writer::operator= (Writer&& w) {
@@ -49,10 +49,10 @@ namespace fleece {
 
     size_t Writer::posToOffset(const void *pos) const {
         size_t offset = 0;
-        for (auto chunk = _chunks.begin(); chunk != _chunks.end(); ++chunk) {
-            if (chunk->contains(pos))
-                return offset + chunk->offsetOf(pos);
-            offset += chunk->length();
+        for (auto &chunk : _chunks) {
+            if (chunk.contains(pos))
+                return offset + chunk.offsetOf(pos);
+            offset += chunk.length();
         }
         throw "invalid pos for posToOffset";
     }
@@ -88,11 +88,11 @@ namespace fleece {
         } else {
             output = alloc_slice(length());
             void* dst = (void*)output.buf;
-            for (auto chunk = _chunks.begin(); chunk != _chunks.end(); ++chunk) {
-                auto contents = chunk->contents();
+            for (auto &chunk : _chunks) {
+                auto contents = chunk.contents();
                 memcpy(dst, contents.buf, contents.size);
                 dst = offsetby(dst, contents.size);
-                chunk->free();
+                chunk.free();
             }
         }
         _chunks.resize(0);
