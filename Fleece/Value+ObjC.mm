@@ -16,6 +16,7 @@
 #import <Foundation/Foundation.h>
 #import "Value.hh"
 #include "Array.hh"
+#include "FleeceException.hh"
 
 
 namespace fleece {
@@ -66,7 +67,7 @@ namespace fleece {
                 }
                 NSString* str = (NSString*)strSlice;
                 if (!str)
-                    throw "Invalid UTF-8 in string";
+                    throw FleeceException("Invalid UTF-8 in string");
                 if (shareable) {
 #if TARGET_OS_IPHONE
                     [sharedStrings setObject: str forKey: (__bridge id)this];
@@ -96,7 +97,7 @@ namespace fleece {
                 return result;
             }
             default:
-                throw "illegal typecode";
+                throw FleeceException("illegal typecode");
         }
     }
 

@@ -15,6 +15,7 @@
 
 #include "Array.hh"
 #include "Internal.hh"
+#include "FleeceException.hh"
 #include "varint.hh"
 #include <assert.h>
 #include <iostream>
@@ -73,7 +74,7 @@ namespace fleece {
 
     bool Array::impl::next() {
         if (_count == 0)
-            throw "iterating past end of array";
+            throw FleeceException("iterating past end of array");
         if (--_count == 0)
             return false;
         _first = _first->next(_wide);
@@ -118,7 +119,7 @@ namespace fleece {
 
     Array::iterator& Array::iterator::operator += (uint32_t n) {
         if (n > _a._count)
-            throw "iterating past end of array";
+            throw FleeceException("iterating past end of array");
         _a._count -= n;
         _a._first = offsetby(_a._first, width(_a._wide)*n);
         _value = _a.firstValue();
@@ -444,7 +445,7 @@ namespace fleece {
 
     Dict::iterator& Dict::iterator::operator++() {
         if (_a._count == 0)
-            throw "iterating past end of dict";
+            throw FleeceException("iterating past end of dict");
         --_a._count;
         _a._first = offsetby(_a._first, 2*width(_a._wide));
         readKV();
@@ -453,7 +454,7 @@ namespace fleece {
 
     Dict::iterator& Dict::iterator::operator += (uint32_t n) {
         if (n > _a._count)
-            throw "iterating past end of dict";
+            throw FleeceException("iterating past end of dict");
         _a._count -= n;
         _a._first = offsetby(_a._first, 2*width(_a._wide)*n);
         readKV();

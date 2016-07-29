@@ -16,6 +16,7 @@
 #include "Value.hh"
 #include "Array.hh"
 #include "Writer.hh"
+#include "FleeceException.hh"
 #include <ostream>
 #include <ctime>
 #include <iomanip>
@@ -133,7 +134,7 @@ namespace fleece {
                 return;
             }
             default:
-                throw "illegal typecode";
+                throw FleeceException("illegal typecode");
         }
 
     }

@@ -17,6 +17,7 @@
 #include "Array.hh"
 #include "Internal.hh"
 #include "Endian.hh"
+#include "FleeceException.hh"
 #include "varint.hh"
 #include <assert.h>
 #include <math.h>
@@ -149,7 +150,7 @@ namespace fleece {
                         str = (char*)"true";
                         break;
                     default:
-                        throw "illegal special typecode";
+                        throw FleeceException("illegal special typecode");
                         break;
                 }
                 break;

@@ -16,6 +16,7 @@
 #include "Encoder.hh"
 #include "Endian.hh"
 #include "varint.hh"
+#include "FleeceException.hh"
 #include <algorithm>
 #include <assert.h>
 #include <math.h>
@@ -39,9 +40,9 @@ namespace fleece {
         if (!_items)
             return;
         if (_stackDepth > 1)
-            throw "unclosed array/dict";
+            throw FleeceException("unclosed array/dict");
         if (_items->size() > 1)
-            throw "top level must have only one value";
+            throw FleeceException("top level must have only one value");
 
         if (_items->size() > 0) {
             checkPointerWidths(_items);
@@ -95,7 +96,7 @@ namespace fleece {
 
     void Encoder::addItem(Value v) {
         if (_blockedOnKey)
-            throw "need a key before this value";
+            throw FleeceException("need a key before this value");
         if (_writingKey) {
             _writingKey = false;
         } else {
@@ -147,7 +148,7 @@ namespace fleece {
 
     void Encoder::writeDouble(double n) {
         if (isnan(n))
-            throw "Can't write NaN";
+            throw FleeceException("Can't write NaN");
         if (n == (int64_t)n) {
             return writeInt((int64_t)n);
         } else if (n == (float)n) {
@@ -164,7 +165,7 @@ namespace fleece {
 
     void Encoder::writeFloat(float n) {
         if (isnan(n))
-            throw "Can't write NaN";
+            throw FleeceException("Can't write NaN");
         if (n == (int32_t)n)
             writeInt((int32_t)n);
         else
@@ -294,9 +295,9 @@ namespace fleece {
     void Encoder::writeKey(slice s) {
         if (!_blockedOnKey) {
             if (_items->tag == kDictTag)
-                throw "need a value after a key";
+                throw FleeceException("need a value after a key");
             else
-                throw "not writing a dictionary";
+                throw FleeceException("not writing a dictionary");
         }
         _blockedOnKey = false;
         s = _writeString(s, true);
@@ -328,13 +329,17 @@ namespace fleece {
 
     void Encoder::endDictionary() {
         if (!_writingKey)
-            throw "need a value";
+            throw FleeceException("need a value");
         endCollection(internal::kDictTag);
     }
 
     void Encoder::endCollection(tags tag) {
-        if (_items->tag != tag)
-            throw "ending wrong type of collection";
+        if (_items->tag != tag) {
+            if (_items->tag == kSpecialTag)
+                throw FleeceException("endCollection: not in a collection");
+            else
+                throw FleeceException("ending wrong type of collection");
+        }
 
         // Pop _items off the stack:
         valueArray *items = _items;
