@@ -9,6 +9,7 @@
 #include "FleeceTests.hh"
 #include "JSONConverter.hh"
 #include "KeyTree.hh"
+#include "jsonsl.h"
 #include "mn_wordlist.h"
 
 namespace fleece {
@@ -119,6 +120,21 @@ public:
     }
 
 #pragma mark - TESTS
+
+    void testEmpty() {
+        Assert(enc.isEmpty());
+        enc.beginArray();
+        Assert(!enc.isEmpty());
+        enc.endArray();
+
+        Encoder enc2;
+        Assert(enc2.isEmpty());
+        enc2 << 17;
+        Assert(!enc2.isEmpty());
+
+        enc2.reset();
+        Assert(enc2.isEmpty());
+    }
 
     void testPointer() {
         uint8_t data[2] = {0x80, 0x02};
@@ -714,6 +730,7 @@ public:
     }
 
     CPPUNIT_TEST_SUITE( EncoderTests );
+    CPPUNIT_TEST( testEmpty );
     CPPUNIT_TEST( testSpecial );
     CPPUNIT_TEST( testInts );
     CPPUNIT_TEST( testFloats );

@@ -37,7 +37,7 @@ namespace fleece {
             sorted order. This makes dict::get faster but makes the encoder slightly slower. */
         void sortKeys(bool b)           {_sortKeys = b;}
 
-        bool isEmpty() const            {return _out.length() == 0;}
+        bool isEmpty() const            {return _out.length() == 0 && _stackDepth == 1 && _items->empty();}
 
         /** Ends encoding, writing the last of the data to the Writer. */
         void end();
