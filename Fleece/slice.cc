@@ -149,6 +149,17 @@ namespace fleece {
     }
 
 
+    void alloc_slice::resize(size_t newSize) {
+        if (newSize != size) {
+            void* newBuf = slice::reallocBytes((void*)buf, newSize);
+            if (newBuf != buf) {
+                dontFree();
+                *this = alloc_slice::adopt(newBuf, newSize);
+            }
+        }
+    }
+
+
     std::string slice::hexString() const {
         static const char kDigits[17] = "0123456789abcdef";
         std::string result;

@@ -187,7 +187,12 @@ namespace fleece {
         NSData* convertToNSData()   {dontFree(); return slice::convertToNSData();}
 #endif
 
+        void resize(size_t newSize);
+
         alloc_slice& operator=(slice);
+
+        // disambiguation:
+        alloc_slice& operator=(const std::string &str)      {*this = (slice)str; return *this;}
 
         class freer {
         public:
