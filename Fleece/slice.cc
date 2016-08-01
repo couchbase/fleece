@@ -152,7 +152,9 @@ namespace fleece {
     void alloc_slice::resize(size_t newSize) {
         if (newSize != size) {
             void* newBuf = slice::reallocBytes((void*)buf, newSize);
-            if (newBuf != buf) {
+            if (newBuf == buf) {
+                size = newSize;
+            } else {
                 dontFree();
                 *this = alloc_slice::adopt(newBuf, newSize);
             }
