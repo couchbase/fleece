@@ -208,6 +208,7 @@ namespace fleece {
         static void* alloc(const void* src, size_t size);
         explicit alloc_slice(void* adoptBuf, size_t size, bool)     // called by adopt()
             :std::shared_ptr<char>((char*)adoptBuf, freer()), slice(get(),size) {}
+        void reset(slice);
     };
 
 

@@ -140,11 +140,16 @@ namespace fleece {
         return buf;
     }
 
-    alloc_slice& alloc_slice::operator=(slice s) {
-        s = s.copy();
+
+    void alloc_slice::reset(slice s) {
         buf = s.buf;
         size = s.size;
-        reset((char*)buf);
+        shared_ptr::reset((char*)buf, freer());
+    }
+
+
+    alloc_slice& alloc_slice::operator=(slice s) {
+        reset(s.copy());
         return *this;
     }
 
@@ -152,11 +157,10 @@ namespace fleece {
     void alloc_slice::resize(size_t newSize) {
         if (newSize != size) {
             void* newBuf = slice::reallocBytes((void*)buf, newSize);
-            if (newBuf == buf) {
-                size = newSize;
-            } else {
+            size = newSize;
+            if (newBuf != buf) {
                 dontFree();
-                *this = alloc_slice::adopt(newBuf, newSize);
+                reset(slice(newBuf, newSize));
             }
         }
     }
