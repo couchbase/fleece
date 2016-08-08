@@ -46,6 +46,8 @@ namespace fleece {
         Writer& operator<< (uint8_t byte)       {return operator<<(slice(&byte,1));}
         Writer& operator<< (slice s)            {write(s.buf, s.size); return *this;}
 
+        void writeBase64(slice);
+
         /** Reserves space for data without actually writing anything yet.
             The data must be written later using rewrite() otherwise there will be garbage in
             the output. */

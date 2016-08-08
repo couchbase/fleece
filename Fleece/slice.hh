@@ -112,9 +112,11 @@ namespace fleece {
         bool hasPrefix(slice) const;
         
         explicit operator std::string() const;
+        std::string asString() const                {return (std::string)*this;}
         std::string hexString() const;
 
         #define hexCString() hexString().c_str()    // has to be a macro else dtor called too early
+        #define cString() asString().c_str()        // has to be a macro else dtor called too early
 
         /** djb2 hash algorithm */
         uint32_t hash() const {
