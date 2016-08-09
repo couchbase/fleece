@@ -35,6 +35,8 @@
 		272E5A611BF91F6C00848580 /* slice.mm in Sources */ = {isa = PBXBuildFile; fileRef = 272E5A601BF91F6C00848580 /* slice.mm */; };
 		275CED521D3EF7BE001DE46C /* FleeceException.cc in Sources */ = {isa = PBXBuildFile; fileRef = 275CED501D3EF7BE001DE46C /* FleeceException.cc */; };
 		275CED531D3EF7BE001DE46C /* FleeceException.hh in Headers */ = {isa = PBXBuildFile; fileRef = 275CED511D3EF7BE001DE46C /* FleeceException.hh */; };
+		2770153C1D59645A008BADD7 /* cdecode.c in Sources */ = {isa = PBXBuildFile; fileRef = 277015351D596436008BADD7 /* cdecode.c */; };
+		2770153D1D59645A008BADD7 /* cencode.c in Sources */ = {isa = PBXBuildFile; fileRef = 277015371D596436008BADD7 /* cencode.c */; };
 		278163B51CE69CA800B94E32 /* Fleece_C_impl.cc in Sources */ = {isa = PBXBuildFile; fileRef = 278163B31CE69CA800B94E32 /* Fleece_C_impl.cc */; settings = {COMPILER_FLAGS = "-Wno-return-type-c-linkage"; }; };
 		278163B61CE69CA800B94E32 /* Fleece.h in Headers */ = {isa = PBXBuildFile; fileRef = 278163B41CE69CA800B94E32 /* Fleece.h */; };
 		278163B91CE6BB8C00B94E32 /* C_Test.c in Sources */ = {isa = PBXBuildFile; fileRef = 278163B81CE6BB8C00B94E32 /* C_Test.c */; };
@@ -127,6 +129,15 @@
 		275C67DC1BFBA128008AA9E7 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		275CED501D3EF7BE001DE46C /* FleeceException.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FleeceException.cc; sourceTree = "<group>"; };
 		275CED511D3EF7BE001DE46C /* FleeceException.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = FleeceException.hh; sourceTree = "<group>"; };
+		277015351D596436008BADD7 /* cdecode.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = cdecode.c; sourceTree = "<group>"; tabWidth = 4; usesTabs = 1; };
+		277015361D596436008BADD7 /* cdecode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cdecode.h; sourceTree = "<group>"; tabWidth = 4; usesTabs = 1; };
+		277015371D596436008BADD7 /* cencode.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = cencode.c; sourceTree = "<group>"; tabWidth = 4; usesTabs = 1; };
+		277015381D596436008BADD7 /* cencode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cencode.h; sourceTree = "<group>"; tabWidth = 4; usesTabs = 1; };
+		2770153B1D596436008BADD7 /* README */ = {isa = PBXFileReference; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
+		2770153E1D5A3B2C008BADD7 /* decode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = decode.h; sourceTree = "<group>"; };
+		2770153F1D5A3B2C008BADD7 /* encode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = encode.h; sourceTree = "<group>"; };
+		277015401D5A63B9008BADD7 /* CHANGELOG */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CHANGELOG; sourceTree = "<group>"; };
+		277015411D5A64B4008BADD7 /* AUTHORS */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = AUTHORS; sourceTree = "<group>"; };
 		278163B31CE69CA800B94E32 /* Fleece_C_impl.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Fleece_C_impl.cc; sourceTree = "<group>"; };
 		278163B41CE69CA800B94E32 /* Fleece.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Fleece.h; sourceTree = "<group>"; };
 		278163B71CE6A07A00B94E32 /* Fleece.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Fleece.hh; sourceTree = "<group>"; };
@@ -254,6 +265,7 @@
 			isa = PBXGroup;
 			children = (
 				27298E3F1C00F8A9000CFBA8 /* jsonsl */,
+				277015321D596436008BADD7 /* libb64 */,
 			);
 			path = vendor;
 			sourceTree = "<group>";
@@ -290,6 +302,22 @@
 				272E5A561BF7FEB200848580 /* libstdc++.tbd */,
 			);
 			name = Libraries;
+			sourceTree = "<group>";
+		};
+		277015321D596436008BADD7 /* libb64 */ = {
+			isa = PBXGroup;
+			children = (
+				277015351D596436008BADD7 /* cdecode.c */,
+				277015361D596436008BADD7 /* cdecode.h */,
+				277015371D596436008BADD7 /* cencode.c */,
+				277015381D596436008BADD7 /* cencode.h */,
+				2770153E1D5A3B2C008BADD7 /* decode.h */,
+				2770153F1D5A3B2C008BADD7 /* encode.h */,
+				2770153B1D596436008BADD7 /* README */,
+				277015401D5A63B9008BADD7 /* CHANGELOG */,
+				277015411D5A64B4008BADD7 /* AUTHORS */,
+			);
+			path = libb64;
 			sourceTree = "<group>";
 		};
 		278163B21CE69C7300B94E32 /* C */ = {
@@ -435,6 +463,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				270FA27E1BF53CEA005DCB13 /* Encoder+ObjC.mm in Sources */,
+				2770153C1D59645A008BADD7 /* cdecode.c in Sources */,
 				270FA27B1BF53CEA005DCB13 /* Value+ObjC.mm in Sources */,
 				27C4ACAC1CE5146500938365 /* Array.cc in Sources */,
 				270FA27A1BF53CEA005DCB13 /* Value+JSON.cc in Sources */,
@@ -445,6 +474,7 @@
 				2797BCD21C122E9200E5C991 /* FleeceDocument.mm in Sources */,
 				270FA2821BF53CEA005DCB13 /* slice.cc in Sources */,
 				270FA2781BF53CEA005DCB13 /* Value.cc in Sources */,
+				2770153D1D59645A008BADD7 /* cencode.c in Sources */,
 				278163BC1CE7A72300B94E32 /* KeyTree.cc in Sources */,
 				27298E801C04E665000CFBA8 /* Encoder.cc in Sources */,
 				27298E3C1C00F812000CFBA8 /* JSONConverter.cc in Sources */,
@@ -536,7 +566,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				LLVM_LTO = YES;
+				LLVM_LTO = NO;
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;

@@ -417,6 +417,19 @@ public:
         AssertEqual((slice)output, json);
     }
 
+    void testJSONBinary() {
+        enc.beginArray();
+        enc.writeData(slice("not-really-binary"));
+        enc.endArray();
+        endEncoding();
+        auto json = Value::fromData(result)->toJSON();
+        AssertEqual(json, alloc_slice("[\"bm90LXJlYWxseS1iaW5hcnk=\"]"));
+
+        Writer w;
+        w.writeDecodedBase64(slice("bm90LXJlYWxseS1iaW5hcnk="));
+        AssertEqual(w.extractOutput(), alloc_slice("not-really-binary"));
+    }
+
     void testDump() {
         std::string json = "{\"foo\":123,"
                            "\"\\\"ironic\\\"\":[null,false,true,-100,0,100,123.456,6.02e+23],"
@@ -741,6 +754,7 @@ public:
     CPPUNIT_TEST( testSharedStrings );
     CPPUNIT_TEST( testJSONStrings );
     CPPUNIT_TEST( testJSON );
+    CPPUNIT_TEST( testJSONBinary );
     CPPUNIT_TEST( testDump );
     CPPUNIT_TEST( testConvertPeople );
     CPPUNIT_TEST( testFindPersonByIndexUnsorted );
