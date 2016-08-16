@@ -158,6 +158,7 @@ namespace fleece {
         size_t written = enc.encode(data.buf, data.size, dst);
         written += enc.encode_end(dst + written);
         assert((size_t)written == base64size);
+        (void)written;      // suppresses 'unused value' warning in release builds
     }
 
 

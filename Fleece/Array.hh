@@ -49,7 +49,7 @@ namespace fleece {
             uint32_t count() const              {return _a._count;}
 
             const Value* value() const          {return _value;}
-            operator const Value* const ()      {return _value;}
+            explicit operator const Value* const () {return _value;}
             const Value* operator-> ()          {return _value;}
 
             /** Returns the current item and advances to the next. */
