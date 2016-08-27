@@ -3,7 +3,7 @@
 //  Fleece
 //
 //  Created by Jens Alfke on 12/4/15.
-//  Copyright © 2015 Couchbase. All rights reserved.
+//  Copyright (c) 2015-2016 Couchbase. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
