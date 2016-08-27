@@ -13,8 +13,7 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#ifndef Fleece_Writer_hh
-#define Fleece_Writer_hh
+#pragma once
 
 #include "slice.hh"
 #include <vector>
@@ -90,5 +89,3 @@ namespace fleece {
     };
 
 }
-
-#endif /* Fleece_Writer_hh */

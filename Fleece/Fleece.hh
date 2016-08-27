@@ -6,8 +6,7 @@
 //  Copyright © 2016 Couchbase. All rights reserved.
 //
 
-#ifndef Fleece_hh
-#define Fleece_hh
+#pragma once
 
 #ifndef __cplusplus
 #error Using Fleece C++ API from C code. Please include Fleece.h instead.
@@ -17,5 +16,3 @@
 #include "Array.hh"
 #include "Encoder.hh"
 #include "JSONConverter.hh"
-
-#endif /* Fleece_hh */

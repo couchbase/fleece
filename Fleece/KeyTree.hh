@@ -6,8 +6,7 @@
 //  Copyright © 2016 Couchbase. All rights reserved.
 //
 
-#ifndef KeyTree_hh
-#define KeyTree_hh
+#pragma once
 
 #include "slice.hh"
 #include <vector>
@@ -39,5 +38,3 @@ namespace fleece {
     };
 
 }
-
-#endif /* KeyTree_hh */

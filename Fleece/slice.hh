@@ -13,8 +13,7 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#ifndef Fleece_slice_hh
-#define Fleece_slice_hh
+#pragma once
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -236,5 +235,3 @@ namespace fleece {
     };
 
 }
-
-#endif

@@ -6,8 +6,7 @@
 //  Copyright © 2015 Couchbase. All rights reserved.
 //
 
-#ifndef FleeceTests_h
-#define FleeceTests_h
+#pragma once
 
 #include "Value.hh"
 #include "Array.hh"
@@ -113,5 +112,3 @@ private:
 
 #include <cppunit/TestCase.h>
 #include <cppunit/extensions/HelperMacros.h>
-
-#endif /* FleeceTests_h */

@@ -13,8 +13,7 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#ifndef Fleece_Endian_hh
-#define Fleece_Endian_hh
+#pragma once
 extern "C" {
     #include "forestdb_endian.h"
 }
@@ -80,5 +79,3 @@ namespace fleece {
     typedef internal::endian<double, uint64_t, internal::_swapBig>    bigEndianDouble;
 
 }
-
-#endif

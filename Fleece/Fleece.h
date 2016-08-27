@@ -6,8 +6,7 @@
 //  Copyright © 2016 Couchbase. All rights reserved.
 //
 
-#ifndef Fleece_h
-#define Fleece_h
+#pragma once
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -180,4 +179,3 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-#endif /* Fleece_h */

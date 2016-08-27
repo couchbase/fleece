@@ -13,8 +13,7 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#ifndef Fleece_Internal_hh
-#define Fleece_Internal_hh
+#pragma once
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -80,5 +79,3 @@ namespace fleece {
 
     }
 }
-
-#endif /* Fleece_Internal_hh */

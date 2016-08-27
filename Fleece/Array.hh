@@ -6,8 +6,7 @@
 //  Copyright © 2016 Couchbase. All rights reserved.
 //
 
-#ifndef Array_hh
-#define Array_hh
+#pragma once
 
 #include "Value.hh"
 
@@ -181,5 +180,3 @@ namespace fleece {
     };
 
 }
-
-#endif /* Array_hh */

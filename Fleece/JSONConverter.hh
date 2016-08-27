@@ -6,8 +6,7 @@
 //  Copyright © 2015 Couchbase. All rights reserved.
 //
 
-#ifndef Fleece_JSONConverter_h
-#define Fleece_JSONConverter_h
+#pragma once
 
 #include "Encoder.hh"
 #include <vector>
@@ -58,5 +57,3 @@ namespace fleece {
     };
 
 }
-
-#endif /* Fleece_JSONConverter_h */

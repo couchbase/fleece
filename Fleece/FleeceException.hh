@@ -6,8 +6,7 @@
 //  Copyright © 2016 Couchbase. All rights reserved.
 //
 
-#ifndef FleeceException_hh
-#define FleeceException_hh
+#pragma once
 #include <exception>
 
 namespace fleece {
@@ -27,5 +26,3 @@ namespace fleece {
     };
     
 }
-
-#endif /* FleeceException_hh */

@@ -13,8 +13,7 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#ifndef Fleece_Value_hh
-#define Fleece_Value_hh
+#pragma once
 #include "Internal.hh"
 #include "slice.hh"
 #include "Endian.hh"
@@ -228,5 +227,3 @@ namespace fleece {
     };
 
 }
-
-#endif

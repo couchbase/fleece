@@ -6,8 +6,7 @@
 //  Copyright © 2015 Couchbase. All rights reserved.
 //
 
-#ifndef stringTable_hh
-#define stringTable_hh
+#pragma once
 
 #include "slice.hh"
 
@@ -77,5 +76,3 @@ namespace fleece {
     };
 
 }
-
-#endif /* stringTable_hh */

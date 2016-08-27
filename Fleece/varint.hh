@@ -13,8 +13,7 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#ifndef Fleece_varint_hh
-#define Fleece_varint_hh
+#pragma once
 
 #include <stddef.h>
 #include "slice.hh"
@@ -72,5 +71,3 @@ inline size_t PutUIntOfLength(void *buf, uint64_t n) {return PutIntOfLength(buf,
 int64_t GetIntOfLength(const void *buf, unsigned length);
 
 }
-
-#endif
