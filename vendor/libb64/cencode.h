@@ -7,7 +7,7 @@ For details, see http://sourceforge.net/projects/libb64
 
 #ifndef BASE64_CENCODE_H
 #define BASE64_CENCODE_H
-#include <stddef.h>
+#include <stdint.h>
 
 typedef enum
 {

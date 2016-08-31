@@ -22,6 +22,8 @@
 #include <map>
 #ifdef __OBJC__
 #import <Foundation/NSMapTable.h>
+#elif defined(_MSC_VER)
+#define __builtin_expect
 #endif
 
 

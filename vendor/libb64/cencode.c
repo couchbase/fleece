@@ -24,7 +24,7 @@ char base64_encode_value(uint8_t value_in)
 	return encoding[(int)value_in];
 }
 
-size_t base64_encode_block(const void* plaintext_in, size_t length_in, void* code_out,
+size_t base64_encode_block(const uint8_t* plaintext_in, size_t length_in, void* code_out,
 						   base64_encodestate* state_in)
 {
 	const uint8_t* plainchar = plaintext_in;

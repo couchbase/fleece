@@ -17,6 +17,9 @@
 #include <algorithm>
 #include <assert.h>
 #include <stdlib.h>
+#if _MSC_VER
+#define __builtin_expect
+#endif
 
 namespace fleece {
 

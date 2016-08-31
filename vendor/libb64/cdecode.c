@@ -20,7 +20,7 @@ void base64_init_decodestate(base64_decodestate* state_in)
 	state_in->plainchar = 0;
 }
 
-size_t base64_decode_block(const void* code_in, const size_t length_in, void* plaintext_out,
+size_t base64_decode_block(const uint8_t* code_in, const size_t length_in, void* plaintext_out,
 						   base64_decodestate* state_in)
 {
 	const uint8_t* codechar = code_in;

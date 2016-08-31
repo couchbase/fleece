@@ -172,10 +172,19 @@ namespace fleece {
             return key ? deref(next(key)) : NULL;
         }
 
+#ifdef _MSC_VER
+#if 1
+        // NOTE: Can't get this to compile
+#define log(FMT, PARAM, ...)
+#else
+#define log(FMT, PARAM, ...) ({for (unsigned i_=0; i_<indent; i_++) std::cerr << "\t"; fprintf(stderr, FMT "\n", PARAM, __VA_ARGS__);})
+#endif
+#else
 #ifdef NDEBUG
 #define log(FMT, PARAM...) ({})
 #else
 #define log(FMT, PARAM...) ({for (unsigned i_=0; i_<indent; i_++) std::cerr << "\t"; fprintf(stderr, FMT "\n", PARAM);})
+#endif
 #endif
 
         size_t get(Dict::key keysToFind[], const Value* values[], size_t nKeys) {

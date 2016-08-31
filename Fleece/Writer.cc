@@ -17,6 +17,7 @@
 #include "decode.h"
 #include "encode.h"
 #include <assert.h>
+#include <algorithm>
 
 
 namespace fleece {
@@ -164,9 +165,9 @@ namespace fleece {
 
     void Writer::writeDecodedBase64(slice base64) {
         base64::decoder dec;
-        char buf[(base64.size + 3) / 4 * 3];
-        size_t len = dec.decode(base64.buf, base64.size, buf);
-        write(buf, len);
+        std::vector<char> buf((base64.size + 3) / 4 * 3);
+        size_t len = dec.decode(base64.buf, base64.size, buf.data());
+        write(buf.data(), len);
     }
 
 }

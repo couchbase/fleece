@@ -11,6 +11,7 @@
 #include <assert.h>
 #include <math.h>
 #include <iostream>
+#include <algorithm>
 
 
 namespace fleece {

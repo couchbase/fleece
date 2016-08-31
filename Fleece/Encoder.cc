@@ -22,6 +22,12 @@
 #include <math.h>
 #include <stdlib.h>
 
+#ifdef _MSC_VER
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+#define __builtin_expect
+#endif
+
 
 namespace fleece {
 
@@ -379,12 +385,12 @@ namespace fleece {
             if (items->wide) {
                 _out.write(&(*items)[0], kWide*nValues);
             } else {
-                uint16_t narrow[nValues];
+                std::vector<uint16_t> narrow(nValues);
                 size_t i = 0;
                 for (auto v = items->begin(); v != items->end(); ++v, ++i) {
                     ::memcpy(&narrow[i], &*v, kNarrow);
                 }
-                _out.write(narrow, kNarrow*nValues);
+                _out.write(narrow.data(), kNarrow*nValues);
             }
         }
 
@@ -420,11 +426,11 @@ namespace fleece {
                 keys[i].buf = offsetby(&items[2*i], 1);
 
         // Construct an array that describes the permutation of item indices:
-        const slice* indices[n];
+        std::vector<const slice*> indices(n);
         const slice* base = &keys[0];
         for (unsigned i = 0; i < n; i++)
             indices[i] = base + i;
-        ::qsort(indices, n, sizeof(indices[0]), &compareKeysByIndex);
+        ::qsort(indices.data(), n, sizeof(indices[0]), &compareKeysByIndex);
         // indices[i] is now a pointer to the Value that should go at index i
 
         // Now rewrite items according to the permutation in indices:
