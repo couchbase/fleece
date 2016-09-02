@@ -14,7 +14,10 @@
 //  and limitations under the License.
 
 #include "slice.hh"
+#include "encode.h"
+#include "decode.h"
 #include <algorithm>
+#include <assert.h>
 #include <math.h>
 #include <stdlib.h>
 
@@ -176,5 +179,31 @@ namespace fleece {
         }
         return result;
     }
+
+
+    std::string slice::base64String() const {
+        std::string str;
+        size_t strLen = ((size + 2) / 3) * 4;
+        str.resize(strLen);
+        char *dst = &str[0];
+        base64::encoder enc;
+        enc.set_chars_per_line(0);
+        size_t written = enc.encode(buf, size, dst);
+        written += enc.encode_end(dst + written);
+        assert(written == strLen);
+        return str;
+    }
+
+
+    slice slice::readBase64Into(slice output) const {
+        size_t expectedLen = (size + 3) / 4 * 3;
+        if (expectedLen > output.size)
+            return slice::null;
+        base64::decoder dec;
+        size_t len = dec.decode(buf, size, (void*)output.buf);
+        assert(len <= output.size);
+        return slice(output.buf, len);
+    }
+
 
 }

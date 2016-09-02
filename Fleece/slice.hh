@@ -114,6 +114,14 @@ namespace fleece {
         std::string asString() const                {return (std::string)*this;}
         std::string hexString() const;
 
+        std::string base64String() const;
+
+        /** Decodes Base64 data from receiver into output. On success returns subrange of output
+            where the decoded data is. If output is too small to hold all the decoded data, returns
+            a null slice. */
+        slice readBase64Into(slice output) const;
+
+
         #define hexCString() hexString().c_str()    // has to be a macro else dtor called too early
         #define cString() asString().c_str()        // has to be a macro else dtor called too early
 
