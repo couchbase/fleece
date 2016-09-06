@@ -68,6 +68,7 @@ namespace fleece {
         slice operator()(size_t i, unsigned n) const  {return slice(offset(i), n);}
 
         slice read(size_t nBytes);
+        slice readAtMost(size_t nBytes);
         bool readInto(slice dst);
 
         bool writeFrom(slice);

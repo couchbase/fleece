@@ -41,6 +41,13 @@ namespace fleece {
         return result;
     }
 
+    slice slice::readAtMost(size_t nBytes) {
+        nBytes = std::min(nBytes, size);
+        slice result(buf, nBytes);
+        moveStart(nBytes);
+        return result;
+    }
+
     bool slice::readInto(slice dst) {
         if (dst.size > size)
             return false;
