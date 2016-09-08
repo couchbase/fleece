@@ -32,7 +32,7 @@ namespace base64
 
 		size_t decode(const void* code_in, const size_t length_in, void* plaintext_out)
 		{
-			return base64_decode_block(code_in, length_in, plaintext_out, &_state);
+			return base64_decode_block((const uint8_t*)code_in, length_in, plaintext_out, &_state);
 		}
 
 		void decode(std::istream& istream_in, std::ostream& ostream_in, int buffersize_in = 1024)

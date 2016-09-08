@@ -17,6 +17,7 @@
 #include "Endian.hh"
 #include "varint.hh"
 #include "FleeceException.hh"
+#include "MSVC_Compat.hh"
 #include <algorithm>
 #include <assert.h>
 #include <math.h>
@@ -379,7 +380,7 @@ namespace fleece {
             if (items->wide) {
                 _out.write(&(*items)[0], kWide*nValues);
             } else {
-                uint16_t narrow[nValues];
+                StackArray(narrow, uint16_t, nValues);
                 size_t i = 0;
                 for (auto v = items->begin(); v != items->end(); ++v, ++i) {
                     ::memcpy(&narrow[i], &*v, kNarrow);
@@ -420,7 +421,7 @@ namespace fleece {
                 keys[i].buf = offsetby(&items[2*i], 1);
 
         // Construct an array that describes the permutation of item indices:
-        const slice* indices[n];
+        StackArray(indices, const slice*, n);
         const slice* base = &keys[0];
         for (unsigned i = 0; i < n; i++)
             indices[i] = base + i;

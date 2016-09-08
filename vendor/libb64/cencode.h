@@ -7,7 +7,7 @@ For details, see http://sourceforge.net/projects/libb64
 
 #ifndef BASE64_CENCODE_H
 #define BASE64_CENCODE_H
-#include <stddef.h>
+#include <stdint.h>
 
 typedef enum
 {
@@ -26,7 +26,7 @@ void base64_init_encodestate(base64_encodestate* state_in);
 
 char base64_encode_value(uint8_t value_in);
 
-size_t base64_encode_block(const void* plaintext_in,
+size_t base64_encode_block(const uint8_t* plaintext_in,
                            size_t length_in,
                            void* code_out,
                            base64_encodestate* state_in);

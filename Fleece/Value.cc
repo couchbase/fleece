@@ -47,7 +47,8 @@ namespace fleece {
         auto t = tag();
         if (t == kSpecialTag) {
             switch (tinyValue()) {
-                case kSpecialValueFalse...kSpecialValueTrue:
+                case kSpecialValueFalse:
+                case kSpecialValueTrue:
                     return kBoolean;
                 case kSpecialValueNull:
                 default:
@@ -63,7 +64,9 @@ namespace fleece {
         switch (tag()) {
             case kSpecialTag:
                 return tinyValue() == kSpecialValueTrue;
-            case kShortIntTag...kFloatTag:
+            case kShortIntTag:
+            case kIntTag:
+            case kFloatTag:
                 return asInt() != 0;
             default:
                 return true;
