@@ -17,16 +17,11 @@
 #include "Endian.hh"
 #include "varint.hh"
 #include "FleeceException.hh"
+#include "MSVC_Compat.hh"
 #include <algorithm>
 #include <assert.h>
 #include <math.h>
 #include <stdlib.h>
-
-#ifdef _MSC_VER
-#include <BaseTsd.h>
-typedef SSIZE_T ssize_t;
-#define __builtin_expect
-#endif
 
 
 namespace fleece {
@@ -385,12 +380,12 @@ namespace fleece {
             if (items->wide) {
                 _out.write(&(*items)[0], kWide*nValues);
             } else {
-                std::vector<uint16_t> narrow(nValues);
+                StackArray(narrow, uint16_t, nValues);
                 size_t i = 0;
                 for (auto v = items->begin(); v != items->end(); ++v, ++i) {
                     ::memcpy(&narrow[i], &*v, kNarrow);
                 }
-                _out.write(narrow.data(), kNarrow*nValues);
+                _out.write(narrow, kNarrow*nValues);
             }
         }
 
@@ -426,11 +421,11 @@ namespace fleece {
                 keys[i].buf = offsetby(&items[2*i], 1);
 
         // Construct an array that describes the permutation of item indices:
-        std::vector<const slice*> indices(n);
+        StackArray(indices, const slice*, n);
         const slice* base = &keys[0];
         for (unsigned i = 0; i < n; i++)
             indices[i] = base + i;
-        ::qsort(indices.data(), n, sizeof(indices[0]), &compareKeysByIndex);
+        ::qsort(indices, n, sizeof(indices[0]), &compareKeysByIndex);
         // indices[i] is now a pointer to the Value that should go at index i
 
         // Now rewrite items according to the permutation in indices:

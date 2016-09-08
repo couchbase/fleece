@@ -27,10 +27,9 @@ namespace fleece {
         else if (this->size < b.size) {
             int result = memcmp(this->buf, b.buf, this->size);
             return result ? result : -1;
-        }
-        else {
+        } else {
             int result = memcmp(this->buf, b.buf, b.size);
-            return result ? result : -1;
+            return result ? result : 1;
         }
     }
 

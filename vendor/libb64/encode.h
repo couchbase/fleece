@@ -37,7 +37,7 @@ namespace base64
 
 		size_t encode(const void* code_in, const size_t length_in, void* plaintext_out)
 		{
-			return base64_encode_block(code_in, length_in, plaintext_out, &_state);
+			return base64_encode_block((const uint8_t*)code_in, length_in, plaintext_out, &_state);
 		}
 
 		size_t encode_end(char* plaintext_out)
