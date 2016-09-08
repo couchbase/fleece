@@ -198,6 +198,7 @@ namespace fleece {
         size_t written = enc.encode(buf, size, dst);
         written += enc.encode_end(dst + written);
         assert(written == strLen);
+        (void)written;  // avoid compiler warning in release build when 'assert' is a no-op
         return str;
     }
 

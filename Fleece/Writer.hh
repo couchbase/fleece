@@ -29,8 +29,8 @@ namespace fleece {
         Writer(size_t initialCapacity =kDefaultInitialCapacity);
         ~Writer();
 
-        Writer(Writer&&);
-        Writer& operator= (Writer&&);
+        Writer(Writer&&) noexcept;
+        Writer& operator= (Writer&&) noexcept;
 
         size_t length() const                   {return _length;}
         const void* curPos() const;

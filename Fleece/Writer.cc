@@ -28,8 +28,8 @@ namespace fleece {
         addChunk(initialCapacity);
     }
 
-    Writer::Writer(Writer&& w)
-    :_chunks(w._chunks)
+    Writer::Writer(Writer&& w) noexcept
+    :_chunks(std::move(w._chunks))
     {
         w._chunks.resize(0);
     }
@@ -39,8 +39,8 @@ namespace fleece {
             chunk.free();
     }
 
-    Writer& Writer::operator= (Writer&& w) {
-        _chunks = w._chunks;
+    Writer& Writer::operator= (Writer&& w) noexcept {
+        _chunks = std::move(w._chunks);
         w._chunks.resize(0);
         return *this;
     }
