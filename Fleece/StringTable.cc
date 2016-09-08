@@ -14,6 +14,7 @@
 //  and limitations under the License.
 
 #include "stringTable.hh"
+#include "MSVC_Compat.hh"
 #include <algorithm>
 #include <assert.h>
 #include <stdlib.h>
@@ -43,7 +44,7 @@ namespace fleece {
         assert(key.buf != NULL);
         size_t index = hash & (_size - 1);
         slot *s = &_table[index];
-        if (__builtin_expect(s->first.buf != NULL && s->first != key, false)) {
+        if (_usuallyFalse(s->first.buf != NULL && s->first != key)) {
             slot *end = &_table[_size];
             do {
                 if (++s >= end)

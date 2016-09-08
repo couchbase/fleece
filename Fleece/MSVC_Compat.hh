@@ -11,7 +11,8 @@
 
 #ifdef _MSC_VER
 
-    #define __builtin_expect(VAL, EXPECTED) (VAL)
+    #define _usuallyTrue(VAL)               (VAL)
+    #define _usuallyFalse(VAL)              (VAL)
 
     #define __has_extension(X)              0
     #define __has_feature(F)                0
@@ -29,6 +30,9 @@
     #define StackArray(NAME, TYPE, SIZE)    TYPE* NAME = (TYPE*)_malloca(sizeof(TYPE)*(size))
 
 #else
+
+    #define _usuallyTrue(VAL)               __builtin_expect(VAL, true)
+    #define _usuallyFalse(VAL)              __builtin_expect(VAL, false)
 
     #define StackArray(NAME, TYPE, SIZE)    TYPE NAME[(SIZE)]
 

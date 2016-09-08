@@ -19,6 +19,7 @@
 #include "Endian.hh"
 #include "FleeceException.hh"
 #include "varint.hh"
+#include "MSVC_Compat.hh"
 #include <assert.h>
 #include <math.h>
 
@@ -127,6 +128,17 @@ namespace fleece {
                 else
                     return asInt();
         }
+    }
+
+    slice Value::getStringBytes() const {
+        slice s(&_byte[1], tinyValue());
+        if (_usuallyFalse(s.size == 0x0F)) {
+            // This means the actual length follows as a varint:
+            uint32_t realLength;
+            ReadUVarInt32(&s, &realLength);
+            s.size = realLength;
+        }
+        return s;
     }
 
     std::string Value::toString() const {

@@ -193,16 +193,7 @@ namespace fleece {
         uint16_t shortValue() const  {return (((uint16_t)_byte[0] << 8) | _byte[1]) & 0x0FFF;}
         template<typename T> T asFloatOfType() const;
 
-        slice getStringBytes() const {
-            slice s(&_byte[1], tinyValue());
-            if (__builtin_expect(s.size == 0x0F, false)) {
-                // This means the actual length follows as a varint:
-                uint32_t realLength;
-                ReadUVarInt32(&s, &realLength);
-                s.size = realLength;
-            }
-            return s;
-        }
+        slice getStringBytes() const;
 
         // dump:
         size_t dataSize() const;

@@ -212,8 +212,7 @@ namespace fleece {
     // Returns the location where s got written to, if possible, just like writeData above.
     slice Encoder::_writeString(slice s, bool asKey) {
         // Check whether this string's already been written:
-        if (__builtin_expect(_uniqueStrings && s.size >= kNarrow && s.size <= kMaxSharedStringSize,
-                             true)) {
+        if (_usuallyTrue(_uniqueStrings && s.size >= kNarrow && s.size <= kMaxSharedStringSize)) {
             auto entry = _strings.find(s);
             if (entry->first.buf != NULL) {
 //                fprintf(stderr, "Found `%.*s` --> %u\n", (int)s.size, s.buf, entry->second);

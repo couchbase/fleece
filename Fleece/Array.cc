@@ -17,6 +17,7 @@
 #include "Internal.hh"
 #include "FleeceException.hh"
 #include "varint.hh"
+#include "MSVC_Compat.hh"
 #include <assert.h>
 #include <iostream>
 
@@ -44,7 +45,7 @@ namespace fleece {
     const Value* Value::deref(const Value *v) {
         if (v->isPointer()) {
             v = derefPointer<WIDE>(v);
-            while (!WIDE && __builtin_expect(v->isPointer(), false))
+            while (!WIDE && _usuallyFalse(v->isPointer()))
                 v = derefPointer<true>(v);      // subsequent pointers must be wide
         }
         return v;
