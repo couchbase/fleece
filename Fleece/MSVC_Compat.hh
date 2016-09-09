@@ -27,7 +27,7 @@
 
     // MSVC doesn't support C99 so it doesn't have variable-length C arrays.
     // WARNING: sizeof() will not work on this array since it's actually declared as a pointer.
-    #define StackArray(NAME, TYPE, SIZE)    TYPE* NAME = (TYPE*)_malloca(sizeof(TYPE)*(size))
+    #define StackArray(NAME, TYPE, SIZE)    TYPE* NAME = (TYPE*)_malloca(sizeof(TYPE)*(SIZE))
 
 #else
 
