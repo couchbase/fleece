@@ -15,6 +15,7 @@
 
 #pragma once
 #include "Internal.hh"
+#include "FleeceException.hh"
 #include "slice.hh"
 #include "Endian.hh"
 #include "varint.hh"
@@ -177,12 +178,12 @@ namespace fleece {
             offset >>= 1;
             if (width < internal::kWide) {
                 if (offset >= 0x8000)
-                    throw "offset too large";
+                    throw FleeceException(InternalError, "offset too large");
                 int16_t n = (uint16_t)_enc16(offset | 0x8000); // big-endian, high bit set
                 memcpy(_byte, &n, sizeof(n));
             } else {
                 if (offset >= 0x80000000)
-                    throw "offset too large";
+                    throw FleeceException(OutOfRange, "data too large");
                 uint32_t n = (uint32_t)_enc32(offset | 0x80000000);
                 memcpy(_byte, &n, sizeof(n));
             }

@@ -165,7 +165,7 @@ namespace fleece {
                         str = (char*)"true";
                         break;
                     default:
-                        throw FleeceException("illegal special typecode");
+                        throw FleeceException(InvalidData, "illegal special typecode in Value; corrupt data?");
                         break;
                 }
                 break;

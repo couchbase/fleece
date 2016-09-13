@@ -31,6 +31,7 @@ namespace fleece {
 
         /** See jsonsl_error_t for error codes, plus a few more defined below. */
         int error()                 {return _error;}
+        const char* errorMessage();
         
         /** Byte offset in input where error occurred */
         size_t errorPos()           {return _errorPos;}

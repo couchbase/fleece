@@ -54,7 +54,7 @@ namespace fleece {
                        encoding: NSUTF8StringEncoding options: 0
                           range: NSMakeRange(0, str.length) remainingRange: NULL];
         if (!ok)
-            throw "couldn't get NSString bytes";
+            throw std::runtime_error("couldn't get NSString bytes");
         size = byteCount;
     }
 

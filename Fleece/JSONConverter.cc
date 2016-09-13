@@ -48,6 +48,11 @@ namespace fleece {
             jsonsl_destroy(_jsn);
     }
 
+    const char* JSONConverter::errorMessage() {
+        return jsonsl_strerror((jsonsl_error_t)_error);
+    }
+
+
     bool JSONConverter::convertJSON(slice json) {
         _input = json;
         _error = JSONSL_ERROR_SUCCESS;

@@ -1,5 +1,5 @@
 //
-//  fleece_c.cc
+//  fleece_C_impl.cc
 //  Fleece
 //
 //  Created by Jens Alfke on 5/13/16.
@@ -14,67 +14,182 @@
 //  and limitations under the License.
 
 #include "Fleece.hh"
+#include "FleeceException.hh"
 using namespace fleece;
+
+namespace fleece {
+    struct FLEncoderImpl;
+}
 
 #define FL_IMPL
 typedef const Value* FLValue;
 typedef const Array* FLArray;
 typedef const Dict* FLDict;
-typedef Encoder* FLEncoder;
 typedef slice FLSlice;
+typedef FLEncoderImpl* FLEncoder;
 
-#include "fleece.h"
+
+#include "Fleece.h" /* the C header */
+
+
+static void recordError(const std::exception &x, FLError *outError) {
+    if (outError) {
+        auto fleecex = dynamic_cast<const FleeceException*>(&x);
+        if (fleecex)
+            *outError = (FLError)fleecex->code;
+        else if (nullptr != dynamic_cast<const std::bad_alloc*>(&x))
+            *outError = ::MemoryError;
+        else
+            *outError = ::InternalError;
+    }
+}
+
+#define catchError(OUTERROR) \
+    catch (const std::exception &x) { recordError(x, OUTERROR); }
+
+
+namespace fleece {
+
+    // Implementation of FLEncoder: a subclass of Encoder that keeps track of its error state.
+    struct FLEncoderImpl : public Encoder {
+        FLError errorCode {::NoError};
+        std::string errorMessage;
+
+        FLEncoderImpl(size_t reserveOutputSize =256) :Encoder(reserveOutputSize) { }
+
+        bool hasError() const {
+            return errorCode != ::NoError;
+        }
+
+        void recordError(const std::exception &x) {
+            if (!hasError()) {
+                ::recordError(x, &errorCode);
+                errorMessage = x.what();
+            }
+        }
+
+        void reset() {              // careful, not a real override (non-virtual method)
+            Encoder::reset();
+            errorCode = ::NoError;
+        }
+    };
+
+}
 
 
 void FLSliceFree(FLSliceResult s)               {free(s.buf);}
 
-FLValue FLValueFromData(FLSlice data)           {return Value::fromData(data);}
-FLValue FLValueFromTrustedData(FLSlice data)    {return Value::fromTrustedData(data);}
-FLValueType FLValueGetType(FLValue v)           {return (FLValueType)v->type();}
-bool FLValueIsInteger(FLValue v)                {return v->isInteger();}
-bool FLValueIsUnsigned(FLValue v)               {return v->isUnsigned();}
-bool FLValueIsDouble(FLValue v)                 {return v->isDouble();}
-bool FLValueAsBool(FLValue v)                   {return v->asBool();}
-int64_t FLValueAsInt(FLValue v)                 {return v->asInt();}
-uint64_t FLValueAsUnsigned(FLValue v)           {return v->asUnsigned();}
-float FLValueAsFloat(FLValue v)                 {return v->asFloat();}
-double FLValueAsDouble(FLValue v)               {return v->asDouble();}
-FLSlice FLValueAsString(FLValue v)              {return v->asString();}
-FLArray FLValueAsArray(FLValue v)               {return v->asArray();}
-FLDict FLValueAsDict(FLValue v)                 {return v->asDict();}
+
+FLValue FLValueFromData(FLSlice data, FLError *outError) {
+    try {
+        auto val = Value::fromData(data);
+        if (val)
+            return val;
+        else if (outError)
+            *outError = ::UnknownValue;
+    } catchError(outError)
+    return nullptr;
+}
+
+
+FLValue FLValueFromTrustedData(FLSlice data, FLError *outError) {
+    try {
+        auto val = Value::fromTrustedData(data);
+        if (val)
+            return val;
+        else if (outError)
+            *outError = ::UnknownValue;
+    } catchError(outError)
+    return nullptr;
+}
+
+
+FLSliceResult FLConvertJSON(FLSlice json, FLError *outError) {
+    FLEncoderImpl e(json.size);
+    try {
+        JSONConverter jc(e);
+        if (jc.convertJSON(json))
+            return FLEncoderFinish(&e, outError);
+        else {
+            e.errorCode = ::JSONError; //TODO: Save value of jc.error() somewhere
+            e.errorMessage = jc.errorMessage();
+        }
+    } catch (const std::exception &x) {
+        e.recordError(x);
+    }
+    // Failure:
+    if (outError)
+        *outError = e.errorCode;
+    return {nullptr, 0};
+}
+
+
+FLValueType FLValueGetType(FLValue v)       {return v ? (FLValueType)v->type() : kFLUndefined;}
+bool FLValueIsInteger(FLValue v)            {return v && v->isInteger();}
+bool FLValueIsUnsigned(FLValue v)           {return v && v->isUnsigned();}
+bool FLValueIsDouble(FLValue v)             {return v && v->isDouble();}
+bool FLValueAsBool(FLValue v)               {return v && v->asBool();}
+int64_t FLValueAsInt(FLValue v)             {return v ? v->asInt() : 0;}
+uint64_t FLValueAsUnsigned(FLValue v)       {return v ? v->asUnsigned() : 0;}
+float FLValueAsFloat(FLValue v)             {return v ? v->asFloat() : 0.0;}
+double FLValueAsDouble(FLValue v)           {return v ? v->asDouble() : 0.0;}
+FLSlice FLValueAsString(FLValue v)          {return v ? v->asString() : slice::null;}
+FLArray FLValueAsArray(FLValue v)           {return v ? v->asArray() : nullptr;}
+FLDict FLValueAsDict(FLValue v)             {return v ? v->asDict() : nullptr;}
+
 
 static FLSliceResult strToSlice(std::string str) {
     FLSliceResult result;
     result.size = str.size();
-    if (result.size == 0)
-        return {NULL, 0};
-    result.buf = malloc(result.size);
-    if (!result.buf)
-        return {NULL, 0};
-    memcpy(result.buf, str.data(), result.size);
-    return result;
+    if (result.size > 0) {
+        result.buf = malloc(result.size);
+        if (result.buf) {
+            memcpy(result.buf, str.data(), result.size);
+            return result;
+        }
+    }
+    return {nullptr, 0};
 }
 
+
 FLSliceResult FLValueToString(FLValue v) {
-    return strToSlice(v->toString());
+    if (v) {
+        try {
+            return strToSlice(v->toString());
+        } catchError(nullptr)
+    }
+    return {nullptr, 0};
 }
 
 FLSliceResult FLValueToJSON(FLValue v) {
-    alloc_slice json = v->toJSON();
-    json.dontFree();
-    return {(void*)json.buf, json.size};
+    if (v) {
+        try {
+            alloc_slice json = v->toJSON();
+            json.dontFree();
+            return {(void*)json.buf, json.size};
+        } catchError(nullptr)
+    }
+    return {nullptr, 0};
 }
 
 FLSliceResult FLDataDump(FLSlice data) {
-    return strToSlice(Value::dump(data));
+    try {
+        return strToSlice(Value::dump(data));
+    } catchError(nullptr)
+    return {nullptr, 0};
 }
 
-uint32_t FLArrayCount(FLArray a)                    {return a->count();}
-FLValue FLArrayGet(FLArray a, uint32_t index)       {return a->get(index);}
+
+#pragma mark - ARRAYS:
+
+
+uint32_t FLArrayCount(FLArray a)                    {return a ? a->count() : 0;}
+FLValue FLArrayGet(FLArray a, uint32_t index)       {return a ? a->get(index) : nullptr;}
 
 void FLArrayIteratorBegin(FLArray a, FLArrayIterator* i) {
     static_assert(sizeof(FLArrayIterator) >= sizeof(Array::iterator),"FLArrayIterator is too small");
     new (i) Array::iterator(a);
+    // Note: this is safe even if a is null.
 }
 
 FLValue FLArrayIteratorGetValue(const FLArrayIterator* i) {
@@ -88,13 +203,17 @@ bool FLArrayIteratorNext(FLArrayIterator* i) {
 }
 
 
-uint32_t FLDictCount(FLDict d)                          {return d->count();}
-FLValue FLDictGet(FLDict d, FLSlice keyString)          {return d->get(keyString);}
-FLValue FLDictGetUnsorted(FLDict d, FLSlice keyString)  {return d->get_unsorted(keyString);}
+#pragma mark - DICTIONARIES:
+
+
+uint32_t FLDictCount(FLDict d)                          {return d ? d->count() : 0;}
+FLValue FLDictGet(FLDict d, FLSlice keyString)          {return d ? d->get(keyString) : nullptr;}
+FLValue FLDictGetUnsorted(FLDict d, FLSlice keyString)  {return d ? d->get_unsorted(keyString) : nullptr;}
 
 void FLDictIteratorBegin(FLDict d, FLDictIterator* i) {
     static_assert(sizeof(FLDictIterator) >= sizeof(Dict::iterator), "FLDictIterator is too small");
     new (i) Dict::iterator(d);
+    // Note: this is safe even if a is null.
 }
 
 FLValue FLDictIteratorGetKey(const FLDictIterator* i) {
@@ -116,6 +235,8 @@ void FLDictKeyInit(FLDictKey* key, FLSlice string, bool cachePointers) {
 }
 
 FLValue FLDictGetWithKey(FLDict d, FLDictKey *k) {
+    if (!d)
+        return nullptr;
     auto key = *(Dict::key*)k;
     return d->get(key);
 }
@@ -125,46 +246,77 @@ size_t FLDictGetWithKeys(FLDict d, FLDictKey keys[], FLValue values[], size_t co
 }
 
 
-FLEncoder FLEncoderNew(void)                            {return new Encoder();}
+#pragma mark - ENCODER:
+
+
+FLEncoder FLEncoderNew(void) {
+    return new FLEncoderImpl;
+}
 
 FLEncoder FLEncoderNewWithOptions(size_t reserveSize, bool uniqueStrings, bool sortKeys) {
-    auto e = new Encoder(reserveSize);
+    auto e = new FLEncoderImpl(reserveSize);
     e->uniqueStrings(uniqueStrings);
     e->sortKeys(sortKeys);
     return e;
 }
 
-void FLEncoderReset(FLEncoder e)                        {e->reset();}
-void FLEncoderFree(FLEncoder e)                         {delete e;}
-
-void FLEncoderWriteNull(FLEncoder e)                    {e->writeNull();}
-void FLEncoderWriteBool(FLEncoder e, bool b)            {e->writeBool(b);}
-void FLEncoderWriteInt(FLEncoder e, int64_t i)          {e->writeInt(i);}
-void FLEncoderWriteUInt(FLEncoder e, uint64_t u)        {e->writeUInt(u);}
-void FLEncoderWriteFloat(FLEncoder e, float f)          {e->writeFloat(f);}
-void FLEncoderWriteDouble(FLEncoder e, double d)        {e->writeDouble(d);}
-void FLEncoderWriteString(FLEncoder e, FLSlice s)       {e->writeString(s);}
-void FLEncoderWriteData(FLEncoder e, FLSlice d)         {e->writeData(d);}
-
-void FLEncoderBeginArray(FLEncoder e, size_t reserve)   {e->beginArray(reserve);}
-void FLEncoderEndArray(FLEncoder e)                     {e->endArray();}
-
-void FLEncoderBeginDict(FLEncoder e, size_t reserve)    {e->beginDictionary(reserve);}
-void FLEncoderWriteKey(FLEncoder e, FLSlice s)          {e->writeKey(s);}
-void FLEncoderEndDict(FLEncoder e)                      {e->endDictionary();}
-
-FLSliceResult FLEncoderEnd(FLEncoder e) {
-    alloc_slice result = e->extractOutput();
-    result.dontFree();
-    return {(void*)result.buf, result.size};
+void FLEncoderReset(FLEncoder e) {
+    e->reset();
 }
 
-FLSliceResult FLConvertJSON(FLSlice json, int *outError) {
-    Encoder e(json.size);
-    JSONConverter jc(e);
-    if (!jc.convertJSON(json)) {
-        if (outError) *outError = jc.error();
-        return {NULL, 0};
+void FLEncoderFree(FLEncoder e)                         {
+    delete e;
+}
+
+
+#define ENCODER_TRY(METHOD) \
+    try{ \
+        if (!e->hasError()) { \
+            e->METHOD; \
+            return true; \
+        } \
+    } catch (const std::exception &x) { \
+        e->recordError(x); \
+    } \
+    return false;
+
+
+bool FLEncoderWriteNull(FLEncoder e)                    {ENCODER_TRY(writeNull());}
+bool FLEncoderWriteBool(FLEncoder e, bool b)            {ENCODER_TRY(writeBool(b));}
+bool FLEncoderWriteInt(FLEncoder e, int64_t i)          {ENCODER_TRY(writeNull());}
+bool FLEncoderWriteUInt(FLEncoder e, uint64_t u)        {ENCODER_TRY(writeUInt(u));}
+bool FLEncoderWriteFloat(FLEncoder e, float f)          {ENCODER_TRY(writeFloat(f));}
+bool FLEncoderWriteDouble(FLEncoder e, double d)        {ENCODER_TRY(writeDouble(d));}
+bool FLEncoderWriteString(FLEncoder e, FLSlice s)       {ENCODER_TRY(writeString(s));}
+bool FLEncoderWriteData(FLEncoder e, FLSlice d)         {ENCODER_TRY(writeData(d));}
+
+bool FLEncoderBeginArray(FLEncoder e, size_t reserve)   {ENCODER_TRY(beginArray(reserve));}
+bool FLEncoderEndArray(FLEncoder e)                     {ENCODER_TRY(endArray());}
+bool FLEncoderBeginDict(FLEncoder e, size_t reserve)    {ENCODER_TRY(beginDictionary(reserve));}
+bool FLEncoderWriteKey(FLEncoder e, FLSlice s)          {ENCODER_TRY(writeKey(s));}
+bool FLEncoderEndDict(FLEncoder e)                      {ENCODER_TRY(endDictionary());}
+
+
+FLError FLEncoderGetError(FLEncoder e) {
+    return (FLError)e->errorCode;
+}
+
+const char* FLEncoderGetErrorMessage(FLEncoder e) {
+    return e->hasError() ? e->errorMessage.c_str() : nullptr;
+}
+
+FLSliceResult FLEncoderFinish(FLEncoder e, FLError *outError) {
+    if (!e->hasError()) {
+        try {
+            alloc_slice result = e->extractOutput();
+            result.dontFree();
+            return {(void*)result.buf, result.size};
+        } catch (const std::exception &x) {
+            e->recordError(x);
+        }
     }
-    return FLEncoderEnd(&e);
+    // Failure:
+    if (outError)
+        *outError = e->errorCode;
+    return {nullptr, 0};
 }

@@ -52,7 +52,6 @@
 		279AC53C1C097941002C80DB /* Value+Dump.cc in Sources */ = {isa = PBXBuildFile; fileRef = 279AC53B1C097941002C80DB /* Value+Dump.cc */; };
 		27C4ACAC1CE5146500938365 /* Array.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27C4ACAA1CE5146500938365 /* Array.cc */; };
 		27C4ACAD1CE5146500938365 /* Array.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C4ACAB1CE5146500938365 /* Array.hh */; };
-		27EC8D5C1CEBA72E00199FE6 /* mn_wordlist.h in Sources */ = {isa = PBXBuildFile; fileRef = 27EC8D5B1CEBA72E00199FE6 /* mn_wordlist.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -493,7 +492,6 @@
 			files = (
 				272E5A5D1BF800A100848580 /* EncoderTests.cc in Sources */,
 				272E5A521BF7FE7100848580 /* FleeceTests.cc in Sources */,
-				27EC8D5C1CEBA72E00199FE6 /* mn_wordlist.h in Sources */,
 				27298E781C01A461000CFBA8 /* PerfTests.cc in Sources */,
 				272E5A5F1BF91DBE00848580 /* ObjCTests.mm in Sources */,
 				279AC52B1C07776A002C80DB /* ValueTests.cpp in Sources */,
