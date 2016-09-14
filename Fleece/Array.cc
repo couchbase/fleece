@@ -190,75 +190,11 @@ namespace fleece {
 
         size_t get(Dict::key keysToFind[], const Value* values[], size_t nKeys) {
             size_t nFound = 0;
-#if 1
             unsigned indent = 0;
             log("get(%zu keys; dict has %u)", nKeys, _count);
             nFound = find(keysToFind, values, 0, (unsigned)nKeys, 0, _count, indent+1).nFound;
             log("--> found %zu", nFound);
-#elif 0
-            // Algorithm A: Parallel linear search through both arrays.
-            if (nKeys == 0)
-                return 0;
-            size_t findIndex = 0;
-            Dict::key *keyToFind = &keysToFind[findIndex];
-
-            const Value *key = _first;
-            const Value *end = offsetby(_first, _count*2*kWidth);
-            if (key < end) {
-                slice keyStr = keyBytes(key);
-
-                while(true) {
-                    int cmp = keyToFind->_rawString.compare(keyStr);
-#ifndef NDEBUG
-                    ++gTotalComparisons;
-#endif
-                    if (cmp <= 0) {
-                        const Value *value;
-                        if (cmp == 0) {
-                            ++nFound;
-                            value = deref(next(key));
-                        } else {
-                            value = NULL;
-                        }
-                        values[findIndex++] = value;
-                        if (findIndex >= nKeys)
-                            break;
-                        ++keyToFind;
-                    }
-                    if (cmp >= 0) {
-                        key = next(next(key));
-                        if (key >= end)
-                            break;
-                        keyStr = keyBytes(key);
-                    }
-                }
-            }
-            while (findIndex < nKeys)
-                values[findIndex++] = NULL;
-
-#else
-            // Algorithm B: Binary search for each key to find, updating the start position
-            // after finding a key.
-            // This is half as fast as algorithm A, except that it uses findKeyByHint, which
-            // if it succeeds makes it faster than A...
-            const Value *start = _first;
-            const Value *end = offsetby(_first, _count*2*kWidth);
-            for (size_t i = 0; i < nKeys; i++) {
-                Dict::key &keyToFind = keysToFind[i];
-                const Value *key = findKeyByHint(keyToFind);
-                if (!key && !findKeyByPointer(keyToFind, start, end, &key))
-                    key = findKeyBySearch(keyToFind, start, end);
-
-                if (key) {
-                    auto value = next(key);
-                    values[i] = deref(value);
-                    ++nFound;
-                    start = next(value);        // Start next search after the found key/value
-                } else {
-                    values[i] = NULL;
-                }
-            }
-#endif
+            // Note: There were two earlier implementations that can be found in older revisions.
             return nFound;
         }
 
@@ -269,6 +205,10 @@ namespace fleece {
         };
 
 
+        // Finds the values for a sorted list of keys. Recursive, with a depth of log2(n).
+        // [kf0..kf1) is the range in keysToFind[] to consider
+        // [k0..k1) is the range in the dict's entry array to consider
+        // indent is only used when debugging, to align the log output
         findResult find(Dict::key keysToFind[], const Value* values[],
                         unsigned kf0, unsigned kf1,
                         unsigned k0, unsigned k1,

@@ -77,10 +77,12 @@ namespace fleece {
 }
 
 
-void FLSliceFree(FLSliceResult s)               {free(s.buf);}
+int FLSlice_Compare(FLSlice a, FLSlice b)       {return a.compare(b);}
+
+void FLSlice_Free(FLSliceResult s)              {free(s.buf);}
 
 
-FLValue FLValueFromData(FLSlice data, FLError *outError) {
+FLValue FLValue_FromData(FLSlice data, FLError *outError) {
     try {
         auto val = Value::fromData(data);
         if (val)
@@ -92,7 +94,7 @@ FLValue FLValueFromData(FLSlice data, FLError *outError) {
 }
 
 
-FLValue FLValueFromTrustedData(FLSlice data, FLError *outError) {
+FLValue FLValue_FromTrustedData(FLSlice data, FLError *outError) {
     try {
         auto val = Value::fromTrustedData(data);
         if (val)
@@ -104,12 +106,12 @@ FLValue FLValueFromTrustedData(FLSlice data, FLError *outError) {
 }
 
 
-FLSliceResult FLConvertJSON(FLSlice json, FLError *outError) {
+FLSliceResult FLData_ConvertJSON(FLSlice json, FLError *outError) {
     FLEncoderImpl e(json.size);
     try {
         JSONConverter jc(e);
         if (jc.convertJSON(json))
-            return FLEncoderFinish(&e, outError);
+            return FLEncoder_Finish(&e, outError);
         else {
             e.errorCode = ::JSONError; //TODO: Save value of jc.error() somewhere
             e.errorMessage = jc.errorMessage();
@@ -124,18 +126,18 @@ FLSliceResult FLConvertJSON(FLSlice json, FLError *outError) {
 }
 
 
-FLValueType FLValueGetType(FLValue v)       {return v ? (FLValueType)v->type() : kFLUndefined;}
-bool FLValueIsInteger(FLValue v)            {return v && v->isInteger();}
-bool FLValueIsUnsigned(FLValue v)           {return v && v->isUnsigned();}
-bool FLValueIsDouble(FLValue v)             {return v && v->isDouble();}
-bool FLValueAsBool(FLValue v)               {return v && v->asBool();}
-int64_t FLValueAsInt(FLValue v)             {return v ? v->asInt() : 0;}
-uint64_t FLValueAsUnsigned(FLValue v)       {return v ? v->asUnsigned() : 0;}
-float FLValueAsFloat(FLValue v)             {return v ? v->asFloat() : 0.0;}
-double FLValueAsDouble(FLValue v)           {return v ? v->asDouble() : 0.0;}
-FLSlice FLValueAsString(FLValue v)          {return v ? v->asString() : slice::null;}
-FLArray FLValueAsArray(FLValue v)           {return v ? v->asArray() : nullptr;}
-FLDict FLValueAsDict(FLValue v)             {return v ? v->asDict() : nullptr;}
+FLValueType FLValue_GetType(FLValue v)       {return v ? (FLValueType)v->type() : kFLUndefined;}
+bool FLValue_IsInteger(FLValue v)            {return v && v->isInteger();}
+bool FLValue_IsUnsigned(FLValue v)           {return v && v->isUnsigned();}
+bool FLValue_IsDouble(FLValue v)             {return v && v->isDouble();}
+bool FLValue_AsBool(FLValue v)               {return v && v->asBool();}
+int64_t FLValue_AsInt(FLValue v)             {return v ? v->asInt() : 0;}
+uint64_t FLValue_AsUnsigned(FLValue v)       {return v ? v->asUnsigned() : 0;}
+float FLValue_AsFloat(FLValue v)             {return v ? v->asFloat() : 0.0;}
+double FLValue_AsDouble(FLValue v)           {return v ? v->asDouble() : 0.0;}
+FLSlice FLValue_AsString(FLValue v)          {return v ? v->asString() : slice::null;}
+FLArray FLValue_AsArray(FLValue v)           {return v ? v->asArray() : nullptr;}
+FLDict FLValue_AsDict(FLValue v)             {return v ? v->asDict() : nullptr;}
 
 
 static FLSliceResult strToSlice(std::string str) {
@@ -152,7 +154,7 @@ static FLSliceResult strToSlice(std::string str) {
 }
 
 
-FLSliceResult FLValueToString(FLValue v) {
+FLSliceResult FLValue_ToString(FLValue v) {
     if (v) {
         try {
             return strToSlice(v->toString());
@@ -161,7 +163,7 @@ FLSliceResult FLValueToString(FLValue v) {
     return {nullptr, 0};
 }
 
-FLSliceResult FLValueToJSON(FLValue v) {
+FLSliceResult FLValue_ToJSON(FLValue v) {
     if (v) {
         try {
             alloc_slice json = v->toJSON();
@@ -172,7 +174,7 @@ FLSliceResult FLValueToJSON(FLValue v) {
     return {nullptr, 0};
 }
 
-FLSliceResult FLDataDump(FLSlice data) {
+FLSliceResult FLData_Dump(FLSlice data) {
     try {
         return strToSlice(Value::dump(data));
     } catchError(nullptr)
@@ -183,20 +185,20 @@ FLSliceResult FLDataDump(FLSlice data) {
 #pragma mark - ARRAYS:
 
 
-uint32_t FLArrayCount(FLArray a)                    {return a ? a->count() : 0;}
-FLValue FLArrayGet(FLArray a, uint32_t index)       {return a ? a->get(index) : nullptr;}
+uint32_t FLArray_Count(FLArray a)                    {return a ? a->count() : 0;}
+FLValue FLArray_Get(FLArray a, uint32_t index)       {return a ? a->get(index) : nullptr;}
 
-void FLArrayIteratorBegin(FLArray a, FLArrayIterator* i) {
+void FLArrayIterator_Begin(FLArray a, FLArrayIterator* i) {
     static_assert(sizeof(FLArrayIterator) >= sizeof(Array::iterator),"FLArrayIterator is too small");
     new (i) Array::iterator(a);
     // Note: this is safe even if a is null.
 }
 
-FLValue FLArrayIteratorGetValue(const FLArrayIterator* i) {
+FLValue FLArrayIterator_GetValue(const FLArrayIterator* i) {
     return ((Array::iterator*)i)->value();
 }
 
-bool FLArrayIteratorNext(FLArrayIterator* i) {
+bool FLArrayIterator_Next(FLArrayIterator* i) {
     auto& iter = *(Array::iterator*)i;
     ++iter;
     return (bool)iter;
@@ -206,42 +208,42 @@ bool FLArrayIteratorNext(FLArrayIterator* i) {
 #pragma mark - DICTIONARIES:
 
 
-uint32_t FLDictCount(FLDict d)                          {return d ? d->count() : 0;}
-FLValue FLDictGet(FLDict d, FLSlice keyString)          {return d ? d->get(keyString) : nullptr;}
-FLValue FLDictGetUnsorted(FLDict d, FLSlice keyString)  {return d ? d->get_unsorted(keyString) : nullptr;}
+uint32_t FLDict_Count(FLDict d)                          {return d ? d->count() : 0;}
+FLValue FLDict_Get(FLDict d, FLSlice keyString)          {return d ? d->get(keyString) : nullptr;}
+FLValue FLDict_GetUnsorted(FLDict d, FLSlice keyString)  {return d ? d->get_unsorted(keyString) : nullptr;}
 
-void FLDictIteratorBegin(FLDict d, FLDictIterator* i) {
+void FLDictIterator_Begin(FLDict d, FLDictIterator* i) {
     static_assert(sizeof(FLDictIterator) >= sizeof(Dict::iterator), "FLDictIterator is too small");
     new (i) Dict::iterator(d);
     // Note: this is safe even if a is null.
 }
 
-FLValue FLDictIteratorGetKey(const FLDictIterator* i) {
+FLValue FLDictIterator_GetKey(const FLDictIterator* i) {
     return ((Dict::iterator*)i)->key();
 }
-FLValue FLDictIteratorGetValue(const FLDictIterator* i) {
+FLValue FLDictIterator_GetValue(const FLDictIterator* i) {
     return ((Dict::iterator*)i)->value();
 }
-bool FLDictIteratorNext(FLDictIterator* i) {
+bool FLDictIterator_Next(FLDictIterator* i) {
     auto& iter = *(Dict::iterator*)i;
     ++iter;
     return (bool)iter;
 }
 
 
-void FLDictKeyInit(FLDictKey* key, FLSlice string, bool cachePointers) {
+void FLDictKey_Init(FLDictKey* key, FLSlice string, bool cachePointers) {
     static_assert(sizeof(FLDictKey) >= sizeof(Dict::key), "FLDictKey is too small");
     new (key) Dict::key(string, cachePointers);
 }
 
-FLValue FLDictGetWithKey(FLDict d, FLDictKey *k) {
+FLValue FLDict_GetWithKey(FLDict d, FLDictKey *k) {
     if (!d)
         return nullptr;
     auto key = *(Dict::key*)k;
     return d->get(key);
 }
 
-size_t FLDictGetWithKeys(FLDict d, FLDictKey keys[], FLValue values[], size_t count) {
+size_t FLDict_GetWithKeys(FLDict d, FLDictKey keys[], FLValue values[], size_t count) {
     return d->get((Dict::key*)keys, values, count);
 }
 
@@ -249,22 +251,22 @@ size_t FLDictGetWithKeys(FLDict d, FLDictKey keys[], FLValue values[], size_t co
 #pragma mark - ENCODER:
 
 
-FLEncoder FLEncoderNew(void) {
+FLEncoder FLEncoder_New(void) {
     return new FLEncoderImpl;
 }
 
-FLEncoder FLEncoderNewWithOptions(size_t reserveSize, bool uniqueStrings, bool sortKeys) {
+FLEncoder FLEncoder_NewWithOptions(size_t reserveSize, bool uniqueStrings, bool sortKeys) {
     auto e = new FLEncoderImpl(reserveSize);
     e->uniqueStrings(uniqueStrings);
     e->sortKeys(sortKeys);
     return e;
 }
 
-void FLEncoderReset(FLEncoder e) {
+void FLEncoder_Reset(FLEncoder e) {
     e->reset();
 }
 
-void FLEncoderFree(FLEncoder e)                         {
+void FLEncoder_Free(FLEncoder e)                         {
     delete e;
 }
 
@@ -281,31 +283,31 @@ void FLEncoderFree(FLEncoder e)                         {
     return false;
 
 
-bool FLEncoderWriteNull(FLEncoder e)                    {ENCODER_TRY(writeNull());}
-bool FLEncoderWriteBool(FLEncoder e, bool b)            {ENCODER_TRY(writeBool(b));}
-bool FLEncoderWriteInt(FLEncoder e, int64_t i)          {ENCODER_TRY(writeNull());}
-bool FLEncoderWriteUInt(FLEncoder e, uint64_t u)        {ENCODER_TRY(writeUInt(u));}
-bool FLEncoderWriteFloat(FLEncoder e, float f)          {ENCODER_TRY(writeFloat(f));}
-bool FLEncoderWriteDouble(FLEncoder e, double d)        {ENCODER_TRY(writeDouble(d));}
-bool FLEncoderWriteString(FLEncoder e, FLSlice s)       {ENCODER_TRY(writeString(s));}
-bool FLEncoderWriteData(FLEncoder e, FLSlice d)         {ENCODER_TRY(writeData(d));}
+bool FLEncoder_WriteNull(FLEncoder e)                    {ENCODER_TRY(writeNull());}
+bool FLEncoder_WriteBool(FLEncoder e, bool b)            {ENCODER_TRY(writeBool(b));}
+bool FLEncoder_WriteInt(FLEncoder e, int64_t i)          {ENCODER_TRY(writeNull());}
+bool FLEncoder_WriteUInt(FLEncoder e, uint64_t u)        {ENCODER_TRY(writeUInt(u));}
+bool FLEncoder_WriteFloat(FLEncoder e, float f)          {ENCODER_TRY(writeFloat(f));}
+bool FLEncoder_WriteDouble(FLEncoder e, double d)        {ENCODER_TRY(writeDouble(d));}
+bool FLEncoder_WriteString(FLEncoder e, FLSlice s)       {ENCODER_TRY(writeString(s));}
+bool FLEncoder_WriteData(FLEncoder e, FLSlice d)         {ENCODER_TRY(writeData(d));}
 
-bool FLEncoderBeginArray(FLEncoder e, size_t reserve)   {ENCODER_TRY(beginArray(reserve));}
-bool FLEncoderEndArray(FLEncoder e)                     {ENCODER_TRY(endArray());}
-bool FLEncoderBeginDict(FLEncoder e, size_t reserve)    {ENCODER_TRY(beginDictionary(reserve));}
-bool FLEncoderWriteKey(FLEncoder e, FLSlice s)          {ENCODER_TRY(writeKey(s));}
-bool FLEncoderEndDict(FLEncoder e)                      {ENCODER_TRY(endDictionary());}
+bool FLEncoder_BeginArray(FLEncoder e, size_t reserve)   {ENCODER_TRY(beginArray(reserve));}
+bool FLEncoder_EndArray(FLEncoder e)                     {ENCODER_TRY(endArray());}
+bool FLEncoder_BeginDict(FLEncoder e, size_t reserve)    {ENCODER_TRY(beginDictionary(reserve));}
+bool FLEncoder_WriteKey(FLEncoder e, FLSlice s)          {ENCODER_TRY(writeKey(s));}
+bool FLEncoder_EndDict(FLEncoder e)                      {ENCODER_TRY(endDictionary());}
 
 
-FLError FLEncoderGetError(FLEncoder e) {
+FLError FLEncoder_GetError(FLEncoder e) {
     return (FLError)e->errorCode;
 }
 
-const char* FLEncoderGetErrorMessage(FLEncoder e) {
+const char* FLEncoder_GetErrorMessage(FLEncoder e) {
     return e->hasError() ? e->errorMessage.c_str() : nullptr;
 }
 
-FLSliceResult FLEncoderFinish(FLEncoder e, FLError *outError) {
+FLSliceResult FLEncoder_Finish(FLEncoder e, FLError *outError) {
     if (!e->hasError()) {
         try {
             alloc_slice result = e->extractOutput();
