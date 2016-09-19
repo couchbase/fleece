@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		270515571D905C1D00D62D05 /* Fleece+CoreFoundation.mm in Sources */ = {isa = PBXBuildFile; fileRef = 270515531D9058F200D62D05 /* Fleece+CoreFoundation.mm */; settings = {COMPILER_FLAGS = "-Wno-return-type-c-linkage"; }; };
 		270FA2781BF53CEA005DCB13 /* Value.cc in Sources */ = {isa = PBXBuildFile; fileRef = 270FA26A1BF53CEA005DCB13 /* Value.cc */; };
 		270FA2791BF53CEA005DCB13 /* Value.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA26B1BF53CEA005DCB13 /* Value.hh */; };
 		270FA27A1BF53CEA005DCB13 /* Value+JSON.cc in Sources */ = {isa = PBXBuildFile; fileRef = 270FA26C1BF53CEA005DCB13 /* Value+JSON.cc */; };
@@ -93,6 +94,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		270515521D9053BE00D62D05 /* Fleece+CoreFoundation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Fleece+CoreFoundation.h"; sourceTree = "<group>"; };
+		270515531D9058F200D62D05 /* Fleece+CoreFoundation.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "Fleece+CoreFoundation.mm"; sourceTree = "<group>"; };
+		270515551D90596000D62D05 /* Fleece_C_impl.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Fleece_C_impl.hh; sourceTree = "<group>"; };
 		270FA25C1BF53CAD005DCB13 /* libFleece.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libFleece.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		270FA26A1BF53CEA005DCB13 /* Value.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Value.cc; sourceTree = "<group>"; };
 		270FA26B1BF53CEA005DCB13 /* Value.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Value.hh; sourceTree = "<group>"; };
@@ -325,7 +329,10 @@
 			isa = PBXGroup;
 			children = (
 				278163B31CE69CA800B94E32 /* Fleece_C_impl.cc */,
+				270515551D90596000D62D05 /* Fleece_C_impl.hh */,
 				278163B41CE69CA800B94E32 /* Fleece.h */,
+				270515521D9053BE00D62D05 /* Fleece+CoreFoundation.h */,
+				270515531D9058F200D62D05 /* Fleece+CoreFoundation.mm */,
 			);
 			name = C;
 			path = Fleece;
@@ -471,6 +478,7 @@
 				270FA2841BF53CEA005DCB13 /* varint.cc in Sources */,
 				275CED521D3EF7BE001DE46C /* FleeceException.cc in Sources */,
 				278163B51CE69CA800B94E32 /* Fleece_C_impl.cc in Sources */,
+				270515571D905C1D00D62D05 /* Fleece+CoreFoundation.mm in Sources */,
 				272E5A611BF91F6C00848580 /* slice.mm in Sources */,
 				2797BCD21C122E9200E5C991 /* FleeceDocument.mm in Sources */,
 				270FA2821BF53CEA005DCB13 /* slice.cc in Sources */,

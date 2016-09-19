@@ -35,6 +35,8 @@ namespace fleece {
             return _what;
         }
 
+        static ErrorCode getCode(const std::exception&) noexcept;
+
         const ErrorCode code;
 
     private:

@@ -17,6 +17,7 @@
 #import "Value.hh"
 #import "Array.hh"
 #import "Encoder.hh"
+#import "Fleece+CoreFoundation.h"
 using namespace fleece;
 
 #define UU __unsafe_unretained
@@ -36,11 +37,11 @@ using namespace fleece;
 @end
 
 
-
-
 #pragma mark - DOCUMENT:
 
 
+// FleeceDocument is instantiated to hold onto the encoded data and the shared strings,
+// but clients never see it; the public objects (FleeceDictionary, FleeceArray) hold references.
 @implementation FleeceDocument
 {
     NSData* _fleeceData;
@@ -48,7 +49,9 @@ using namespace fleece;
     id _root;
 }
 
-- (instancetype) initWithFleeceData: (UU NSData*)fleece trusted: (BOOL)trusted {
+- (instancetype) initWithFleeceData: (UU NSData*)fleece
+                            trusted: (BOOL)trusted
+{
     NSParameterAssert(fleece != nil);
     self = [super init];
     if (self) {
@@ -103,28 +106,14 @@ using namespace fleece;
 }
 
 
-static void returnFleeceError(const char *msg, NSError **outError) {
-    if (outError)
-        *outError = [NSError errorWithDomain: @"Fleece" code: -1 userInfo: @{NSLocalizedDescriptionKey: @(msg)}];
-}
-
-
 + (NSData*) fleeceDataWithObject: (id)object error: (NSError**)outError {
     NSParameterAssert(object != nil);
-    try {
-        Encoder encoder;
-        encoder.write(object);
-        encoder.end();
-        return encoder.extractOutput().convertToNSData();
-    } catch(const char *msg) {
-        returnFleeceError(msg, outError);
-        return nil;
-    } catch (...) {
-        returnFleeceError("exception", outError);
-        return nil;
-    }
+    FLEncoder enc = FLEncoder_New();
+    FLEncoder_WriteNSObject(enc, object);
+    NSData* data = FLEncoder_FinishWithNSData(enc, outError);
+    FLEncoder_Free(enc);
+    return data;
 }
-
 
 
 @end

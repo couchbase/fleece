@@ -13,66 +13,15 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#include "Fleece.hh"
-#include "FleeceException.hh"
-using namespace fleece;
+#include "Fleece_C_impl.hh"
+
 
 namespace fleece {
-    struct FLEncoderImpl;
-}
 
-#define FL_IMPL
-typedef const Value* FLValue;
-typedef const Array* FLArray;
-typedef const Dict* FLDict;
-typedef slice FLSlice;
-typedef FLEncoderImpl* FLEncoder;
-
-
-#include "Fleece.h" /* the C header */
-
-
-static void recordError(const std::exception &x, FLError *outError) {
-    if (outError) {
-        auto fleecex = dynamic_cast<const FleeceException*>(&x);
-        if (fleecex)
-            *outError = (FLError)fleecex->code;
-        else if (nullptr != dynamic_cast<const std::bad_alloc*>(&x))
-            *outError = ::MemoryError;
-        else
-            *outError = ::InternalError;
+    void recordError(const std::exception &x, FLError *outError) noexcept {
+        if (outError)
+            *outError = (FLError) FleeceException::getCode(x);
     }
-}
-
-#define catchError(OUTERROR) \
-    catch (const std::exception &x) { recordError(x, OUTERROR); }
-
-
-namespace fleece {
-
-    // Implementation of FLEncoder: a subclass of Encoder that keeps track of its error state.
-    struct FLEncoderImpl : public Encoder {
-        FLError errorCode {::NoError};
-        std::string errorMessage;
-
-        FLEncoderImpl(size_t reserveOutputSize =256) :Encoder(reserveOutputSize) { }
-
-        bool hasError() const {
-            return errorCode != ::NoError;
-        }
-
-        void recordError(const std::exception &x) {
-            if (!hasError()) {
-                ::recordError(x, &errorCode);
-                errorMessage = x.what();
-            }
-        }
-
-        void reset() {              // careful, not a real override (non-virtual method)
-            Encoder::reset();
-            errorCode = ::NoError;
-        }
-    };
 
 }
 
