@@ -44,7 +44,7 @@ namespace fleece {
 
 #pragma mark - TYPE CHECK / CONVERSION:
 
-    valueType Value::type() const {
+    valueType Value::type() const noexcept {
         auto t = tag();
         if (t == kSpecialTag) {
             switch (tinyValue()) {
@@ -61,7 +61,7 @@ namespace fleece {
     }
 
 
-    bool Value::asBool() const {
+    bool Value::asBool() const noexcept {
         switch (tag()) {
             case kSpecialTag:
                 return tinyValue() == kSpecialValueTrue;
@@ -74,7 +74,7 @@ namespace fleece {
         }
     }
 
-    int64_t Value::asInt() const {
+    int64_t Value::asInt() const noexcept {
         switch (tag()) {
             case kSpecialTag:
                 return tinyValue() == kSpecialValueTrue;
@@ -105,11 +105,11 @@ namespace fleece {
     }
 
     // Explicitly instantiate both needed versions:
-    template float Value::asFloatOfType<float>() const;
-    template double Value::asFloatOfType<double>() const;
+    template float Value::asFloatOfType<float>() const noexcept;
+    template double Value::asFloatOfType<double>() const noexcept;
 
     template<typename T>
-    T Value::asFloatOfType() const {
+    T Value::asFloatOfType() const noexcept {
         switch (tag()) {
             case kFloatTag: {
                 if (_byte[0] & 0x8) {
@@ -130,7 +130,7 @@ namespace fleece {
         }
     }
 
-    slice Value::getStringBytes() const {
+    slice Value::getStringBytes() const noexcept {
         slice s(&_byte[1], tinyValue());
         if (_usuallyFalse(s.size == 0x0F)) {
             // This means the actual length follows as a varint:
@@ -141,7 +141,7 @@ namespace fleece {
         return s;
     }
 
-    std::string Value::toString() const {
+    alloc_slice Value::toString() const {
         char buf[32], *str = buf;
         switch (tag()) {
             case kShortIntTag:
@@ -165,7 +165,7 @@ namespace fleece {
                         str = (char*)"true";
                         break;
                     default:
-                        throw FleeceException(InvalidData, "illegal special typecode in Value; corrupt data?");
+                        str = (char*)"{?special?}";
                         break;
                 }
                 break;
@@ -178,12 +178,12 @@ namespace fleece {
                 break;
             }
             default:
-                return (std::string)asString();
+                return alloc_slice(asString());
         }
-        return std::string(str);
+        return alloc_slice(str);
     }
 
-    slice Value::asString() const {
+    slice Value::asString() const noexcept {
         switch (tag()) {
             case kStringTag:
             case kBinaryTag:
@@ -193,13 +193,13 @@ namespace fleece {
         }
     }
 
-    const Array* Value::asArray() const {
+    const Array* Value::asArray() const noexcept {
         if (tag() != kArrayTag)
             return NULL;
         return (const Array*)this;
     }
 
-    const Dict* Value::asDict() const {
+    const Dict* Value::asDict() const noexcept {
         if (tag() != kDictTag)
             return NULL;
         return (const Dict*)this;
@@ -209,21 +209,21 @@ namespace fleece {
 #pragma mark - VALIDATION:
 
     
-    const Value* Value::fromTrustedData(slice s) {
+    const Value* Value::fromTrustedData(slice s) noexcept {
         // Root value is at the end of the data and is two bytes wide:
         assert(fromData(s) != NULL); // validate anyway, in debug builds; abort if invalid
         auto root = fastValidate(s);
         return root ? deref<true>(root) : NULL;
     }
 
-    const Value* Value::fromData(slice s) {
+    const Value* Value::fromData(slice s) noexcept {
         auto root = fastValidate(s);
         if (root && !root->validate(s.buf, s.end(), true))
             root = NULL;
         return root;
     }
 
-    const Value* Value::fastValidate(slice s) {
+    const Value* Value::fastValidate(slice s) noexcept {
         if (s.size < kNarrow || (s.size % kNarrow))
             return NULL;
         auto root = (const Value*)offsetby(s.buf, s.size - internal::kNarrow);
@@ -248,7 +248,7 @@ namespace fleece {
         return root;
     }
 
-    bool Value::validate(const void *dataStart, const void *dataEnd, bool wide) const {
+    bool Value::validate(const void *dataStart, const void *dataEnd, bool wide) const noexcept {
         // First dereference a pointer:
         if (isPointer()) {
             auto derefed = derefPointer(this, wide);
@@ -286,7 +286,7 @@ namespace fleece {
     }
 
     // This does not include the inline items in arrays/dicts
-    size_t Value::dataSize() const {
+    size_t Value::dataSize() const noexcept {
         switch(tag()) {
             case kShortIntTag:
             case kSpecialTag:   return 2;

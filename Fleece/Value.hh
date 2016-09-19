@@ -53,57 +53,57 @@ namespace fleece {
             Validates the data first; if it's invalid, returns NULL.
             Does NOT copy or take ownership of the data; the caller is responsible for keeping it
             intact. Any changes to the data will invalidate any FLValues obtained from it. */
-        static const Value* fromData(slice);
+        static const Value* fromData(slice) noexcept;
 
         /** Returns a pointer to the root value in the encoded data, without validating.
             This is a lot faster, but "undefined behavior" occurs if the data is corrupt... */
-        static const Value* fromTrustedData(slice s);
+        static const Value* fromTrustedData(slice s) noexcept;
 
         /** The overall type of a value (JSON types plus Data) */
-        valueType type() const;
+        valueType type() const noexcept;
 
         //////// Scalar types:
 
         /** Boolean value/conversion. Any value is considered true except false, null, 0. */
-        bool asBool() const;
+        bool asBool() const noexcept;
 
         /** Integer value/conversion. Float values will be rounded. A true value returns 1.
             Other non-numeric values return 0. */
-        int64_t asInt() const;
+        int64_t asInt() const noexcept;
 
         /** Integer conversion, expressed as an unsigned type. Use this instead of asInt if
             isUnsigned is true, otherwise large 64-bit numbers may look negative. */
-        uint64_t asUnsigned() const             {return (uint64_t)asInt();}
+        uint64_t asUnsigned() const noexcept             {return (uint64_t)asInt();}
 
         /** 32-bit float value/conversion. Non-numeric values return 0, as with asInt. */
-        float asFloat() const      {return asFloatOfType<float>();}
+        float asFloat() const noexcept      {return asFloatOfType<float>();}
 
         /** 64-bit float value/conversion. Non-numeric values return 0, as with asInt. */
-        double asDouble() const    {return asFloatOfType<double>();}
+        double asDouble() const noexcept    {return asFloatOfType<double>();}
 
         /** Is this value an integer? */
-        bool isInteger() const     {return tag() <= internal::kIntTag;}
+        bool isInteger() const noexcept     {return tag() <= internal::kIntTag;}
 
         /** Is this value an unsigned integer? (This does _not_ mean it's positive; it means
             that you should treat it as possibly overflowing an int64_t.) */
-        bool isUnsigned() const    {return tag() == internal::kIntTag && (_byte[0] & 0x08) != 0;}
+        bool isUnsigned() const noexcept    {return tag() == internal::kIntTag && (_byte[0] & 0x08) != 0;}
 
         /** Is this a 64-bit floating-point value? */
-        bool isDouble() const      {return tag() == internal::kFloatTag && (_byte[0] & 0x8);}
+        bool isDouble() const noexcept      {return tag() == internal::kFloatTag && (_byte[0] & 0x8);}
 
         //////// Non-scalars:
 
         /** Returns the exact contents of a string or data. Other types return a null slice. */
-        slice asString() const;
+        slice asString() const noexcept;
 
         /** If this value is an array, returns it cast to 'const Array*', else returns NULL. */
-        const Array* asArray() const;
+        const Array* asArray() const noexcept;
 
         /** If this value is a dictionary, returns it cast to 'const Dict*', else returns NULL. */
-        const Dict* asDict() const;
+        const Dict* asDict() const noexcept;
 
         /** Converts any _non-collection_ type to string form. */
-        std::string toString() const;
+        alloc_slice toString() const;
 
         //////// Conversion:
 
@@ -124,25 +124,26 @@ namespace fleece {
         /** Converts a Fleece value to an Objective-C object.
             Can optionally use a pre-existing shared-string table.
             New strings will be added to the table. The table can be used for multiple calls
-            and will reduce the number of NSString objects created by the decoder. */
+            and will reduce the number of NSString objects created by the decoder.
+            (Not noexcept, but can only throw Objective-C exceptions.) */
         id toNSObject(NSMapTable *sharedStrings =nil) const;
 
         /** Creates a new shared-string table for use with toNSObject. */
-        static NSMapTable* createSharedStringsTable();
+        static NSMapTable* createSharedStringsTable() noexcept;
 #endif
 
     protected:
-        bool isPointer() const       {return (_byte[0] >= (internal::kPointerTagFirst << 4));}
+        bool isPointer() const noexcept       {return (_byte[0] >= (internal::kPointerTagFirst << 4));}
 
         template <bool WIDE>
-        uint32_t pointerValue() const {
+        uint32_t pointerValue() const noexcept {
             if (WIDE)
                 return (_dec32(*(uint32_t*)_byte) & ~0x80000000) << 1;
             else
                 return (_dec16(*(uint16_t*)_byte) & ~0x8000) << 1;
         }
 
-        void shrinkPointer() {
+        void shrinkPointer() noexcept {
             _byte[0] = _byte[2] | 0x80;
             _byte[1] = _byte[3];
         }
@@ -159,12 +160,12 @@ namespace fleece {
         template <bool WIDE>
         static const Value* deref(const Value *v);
 
-        const Value* next(bool wide) const
+        const Value* next(bool wide) const noexcept
                                 {return offsetby(this, wide ? internal::kWide : internal::kNarrow);}
         template <bool WIDE>
-        const Value* next() const       {return next(WIDE);}
+        const Value* next() const noexcept       {return next(WIDE);}
 
-        bool isWideArray() const {return (_byte[0] & 0x08) != 0;}
+        bool isWideArray() const noexcept {return (_byte[0] & 0x08) != 0;}
 
     private:
         Value(internal::tags tag, int tiny, int byte1 = 0) {
@@ -189,22 +190,22 @@ namespace fleece {
             }
         }
 
-        internal::tags tag() const   {return (internal::tags)(_byte[0] >> 4);}
-        unsigned tinyValue() const   {return _byte[0] & 0x0F;}
-        uint16_t shortValue() const  {return (((uint16_t)_byte[0] << 8) | _byte[1]) & 0x0FFF;}
-        template<typename T> T asFloatOfType() const;
+        internal::tags tag() const noexcept   {return (internal::tags)(_byte[0] >> 4);}
+        unsigned tinyValue() const noexcept   {return _byte[0] & 0x0F;}
+        uint16_t shortValue() const noexcept  {return (((uint16_t)_byte[0] << 8) | _byte[1]) & 0x0FFF;}
+        template<typename T> T asFloatOfType() const noexcept;
 
-        slice getStringBytes() const;
+        slice getStringBytes() const noexcept;
 
         // dump:
-        size_t dataSize() const;
+        size_t dataSize() const noexcept;
         typedef std::map<size_t, const Value*> mapByAddress;
         void mapAddresses(mapByAddress&) const;
         void dump(std::ostream &out, bool wide, int indent, const void *base) const;
         void writeDumpBrief(std::ostream &out, const void *base, bool wide =false) const;
 
-        static const Value* fastValidate(slice);
-        bool validate(const void* dataStart, const void *dataEnd, bool wide) const;
+        static const Value* fastValidate(slice) noexcept;
+        bool validate(const void* dataStart, const void *dataEnd, bool wide) const noexcept;
 
         //////// Here's the data:
 

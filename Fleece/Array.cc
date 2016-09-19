@@ -59,7 +59,7 @@ namespace fleece {
 #pragma mark - ARRAY:
 
 
-    Array::impl::impl(const Value* v) {
+    Array::impl::impl(const Value* v) noexcept {
         if (v == nullptr) {
             _first = NULL;
             _wide = false;
@@ -89,7 +89,7 @@ namespace fleece {
         return true;
     }
 
-    const Value* Array::impl::operator[] (unsigned index) const {
+    const Value* Array::impl::operator[] (unsigned index) const noexcept {
         if (index >= _count)
             return NULL;
         if (_wide)
@@ -98,23 +98,23 @@ namespace fleece {
             return Value::deref<false>(offsetby(_first, kNarrow * index));
     }
 
-    size_t Array::impl::indexOf(const Value *v) const {
+    size_t Array::impl::indexOf(const Value *v) const noexcept {
         return ((size_t)v - (size_t)_first) / width(_wide);
     }
 
 
 
-    uint32_t Array::count() const {
+    uint32_t Array::count() const noexcept {
         return Array::impl(this)._count;
     }
 
-    const Value* Array::get(uint32_t index) const {
+    const Value* Array::get(uint32_t index) const noexcept {
         return impl(this)[index];
     }
 
 
 
-    Array::iterator::iterator(const Array *a)
+    Array::iterator::iterator(const Array *a) noexcept
     :_a(a),
      _value(_a.firstValue())
     { }
@@ -141,11 +141,11 @@ namespace fleece {
     template <bool WIDE>
     struct dictImpl : public Array::impl {
 
-        dictImpl(const Dict *d)
+        dictImpl(const Dict *d) noexcept
         :impl(d)
         { }
 
-        const Value* get_unsorted(slice keyToFind) const {
+        const Value* get_unsorted(slice keyToFind) const noexcept {
             const Value *key = _first;
             for (uint32_t i = 0; i < _count; i++) {
                 const Value *val = next(key);
@@ -156,14 +156,14 @@ namespace fleece {
             return NULL;
         }
 
-        inline const Value* get(slice keyToFind) const {
+        inline const Value* get(slice keyToFind) const noexcept {
             auto key = (const Value*) ::bsearch(&keyToFind, _first, _count, 2*kWidth, &keyCmp);
             if (!key)
                 return NULL;
             return deref(next(key));
         }
 
-        const Value* get(Dict::key &keyToFind) const {
+        const Value* get(Dict::key &keyToFind) const noexcept {
             const Value *key = findKeyByHint(keyToFind);
             if (!key) {
                 const Value *end = offsetby(_first, _count*2*kWidth);
@@ -188,7 +188,7 @@ namespace fleece {
 #endif
 #endif
 
-        size_t get(Dict::key keysToFind[], const Value* values[], size_t nKeys) {
+        size_t get(Dict::key keysToFind[], const Value* values[], size_t nKeys) noexcept {
             size_t nFound = 0;
             unsigned indent = 0;
             log("get(%zu keys; dict has %u)", nKeys, _count);
@@ -212,7 +212,7 @@ namespace fleece {
         findResult find(Dict::key keysToFind[], const Value* values[],
                         unsigned kf0, unsigned kf1,
                         unsigned k0, unsigned k1,
-                        unsigned indent)
+                        unsigned indent) noexcept
         {
             log("find( %u--%u in %u--%u )", kf0, kf1-1, k0, k1-1);
             if (kf0 == kf1) {
@@ -350,32 +350,32 @@ namespace fleece {
 
 
 
-    uint32_t Dict::count() const {
+    uint32_t Dict::count() const noexcept {
         return Array::impl(this)._count;
     }
     
-    const Value* Dict::get_unsorted(slice keyToFind) const {
+    const Value* Dict::get_unsorted(slice keyToFind) const noexcept {
         if (isWideArray())
             return dictImpl<true>(this).get_unsorted(keyToFind);
         else
             return dictImpl<false>(this).get_unsorted(keyToFind);
     }
 
-    const Value* Dict::get(slice keyToFind) const {
+    const Value* Dict::get(slice keyToFind) const noexcept {
         if (isWideArray())
             return dictImpl<true>(this).get(keyToFind);
         else
             return dictImpl<false>(this).get(keyToFind);
     }
 
-    const Value* Dict::get(key &keyToFind) const {
+    const Value* Dict::get(key &keyToFind) const noexcept {
         if (isWideArray())
             return dictImpl<true>(this).get(keyToFind);
         else
             return dictImpl<false>(this).get(keyToFind);
     }
 
-    size_t Dict::get(key keys[], const Value* values[], size_t count) const {
+    size_t Dict::get(key keys[], const Value* values[], size_t count) const noexcept {
         if (isWideArray())
             return dictImpl<true>(this).get(keys, values, count);
         else
@@ -388,13 +388,13 @@ namespace fleece {
 
     }
 
-    void Dict::sortKeys(key keys[], size_t count) {
+    void Dict::sortKeys(key keys[], size_t count) noexcept {
         qsort(keys, count, sizeof(key), sortKeysCmp);
     }
 
 
 
-    Dict::iterator::iterator(const Dict* d)
+    Dict::iterator::iterator(const Dict* d) noexcept
     :_a(d)
     {
         readKV();
@@ -418,7 +418,7 @@ namespace fleece {
         return *this;
     }
 
-    void Dict::iterator::readKV() {
+    void Dict::iterator::readKV() noexcept {
         if (_a._count) {
             _key   = deref(_a._first,                _a._wide);
             _value = deref(_a._first->next(_a._wide), _a._wide);

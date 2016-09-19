@@ -21,7 +21,7 @@
 
 namespace fleece {
 
-    NSMapTable* Value::createSharedStringsTable() {
+    NSMapTable* Value::createSharedStringsTable() noexcept {
         return [[NSMapTable alloc] initWithKeyOptions: NSPointerFunctionsOpaquePersonality |
                                                        NSPointerFunctionsOpaqueMemory
                                          valueOptions: NSPointerFunctionsStrongMemory

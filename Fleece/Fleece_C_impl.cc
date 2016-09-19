@@ -140,7 +140,7 @@ FLArray FLValue_AsArray(FLValue v)           {return v ? v->asArray() : nullptr;
 FLDict FLValue_AsDict(FLValue v)             {return v ? v->asDict() : nullptr;}
 
 
-static FLSliceResult strToSlice(std::string str) {
+static FLSliceResult toSliceResult(const std::string &str) {
     FLSliceResult result;
     result.size = str.size();
     if (result.size > 0) {
@@ -153,11 +153,16 @@ static FLSliceResult strToSlice(std::string str) {
     return {nullptr, 0};
 }
 
+static FLSliceResult toSliceResult(alloc_slice &&s) {
+    s.dontFree();
+    return {(void*)s.buf, s.size};
+}
+
 
 FLSliceResult FLValue_ToString(FLValue v) {
     if (v) {
         try {
-            return strToSlice(v->toString());
+            return toSliceResult(v->toString());
         } catchError(nullptr)
     }
     return {nullptr, 0};
@@ -166,9 +171,7 @@ FLSliceResult FLValue_ToString(FLValue v) {
 FLSliceResult FLValue_ToJSON(FLValue v) {
     if (v) {
         try {
-            alloc_slice json = v->toJSON();
-            json.dontFree();
-            return {(void*)json.buf, json.size};
+            return toSliceResult(v->toJSON());
         } catchError(nullptr)
     }
     return {nullptr, 0};
@@ -176,7 +179,7 @@ FLSliceResult FLValue_ToJSON(FLValue v) {
 
 FLSliceResult FLData_Dump(FLSlice data) {
     try {
-        return strToSlice(Value::dump(data));
+        return toSliceResult(Value::dump(data));
     } catchError(nullptr)
     return {nullptr, 0};
 }
