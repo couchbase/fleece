@@ -22,7 +22,7 @@ namespace fleece {
     /** Parses JSON data and writes the values in it to a Fleece encoder. */
     class JSONConverter {
     public:
-        JSONConverter(Encoder&);
+        JSONConverter(Encoder&) noexcept;
         ~JSONConverter();
 
         /** Parses JSON data and writes the values to the encoder.
@@ -30,11 +30,11 @@ namespace fleece {
         bool convertJSON(slice json);
 
         /** See jsonsl_error_t for error codes, plus a few more defined below. */
-        int error()                 {return _error;}
-        const char* errorMessage();
+        int error() noexcept                    {return _error;}
+        const char* errorMessage() noexcept;
         
         /** Byte offset in input where error occurred */
-        size_t errorPos()           {return _errorPos;}
+        size_t errorPos() noexcept              {return _errorPos;}
 
         /** Extra error codes beyond those in jsonsl_error_t. */
         enum {
@@ -42,16 +42,16 @@ namespace fleece {
         };
 
     //private:
-        bool countJSONItems(slice json);
         void push(struct jsonsl_state_st *state);
         void pop(struct jsonsl_state_st *state);
-        int gotError(int err, char *errat);
+        int gotError(int err, size_t pos) noexcept;
+        int gotError(int err, const char *errat) noexcept;
 
     private:
         typedef std::map<size_t, uint64_t> startToLengthMap;
 
         Encoder &_encoder;                  // encoder to write to
-        struct jsonsl_st * _jsn;                      // JSON parser
+        struct jsonsl_st * _jsn;            // JSON parser
         int _error;                         // Parse error from jsonsl
         size_t _errorPos;                   // Byte index where parse error occurred
         slice _input;                       // Current JSON being parsed

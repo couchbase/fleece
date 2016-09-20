@@ -31,62 +31,22 @@ int FLSlice_Compare(FLSlice a, FLSlice b)       {return a.compare(b);}
 void FLSlice_Free(FLSliceResult s)              {free(s.buf);}
 
 
-FLValue FLValue_FromData(FLSlice data, FLError *outError) {
-    try {
-        auto val = Value::fromData(data);
-        if (val)
-            return val;
-        else if (outError)
-            *outError = ::UnknownValue;
-    } catchError(outError)
-    return nullptr;
-}
+FLValue FLValue_FromData(FLSlice data)          {return Value::fromData(data);}
+FLValue FLValue_FromTrustedData(FLSlice data)   {return Value::fromTrustedData(data);}
 
 
-FLValue FLValue_FromTrustedData(FLSlice data, FLError *outError) {
-    try {
-        auto val = Value::fromTrustedData(data);
-        if (val)
-            return val;
-        else if (outError)
-            *outError = ::UnknownValue;
-    } catchError(outError)
-    return nullptr;
-}
-
-
-FLSliceResult FLData_ConvertJSON(FLSlice json, FLError *outError) {
-    FLEncoderImpl e(json.size);
-    try {
-        JSONConverter jc(e);
-        if (jc.convertJSON(json))
-            return FLEncoder_Finish(&e, outError);
-        else {
-            e.errorCode = ::JSONError; //TODO: Save value of jc.error() somewhere
-            e.errorMessage = jc.errorMessage();
-        }
-    } catch (const std::exception &x) {
-        e.recordError(x);
-    }
-    // Failure:
-    if (outError)
-        *outError = e.errorCode;
-    return {nullptr, 0};
-}
-
-
-FLValueType FLValue_GetType(FLValue v)       {return v ? (FLValueType)v->type() : kFLUndefined;}
-bool FLValue_IsInteger(FLValue v)            {return v && v->isInteger();}
-bool FLValue_IsUnsigned(FLValue v)           {return v && v->isUnsigned();}
-bool FLValue_IsDouble(FLValue v)             {return v && v->isDouble();}
-bool FLValue_AsBool(FLValue v)               {return v && v->asBool();}
-int64_t FLValue_AsInt(FLValue v)             {return v ? v->asInt() : 0;}
-uint64_t FLValue_AsUnsigned(FLValue v)       {return v ? v->asUnsigned() : 0;}
-float FLValue_AsFloat(FLValue v)             {return v ? v->asFloat() : 0.0;}
-double FLValue_AsDouble(FLValue v)           {return v ? v->asDouble() : 0.0;}
-FLSlice FLValue_AsString(FLValue v)          {return v ? v->asString() : slice::null;}
-FLArray FLValue_AsArray(FLValue v)           {return v ? v->asArray() : nullptr;}
-FLDict FLValue_AsDict(FLValue v)             {return v ? v->asDict() : nullptr;}
+FLValueType FLValue_GetType(FLValue v)          {return v ? (FLValueType)v->type() : kFLUndefined;}
+bool FLValue_IsInteger(FLValue v)               {return v && v->isInteger();}
+bool FLValue_IsUnsigned(FLValue v)              {return v && v->isUnsigned();}
+bool FLValue_IsDouble(FLValue v)                {return v && v->isDouble();}
+bool FLValue_AsBool(FLValue v)                  {return v && v->asBool();}
+int64_t FLValue_AsInt(FLValue v)                {return v ? v->asInt() : 0;}
+uint64_t FLValue_AsUnsigned(FLValue v)          {return v ? v->asUnsigned() : 0;}
+float FLValue_AsFloat(FLValue v)                {return v ? v->asFloat() : 0.0;}
+double FLValue_AsDouble(FLValue v)              {return v ? v->asDouble() : 0.0;}
+FLSlice FLValue_AsString(FLValue v)             {return v ? v->asString() : slice::null;}
+FLArray FLValue_AsArray(FLValue v)              {return v ? v->asArray() : nullptr;}
+FLDict FLValue_AsDict(FLValue v)                {return v ? v->asDict() : nullptr;}
 
 
 static FLSliceResult toSliceResult(const std::string &str) {
@@ -111,20 +71,29 @@ static FLSliceResult toSliceResult(alloc_slice &&s) {
 FLSliceResult FLValue_ToString(FLValue v) {
     if (v) {
         try {
-            return toSliceResult(v->toString());
+            return toSliceResult(v->toString());    // toString can throw
         } catchError(nullptr)
     }
     return {nullptr, 0};
 }
 
+
 FLSliceResult FLValue_ToJSON(FLValue v) {
     if (v) {
         try {
-            return toSliceResult(v->toJSON());
+            return toSliceResult(v->toJSON());      // toJSON can throw
         } catchError(nullptr)
     }
     return {nullptr, 0};
 }
+
+
+FLSliceResult FLData_ConvertJSON(FLSlice json, FLError *outError) {
+    FLEncoderImpl e(json.size);
+    FLEncoder_ConvertJSON(&e, json);
+    return FLEncoder_Finish(&e, outError);
+}
+
 
 FLSliceResult FLData_Dump(FLSlice data) {
     try {
@@ -151,9 +120,12 @@ FLValue FLArrayIterator_GetValue(const FLArrayIterator* i) {
 }
 
 bool FLArrayIterator_Next(FLArrayIterator* i) {
-    auto& iter = *(Array::iterator*)i;
-    ++iter;
-    return (bool)iter;
+    try {
+        auto& iter = *(Array::iterator*)i;
+        ++iter;                 // throws if iterating past end
+        return (bool)iter;
+    } catchError(nullptr)
+    return false;
 }
 
 
@@ -177,9 +149,12 @@ FLValue FLDictIterator_GetValue(const FLDictIterator* i) {
     return ((Dict::iterator*)i)->value();
 }
 bool FLDictIterator_Next(FLDictIterator* i) {
-    auto& iter = *(Dict::iterator*)i;
-    ++iter;
-    return (bool)iter;
+    try {
+        auto& iter = *(Dict::iterator*)i;
+        ++iter;                 // throws if iterating past end
+        return (bool)iter;
+    } catchError(nullptr)
+    return false;
 }
 
 
@@ -230,10 +205,9 @@ void FLEncoder_Free(FLEncoder e)                         {
             return true; \
         } \
     } catch (const std::exception &x) { \
-        e->recordError(x); \
+        e->recordException(x); \
     } \
     return false;
-
 
 bool FLEncoder_WriteNull(FLEncoder e)                    {ENCODER_TRY(writeNull());}
 bool FLEncoder_WriteBool(FLEncoder e, bool b)            {ENCODER_TRY(writeBool(b));}
@@ -250,6 +224,22 @@ bool FLEncoder_BeginDict(FLEncoder e, size_t reserve)    {ENCODER_TRY(beginDicti
 bool FLEncoder_WriteKey(FLEncoder e, FLSlice s)          {ENCODER_TRY(writeKey(s));}
 bool FLEncoder_EndDict(FLEncoder e)                      {ENCODER_TRY(endDictionary());}
 
+bool FLEncoder_ConvertJSON(FLEncoder e, FLSlice json) {
+    if (!e->hasError()) {
+        try {
+            JSONConverter jc(*e);
+            if (jc.convertJSON(json)) {                   // convertJSON can throw
+                return true;
+            } else {
+                e->errorCode = ::JSONError; //TODO: Save value of jc.error() somewhere
+                e->errorMessage = jc.errorMessage();
+            }
+        } catch (const std::exception &x) {
+            e->recordException(x);
+        }
+    }
+    return false;
+}
 
 FLError FLEncoder_GetError(FLEncoder e) {
     return (FLError)e->errorCode;
@@ -262,11 +252,9 @@ const char* FLEncoder_GetErrorMessage(FLEncoder e) {
 FLSliceResult FLEncoder_Finish(FLEncoder e, FLError *outError) {
     if (!e->hasError()) {
         try {
-            alloc_slice result = e->extractOutput();
-            result.dontFree();
-            return {(void*)result.buf, result.size};
+            return toSliceResult(e->extractOutput());       // extractOutput can throw
         } catch (const std::exception &x) {
-            e->recordError(x);
+            e->recordException(x);
         }
     }
     // Failure:

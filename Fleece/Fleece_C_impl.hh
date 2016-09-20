@@ -45,7 +45,7 @@ namespace fleece {
             return errorCode != ::NoError;
         }
 
-        void recordError(const std::exception &x) noexcept {
+        void recordException(const std::exception &x) noexcept {
             if (!hasError()) {
                 fleece::recordError(x, &errorCode);
                 errorMessage = x.what();

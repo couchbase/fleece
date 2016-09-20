@@ -22,33 +22,30 @@ namespace fleece {
     static int errorCallback(struct jsonsl_st * jsn,
                              jsonsl_error_t err,
                              struct jsonsl_state_st *state,
-                             char *errat);
+                             char *errat) noexcept;
     static void writePushCallback(struct jsonsl_st * jsn,
                                   jsonsl_action_t action,
                                   struct jsonsl_state_st *state,
-                                  const char *buf);
+                                  const char *buf) noexcept;
     static void writePopCallback(struct jsonsl_st * jsn,
                                  jsonsl_action_t action,
                                  struct jsonsl_state_st *state,
-                                 const char *buf);
+                                 const char *buf) noexcept;
 
-    JSONConverter::JSONConverter(Encoder &e)
+    JSONConverter::JSONConverter(Encoder &e) noexcept
     :_encoder(e),
-     _jsn(jsonsl_new(0x2000)),
+     _jsn(jsonsl_new(0x2000)),      // never returns NULL, according to source code
      _error(JSONSL_ERROR_SUCCESS),
      _errorPos(0)
     {
-        if (!_jsn)
-            throw std::bad_alloc();
         _jsn->data = this;
     }
 
     JSONConverter::~JSONConverter() {
-        if (_jsn)
-            jsonsl_destroy(_jsn);
+        jsonsl_destroy(_jsn);
     }
 
-    const char* JSONConverter::errorMessage() {
+    const char* JSONConverter::errorMessage() noexcept {
         return jsonsl_strerror((jsonsl_error_t)_error);
     }
 
@@ -146,40 +143,52 @@ namespace fleece {
         }
     }
 
-    inline int JSONConverter::gotError(int err, char *errat) {
+    int JSONConverter::gotError(int err, size_t pos) noexcept {
         _error = err;
-        _errorPos = errat - (char*)_input.buf;
+        _errorPos = pos;
         jsonsl_stop(_jsn);
         return 0;
+    }
+
+    int JSONConverter::gotError(int err, const char *errat) noexcept {
+        return gotError(err, errat - (char*)_input.buf);
     }
 
 
     // Callbacks:
 
-    static inline JSONConverter* converter(jsonsl_t jsn) {
+    static inline JSONConverter* converter(jsonsl_t jsn) noexcept {
         return (JSONConverter*)jsn->data;
     }
     
     static void writePushCallback(jsonsl_t jsn,
                                   jsonsl_action_t action,
                                   struct jsonsl_state_st *state,
-                                  const char *buf)
+                                  const char *buf) noexcept
     {
-        converter(jsn)->push(state);
+        try {
+            converter(jsn)->push(state);
+        } catch (...) {
+            converter(jsn)->gotError(JSONSL_ERROR_GENERIC, state->pos_begin);
+        }
     }
 
     static void writePopCallback(jsonsl_t jsn,
                                  jsonsl_action_t action,
                                  struct jsonsl_state_st *state,
-                                 const char *buf)
+                                 const char *buf) noexcept
     {
-        converter(jsn)->pop(state);
+        try {
+            converter(jsn)->pop(state);
+        } catch (...) {
+            converter(jsn)->gotError(JSONSL_ERROR_GENERIC, state->pos_begin);
+        }
     }
 
     static int errorCallback(jsonsl_t jsn,
                              jsonsl_error_t err,
                              struct jsonsl_state_st *state,
-                             char *errat)
+                             char *errat) noexcept
     {
         return converter(jsn)->gotError(err, errat);
     }
