@@ -91,6 +91,8 @@ namespace fleece {
             the next outermost collection (or made the root if there is no collection active.) */
         void endDictionary();
 
+        void writeValue(const Value*);
+
         // Note: overriding <<(bool) would be dangerous due to implicit conversion
         Encoder& operator<< (int64_t i)         {writeInt(i); return *this;}
         Encoder& operator<< (uint64_t i)        {writeUInt(i); return *this;}
@@ -101,6 +103,7 @@ namespace fleece {
         Encoder& operator<< (float f)           {writeFloat(f); return *this;}
         Encoder& operator<< (std::string str)   {writeString(str); return *this;}
         Encoder& operator<< (slice s)           {writeString(s); return *this;} // string not data!
+        Encoder& operator<< (const Value *v)    {writeValue(v); return *this;}
 
 #ifdef __OBJC__
         /** Writes an Objective-C object. Supported classes are the ones allowed by
@@ -120,6 +123,7 @@ namespace fleece {
         };
 
         void addItem(Value v);
+        void writeRawValue(slice rawValue, bool canInline =true);
         void writeValue(internal::tags, uint8_t buf[], size_t size, bool canInline =true);
         void writePointer(size_t pos);
         void writeSpecial(uint8_t special);

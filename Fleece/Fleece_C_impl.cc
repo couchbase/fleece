@@ -158,9 +158,16 @@ bool FLDictIterator_Next(FLDictIterator* i) {
 }
 
 
-void FLDictKey_Init(FLDictKey* key, FLSlice string, bool cachePointers) {
+FLDictKey FLDictKey_Init(FLSlice string, bool cachePointers) {
+    FLDictKey key;
     static_assert(sizeof(FLDictKey) >= sizeof(Dict::key), "FLDictKey is too small");
-    new (key) Dict::key(string, cachePointers);
+    new (&key) Dict::key(string, cachePointers);
+    return key;
+}
+
+FLSlice FLDictKey_GetString(const FLDictKey *key) {
+    auto realKey = (const Dict::key*)key;
+    return realKey->string();
 }
 
 FLValue FLDict_GetWithKey(FLDict d, FLDictKey *k) {
@@ -223,6 +230,9 @@ bool FLEncoder_EndArray(FLEncoder e)                     {ENCODER_TRY(endArray()
 bool FLEncoder_BeginDict(FLEncoder e, size_t reserve)    {ENCODER_TRY(beginDictionary(reserve));}
 bool FLEncoder_WriteKey(FLEncoder e, FLSlice s)          {ENCODER_TRY(writeKey(s));}
 bool FLEncoder_EndDict(FLEncoder e)                      {ENCODER_TRY(endDictionary());}
+
+bool FLEncoder_WriteValue(FLEncoder e, FLValue v)        {ENCODER_TRY(writeValue(v));}
+
 
 bool FLEncoder_ConvertJSON(FLEncoder e, FLSlice json) {
     if (!e->hasError()) {

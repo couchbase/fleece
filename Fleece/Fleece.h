@@ -38,6 +38,28 @@ extern "C" {
         const void *buf;
         size_t size;
     } FLSlice;
+
+    /** Creates a slice pointing to the contents of a C string. */
+    static inline FLSlice FLStr(const char *str) {
+        FLSlice foo = { str, str ? strlen(str) : 0 };
+        return foo;
+    }
+
+    // Macro version of FLStr, for use in initializing compile-time constants.
+    // STR must be a C string literal.
+    #ifdef _MSC_VER
+    #define FLSTR(STR) {("" STR), sizeof(("" STR))-1}
+    #else
+    #define FLSTR(STR) ((FLSlice){("" STR), sizeof(("" STR))-1})
+    #endif
+
+    // A convenient constant denoting a null slice.
+    #ifdef _MSC_VER
+    const FLSlice kFLSliceNull = { NULL, 0 };
+    #else
+    #define kFLSliceNull ((FLSlice){NULL, 0})
+    #endif
+
 #endif
 
 #define FL_SLICE_DEFINED
@@ -264,12 +286,15 @@ extern "C" {
     } FLDictKey;
 
     /** Initializes an FLDictKey struct with a key string.
-        @param key  Pointer to a raw uninitialized FLDictKey struct.
         @param string  The key string (UTF-8).
         @param cachePointers  If true, the FLDictKey is allowed to cache a direct Value pointer
                 representation of the key. This provides faster lookup, but means that it can
-                only ever be used with Dicts that live in the same stored data buffer. */
-    void FLDictKey_Init(FLDictKey* key, FLSlice string, bool cachePointers);
+                only ever be used with Dicts that live in the same stored data buffer.
+        @return  The opaque key. */
+    FLDictKey FLDictKey_Init(FLSlice string, bool cachePointers);
+
+    /** Returns the string value of the key (which it was initialized with.) */
+    FLSlice FLDictKey_GetString(const FLDictKey *key);
 
     /** Looks up a key in a dictionary using an FLDictKey. If the key is found, "hint" data will
         be stored inside the FLDictKey that will speed up subsequent lookups. */
@@ -388,6 +413,10 @@ extern "C" {
 
     /** Ends writing a dictionary value; pops back the previous encoding state. */
     bool FLEncoder_EndDict(FLEncoder);
+
+
+    /** Writes a Fleece Value to an Encoder. */
+    bool FLEncoder_WriteValue(FLEncoder, FLValue);
 
 
     /** Parses JSON data and writes the object(s) to the encoder. (This acts as a single write,

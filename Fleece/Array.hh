@@ -150,8 +150,9 @@ namespace fleece {
             key(slice rawString, bool cachePointer = false) noexcept
             :_rawString(rawString), _cachePointer(cachePointer) { }
 
-            const Value* asValue() const noexcept            {return _keyValue;}
-            int compare(const key &k) const noexcept         {return _rawString.compare(k._rawString);}
+            slice string() const noexcept                {return _rawString;}
+            const Value* asValue() const noexcept        {return _keyValue;}
+            int compare(const key &k) const noexcept     {return _rawString.compare(k._rawString);}
         private:
             slice const _rawString;
             const Value* _keyValue  {nullptr};

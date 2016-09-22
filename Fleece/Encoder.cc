@@ -14,6 +14,7 @@
 //  and limitations under the License.
 
 #include "Encoder.hh"
+#include "Array.hh"
 #include "Endian.hh"
 #include "varint.hh"
 #include "FleeceException.hh"
@@ -110,15 +111,23 @@ namespace fleece {
 
     void Encoder::writeValue(tags tag, byte buf[], size_t size, bool canInline) {
         buf[0] |= tag << 4;
-        if (canInline && size <= 4) {
-            if (size < 4)
-                memset(&buf[size], 0, 4-size); // zero unused bytes
-            addItem(*(Value*)buf);
-            if (size > 2)
+        writeRawValue(slice(buf, size), canInline);
+    }
+
+    void Encoder::writeRawValue(slice rawValue, bool canInline) {
+        if (canInline && rawValue.size <= 4) {
+            if (rawValue.size < 4) {
+                byte buf[4] = {0};      // zero the unused bytes
+                memcpy(buf, rawValue.buf, rawValue.size);
+                addItem(*(Value*)buf);
+            } else {
+                addItem(*(Value*)rawValue.buf);
+            }
+            if (rawValue.size > 2)
                 _items->wide = true;
         } else {
             writePointer(nextWritePos());
-            _out.write(buf, size);
+            _out.write(rawValue.buf, rawValue.size);
         }
     }
 
@@ -248,6 +257,45 @@ namespace fleece {
 
     void Encoder::writeData(slice s) {
         writeData(kBinaryTag, s);
+    }
+
+
+    void Encoder::writeValue(const Value *value) {
+        switch (value->tag()) {
+            case kShortIntTag:
+            case kIntTag:
+            case kFloatTag:
+            case kSpecialTag:
+                writeRawValue(slice(value, value->dataSize()));
+                break;
+            case kStringTag:
+                writeString(value->asString());
+                break;
+            case kBinaryTag:
+                writeData(value->asString());
+                break;
+            case kArrayTag: {
+                auto iter = value->asArray()->begin();
+                beginArray(iter.count());
+                for (; iter; ++iter) {
+                    writeValue(iter.value());
+                }
+                endArray();
+                break;
+            }
+            case kDictTag: {
+                auto iter = value->asDict()->begin();
+                beginDictionary(iter.count());
+                for (; iter; ++iter) {
+                    writeKey(iter.key()->asString());
+                    writeValue(iter.value());
+                }
+                endDictionary();
+                break;
+            }
+            default:
+                throw FleeceException(UnknownValue, "illegal tag in Value; corrupt data?");
+        }
     }
 
 
