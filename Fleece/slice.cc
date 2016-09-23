@@ -179,6 +179,13 @@ namespace fleece {
     }
 
 
+    void alloc_slice::append(slice suffix) {
+        size_t oldSize = size;
+        resize(oldSize + suffix.size);
+        memcpy((void*)offset(oldSize), suffix.buf, suffix.size);
+    }
+
+
     std::string slice::hexString() const {
         static const char kDigits[17] = "0123456789abcdef";
         std::string result;

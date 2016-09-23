@@ -198,6 +198,7 @@ namespace fleece {
 #endif
 
         void resize(size_t newSize);
+        void append(slice);
 
         alloc_slice& operator=(slice);
 
