@@ -28,7 +28,7 @@ namespace fleece {
 
 int FLSlice_Compare(FLSlice a, FLSlice b)       {return a.compare(b);}
 
-void FLSlice_Free(FLSliceResult s)              {free(s.buf);}
+void FLSliceResult_Free(FLSliceResult s)              {free(s.buf);}
 
 
 FLValue FLValue_FromData(FLSlice data)          {return Value::fromData(data);}

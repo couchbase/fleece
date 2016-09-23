@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -65,16 +66,27 @@ extern "C" {
 #define FL_SLICE_DEFINED
 
 
+#ifdef __cplusplus
+    /** A block of memory returned from an API call. The caller takes ownership, may modify the
+        bytes, and must call FLSliceFree when done. */
+    struct FLSliceResult {
+        void *buf;      // note: not const, since caller owns the buffer
+        size_t size;
+
+        explicit operator FLSlice () {return {buf, size};}
+    };
+#else
     /** A block of memory returned from an API call. The caller takes ownership, may modify the
         bytes, and must call FLSliceFree when done. */
     typedef struct {
-        void *buf;
+        void *buf;      // note: not const, since caller owns the buffer
         size_t size;
     } FLSliceResult;
+#endif
 
 
     /** Frees the memory of a FLSliceResult. */
-    void FLSlice_Free(FLSliceResult);
+    void FLSliceResult_Free(FLSliceResult);
 
 
     /** Lexicographic comparison of two slices; basically like memcmp(), but taking into account
