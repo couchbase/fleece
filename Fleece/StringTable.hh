@@ -19,9 +19,9 @@ namespace fleece {
         ~StringTable();
 
         struct info {
-            uint32_t offset;
+            bool usedAsKey   : 1;
+            unsigned offset  :31;
             uint32_t hash;
-            bool usedAsKey;
         };
 
         typedef std::pair<slice, info> slot;
@@ -29,20 +29,13 @@ namespace fleece {
         size_t count()                              {return _count;}
         size_t tableSize()                          {return _size;}
 
-        void clear();
+        void clear() noexcept;
 
-        slot* find(slice key)                       {return find(key, hash(key));}
+        slot* find(slice key) noexcept              {return find(key, key.hash());}
 
         void add(slice, const info&);
 
-        void addAt(slot*, slice, const info&);
-
-        static uint32_t hash(slice s) {  // djb2 hash function
-            uint32_t hash = 5381;
-            for (size_t i = 0; i < s.size; i++)
-                hash = (hash<<5) + hash + s[i];
-            return hash;
-        }
+        void addAt(slot*, slice key, const info&) noexcept;
 
         class iterator {
         public:
@@ -64,8 +57,8 @@ namespace fleece {
 
     private:
         void allocTable(size_t size);
-        slot* find(fleece::slice key, uint32_t hash);
-        bool _add(slice, uint32_t h, const info&);
+        slot* find(fleece::slice key, uint32_t hash) noexcept;
+        bool _add(slice, uint32_t h, const info&) noexcept;
         void incCount()                             {if (++_count > _maxCount) grow();}
         void grow();
 

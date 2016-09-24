@@ -86,7 +86,7 @@ namespace fleece {
             _items->clear();
             _items = NULL;
         }
-        _out = Writer();
+        _out.reset();
         _stackDepth = 0;
         push(kSpecialTag, 1);
         _strings.clear();
@@ -233,7 +233,9 @@ namespace fleece {
                     entry->second.usedAsKey = true;
                 return entry->first;
             } else {
-                auto offset = (uint32_t)nextWritePos();
+                auto offset = nextWritePos();
+                if (offset > 1u<<31)
+                    throw FleeceException(MemoryError, "encoded data too large");
                 s = writeData(kStringTag, s);
                 if (s.buf) {
 #if 0
@@ -241,7 +243,7 @@ namespace fleece {
                         fprintf(stderr, "---- new encoder ----\n");
                     fprintf(stderr, "Caching `%.*s` --> %u\n", (int)s.size, s.buf, offset);
 #endif
-                    StringTable::info i = {offset, asKey};
+                    StringTable::info i = {asKey, (uint32_t)offset};
                     _strings.addAt(entry, s, i);
                 }
                 return s;

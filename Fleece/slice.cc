@@ -23,7 +23,13 @@
 
 namespace fleece {
 
-    int slice::compare(slice b) const {
+    void slice::setStart(const void *s) noexcept {
+        assert(s <= end());
+        size = (uint8_t*)end() - (uint8_t*)s;
+        buf = s;
+    }
+
+    int slice::compare(slice b) const noexcept {
         // Optimized for speed
         if (this->size == b.size)
             return memcmp(this->buf, b.buf, this->size);
@@ -36,7 +42,7 @@ namespace fleece {
         }
     }
 
-    slice slice::read(size_t nBytes) {
+    slice slice::read(size_t nBytes) noexcept {
         if (nBytes > size)
             return null;
         slice result(buf, nBytes);
@@ -44,14 +50,14 @@ namespace fleece {
         return result;
     }
 
-    slice slice::readAtMost(size_t nBytes) {
+    slice slice::readAtMost(size_t nBytes) noexcept {
         nBytes = std::min(nBytes, size);
         slice result(buf, nBytes);
         moveStart(nBytes);
         return result;
     }
 
-    bool slice::readInto(slice dst) {
+    bool slice::readInto(slice dst) noexcept {
         if (dst.size > size)
             return false;
         ::memcpy((void*)dst.buf, buf, dst.size);
@@ -59,7 +65,7 @@ namespace fleece {
         return true;
     }
 
-    bool slice::writeFrom(slice src) {
+    bool slice::writeFrom(slice src) noexcept {
         if (src.size > size)
             return false;
         ::memcpy((void*)buf, src.buf, src.size);
@@ -67,7 +73,7 @@ namespace fleece {
         return true;
     }
 
-    uint8_t slice::readByte() {
+    uint8_t slice::readByte() noexcept {
         if (size == 0)
             return 0;
         uint8_t result = (*this)[0];
@@ -75,7 +81,7 @@ namespace fleece {
         return result;
     }
 
-    bool slice::writeByte(uint8_t n) {
+    bool slice::writeByte(uint8_t n) noexcept {
         if (size == 0)
             return false;
         *((char*)buf) = n;
@@ -83,7 +89,7 @@ namespace fleece {
         return true;
     }
 
-    uint64_t slice::readDecimal() {
+    uint64_t slice::readDecimal() noexcept {
         uint64_t n = 0;
         while (size > 0 && isdigit(*(char*)buf)) {
             n = 10*n + (*(char*)buf - '0');
@@ -92,7 +98,7 @@ namespace fleece {
         return n;
     }
 
-    bool slice::writeDecimal(uint64_t n) {
+    bool slice::writeDecimal(uint64_t n) noexcept {
         // Optimized for speed
         size_t len;
         if (n < 10) {
@@ -117,7 +123,7 @@ namespace fleece {
         return true;
     }
 
-    unsigned slice::sizeOfDecimal(uint64_t n) {
+    unsigned slice::sizeOfDecimal(uint64_t n) noexcept {
         if (n == 0)
             return 1;
         return 1 + (unsigned)::floor(::log10(n));
@@ -131,13 +137,13 @@ namespace fleece {
         return slice(copied, size);
     }
 
-    void slice::free() {
+    void slice::free() noexcept {
         ::free((void*)buf);
         buf = NULL;
         size = 0;
     }
     
-    bool slice::hasPrefix(slice s) const {
+    bool slice::hasPrefix(slice s) const noexcept {
         return s.size > 0 && size >= s.size && ::memcmp(buf, s.buf, s.size) == 0;
     }
 

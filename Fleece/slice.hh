@@ -60,6 +60,7 @@ namespace fleece {
         size_t offsetOf(const void* ptr) const      {return (uint8_t*)ptr - (uint8_t*)buf;}
         const void* end() const                     {return offset(size);}
         void setEnd(const void* e)                  {size = (uint8_t*)e - (uint8_t*)buf;}
+        void setStart(const void* s) noexcept;
 
         slice upTo(const void* pos)                 {return slice(buf, pos);}
         slice from(const void* pos)                 {return slice(pos, end());}
@@ -67,33 +68,35 @@ namespace fleece {
         const uint8_t& operator[](size_t i) const     {return ((const uint8_t*)buf)[i];}
         slice operator()(size_t i, unsigned n) const  {return slice(offset(i), n);}
 
-        slice read(size_t nBytes);
-        slice readAtMost(size_t nBytes);
-        bool readInto(slice dst);
+        slice read(size_t nBytes) noexcept;
+        slice readAtMost(size_t nBytes) noexcept;
+        bool readInto(slice dst) noexcept;
 
-        bool writeFrom(slice);
+        bool writeFrom(slice) noexcept;
 
-        uint8_t readByte();     // returns 0 if slice is empty
-        bool writeByte(uint8_t);
-        uint64_t readDecimal(); // reads until it hits a non-digit or the end
-        bool writeDecimal(uint64_t);
-        static unsigned sizeOfDecimal(uint64_t);
+        uint8_t readByte() noexcept;     // returns 0 if slice is empty
+        bool writeByte(uint8_t) noexcept;
+        uint64_t readDecimal() noexcept; // reads until it hits a non-digit or the end
+        bool writeDecimal(uint64_t) noexcept;
+        static unsigned sizeOfDecimal(uint64_t) noexcept;
 
         const void* findByte(uint8_t byte) const    {return ::memchr(buf, byte, size);}
 
-        int compare(slice) const;
+        int compare(slice) const noexcept;
         bool operator==(const slice &s) const       {return size==s.size &&
                                                      memcmp(buf, s.buf, size) == 0;}
         bool operator!=(const slice &s) const       {return !(*this == s);}
         bool operator<(slice s) const               {return compare(s) < 0;}
         bool operator>(slice s) const               {return compare(s) > 0;}
 
+        bool hasPrefix(slice) const noexcept;
+
         void moveStart(ptrdiff_t delta)             {buf = offsetby(buf, delta); size -= delta;}
         bool checkedMoveStart(size_t delta)         {if (size<delta) return false;
                                                      else {moveStart(delta); return true;}}
 
         slice copy() const;
-        void free();
+        void free() noexcept;
 
         /** Raw memory allocation. Just like malloc but throws on failure. */
         static void* newBytes(size_t sz) {
@@ -109,8 +112,6 @@ namespace fleece {
             return newBytes;
         }
 
-        bool hasPrefix(slice) const;
-        
         explicit operator std::string() const;
         std::string asString() const                {return (std::string)*this;}
         std::string hexString() const;

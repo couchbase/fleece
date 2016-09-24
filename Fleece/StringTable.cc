@@ -21,6 +21,8 @@
 
 namespace fleece {
 
+    static_assert(sizeof(StringTable::info) == 8, "info isn't packed");
+
     static const float kMaxLoad = 0.666f;
 
     StringTable::StringTable(size_t capacity) {
@@ -35,12 +37,12 @@ namespace fleece {
         ::free(_table);
     }
 
-    void StringTable::clear() {
+    void StringTable::clear() noexcept {
         ::memset(_table, 0, _size * sizeof(slot));
         _count = 0;
     }
 
-    StringTable::slot* StringTable::find(fleece::slice key, uint32_t hash) {
+    StringTable::slot* StringTable::find(fleece::slice key, uint32_t hash) noexcept {
         assert(key.buf != NULL);
         size_t index = hash & (_size - 1);
         slot *s = &_table[index];
@@ -57,7 +59,7 @@ namespace fleece {
         return s;
     }
 
-    bool StringTable::_add(fleece::slice key, uint32_t h, const info& n) {
+    bool StringTable::_add(fleece::slice key, uint32_t h, const info& n) noexcept {
         auto s = find(key, h);
         if (s->first.buf)
             return false;
@@ -69,19 +71,18 @@ namespace fleece {
         }
     }
 
-    void StringTable::addAt(slot* s, slice key, const info& n) {
+    void StringTable::addAt(slot* s, slice key, const info& n) noexcept {
         assert(key.buf != NULL);
-        auto ss = const_cast<slot*>(s);
-        assert(ss->first.buf == NULL);
-        ss->first = key;
-        auto hash = ss->second.hash;
-        ss->second = n;
-        ss->second.hash = hash;
+        assert(s->first.buf == NULL);
+        s->first = key;
+        auto hash = s->second.hash;
+        s->second = n;
+        s->second.hash = hash;
         incCount();
     }
 
     void StringTable::add(fleece::slice key, const info& n) {
-        if (_add(key, hash(key), n))
+        if (_add(key, key.hash(), n))
             incCount();
     }
 

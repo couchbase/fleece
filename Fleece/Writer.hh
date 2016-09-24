@@ -32,6 +32,8 @@ namespace fleece {
         Writer(Writer&&) noexcept;
         Writer& operator= (Writer&&) noexcept;
 
+        void reset();
+
         size_t length() const                   {return _length;}
         const void* curPos() const;
         size_t posToOffset(const void *pos) const;
@@ -62,11 +64,14 @@ namespace fleece {
         class Chunk {
         public:
             Chunk(size_t capacity);
-            Chunk(const Chunk&);
-            Chunk();
-            void free();
+            Chunk(Chunk&&) noexcept;
+            Chunk(const Chunk&) =delete;
+            Chunk() noexcept;
+            Chunk& operator=(Chunk&&) noexcept;
+            void free() noexcept;
+            void reset()              {_available.setStart(_start);}
             const void* write(const void* data, size_t length);
-            void resizeToFit();
+            void resizeToFit() noexcept;
             size_t length() const     {return (int8_t*)_available.buf - (int8_t*)_start;}
             size_t capacity() const   {return (int8_t*)_available.end() - (int8_t*)_start;}
             slice contents() const    {return slice(_start, _available.buf);}

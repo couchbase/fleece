@@ -47,6 +47,21 @@ namespace fleece {
         return *this;
     }
 
+    void Writer::reset() {
+        size_t size = _chunks.size();
+        if (size == 0) {
+            addChunk(_chunkSize);
+        } else {
+            if (size > 1) {
+                for (size_t i = 0; i < size-1; i++)
+                    _chunks[i].free();
+                _chunks.erase(_chunks.begin(), _chunks.end() - 1);
+            }
+            _chunks[0].reset();
+        }
+        _length = 0;
+    }
+
     const void* Writer::curPos() const {
         return _chunks.back().available().buf;
     }
@@ -89,6 +104,8 @@ namespace fleece {
         if (_chunks.size() == 1) {
             _chunks[0].resizeToFit();
             output = alloc_slice::adopt(_chunks[0].contents());
+            _chunks.clear();
+            _length = 0;
         } else {
             output = alloc_slice(length());
             void* dst = (void*)output.buf;
@@ -96,18 +113,16 @@ namespace fleece {
                 auto contents = chunk.contents();
                 memcpy(dst, contents.buf, contents.size);
                 dst = offsetby(dst, contents.size);
-                chunk.free();
             }
+            reset();
         }
-        _chunks.resize(0);
-        _length = 0;
         return output;
     }
 
 
 #pragma mark - CHUNK:
 
-    Writer::Chunk::Chunk()
+    Writer::Chunk::Chunk() noexcept
     :_start(NULL)
     { }
 
@@ -119,12 +134,22 @@ namespace fleece {
             throw std::bad_alloc();
     }
 
-    Writer::Chunk::Chunk(const Chunk& c)
+    Writer::Chunk::Chunk(Chunk&& c) noexcept
     :_start(c._start),
      _available(c._available)
-    { }
+    {
+        c._start = nullptr;
+    }
 
-    void Writer::Chunk::free() {
+    Writer::Chunk& Writer::Chunk::operator=(Chunk&& c) noexcept {
+        _start = c._start;
+        _available = c._available;
+        c._start = nullptr;
+        return *this;
+    }
+
+
+    void Writer::Chunk::free() noexcept {
         ::free(_start);
         _start = NULL;
     }
@@ -139,12 +164,11 @@ namespace fleece {
         return result;
     }
 
-    void Writer::Chunk::resizeToFit() {
+    void Writer::Chunk::resizeToFit() noexcept {
         size_t len = length();
         void *newStart = ::realloc(_start, len);
-        if (!newStart)
-            throw std::bad_alloc();
-        _start = newStart;
+        if (newStart)
+            _start = newStart;
         _available = slice(offsetby(newStart,len), (size_t)0);
     }
 
