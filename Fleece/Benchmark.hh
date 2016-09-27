@@ -17,6 +17,12 @@ public:
     void reset()        {_start = clock();}
     double elapsed()    {return (clock() - _start) / (double)CLOCKS_PER_SEC;}
     double elapsedMS()  {return elapsed() * 1000.0;}
+
+    void printReport(const char *what, unsigned count, const char *item) {
+        auto ms = elapsedMS();
+        fprintf(stderr, "%s took %.3f ms for %u %ss (%.3f us/%s, or %.0f %ss/sec)\n",
+                what, ms, count, item, ms/count*1000.0, item, count/ms*1000, item);
+    }
 private:
     clock_t _start;
 };

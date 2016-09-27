@@ -34,7 +34,7 @@ namespace fleece {
 
     JSONConverter::JSONConverter(Encoder &e) noexcept
     :_encoder(e),
-     _jsn(jsonsl_new(0x2000)),      // never returns NULL, according to source code
+     _jsn(jsonsl_new(50)),      // never returns NULL, according to source code
      _error(JSONSL_ERROR_SUCCESS),
      _errorPos(0)
     {
@@ -43,6 +43,12 @@ namespace fleece {
 
     JSONConverter::~JSONConverter() {
         jsonsl_destroy(_jsn);
+    }
+
+    void JSONConverter::reset() {
+        jsonsl_reset(_jsn);
+        _error = JSONSL_ERROR_SUCCESS;
+        _errorPos = 0;
     }
 
     const char* JSONConverter::errorMessage() noexcept {

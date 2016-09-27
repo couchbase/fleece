@@ -33,7 +33,7 @@ namespace fleece {
 
     Encoder::Encoder(size_t reserveSize)
     :_out(reserveSize),
-     _strings(100)
+     _strings(10)
     {
         push(kSpecialTag, 1);                   // Top-level 'array' is just a single item
     }
@@ -357,7 +357,7 @@ namespace fleece {
 
     void Encoder::push(tags tag, size_t reserve) {
         if (_stackDepth >= _stack.size())
-            _stack.emplace_back();
+            throw FleeceException(EncodeError, "nesting is too deep");
         _items = &_stack[_stackDepth++];
         _items->reset(tag);
         if (reserve > 0)

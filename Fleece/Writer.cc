@@ -27,23 +27,26 @@ namespace fleece {
     :_chunkSize(initialCapacity),
      _length(0)
     {
-        addChunk(initialCapacity);
+        if (initialCapacity <= kDefaultInitialCapacity)
+            _chunks.emplace_back(_initialBuf, sizeof(_initialBuf));
+        else
+            addChunk(initialCapacity);
     }
 
     Writer::Writer(Writer&& w) noexcept
     :_chunks(std::move(w._chunks))
     {
-        w._chunks.resize(0);
+        w._chunks.clear();
     }
 
     Writer::~Writer() {
         for (auto &chunk : _chunks)
-            chunk.free();
+            freeChunk(chunk);
     }
 
     Writer& Writer::operator= (Writer&& w) noexcept {
         _chunks = std::move(w._chunks);
-        w._chunks.resize(0);
+        w._chunks.clear();
         return *this;
     }
 
@@ -54,7 +57,7 @@ namespace fleece {
         } else {
             if (size > 1) {
                 for (size_t i = 0; i < size-1; i++)
-                    _chunks[i].free();
+                    freeChunk(_chunks[i]);
                 _chunks.erase(_chunks.begin(), _chunks.end() - 1);
             }
             _chunks[0].reset();
@@ -95,13 +98,17 @@ namespace fleece {
     }
 
     void Writer::addChunk(size_t capacity) {
-        auto chunk(capacity);
-        _chunks.push_back(chunk);
+        _chunks.emplace_back(capacity);
+    }
+
+    void Writer::freeChunk(Chunk &chunk) {
+        if (chunk.start() != &_initialBuf)
+            chunk.free();
     }
 
     alloc_slice Writer::extractOutput() {
         alloc_slice output;
-        if (_chunks.size() == 1) {
+        if (_chunks.size() == 1 && _chunks[0].start() != &_initialBuf) {
             _chunks[0].resizeToFit();
             output = alloc_slice::adopt(_chunks[0].contents());
             _chunks.clear();
@@ -122,8 +129,9 @@ namespace fleece {
 
 #pragma mark - CHUNK:
 
-    Writer::Chunk::Chunk() noexcept
-    :_start(NULL)
+    Writer::Chunk::Chunk(void *buf, size_t size)
+    :_start(buf),
+     _available(buf, size)
     { }
 
     Writer::Chunk::Chunk(size_t capacity)

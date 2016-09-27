@@ -28,13 +28,14 @@ namespace fleece {
     StringTable::StringTable(size_t capacity) {
         _count = 0;
         size_t size;
-        for (size = 8; size*kMaxLoad < capacity; size *= 2)
+        for (size = 16; size*kMaxLoad < capacity; size *= 2)
             ;
         allocTable(size); // initializes _table, _size, _maxCount
     }
 
     StringTable::~StringTable() {
-        ::free(_table);
+        if (_table != _initialTable)
+            ::free(_table);
     }
 
     void StringTable::clear() noexcept {
@@ -87,9 +88,16 @@ namespace fleece {
     }
 
     void StringTable::allocTable(size_t size) {
-        auto table = (slot*)::calloc(size, sizeof(slot));
-        if (!table)
-            throw std::bad_alloc();
+        slot* table;
+        if (size <= kInitialTableSize) {
+            table = _initialTable;
+            memset(table, 0, sizeof(_initialTable));
+            size = kInitialTableSize;
+        } else {
+            table = (slot*)::calloc(size, sizeof(slot));
+            if (!table)
+                throw std::bad_alloc();
+        }
         _table = table;
         _size = size;
         _maxCount = (size_t)(size * kMaxLoad);
@@ -102,7 +110,8 @@ namespace fleece {
             if (s->first.buf != NULL)
                 _add(s->first, s->second.hash, s->second);
         }
-        ::free(oldTable);
+        if (oldTable != _initialTable)
+            ::free(oldTable);
     }
 
 }

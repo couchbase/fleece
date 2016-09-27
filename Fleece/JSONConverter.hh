@@ -41,6 +41,9 @@ namespace fleece {
             kErrTruncatedJSON = 1000
         };
 
+        /** Resets the converter, as though you'd deleted it and constructed a new one. */
+        void reset();
+
     //private:
         void push(struct jsonsl_state_st *state);
         void pop(struct jsonsl_state_st *state);

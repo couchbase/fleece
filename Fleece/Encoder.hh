@@ -18,6 +18,8 @@
 #include "Value.hh"
 #include "Writer.hh"
 #include "StringTable.hh"
+#include <array>
+#include <vector>
 
 
 namespace fleece {
@@ -146,9 +148,11 @@ namespace fleece {
 
         //////// Data members:
 
+        static const size_t kMaxStackDepth = 10;
+
         Writer _out;            // Where output is written to
         valueArray *_items;     // Values of the currently-open array/dict; == &_stack[_stackDepth]
-        std::vector<valueArray> _stack; // Stack of open arrays/dicts
+        std::array<valueArray, kMaxStackDepth> _stack; // Stack of open arrays/dicts
         unsigned _stackDepth {0};    // Current depth of _stack
         StringTable _strings;        // Maps strings to the offsets where they appear as values
         bool _uniqueStrings {true};  // Should strings be uniqued before writing?

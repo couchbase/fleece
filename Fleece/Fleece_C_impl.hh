@@ -38,6 +38,7 @@ namespace fleece {
     struct FLEncoderImpl : public Encoder {
         FLError errorCode {::NoError};
         std::string errorMessage;
+        std::unique_ptr<JSONConverter> jsonConverter {nullptr};
 
         FLEncoderImpl(size_t reserveOutputSize =256) :Encoder(reserveOutputSize) { }
 
@@ -54,6 +55,8 @@ namespace fleece {
 
         void reset() {              // careful, not a real override (non-virtual method)
             Encoder::reset();
+            if (jsonConverter)
+                jsonConverter->reset();
             errorCode = ::NoError;
         }
     };

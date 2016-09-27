@@ -237,12 +237,18 @@ bool FLEncoder_WriteValue(FLEncoder e, FLValue v)        {ENCODER_TRY(writeValue
 bool FLEncoder_ConvertJSON(FLEncoder e, FLSlice json) {
     if (!e->hasError()) {
         try {
-            JSONConverter jc(*e);
-            if (jc.convertJSON(json)) {                   // convertJSON can throw
+            JSONConverter *jc = e->jsonConverter.get();
+            if (jc) {
+                jc->reset();
+            } else {
+                jc = new JSONConverter(*e);
+                e->jsonConverter.reset(jc);
+            }
+            if (jc->convertJSON(json)) {                   // convertJSON can throw
                 return true;
             } else {
                 e->errorCode = ::JSONError; //TODO: Save value of jc.error() somewhere
-                e->errorMessage = jc.errorMessage();
+                e->errorMessage = jc->errorMessage();
             }
         } catch (const std::exception &x) {
             e->recordException(x);
