@@ -77,6 +77,7 @@ namespace fleece {
         uint8_t readByte() noexcept;     // returns 0 if slice is empty
         bool writeByte(uint8_t) noexcept;
         uint64_t readDecimal() noexcept; // reads until it hits a non-digit or the end
+        int64_t readSignedDecimal() noexcept;
         bool writeDecimal(uint64_t) noexcept;
         static unsigned sizeOfDecimal(uint64_t) noexcept;
 

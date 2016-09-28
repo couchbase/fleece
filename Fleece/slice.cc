@@ -98,6 +98,16 @@ namespace fleece {
         return n;
     }
 
+    int64_t slice::readSignedDecimal() noexcept {
+        bool negative = (size > 0 && (*this)[0] == '-');
+        if (negative)
+            moveStart(1);
+        uint64_t n = readDecimal();
+        if (n > INT64_MAX)
+            return 0;
+        return negative ? -(int64_t)n : (int64_t)n;
+    }
+
     bool slice::writeDecimal(uint64_t n) noexcept {
         // Optimized for speed
         size_t len;

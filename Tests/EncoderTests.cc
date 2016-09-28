@@ -9,6 +9,7 @@
 #include "FleeceTests.hh"
 #include "JSONConverter.hh"
 #include "KeyTree.hh"
+#include "Path.hh"
 #include "jsonsl.h"
 #include "mn_wordlist.h"
 
@@ -680,6 +681,27 @@ public:
 #endif
     }
 
+    void testPaths() {
+        alloc_slice input = readFile(kTestFilesDir "1000people.json");
+        JSONConverter jr(enc);
+        jr.convertJSON(input);
+        enc.end();
+        alloc_slice fleeceData = enc.extractOutput();
+        const Value *root = Value::fromData(fleeceData);
+
+        Path p1{"$.123.name"};
+        const Value *name = p1.eval(root);
+        Assert(name);
+        Assert(name->type() == kString);
+        AssertEqual(name->asString(), slice("Concepcion Burns"));
+
+        Path p2{"-1.name"};
+        name = p2.eval(root);
+        Assert(name);
+        Assert(name->type() == kString);
+        AssertEqual(name->asString(), slice("Marva Morse"));
+    }
+
 #pragma mark - KEY TREE:
 
     void testKeyTree() {
@@ -761,6 +783,7 @@ public:
     CPPUNIT_TEST( testFindPersonByIndexSorted );
     CPPUNIT_TEST( testFindPersonByIndexKeyed );
     CPPUNIT_TEST( testLookupManyKeys );
+    CPPUNIT_TEST( testPaths );
     CPPUNIT_TEST( testKeyTree );
     CPPUNIT_TEST_SUITE_END();
 };

@@ -20,6 +20,7 @@ namespace fleece {
         EncodeError,        // Structural error encoding (missing value, too many ends, etc.)
         JSONError,          // Error parsing JSON
         UnknownValue,       // Unparseable data in a Value (corrupt? Or from some distant future?)
+        PathSyntaxError,    // Invalid Path specifier
         InternalError,      // This shouldn't happen
     } ErrorCode;
 

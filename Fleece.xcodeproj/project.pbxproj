@@ -51,6 +51,8 @@
 		279AC5341C096872002C80DB /* fleece_tool.cc in Sources */ = {isa = PBXBuildFile; fileRef = 279AC5331C096872002C80DB /* fleece_tool.cc */; };
 		279AC5381C096B5C002C80DB /* libFleece.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 270FA25C1BF53CAD005DCB13 /* libFleece.a */; };
 		279AC53C1C097941002C80DB /* Value+Dump.cc in Sources */ = {isa = PBXBuildFile; fileRef = 279AC53B1C097941002C80DB /* Value+Dump.cc */; };
+		27A924CF1D9C32E800086206 /* Path.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27A924CD1D9C32E800086206 /* Path.cc */; };
+		27A924D01D9C32E800086206 /* Path.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27A924CE1D9C32E800086206 /* Path.hh */; };
 		27C4ACAC1CE5146500938365 /* Array.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27C4ACAA1CE5146500938365 /* Array.cc */; };
 		27C4ACAD1CE5146500938365 /* Array.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C4ACAB1CE5146500938365 /* Array.hh */; };
 /* End PBXBuildFile section */
@@ -157,6 +159,8 @@
 		279AC5311C096872002C80DB /* fleece */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = fleece; sourceTree = BUILT_PRODUCTS_DIR; };
 		279AC5331C096872002C80DB /* fleece_tool.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = fleece_tool.cc; sourceTree = "<group>"; };
 		279AC53B1C097941002C80DB /* Value+Dump.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "Value+Dump.cc"; sourceTree = "<group>"; };
+		27A924CD1D9C32E800086206 /* Path.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Path.cc; sourceTree = "<group>"; };
+		27A924CE1D9C32E800086206 /* Path.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Path.hh; sourceTree = "<group>"; };
 		27C4AC941CDE843F00938365 /* Example.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = Example.md; sourceTree = "<group>"; };
 		27C4AC961CDFFDA100938365 /* Performance.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = Performance.md; sourceTree = "<group>"; };
 		27C4ACAA1CE5146500938365 /* Array.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Array.cc; sourceTree = "<group>"; };
@@ -232,6 +236,8 @@
 				270FA26C1BF53CEA005DCB13 /* Value+JSON.cc */,
 				279AC53B1C097941002C80DB /* Value+Dump.cc */,
 				270FA26D1BF53CEA005DCB13 /* Value+ObjC.mm */,
+				27A924CD1D9C32E800086206 /* Path.cc */,
+				27A924CE1D9C32E800086206 /* Path.hh */,
 				27298E7F1C04E665000CFBA8 /* Encoder.cc */,
 				270FA26F1BF53CEA005DCB13 /* Encoder.hh */,
 				270FA2701BF53CEA005DCB13 /* Encoder+ObjC.mm */,
@@ -367,6 +373,7 @@
 				270FA2871BF53D32005DCB13 /* forestdb_endian.h in Headers */,
 				270FA2801BF53CEA005DCB13 /* Writer.hh in Headers */,
 				270FA27D1BF53CEA005DCB13 /* Encoder.hh in Headers */,
+				27A924D01D9C32E800086206 /* Path.hh in Headers */,
 				278163B61CE69CA800B94E32 /* Fleece.h in Headers */,
 				275CED531D3EF7BE001DE46C /* FleeceException.hh in Headers */,
 			);
@@ -478,6 +485,7 @@
 				27C4ACAC1CE5146500938365 /* Array.cc in Sources */,
 				270FA27A1BF53CEA005DCB13 /* Value+JSON.cc in Sources */,
 				270FA2841BF53CEA005DCB13 /* varint.cc in Sources */,
+				27A924CF1D9C32E800086206 /* Path.cc in Sources */,
 				275CED521D3EF7BE001DE46C /* FleeceException.cc in Sources */,
 				278163B51CE69CA800B94E32 /* Fleece_C_impl.cc in Sources */,
 				270515571D905C1D00D62D05 /* Fleece+CoreFoundation.mm in Sources */,
