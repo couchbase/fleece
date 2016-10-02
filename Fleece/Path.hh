@@ -17,9 +17,8 @@ namespace fleece {
     /** Describes a location in a Fleece object tree, as a path from the root that follows
         dictionary properties and array elements.
         Similar to a JSONPointer or an Objective-C KeyPath, but simpler (so far.)
-        Syntax is a series of "."-delimited elements. If an element is an integer it's interpreted
-        as an array index; negative numbers count backwards from the end of the array. Otherwise
-        it's interpreted as a dictionary key.
+        It looks like "foo.bar[2][-3].baz" -- that is, properties prefixed with a ".", and array
+        indexes in brackets. (Negative indexes count from the end of the array.)
         A leading JSONPath-like "$." is allowed but ignored.
         This class is pretty experimental ... syntax may change without warning! */
     class Path {
@@ -33,19 +32,29 @@ namespace fleece {
 
         const Value* eval(const Value *root) const;
 
+        /** One-shot evaluation; faster if you're only doing it once */
+        static const Value* eval(slice specifier, const Value *root);
+
         class Element {
         public:
-            Element(slice expr);
+            Element(slice property)                 :_key(new Dict::key(property)) { }
+            Element(int32_t arrayIndex)             :_index(arrayIndex) { }
             const Value* eval(const Value*) const;
             bool isKey() const                      {return _key != nullptr;}
             Dict::key& key() const                  {return *_key;}
             int32_t index() const                   {return _index;}
+
+            static const Value* eval(char token, slice property, int32_t index, const Value *item);
         private:
+            static const Value* getFromArray(const Value*, int32_t index);
+
             std::unique_ptr<Dict::key> _key {nullptr};
             int32_t _index {0};
         };
 
     private:
+        static void forEachComponent(slice in, std::function<bool(char,slice,int32_t)> callback);
+
         const std::string _specifier;
         std::vector<Element> _path;
     };

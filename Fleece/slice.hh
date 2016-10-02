@@ -75,13 +75,16 @@ namespace fleece {
         bool writeFrom(slice) noexcept;
 
         uint8_t readByte() noexcept;     // returns 0 if slice is empty
+        uint8_t peekByte() noexcept;     // returns 0 if slice is empty
         bool writeByte(uint8_t) noexcept;
         uint64_t readDecimal() noexcept; // reads until it hits a non-digit or the end
         int64_t readSignedDecimal() noexcept;
         bool writeDecimal(uint64_t) noexcept;
         static unsigned sizeOfDecimal(uint64_t) noexcept;
 
-        const void* findByte(uint8_t byte) const    {return ::memchr(buf, byte, size);}
+        const uint8_t* findByte(uint8_t byte) const    {return (const uint8_t*)::memchr(buf, byte, size);}
+        const uint8_t* findByteOrEnd(uint8_t byte) const;
+        const uint8_t* findAnyByteOf(slice targetBytes);
 
         int compare(slice) const noexcept;
         bool operator==(const slice &s) const       {return size==s.size &&

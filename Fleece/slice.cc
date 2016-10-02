@@ -73,6 +73,10 @@ namespace fleece {
         return true;
     }
 
+    uint8_t slice::peekByte() noexcept {
+        return (size > 0) ? (*this)[0] : 0;
+    }
+
     uint8_t slice::readByte() noexcept {
         if (size == 0)
             return 0;
@@ -137,6 +141,21 @@ namespace fleece {
         if (n == 0)
             return 1;
         return 1 + (unsigned)::floor(::log10(n));
+    }
+
+    const uint8_t* slice::findByteOrEnd(uint8_t byte) const {
+        auto result = findByte(byte);
+        return result ? result : (const uint8_t*)end();
+    }
+
+    const uint8_t* slice::findAnyByteOf(slice targetBytes) {
+        const void* result = nullptr;
+        for (size_t i = 0; i < targetBytes.size; ++i) {
+            auto r = findByte(targetBytes[i]);
+            if (r && (!result || r < result))
+                result = r;
+        }
+        return (const uint8_t*)result;
     }
 
     slice slice::copy() const {

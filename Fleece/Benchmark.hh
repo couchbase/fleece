@@ -21,8 +21,13 @@ public:
 
     void printReport(const char *what, unsigned count, const char *item) {
         auto ms = elapsedMS();
+#ifdef NDEBUG
         fprintf(stderr, "%s took %.3f ms for %u %ss (%.3f us/%s, or %.0f %ss/sec)\n",
                 what, ms, count, item, ms/count*1000.0, item, count/ms*1000, item);
+#else
+        fprintf(stderr, "%s; %u %ss (took %.3f ms, but this is UNOPTIMIZED CODE)\n",
+                what, count, item, ms);
+#endif
     }
 private:
     clock_t _start;

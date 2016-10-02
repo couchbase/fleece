@@ -8,33 +8,104 @@
 
 #include "Path.hh"
 #include "FleeceException.hh"
+#include "MSVC_Compat.hh"
 
 using namespace std;
 
 namespace fleece {
 
+    // Parses a path expression, calling the callback for each property or array index.
+    void Path::forEachComponent(slice in, function<bool(char, slice, int32_t)> callback) {
+        if (in.size == 0)
+            throw FleeceException(PathSyntaxError, "Empty path");
+        uint8_t token = in.peekByte();
+        if (token == '$') {
+            // Starts with "$." or "$["
+            in.moveStart(1);
+            token = in.readByte();
+            if (token != '.' && token != '[')
+                throw FleeceException(PathSyntaxError, "Invalid path delimiter after $");
+        } else if (token == '[') {
+            // Starts with "["
+            in.moveStart(1);
+        } else {
+            // Else starts with a property name
+            token = '.';
+        }
+
+        while (true) {
+            // Read parameter (property name or array index):
+            const uint8_t* next;
+            slice param;
+            int32_t index = 0;
+
+            if (token == '.') {
+                // Find end of property name:
+                next = in.findAnyByteOf(slice(".[", 2));
+                if (!next)
+                    next = (const uint8_t*)in.end();
+                param = slice(in.buf, next);
+            } else if (token == '[') {
+                // Find end of array index:
+                next = in.findByteOrEnd(']');
+                if (!next)
+                    throw FleeceException(PathSyntaxError, "Missing ']'");
+                param = slice(in.buf, next++);
+                // Parse array index:
+                slice n = param;
+                int64_t i = n.readSignedDecimal();
+                if (_usuallyFalse(n.size > 0 || i > INT32_MAX || i < INT32_MIN))
+                    throw FleeceException(PathSyntaxError, "Invalid array index");
+                index = (int32_t)i;
+            } else {
+                throw FleeceException(PathSyntaxError, "Invalid path component");
+            }
+
+            // Invoke the callback:
+            if (param.size == 0)
+                throw FleeceException(PathSyntaxError, "Empty property or index");
+            if (_usuallyFalse(!callback(token, param, index)))
+                return;
+
+            // Did we read the whole expression?
+            if (next >= in.end())
+                break;              // LOOP EXIT
+
+            // Read the next token and go round again…
+            token = *next;
+            in.setStart(next+1);
+        }
+    }
+
+
+    /*static*/ const Value* Path::eval(slice specifier, const Value *root) {
+        const Value *item = root;
+        if (_usuallyFalse(!item))
+            return nullptr;
+        forEachComponent(specifier, [&](char token, slice component, int32_t index) {
+            item = Element::eval(token, component, index, item);
+            return (item != nullptr);
+        });
+        return item;
+    }
+
+
     Path::Path(const string &specifier)
     :_specifier(specifier)
     {
-        slice in(_specifier);
-        if (in.hasPrefix(slice("$.")))
-            in.moveStart(2);
-        while (true) {
-            auto dot = in.findByte('.');
-            if (!dot)
-                dot = in.end();
-            _path.emplace_back(slice(in.buf, dot));
-            in.setStart(dot);
-            if (in.size == 0)
-                break;
-            in.moveStart(1);
-        }
+        forEachComponent(slice(_specifier), [this](char token, slice component, int32_t index) {
+            if (token == '.')
+                _path.emplace_back(component);
+            else
+                _path.emplace_back(index);
+            return true;
+        });
     }
 
 
     const Value* Path::eval(const Value *root) const {
         const Value *item = root;
-        if (!item)
+        if (_usuallyFalse(!item))
             return nullptr;
         for (auto &e : _path) {
             item = e.eval(item);
@@ -45,39 +116,40 @@ namespace fleece {
     }
 
 
-    Path::Element::Element(slice expr) {
-        if (expr.size == 0)
-            throw FleeceException(PathSyntaxError, "Empty path element");
-        if (isdigit(expr[0]) || expr[0] == '-') {
-            int64_t i = expr.readSignedDecimal();
-            if (expr.size > 0 || i > INT32_MAX || i < INT32_MIN)
-                throw FleeceException(PathSyntaxError, "Invalid numeric index");
-            _index = (int32_t)i;
+    const Value* Path::Element::eval(const Value *item) const {
+        if (_key) {
+            auto d = item->asDict();
+            if (_usuallyFalse(!d))
+                return nullptr;
+            return d->get(*_key);
         } else {
-            _key.reset(new Dict::key(expr));
+            return getFromArray(item, _index);
+        }
+    }
+
+    /*static*/ const Value* Path::Element::eval(char token, slice comp, int32_t index, const Value *item) {
+        if (token == '.') {
+            auto d = item->asDict();
+            if (_usuallyFalse(!d))
+                return nullptr;
+            return d->get(comp);
+        } else {
+            return getFromArray(item, index);
         }
     }
 
 
-    const Value* Path::Element::eval(const Value *item) const {
-        if (_key) {
-            auto d = item->asDict();
-            if (!d)
+    const Value* Path::Element::getFromArray(const Value* item, int32_t index) {
+        auto a = item->asArray();
+        if (_usuallyFalse(!a))
+            return nullptr;
+        if (index < 0) {
+            uint32_t count = a->count();
+            if (_usuallyFalse((uint32_t)-index > count))
                 return nullptr;
-            return d->get(*_key);
-        } else {
-            auto a = item->asArray();
-            if (!a)
-                return nullptr;
-            int32_t i = _index;
-            if (i < 0) {
-                uint32_t count = a->count();
-                if ((uint32_t)-i > count)
-                    return nullptr;
-                i += count;
-            }
-            return a->get((uint32_t)i);
+            index += count;
         }
+        return a->get((uint32_t)index);
     }
 
 }

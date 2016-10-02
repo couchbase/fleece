@@ -689,13 +689,13 @@ public:
         alloc_slice fleeceData = enc.extractOutput();
         const Value *root = Value::fromData(fleeceData);
 
-        Path p1{"$.123.name"};
+        Path p1{"$[123].name"};
         const Value *name = p1.eval(root);
         Assert(name);
         Assert(name->type() == kString);
         AssertEqual(name->asString(), slice("Concepcion Burns"));
 
-        Path p2{"-1.name"};
+        Path p2{"[-1].name"};
         name = p2.eval(root);
         Assert(name);
         Assert(name->type() == kString);
