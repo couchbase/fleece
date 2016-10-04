@@ -56,7 +56,7 @@ namespace fleece {
     }
 
 
-    bool JSONConverter::convertJSON(slice json) {
+    bool JSONConverter::encodeJSON(slice json) {
         _input = json;
         _error = JSONSL_ERROR_SUCCESS;
         _errorPos = 0;
@@ -75,6 +75,14 @@ namespace fleece {
         }
         jsonsl_reset(_jsn);
         return (_error == JSONSL_ERROR_SUCCESS);
+    }
+
+    /*static*/ alloc_slice JSONConverter::convertJSON(slice json) {
+        Encoder enc;
+        JSONConverter cvt(enc);
+        if (!cvt.encodeJSON(slice(json)))
+            throw FleeceException(JSONError, cvt.errorMessage());
+        return enc.extractOutput();
     }
 
     inline void JSONConverter::push(struct jsonsl_state_st *state) {

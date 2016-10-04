@@ -244,7 +244,7 @@ bool FLEncoder_ConvertJSON(FLEncoder e, FLSlice json) {
                 jc = new JSONConverter(*e);
                 e->jsonConverter.reset(jc);
             }
-            if (jc->convertJSON(json)) {                   // convertJSON can throw
+            if (jc->encodeJSON(json)) {                   // encodeJSON can throw
                 return true;
             } else {
                 e->errorCode = ::JSONError; //TODO: Save value of jc.error() somewhere

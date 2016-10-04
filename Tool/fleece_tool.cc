@@ -9,6 +9,7 @@
 #include "JSONConverter.hh"
 #include <stdio.h>
 #include <unistd.h>
+#include <iostream>
 #include <sstream>
 
 using namespace fleece;
@@ -91,30 +92,27 @@ int main(int argc, const char * argv[]) {
         auto input = readInput(in);
 
         if (encode) {
-            Writer writer;
-            Encoder e(writer);
-            JSONConverter reader(e);
-            if (!reader.convertJSON(input))
-                throw "Couldn't parse input as JSON";
-            e.end();
-            auto output = writer.extractOutput();
+            auto output = JSONConverter::convertJSON(input);
             fwrite(output.buf, 1, output.size, stdout);
         } else if (decode) {
             auto root = Value::fromData(input);
             if (!root)
                 throw "Couldn't parse input as Fleece";
             auto json = root->toJSON();
-            cout.write((char*)json.buf, json.size);
+            fwrite(json.buf, json.size, 1, stderr);
+            fprintf(stderr, "\n");
         } else if (dump) {
             if (!Value::dump(input, cout))
                 throw "Couldn't parse input as Fleece";
         }
 
         return 0;
-        
+
     } catch (const char *err) {
         fprintf(stderr, "%s\n", err);
         return 1;
+    } catch (const std::exception &x) {
+        fprintf(stderr, "%s\n", x.what());
     } catch (...) {
         fprintf(stderr, "Uncaught exception!\n");
         return 1;

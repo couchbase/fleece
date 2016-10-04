@@ -38,7 +38,7 @@ class PerfTests : public CppUnit::TestFixture {
                 e.sortKeys(kSortKeys);
                 JSONConverter jr(e);
 
-                jr.convertJSON(input);
+                jr.encodeJSON(input);
                 e.end();
                 auto result = e.extractOutput();
                 if (i == kSamples-1)

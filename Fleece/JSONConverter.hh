@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Encoder.hh"
+#include "slice.hh"
 #include <vector>
 #include <map>
 
@@ -27,7 +28,7 @@ namespace fleece {
 
         /** Parses JSON data and writes the values to the encoder.
             @return  True if parsing succeeded, false if the JSON is invalid. */
-        bool convertJSON(slice json);
+        bool encodeJSON(slice json);
 
         /** See jsonsl_error_t for error codes, plus a few more defined below. */
         int error() noexcept                    {return _error;}
@@ -43,6 +44,9 @@ namespace fleece {
 
         /** Resets the converter, as though you'd deleted it and constructed a new one. */
         void reset();
+
+        /** Convenience method to convert JSON to Fleece data. Throws FleeceException on error. */
+        static alloc_slice convertJSON(slice json);
 
     //private:
         void push(struct jsonsl_state_st *state);

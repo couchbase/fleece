@@ -360,7 +360,7 @@ public:
     {
         json = std::string("[\"") + json + std::string("\"]");
         JSONConverter j(enc);
-        j.convertJSON(slice(json));
+        j.encodeJSON(slice(json));
         AssertEqual(j.error(), expectedErr);
         if (j.error()) {
             enc.reset();
@@ -411,7 +411,7 @@ public:
                             "\"\\\"ironic\\\"\":[null,false,true,-100,0,100,123.456,6.02e+23],"
                             "\"foo\":123}");
         JSONConverter j(enc);
-        Assert(j.convertJSON(json));
+        Assert(j.encodeJSON(json));
         endEncoding();
         auto d = checkDict(3);
         auto output = d->toJSON();
@@ -436,7 +436,7 @@ public:
                            "\"\\\"ironic\\\"\":[null,false,true,-100,0,100,123.456,6.02e+23],"
                            "\"\":\"hello\\nt\\\\here\"}";
         JSONConverter j(enc);
-        j.convertJSON(slice(json));
+        j.encodeJSON(slice(json));
         endEncoding();
         std::string dumped = Value::dump(result);
         //std::cerr << dumped;
@@ -471,7 +471,7 @@ public:
         enc.uniqueStrings(true);
 
         JSONConverter jr(enc);
-        jr.convertJSON(input);
+        jr.encodeJSON(input);
 
 #if 0
         // Dump the string table and some statistics:
@@ -684,7 +684,7 @@ public:
     void testPaths() {
         alloc_slice input = readFile(kTestFilesDir "1000people.json");
         JSONConverter jr(enc);
-        jr.convertJSON(input);
+        jr.encodeJSON(input);
         enc.end();
         alloc_slice fleeceData = enc.extractOutput();
         const Value *root = Value::fromData(fleeceData);
