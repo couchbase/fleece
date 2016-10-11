@@ -218,7 +218,7 @@ void FLEncoder_Free(FLEncoder e)                         {
 
 bool FLEncoder_WriteNull(FLEncoder e)                    {ENCODER_TRY(writeNull());}
 bool FLEncoder_WriteBool(FLEncoder e, bool b)            {ENCODER_TRY(writeBool(b));}
-bool FLEncoder_WriteInt(FLEncoder e, int64_t i)          {ENCODER_TRY(writeNull());}
+bool FLEncoder_WriteInt(FLEncoder e, int64_t i)          {ENCODER_TRY(writeInt(i));}
 bool FLEncoder_WriteUInt(FLEncoder e, uint64_t u)        {ENCODER_TRY(writeUInt(u));}
 bool FLEncoder_WriteFloat(FLEncoder e, float f)          {ENCODER_TRY(writeFloat(f));}
 bool FLEncoder_WriteDouble(FLEncoder e, double d)        {ENCODER_TRY(writeDouble(d));}
