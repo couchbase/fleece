@@ -19,7 +19,7 @@ namespace fleece {
         ~StringTable();
 
         struct info {
-            bool usedAsKey   : 1;
+            unsigned usedAsKey   : 1;
             unsigned offset  :31;
             uint32_t hash;
         };

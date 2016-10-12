@@ -20,7 +20,7 @@ namespace fleece {
     class Val {
     public:
         Val()                           :_v( (const Value*)kUndefined ) { }
-        explicit Val(const Value *v)    :_v(v ?: (const Value*)kUndefined) { }
+        explicit Val(const Value *v)    :_v(v ? v : (const Value*)kUndefined) { }
 
         valueType type() const          {return _v->type();}
 
@@ -50,7 +50,7 @@ namespace fleece {
     class Arr {
     public:
         Arr()                           :_a((const Value*)kUndefined) { }
-        Arr(const Array *a)             :_a(a ?: (const Value*)kUndefined) { }
+        Arr(const Array *a)             :_a(a ? a : (const Value*)kUndefined) { }
 
         uint32_t count() const          {return _a._count;}
 
