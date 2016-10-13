@@ -201,7 +201,7 @@ namespace fleece {
         alloc_slice(const void* start, const void* end)
             :std::shared_ptr<char>((char*)alloc(start,(uint8_t*)end-(uint8_t*)start), freer()),
              slice(get(),(uint8_t*)end-(uint8_t*)start) {}
-        explicit alloc_slice(std::string str)
+        explicit alloc_slice(const std::string &str)
             :std::shared_ptr<char>((char*)alloc(&str[0], str.length()), freer()), slice(get(), str.length()) {}
 
         explicit operator bool() const               {return buf != nullptr;}

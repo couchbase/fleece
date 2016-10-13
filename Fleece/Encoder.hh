@@ -60,7 +60,7 @@ namespace fleece {
         void writeFloat(float);
         void writeDouble(double);
 
-        void writeString(std::string);
+        void writeString(const std::string&);
         void writeString(slice s)           {(void)_writeString(s, false);}
         
         void writeData(slice s);
@@ -85,7 +85,7 @@ namespace fleece {
         void beginDictionary(size_t reserve =0);
 
         /** Writes a key to the current dictionary. This must be called before adding a value. */
-        void writeKey(std::string);
+        void writeKey(const std::string&);
         /** Writes a key to the current dictionary. This must be called before adding a value. */
         void writeKey(slice);
 
@@ -103,7 +103,7 @@ namespace fleece {
         Encoder& operator<< (unsigned long i)   {writeUInt(i); return *this;}
         Encoder& operator<< (double d)          {writeDouble(d); return *this;}
         Encoder& operator<< (float f)           {writeFloat(f); return *this;}
-        Encoder& operator<< (std::string str)   {writeString(str); return *this;}
+        Encoder& operator<< (const std::string &str)   {writeString(str); return *this;}
         Encoder& operator<< (slice s)           {writeString(s); return *this;} // string not data!
         Encoder& operator<< (const Value *v)    {writeValue(v); return *this;}
 

@@ -253,7 +253,7 @@ namespace fleece {
         }
     }
 
-    void Encoder::writeString(std::string s) {
+    void Encoder::writeString(const std::string &s) {
         _writeString(slice(s), false);
     }
 
@@ -340,7 +340,7 @@ namespace fleece {
 
 #pragma mark - ARRAYS / DICTIONARIES:
 
-    void Encoder::writeKey(std::string s)   {writeKey(slice(s));}
+    void Encoder::writeKey(const std::string &s)   {writeKey(slice(s));}
 
     void Encoder::writeKey(slice s) {
         if (!_blockedOnKey) {
