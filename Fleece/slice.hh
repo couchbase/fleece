@@ -29,6 +29,7 @@
 
 
 namespace fleece {
+    struct alloc_slice;
 
     /** Adds a byte offset to a pointer. */
     template <typename T>
@@ -54,6 +55,8 @@ namespace fleece {
 
         slice(const std::string& str)               :buf(&str[0]), size(str.length()) {}
         explicit slice(const char* str)             :buf(str), size(str ? strlen(str) : 0) {}
+
+        slice& operator= (alloc_slice&&) =delete;   // Disallowed: might lead to ptr to freed buf
 
         explicit operator bool() const              {return buf != nullptr;}
 
@@ -198,7 +201,7 @@ namespace fleece {
         alloc_slice(const void* start, const void* end)
             :std::shared_ptr<char>((char*)alloc(start,(uint8_t*)end-(uint8_t*)start), freer()),
              slice(get(),(uint8_t*)end-(uint8_t*)start) {}
-        alloc_slice(std::string str)
+        explicit alloc_slice(std::string str)
             :std::shared_ptr<char>((char*)alloc(&str[0], str.length()), freer()), slice(get(), str.length()) {}
 
         explicit operator bool() const               {return buf != nullptr;}
