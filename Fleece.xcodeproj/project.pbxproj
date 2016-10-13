@@ -54,6 +54,7 @@
 		27A924D01D9C32E800086206 /* Path.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27A924CE1D9C32E800086206 /* Path.hh */; };
 		27C4ACAC1CE5146500938365 /* Array.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27C4ACAA1CE5146500938365 /* Array.cc */; };
 		27C4ACAD1CE5146500938365 /* Array.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C4ACAB1CE5146500938365 /* Array.hh */; };
+		27FDF1A61DAF01300087B4E6 /* FleeceDocument.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2797BCD01C122E9200E5C991 /* FleeceDocument.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -508,6 +509,7 @@
 			files = (
 				272E5A5D1BF800A100848580 /* EncoderTests.cc in Sources */,
 				272E5A521BF7FE7100848580 /* FleeceTests.cc in Sources */,
+				27FDF1A61DAF01300087B4E6 /* FleeceDocument.mm in Sources */,
 				27298E781C01A461000CFBA8 /* PerfTests.cc in Sources */,
 				272E5A5F1BF91DBE00848580 /* ObjCTests.mm in Sources */,
 				279AC52B1C07776A002C80DB /* ValueTests.cpp in Sources */,

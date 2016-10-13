@@ -53,7 +53,7 @@ namespace fleece {
         /** Reserves space for data without actually writing anything yet.
             The data must be written later using rewrite() otherwise there will be garbage in
             the output. */
-        const void* reserveSpace(size_t length)      {return write(NULL, length);}
+        const void* reserveSpace(size_t length)      {return write(nullptr, length);}
 
         /** Overwrites already-written data.
             @param pos  The position in the output at which to start overwriting

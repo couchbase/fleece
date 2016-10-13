@@ -49,7 +49,7 @@ public:
 
     void checkReadBool(bool b) {
         auto v = Value::fromData(result);
-        Assert(v != NULL);
+        Assert(v != nullptr);
         Assert(v->type() == kBoolean);
         AssertEqual(v->asBool(), b);
         AssertEqual(v->asInt(), (int64_t)b);
@@ -57,7 +57,7 @@ public:
 
     void checkRead(int64_t i) {
         auto v = Value::fromData(result);
-        Assert(v != NULL);
+        Assert(v != nullptr);
         Assert(v->type() == kNumber);
         Assert(v->isInteger());
         Assert(!v->isUnsigned());
@@ -76,7 +76,7 @@ public:
 
     void checkReadFloat(float f) {
         auto v = Value::fromData(result);
-        Assert(v != NULL);
+        Assert(v != nullptr);
         Assert(v->type() == kNumber);
         Assert(!v->isDouble());
         AssertEqual(v->asInt(), (int64_t)round(f));
@@ -86,7 +86,7 @@ public:
 
     void checkReadDouble(double f) {
         auto v = Value::fromData(result);
-        Assert(v != NULL);
+        Assert(v != nullptr);
         Assert(v->type() == kNumber);
         AssertEqual(v->asInt(), (int64_t)round(f));
         AssertEqual(v->asDouble(), f);
@@ -95,27 +95,27 @@ public:
 
     void checkReadString(const char *str) {
         auto v = Value::fromData(result);
-        Assert(v != NULL);
+        Assert(v != nullptr);
         Assert(v->type() == kString);
         AssertEqual(v->asString(), slice(str, strlen(str)));
     }
 
     const Array* checkArray(uint32_t count) {
         auto v = Value::fromData(result);
-        Assert(v != NULL);
+        Assert(v != nullptr);
         Assert(v->type() == kArray);
         auto a = v->asArray();
-        Assert(a != NULL);
+        Assert(a != nullptr);
         AssertEqual(a->count(), count);
         return a;
     }
 
     const Dict* checkDict(uint32_t count) {
         auto v = Value::fromData(result);
-        Assert(v != NULL);
+        Assert(v != nullptr);
         Assert(v->type() == kDict);
         auto d = v->asDict();
-        Assert(d != NULL);
+        Assert(d != nullptr);
         AssertEqual(d->count(), count);
         return d;
     }
@@ -248,11 +248,11 @@ public:
             auto v = a->get(0);
             Assert(v);
             AssertEqual(v->type(), kString);
-            AssertEqual(v->asString(), slice("a"));
+            AssertEqual(v->asString(), "a"_sl);
             v = a->get(1);
             Assert(v);
             AssertEqual(v->type(), kString);
-            AssertEqual(v->asString(), slice("hello"));
+            AssertEqual(v->asString(), "hello"_sl);
 
             // Now use an iterator:
             Array::iterator iter(a);
@@ -322,7 +322,7 @@ public:
             auto v = d->get(slice("f"));
             Assert(v);
             AssertEqual(v->asInt(), 42ll);
-            AssertEqual(d->get(slice("barrr")), (const Value*)NULL);
+            AssertEqual(d->get(slice("barrr")), (const Value*)nullptr);
             AssertEqual(d->toJSON(), alloc_slice("{\"f\":42}"));
         }
         {
@@ -335,7 +335,7 @@ public:
             auto v = d->get(slice("foo"));
             Assert(v);
             AssertEqual(v->asInt(), 42ll);
-            AssertEqual(d->get(slice("barrr")), (const Value*)NULL);
+            AssertEqual(d->get(slice("barrr")), (const Value*)nullptr);
             AssertEqual(d->toJSON(), alloc_slice("{\"foo\":42}"));
         }
     }
@@ -377,8 +377,8 @@ public:
         checkJSONStr("", "");
         checkJSONStr("x", "x");
         checkJSONStr("\\\"", "\"");
-        checkJSONStr("\"", NULL, JSONConverter::kErrTruncatedJSON); // unterminated string
-        checkJSONStr("\\", NULL, JSONConverter::kErrTruncatedJSON);
+        checkJSONStr("\"", nullptr, JSONConverter::kErrTruncatedJSON); // unterminated string
+        checkJSONStr("\\", nullptr, JSONConverter::kErrTruncatedJSON);
         checkJSONStr("hi \\\"there\\\"", "hi \"there\"");
         checkJSONStr("hi\\nthere", "hi\nthere");
         checkJSONStr("H\\u0061ppy", "Happy");
@@ -389,21 +389,21 @@ public:
         checkJSONStr("Price \\u20ac250", "Price €250");
         checkJSONStr("Price \\uffff?", "Price \uffff?");
         checkJSONStr("Price \\u20ac", "Price €");
-        checkJSONStr("Price \\u20a", NULL, JSONSL_ERROR_UESCAPE_TOOSHORT);
-        checkJSONStr("Price \\u20", NULL, JSONSL_ERROR_UESCAPE_TOOSHORT);
-        checkJSONStr("Price \\u2", NULL, JSONSL_ERROR_UESCAPE_TOOSHORT);
-        checkJSONStr("Price \\u", NULL, JSONSL_ERROR_UESCAPE_TOOSHORT);
-        checkJSONStr("\\uzoop!", NULL, JSONSL_ERROR_PERCENT_BADHEX);
-        checkJSONStr("!\\u0000!", NULL, JSONSL_ERROR_INVALID_CODEPOINT);
+        checkJSONStr("Price \\u20a", nullptr, JSONSL_ERROR_UESCAPE_TOOSHORT);
+        checkJSONStr("Price \\u20", nullptr, JSONSL_ERROR_UESCAPE_TOOSHORT);
+        checkJSONStr("Price \\u2", nullptr, JSONSL_ERROR_UESCAPE_TOOSHORT);
+        checkJSONStr("Price \\u", nullptr, JSONSL_ERROR_UESCAPE_TOOSHORT);
+        checkJSONStr("\\uzoop!", nullptr, JSONSL_ERROR_PERCENT_BADHEX);
+        checkJSONStr("!\\u0000!", nullptr, JSONSL_ERROR_INVALID_CODEPOINT);
 
         // UTF-16 surrogate pair decoding:
         checkJSONStr("lmao\\uD83D\\uDE1C!", "lmao😜!");
-        checkJSONStr("lmao\\uD83D", NULL, JSONSL_ERROR_INVALID_CODEPOINT);
-        checkJSONStr("lmao\\uD83D\\n", NULL, JSONSL_ERROR_INVALID_CODEPOINT);
-        checkJSONStr("lmao\\uD83D\\u", NULL, JSONSL_ERROR_UESCAPE_TOOSHORT);
-        checkJSONStr("lmao\\uD83D\\u333", NULL, JSONSL_ERROR_UESCAPE_TOOSHORT);
-        checkJSONStr("lmao\\uD83D\\u3333", NULL, JSONSL_ERROR_INVALID_CODEPOINT);
-        checkJSONStr("lmao\\uDE1C\\uD83D!", NULL, JSONSL_ERROR_INVALID_CODEPOINT);
+        checkJSONStr("lmao\\uD83D", nullptr, JSONSL_ERROR_INVALID_CODEPOINT);
+        checkJSONStr("lmao\\uD83D\\n", nullptr, JSONSL_ERROR_INVALID_CODEPOINT);
+        checkJSONStr("lmao\\uD83D\\u", nullptr, JSONSL_ERROR_UESCAPE_TOOSHORT);
+        checkJSONStr("lmao\\uD83D\\u333", nullptr, JSONSL_ERROR_UESCAPE_TOOSHORT);
+        checkJSONStr("lmao\\uD83D\\u3333", nullptr, JSONSL_ERROR_INVALID_CODEPOINT);
+        checkJSONStr("lmao\\uDE1C\\uD83D!", nullptr, JSONSL_ERROR_INVALID_CODEPOINT);
     }
 
     void testJSON() {
@@ -570,11 +570,11 @@ public:
             auto smol = Value::fromData(result)->asArray();
             lookupNameWithKey(smol->get(0)->asDict(), nameKey, "Concepcion Burns");
             lookupNameWithKey(smol->get(1)->asDict(), nameKey, "Carmen Miranda");
-            Assert(smol->get(2)->asDict()->get(nameKey) == NULL);
+            Assert(smol->get(2)->asDict()->get(nameKey) == nullptr);
 
             lookupNamesWithKeys(smol->get(0)->asDict(), "Concepcion Burns", false);
             lookupNamesWithKeys(smol->get(1)->asDict(), "Carmen Miranda", false);
-            lookupNamesWithKeys(smol->get(2)->asDict(), NULL, false);
+            lookupNamesWithKeys(smol->get(2)->asDict(), nullptr, false);
         }
         {
             // Now try a wide Dict:
@@ -598,7 +598,7 @@ public:
         Assert(name);
         std::string nameStr = (std::string)name->asString();
         AssertEqual(nameStr, expectedName);
-        Assert(nameKey.asValue() != NULL);
+        Assert(nameKey.asValue() != nullptr);
         AssertEqual(nameKey.asValue()->asString(), slice("name"));
 
         // Second lookup (using cache)
@@ -614,17 +614,17 @@ public:
         Dict::key keys[2] = {nameKey, xKey};
         const Value* values[2];
         auto found = person->get(keys, values, 2);
-        size_t expectedFound = (expectedName != NULL) + (expectedX >= false);
+        size_t expectedFound = (expectedName != nullptr) + (expectedX >= false);
         AssertEqual(found, expectedFound);
         if (expectedName)
             AssertEqual(values[0]->asString(), slice(expectedName));
         else
-            Assert(values[0] == NULL);
+            Assert(values[0] == nullptr);
         if (expectedX >= false) {
             AssertEqual(values[1]->type(), kBoolean);
             AssertEqual(values[1]->asBool(), (bool)expectedX);
         } else {
-            Assert(values[1] == NULL);
+            Assert(values[1] == nullptr);
         }
     }
 
@@ -757,11 +757,11 @@ public:
         Assert(keys[slice("whiskex")] == 0);
         Assert(keys[slice("whiskez")] == 0);
 
-        Assert(keys[0].buf == NULL);
-        Assert(keys[(unsigned)n+1].buf == NULL);
-        Assert(keys[(unsigned)n+2].buf == NULL);
-        Assert(keys[(unsigned)n+28].buf == NULL);
-        Assert(keys[(unsigned)9999].buf == NULL);
+        Assert(keys[0].buf == nullptr);
+        Assert(keys[(unsigned)n+1].buf == nullptr);
+        Assert(keys[(unsigned)n+2].buf == nullptr);
+        Assert(keys[(unsigned)n+28].buf == nullptr);
+        Assert(keys[(unsigned)9999].buf == nullptr);
     }
 
     CPPUNIT_TEST_SUITE( EncoderTests );

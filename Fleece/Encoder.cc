@@ -61,7 +61,7 @@ namespace fleece {
             }
             _items->clear();
         }
-        _items = NULL;
+        _items = nullptr;
         _stackDepth = 0;
     }
 
@@ -84,7 +84,7 @@ namespace fleece {
     void Encoder::reset() {
         if (_items) {
             _items->clear();
-            _items = NULL;
+            _items = nullptr;
         }
         _out.reset();
         _stackDepth = 0;
@@ -195,7 +195,7 @@ namespace fleece {
 #pragma mark - STRINGS / DATA:
 
     // used for strings and binary data. Returns the location where s got written to, which
-    // can be used until the enoding is over. (Unless it's inline, in which case s.buf is NULL.)
+    // can be used until the enoding is over. (Unless it's inline, in which case s.buf is nullptr.)
     slice Encoder::writeData(tags tag, slice s) {
         uint8_t buf[4 + kMaxVarintLen64];
         buf[0] = (uint8_t)std::min(s.size, (size_t)0xF);
@@ -204,7 +204,7 @@ namespace fleece {
             // Tiny data fits inline:
             memcpy(&buf[1], s.buf, s.size);
             writeValue(tag, buf, 1 + s.size);
-            dst = NULL;
+            dst = nullptr;
         } else {
             // Large data doesn't:
             size_t bufLen = 1;
@@ -223,7 +223,7 @@ namespace fleece {
         // Check whether this string's already been written:
         if (_usuallyTrue(_uniqueStrings && s.size >= kNarrow && s.size <= kMaxSharedStringSize)) {
             auto entry = _strings.find(s);
-            if (entry->first.buf != NULL) {
+            if (entry->first.buf != nullptr) {
 //                fprintf(stderr, "Found `%.*s` --> %u\n", (int)s.size, s.buf, entry->second);
                 writePointer(entry->second.offset);
 #ifndef NDEBUG
@@ -466,7 +466,7 @@ namespace fleece {
 
         // Fill in the pointers of any keys that refer to inline strings:
         for (unsigned i = 0; i < n; i++)
-            if (keys[i].buf == NULL)
+            if (keys[i].buf == nullptr)
                 keys[i].buf = offsetby(&items[2*i], 1);
 
         // Construct an array that describes the permutation of item indices:

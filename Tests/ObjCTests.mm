@@ -20,7 +20,7 @@ public:
         enc.end();
         auto result = enc.extractOutput();
         auto v = Value::fromData(result);
-        Assert(v != NULL);
+        Assert(v != nullptr);
         AssertEqual(v->toJSON(), alloc_slice(json));
         Assert([v->toNSObject() isEqual: obj]);
     }
@@ -97,7 +97,7 @@ public:
                 bench.start();
 
                 @autoreleasepool {
-                    id j = [NSJSONSerialization JSONObjectWithData: data options: 0 error: NULL];
+                    id j = [NSJSONSerialization JSONObjectWithData: data options: 0 error: nullptr];
                     Assert(j);
                 }
 
@@ -112,7 +112,7 @@ public:
     void testPerfFindPersonByIndexNS() {
         @autoreleasepool {
             NSData *data = [NSData dataWithContentsOfFile: @kTestFilesDir "1000people.json"];
-            NSArray *people = [NSJSONSerialization JSONObjectWithData: data options: 0 error: NULL];
+            NSArray *people = [NSJSONSerialization JSONObjectWithData: data options: 0 error: nullptr];
             Assert([people isKindOfClass: [NSArray class]]);
 
             int kSamples = 500;
@@ -165,7 +165,7 @@ public:
             Stopwatch st;
             for (int j = 0; j < 1e5; j++) {
                 @autoreleasepool {
-                    NSDictionary *person = [NSJSONSerialization JSONObjectWithData: data options: 0 error: NULL];
+                    NSDictionary *person = [NSJSONSerialization JSONObjectWithData: data options: 0 error: nullptr];
                     if (person[@"name"] == nil)
                         abort();
                 }
@@ -192,7 +192,7 @@ public:
     void testPerfReadNamesNS() {
         @autoreleasepool {
             NSData *data = [NSData dataWithContentsOfFile: @kTestFilesDir "1000people.json"];
-            NSArray *people = [NSJSONSerialization JSONObjectWithData: data options: 0 error: NULL];
+            NSArray *people = [NSJSONSerialization JSONObjectWithData: data options: 0 error: nullptr];
             Assert([people isKindOfClass: [NSArray class]]);
 
             Stopwatch st;

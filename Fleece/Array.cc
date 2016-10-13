@@ -61,7 +61,7 @@ namespace fleece {
 
     Array::impl::impl(const Value* v) noexcept {
         if (v == nullptr) {
-            _first = NULL;
+            _first = nullptr;
             _wide = false;
             _count = 0;
             return;
@@ -91,7 +91,7 @@ namespace fleece {
 
     const Value* Array::impl::operator[] (unsigned index) const noexcept {
         if (index >= _count)
-            return NULL;
+            return nullptr;
         if (_wide)
             return Value::deref<true> (offsetby(_first, kWide   * index));
         else
@@ -153,13 +153,13 @@ namespace fleece {
                     return deref(val);
                 key = next(val);
             }
-            return NULL;
+            return nullptr;
         }
 
         inline const Value* get(slice keyToFind) const noexcept {
             auto key = (const Value*) ::bsearch(&keyToFind, _first, _count, 2*kWidth, &keyCmp);
             if (!key)
-                return NULL;
+                return nullptr;
             return deref(next(key));
         }
 
@@ -170,7 +170,7 @@ namespace fleece {
                 if (!findKeyByPointer(keyToFind, _first, end, &key))
                     key = findKeyBySearch(keyToFind, _first, end);
             }
-            return key ? deref(next(key)) : NULL;
+            return key ? deref(next(key)) : nullptr;
         }
 
 #ifdef _MSC_VER
@@ -220,7 +220,7 @@ namespace fleece {
             }
             if (k0 == k1) {
                 for (unsigned i = kf0; i < kf1; i++) {
-                    values[i] = NULL;
+                    values[i] = nullptr;
                     log("[#%u] = missing", i);
                 }
                 return {k0, k1, 0};
@@ -271,7 +271,7 @@ namespace fleece {
                     return key;
                 }
             }
-            return NULL;
+            return nullptr;
         }
 
         // Find a key in a dictionary by comparing the cached pointer with the pointers in the
@@ -304,7 +304,7 @@ namespace fleece {
                 key = next(next(key));
             }
             // Definitively not found
-            *outKey = NULL;
+            *outKey = nullptr;
             return true;
         }
 
@@ -316,7 +316,7 @@ namespace fleece {
                                                 ((ptrdiff_t)end - (ptrdiff_t)start) / (2*kWidth),
                                                 2*kWidth, &keyCmp);
             if (!key)
-                return NULL;
+                return nullptr;
 
             // Found it! Cache dict index and encoded key as optimizations for next time:
             if (key->isPointer() && keyToFind._cachePointer)
@@ -344,8 +344,8 @@ namespace fleece {
             return ((slice*)keyToFindP)->compare(keyBytes((const Value*)keyP));
         }
 
-        static const size_t kWidth = (WIDE ? 4 : 2);
-        static const uint32_t kPtrMask = (WIDE ? 0x80000000 : 0x8000);
+        static constexpr size_t kWidth = (WIDE ? 4 : 2);
+        static constexpr uint32_t kPtrMask = (WIDE ? 0x80000000 : 0x8000);
     };
 
 
@@ -423,7 +423,7 @@ namespace fleece {
             _key   = deref(_a._first,                _a._wide);
             _value = deref(_a._first->next(_a._wide), _a._wide);
         } else {
-            _key = _value = NULL;
+            _key = _value = nullptr;
         }
     }
 

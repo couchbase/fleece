@@ -105,7 +105,7 @@ Here's an example of how the above data could be read and used from a C++ progra
     * It reads the 2-byte "pointer" at the end of the data (`80 11`), interprets it as a 34-byte backward offset, and arrives at address bfff0064, i.e. byte 64 of the data, the location of the root dictionary.
     * It returns this root pointer as a `const value*`.
 3. You call `asDict()` on the returned value, which returns the same pointer cast to a `const dict*`.
-    * The method looks at the object type in the first 4 bits to make sure it's a dictionary. If the object hadn't been a dictionary, `asDict()` would have returned `NULL`, which you can check for and treat as an error.
+    * The method looks at the object type in the first 4 bits to make sure it's a dictionary. If the object hadn't been a dictionary, `asDict()` would have returned `nullptr`, which you can check for and treat as an error.
 4. You call `get()` on the `dict` to look up the key `"arr"`, and get back a pointer to the associated value.
     * The data inside the dict consists of alternating keys and values. Since these are fixed-width, and the keys are pre-sorted, Fleece can use binary search to look up keys in O(log _n_) time.
     * In this case it finds the key `"arr"` in 3 comparisons. (Note that the keys are stored in the dictionary as 2-byte "pointers" to the actual string data. The dump prefixes these with `&`. Most of the values are stored as "pointers" too, except for `true`, `false` and `null` which all fit inline in 2 bytes.)

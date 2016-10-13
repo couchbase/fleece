@@ -50,7 +50,7 @@ namespace fleece {
     public:
 
         /** Returns a pointer to the root value in the encoded data.
-            Validates the data first; if it's invalid, returns NULL.
+            Validates the data first; if it's invalid, returns nullptr.
             Does NOT copy or take ownership of the data; the caller is responsible for keeping it
             intact. Any changes to the data will invalidate any FLValues obtained from it. */
         static const Value* fromData(slice) noexcept;
@@ -96,10 +96,10 @@ namespace fleece {
         /** Returns the exact contents of a string or data. Other types return a null slice. */
         slice asString() const noexcept;
 
-        /** If this value is an array, returns it cast to 'const Array*', else returns NULL. */
+        /** If this value is an array, returns it cast to 'const Array*', else returns nullptr. */
         const Array* asArray() const noexcept;
 
-        /** If this value is a dictionary, returns it cast to 'const Dict*', else returns NULL. */
+        /** If this value is a dictionary, returns it cast to 'const Dict*', else returns nullptr. */
         const Dict* asDict() const noexcept;
 
         /** Converts any _non-collection_ type to string form. */

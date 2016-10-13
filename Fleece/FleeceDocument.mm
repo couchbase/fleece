@@ -172,7 +172,7 @@ using namespace fleece;
 
 
 - (BOOL)containsObjectForKey:(UU NSString *)key {
-    return _dict->get(key) != NULL;
+    return _dict->get(key) != nullptr;
 }
 
 
@@ -229,7 +229,7 @@ using namespace fleece;
 {
     NSUInteger index = state->state;
     if (index == 0)
-        state->mutationsPtr = &state->extra[0]; // this has to be pointed to something non-NULL
+        state->mutationsPtr = &state->extra[0]; // this has to be pointed to something non-nullptr
     if (index >= _count)
         return 0;
 
@@ -330,7 +330,7 @@ using namespace fleece;
 {
     NSUInteger index = state->state;
     if (index == 0)
-        state->mutationsPtr = &state->extra[0]; // this has to be pointed to something non-NULL
+        state->mutationsPtr = &state->extra[0]; // this has to be pointed to something non-nullptr
     if (index >= _count)
         return 0;
 

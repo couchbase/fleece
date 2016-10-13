@@ -44,7 +44,7 @@ namespace fleece {
 
     slice slice::read(size_t nBytes) noexcept {
         if (nBytes > size)
-            return null;
+            return nullslice;
         slice result(buf, nBytes);
         moveStart(nBytes);
         return result;
@@ -159,7 +159,7 @@ namespace fleece {
     }
 
     slice slice::copy() const {
-        if (buf == NULL)
+        if (buf == nullptr)
             return *this;
         void* copied = newBytes(size);
         ::memcpy(copied, buf, size);
@@ -168,7 +168,7 @@ namespace fleece {
 
     void slice::free() noexcept {
         ::free((void*)buf);
-        buf = NULL;
+        buf = nullptr;
         size = 0;
     }
     
@@ -179,8 +179,6 @@ namespace fleece {
     slice::operator std::string() const {
         return std::string((const char*)buf, size);
     }
-
-    const slice slice::null;
 
     void* alloc_slice::alloc(const void* src, size_t s) {
         void* buf = newBytes(s);
@@ -251,7 +249,7 @@ namespace fleece {
     slice slice::readBase64Into(slice output) const {
         size_t expectedLen = (size + 3) / 4 * 3;
         if (expectedLen > output.size)
-            return slice::null;
+            return nullslice;
         base64::decoder dec;
         size_t len = dec.decode(buf, size, (void*)output.buf);
         assert(len <= output.size);

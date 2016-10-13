@@ -44,17 +44,17 @@ namespace fleece {
     }
 
     StringTable::slot* StringTable::find(fleece::slice key, uint32_t hash) noexcept {
-        assert(key.buf != NULL);
+        assert(key.buf != nullptr);
         size_t index = hash & (_size - 1);
         slot *s = &_table[index];
-        if (_usuallyFalse(s->first.buf != NULL && s->first != key)) {
+        if (_usuallyFalse(s->first.buf != nullptr && s->first != key)) {
             slot *end = &_table[_size];
             do {
                 if (++s >= end)
                     s = &_table[0];
-            } while (s->first.buf != NULL && s->first != key);
+            } while (s->first.buf != nullptr && s->first != key);
         }
-        if (s->first.buf == NULL) {
+        if (s->first.buf == nullptr) {
             s->second.hash = hash;
         }
         return s;
@@ -73,8 +73,8 @@ namespace fleece {
     }
 
     void StringTable::addAt(slot* s, slice key, const info& n) noexcept {
-        assert(key.buf != NULL);
-        assert(s->first.buf == NULL);
+        assert(key.buf != nullptr);
+        assert(s->first.buf == nullptr);
         s->first = key;
         auto hash = s->second.hash;
         s->second = n;
@@ -107,7 +107,7 @@ namespace fleece {
         slot *oldTable = _table, *end = &_table[_size];
         allocTable(2*_size);
         for (auto s = oldTable; s < end; ++s) {
-            if (s->first.buf != NULL)
+            if (s->first.buf != nullptr)
                 _add(s->first, s->second.hash, s->second);
         }
         if (oldTable != _initialTable)

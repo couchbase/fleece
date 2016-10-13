@@ -159,14 +159,14 @@ namespace fleece {
 
     void Writer::Chunk::free() noexcept {
         ::free(_start);
-        _start = NULL;
+        _start = nullptr;
     }
 
     const void* Writer::Chunk::write(const void* data, size_t length) {
         if (_available.size < length)
-            return NULL;
+            return nullptr;
         const void *result = _available.buf;
-        if (data != NULL)
+        if (data != nullptr)
             ::memcpy((void*)result, data, length);
         _available.moveStart(length);
         return result;

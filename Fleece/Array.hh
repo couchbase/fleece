@@ -24,7 +24,7 @@ namespace fleece {
             impl(const Value*) noexcept;
             const Value* second() const noexcept      {return _first->next(_wide);}
             bool next();
-            const Value* firstValue() const noexcept  {return _count ? Value::deref(_first, _wide) : NULL;}
+            const Value* firstValue() const noexcept  {return _count ? Value::deref(_first, _wide) : nullptr;}
             const Value* operator[] (unsigned index) const noexcept;
             size_t indexOf(const Value *v) const noexcept;
         };
@@ -34,7 +34,7 @@ namespace fleece {
         /** The number of items in the array. */
         uint32_t count() const noexcept;
 
-        /** Accesses an array item. Returns NULL for out of range index.
+        /** Accesses an array item. Returns nullptr for out of range index.
             If you're accessing a lot of items of the same array, it's faster to make an
             iterator and use its sequential or random-access accessors. */
         const Value* get(uint32_t index) const noexcept;

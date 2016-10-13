@@ -34,7 +34,7 @@ namespace fleece {
 
     JSONConverter::JSONConverter(Encoder &e) noexcept
     :_encoder(e),
-     _jsn(jsonsl_new(50)),      // never returns NULL, according to source code
+     _jsn(jsonsl_new(50)),      // never returns nullptr, according to source code
      _error(JSONSL_ERROR_SUCCESS),
      _errorPos(0)
     {
@@ -122,7 +122,7 @@ namespace fleece {
             case JSONSL_T_HKEY: {
                 slice str(&_input[state->pos_begin + 1],
                           state->pos_cur - state->pos_begin - 1);
-                char *buf = NULL;
+                char *buf = nullptr;
                 bool mallocedBuf = false;
                 if (state->nescapes > 0) {
                     // De-escape str:
@@ -131,7 +131,7 @@ namespace fleece {
                     jsonsl_error_t err = JSONSL_ERROR_SUCCESS;
                     const char *errat;
                     auto size = jsonsl_util_unescape_ex((const char*)str.buf, buf, str.size,
-                                                        NULL, NULL, &err, &errat);
+                                                        nullptr, nullptr, &err, &errat);
                     if (err) {
                         errorCallback(_jsn, err, state, (char*)errat);
                         if (mallocedBuf)

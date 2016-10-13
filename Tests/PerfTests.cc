@@ -65,7 +65,7 @@ class PerfTests : public CppUnit::TestFixture {
             for (int i = 0; i < kIterations; i++) {
                 bench.start();
                 __unused auto root = Value::fromData(doc)->asArray();
-                Assert(root != NULL);
+                Assert(root != nullptr);
                 bench.stop();
             }
             bench.printReport(1e3, "ms");
@@ -79,7 +79,7 @@ class PerfTests : public CppUnit::TestFixture {
                 bench.start();
                 for (int j = 0; j < kIterationsPerSample; j++) {
                     __unused auto root = Value::fromTrustedData(doc)->asArray();
-                    Assert(root != NULL);
+                    Assert(root != nullptr);
                 }
                 bench.stop();
             }
@@ -160,7 +160,7 @@ class PerfTests : public CppUnit::TestFixture {
                         n = person->get(keys, values, 10);
                     } else {
                         for (int k = 0; k < 10; k++)
-                            if (person->get(keys[k]) != NULL)
+                            if (person->get(keys[k]) != nullptr)
                                 n++;
                     }
                     Assert(n == 10);

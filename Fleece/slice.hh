@@ -47,14 +47,15 @@ namespace fleece {
         const void* buf;
         size_t      size;
 
-        slice()                                   :buf(NULL), size(0) {}
-        slice(const void* b, size_t s)            :buf(b), size(s) {}
-        slice(const void* start, const void* end) :buf(start), size((uint8_t*)end-(uint8_t*)start){}
-        slice(const std::string& str)             :buf(&str[0]), size(str.length()) {}
+        constexpr slice()                           :buf(nullptr), size(0) {}
+        constexpr slice(const void* b, size_t s)    :buf(b), size(s) {}
+        constexpr slice(const void* start,
+                        const void* end)          :buf(start), size((uint8_t*)end-(uint8_t*)start){}
 
-        explicit slice(const char* str)           :buf(str), size(str ? strlen(str) : 0) {}
+        slice(const std::string& str)               :buf(&str[0]), size(str.length()) {}
+        explicit slice(const char* str)             :buf(str), size(str ? strlen(str) : 0) {}
 
-        static const slice null;
+        explicit operator bool() const              {return buf != nullptr;}
 
         const void* offset(size_t o) const          {return (uint8_t*)buf + o;}
         size_t offsetOf(const void* ptr) const      {return (uint8_t*)ptr - (uint8_t*)buf;}
@@ -167,18 +168,27 @@ namespace fleece {
         explicit operator NSString* () const {
             if (!buf)
                 return nil;
-            return CFBridgingRelease(CFStringCreateWithBytes(NULL, (const uint8_t*)buf, size,
+            return CFBridgingRelease(CFStringCreateWithBytes(nullptr, (const uint8_t*)buf, size,
                                                              kCFStringEncodingUTF8, NO));
         }
 #endif
     };
+
+    
+    /** A null/empty slice. */
+    constexpr slice nullslice = slice();
+
+
+    // Literal syntax for slices: "foo"_sl
+    inline constexpr slice operator "" _sl (const char *str, size_t length)
+        {return slice(str, length);}
 
 
 
     /** An allocated range of memory. Constructors allocate, destructor frees. */
     struct alloc_slice : private std::shared_ptr<char>, public slice {
         alloc_slice()
-            :std::shared_ptr<char>(NULL), slice() {}
+            :std::shared_ptr<char>(nullptr), slice() {}
         explicit alloc_slice(size_t s)
             :std::shared_ptr<char>((char*)newBytes(s), freer()), slice(get(),s) {}
         explicit alloc_slice(slice s)
@@ -190,6 +200,8 @@ namespace fleece {
              slice(get(),(uint8_t*)end-(uint8_t*)start) {}
         alloc_slice(std::string str)
             :std::shared_ptr<char>((char*)alloc(&str[0], str.length()), freer()), slice(get(), str.length()) {}
+
+        explicit operator bool() const               {return buf != nullptr;}
 
         static alloc_slice adopt(slice s)            {return alloc_slice((void*)s.buf,s.size,true);}
         static alloc_slice adopt(void* buf, size_t size) {return alloc_slice(buf,size,true);}

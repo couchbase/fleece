@@ -43,13 +43,13 @@ namespace fleece {
                     if (isUnsigned())
                         return @((uint64_t)i);  // CFNumber can't do unsigned long long!
                     else
-                        return CFBridgingRelease(CFNumberCreate(NULL, kCFNumberLongLongType,  &i));
+                        return CFBridgingRelease(CFNumberCreate(nullptr, kCFNumberLongLongType,  &i));
                 } else if (isDouble()) {
                     double d = asDouble();
-                    return CFBridgingRelease(CFNumberCreate(NULL, kCFNumberDoubleType,  &d));
+                    return CFBridgingRelease(CFNumberCreate(nullptr, kCFNumberDoubleType,  &d));
                 } else {
                     float f = asFloat();
-                    return CFBridgingRelease(CFNumberCreate(NULL, kCFNumberFloatType,  &f));
+                    return CFBridgingRelease(CFNumberCreate(nullptr, kCFNumberFloatType,  &f));
                 }
             case kString: {
                 slice strSlice = asString();

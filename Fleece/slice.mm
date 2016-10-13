@@ -52,7 +52,7 @@ namespace fleece {
         _needsFree = true;
         BOOL ok = [str getBytes: (void*)buf maxLength: maxByteCount usedLength: &byteCount
                        encoding: NSUTF8StringEncoding options: 0
-                          range: NSMakeRange(0, str.length) remainingRange: NULL];
+                          range: NSMakeRange(0, str.length) remainingRange: nullptr];
         if (!ok)
             throw std::runtime_error("couldn't get NSString bytes");
         size = byteCount;

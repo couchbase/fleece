@@ -187,7 +187,7 @@ namespace fleece {
 
     slice KeyTree::operator[] (unsigned id) const {
         if (id == 0)
-            return slice::null;
+            return nullslice;
         const uint8_t* tree = (const uint8_t*)_data;
         for (unsigned depth = *tree++; depth > 0; --depth) {
             slice key = readKey(tree);
@@ -199,15 +199,15 @@ namespace fleece {
                 break;
             int32_t leftTreeSize = readVarInt(tree);
             if (leftTreeSize < 0)
-                return slice::null; // parse error
+                return nullslice; // parse error
             if (id & 1) {
                 if (leftTreeSize == 0)
-                    return slice::null; // no right subtree
+                    return nullslice; // no right subtree
                 tree += leftTreeSize;
             }
             id >>= 1;
         }
-        return slice::null;
+        return nullslice;
     }
 
 }

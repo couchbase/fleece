@@ -195,13 +195,13 @@ namespace fleece {
 
     const Array* Value::asArray() const noexcept {
         if (tag() != kArrayTag)
-            return NULL;
+            return nullptr;
         return (const Array*)this;
     }
 
     const Dict* Value::asDict() const noexcept {
         if (tag() != kDictTag)
-            return NULL;
+            return nullptr;
         return (const Dict*)this;
     }
 
@@ -211,39 +211,39 @@ namespace fleece {
     
     const Value* Value::fromTrustedData(slice s) noexcept {
         // Root value is at the end of the data and is two bytes wide:
-        assert(fromData(s) != NULL); // validate anyway, in debug builds; abort if invalid
+        assert(fromData(s) != nullptr); // validate anyway, in debug builds; abort if invalid
         auto root = fastValidate(s);
-        return root ? deref<true>(root) : NULL;
+        return root ? deref<true>(root) : nullptr;
     }
 
     const Value* Value::fromData(slice s) noexcept {
         auto root = fastValidate(s);
         if (root && !root->validate(s.buf, s.end(), true))
-            root = NULL;
+            root = nullptr;
         return root;
     }
 
     const Value* Value::fastValidate(slice s) noexcept {
         if (s.size < kNarrow || (s.size % kNarrow))
-            return NULL;
+            return nullptr;
         auto root = (const Value*)offsetby(s.buf, s.size - internal::kNarrow);
         if (root->isPointer()) {
             // If the root is a pointer, sanity-check the destination:
             auto derefed = derefPointer<false>(root);
             if (derefed >= root || derefed < s.buf)
-                return NULL;
+                return nullptr;
             root = derefed;
             // The root itself might point to a wide pointer, if the actual value is too far away:
             if (root->isPointer()) {
                 derefed = derefPointer<true>(root);
                 if (derefed >= root || derefed < s.buf)
-                    return NULL;
+                    return nullptr;
                 root = derefed;
             }
         } else {
             // If the root is a direct value there better not be any data before it:
             if (s.size != kNarrow)
-                return NULL;
+                return nullptr;
         };
         return root;
     }

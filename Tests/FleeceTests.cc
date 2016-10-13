@@ -21,7 +21,7 @@ using namespace fleece;
 
 std::ostream& operator<< (std::ostream& o, slice s) {
     o << "slice[";
-    if (s.buf == NULL)
+    if (s.buf == nullptr)
         return o << "null]";
     auto buf = (const uint8_t*)s.buf;
     for (size_t i = 0; i < s.size; i++) {
@@ -78,7 +78,7 @@ _mapped(MAP_FAILED)
     struct stat stat;
     ::fstat(_fd, &stat);
     size = stat.st_size;
-    _mapped = ::mmap(NULL, size, PROT_READ, MAP_PRIVATE, _fd, 0);
+    _mapped = ::mmap(nullptr, size, PROT_READ, MAP_PRIVATE, _fd, 0);
     assert(_mapped != MAP_FAILED);
     buf = _mapped;
 }
