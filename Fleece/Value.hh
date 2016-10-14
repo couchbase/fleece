@@ -216,7 +216,6 @@ namespace fleece {
         friend class Encoder;
         friend class ValueTests;
         friend class EncoderTests;
-        friend class Arr;
         template <bool WIDE> friend struct dictImpl;
     };
 

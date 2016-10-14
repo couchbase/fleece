@@ -38,7 +38,6 @@
     // WARNING: sizeof() will not work on this array since it's actually declared as a pointer.
     #define StackArray(NAME, TYPE, SIZE)    TYPE* NAME = (TYPE*)_malloca(sizeof(TYPE)*(SIZE))
 
-    #define strlcat strncat
     #define fseeko fseek
     #define ftello ftell
 

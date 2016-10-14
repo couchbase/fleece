@@ -28,7 +28,6 @@
     <ClCompile Include="..\..\Fleece\Path.cc" />
     <ClCompile Include="..\..\Fleece\slice.cc" />
     <ClCompile Include="..\..\Fleece\StringTable.cc" />
-    <ClCompile Include="..\..\Fleece\Val.cc" />
     <ClCompile Include="..\..\Fleece\Value+Dump.cc" />
     <ClCompile Include="..\..\Fleece\Value+JSON.cc" />
     <ClCompile Include="..\..\Fleece\Value.cc" />

@@ -80,7 +80,6 @@ namespace fleece {
 
         friend class Value;
         friend class Dict;
-        friend class Arr;
         template <bool WIDE> friend struct dictImpl;
     };
 

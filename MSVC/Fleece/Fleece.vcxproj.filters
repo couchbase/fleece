@@ -66,8 +66,5 @@
     <ClCompile Include="..\..\Fleece\Path.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Fleece\Val.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>
