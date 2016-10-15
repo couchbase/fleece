@@ -5,6 +5,7 @@
 *~
 xcuserdata/
 /build/
+/build_cmake/
 DerivedData/
 1000people.fleece
 Debug/

@@ -8,6 +8,7 @@ For details, see http://sourceforge.net/projects/libb64
 #ifndef BASE64_CENCODE_H
 #define BASE64_CENCODE_H
 #include <stdint.h>
+#include <stdlib.h>
 
 typedef enum
 {
