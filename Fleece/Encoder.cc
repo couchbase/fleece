@@ -21,7 +21,7 @@
 #include "MSVC_Compat.hh"
 #include <algorithm>
 #include <assert.h>
-#include <math.h>
+#include <cmath>
 #include <stdlib.h>
 
 
@@ -157,7 +157,7 @@ namespace fleece {
     void Encoder::writeUInt(uint64_t i) {writeInt(i, (i < 2048),               true);}
 
     void Encoder::writeDouble(double n) {
-        if (isnan(n))
+        if (std::isnan(n))
             throw FleeceException(InvalidData, "Can't write NaN");
         if (n == (int64_t)n) {
             return writeInt((int64_t)n);
@@ -174,7 +174,7 @@ namespace fleece {
     }
 
     void Encoder::writeFloat(float n) {
-        if (isnan(n))
+        if (std::isnan(n))
             throw FleeceException(InvalidData, "Can't write NaN");
         if (n == (int32_t)n)
             writeInt((int32_t)n);

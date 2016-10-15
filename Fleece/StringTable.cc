@@ -1,5 +1,5 @@
 //
-//  stringTable.cc
+//  StringTable.cc
 //  Fleece
 //
 //  Created by Jens Alfke on 12/2/15.
@@ -13,7 +13,7 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#include "stringTable.hh"
+#include "StringTable.hh"
 #include "MSVC_Compat.hh"
 #include <algorithm>
 #include <assert.h>
