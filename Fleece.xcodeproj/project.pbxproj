@@ -96,8 +96,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		270515521D9053BE00D62D05 /* Fleece+CoreFoundation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Fleece+CoreFoundation.h"; sourceTree = "<group>"; };
-		270515531D9058F200D62D05 /* Fleece+CoreFoundation.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "Fleece+CoreFoundation.mm"; sourceTree = "<group>"; };
+		270515521D9053BE00D62D05 /* Fleece+CoreFoundation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "Fleece+CoreFoundation.h"; path = "../ObjC/Fleece+CoreFoundation.h"; sourceTree = "<group>"; };
+		270515531D9058F200D62D05 /* Fleece+CoreFoundation.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "Fleece+CoreFoundation.mm"; path = "../ObjC/Fleece+CoreFoundation.mm"; sourceTree = "<group>"; };
 		270515551D90596000D62D05 /* Fleece_C_impl.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Fleece_C_impl.hh; sourceTree = "<group>"; };
 		270FA25C1BF53CAD005DCB13 /* libFleece.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libFleece.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		270FA26A1BF53CEA005DCB13 /* Value.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Value.cc; sourceTree = "<group>"; };
@@ -128,7 +128,7 @@
 		272E5A5A1BF8004100848580 /* FleeceTests.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FleeceTests.hh; sourceTree = "<group>"; };
 		272E5A5B1BF800A100848580 /* EncoderTests.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EncoderTests.cc; sourceTree = "<group>"; };
 		272E5A5E1BF91DBE00848580 /* ObjCTests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ObjCTests.mm; sourceTree = "<group>"; };
-		272E5A601BF91F6C00848580 /* slice.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = slice.mm; sourceTree = "<group>"; };
+		272E5A601BF91F6C00848580 /* slice.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = slice.mm; path = ../ObjC/slice.mm; sourceTree = "<group>"; };
 		272E5A671BFA7C3100848580 /* Internal.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Internal.hh; sourceTree = "<group>"; };
 		2746DD3B1D931BE9000517BC /* Benchmark.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Benchmark.hh; sourceTree = "<group>"; };
 		2747D9841CFB9BC300C48211 /* 1person.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = 1person.json; sourceTree = "<group>"; };
@@ -227,6 +227,7 @@
 		270FA25E1BF53CAD005DCB13 /* Fleece */ = {
 			isa = PBXGroup;
 			children = (
+				27E3DD2A1DB1C17900F2872D /* ObjC */,
 				278163B71CE6A07A00B94E32 /* Fleece.hh */,
 				272E5A671BFA7C3100848580 /* Internal.hh */,
 				270FA26A1BF53CEA005DCB13 /* Value.cc */,
@@ -235,14 +236,10 @@
 				27C4ACAB1CE5146500938365 /* Array.hh */,
 				270FA26C1BF53CEA005DCB13 /* Value+JSON.cc */,
 				279AC53B1C097941002C80DB /* Value+Dump.cc */,
-				270FA26D1BF53CEA005DCB13 /* Value+ObjC.mm */,
 				27A924CD1D9C32E800086206 /* Path.cc */,
 				27A924CE1D9C32E800086206 /* Path.hh */,
 				27298E7F1C04E665000CFBA8 /* Encoder.cc */,
 				270FA26F1BF53CEA005DCB13 /* Encoder.hh */,
-				270FA2701BF53CEA005DCB13 /* Encoder+ObjC.mm */,
-				2797BCCF1C122E9200E5C991 /* FleeceDocument.h */,
-				2797BCD01C122E9200E5C991 /* FleeceDocument.mm */,
 				27298E3A1C00F812000CFBA8 /* JSONConverter.cc */,
 				27298E761C00FB48000CFBA8 /* JSONConverter.hh */,
 				270FA28D1BF53FB0005DCB13 /* Utilities */,
@@ -352,6 +349,18 @@
 				279AC5331C096872002C80DB /* fleece_tool.cc */,
 			);
 			path = Tool;
+			sourceTree = "<group>";
+		};
+		27E3DD2A1DB1C17900F2872D /* ObjC */ = {
+			isa = PBXGroup;
+			children = (
+				270FA26D1BF53CEA005DCB13 /* Value+ObjC.mm */,
+				270FA2701BF53CEA005DCB13 /* Encoder+ObjC.mm */,
+				2797BCCF1C122E9200E5C991 /* FleeceDocument.h */,
+				2797BCD01C122E9200E5C991 /* FleeceDocument.mm */,
+			);
+			name = ObjC;
+			path = ../ObjC;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
