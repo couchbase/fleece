@@ -63,5 +63,8 @@
     <ClCompile Include="..\..\vendor\jsonsl\jsonsl.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Fleece\Path.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
