@@ -9,6 +9,7 @@
 #pragma once
 #include <math.h>
 #include <time.h>
+#include <algorithm>
 #include <vector>
 
 
