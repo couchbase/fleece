@@ -289,6 +289,9 @@ namespace fleece {
                 auto iter = value->asDict()->begin();
                 beginDictionary(iter.count());
                 for (; iter; ++iter) {
+                    if (iter.key()->isInteger())
+                        writeKey((int)iter.key()->asInt());
+                    else
                     writeKey(iter.key()->asString());
                     writeValue(iter.value());
                 }
@@ -343,20 +346,32 @@ namespace fleece {
     void Encoder::writeKey(const std::string &s)   {writeKey(slice(s));}
 
     void Encoder::writeKey(slice s) {
-        if (!_blockedOnKey) {
-            if (_items->tag == kDictTag)
-                throw FleeceException(EncodeError, "need a value after a key");
-            else
-                throw FleeceException(EncodeError, "not writing a dictionary");
-        }
+        if (_usuallyFalse(!_blockedOnKey))
+            throwUnexpectedKey();
         _blockedOnKey = false;
         s = _writeString(s, true);
         if (_sortKeys)
             _items->keys.push_back(s);
     }
 
+    void Encoder::writeKey(int n) {
+        if (_usuallyFalse(!_blockedOnKey))
+            throwUnexpectedKey();
+        _blockedOnKey = false;
+        writeInt(n);
+        if (_sortKeys)
+            _items->keys.push_back(nullslice);
+    }
+
+    void Encoder::throwUnexpectedKey() {
+        if (_items->tag == kDictTag)
+            throw FleeceException(EncodeError, "need a value after a key");
+        else
+            throw FleeceException(EncodeError, "not writing a dictionary");
+    }
+
     void Encoder::push(tags tag, size_t reserve) {
-        if (_stackDepth >= _stack.size())
+        if (_usuallyFalse(_stackDepth >= _stack.size()))
             throw FleeceException(EncodeError, "nesting is too deep");
         _items = &_stack[_stackDepth++];
         _items->reset(tag);
@@ -451,9 +466,22 @@ namespace fleece {
         items->clear();
     }
 
+    // compares dictionary keys as slices. If a slice has a null `buf`, it represents an integer
+    // key, whose value is in the `size` field.
     static int compareKeysByIndex(const void *a, const void *b) {
         const slice &sa = **(const slice**)a;
         const slice &sb = **(const slice**)b;
+        if (sa.buf) {
+            if (sb.buf)
+                return sa.compare(sb);                  // string key comparison
+            else
+                return 1;
+        } else {
+            if (sb.buf)
+                return -1;
+            else
+                return (int)sa.size - (int)sb.size;     // integer key comparison
+        }
         assert(sa.buf && sb.buf);
         return sa.compare(sb);
     }
@@ -465,9 +493,15 @@ namespace fleece {
             return;
 
         // Fill in the pointers of any keys that refer to inline strings:
-        for (unsigned i = 0; i < n; i++)
-            if (keys[i].buf == nullptr)
-                keys[i].buf = offsetby(&items[2*i], 1);
+        for (unsigned i = 0; i < n; i++) {
+            if (keys[i].buf == nullptr) {
+                const Value *item = &items[2*i];
+                if (item->tag() == kStringTag)
+                    keys[i].buf = offsetby(item, 1);                // inline string
+                else
+                    keys[i] = slice(nullptr, item->asUnsigned());   // integer
+            }
+        }
 
         // Construct an array that describes the permutation of item indices:
         StackArray(indices, const slice*, n);

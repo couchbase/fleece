@@ -89,6 +89,9 @@ namespace fleece {
         /** Writes a key to the current dictionary. This must be called before adding a value. */
         void writeKey(slice);
 
+        /** Writes a numeric key to the current dictionary. This must be called before adding a value. */
+        void writeKey(int);
+
         /** Ends creating a dictionary. The dict is written to the output and added as a value to
             the next outermost collection (or made the root if there is no collection active.) */
         void endDictionary();
@@ -133,6 +136,7 @@ namespace fleece {
         void _writeFloat(float);
         slice writeData(internal::tags, slice s);
         slice _writeString(slice, bool asKey);
+        [[noreturn]] void throwUnexpectedKey();
         size_t nextWritePos();
         void sortDict(valueArray &items);
         void checkPointerWidths(valueArray *items);

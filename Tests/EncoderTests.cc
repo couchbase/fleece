@@ -340,6 +340,32 @@ public:
         }
     }
 
+    void testDictionaryNumericKeys() {
+        {
+            enc.beginDictionary();
+            enc.writeKey(0);
+            enc.writeInt(23);
+            enc.writeKey(1);
+            enc.writeInt(42);
+            enc.writeKey(2047);
+            enc.writeInt(-1);
+            enc.endDictionary();
+            checkOutput("7003 0000 0017 0001 002A 07FF 0FFF 8007");
+            auto d = checkDict(3);
+            auto v = d->get(0);
+            Assert(v);
+            AssertEqual(v->asInt(), 23ll);
+            v = d->get(1);
+            Assert(v);
+            AssertEqual(v->asInt(), 42ll);
+            v = d->get(2047);
+            Assert(v);
+            AssertEqual(v->asInt(), -1ll);
+            AssertEqual(d->get(slice("barrr")), (const Value*)nullptr);
+            AssertEqual(d->toJSON(), alloc_slice("{0:23,1:42,2047:-1}"));
+        }
+    }
+
     void testSharedStrings() {
         enc.beginArray(4);
         enc.writeString("a");
@@ -535,6 +561,7 @@ public:
         auto root = Value::fromTrustedData(doc)->asArray();
         auto person = root->get(123)->asDict();
         const Value *name = person->get(slice("name"));
+        Assert(name);
         std::string nameStr = (std::string)name->asString();
         AssertEqual(nameStr, std::string("Concepcion Burns"));
     }
@@ -773,6 +800,7 @@ public:
     CPPUNIT_TEST( testArrays );
     CPPUNIT_TEST( testLongArrays );
     CPPUNIT_TEST( testDictionaries );
+    CPPUNIT_TEST( testDictionaryNumericKeys );
     CPPUNIT_TEST( testSharedStrings );
     CPPUNIT_TEST( testJSONStrings );
     CPPUNIT_TEST( testJSON );

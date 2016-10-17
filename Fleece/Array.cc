@@ -163,6 +163,15 @@ namespace fleece {
             return deref(next(key));
         }
 
+        inline const Value* get(int keyToFind) const noexcept {
+            auto key = (const Value*) ::bsearch((void*)(ssize_t)keyToFind,
+                                                _first, _count, 2*kWidth,
+                                                &numericKeyCmp);
+            if (!key)
+                return nullptr;
+            return deref(next(key));
+        }
+
         const Value* get(Dict::key &keyToFind) const noexcept {
             const Value *key = findKeyByHint(keyToFind);
             if (!key) {
@@ -341,7 +350,22 @@ namespace fleece {
 #ifndef NDEBUG
             ++gTotalComparisons;
 #endif
-            return ((slice*)keyToFindP)->compare(keyBytes((const Value*)keyP));
+            auto key = (const Value*)keyP;
+            if (key->isInteger())
+                return 1;
+            else
+                return ((slice*)keyToFindP)->compare(keyBytes(key));
+        }
+
+        static int numericKeyCmp(const void* keyToFindP, const void* keyP) {
+#ifndef NDEBUG
+            ++gTotalComparisons;
+#endif
+            auto key = (const Value*)keyP;
+            if (key->isInteger())
+                return (int)((ssize_t)keyToFindP - key->asInt());
+            else
+                return -1;
         }
 
         static constexpr size_t kWidth = (WIDE ? 4 : 2);
@@ -362,6 +386,13 @@ namespace fleece {
     }
 
     const Value* Dict::get(slice keyToFind) const noexcept {
+        if (isWideArray())
+            return dictImpl<true>(this).get(keyToFind);
+        else
+            return dictImpl<false>(this).get(keyToFind);
+    }
+
+    const Value* Dict::get(int keyToFind) const noexcept {
         if (isWideArray())
             return dictImpl<true>(this).get(keyToFind);
         else
