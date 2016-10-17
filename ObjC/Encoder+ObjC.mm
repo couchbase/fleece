@@ -55,7 +55,7 @@ namespace fleece {
             [obj enumerateKeysAndObjectsUsingBlock:^(__unsafe_unretained id key,
                                                      __unsafe_unretained id value, BOOL *stop) {
                 if (![key isKindOfClass: [NSString class]])
-                    throw FleeceException(InvalidData, "NSDictionary has non-string key");
+                    FleeceException::_throw(InvalidData, "NSDictionary has non-string key");
                 nsstring_slice slice(key);
                 writeKey(slice);
                 write(value);
@@ -72,7 +72,7 @@ namespace fleece {
         } else if ([obj isKindOfClass: [NSNull class]]) {
             writeNull();
         } else {
-            throw FleeceException(InvalidData, "Un-encodable object type");
+            FleeceException::_throw(InvalidData, "Un-encodable object type");
         }
     }
 

@@ -127,7 +127,7 @@ namespace fleece {
                 return;
             }
             default:
-                throw FleeceException(UnknownValue, "illegal typecode in Value; corrupt data?");
+                FleeceException::_throw(UnknownValue, "illegal typecode in Value; corrupt data?");
         }
     }
 

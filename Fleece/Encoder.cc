@@ -41,10 +41,8 @@ namespace fleece {
     void Encoder::end() {
         if (!_items)
             return;
-        if (_stackDepth > 1)
-            throw FleeceException(EncodeError, "unclosed array/dict");
-        if (_items->size() > 1)
-            throw FleeceException(EncodeError, "top level must have only one value");
+        throwIf(_stackDepth > 1, EncodeError, "unclosed array/dict");
+        throwIf(_items->size() > 1, EncodeError, "top level must have only one value");
 
         if (_items->size() > 0) {
             checkPointerWidths(_items);
@@ -97,8 +95,7 @@ namespace fleece {
 #pragma mark - WRITING:
 
     void Encoder::addItem(Value v) {
-        if (_blockedOnKey)
-            throw FleeceException(EncodeError, "need a key before this value");
+        throwIf(_blockedOnKey, EncodeError, "need a key before this value");
         if (_writingKey) {
             _writingKey = false;
         } else {
@@ -157,8 +154,7 @@ namespace fleece {
     void Encoder::writeUInt(uint64_t i) {writeInt(i, (i < 2048),               true);}
 
     void Encoder::writeDouble(double n) {
-        if (std::isnan(n))
-            throw FleeceException(InvalidData, "Can't write NaN");
+        throwIf(std::isnan(n), InvalidData, "Can't write NaN");
         if (n == (int64_t)n) {
             return writeInt((int64_t)n);
         } else if (n == (float)n) {
@@ -174,8 +170,7 @@ namespace fleece {
     }
 
     void Encoder::writeFloat(float n) {
-        if (std::isnan(n))
-            throw FleeceException(InvalidData, "Can't write NaN");
+        throwIf(std::isnan(n), InvalidData, "Can't write NaN");
         if (n == (int32_t)n)
             writeInt((int32_t)n);
         else
@@ -234,8 +229,7 @@ namespace fleece {
                 return entry->first;
             } else {
                 auto offset = nextWritePos();
-                if (offset > 1u<<31)
-                    throw FleeceException(MemoryError, "encoded data too large");
+                throwIf(offset > 1u<<31, MemoryError, "encoded data too large");
                 s = writeData(kStringTag, s);
                 if (s.buf) {
 #if 0
@@ -299,7 +293,7 @@ namespace fleece {
                 break;
             }
             default:
-                throw FleeceException(UnknownValue, "illegal tag in Value; corrupt data?");
+                FleeceException::_throw(UnknownValue, "illegal tag in Value; corrupt data?");
         }
     }
 
@@ -365,14 +359,13 @@ namespace fleece {
 
     void Encoder::throwUnexpectedKey() {
         if (_items->tag == kDictTag)
-            throw FleeceException(EncodeError, "need a value after a key");
+            FleeceException::_throw(EncodeError, "need a value after a key");
         else
-            throw FleeceException(EncodeError, "not writing a dictionary");
+            FleeceException::_throw(EncodeError, "not writing a dictionary");
     }
 
     void Encoder::push(tags tag, size_t reserve) {
-        if (_usuallyFalse(_stackDepth >= _stack.size()))
-            throw FleeceException(EncodeError, "nesting is too deep");
+        throwIf(_stackDepth >= _stack.size(), EncodeError, "nesting is too deep");
         _items = &_stack[_stackDepth++];
         _items->reset(tag);
         if (reserve > 0)
@@ -393,17 +386,16 @@ namespace fleece {
     }
 
     void Encoder::endDictionary() {
-        if (!_writingKey)
-            throw FleeceException(EncodeError, "need a value");
+        throwIf(!_writingKey, EncodeError, "need a value");
         endCollection(internal::kDictTag);
     }
 
     void Encoder::endCollection(tags tag) {
-        if (_items->tag != tag) {
+        if (_usuallyFalse(_items->tag != tag)) {
             if (_items->tag == kSpecialTag)
-                throw FleeceException(EncodeError, "endCollection: not in a collection");
+                FleeceException::_throw(EncodeError, "endCollection: not in a collection");
             else
-                throw FleeceException(EncodeError, "ending wrong type of collection");
+                FleeceException::_throw(EncodeError, "ending wrong type of collection");
         }
 
         // Pop _items off the stack:

@@ -178,13 +178,12 @@ namespace fleece {
         Value(size_t offset, int width) {
             offset >>= 1;
             if (width < internal::kWide) {
-                if (offset >= 0x8000)
-                    throw FleeceException(InternalError, "offset too large");
+                throwIf(offset >= 0x8000, InternalError, "offset too large");
                 int16_t n = (uint16_t)_enc16(offset | 0x8000); // big-endian, high bit set
                 memcpy(_byte, &n, sizeof(n));
             } else {
                 if (offset >= 0x80000000)
-                    throw FleeceException(OutOfRange, "data too large");
+                    FleeceException::_throw(OutOfRange, "data too large");
                 uint32_t n = (uint32_t)_enc32(offset | 0x80000000);
                 memcpy(_byte, &n, sizeof(n));
             }

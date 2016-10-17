@@ -66,8 +66,7 @@ namespace fleece {
                         return str;
                 }
                 NSString* str = (NSString*)strSlice;
-                if (!str)
-                    throw FleeceException(InvalidData, "Invalid UTF-8 in string");
+                throwIf(!str, InvalidData, "Invalid UTF-8 in string");
                 if (shareable) {
 #if TARGET_OS_IPHONE
                     [sharedStrings setObject: str forKey: (__bridge id)this];
@@ -97,7 +96,7 @@ namespace fleece {
                 return result;
             }
             default:
-                throw FleeceException(UnknownValue, "illegal typecode in Value; corrupt data?");
+                FleeceException::_throw(UnknownValue, "illegal typecode in Value; corrupt data?");
         }
     }
 

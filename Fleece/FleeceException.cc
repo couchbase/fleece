@@ -12,6 +12,11 @@
 
 namespace fleece {
 
+    void FleeceException::_throw(ErrorCode code, const char *what) {
+        throw FleeceException(code, what);
+    }
+
+
     ErrorCode FleeceException::getCode(const std::exception &x) noexcept {
         auto fleecex = dynamic_cast<const FleeceException*>(&x);
         if (fleecex)

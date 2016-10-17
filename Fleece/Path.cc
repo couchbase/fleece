@@ -16,15 +16,14 @@ namespace fleece {
 
     // Parses a path expression, calling the callback for each property or array index.
     void Path::forEachComponent(slice in, function<bool(char, slice, int32_t)> callback) {
-        if (in.size == 0)
-            throw FleeceException(PathSyntaxError, "Empty path");
+        throwIf(in.size == 0, PathSyntaxError, "Empty path");
         uint8_t token = in.peekByte();
         if (token == '$') {
             // Starts with "$." or "$["
             in.moveStart(1);
             token = in.readByte();
             if (token != '.' && token != '[')
-                throw FleeceException(PathSyntaxError, "Invalid path delimiter after $");
+                FleeceException::_throw(PathSyntaxError, "Invalid path delimiter after $");
         } else if (token == '[') {
             // Starts with "["
             in.moveStart(1);
@@ -49,21 +48,21 @@ namespace fleece {
                 // Find end of array index:
                 next = in.findByteOrEnd(']');
                 if (!next)
-                    throw FleeceException(PathSyntaxError, "Missing ']'");
+                    FleeceException::_throw(PathSyntaxError, "Missing ']'");
                 param = slice(in.buf, next++);
                 // Parse array index:
                 slice n = param;
                 int64_t i = n.readSignedDecimal();
                 if (_usuallyFalse(n.size > 0 || i > INT32_MAX || i < INT32_MIN))
-                    throw FleeceException(PathSyntaxError, "Invalid array index");
+                    FleeceException::_throw(PathSyntaxError, "Invalid array index");
                 index = (int32_t)i;
             } else {
-                throw FleeceException(PathSyntaxError, "Invalid path component");
+                FleeceException::_throw(PathSyntaxError, "Invalid path component");
             }
 
             // Invoke the callback:
             if (param.size == 0)
-                throw FleeceException(PathSyntaxError, "Empty property or index");
+                FleeceException::_throw(PathSyntaxError, "Empty property or index");
             if (_usuallyFalse(!callback(token, param, index)))
                 return;
 

@@ -81,8 +81,7 @@ namespace fleece {
     }
 
     bool Array::impl::next() {
-        if (_count == 0)
-            throw FleeceException(OutOfRange, "iterating past end of array");
+        throwIf(_count == 0, OutOfRange, "iterating past end of array");
         if (--_count == 0)
             return false;
         _first = _first->next(_wide);
@@ -126,8 +125,7 @@ namespace fleece {
     }
 
     Array::iterator& Array::iterator::operator += (uint32_t n) {
-        if (n > _a._count)
-            throw FleeceException(OutOfRange, "iterating past end of array");
+        throwIf(n > _a._count, OutOfRange, "iterating past end of array");
         _a._count -= n;
         _a._first = offsetby(_a._first, width(_a._wide)*n);
         _value = _a.firstValue();
@@ -432,8 +430,7 @@ namespace fleece {
     }
 
     Dict::iterator& Dict::iterator::operator++() {
-        if (_a._count == 0)
-            throw FleeceException(OutOfRange, "iterating past end of dict");
+        throwIf(_a._count == 0, OutOfRange, "iterating past end of dict");
         --_a._count;
         _a._first = offsetby(_a._first, 2*width(_a._wide));
         readKV();
@@ -441,8 +438,7 @@ namespace fleece {
     }
 
     Dict::iterator& Dict::iterator::operator += (uint32_t n) {
-        if (n > _a._count)
-            throw FleeceException(OutOfRange, "iterating past end of dict");
+        throwIf(n > _a._count, OutOfRange, "iterating past end of dict");
         _a._count -= n;
         _a._first = offsetby(_a._first, 2*width(_a._wide)*n);
         readKV();

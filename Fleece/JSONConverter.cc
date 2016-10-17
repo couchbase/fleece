@@ -80,8 +80,7 @@ namespace fleece {
     /*static*/ alloc_slice JSONConverter::convertJSON(slice json) {
         Encoder enc;
         JSONConverter cvt(enc);
-        if (!cvt.encodeJSON(slice(json)))
-            throw FleeceException(JSONError, cvt.errorMessage());
+        throwIf(!cvt.encodeJSON(slice(json)), JSONError, cvt.errorMessage());
         return enc.extractOutput();
     }
 

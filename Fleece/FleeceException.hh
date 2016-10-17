@@ -8,6 +8,7 @@
 
 #pragma once
 #include <exception>
+#include "MSVC_Compat.hh"
 
 namespace fleece {
 
@@ -24,6 +25,7 @@ namespace fleece {
         InternalError,      // This shouldn't happen
     } ErrorCode;
 
+
     class FleeceException : public std::exception {
     public:
 
@@ -36,6 +38,8 @@ namespace fleece {
             return _what;
         }
 
+        [[noreturn]] static void _throw(ErrorCode code, const char *what);
+
         static ErrorCode getCode(const std::exception&) noexcept;
 
         const ErrorCode code;
@@ -43,5 +47,11 @@ namespace fleece {
     private:
         const char* _what;
     };
-    
+
+
+    static inline void throwIf(bool bad, ErrorCode error, const char *message) {
+        if (_usuallyFalse(bad))
+            FleeceException::_throw(error, message);
+    }
+
 }
