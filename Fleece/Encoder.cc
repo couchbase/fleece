@@ -15,6 +15,7 @@
 
 #include "Encoder.hh"
 #include "Array.hh"
+#include "SharedKeys.hh"
 #include "Endian.hh"
 #include "varint.hh"
 #include "FleeceException.hh"
@@ -286,7 +287,7 @@ namespace fleece {
                     if (iter.key()->isInteger())
                         writeKey((int)iter.key()->asInt());
                     else
-                    writeKey(iter.key()->asString());
+                        writeKey(iter.key()->asString());
                     writeValue(iter.value());
                 }
                 endDictionary();
@@ -340,6 +341,11 @@ namespace fleece {
     void Encoder::writeKey(const std::string &s)   {writeKey(slice(s));}
 
     void Encoder::writeKey(slice s) {
+        int encoded;
+        if (_sharedKeys && _sharedKeys->encode(s, encoded)) {
+            writeKey(encoded);
+            return;
+        }
         if (_usuallyFalse(!_blockedOnKey))
             throwUnexpectedKey();
         _blockedOnKey = false;

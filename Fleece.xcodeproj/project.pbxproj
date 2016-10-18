@@ -54,6 +54,8 @@
 		27A924D01D9C32E800086206 /* Path.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27A924CE1D9C32E800086206 /* Path.hh */; };
 		27C4ACAC1CE5146500938365 /* Array.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27C4ACAA1CE5146500938365 /* Array.cc */; };
 		27C4ACAD1CE5146500938365 /* Array.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C4ACAB1CE5146500938365 /* Array.hh */; };
+		27E3DD421DB6A14200F2872D /* SharedKeys.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27E3DD401DB6A14200F2872D /* SharedKeys.cc */; };
+		27E3DD431DB6A14200F2872D /* SharedKeys.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27E3DD411DB6A14200F2872D /* SharedKeys.hh */; };
 		27FDF1A61DAF01300087B4E6 /* FleeceDocument.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2797BCD01C122E9200E5C991 /* FleeceDocument.mm */; };
 /* End PBXBuildFile section */
 
@@ -165,6 +167,8 @@
 		27C4AC961CDFFDA100938365 /* Performance.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = Performance.md; sourceTree = "<group>"; };
 		27C4ACAA1CE5146500938365 /* Array.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Array.cc; sourceTree = "<group>"; };
 		27C4ACAB1CE5146500938365 /* Array.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Array.hh; sourceTree = "<group>"; };
+		27E3DD401DB6A14200F2872D /* SharedKeys.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SharedKeys.cc; sourceTree = "<group>"; };
+		27E3DD411DB6A14200F2872D /* SharedKeys.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = SharedKeys.hh; sourceTree = "<group>"; };
 		27EC8D5B1CEBA72E00199FE6 /* mn_wordlist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mn_wordlist.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -242,6 +246,8 @@
 				270FA26F1BF53CEA005DCB13 /* Encoder.hh */,
 				27298E3A1C00F812000CFBA8 /* JSONConverter.cc */,
 				27298E761C00FB48000CFBA8 /* JSONConverter.hh */,
+				27E3DD401DB6A14200F2872D /* SharedKeys.cc */,
+				27E3DD411DB6A14200F2872D /* SharedKeys.hh */,
 				270FA28D1BF53FB0005DCB13 /* Utilities */,
 			);
 			path = Fleece;
@@ -385,6 +391,7 @@
 				27A924D01D9C32E800086206 /* Path.hh in Headers */,
 				278163B61CE69CA800B94E32 /* Fleece.h in Headers */,
 				275CED531D3EF7BE001DE46C /* FleeceException.hh in Headers */,
+				27E3DD431DB6A14200F2872D /* SharedKeys.hh in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -501,6 +508,7 @@
 				272E5A611BF91F6C00848580 /* slice.mm in Sources */,
 				270FA2821BF53CEA005DCB13 /* slice.cc in Sources */,
 				270FA2781BF53CEA005DCB13 /* Value.cc in Sources */,
+				27E3DD421DB6A14200F2872D /* SharedKeys.cc in Sources */,
 				2770153D1D59645A008BADD7 /* cencode.c in Sources */,
 				278163BC1CE7A72300B94E32 /* KeyTree.cc in Sources */,
 				27298E801C04E665000CFBA8 /* Encoder.cc in Sources */,

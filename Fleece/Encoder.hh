@@ -23,6 +23,8 @@
 
 
 namespace fleece {
+    class SharedKeys;
+    
 
     /** Generates Fleece-encoded data. */
     class Encoder {
@@ -65,7 +67,15 @@ namespace fleece {
         
         void writeData(slice s);
 
-        //////// Writing collections:
+        void writeValue(const Value*);
+
+#ifdef __OBJC__
+        /** Writes an Objective-C object. Supported classes are the ones allowed by
+            NSJSONSerialization, as well as NSData. */
+        void write(id);
+#endif
+
+        //////// Writing arrays:
 
         /** Begins creating an array. Until endArray is called, values written to the encoder are
             added to this array.
@@ -77,12 +87,18 @@ namespace fleece {
             the next outermost collection (or made the root if there is no collection active.) */
         void endArray();
 
+        //////// Writing dictionaries:
+
         /** Begins creating a dictionary. Until endDict is called, values written to the encoder
             are added to this dictionary.
             While creating a dictionary, writeKey must be called before every value.
             @param reserve  If nonzero, space is preallocated for this many values. This has no
                             effect on the output but can speed up encoding slightly. */
         void beginDictionary(size_t reserve =0);
+
+        /** Ends creating a dictionary. The dict is written to the output and added as a value to
+            the next outermost collection (or made the root if there is no collection active.) */
+        void endDictionary();
 
         /** Writes a key to the current dictionary. This must be called before adding a value. */
         void writeKey(const std::string&);
@@ -92,11 +108,12 @@ namespace fleece {
         /** Writes a numeric key to the current dictionary. This must be called before adding a value. */
         void writeKey(int);
 
-        /** Ends creating a dictionary. The dict is written to the output and added as a value to
-            the next outermost collection (or made the root if there is no collection active.) */
-        void endDictionary();
+        /** Associates a SharedKeys object with this Encoder. The writeKey() methods that take
+            strings will consult this object to possibly map the key to an integer. */
+        void setSharedKeys(SharedKeys *s) {_sharedKeys = s;}
+        SharedKeys* sharedStrings() const    {return _sharedKeys;}
 
-        void writeValue(const Value*);
+        //////// "<<" convenience operators;
 
         // Note: overriding <<(bool) would be dangerous due to implicit conversion
         Encoder& operator<< (int64_t i)         {writeInt(i); return *this;}
@@ -109,12 +126,6 @@ namespace fleece {
         Encoder& operator<< (const std::string &str)   {writeString(str); return *this;}
         Encoder& operator<< (slice s)           {writeString(s); return *this;} // string not data!
         Encoder& operator<< (const Value *v)    {writeValue(v); return *this;}
-
-#ifdef __OBJC__
-        /** Writes an Objective-C object. Supported classes are the ones allowed by
-            NSJSONSerialization, as well as NSData. */
-        void write(id);
-#endif
 
     private:
         // Stores the pending values to be written to an in-progress array/dict
@@ -160,6 +171,7 @@ namespace fleece {
         unsigned _stackDepth {0};    // Current depth of _stack
         StringTable _strings;        // Maps strings to the offsets where they appear as values
         bool _uniqueStrings {true};  // Should strings be uniqued before writing?
+        SharedKeys *_sharedKeys {nullptr};  // Client-provided key-to-int mapping
         bool _sortKeys      {true};  // Should dictionary keys be sorted?
         bool _writingKey    {false}; // True if Value being written is a key
         bool _blockedOnKey  {false}; // True if writes should be refused

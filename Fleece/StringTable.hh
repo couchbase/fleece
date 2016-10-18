@@ -1,5 +1,5 @@
 //
-//  stringTable.hh
+//  StringTable.hh
 //  Fleece
 //
 //  Created by Jens Alfke on 12/2/15.
@@ -19,19 +19,19 @@ namespace fleece {
         ~StringTable();
 
         struct info {
-            unsigned usedAsKey   : 1;
-            unsigned offset  :31;
-            uint32_t hash;
+            unsigned usedAsKey  : 1;    // Used by Encoder
+            unsigned offset     :31;    // Used by Encoder
+            uint32_t hash;              // only field used by StringTable itself
         };
 
         typedef std::pair<slice, info> slot;
 
-        size_t count()                              {return _count;}
-        size_t tableSize()                          {return _size;}
+        size_t count() const                        {return _count;}
+        size_t tableSize() const                    {return _size;}
 
         void clear() noexcept;
 
-        slot* find(slice key) noexcept              {return find(key, key.hash());}
+        slot* find(slice key) const noexcept        {return find(key, key.hash());}
 
         void add(slice, const info&);
 
@@ -57,7 +57,7 @@ namespace fleece {
 
     private:
         void allocTable(size_t size);
-        slot* find(fleece::slice key, uint32_t hash) noexcept;
+        slot* find(fleece::slice key, uint32_t hash) const noexcept;
         bool _add(slice, uint32_t h, const info&) noexcept;
         void incCount()                             {if (++_count > _maxCount) grow();}
         void grow();

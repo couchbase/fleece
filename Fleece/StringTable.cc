@@ -43,7 +43,7 @@ namespace fleece {
         _count = 0;
     }
 
-    StringTable::slot* StringTable::find(fleece::slice key, uint32_t hash) noexcept {
+    StringTable::slot* StringTable::find(fleece::slice key, uint32_t hash) const noexcept {
         assert(key.buf != nullptr);
         size_t index = hash & (_size - 1);
         slot *s = &_table[index];
