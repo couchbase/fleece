@@ -12,10 +12,12 @@
 #include "Path.hh"
 #include "jsonsl.h"
 #include "mn_wordlist.h"
+#include <iostream>
+
 
 namespace fleece {
 
-class EncoderTests : public CppUnit::TestFixture {
+class EncoderTests {
 public:
     EncoderTests()
     :enc()
@@ -34,6 +36,11 @@ public:
         enc.reset();
     }
 
+    template <bool WIDE>
+    uint32_t pointerValue(const Value *v) const noexcept {
+        return v->pointerValue<WIDE>();
+    }
+
     void checkOutput(const char *expected) {
         endEncoding();
         std::string hex;
@@ -44,112 +51,186 @@ public:
             if (i % 2 && i != result.size-1)
                 hex.append(" ");
         }
-        AssertEqual(hex, std::string(expected));
+        REQUIRE(hex == std::string(expected));
     }
 
     void checkReadBool(bool b) {
         auto v = Value::fromData(result);
-        Assert(v != nullptr);
-        Assert(v->type() == kBoolean);
-        AssertEqual(v->asBool(), b);
-        AssertEqual(v->asInt(), (int64_t)b);
+        REQUIRE(v != nullptr);
+        REQUIRE(v->type() == kBoolean);
+        REQUIRE(v->asBool() == b);
+        REQUIRE(v->asInt() == (int64_t)b);
     }
 
     void checkRead(int64_t i) {
         auto v = Value::fromData(result);
-        Assert(v != nullptr);
-        Assert(v->type() == kNumber);
-        Assert(v->isInteger());
-        Assert(!v->isUnsigned());
-        AssertEqual(v->asInt(), i);
-        AssertEqual(v->asDouble(), (double)i);
+        REQUIRE(v != nullptr);
+        REQUIRE(v->type() == kNumber);
+        REQUIRE(v->isInteger());
+        REQUIRE(!v->isUnsigned());
+        REQUIRE(v->asInt() == i);
+        REQUIRE(v->asDouble() == (double)i);
     }
 
     void checkReadU(uint64_t i) {
         auto v = Value::fromData(result);
-        Assert(v->type() == kNumber);
-        Assert(v->isInteger());
-        Assert(v->isUnsigned());
-        AssertEqual(v->asUnsigned(), i);
-        AssertEqual(v->asDouble(), (double)i);
+        REQUIRE(v->type() == kNumber);
+        REQUIRE(v->isInteger());
+        REQUIRE(v->isUnsigned());
+        REQUIRE(v->asUnsigned() == i);
+        REQUIRE(v->asDouble() == (double)i);
     }
 
     void checkReadFloat(float f) {
         auto v = Value::fromData(result);
-        Assert(v != nullptr);
-        Assert(v->type() == kNumber);
-        Assert(!v->isDouble());
-        AssertEqual(v->asInt(), (int64_t)round(f));
-        AssertEqual(v->asFloat(), f);
-        AssertEqual(v->asDouble(), (double)f);
+        REQUIRE(v != nullptr);
+        REQUIRE(v->type() == kNumber);
+        REQUIRE(!v->isDouble());
+        REQUIRE(v->asInt() == (int64_t)round(f));
+        REQUIRE(v->asFloat() == f);
+        REQUIRE(v->asDouble() == (double)f);
     }
 
     void checkReadDouble(double f) {
         auto v = Value::fromData(result);
-        Assert(v != nullptr);
-        Assert(v->type() == kNumber);
-        AssertEqual(v->asInt(), (int64_t)round(f));
-        AssertEqual(v->asDouble(), f);
-        AssertEqual(v->asFloat(), (float)f);
+        REQUIRE(v != nullptr);
+        REQUIRE(v->type() == kNumber);
+        REQUIRE(v->asInt() == (int64_t)round(f));
+        REQUIRE(v->asDouble() == f);
+        REQUIRE(v->asFloat() == (float)f);
     }
 
     void checkReadString(const char *str) {
         auto v = Value::fromData(result);
-        Assert(v != nullptr);
-        Assert(v->type() == kString);
-        AssertEqual(v->asString(), slice(str, strlen(str)));
+        REQUIRE(v != nullptr);
+        REQUIRE(v->type() == kString);
+        REQUIRE(v->asString() == slice(str, strlen(str)));
     }
 
     const Array* checkArray(uint32_t count) {
         auto v = Value::fromData(result);
-        Assert(v != nullptr);
-        Assert(v->type() == kArray);
+        REQUIRE(v != nullptr);
+        REQUIRE(v->type() == kArray);
         auto a = v->asArray();
-        Assert(a != nullptr);
-        AssertEqual(a->count(), count);
+        REQUIRE(a != nullptr);
+        REQUIRE(a->count() == count);
         return a;
     }
 
     const Dict* checkDict(uint32_t count) {
         auto v = Value::fromData(result);
-        Assert(v != nullptr);
-        Assert(v->type() == kDict);
+        REQUIRE(v != nullptr);
+        REQUIRE(v->type() == kDict);
         auto d = v->asDict();
-        Assert(d != nullptr);
-        AssertEqual(d->count(), count);
+        REQUIRE(d != nullptr);
+        REQUIRE(d->count() == count);
         return d;
     }
 
+    void testArrayOfLength(unsigned length) {
+        enc.beginArray();
+        for (unsigned i = 0; i < length; ++i)
+            enc.writeUInt(i);
+        enc.endArray();
+        endEncoding();
+
+        // Check the contents:
+        auto a = checkArray(length);
+        for (unsigned i = 0; i < length; ++i) {
+            auto v = a->get(i);
+            REQUIRE(v);
+            REQUIRE(v->type() == kNumber);
+            REQUIRE(v->asUnsigned() == (uint64_t)i);
+        }
+    }
+    
+    void checkJSONStr(std::string json,
+                      const char *expectedStr,
+                      int expectedErr = JSONSL_ERROR_SUCCESS)
+    {
+        json = std::string("[\"") + json + std::string("\"]");
+        JSONConverter j(enc);
+        j.encodeJSON(slice(json));
+        REQUIRE(j.error() == expectedErr);
+        if (j.error()) {
+            enc.reset();
+            return;
+        }
+        endEncoding();
+        REQUIRE(expectedStr); // expected success
+        auto a = checkArray(1);
+        auto output = a->get(0)->asString();
+        REQUIRE(output == slice(expectedStr));
+    }
+
+    void lookupNameWithKey(const Dict* person, Dict::key &nameKey, std::string expectedName) {
+        REQUIRE(person);
+        const Value *name = person->get(nameKey);
+        REQUIRE(name);
+        std::string nameStr = (std::string)name->asString();
+        REQUIRE(nameStr == expectedName);
+        REQUIRE(nameKey.asValue() != nullptr);
+        REQUIRE(nameKey.asValue()->asString() == slice("name"));
+
+        // Second lookup (using cache)
+        name = person->get(nameKey);
+        REQUIRE(name);
+        nameStr = (std::string)name->asString();
+        REQUIRE(nameStr == expectedName);
+    }
+
+    void lookupNamesWithKeys(const Dict* person, const char *expectedName, int expectedX) {
+        Dict::key nameKey(slice("name"));
+        Dict::key xKey(slice("x"));
+        Dict::key keys[2] = {nameKey, xKey};
+        const Value* values[2];
+        auto found = person->get(keys, values, 2);
+        size_t expectedFound = (expectedName != nullptr) + (expectedX >= false);
+        REQUIRE(found == expectedFound);
+        if (expectedName)
+            REQUIRE(values[0]->asString() == slice(expectedName));
+        else
+            REQUIRE(values[0] == nullptr);
+        if (expectedX >= false) {
+            REQUIRE(values[1]->type() == kBoolean);
+            REQUIRE(values[1]->asBool() == (bool)expectedX);
+        } else {
+            REQUIRE(values[1] == nullptr);
+        }
+    }
+
+};
+
 #pragma mark - TESTS
 
-    void testEmpty() {
-        Assert(enc.isEmpty());
+    TEST_CASE_METHOD(EncoderTests, "Empty") {
+        REQUIRE(enc.isEmpty());
         enc.beginArray();
-        Assert(!enc.isEmpty());
+        REQUIRE(!enc.isEmpty());
         enc.endArray();
 
         Encoder enc2;
-        Assert(enc2.isEmpty());
+        REQUIRE(enc2.isEmpty());
         enc2 << 17;
-        Assert(!enc2.isEmpty());
+        REQUIRE(!enc2.isEmpty());
 
         enc2.reset();
-        Assert(enc2.isEmpty());
+        REQUIRE(enc2.isEmpty());
     }
 
-    void testPointer() {
+    TEST_CASE_METHOD(EncoderTests, "Pointer") {
         uint8_t data[2] = {0x80, 0x02};
         auto v = (const Value*)data;
-        AssertEqual(v->pointerValue<false>(), 4u);
+        REQUIRE(pointerValue<false>(v) == 4u);
     }
 
-    void testSpecial() {
+    TEST_CASE_METHOD(EncoderTests, "Special") {
         enc.writeNull();        checkOutput("3000");
         enc.writeBool(false);   checkOutput("3400");    checkReadBool(false);
         enc.writeBool(true);    checkOutput("3800");    checkReadBool(true);
     }
 
-    void testInts() {
+    TEST_CASE_METHOD(EncoderTests, "Ints") {
         enc.writeInt( 0);       checkOutput("0000");    checkRead(0);
         enc.writeInt( 1234);    checkOutput("04D2");    checkRead(1234);
         enc.writeInt(-1234);    checkOutput("0B2E");    checkRead(-1234);
@@ -171,7 +252,7 @@ public:
         checkReadU(UINT64_MAX);
     }
 
-    void testFloats() {
+    TEST_CASE_METHOD(EncoderTests, "Floats") {
         enc.writeFloat( 0.5);   checkOutput("2000 0000 003F 8003");           checkReadFloat( 0.5);
         enc.writeFloat(-0.5);   checkOutput("2000 0000 00BF 8003");           checkReadFloat(-0.5);
         enc.writeFloat((float)M_PI); checkOutput("2000 DB0F 4940 8003");      checkReadFloat((float)M_PI);
@@ -193,7 +274,7 @@ public:
         enc.writeDouble((float)M_PI); checkOutput("2000 DB0F 4940 8003");      checkReadDouble((float)M_PI);
 }
 
-    void testStrings() {
+    TEST_CASE_METHOD(EncoderTests, "Strings") {
         enc.writeString("");    checkOutput("4000");            checkReadString("");
         enc.writeString("a");   checkOutput("4161");            checkReadString("a");
         enc.writeString("ab");  checkOutput("4261 6200 8002");  checkReadString("ab");
@@ -220,7 +301,7 @@ public:
         checkReadString(cstr);
     }
 
-    void testArrays() {
+    TEST_CASE_METHOD(EncoderTests, "Arrays") {
         {
             enc.beginArray();
             enc.endArray();
@@ -234,8 +315,8 @@ public:
             checkOutput("6001 3000 8002");
             auto a = checkArray(1);
             auto v = a->get(0);
-            Assert(v);
-            AssertEqual(v->type(), kNull);
+            REQUIRE(v);
+            REQUIRE(v->type() == kNull);
         }
         {
             enc.beginArray(2);
@@ -246,27 +327,27 @@ public:
             // Check the contents:
             auto a = checkArray(2);
             auto v = a->get(0);
-            Assert(v);
-            AssertEqual(v->type(), kString);
-            AssertEqual(v->asString(), "a"_sl);
+            REQUIRE(v);
+            REQUIRE(v->type() == kString);
+            REQUIRE(v->asString() == "a"_sl);
             v = a->get(1);
-            Assert(v);
-            AssertEqual(v->type(), kString);
-            AssertEqual(v->asString(), "hello"_sl);
+            REQUIRE(v);
+            REQUIRE(v->type() == kString);
+            REQUIRE(v->asString() == "hello"_sl);
 
             // Now use an iterator:
             Array::iterator iter(a);
-            Assert(iter);
-            AssertEqual(iter->type(), kString);
-            AssertEqual(iter->asString(), slice("a"));
+            REQUIRE(iter);
+            REQUIRE(iter->type() == kString);
+            REQUIRE(iter->asString() == slice("a"));
             ++iter;
-            Assert(iter);
-            AssertEqual(iter->type(), kString);
-            AssertEqual(iter->asString(), slice("hello"));
+            REQUIRE(iter);
+            REQUIRE(iter->type() == kString);
+            REQUIRE(iter->asString() == slice("hello"));
             ++iter;
-            Assert(!iter);
+            REQUIRE(!iter);
 
-            AssertEqual(a->toJSON(), alloc_slice("[\"a\",\"hello\"]"));
+            REQUIRE(a->toJSON() == alloc_slice("[\"a\",\"hello\"]"));
         }
 #if 0
         {
@@ -280,7 +361,7 @@ public:
 #endif
     }
 
-    void testLongArrays() {
+    TEST_CASE_METHOD(EncoderTests, "LongArrays") {
         testArrayOfLength(0x7FE);
         testArrayOfLength(0x7FF);
         testArrayOfLength(0x800);
@@ -288,24 +369,7 @@ public:
         testArrayOfLength(0xFFFF);
     }
 
-    void testArrayOfLength(unsigned length) {
-        enc.beginArray();
-        for (unsigned i = 0; i < length; ++i)
-            enc.writeUInt(i);
-        enc.endArray();
-        endEncoding();
-
-        // Check the contents:
-        auto a = checkArray(length);
-        for (unsigned i = 0; i < length; ++i) {
-            auto v = a->get(i);
-            Assert(v);
-            AssertEqual(v->type(), kNumber);
-            AssertEqual(v->asUnsigned(), (uint64_t)i);
-        }
-    }
-
-    void testDictionaries() {
+    TEST_CASE_METHOD(EncoderTests, "Dictionaries") {
         {
             enc.beginDictionary();
             enc.endDictionary();
@@ -320,10 +384,10 @@ public:
             checkOutput("7001 4166 002A 8003");
             auto d = checkDict(1);
             auto v = d->get(slice("f"));
-            Assert(v);
-            AssertEqual(v->asInt(), 42ll);
-            AssertEqual(d->get(slice("barrr")), (const Value*)nullptr);
-            AssertEqual(d->toJSON(), alloc_slice("{\"f\":42}"));
+            REQUIRE(v);
+            REQUIRE(v->asInt() == 42ll);
+            REQUIRE(d->get(slice("barrr")) == (const Value*)nullptr);
+            REQUIRE(d->toJSON() == alloc_slice("{\"f\":42}"));
         }
         {
             enc.beginDictionary();
@@ -333,14 +397,14 @@ public:
             checkOutput("4366 6F6F 7001 8003 002A 8003");
             auto d = checkDict(1);
             auto v = d->get(slice("foo"));
-            Assert(v);
-            AssertEqual(v->asInt(), 42ll);
-            AssertEqual(d->get(slice("barrr")), (const Value*)nullptr);
-            AssertEqual(d->toJSON(), alloc_slice("{\"foo\":42}"));
+            REQUIRE(v);
+            REQUIRE(v->asInt() == 42);
+            REQUIRE(d->get(slice("barrr")) == (const Value*)nullptr);
+            REQUIRE(d->toJSON() == alloc_slice("{\"foo\":42}"));
         }
     }
 
-    void testDictionaryNumericKeys() {
+    TEST_CASE_METHOD(EncoderTests, "DictionaryNumericKeys") {
         {
             enc.beginDictionary();
             enc.writeKey(0);
@@ -353,20 +417,20 @@ public:
             checkOutput("7003 0000 0017 0001 002A 07FF 0FFF 8007");
             auto d = checkDict(3);
             auto v = d->get(0);
-            Assert(v);
-            AssertEqual(v->asInt(), 23ll);
+            REQUIRE(v);
+            REQUIRE(v->asInt() == 23ll);
             v = d->get(1);
-            Assert(v);
-            AssertEqual(v->asInt(), 42ll);
+            REQUIRE(v);
+            REQUIRE(v->asInt() == 42ll);
             v = d->get(2047);
-            Assert(v);
-            AssertEqual(v->asInt(), -1ll);
-            AssertEqual(d->get(slice("barrr")), (const Value*)nullptr);
-            AssertEqual(d->toJSON(), alloc_slice("{0:23,1:42,2047:-1}"));
+            REQUIRE(v);
+            REQUIRE(v->asInt() == -1ll);
+            REQUIRE(d->get(slice("barrr")) == (const Value*)nullptr);
+            REQUIRE(d->toJSON() == alloc_slice("{0:23,1:42,2047:-1}"));
         }
     }
 
-    void testSharedStrings() {
+    TEST_CASE_METHOD(EncoderTests, "SharedStrings") {
         enc.beginArray(4);
         enc.writeString("a");
         enc.writeString("hello");
@@ -375,31 +439,12 @@ public:
         enc.endArray();
         checkOutput("4568 656C 6C6F 6004 4161 8005 4161 8007 8005");
         auto a = checkArray(4);
-        AssertEqual(a->toJSON(), alloc_slice("[\"a\",\"hello\",\"a\",\"hello\"]"));
+        REQUIRE(a->toJSON() == alloc_slice("[\"a\",\"hello\",\"a\",\"hello\"]"));
     }
 
 #pragma mark - JSON:
 
-    void checkJSONStr(std::string json,
-                      const char *expectedStr,
-                      int expectedErr = JSONSL_ERROR_SUCCESS)
-    {
-        json = std::string("[\"") + json + std::string("\"]");
-        JSONConverter j(enc);
-        j.encodeJSON(slice(json));
-        AssertEqual(j.error(), expectedErr);
-        if (j.error()) {
-            enc.reset();
-            return;
-        }
-        endEncoding();
-        Assert(expectedStr); // expected success
-        auto a = checkArray(1);
-        auto output = a->get(0)->asString();
-        AssertEqual(output, slice(expectedStr));
-    }
-
-    void testJSONStrings() {
+    TEST_CASE_METHOD(EncoderTests, "JSONStrings") {
         checkJSONStr("", "");
         checkJSONStr("x", "x");
         checkJSONStr("\\\"", "\"");
@@ -432,32 +477,32 @@ public:
         checkJSONStr("lmao\\uDE1C\\uD83D!", nullptr, JSONSL_ERROR_INVALID_CODEPOINT);
     }
 
-    void testJSON() {
+    TEST_CASE_METHOD(EncoderTests, "JSON") {
         slice json("{\"\":\"hello\\nt\\\\here\","
                             "\"\\\"ironic\\\"\":[null,false,true,-100,0,100,123.456,6.02e+23],"
                             "\"foo\":123}");
         JSONConverter j(enc);
-        Assert(j.encodeJSON(json));
+        REQUIRE(j.encodeJSON(json));
         endEncoding();
         auto d = checkDict(3);
         auto output = d->toJSON();
-        AssertEqual((slice)output, json);
+        REQUIRE((slice)output == json);
     }
 
-    void testJSONBinary() {
+    TEST_CASE_METHOD(EncoderTests, "JSONBinary") {
         enc.beginArray();
         enc.writeData(slice("not-really-binary"));
         enc.endArray();
         endEncoding();
         auto json = Value::fromData(result)->toJSON();
-        AssertEqual(json, alloc_slice("[\"bm90LXJlYWxseS1iaW5hcnk=\"]"));
+        REQUIRE(json == alloc_slice("[\"bm90LXJlYWxseS1iaW5hcnk=\"]"));
 
         Writer w;
         w.writeDecodedBase64(slice("bm90LXJlYWxseS1iaW5hcnk="));
-        AssertEqual(w.extractOutput(), alloc_slice("not-really-binary"));
+        REQUIRE(w.extractOutput() == alloc_slice("not-really-binary"));
     }
 
-    void testDump() {
+    TEST_CASE_METHOD(EncoderTests, "Dump") {
         std::string json = "{\"foo\":123,"
                            "\"\\\"ironic\\\"\":[null,false,true,-100,0,100,123.456,6.02e+23],"
                            "\"\":\"hello\\nt\\\\here\"}";
@@ -466,7 +511,7 @@ public:
         endEncoding();
         std::string dumped = Value::dump(result);
         //std::cerr << dumped;
-        AssertEqual(dumped, std::string(
+        REQUIRE(dumped == std::string(
             "0000: 43 66 6f 6f : \"foo\"\n"
             "0004: 48 22 69 72…: \"\\\"ironic\\\"\"\n"
             "000e: 28 00 77 be…: 123.456\n"
@@ -491,7 +536,7 @@ public:
             "0050: 80 07       : &Dict[3] (@0042)\n"));
     }
 
-    void testConvertPeople() {
+    TEST_CASE_METHOD(EncoderTests, "ConvertPeople") {
         alloc_slice input = readFile(kTestFilesDir "1000people.json");
 
         enc.uniqueStrings(true);
@@ -535,7 +580,7 @@ public:
         enc.end();
         result = enc.extractOutput();
 
-        Assert(result.buf);
+        REQUIRE(result.buf);
         writeToFile(result, kTestFilesDir "1000people.fleece");
 
         fprintf(stderr, "\nJSON size: %zu bytes; Fleece size: %zu bytes (%.2f%%)\n",
@@ -547,26 +592,26 @@ public:
 #endif
     }
 
-    void testFindPersonByIndexUnsorted() {
+    TEST_CASE_METHOD(EncoderTests, "FindPersonByIndexUnsorted") {
         mmap_slice doc(kTestFilesDir "1000people.fleece");
         auto root = Value::fromTrustedData(doc)->asArray();
         auto person = root->get(123)->asDict();
         const Value *name = person->get_unsorted(slice("name"));
         std::string nameStr = (std::string)name->asString();
-        AssertEqual(nameStr, std::string("Concepcion Burns"));
+        REQUIRE(nameStr == std::string("Concepcion Burns"));
     }
 
-    void testFindPersonByIndexSorted() {
+    TEST_CASE_METHOD(EncoderTests, "FindPersonByIndexSorted") {
         mmap_slice doc(kTestFilesDir "1000people.fleece");
         auto root = Value::fromTrustedData(doc)->asArray();
         auto person = root->get(123)->asDict();
         const Value *name = person->get(slice("name"));
-        Assert(name);
+        REQUIRE(name);
         std::string nameStr = (std::string)name->asString();
-        AssertEqual(nameStr, std::string("Concepcion Burns"));
+        REQUIRE(nameStr == std::string("Concepcion Burns"));
     }
 
-    void testFindPersonByIndexKeyed() {
+    TEST_CASE_METHOD(EncoderTests, "FindPersonByIndexKeyed") {
         {
             Dict::key nameKey(slice("name"), true);
 
@@ -597,7 +642,7 @@ public:
             auto smol = Value::fromData(result)->asArray();
             lookupNameWithKey(smol->get(0)->asDict(), nameKey, "Concepcion Burns");
             lookupNameWithKey(smol->get(1)->asDict(), nameKey, "Carmen Miranda");
-            Assert(smol->get(2)->asDict()->get(nameKey) == nullptr);
+            REQUIRE(smol->get(2)->asDict()->get(nameKey) == nullptr);
 
             lookupNamesWithKeys(smol->get(0)->asDict(), "Concepcion Burns", false);
             lookupNamesWithKeys(smol->get(1)->asDict(), "Carmen Miranda", false);
@@ -619,43 +664,7 @@ public:
         }
     }
 
-    void lookupNameWithKey(const Dict* person, Dict::key &nameKey, std::string expectedName) {
-        Assert(person);
-        const Value *name = person->get(nameKey);
-        Assert(name);
-        std::string nameStr = (std::string)name->asString();
-        AssertEqual(nameStr, expectedName);
-        Assert(nameKey.asValue() != nullptr);
-        AssertEqual(nameKey.asValue()->asString(), slice("name"));
-
-        // Second lookup (using cache)
-        name = person->get(nameKey);
-        Assert(name);
-        nameStr = (std::string)name->asString();
-        AssertEqual(nameStr, expectedName);
-    }
-
-    void lookupNamesWithKeys(const Dict* person, const char *expectedName, int expectedX) {
-        Dict::key nameKey(slice("name"));
-        Dict::key xKey(slice("x"));
-        Dict::key keys[2] = {nameKey, xKey};
-        const Value* values[2];
-        auto found = person->get(keys, values, 2);
-        size_t expectedFound = (expectedName != nullptr) + (expectedX >= false);
-        AssertEqual(found, expectedFound);
-        if (expectedName)
-            AssertEqual(values[0]->asString(), slice(expectedName));
-        else
-            Assert(values[0] == nullptr);
-        if (expectedX >= false) {
-            AssertEqual(values[1]->type(), kBoolean);
-            AssertEqual(values[1]->asBool(), (bool)expectedX);
-        } else {
-            Assert(values[1] == nullptr);
-        }
-    }
-
-    void testLookupManyKeys() {
+    TEST_CASE_METHOD(EncoderTests, "LookupManyKeys") {
         mmap_slice doc(kTestFilesDir "1person.fleece");
         auto person = Value::fromTrustedData(doc)->asDict();
 
@@ -692,23 +701,23 @@ public:
         internal::gTotalComparisons = 0;
 #endif
         const Value* values[nKeys];
-        AssertEqual(person->get(keys, values, nKeys), 10ul);
+        REQUIRE(person->get(keys, values, nKeys) == 10ul);
 #ifndef NDEBUG
         fprintf(stderr, "... that took %u comparisons, or %.1f/key\n",
                 internal::gTotalComparisons, internal::gTotalComparisons/(float)nKeys);
         internal::gTotalComparisons = 0;
 #endif
         for (unsigned i = 0; i < nKeys; ++i)
-            AssertEqual(values[i], person->get(keys[i]));
+            REQUIRE(values[i] == person->get(keys[i]));
 
-        AssertEqual(person->get(keys, values, nKeys), 10ul);
+        REQUIRE(person->get(keys, values, nKeys) == 10ul);
 #ifndef NDEBUG
         fprintf(stderr, "... second pass took %u comparisons, or %.1f/key\n",
                 internal::gTotalComparisons, internal::gTotalComparisons/(float)nKeys);
 #endif
     }
 
-    void testPaths() {
+    TEST_CASE_METHOD(EncoderTests, "Paths") {
         alloc_slice input = readFile(kTestFilesDir "1000people.json");
         JSONConverter jr(enc);
         jr.encodeJSON(input);
@@ -718,20 +727,22 @@ public:
 
         Path p1{"$[123].name"};
         const Value *name = p1.eval(root);
-        Assert(name);
-        Assert(name->type() == kString);
-        AssertEqual(name->asString(), slice("Concepcion Burns"));
+        REQUIRE(name);
+        REQUIRE(name->type() == kString);
+        REQUIRE(name->asString() == slice("Concepcion Burns"));
 
         Path p2{"[-1].name"};
         name = p2.eval(root);
-        Assert(name);
-        Assert(name->type() == kString);
-        AssertEqual(name->asString(), slice("Marva Morse"));
+        REQUIRE(name);
+        REQUIRE(name->type() == kString);
+        REQUIRE(name->asString() == slice("Marva Morse"));
     }
 
 #pragma mark - KEY TREE:
 
-    void testKeyTree() {
+    TEST_CASE_METHOD(EncoderTests, "KeyTree") {
+        bool verbose = false;
+
         char eeeeeeee[1024] = "";
         memset(&eeeeeeee[0], 'e', sizeof(eeeeeeee)-1);
 
@@ -759,63 +770,36 @@ public:
 
         KeyTree keys = KeyTree::fromStrings(strings);
         slice output = keys.encodedData();
-        std::cerr << "\n" << sliceToHexDump(output, 32);
+        if (verbose) {
+            std::cerr << "\n" << sliceToHexDump(output, 32);
+        }
         std::cerr << "Size = " << output.size << "; that's " << output.size-totalLen << " bytes overhead for " << n << " strings, i.e." << (output.size-totalLen)/(double)n << " bytes/string.\n";
 
         std::vector<bool> ids(n+1);
         for (size_t i = 0; i < n; ++i) {
-            std::cerr << "Checking '" << rawStrings[i] << "' ... ";
+            INFO( "Checking '" << rawStrings[i] << "' ... ");
             unsigned id = keys[strings[i]];
-            std::cerr << id << " ... ";
-            Assert(id);
-            Assert(!ids[id]);
+            REQUIRE(id);
+            REQUIRE(!ids[id]);
             ids[id] = true;
 
             slice lookup = keys[id];
-            std::cerr << lookup << "\n";
-            Assert(lookup.buf);
-            AssertEqual(lookup, strings[i]);
+            INFO("    id = " << id << ", lookup = " << lookup );
+            REQUIRE(lookup.buf);
+            REQUIRE(lookup == strings[i]);
         }
 
-        Assert(keys[slice("")] == 0);
-        Assert(keys[slice("foo")] == 0);
-        Assert(keys[slice("~")] == 0);
-        Assert(keys[slice("whiske")] == 0);
-        Assert(keys[slice("whiskex")] == 0);
-        Assert(keys[slice("whiskez")] == 0);
+        REQUIRE(keys[slice("")] == 0);
+        REQUIRE(keys[slice("foo")] == 0);
+        REQUIRE(keys[slice("~")] == 0);
+        REQUIRE(keys[slice("whiske")] == 0);
+        REQUIRE(keys[slice("whiskex")] == 0);
+        REQUIRE(keys[slice("whiskez")] == 0);
 
-        Assert(keys[0].buf == nullptr);
-        Assert(keys[(unsigned)n+1].buf == nullptr);
-        Assert(keys[(unsigned)n+2].buf == nullptr);
-        Assert(keys[(unsigned)n+28].buf == nullptr);
-        Assert(keys[(unsigned)9999].buf == nullptr);
+        REQUIRE(keys[0].buf == nullptr);
+        REQUIRE(keys[(unsigned)n+1].buf == nullptr);
+        REQUIRE(keys[(unsigned)n+2].buf == nullptr);
+        REQUIRE(keys[(unsigned)n+28].buf == nullptr);
+        REQUIRE(keys[(unsigned)9999].buf == nullptr);
     }
-
-    CPPUNIT_TEST_SUITE( EncoderTests );
-    CPPUNIT_TEST( testEmpty );
-    CPPUNIT_TEST( testSpecial );
-    CPPUNIT_TEST( testInts );
-    CPPUNIT_TEST( testFloats );
-    CPPUNIT_TEST( testStrings );
-    CPPUNIT_TEST( testArrays );
-    CPPUNIT_TEST( testLongArrays );
-    CPPUNIT_TEST( testDictionaries );
-    CPPUNIT_TEST( testDictionaryNumericKeys );
-    CPPUNIT_TEST( testSharedStrings );
-    CPPUNIT_TEST( testJSONStrings );
-    CPPUNIT_TEST( testJSON );
-    CPPUNIT_TEST( testJSONBinary );
-    CPPUNIT_TEST( testDump );
-    CPPUNIT_TEST( testConvertPeople );
-    CPPUNIT_TEST( testFindPersonByIndexUnsorted );
-    CPPUNIT_TEST( testFindPersonByIndexSorted );
-    CPPUNIT_TEST( testFindPersonByIndexKeyed );
-    CPPUNIT_TEST( testLookupManyKeys );
-    CPPUNIT_TEST( testPaths );
-    CPPUNIT_TEST( testKeyTree );
-    CPPUNIT_TEST_SUITE_END();
 };
-
-CPPUNIT_TEST_SUITE_REGISTRATION(EncoderTests);
-
-}

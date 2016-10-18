@@ -1,15 +1,18 @@
 //
-//  FleeceTests.cpp
+//  FleeceTests.cc
 //  Fleece
 //
 //  Created by Jens Alfke on 11/14/15.
 //  Copyright (c) 2015-2016 Couchbase. All rights reserved.
 //
 
+#define CATCH_CONFIG_CONSOLE_WIDTH 120
+#define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
+
+#include "CaseListReporter.hh"
+
 #include "FleeceTests.hh"
 #include "slice.hh"
-#include <cppunit/extensions/TestFactoryRegistry.h>
-#include <cppunit/ui/text/TestRunner.h>
 #include <assert.h>
 #include <fcntl.h>
 #include <sys/mman.h>
@@ -19,16 +22,18 @@
 using namespace fleece;
 
 
-std::ostream& operator<< (std::ostream& o, slice s) {
-    o << "slice[";
-    if (s.buf == nullptr)
-        return o << "null]";
-    auto buf = (const uint8_t*)s.buf;
-    for (size_t i = 0; i < s.size; i++) {
-        if (buf[i] < 32 || buf[i] > 126)
-            return o << sliceToHex(s) << "]";
+namespace fleece {
+    std::ostream& operator<< (std::ostream& o, slice s) {
+        o << "slice[";
+        if (s.buf == nullptr)
+            return o << "null]";
+        auto buf = (const uint8_t*)s.buf;
+        for (size_t i = 0; i < s.size; i++) {
+            if (buf[i] < 32 || buf[i] > 126)
+                return o << sliceToHex(s) << "]";
+        }
+        return o << "\"" << std::string((char*)s.buf, s.size) << "\"]";
     }
-    return o << "\"" << std::string((char*)s.buf, s.size) << "\"]";
 }
 
 
@@ -98,7 +103,7 @@ alloc_slice readFile(const char *path) {
     fstat(fd, &stat);
     alloc_slice data(stat.st_size);
     ssize_t bytesRead = ::read(fd, (void*)data.buf, data.size);
-    AssertEqual(bytesRead, (ssize_t)data.size);
+    REQUIRE(bytesRead == (ssize_t)data.size);
     ::close(fd);
     return data;
 }
@@ -107,19 +112,6 @@ void writeToFile(slice s, const char *path) {
     int fd = ::open(path, O_WRONLY | O_CREAT | O_TRUNC, 0600);
     assert(fd != -1);
     ssize_t written = ::write(fd, s.buf, s.size);
-    AssertEqual(written, (ssize_t)s.size);
+    REQUIRE(written == (ssize_t)s.size);
     ::close(fd);
 }
-
-
-using namespace CppUnit;
-
-
-int main( int argc, char **argv) {
-    TextTestRunner runner;
-    TestFactoryRegistry &registry = TestFactoryRegistry::getRegistry();
-    runner.addTest( registry.makeTest() );
-    return runner.run( "", false ) ? 0 : -1;
-}
-
-

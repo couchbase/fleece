@@ -181,18 +181,19 @@ namespace fleece {
         }
 
 #ifdef _MSC_VER
-#if 1
-        // NOTE: Can't get this to compile
-#define log(FMT, PARAM, ...)
+    #define log(FMT, PARAM, ...)
 #else
-#define log(FMT, PARAM, ...) ({for (unsigned i_=0; i_<indent; i_++) std::cerr << "\t"; fprintf(stderr, FMT "\n", PARAM, __VA_ARGS__);})
+    #define log(FMT, PARAM...) ({})
 #endif
-#else
-#ifdef NDEBUG
-#define log(FMT, PARAM...) ({})
-#else
-#define log(FMT, PARAM...) ({for (unsigned i_=0; i_<indent; i_++) std::cerr << "\t"; fprintf(stderr, FMT "\n", PARAM);})
-#endif
+
+#if 0 // Set this to 1 to log innards of the method below
+    #undef log
+    #ifdef _MSC_VER
+        // Can't get this to compile
+        //#define log(FMT, PARAM, ...) ({for (unsigned i_=0; i_<indent; i_++) std::cerr << "\t"; fprintf(stderr, FMT "\n", PARAM, __VA_ARGS__);})
+    #else
+        #define log(FMT, PARAM...) ({for (unsigned i_=0; i_<indent; i_++) std::cerr << "\t"; fprintf(stderr, FMT "\n", PARAM);})
+    #endif
 #endif
 
         size_t get(Dict::key keysToFind[], const Value* values[], size_t nKeys) noexcept {

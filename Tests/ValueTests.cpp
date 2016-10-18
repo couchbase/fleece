@@ -12,30 +12,32 @@
 namespace fleece {
     using namespace internal;
 
-    class ValueTests : public CppUnit::TestFixture {
+    class ValueTests {  // Value declares this as a friend so it can call private API
     public:
 
-        void testPointers() {
+        static void testPointers() {
             Value v(4, kNarrow);
-            AssertEqual(v.pointerValue<false>(), 4u);
+            REQUIRE(v.pointerValue<false>() == 4u);
             Value w(4, kWide);
-            AssertEqual(w.pointerValue<true>(), 4u);
+            REQUIRE(w.pointerValue<true>() == 4u);
         }
 
-        void testDeref() {
+        static void testDeref() {
             uint8_t data[6] = {0x01, 0x02, 0x03, 0x04, 0x80, 0x02};
             auto start = (const Value*)&data[4];
-            AssertEqual(start->pointerValue<false>(), 4u);
+            REQUIRE(start->pointerValue<false>() == 4u);
             auto dst = Value::derefPointer<false>(start);
-            AssertEqual((ptrdiff_t)dst - (ptrdiff_t)&data[0], 0L);
+            REQUIRE((ptrdiff_t)dst - (ptrdiff_t)&data[0] == 0L);
         }
 
-        CPPUNIT_TEST_SUITE( ValueTests );
-        CPPUNIT_TEST( testPointers );
-        CPPUNIT_TEST( testDeref );
-        CPPUNIT_TEST_SUITE_END();
     };
 
-    CPPUNIT_TEST_SUITE_REGISTRATION(ValueTests);
+    TEST_CASE("Pointers") {
+        ValueTests::testPointers();
+    }
+
+    TEST_CASE("Deref") {
+        ValueTests::testDeref();
+    }
 
 }

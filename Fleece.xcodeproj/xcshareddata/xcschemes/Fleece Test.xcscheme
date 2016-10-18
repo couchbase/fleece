@@ -63,13 +63,16 @@
             ReferencedContainer = "container:Fleece.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <EnvironmentVariables>
-         <EnvironmentVariable
-            key = "ASAN_OPTIONS"
-            value = "detect_odr_violation=0"
+      <CommandLineArguments>
+         <CommandLineArgument
+            argument = "-r list"
             isEnabled = "YES">
-         </EnvironmentVariable>
-      </EnvironmentVariables>
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--break"
+            isEnabled = "YES">
+         </CommandLineArgument>
+      </CommandLineArguments>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>

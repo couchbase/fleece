@@ -56,6 +56,8 @@
 		27C4ACAD1CE5146500938365 /* Array.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C4ACAB1CE5146500938365 /* Array.hh */; };
 		27E3DD421DB6A14200F2872D /* SharedKeys.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27E3DD401DB6A14200F2872D /* SharedKeys.cc */; };
 		27E3DD431DB6A14200F2872D /* SharedKeys.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27E3DD411DB6A14200F2872D /* SharedKeys.hh */; };
+		27E3DD4C1DB6C32400F2872D /* CaseListReporter.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27E3DD4A1DB6C32400F2872D /* CaseListReporter.hh */; };
+		27E3DD4D1DB6C32400F2872D /* CatchHelper.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27E3DD4B1DB6C32400F2872D /* CatchHelper.hh */; };
 		27FDF1A61DAF01300087B4E6 /* FleeceDocument.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2797BCD01C122E9200E5C991 /* FleeceDocument.mm */; };
 /* End PBXBuildFile section */
 
@@ -169,6 +171,10 @@
 		27C4ACAB1CE5146500938365 /* Array.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Array.hh; sourceTree = "<group>"; };
 		27E3DD401DB6A14200F2872D /* SharedKeys.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SharedKeys.cc; sourceTree = "<group>"; };
 		27E3DD411DB6A14200F2872D /* SharedKeys.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = SharedKeys.hh; sourceTree = "<group>"; };
+		27E3DD471DB6B86000F2872D /* catch.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = catch.hpp; sourceTree = "<group>"; };
+		27E3DD481DB6B86000F2872D /* README.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.txt; sourceTree = "<group>"; };
+		27E3DD4A1DB6C32400F2872D /* CaseListReporter.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = CaseListReporter.hh; sourceTree = "<group>"; };
+		27E3DD4B1DB6C32400F2872D /* CatchHelper.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = CatchHelper.hh; sourceTree = "<group>"; };
 		27EC8D5B1CEBA72E00199FE6 /* mn_wordlist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mn_wordlist.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -280,6 +286,7 @@
 		27298E3E1C00F8A9000CFBA8 /* vendor */ = {
 			isa = PBXGroup;
 			children = (
+				27E3DD461DB6B86000F2872D /* catch */,
 				27298E3F1C00F8A9000CFBA8 /* jsonsl */,
 				277015321D596436008BADD7 /* libb64 */,
 			);
@@ -369,6 +376,17 @@
 			path = ../ObjC;
 			sourceTree = "<group>";
 		};
+		27E3DD461DB6B86000F2872D /* catch */ = {
+			isa = PBXGroup;
+			children = (
+				27E3DD4A1DB6C32400F2872D /* CaseListReporter.hh */,
+				27E3DD4B1DB6C32400F2872D /* CatchHelper.hh */,
+				27E3DD471DB6B86000F2872D /* catch.hpp */,
+				27E3DD481DB6B86000F2872D /* README.txt */,
+			);
+			path = catch;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -377,6 +395,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				27298E661C00F8A9000CFBA8 /* jsonsl.h in Headers */,
+				27E3DD4D1DB6C32400F2872D /* CatchHelper.hh in Headers */,
 				278163BD1CE7A72300B94E32 /* KeyTree.hh in Headers */,
 				27C4ACAD1CE5146500938365 /* Array.hh in Headers */,
 				2797BCAD1C0FBFDE00E5C991 /* StringTable.hh in Headers */,
@@ -386,6 +405,7 @@
 				270FA2811BF53CEA005DCB13 /* Endian.hh in Headers */,
 				2797BCD11C122E9200E5C991 /* FleeceDocument.h in Headers */,
 				270FA2871BF53D32005DCB13 /* forestdb_endian.h in Headers */,
+				27E3DD4C1DB6C32400F2872D /* CaseListReporter.hh in Headers */,
 				270FA2801BF53CEA005DCB13 /* Writer.hh in Headers */,
 				270FA27D1BF53CEA005DCB13 /* Encoder.hh in Headers */,
 				27A924D01D9C32E800086206 /* Path.hh in Headers */,

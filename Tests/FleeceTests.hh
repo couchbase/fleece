@@ -26,7 +26,9 @@ using namespace fleece;
 
 
 // Some operators to make slice work with AssertEqual:
-std::ostream& operator<< (std::ostream& o, slice s);
+namespace fleece {
+    std::ostream& operator<< (std::ostream& o, slice s);
+}
 
 std::string sliceToHex(slice);
 std::string sliceToHexDump(slice, size_t width = 16);
@@ -47,5 +49,4 @@ private:
 };
 
 
-#include <cppunit/TestCase.h>
-#include <cppunit/extensions/HelperMacros.h>
+#include "catch.hpp"
