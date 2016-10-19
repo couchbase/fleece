@@ -30,7 +30,6 @@
 		272E5A521BF7FE7100848580 /* FleeceTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 272E5A451BF7FD8F00848580 /* FleeceTests.cc */; };
 		272E5A551BF7FE9C00848580 /* libFleece.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 270FA25C1BF53CAD005DCB13 /* libFleece.a */; };
 		272E5A571BF7FEB200848580 /* libstdc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 272E5A561BF7FEB200848580 /* libstdc++.tbd */; };
-		272E5A591BF7FED600848580 /* libcppunit-1.13.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 272E5A581BF7FED600848580 /* libcppunit-1.13.0.dylib */; };
 		272E5A5D1BF800A100848580 /* EncoderTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 272E5A5B1BF800A100848580 /* EncoderTests.cc */; };
 		272E5A5F1BF91DBE00848580 /* ObjCTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 272E5A5E1BF91DBE00848580 /* ObjCTests.mm */; };
 		272E5A611BF91F6C00848580 /* slice.mm in Sources */ = {isa = PBXBuildFile; fileRef = 272E5A601BF91F6C00848580 /* slice.mm */; };
@@ -192,7 +191,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				272E5A591BF7FED600848580 /* libcppunit-1.13.0.dylib in Frameworks */,
 				272E5A571BF7FEB200848580 /* libstdc++.tbd in Frameworks */,
 				272E5A551BF7FE9C00848580 /* libFleece.a in Frameworks */,
 			);
@@ -720,11 +718,6 @@
 		272E5A501BF7FE5600848580 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				HEADER_SEARCH_PATHS = /usr/local/include/;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/Cellar/cppunit/1.13.2/lib,
-				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				RUN_CLANG_STATIC_ANALYZER = NO;
 			};
@@ -733,11 +726,6 @@
 		272E5A511BF7FE5600848580 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				HEADER_SEARCH_PATHS = /usr/local/include/;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/Cellar/cppunit/1.13.2/lib,
-				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				RUN_CLANG_STATIC_ANALYZER = NO;
 			};
