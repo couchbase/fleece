@@ -7,6 +7,7 @@
 //
 
 #include "Path.hh"
+#include "SharedKeys.hh"
 #include "FleeceException.hh"
 #include "MSVC_Compat.hh"
 
@@ -77,24 +78,24 @@ namespace fleece {
     }
 
 
-    /*static*/ const Value* Path::eval(slice specifier, const Value *root) {
+    /*static*/ const Value* Path::eval(slice specifier, SharedKeys *sk, const Value *root) {
         const Value *item = root;
         if (_usuallyFalse(!item))
             return nullptr;
         forEachComponent(specifier, [&](char token, slice component, int32_t index) {
-            item = Element::eval(token, component, index, item);
+            item = Element::eval(token, component, index, sk, item);
             return (item != nullptr);
         });
         return item;
     }
 
 
-    Path::Path(const string &specifier)
+    Path::Path(const string &specifier, SharedKeys *sk)
     :_specifier(specifier)
     {
-        forEachComponent(slice(_specifier), [this](char token, slice component, int32_t index) {
+        forEachComponent(slice(_specifier), [&](char token, slice component, int32_t index) {
             if (token == '.')
-                _path.emplace_back(component);
+                _path.emplace_back(component, sk);
             else
                 _path.emplace_back(index);
             return true;
@@ -126,12 +127,17 @@ namespace fleece {
         }
     }
 
-    /*static*/ const Value* Path::Element::eval(char token, slice comp, int32_t index, const Value *item) {
+    /*static*/ const Value* Path::Element::eval(char token, slice comp, int32_t index,
+                                                SharedKeys *sk, const Value *item) {
         if (token == '.') {
             auto d = item->asDict();
             if (_usuallyFalse(!d))
                 return nullptr;
-            return d->get(comp);
+            int key;
+            if (sk && sk->encode(comp, key))
+                return d->get(key);
+            else
+                return d->get(comp);
         } else {
             return getFromArray(item, index);
         }

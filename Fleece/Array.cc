@@ -14,6 +14,7 @@
 //  and limitations under the License.
 
 #include "Array.hh"
+#include "SharedKeys.hh"
 #include "Internal.hh"
 #include "FleeceException.hh"
 #include "varint.hh"
@@ -171,6 +172,8 @@ namespace fleece {
         }
 
         const Value* get(Dict::key &keyToFind) const noexcept {
+            if (keyToFind._hasNumericKey)
+                return get(keyToFind._numericKey);
             const Value *key = findKeyByHint(keyToFind);
             if (!key) {
                 const Value *end = offsetby(_first, _count*2*kWidth);
@@ -186,7 +189,7 @@ namespace fleece {
     #define log(FMT, PARAM...) ({})
 #endif
 
-#if 0 // Set this to 1 to log innards of the method below
+#if 0 // Set this to 1 to log innards of the methods below
     #undef log
     #ifdef _MSC_VER
         // Can't get this to compile
@@ -452,6 +455,22 @@ namespace fleece {
             _value = deref(_a._first->next(_a._wide), _a._wide);
         } else {
             _key = _value = nullptr;
+        }
+    }
+
+
+    Dict::key::key(slice rawString)
+    :_rawString(rawString), _cachePointer(false)
+    { }
+
+
+    Dict::key::key(slice rawString, SharedKeys *sk, bool cachePointer)
+    :_rawString(rawString), _cachePointer(cachePointer)
+    {
+        int n;
+        if (sk && sk->encode(rawString, n)) {
+            _numericKey = (uint32_t)n;
+            _hasNumericKey = true;
         }
     }
 

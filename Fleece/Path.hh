@@ -14,6 +14,7 @@
 #include <functional>
 
 namespace fleece {
+    class SharedKeys;
 
     /** Describes a location in a Fleece object tree, as a path from the root that follows
         dictionary properties and array elements.
@@ -26,7 +27,7 @@ namespace fleece {
     public:
         class Element;
 
-        Path(const std::string &specifier);
+        Path(const std::string &specifier, SharedKeys* =nullptr);
 
         const std::string& specifier() const        {return _specifier;}
         const std::vector<Element>& path() const    {return _path;}
@@ -34,18 +35,19 @@ namespace fleece {
         const Value* eval(const Value *root) const;
 
         /** One-shot evaluation; faster if you're only doing it once */
-        static const Value* eval(slice specifier, const Value *root);
+        static const Value* eval(slice specifier, SharedKeys*, const Value *root);
 
         class Element {
         public:
-            Element(slice property)                 :_key(new Dict::key(property)) { }
+            Element(slice property, SharedKeys *sk) :_key(new Dict::key(property, sk, false)) { }
             Element(int32_t arrayIndex)             :_index(arrayIndex) { }
             const Value* eval(const Value*) const;
             bool isKey() const                      {return _key != nullptr;}
             Dict::key& key() const                  {return *_key;}
             int32_t index() const                   {return _index;}
 
-            static const Value* eval(char token, slice property, int32_t index, const Value *item);
+            static const Value* eval(char token, slice property, int32_t index, SharedKeys*,
+                                     const Value *item);
         private:
             static const Value* getFromArray(const Value*, int32_t index);
 

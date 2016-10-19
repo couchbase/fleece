@@ -342,7 +342,7 @@ namespace fleece {
 
     void Encoder::writeKey(slice s) {
         int encoded;
-        if (_sharedKeys && _sharedKeys->encode(s, encoded)) {
+        if (_sharedKeys && _sharedKeys->encodeAndAdd(s, encoded)) {
             writeKey(encoded);
             return;
         }

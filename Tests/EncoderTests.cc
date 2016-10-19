@@ -613,7 +613,7 @@ public:
 
     TEST_CASE_METHOD(EncoderTests, "FindPersonByIndexKeyed") {
         {
-            Dict::key nameKey(slice("name"), true);
+            Dict::key nameKey(slice("name"), nullptr, true);
 
             // First build a small non-wide Dict:
             enc.beginArray();
@@ -650,7 +650,7 @@ public:
         }
         {
             // Now try a wide Dict:
-            Dict::key nameKey(slice("name"), true);
+            Dict::key nameKey(slice("name"), nullptr, true);
 
             mmap_slice doc(kTestFilesDir "1000people.fleece");
             auto root = Value::fromTrustedData(doc)->asArray();

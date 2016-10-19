@@ -293,8 +293,8 @@ extern "C" {
         "hints" that speed up future searches. */
     typedef struct {
         void* _private1[3];
-        uint32_t _private2;
-        bool _private3;
+        uint32_t _private2, private3;
+        bool _private4, private5;
     } FLDictKey;
 
     /** Initializes an FLDictKey struct with a key string.

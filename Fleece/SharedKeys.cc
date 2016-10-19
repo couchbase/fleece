@@ -17,13 +17,19 @@ namespace fleece {
     { }
 
 
-    bool SharedKeys::encode(slice str, int &key) {
+    bool SharedKeys::encode(slice str, int &key) const {
         // Is this string already encoded?
         auto &slot = _table.find(str);
         if (_usuallyTrue(slot.first.buf != nullptr)) {
             key = slot.second.offset;
             return true;
         }
+        return false;
+    }
+
+    bool SharedKeys::encodeAndAdd(slice str, int &key) {
+        if (encode(str, key))
+            return true;
         // Should this string be encoded?
         if (count() >= _maxCount || str.size > _maxKeyLength || !isEligibleToEncode(str))
             return false;

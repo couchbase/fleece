@@ -37,9 +37,12 @@ namespace fleece {
         /** The number of stored keys. */
         size_t count() const                    {return _table.count();}
 
+        /** Maps a string to an integer, or returns false if there is no mapping. */
+        bool encode(slice string, int &key) const;
+
         /** Maps a string to an integer. Will automatically add a new mapping if the string
          qualifies. */
-        bool encode(slice string, int &key);
+        bool encodeAndAdd(slice string, int &key);
 
         /** Decodes an integer back to a string. */
         slice decode(int key);

@@ -13,6 +13,7 @@
 namespace fleece {
 
     class Dict;
+    class SharedKeys;
 
     /** A Value that's an array. */
     class Array : public Value {
@@ -152,8 +153,11 @@ namespace fleece {
             stored in the same encoded data. */
         class key {
         public:
-            key(slice rawString, bool cachePointer = false) noexcept
-            :_rawString(rawString), _cachePointer(cachePointer) { }
+            key(slice rawString);
+
+            /** If the data was encoded using a SharedKeys mapping, you need to use this
+                constructor so the proper numeric encoding can be found & used. */
+            key(slice rawString, SharedKeys*, bool cachePointer =false);
 
             slice string() const noexcept                {return _rawString;}
             const Value* asValue() const noexcept        {return _keyValue;}
@@ -162,7 +166,9 @@ namespace fleece {
             slice const _rawString;
             const Value* _keyValue  {nullptr};
             uint32_t _hint          {0xFFFFFFFF};
+            int32_t _numericKey;
             bool _cachePointer;
+            bool _hasNumericKey     {false};
 
             template <bool WIDE> friend struct dictImpl;
         };

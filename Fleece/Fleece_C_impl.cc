@@ -161,7 +161,7 @@ bool FLDictIterator_Next(FLDictIterator* i) {
 FLDictKey FLDictKey_Init(FLSlice string, bool cachePointers) {
     FLDictKey key;
     static_assert(sizeof(FLDictKey) >= sizeof(Dict::key), "FLDictKey is too small");
-    new (&key) Dict::key(string, cachePointers);
+    new (&key) Dict::key(string, nullptr, cachePointers);
     return key;
 }
 
