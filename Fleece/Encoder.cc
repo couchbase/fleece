@@ -218,16 +218,16 @@ namespace fleece {
     slice Encoder::_writeString(slice s, bool asKey) {
         // Check whether this string's already been written:
         if (_usuallyTrue(_uniqueStrings && s.size >= kNarrow && s.size <= kMaxSharedStringSize)) {
-            auto entry = _strings.find(s);
-            if (entry->first.buf != nullptr) {
-//                fprintf(stderr, "Found `%.*s` --> %u\n", (int)s.size, s.buf, entry->second);
-                writePointer(entry->second.offset);
+            auto &entry = _strings.find(s);
+            if (entry.first.buf != nullptr) {
+//                fprintf(stderr, "Found `%.*s` --> %u\n", (int)s.size, s.buf, entry.second);
+                writePointer(entry.second.offset);
 #ifndef NDEBUG
                 _numSavedStrings++;
 #endif
                 if (asKey)
-                    entry->second.usedAsKey = true;
-                return entry->first;
+                    entry.second.usedAsKey = true;
+                return entry.first;
             } else {
                 auto offset = nextWritePos();
                 throwIf(offset > 1u<<31, MemoryError, "encoded data too large");

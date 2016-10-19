@@ -32,13 +32,34 @@ struct CaseListReporter : public ConsoleReporter {
             stream << "## " << file.substr(slash+1) << ":\n";
         }
         stream << "\t>>> " << _testInfo.name << "\n";
+        _firstSection = true;
+        _sectionNesting = 0;
         ConsoleReporter::testCaseStarting(_testInfo);
     }
     virtual void testCaseEnded( TestCaseStats const& _testCaseStats ) CATCH_OVERRIDE {
         ConsoleReporter::testCaseEnded(_testCaseStats);
     }
 
+    virtual void sectionStarting( SectionInfo const& _sectionInfo ) CATCH_OVERRIDE {
+        if (_firstSection)
+            _firstSection = false;
+        else {
+            for (unsigned i = 0; i < _sectionNesting; ++i)
+                stream << "\t";
+            stream << "\t--- " << _sectionInfo.name << "\n";
+        }
+        ++_sectionNesting;
+        ConsoleReporter::sectionStarting(_sectionInfo);
+    }
+
+    void sectionEnded( SectionStats const& sectionStats ) CATCH_OVERRIDE {
+        --_sectionNesting;
+        ConsoleReporter::sectionEnded(sectionStats);
+    }
+
     std::string _curFile;
+    bool _firstSection;
+    unsigned _sectionNesting;
 };
 
 REGISTER_REPORTER( "list", CaseListReporter )

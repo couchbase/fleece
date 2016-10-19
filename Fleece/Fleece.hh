@@ -16,3 +16,4 @@
 #include "Array.hh"
 #include "Encoder.hh"
 #include "JSONConverter.hh"
+#include "SharedKeys.hh"

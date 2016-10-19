@@ -31,11 +31,11 @@ namespace fleece {
 
         void clear() noexcept;
 
-        slot* find(slice key) const noexcept        {return find(key, key.hash());}
+        slot& find(slice key) const noexcept        {return find(key, key.hash());}
 
         void add(slice, const info&);
 
-        void addAt(slot*, slice key, const info&) noexcept;
+        void addAt(slot&, slice key, const info&) noexcept;
 
         class iterator {
         public:
@@ -57,7 +57,7 @@ namespace fleece {
 
     private:
         void allocTable(size_t size);
-        slot* find(fleece::slice key, uint32_t hash) const noexcept;
+        slot& find(fleece::slice key, uint32_t hash) const noexcept;
         bool _add(slice, uint32_t h, const info&) noexcept;
         void incCount()                             {if (++_count > _maxCount) grow();}
         void grow();

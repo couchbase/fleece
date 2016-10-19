@@ -43,7 +43,7 @@ namespace fleece {
         _count = 0;
     }
 
-    StringTable::slot* StringTable::find(fleece::slice key, uint32_t hash) const noexcept {
+    StringTable::slot& StringTable::find(fleece::slice key, uint32_t hash) const noexcept {
         assert(key.buf != nullptr);
         size_t index = hash & (_size - 1);
         slot *s = &_table[index];
@@ -57,28 +57,28 @@ namespace fleece {
         if (s->first.buf == nullptr) {
             s->second.hash = hash;
         }
-        return s;
+        return *s;
     }
 
     bool StringTable::_add(fleece::slice key, uint32_t h, const info& n) noexcept {
-        auto s = find(key, h);
-        if (s->first.buf)
+        slot &s = find(key, h);
+        if (s.first.buf)
             return false;
         else {
-            s->first = key;
-            s->second = n;
-            s->second.hash = h;
+            s.first = key;
+            s.second = n;
+            s.second.hash = h;
             return true;
         }
     }
 
-    void StringTable::addAt(slot* s, slice key, const info& n) noexcept {
+    void StringTable::addAt(slot& s, slice key, const info& n) noexcept {
         assert(key.buf != nullptr);
-        assert(s->first.buf == nullptr);
-        s->first = key;
-        auto hash = s->second.hash;
-        s->second = n;
-        s->second.hash = hash;
+        assert(s.first.buf == nullptr);
+        s.first = key;
+        auto hash = s.second.hash;
+        s.second = n;
+        s.second.hash = hash;
         incCount();
     }
 

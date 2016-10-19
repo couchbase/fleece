@@ -8,10 +8,7 @@
 
 #pragma once
 
-#include "Value.hh"
-#include "Array.hh"
-#include "Encoder.hh"
-#include "Writer.hh"
+#include "Fleece.hh"
 #include "Benchmark.hh"
 #include <ostream>
 

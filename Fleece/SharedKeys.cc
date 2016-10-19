@@ -13,24 +13,95 @@
 namespace fleece {
     using namespace std;
 
-    static const size_t kMaxCount = 2048;       // Max number of keys to store
-    static const size_t kMaxKeySize = 16;       // Max length of string to store
+    SharedKeys::~SharedKeys()
+    { }
 
 
-    void SharedKeys::update() {
+    bool SharedKeys::encode(slice str, int &key) {
+        // Is this string already encoded?
+        auto &slot = _table.find(str);
+        if (_usuallyTrue(slot.first.buf != nullptr)) {
+            key = slot.second.offset;
+            return true;
+        }
+        // Should this string be encoded?
+        if (count() >= _maxCount || str.size > _maxKeyLength || !isEligibleToEncode(str))
+            return false;
+        // OK, add to table:
+        key = add(str);
+        return true;
+    }
+
+
+    bool SharedKeys::isEligibleToEncode(slice str) {
+        for (size_t i = 0; i < str.size; ++i)
+            if (_usuallyFalse(!isalnum(str[i]) && str[i] != '_' && str[i] != '-'))
+                return false;
+        return true;
+    }
+
+
+
+    slice SharedKeys::decode(int key) {
+        throwIf(key < 0, InvalidData, "key must be non-negative");
+        if (_usuallyFalse(key >= (int)_byKey.size())) {
+            // Unrecognized key -- if not in a transaction, try reloading
+            resolveUnknownKey(key);
+            if (key >= (int)_byKey.size())
+                return nullslice;
+        }
+        return _byKey[key];
+    }
+
+
+    int SharedKeys::add(slice str) {
+        _byKey.emplace_back(str);
+        str = _byKey.back();
+        auto id = (uint32_t)count();
+        StringTable::info info{true, id};
+        _table.add(str, info);
+        return id;
+    }
+
+
+    void SharedKeys::revertToCount(size_t toCount) {
+        if (toCount >= count()) {
+            throwIf(toCount > count(), InternalError, "can't revert to a bigger count");
+            return;
+        }
+        _byKey.resize(toCount);
+        // StringTable doesn't support removing, so rebuild it:
+        _table.clear();
+        uint32_t key = 0;
+        for (auto i = _byKey.begin(); i != _byKey.end(); ++i) {
+            StringTable::info info{true, key++};
+            _table.add(*i, info);
+        }
+    }
+
+
+
+#pragma mark - PERSISTENCE:
+
+
+    PersistentSharedKeys::PersistentSharedKeys()
+    { }
+
+    
+    void PersistentSharedKeys::update() {
         if (!_inTransaction)
             read();
     }
 
 
-    void SharedKeys::transactionBegan() {
+    void PersistentSharedKeys::transactionBegan() {
         throwIf(_inTransaction, InternalError, "already in transaction");
         _inTransaction = true;
         read();     // Catch up with any external changes
     }
 
     
-    void SharedKeys::transactionEnded() {
+    void PersistentSharedKeys::transactionEnded() {
         throwIf(!_inTransaction, InternalError, "not in transaction");
         _committedPersistedCount = _persistedCount;
         _inTransaction = false;
@@ -38,7 +109,7 @@ namespace fleece {
 
 
     // Subclass's read() method calls this
-    bool SharedKeys::loadFrom(slice fleeceData) {
+    bool PersistentSharedKeys::loadFrom(slice fleeceData) {
         throwIf(changed(), InternalError, "can't load when already changed");
         const Value *v = Value::fromData(fleeceData);
         if (!v)
@@ -55,19 +126,19 @@ namespace fleece {
             slice str = i.value()->asString();
             if (!str)
                 return false;
-            add(str);
+            SharedKeys::add(str);
         }
         _committedPersistedCount = _persistedCount = count();
         return true;
     }
 
 
-    void SharedKeys::save() {
+    void PersistentSharedKeys::save() {
         if (!changed())
             return;
         Encoder enc;
-        enc.beginArray(_table.count());
-        for (auto i = _byKey.begin(); i != _byKey.end(); ++i)
+        enc.beginArray(count());
+        for (auto i = byKey().begin(); i != byKey().end(); ++i)
             enc.writeString(*i);
         enc.endArray();
         write(enc.extractOutput());     // subclass hook
@@ -75,67 +146,26 @@ namespace fleece {
     }
 
 
-    void SharedKeys::revert() {
-        if (count() <= _committedPersistedCount)
-            return;
+    void PersistentSharedKeys::revert() {
+        revertToCount(_committedPersistedCount);
         _persistedCount = _committedPersistedCount;
-        _byKey.resize(_committedPersistedCount);
-        // StringTable doesn't support removing, so rebuild it:
-        _table.clear();
-        uint32_t key = 0;
-        for (auto i = _byKey.begin(); i != _byKey.end(); ++i) {
-            StringTable::info info{true, key++};
-            _table.add(*i, info);
-        }
     }
 
 
-    bool SharedKeys::encode(slice str, int &key) {
+    int PersistentSharedKeys::add(slice str) {
         throwIf(!_inTransaction, InternalError, "not in transaction");
-        // Is this string already encoded?
-        auto slot = _table.find(str);
-        if (slot) {
-            key = slot->second.offset;
-            return true;
-        }
-        // Should this string be encoded?
-        if (count() >= kMaxCount)
-            return false;
-        if (str.size > kMaxKeySize)
-            return false;
-        for (size_t i = 0; i < str.size; ++i)
-            if (!isalnum(str[i]) && str[i] != '_' && str[i] != '-')
-                return false;
-        // OK, add to table:
-        key = add(str);
-        return true;
+        return SharedKeys::add(str);
     }
 
 
-    slice SharedKeys::decode(int key) {
-        throwIf(key < 0, InvalidData, "key must be non-negative");
-        if (key >= (int)_byKey.size()) {
-            // Unrecognized key -- if not in a transaction, try reloading
-            if (!_inTransaction)
-                read();
-            if (key >= (int)_byKey.size()) {
-                FleeceException::_throw(InvalidData, "Unrecognized key not in persistent storage");
-//                Warn("SharedKeys: Unrecognized key %d not in persistent storage (max=%ld)",
-//                     key, (long)_byKey.size());
-                return nullslice;
-            }
-        }
-        return _byKey[key];
-    }
-
-
-    int SharedKeys::add(slice str) {
-        _byKey.emplace_back(str);
-        str = _byKey.back();
-        auto id = (uint32_t)count();
-        StringTable::info info{true, id};
-        _table.add(str, info);
-        return id;
+    void PersistentSharedKeys::resolveUnknownKey(int key) {
+        // Presumably this is a new key that was added to the persistent mapping, so re-read it:
+        if (!_inTransaction)
+            read();
+//        if (key >= (int)_byKey.size()) {
+//            Warn("SharedKeys: Unrecognized key %d not in persistent storage (max=%ld)",
+//                 key, (long)_byKey.size());
+//        }
     }
 
 }

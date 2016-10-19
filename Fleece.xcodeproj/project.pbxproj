@@ -46,7 +46,7 @@
 		2797BCAC1C0FBFDE00E5C991 /* StringTable.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2797BCAA1C0FBFDE00E5C991 /* StringTable.cc */; };
 		2797BCAD1C0FBFDE00E5C991 /* StringTable.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2797BCAB1C0FBFDE00E5C991 /* StringTable.hh */; };
 		2797BCD11C122E9200E5C991 /* FleeceDocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 2797BCCF1C122E9200E5C991 /* FleeceDocument.h */; };
-		279AC52B1C07776A002C80DB /* ValueTests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 279AC52A1C07776A002C80DB /* ValueTests.cpp */; };
+		279AC52B1C07776A002C80DB /* ValueTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 279AC52A1C07776A002C80DB /* ValueTests.cc */; };
 		279AC5341C096872002C80DB /* fleece_tool.cc in Sources */ = {isa = PBXBuildFile; fileRef = 279AC5331C096872002C80DB /* fleece_tool.cc */; };
 		279AC5381C096B5C002C80DB /* libFleece.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 270FA25C1BF53CAD005DCB13 /* libFleece.a */; };
 		279AC53C1C097941002C80DB /* Value+Dump.cc in Sources */ = {isa = PBXBuildFile; fileRef = 279AC53B1C097941002C80DB /* Value+Dump.cc */; };
@@ -58,6 +58,7 @@
 		27E3DD431DB6A14200F2872D /* SharedKeys.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27E3DD411DB6A14200F2872D /* SharedKeys.hh */; };
 		27E3DD4C1DB6C32400F2872D /* CaseListReporter.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27E3DD4A1DB6C32400F2872D /* CaseListReporter.hh */; };
 		27E3DD4D1DB6C32400F2872D /* CatchHelper.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27E3DD4B1DB6C32400F2872D /* CatchHelper.hh */; };
+		27E3DD531DB7DB1C00F2872D /* SharedKeysTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27E3DD521DB7DB1C00F2872D /* SharedKeysTests.cc */; };
 		27FDF1A61DAF01300087B4E6 /* FleeceDocument.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2797BCD01C122E9200E5C991 /* FleeceDocument.mm */; };
 /* End PBXBuildFile section */
 
@@ -159,7 +160,7 @@
 		2797BCAB1C0FBFDE00E5C991 /* StringTable.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = StringTable.hh; sourceTree = "<group>"; };
 		2797BCCF1C122E9200E5C991 /* FleeceDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FleeceDocument.h; sourceTree = "<group>"; };
 		2797BCD01C122E9200E5C991 /* FleeceDocument.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FleeceDocument.mm; sourceTree = "<group>"; };
-		279AC52A1C07776A002C80DB /* ValueTests.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ValueTests.cpp; sourceTree = "<group>"; };
+		279AC52A1C07776A002C80DB /* ValueTests.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ValueTests.cc; sourceTree = "<group>"; };
 		279AC5311C096872002C80DB /* fleece */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = fleece; sourceTree = BUILT_PRODUCTS_DIR; };
 		279AC5331C096872002C80DB /* fleece_tool.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = fleece_tool.cc; sourceTree = "<group>"; };
 		279AC53B1C097941002C80DB /* Value+Dump.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "Value+Dump.cc"; sourceTree = "<group>"; };
@@ -175,6 +176,7 @@
 		27E3DD481DB6B86000F2872D /* README.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.txt; sourceTree = "<group>"; };
 		27E3DD4A1DB6C32400F2872D /* CaseListReporter.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = CaseListReporter.hh; sourceTree = "<group>"; };
 		27E3DD4B1DB6C32400F2872D /* CatchHelper.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = CatchHelper.hh; sourceTree = "<group>"; };
+		27E3DD521DB7DB1C00F2872D /* SharedKeysTests.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SharedKeysTests.cc; sourceTree = "<group>"; };
 		27EC8D5B1CEBA72E00199FE6 /* mn_wordlist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mn_wordlist.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -307,8 +309,9 @@
 			children = (
 				272E5A451BF7FD8F00848580 /* FleeceTests.cc */,
 				272E5A5A1BF8004100848580 /* FleeceTests.hh */,
-				279AC52A1C07776A002C80DB /* ValueTests.cpp */,
+				279AC52A1C07776A002C80DB /* ValueTests.cc */,
 				272E5A5B1BF800A100848580 /* EncoderTests.cc */,
+				27E3DD521DB7DB1C00F2872D /* SharedKeysTests.cc */,
 				27298E771C01A461000CFBA8 /* PerfTests.cc */,
 				272E5A5E1BF91DBE00848580 /* ObjCTests.mm */,
 				278163B81CE6BB8C00B94E32 /* C_Test.c */,
@@ -548,8 +551,9 @@
 				272E5A521BF7FE7100848580 /* FleeceTests.cc in Sources */,
 				27FDF1A61DAF01300087B4E6 /* FleeceDocument.mm in Sources */,
 				27298E781C01A461000CFBA8 /* PerfTests.cc in Sources */,
+				27E3DD531DB7DB1C00F2872D /* SharedKeysTests.cc in Sources */,
 				272E5A5F1BF91DBE00848580 /* ObjCTests.mm in Sources */,
-				279AC52B1C07776A002C80DB /* ValueTests.cpp in Sources */,
+				279AC52B1C07776A002C80DB /* ValueTests.cc in Sources */,
 				278163B91CE6BB8C00B94E32 /* C_Test.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
