@@ -172,8 +172,34 @@ namespace fleece {
         }
 
         const Value* get(Dict::key &keyToFind) const noexcept {
-            if (keyToFind._hasNumericKey)
-                return get(keyToFind._numericKey);
+            auto sharedKeys = keyToFind._sharedKeys;
+            if (sharedKeys) {
+                // Look for a numeric key first:
+                if (keyToFind._hasNumericKey)
+                    return get(keyToFind._numericKey);
+                // Key was not registered last we checked; see if dict contains any new keys:
+                if (_count == 0)
+                    return nullptr;
+                const Value *v = offsetby(_first, (_count-1)*2*kWidth);
+                bool hasStringKeys = (deref(v)->tag() == kStringTag);
+                bool hasIntKeys = false;
+                do {
+                    if (v->isInteger()) {
+                        hasIntKeys = true;
+                        if (sharedKeys->isUnknownKey((int)v->asInt())) {
+                            // Yup, try updating SharedKeys and re-encoding:
+                            sharedKeys->refresh();
+                        }
+                        break;
+                    }
+                } while (--v >= _first);
+                if (hasIntKeys && sharedKeys->encode(keyToFind.string(), keyToFind._numericKey))
+                    return get(keyToFind._numericKey);
+                else if (!hasStringKeys)
+                    return nullptr;
+            }
+
+            // Look up by string:
             const Value *key = findKeyByHint(keyToFind);
             if (!key) {
                 const Value *end = offsetby(_first, _count*2*kWidth);
@@ -433,6 +459,19 @@ namespace fleece {
         readKV();
     }
 
+    Dict::iterator::iterator(const Dict* d, const SharedKeys *sk) noexcept
+    :_a(d), _sharedKeys(sk)
+    {
+        readKV();
+    }
+
+    slice Dict::iterator::keyString() const noexcept {
+        slice keyStr = _key->asString();
+        if (!keyStr && _key->isInteger() && _sharedKeys)
+            keyStr = _sharedKeys->decode((int)_key->asInt());
+        return keyStr;
+    }
+
     Dict::iterator& Dict::iterator::operator++() {
         throwIf(_a._count == 0, OutOfRange, "iterating past end of dict");
         --_a._count;
@@ -465,7 +504,7 @@ namespace fleece {
 
 
     Dict::key::key(slice rawString, SharedKeys *sk, bool cachePointer)
-    :_rawString(rawString), _cachePointer(cachePointer)
+    :_rawString(rawString), _sharedKeys(sk), _cachePointer(cachePointer)
     {
         int n;
         if (sk && sk->encode(rawString, n)) {

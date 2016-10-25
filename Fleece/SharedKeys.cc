@@ -47,12 +47,11 @@ namespace fleece {
     }
 
 
-
-    slice SharedKeys::decode(int key) {
+    slice SharedKeys::decode(int key) const {
         throwIf(key < 0, InvalidData, "key must be non-negative");
-        if (_usuallyFalse(key >= (int)_byKey.size())) {
+        if (_usuallyFalse(isUnknownKey(key))) {
             // Unrecognized key -- if not in a transaction, try reloading
-            resolveUnknownKey(key);
+            const_cast<SharedKeys*>(this)->refresh();
             if (key >= (int)_byKey.size())
                 return nullslice;
         }
@@ -94,9 +93,8 @@ namespace fleece {
     { }
 
     
-    void PersistentSharedKeys::update() {
-        if (!_inTransaction)
-            read();
+    bool PersistentSharedKeys::refresh() {
+        return !_inTransaction && read();
     }
 
 
@@ -108,9 +106,10 @@ namespace fleece {
 
     
     void PersistentSharedKeys::transactionEnded() {
-        throwIf(!_inTransaction, InternalError, "not in transaction");
-        _committedPersistedCount = _persistedCount;
-        _inTransaction = false;
+        if (_inTransaction) {
+            _committedPersistedCount = _persistedCount;
+            _inTransaction = false;
+        }
     }
 
 
@@ -125,7 +124,7 @@ namespace fleece {
             return false;
 
         Array::iterator i(strs);
-        if (i.count() < count())
+        if (i.count() <= count())
             return false;
         i += (unsigned)count();           // Start at the first new string
         for (; i; ++i) {
@@ -161,17 +160,6 @@ namespace fleece {
     int PersistentSharedKeys::add(slice str) {
         throwIf(!_inTransaction, InternalError, "not in transaction");
         return SharedKeys::add(str);
-    }
-
-
-    void PersistentSharedKeys::resolveUnknownKey(int key) {
-        // Presumably this is a new key that was added to the persistent mapping, so re-read it:
-        if (!_inTransaction)
-            read();
-//        if (key >= (int)_byKey.size()) {
-//            Warn("SharedKeys: Unrecognized key %d not in persistent storage (max=%ld)",
-//                 key, (long)_byKey.size());
-//        }
     }
 
 }

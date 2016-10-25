@@ -31,6 +31,7 @@ namespace fleece {
     class Array;
     class Dict;
     class Writer;
+    class SharedKeys;
 
 
     /* Types of values -- same as JSON types, plus binary data */
@@ -93,8 +94,11 @@ namespace fleece {
 
         //////// Non-scalars:
 
-        /** Returns the exact contents of a string or data. Other types return a null slice. */
+        /** Returns the exact contents of a string. Other types return a null slice. */
         slice asString() const noexcept;
+
+        /** Returns the exact contents of a binary data value. Other types return a null slice. */
+        slice asData() const noexcept;
 
         /** If this value is an array, returns it cast to 'const Array*', else returns nullptr. */
         const Array* asArray() const noexcept;
@@ -108,9 +112,9 @@ namespace fleece {
         //////// Conversion:
 
         /** Writes a JSON representation to a Writer. */
-        void toJSON(Writer&) const;
+        void toJSON(Writer&, const SharedKeys* =nullptr) const;
         /** Returns a JSON representation. */
-        alloc_slice toJSON() const;
+        alloc_slice toJSON(const SharedKeys* =nullptr) const;
 
         /** Writes a full dump of the values in the data, including offsets and hex. */
         static bool dump(slice data, std::ostream&);
@@ -126,7 +130,7 @@ namespace fleece {
             New strings will be added to the table. The table can be used for multiple calls
             and will reduce the number of NSString objects created by the decoder.
             (Not noexcept, but can only throw Objective-C exceptions.) */
-        id toNSObject(NSMapTable *sharedStrings =nil) const;
+        id toNSObject(NSMapTable *sharedStrings =nil, const SharedKeys* = nullptr) const;
 
         /** Creates a new shared-string table for use with toNSObject. */
         static NSMapTable* createSharedStringsTable() noexcept;

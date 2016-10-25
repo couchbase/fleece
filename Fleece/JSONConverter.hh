@@ -46,7 +46,7 @@ namespace fleece {
         void reset();
 
         /** Convenience method to convert JSON to Fleece data. Throws FleeceException on error. */
-        static alloc_slice convertJSON(slice json);
+        static alloc_slice convertJSON(slice json, SharedKeys *sk =nullptr);
 
     //private:
         void push(struct jsonsl_state_st *state);

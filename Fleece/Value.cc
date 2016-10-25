@@ -184,13 +184,11 @@ namespace fleece {
     }
 
     slice Value::asString() const noexcept {
-        switch (tag()) {
-            case kStringTag:
-            case kBinaryTag:
-                return getStringBytes();
-            default:
-                return slice();
-        }
+        return tag() == kStringTag ? getStringBytes() : nullslice;
+    }
+
+    slice Value::asData() const noexcept {
+        return tag() == kBinaryTag ? getStringBytes() : nullslice;
     }
 
     const Array* Value::asArray() const noexcept {
@@ -293,7 +291,7 @@ namespace fleece {
             case kFloatTag:     return isDouble() ? 10 : 6;
             case kIntTag:       return 2 + (tinyValue() & 0x07);
             case kStringTag:
-            case kBinaryTag:    return (uint8_t*)asString().end() - (uint8_t*)this;
+            case kBinaryTag:    return (uint8_t*)getStringBytes().end() - (uint8_t*)this;
             case kArrayTag:
             case kDictTag:      return (uint8_t*)Array::impl(this)._first - (uint8_t*)this;
             case kPointerTagFirst:

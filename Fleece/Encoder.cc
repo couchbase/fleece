@@ -269,7 +269,7 @@ namespace fleece {
                 writeString(value->asString());
                 break;
             case kBinaryTag:
-                writeData(value->asString());
+                writeData(value->asData());
                 break;
             case kArrayTag: {
                 auto iter = value->asArray()->begin();

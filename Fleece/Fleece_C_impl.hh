@@ -21,6 +21,7 @@ typedef const Array* FLArray;
 typedef const Dict* FLDict;
 typedef slice FLSlice;
 typedef FLEncoderImpl* FLEncoder;
+typedef SharedKeys* FLSharedKeys;
 
 
 #include "Fleece.h" /* the C header */

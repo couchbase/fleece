@@ -45,7 +45,7 @@ namespace fleece {
         bool encodeAndAdd(slice string, int &key);
 
         /** Decodes an integer back to a string. */
-        slice decode(int key);
+        slice decode(int key) const;
 
         /** A vector whose indices are encoded keys and values are the strings. */
         const std::vector<alloc_slice>& byKey() const   {return _byKey;}
@@ -58,14 +58,12 @@ namespace fleece {
             if the string contains only alphanumeric characters, '_' or '-'. */
         virtual bool isEligibleToEncode(slice str);
 
+        bool isUnknownKey(int key) const                {return key >= (int)_byKey.size();}
+
+        virtual bool refresh()                          {return false;}
+
         static const size_t kDefaultMaxCount = 2048;        // Max number of keys to store
         static const size_t kDefaultMaxKeyLength = 16;      // Max length of string to store
-        
-
-    protected:
-        /** Called when `decode` doesn't recognize the key, giving the subclass a chance to update
-            the mapping, hopefully including the new key. */
-        virtual void resolveUnknownKey(int key) { }
 
     private:
         friend class PersistentSharedKeys;
@@ -90,7 +88,7 @@ namespace fleece {
         PersistentSharedKeys();
 
         /** Updates state from persistent storage. Not usually necessary. */
-        void update();
+        virtual bool refresh() override;
 
         /** Call this right after a transaction has started; it enables adding new strings. */
         void transactionBegan();
@@ -120,7 +118,6 @@ namespace fleece {
 
     private:
         virtual int add(slice str) override;
-        virtual void resolveUnknownKey(int key) override;
 
         size_t _persistedCount {0};             // Number of strings written to storage
         size_t _committedPersistedCount {0};    // Number of strings written to storage & committed

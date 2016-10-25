@@ -33,6 +33,8 @@ extern "C" {
     typedef const struct _FLArray* FLArray;     ///< A reference to an array value.
     typedef const struct _FLDict*  FLDict;      ///< A reference to a dictionary (map) value.
     typedef struct _FLEncoder* FLEncoder;
+    typedef struct _FLSharedKeys* FLSharedKeys;
+
 
     /** A simple reference to a block of memory. Does not imply ownership. */
     typedef struct {
@@ -192,8 +194,11 @@ extern "C" {
     /** Returns a value coerced to a 64-bit floating point number. */
     double FLValue_AsDouble(FLValue);
 
-    /** Returns the exact contents of a string or data value, or null for all other types. */
+    /** Returns the exact contents of a string value, or null for all other types. */
     FLSlice FLValue_AsString(FLValue);
+
+    /** Returns the exact contents of a data value, or null for all other types. */
+    FLSlice FLValue_AsData(FLValue);
 
     /** If a FLValue represents an array, returns it cast to FLArray, else nullptr. */
     FLArray FLValue_AsArray(FLValue);
@@ -258,23 +263,22 @@ extern "C" {
         Returns nullptr if the value is not found or if the dictionary is nullptr. */
     FLValue FLDict_Get(FLDict, FLSlice keyString);
 
-    /** Looks up a key in an unsorted (or sorted) dictionary. Slower than FLDictGet. */
+    /** Looks up a key in an unsorted (or sorted) dictionary. Slower than FLDict_Get. */
     FLValue FLDict_GetUnsorted(FLDict, FLSlice keyString);
 
 
     /** Opaque dictionary iterator. Put one on the stack and pass its address to
-        FLDictIteratorBegin. */
+        FLDictIterator_Begin. */
     typedef struct {
         void* _private1;
         uint32_t _private2;
         bool _private3;
-        void* _private4;
-        void* _private5;
+        void* _private4[3];
     } FLDictIterator;
 
     /** Initializes a FLDictIterator struct to iterate over a dictionary.
-        Call FLDictIteratorGetKey and FLDictIteratorGetValue to get the first item,
-        then FLDictIteratorNext. */
+        Call FLDictIterator_GetKey and FLDictIterator_GetValue to get the first item,
+        then FLDictIterator_Next. */
     void FLDictIterator_Begin(FLDict, FLDictIterator*);
 
     /** Returns the current key being iterated over. */
@@ -292,7 +296,7 @@ extern "C" {
         Be aware that the lookup operations that use these will write into the struct to store
         "hints" that speed up future searches. */
     typedef struct {
-        void* _private1[3];
+        void* _private1[4];
         uint32_t _private2, private3;
         bool _private4, private5;
     } FLDictKey;
@@ -304,6 +308,8 @@ extern "C" {
                 only ever be used with Dicts that live in the same stored data buffer.
         @return  The opaque key. */
     FLDictKey FLDictKey_Init(FLSlice string, bool cachePointers);
+
+    FLDictKey FLDictKey_InitWithSharedKeys(FLSlice string, FLSharedKeys sharedKeys);
 
     /** Returns the string value of the key (which it was initialized with.) */
     FLSlice FLDictKey_GetString(const FLDictKey *key);

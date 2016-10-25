@@ -45,6 +45,7 @@ uint64_t FLValue_AsUnsigned(FLValue v)          {return v ? v->asUnsigned() : 0;
 float FLValue_AsFloat(FLValue v)                {return v ? v->asFloat() : 0.0;}
 double FLValue_AsDouble(FLValue v)              {return v ? v->asDouble() : 0.0;}
 FLSlice FLValue_AsString(FLValue v)             {return v ? v->asString() : nullslice;}
+FLSlice FLValue_AsData(FLValue v)               {return v ? v->asData() : nullslice;}
 FLArray FLValue_AsArray(FLValue v)              {return v ? v->asArray() : nullptr;}
 FLDict FLValue_AsDict(FLValue v)                {return v ? v->asDict() : nullptr;}
 
@@ -162,6 +163,13 @@ FLDictKey FLDictKey_Init(FLSlice string, bool cachePointers) {
     FLDictKey key;
     static_assert(sizeof(FLDictKey) >= sizeof(Dict::key), "FLDictKey is too small");
     new (&key) Dict::key(string, nullptr, cachePointers);
+    return key;
+}
+
+FLDictKey FLDictKey_InitWithSharedKeys(FLSlice string, FLSharedKeys sharedKeys) {
+    FLDictKey key;
+    static_assert(sizeof(FLDictKey) >= sizeof(Dict::key), "FLDictKey is too small");
+    new (&key) Dict::key(string, (SharedKeys*)sharedKeys, false);
     return key;
 }
 

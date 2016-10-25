@@ -77,8 +77,9 @@ namespace fleece {
         return (_error == JSONSL_ERROR_SUCCESS);
     }
 
-    /*static*/ alloc_slice JSONConverter::convertJSON(slice json) {
+    /*static*/ alloc_slice JSONConverter::convertJSON(slice json, SharedKeys *sk) {
         Encoder enc;
+        enc.setSharedKeys(sk);
         JSONConverter cvt(enc);
         throwIf(!cvt.encodeJSON(slice(json)), JSONError, cvt.errorMessage());
         return enc.extractOutput();

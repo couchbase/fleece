@@ -16,6 +16,7 @@
 #include "Value.hh"
 #include "Array.hh"
 #include "Writer.hh"
+#include "SharedKeys.hh"
 #include "FleeceException.hh"
 #include <ostream>
 #include <ctime>
@@ -25,7 +26,8 @@
 
 namespace fleece {
 
-    static void writeEscaped(Writer &out, slice str) {
+    // Writes a JSON string, with all necessary escapes
+    static void writeJSONString(Writer &out, slice str) {
         out << '"';
         auto start = (const uint8_t*)str.buf;
         auto end = (const uint8_t*)str.end();
@@ -33,7 +35,7 @@ namespace fleece {
             uint8_t ch = *p;
             if (ch == '"' || ch == '\\' || ch < 32 || ch == 127) {
                 // Write characters from start up to p-1:
-                out << std::string((char*)start, p-start);
+                out.write((char*)start, p-start);
                 start = p + 1;
                 switch (ch) {
                     case '"':
@@ -56,18 +58,18 @@ namespace fleece {
                 }
             }
         }
-        out << std::string((char*)start, end-start);
+        out.write((char*)start, end-start);
         out << '"';
     }
 
-    alloc_slice Value::toJSON() const {
+    alloc_slice Value::toJSON(const SharedKeys *sk) const {
         Writer writer;
-        toJSON(writer);
+        toJSON(writer, sk);
         return writer.extractOutput();
     }
 
 
-    void Value::toJSON(Writer &out) const {
+    void Value::toJSON(Writer &out, const SharedKeys *sk) const {
         switch (type()) {
             case kNull:
                 out << slice("null");
@@ -92,10 +94,11 @@ namespace fleece {
                 return;
             }
             case kString:
-                return writeEscaped(out, asString());
+                writeJSONString(out, asString());
+                return;
             case kData:
                 out << '"';
-                out.writeBase64(asString());
+                out.writeBase64(asData());
                 out << '"';
                 return;
             case kArray: {
@@ -106,7 +109,7 @@ namespace fleece {
                         first = false;
                     else
                         out << ',';
-                    iter->toJSON(out);
+                    iter->toJSON(out, sk);
                 }
                 out << ']';
                 return;
@@ -114,14 +117,18 @@ namespace fleece {
             case kDict: {
                 out << '{';
                 bool first = true;
-                for (auto iter = asDict()->begin(); iter; ++iter) {
+                for (auto iter = asDict()->begin(sk); iter; ++iter) {
                     if (first)
                         first = false;
                     else
                         out << ',';
-                    iter.key()->toJSON(out);
+                    slice keyStr = iter.keyString();
+                    if (keyStr)
+                        writeJSONString(out, keyStr);
+                    else
+                        iter.key()->toJSON(out, sk);
                     out << ':';
-                    iter.value()->toJSON(out);
+                    iter.value()->toJSON(out, sk);
                 }
                 out << '}';
                 return;
