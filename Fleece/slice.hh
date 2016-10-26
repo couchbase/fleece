@@ -50,7 +50,7 @@ namespace fleece {
 
         constexpr slice()                           :buf(nullptr), size(0) {}
         constexpr slice(const void* b, size_t s)    :buf(b), size(s) {}
-        constexpr slice(const void* start,
+        slice(const void* start,
                         const void* end)          :buf(start), size((uint8_t*)end-(uint8_t*)start){}
 
         slice(const std::string& str)               :buf(&str[0]), size(str.length()) {}

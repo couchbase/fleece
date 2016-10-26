@@ -20,6 +20,8 @@
 
     #define alloca(SIZE)                    _malloca(SIZE)
     #define random()                        rand()
+    #define srandom(s)                      srand(s)
+    #define srandomdev()                    time_t now;time(&now);srand(now);
 
     #include <BaseTsd.h>
     typedef SSIZE_T ssize_t;
