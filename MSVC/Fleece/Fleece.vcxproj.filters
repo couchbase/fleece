@@ -66,5 +66,8 @@
     <ClCompile Include="..\..\Fleece\Path.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Fleece\SharedKeys.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

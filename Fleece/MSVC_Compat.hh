@@ -13,15 +13,16 @@
 
     #define _usuallyTrue(VAL)               (VAL)
     #define _usuallyFalse(VAL)              (VAL)
+    #define NOINLINE                        __declspec(noinline)
 
     #define __has_extension(X)              0
     #define __has_feature(F)                0
     #define __func__                        __FUNCTION__
 
-    #define alloca(SIZE)                    _malloca(SIZE)
     #define random()                        rand()
     #define srandom(s)                      srand(s)
     #define srandomdev()                    time_t now;time(&now);srand(now);
+    #define localtime_r(a, b)               localtime_s(b, a)
 
     #include <BaseTsd.h>
     typedef SSIZE_T ssize_t;
@@ -45,6 +46,7 @@
 
     #define _usuallyTrue(VAL)               __builtin_expect(VAL, true)
     #define _usuallyFalse(VAL)              __builtin_expect(VAL, false)
+    #define NOINLINE                        __attribute((noinline))
 
     #ifndef __APPLE__
     #define srandomdev() 
