@@ -95,6 +95,8 @@ namespace fleece {
             (as they are by default.) */
         const Value* get(slice keyToFind) const noexcept;
 
+        const Value* get(slice keyToFind, SharedKeys*) const noexcept;
+
         /** Looks up the Value for an integer key, assuming the keys are sorted
             (as they are by default.) */
         const Value* get(int numericKeyToFind) const noexcept;

@@ -347,9 +347,9 @@
 		278163B21CE69C7300B94E32 /* C */ = {
 			isa = PBXGroup;
 			children = (
+				278163B41CE69CA800B94E32 /* Fleece.h */,
 				278163B31CE69CA800B94E32 /* Fleece_C_impl.cc */,
 				270515551D90596000D62D05 /* Fleece_C_impl.hh */,
-				278163B41CE69CA800B94E32 /* Fleece.h */,
 				270515521D9053BE00D62D05 /* Fleece+CoreFoundation.h */,
 				270515531D9058F200D62D05 /* Fleece+CoreFoundation.mm */,
 			);

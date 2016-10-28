@@ -14,6 +14,7 @@
 //  and limitations under the License.
 
 #include "Fleece_C_impl.hh"
+#include "Fleece.h"
 
 
 namespace fleece {
@@ -137,6 +138,10 @@ uint32_t FLDict_Count(FLDict d)                          {return d ? d->count() 
 FLValue FLDict_Get(FLDict d, FLSlice keyString)          {return d ? d->get(keyString) : nullptr;}
 FLValue FLDict_GetUnsorted(FLDict d, FLSlice keyString)  {return d ? d->get_unsorted(keyString) : nullptr;}
 
+FLValue FLDict_GetSharedKey(FLDict d, FLSlice keyString, FLSharedKeys sk) {
+    return d ? d->get(keyString, sk) : nullptr;
+}
+
 void FLDictIterator_Begin(FLDict d, FLDictIterator* i) {
     static_assert(sizeof(FLDictIterator) >= sizeof(Dict::iterator), "FLDictIterator is too small");
     new (i) Dict::iterator(d);
@@ -212,6 +217,9 @@ void FLEncoder_Free(FLEncoder e)                         {
     delete e;
 }
 
+void FLEncoder_SetSharedKeys(FLEncoder e, FLSharedKeys sk) {
+    e->setSharedKeys(sk);
+}
 
 #define ENCODER_TRY(METHOD) \
     try{ \

@@ -1,5 +1,5 @@
 //
-//  Encoding+ObjC.mm
+//  Value+ObjC.mm
 //  Fleece
 //
 //  Created by Jens Alfke on 1/29/15.
@@ -33,27 +33,19 @@
 
 namespace fleece {
 
+    // Creates an NSMapTable that maps opaque pointers to Obj-C objects (NSStrings).
     NSMapTable* Value::createSharedStringsTable() noexcept {
         return [[NSMapTable alloc] initWithKeyOptions: NSPointerFunctionsOpaquePersonality |
                                                        NSPointerFunctionsOpaqueMemory
-                                         valueOptions: NSPointerFunctionsStrongMemory
+                                         valueOptions: NSPointerFunctionsObjectPersonality |
+                                                       NSPointerFunctionsStrongMemory
                                              capacity: 8];
     }
 
 
-    static NSString* getSharedString(const void* identifier,
-                                     slice strSlice,
-                                     __unsafe_unretained NSMapTable *sharedStrings,
-                                     const SharedKeys *sk)
-    {
-        if (!strSlice)
-            return nil;
-        NSString* str = MapGet(sharedStrings, identifier);
-        if (!str) {
-            str = (NSString*)strSlice;
-            throwIf(!str, InvalidData, "Invalid UTF-8 in string");
-            MapInsert(sharedStrings, identifier, str);
-        }
+    static NSString* convertString(slice strSlice) {
+        auto str = (NSString*)strSlice;
+        throwIf(!str, InvalidData, "Invalid UTF-8 in string");
         return str;
     }
 
@@ -85,11 +77,15 @@ namespace fleece {
                 if (sharedStrings != nil
                                && strSlice.size >= internal::kMinSharedStringSize
                                && strSlice.size <= internal::kMaxSharedStringSize) {
-                    return getSharedString(this, strSlice, sharedStrings, sk);
-                } else {
-                    NSString* str = (NSString*)strSlice;
-                    throwIf(!str, InvalidData, "Invalid UTF-8 in string");
+                    // Look up an existing shared string for this Value*:
+                    NSString* str = MapGet(sharedStrings, this);
+                    if (!str) {
+                        str = convertString(strSlice);
+                        MapInsert(sharedStrings, this, str);
+                    }
                     return str;
+                } else {
+                    return convertString(strSlice);
                 }
             }
             case kData:
@@ -108,9 +104,18 @@ namespace fleece {
                 for (; iter; ++iter) {
                     NSString* key = nil;
                     if (iter.key()->isInteger() && sk) {
-                        auto encoded = iter.key()->asInt();
-                        key = getSharedString((void*)encoded, sk->decode((int)encoded),
-                                              sharedStrings, sk);
+                        // Decode int key using SharedKeys:
+                        auto encodedKey = (int)iter.key()->asInt();
+                        key = (__bridge NSString*)sk->platformStringForKey(encodedKey);
+                        if (!key) {
+                            slice strSlice = sk->decode(encodedKey);
+                            if (strSlice) {
+                                key = convertString(strSlice);
+                                sk->setPlatformStringForKey(encodedKey,
+                                                            CFRetain((__bridge CFStringRef)key));
+                                //TODO: Strings need to be CFRelease'd when the SharedKeys is destructed.
+                            }
+                        }
                     }
                     if (!key)
                         key = iter.key()->toNSObject(sharedStrings, sk);

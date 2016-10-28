@@ -58,6 +58,24 @@ namespace fleece {
         return _byKey[key];
     }
 
+    
+    SharedKeys::PlatformString SharedKeys::platformStringForKey(int key) const {
+        throwIf(key < 0, InvalidData, "key must be non-negative");
+        if ((unsigned)key >= _platformStringsByKey.size())
+            return nullptr;
+        return _platformStringsByKey[key];
+    }
+
+
+    void SharedKeys::setPlatformStringForKey(int key, SharedKeys::PlatformString platformKey) const {
+        throwIf(key < 0, InvalidData, "key must be non-negative");
+        throwIf((unsigned)key >= _byKey.size(), InvalidData, "key is not yet known");
+        auto &strings = const_cast<SharedKeys*>(this)->_platformStringsByKey;
+        if ((unsigned)key >= _platformStringsByKey.size())
+            strings.resize(key + 1);
+        strings[key] = platformKey;
+    }
+
 
     int SharedKeys::add(slice str) {
         _byKey.emplace_back(str);

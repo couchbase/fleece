@@ -263,6 +263,11 @@ extern "C" {
         Returns nullptr if the value is not found or if the dictionary is nullptr. */
     FLValue FLDict_Get(FLDict, FLSlice keyString);
 
+    /** Looks up a key in a _sorted_ dictionary, using a shared-keys mapping.
+        If the database has a shared-keys mapping, you MUST use this call instead of FLDict_Get.
+        Returns nullptr if the value is not found or if the dictionary is nullptr. */
+    FLValue FLDict_GetSharedKey(FLDict d, FLSlice keyString, FLSharedKeys sk);
+
     /** Looks up a key in an unsorted (or sorted) dictionary. Slower than FLDict_Get. */
     FLValue FLDict_GetUnsorted(FLDict, FLSlice keyString);
 
@@ -354,6 +359,9 @@ extern "C" {
 
     /** Frees the space used by an encoder. */
     void FLEncoder_Free(FLEncoder);
+
+    /** Tells the encoder to use a shared-keys mapping when encoding dictionary keys. */
+    void FLEncoder_SetSharedKeys(FLEncoder, FLSharedKeys);
 
     /** Resets the state of an encoder without freeing it. It can then be reused to encode
         another value. */

@@ -14,6 +14,11 @@
 NSString* const FLErrorDomain = @"Fleece";
 
 
+NSMapTable* FLCreateSharedStringsTable(void) {
+    return Value::createSharedStringsTable();
+}
+
+
 bool FLEncoder_WriteNSObject(FLEncoder encoder, id obj) {
     try {
         encoder->write(obj);
@@ -23,9 +28,10 @@ bool FLEncoder_WriteNSObject(FLEncoder encoder, id obj) {
 }
 
 
-id FLValue_GetNSObject(FLValue value) {
+id FLValue_GetNSObject(FLValue value, FLSharedKeys sharedKeys, NSMapTable* sharedStrings) {
     try {
-        return value->toNSObject();
+        if (value)
+            return value->toNSObject(sharedStrings, sharedKeys);
     } catchError(nullptr)
     return nullptr;
 }
@@ -33,7 +39,8 @@ id FLValue_GetNSObject(FLValue value) {
 
 FLValue FLDict_GetWithNSString(FLDict dict, NSString* key) {
     try {
-        return dict->get(key);
+        if (dict)
+            return dict->get(key);
     } catchError(nullptr)
     return nullptr;
 }
@@ -56,8 +63,8 @@ bool FLEncoder_WriteCFObject(FLEncoder encoder, CFTypeRef obj) {
 }
 
 
-CFTypeRef FLValue_CopyCFObject(FLValue value) {
-    id obj = FLValue_GetNSObject(value);
+CFTypeRef FLValue_CopyCFObject(FLValue value, FLSharedKeys sharedKeys) {
+    id obj = FLValue_GetNSObject(value, sharedKeys, nullptr);
     return obj ? CFBridgingRetain(obj) : nullptr;
 }
 

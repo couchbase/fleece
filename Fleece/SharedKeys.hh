@@ -65,6 +65,13 @@ namespace fleece {
         static const size_t kDefaultMaxCount = 2048;        // Max number of keys to store
         static const size_t kDefaultMaxKeyLength = 16;      // Max length of string to store
 
+        typedef const void* PlatformString;
+
+        /** Allows an uninterpreted value (like a pointer to a platform String object) to be
+            associated with an encoded key. */
+        void setPlatformStringForKey(int key, PlatformString) const;
+        PlatformString platformStringForKey(int key) const;
+
     private:
         friend class PersistentSharedKeys;
 
@@ -72,6 +79,7 @@ namespace fleece {
 
         fleece::StringTable _table;                     // Hash table mapping slice->int
         std::vector<alloc_slice> _byKey;                // Reverse mapping, int->slice
+        std::vector<PlatformString> _platformStringsByKey; // Reverse mapping, int->platform key
         size_t _maxCount {kDefaultMaxCount};            // Max number of strings I will hold
         size_t _maxKeyLength {kDefaultMaxKeyLength};    // Max length of string I will add
     };

@@ -171,6 +171,33 @@ namespace fleece {
             return deref(next(key));
         }
 
+        const bool lookupSharedKey(slice keyToFind, SharedKeys *sharedKeys, int &encoded) const noexcept {
+            if (sharedKeys->encode(keyToFind, encoded))
+                return true;
+            // Key is not known to my SharedKeys; see if dict contains any unknown keys:
+            if (_count == 0)
+                return false;
+            const Value *v = offsetby(_first, (_count-1)*2*kWidth);
+            do {
+                if (v->isInteger()) {
+                    if (sharedKeys->isUnknownKey((int)v->asInt())) {
+                        // Yup, try updating SharedKeys and re-encoding:
+                        sharedKeys->refresh();
+                        return sharedKeys->encode(keyToFind, encoded);
+                    }
+                    return false;
+                }
+            } while (--v >= _first);
+            return false;
+        }
+
+        inline const Value* get(slice keyToFind, SharedKeys *sharedKeys) const noexcept {
+            int encoded;
+            if (sharedKeys && lookupSharedKey(keyToFind, sharedKeys, encoded))
+                return get(encoded);
+            return get(keyToFind);
+        }
+
         const Value* get(Dict::key &keyToFind) const noexcept {
             auto sharedKeys = keyToFind._sharedKeys;
             if (sharedKeys) {
@@ -180,23 +207,10 @@ namespace fleece {
                 // Key was not registered last we checked; see if dict contains any new keys:
                 if (_count == 0)
                     return nullptr;
-                const Value *v = offsetby(_first, (_count-1)*2*kWidth);
-                bool hasStringKeys = (deref(v)->tag() == kStringTag);
-                bool hasIntKeys = false;
-                do {
-                    if (v->isInteger()) {
-                        hasIntKeys = true;
-                        if (sharedKeys->isUnknownKey((int)v->asInt())) {
-                            // Yup, try updating SharedKeys and re-encoding:
-                            sharedKeys->refresh();
-                        }
-                        break;
-                    }
-                } while (--v >= _first);
-                if (hasIntKeys && sharedKeys->encode(keyToFind.string(), keyToFind._numericKey))
+                if (lookupSharedKey(keyToFind._rawString, sharedKeys, keyToFind._numericKey)) {
+                    keyToFind._hasNumericKey = true;
                     return get(keyToFind._numericKey);
-                else if (!hasStringKeys)
-                    return nullptr;
+                }
             }
 
             // Look up by string:
@@ -416,8 +430,15 @@ namespace fleece {
     const Value* Dict::get(slice keyToFind) const noexcept {
         if (isWideArray())
             return dictImpl<true>(this).get(keyToFind);
+            else
+                return dictImpl<false>(this).get(keyToFind);
+                }
+    
+    const Value* Dict::get(slice keyToFind, SharedKeys *sk) const noexcept {
+        if (isWideArray())
+            return dictImpl<true>(this).get(keyToFind, sk);
         else
-            return dictImpl<false>(this).get(keyToFind);
+            return dictImpl<false>(this).get(keyToFind, sk);
     }
 
     const Value* Dict::get(int keyToFind) const noexcept {
