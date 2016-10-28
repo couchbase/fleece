@@ -8,7 +8,7 @@
 
 #pragma once
 #include <exception>
-#include "MSVC_Compat.hh"
+#include "PlatformCompat.hh"
 
 namespace fleece {
 

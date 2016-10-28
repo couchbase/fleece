@@ -19,7 +19,7 @@
 #include "Endian.hh"
 #include "FleeceException.hh"
 #include "varint.hh"
-#include "MSVC_Compat.hh"
+#include "PlatformCompat.hh"
 #include <assert.h>
 #include <math.h>
 

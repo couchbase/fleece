@@ -9,7 +9,7 @@
 #include "Path.hh"
 #include "SharedKeys.hh"
 #include "FleeceException.hh"
-#include "MSVC_Compat.hh"
+#include "PlatformCompat.hh"
 
 using namespace std;
 

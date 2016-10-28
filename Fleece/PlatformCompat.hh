@@ -1,5 +1,5 @@
 //
-//  MSVC_Compat.hh
+//  PlatformCompat.hh
 //  Fleece
 //
 //  Created by Jens Alfke on 9/8/16.
@@ -21,15 +21,11 @@
 
     #define random()                        rand()
     #define srandom(s)                      srand(s)
-    #define srandomdev()                    time_t now;time(&now);srand(now);
+
     #define localtime_r(a, b)               localtime_s(b, a)
 
     #include <BaseTsd.h>
     typedef SSIZE_T ssize_t;
-
-    #define MKDIR(PATH, MODE) ::_mkdir(PATH)
-    #define chmod ::_chmod
-    #define fdopen ::_fdopen
 
     #define MAXFLOAT FLT_MAX
 
@@ -39,6 +35,9 @@
     // WARNING: sizeof() will not work on this array since it's actually declared as a pointer.
     #define StackArray(NAME, TYPE, SIZE)    TYPE* NAME = (TYPE*)_malloca(sizeof(TYPE)*(SIZE))
 
+    #define MKDIR(PATH, MODE) ::_mkdir(PATH)
+    #define chmod  ::_chmod
+    #define fdopen ::_fdopen
     #define fseeko fseek
     #define ftello ftell
 
@@ -47,12 +46,6 @@
     #define _usuallyTrue(VAL)               __builtin_expect(VAL, true)
     #define _usuallyFalse(VAL)              __builtin_expect(VAL, false)
     #define NOINLINE                        __attribute((noinline))
-
-    #ifndef __APPLE__
-    #define srandomdev() 
-    #endif
-
-    #define MKDIR(PATH, MODE) ::mkdir(PATH, (mode_t)MODE)
 
     #ifndef __printflike
     #define __printflike(fmtarg, firstvararg) __attribute__((__format__ (__printf__, fmtarg, firstvararg)))
@@ -63,5 +56,6 @@
 
     #define StackArray(NAME, TYPE, SIZE)    TYPE NAME[(SIZE)]
 
-#endif
+    #define MKDIR(PATH, MODE) ::mkdir(PATH, (mode_t)MODE)
 
+#endif

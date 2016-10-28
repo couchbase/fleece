@@ -18,7 +18,7 @@
 #include "Internal.hh"
 #include "FleeceException.hh"
 #include "varint.hh"
-#include "MSVC_Compat.hh"
+#include "PlatformCompat.hh"
 #include <assert.h>
 #include <iostream>
 

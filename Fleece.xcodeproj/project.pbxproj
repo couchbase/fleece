@@ -118,7 +118,7 @@
 		270FA2761BF53CEA005DCB13 /* varint.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = varint.cc; sourceTree = "<group>"; };
 		270FA2771BF53CEA005DCB13 /* varint.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = varint.hh; sourceTree = "<group>"; };
 		270FA2861BF53D32005DCB13 /* forestdb_endian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = forestdb_endian.h; sourceTree = "<group>"; };
-		2715BA1D1D820C690061D92E /* MSVC_Compat.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MSVC_Compat.hh; sourceTree = "<group>"; };
+		2715BA1D1D820C690061D92E /* PlatformCompat.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = PlatformCompat.hh; sourceTree = "<group>"; };
 		27298E3A1C00F812000CFBA8 /* JSONConverter.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSONConverter.cc; sourceTree = "<group>"; };
 		27298E491C00F8A9000CFBA8 /* jsonsl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jsonsl.c; sourceTree = "<group>"; };
 		27298E4A1C00F8A9000CFBA8 /* jsonsl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = jsonsl.h; sourceTree = "<group>"; };
@@ -277,7 +277,7 @@
 				278163BB1CE7A72300B94E32 /* KeyTree.hh */,
 				275CED501D3EF7BE001DE46C /* FleeceException.cc */,
 				275CED511D3EF7BE001DE46C /* FleeceException.hh */,
-				2715BA1D1D820C690061D92E /* MSVC_Compat.hh */,
+				2715BA1D1D820C690061D92E /* PlatformCompat.hh */,
 				2746DD3B1D931BE9000517BC /* Benchmark.hh */,
 			);
 			name = Utilities;

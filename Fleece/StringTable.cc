@@ -14,7 +14,7 @@
 //  and limitations under the License.
 
 #include "StringTable.hh"
-#include "MSVC_Compat.hh"
+#include "PlatformCompat.hh"
 #include <algorithm>
 #include <assert.h>
 #include <stdlib.h>
