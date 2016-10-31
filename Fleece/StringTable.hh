@@ -62,7 +62,7 @@ namespace fleece {
         void incCount()                             {if (++_count > _maxCount) grow();}
         void grow();
 
-        static const size_t kInitialTableSize = 16;
+        static const size_t kInitialTableSize = 64;
 
         slot *_table;
         size_t _size;

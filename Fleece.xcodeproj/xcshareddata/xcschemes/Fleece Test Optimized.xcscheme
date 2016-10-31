@@ -69,6 +69,10 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "[.Perf]"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "&quot;Obj-C PerfSerialize&quot;"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

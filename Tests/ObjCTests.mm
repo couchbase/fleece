@@ -223,3 +223,40 @@ TEST_CASE("Obj-C PerfReadNames", "[.Perf]") {
         fprintf(stderr, "Iterating people (Fleece) took %g ms\n", st.elapsedMS()/10000);
     }
 }
+
+TEST_CASE("Obj-C PerfSerialize", "[.Perf]") {
+    @autoreleasepool {
+        NSData *data = [NSData dataWithContentsOfFile: @kTestFilesDir "1000people.json"];
+        NSArray *people = [NSJSONSerialization JSONObjectWithData: data options: 0 error: nullptr];
+        REQUIRE([people isKindOfClass: [NSArray class]]);
+
+        size_t totalSize = 0;
+        Benchmark b;
+
+        int rep;
+        for (rep = 0; rep < 1000; ++rep) {
+            b.start();
+            @autoreleasepool {
+#if 1
+                Encoder enc;
+                for (NSDictionary *person in people) {
+                    enc.write(person);
+                    auto d = enc.extractOutput();
+                    totalSize += d.size;
+                    enc.reset();
+                }
+#else
+                Encoder enc;
+                enc.write(people);
+                auto d = enc.extractOutput();
+                totalSize += d.size;
+#endif
+            }
+            b.stop();
+        }
+        b.printReport(1e6/rep, "us");
+        // 10/30/16: 12.4us/dict (using isKindOf)
+        //           11.3us/dict (using category)
+        fprintf(stderr, "Total size = %zu bytes\n", totalSize);
+    }
+}

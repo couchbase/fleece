@@ -15,6 +15,7 @@
 
 #include "Writer.hh"
 #include "FleeceException.hh"
+#include "PlatformCompat.hh"
 #include "decode.h"
 #include "encode.h"
 #include <assert.h>
@@ -81,14 +82,18 @@ namespace fleece {
 
     const void* Writer::write(const void* data, size_t length) {
         const void* result = _chunks.back().write(data, length);
-        if (!result) {
-            if (_chunkSize <= 64*1024)
-                _chunkSize *= 2;
-            addChunk(std::max(length, _chunkSize));
-            result = _chunks.back().write(data, length);
-            assert(result);
-        }
+        if (_usuallyFalse(!result))
+            result = writeToNewChunk(data, length);
         _length += length;
+        return result;
+    }
+
+    const void* Writer::writeToNewChunk(const void* data, size_t length) {
+        if (_usuallyTrue(_chunkSize <= 64*1024))
+            _chunkSize *= 2;
+        addChunk(std::max(length, _chunkSize));
+        const void *result = _chunks.back().write(data, length);
+        assert(result);
         return result;
     }
 
@@ -138,7 +143,7 @@ namespace fleece {
     :_start(::malloc(capacity)),
     _available(_start, capacity)
     {
-        if (!_start)
+        if (_usuallyFalse(!_start))
             throw std::bad_alloc();
     }
 
@@ -163,10 +168,10 @@ namespace fleece {
     }
 
     const void* Writer::Chunk::write(const void* data, size_t length) {
-        if (_available.size < length)
+        if (_usuallyFalse(_available.size < length))
             return nullptr;
         const void *result = _available.buf;
-        if (data != nullptr)
+        if (_usuallyTrue(data != nullptr))
             ::memcpy((void*)result, data, length);
         _available.moveStart(length);
         return result;

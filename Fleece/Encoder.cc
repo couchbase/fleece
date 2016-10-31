@@ -466,22 +466,18 @@ namespace fleece {
 
     // compares dictionary keys as slices. If a slice has a null `buf`, it represents an integer
     // key, whose value is in the `size` field.
-    static int compareKeysByIndex(const void *a, const void *b) {
-        const slice &sa = **(const slice**)a;
-        const slice &sb = **(const slice**)b;
-        if (sa.buf) {
-            if (sb.buf)
-                return sa.compare(sb);                  // string key comparison
+    static inline int compareKeysByIndex(const slice *sa, const slice *sb) {
+        if (sa->buf) {
+            if (sb->buf)
+                return sa->compare(*sb) < 0;                // string key comparison
             else
-                return 1;
+                return false;
         } else {
-            if (sb.buf)
-                return -1;
+            if (sb->buf)
+                return true;
             else
-                return (int)sa.size - (int)sb.size;     // integer key comparison
+                return (int)sa->size < (int)sb->size;       // integer key comparison
         }
-        assert(sa.buf && sb.buf);
-        return sa.compare(sb);
     }
 
     void Encoder::sortDict(valueArray &items) {
@@ -506,11 +502,12 @@ namespace fleece {
         const slice* base = &keys[0];
         for (unsigned i = 0; i < n; i++)
             indices[i] = base + i;
-        ::qsort(indices, n, sizeof(indices[0]), &compareKeysByIndex);
+        std::sort(&indices[0], &indices[n], &compareKeysByIndex);
         // indices[i] is now a pointer to the Value that should go at index i
 
         // Now rewrite items according to the permutation in indices:
-        Value *old = (Value*) alloca(2*n * sizeof(Value));
+        StackArray(oldBuf, char, 2*n * sizeof(Value));
+        auto old = (Value*)oldBuf;
         memcpy(old, &items[0], 2*n * sizeof(Value));
         for (size_t i = 0; i < n; i++) {
             auto j = indices[i] - base;

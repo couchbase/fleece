@@ -23,12 +23,12 @@ namespace fleece {
 
     static_assert(sizeof(StringTable::info) == 8, "info isn't packed");
 
-    static const float kMaxLoad = 0.666f;
+    static const float kMaxLoad = 0.59f;
 
     StringTable::StringTable(size_t capacity) {
         _count = 0;
         size_t size;
-        for (size = 16; size*kMaxLoad < capacity; size *= 2)
+        for (size = kInitialTableSize; size*kMaxLoad < capacity; size *= 2)
             ;
         allocTable(size); // initializes _table, _size, _maxCount
     }
@@ -52,7 +52,7 @@ namespace fleece {
             do {
                 if (++s >= end)
                     s = &_table[0];
-            } while (s->first.buf != nullptr && s->first != key);
+            } while (_usuallyFalse(s->first.buf != nullptr && s->first != key));
         }
         if (s->first.buf == nullptr) {
             s->second.hash = hash;

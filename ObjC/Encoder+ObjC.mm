@@ -18,62 +18,94 @@
 #include "FleeceException.hh"
 
 
+@interface NSObject (Fleece)
+- (void) fl_encodeTo: (fleece::Encoder*)enc;
+@end
+
+
 namespace fleece {
 
-
     void Encoder::write(__unsafe_unretained id obj) {
-        if ([obj isKindOfClass: [NSString class]]) {
-            nsstring_slice slice(obj);
-            writeString(slice);
-        } else if ([obj isKindOfClass: [NSNumber class]]) {
-            switch ([obj objCType][0]) {
-                case 'c':
-                    // The only way to tell whether an NSNumber with 'char' type is a boolean is to
-                    // compare it against the singleton kCFBoolean objects:
-                    if (obj == (id)kCFBooleanTrue)
-                        writeBool(true);
-                    else if (obj == (id)kCFBooleanFalse)
-                        writeBool(false);
-                    else
-                        writeInt([obj charValue]);
-                    break;
-                case 'f':
-                    writeFloat([obj floatValue]);
-                    break;
-                case 'd':
-                    writeDouble([obj doubleValue]);
-                    break;
-                case 'Q':
-                    writeUInt([obj unsignedLongLongValue]);
-                    break;
-                default:
-                    writeInt([obj longLongValue]);
-                    break;
-            }
-        } else if ([obj isKindOfClass: [NSDictionary class]]) {
-            beginDictionary((uint32_t)[obj count]);
-            [obj enumerateKeysAndObjectsUsingBlock:^(__unsafe_unretained id key,
-                                                     __unsafe_unretained id value, BOOL *stop) {
-                if (![key isKindOfClass: [NSString class]])
-                    FleeceException::_throw(InvalidData, "NSDictionary has non-string key");
-                nsstring_slice slice(key);
-                writeKey(slice);
-                write(value);
-            }];
-            endDictionary();
-        } else if ([obj isKindOfClass: [NSArray class]]) {
-            beginArray((uint32_t)[obj count]);
-            for (NSString* item in obj) {
-                write(item);
-            }
-            endArray();
-        } else if ([obj isKindOfClass: [NSData class]]) {
-            writeData(slice((NSData*)obj));
-        } else if ([obj isKindOfClass: [NSNull class]]) {
-            writeNull();
-        } else {
-            FleeceException::_throw(InvalidData, "Un-encodable object type");
-        }
+        throwIf(!obj, InvalidData, "Can't encode nil");
+        [obj fl_encodeTo: this];
     }
 
 }
+
+
+using namespace fleece;
+
+
+@implementation NSNull (CBJSONEncoder)
+- (void) fl_encodeTo: (fleece::Encoder*)enc {
+    enc->writeNull();
+}
+@end
+
+@implementation NSNumber (CBJSONEncoder)
+- (void) fl_encodeTo: (Encoder*)enc {
+    switch (self.objCType[0]) {
+        case 'b':
+            enc->writeBool(self.boolValue);
+            break;
+        case 'c':
+            // The only way to tell whether an NSNumber with 'char' type is a boolean is to
+            // compare it against the singleton kCFBoolean objects:
+            if (self == (id)kCFBooleanTrue)
+                enc->writeBool(true);
+            else if (self == (id)kCFBooleanFalse)
+                enc->writeBool(false);
+            else
+                enc->writeInt(self.charValue);
+            break;
+        case 'f':
+            enc->writeFloat(self.floatValue);
+            break;
+        case 'd':
+            enc->writeDouble(self.doubleValue);
+            break;
+        case 'Q':
+            enc->writeUInt(self.unsignedLongLongValue);
+            break;
+        default:
+            enc->writeInt(self.longLongValue);
+            break;
+    }
+}
+@end
+
+@implementation NSString (CBJSONEncoder)
+- (void) fl_encodeTo: (Encoder*)enc {
+    nsstring_slice s(self);
+    enc->writeString(s);
+}
+@end
+
+@implementation NSData (CBJSONEncoder)
+- (void) fl_encodeTo: (Encoder*)enc {
+    enc->writeData(slice(self));
+}
+@end
+
+@implementation NSArray (CBJSONEncoder)
+- (void) fl_encodeTo: (Encoder*)enc {
+    enc->beginArray((uint32_t)self.count);
+    for (NSString* item in self) {
+        [item fl_encodeTo: enc];
+    }
+    enc->endArray();
+}
+@end
+
+@implementation NSDictionary (CBJSONEncoder)
+- (void) fl_encodeTo: (Encoder*)enc {
+    enc->beginDictionary((uint32_t)self.count);
+    [self enumerateKeysAndObjectsUsingBlock:^(__unsafe_unretained id key,
+                                              __unsafe_unretained id value, BOOL *stop) {
+        nsstring_slice slice(key);
+        enc->writeKey(slice);
+        [value fl_encodeTo: enc];
+    }];
+    enc->endDictionary();
+}
+@end

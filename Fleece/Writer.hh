@@ -84,6 +84,7 @@ namespace fleece {
             slice _available;
         };
 
+        const void* writeToNewChunk(const void* data, size_t length);
         void addChunk(size_t capacity);
         void freeChunk(Chunk &chunk);
 
