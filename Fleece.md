@@ -27,7 +27,19 @@ Floating-point numbers are 6 or 10 bytes long (2-byte header followed by a float
 
 An array consists of a two-byte header, an item count (which fits in the header if it's less than 4096), and then a contiguous sequence of values. For fast random access, each value is the same length: 2 bytes in a regular **narrow** array, 4 bytes in a **wide** array.
 
-Dictionaries are like arrays except that each item consists of two values: a key followed by the value it maps to. The items are sorted by increasing key, to allow lookup by binary search. (For JSON compatibility the keys must be strings, but the format allows other types.)
+### Dictionaries
+
+Dictionaries are like arrays, except that each item consists of two values: a key followed by the value it maps to. The items are sorted by increasing key, to allow lookup by binary search. (For JSON compatibility the keys must be strings, but the format allows other types.)
+
+Keys MAY take the form of small integers, if the "shared keys" optimization is being used. In this case, there is an external persistent mapping from integers to strings that's used to interpret the meanings of the integer keys. Using this optimization can significantly shrink the data size and speed up key lookups.
+
+>**Note:** The shared-keys optimization obviously requires that all creators and consumers of the encoded data agree on a shared consistent mapping. This is outside the scope of Fleece. The library provides support for managing such a mapping, and using it while encoding and decoding, but leaves the persistent shared storage of the map (as an array of strings) up to the client.
+
+>**Note:** If a given key string is part of the mapping, it MUST always be encoded as an integer, since readers will be expecting it to be an integer. (Otherwise readers would have to retry every failed integer lookup using the equivalent string, which would slow down access.)
+
+Keys are sorted by default; this allows binary search for lookups. An encoder MAY write unsorted dictionaries, but _only_ if all potential readers know about this and use linear search, since otherwise a binary search will fail. 
+
+The key ordering is very simple: integers sort before strings, and strings are compared lexicographically as byte sequences, as if by memcmp, _not_ by any higher-level collation algorithms like Unicode.
 
 ### Pointers
 
@@ -66,8 +78,7 @@ The reason for the (rare) second pointer dereference is that the true root objec
  0101cccc dddddddd...    binary data (same as string)
  0110wccc cccccccc...    array (c = 11-bit item count, if 2047 then overflow follows as varint;
                                 w = wide, if 1 then following values are 4 bytes wide, not 2)
- 0111wccc cccccccc...    dictionary (same as array, but each item is a key (string) followed by
-                                     a value.)
+ 0111wccc cccccccc...    dictionary (same as array, but each item is two values (key, value).
  1ooooooo oooooooo       pointer (o = BE unsigned offset in units of 2 bytes _backwards_, 0-64kb)
                                 NOTE: In a wide collection, offset field is 31 bits wide
 ```
@@ -112,4 +123,8 @@ Collections provide iterators for sequential access, and getters for random acce
 
 Fleece documents are created using an Encoder object that produces a data blob when it's done. Values are added one by one. A collection is added by making a `begin` call, then adding the values, then calling `end`. (A dictionary encoder requires a key to be written before each value.)
 
-Behind the scenes, the data is written in bottom-up order: the values in a collection are written before the collection itself. The inline data in the collection is buffered while out-of-line values are written, then the collection object is written at the end.
+Behind the scenes, the data is written in bottom-up order: the values in a collection are written before the collection itself. The inline data in the collection is buffered while out-of-line values are written, then the collection object is written at the end. If the collection is a dictionary, the encoder first sorts the key/value pairs by key, to speed up lookups. (This can be turned off, but usually shouldn't be.)
+
+The encoder keeps a hash table of strings that remembers the offset where each string has been written. Subsequent uses of the same string are encoded as pointers to that offset.
+
+The encoder may optionally be given a SharedKeys object that manages a mapping of strings to integers. If so, it will consult that object before writing a dictionary key, and if it returns an integer, the encoder will write that instead. The SharedKeys class is adaptive, so when it's given a string not in the mapping, and the string is considered eligible for mapping, it will add it to the list and return the newly assigned integer. This allows the mapping to grow adaptively as data is encoded. Of course the client is responsible for persistent storage of the mapping, and making sure that readers have access to it as well.

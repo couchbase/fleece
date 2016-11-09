@@ -18,6 +18,7 @@ __Fleece__ is a new binary encoding for semi-structured data. Its data model is 
     * Extensions for encoding from and decoding to Objective-C (Foundation) object trees.
     * Unit tests
     * Some simple performance benchmarks
+* C++ and C APIs
 * A command-line tool, `fleece`, that can convert JSON to Fleece or vice versa, or dump Fleece data in a human-readable form that shows the internal structure
 
 ## FAQ
@@ -25,8 +26,10 @@ __Fleece__ is a new binary encoding for semi-structured data. Its data model is 
 **Q: Why does the world need yet another binary JSON encoding?**  
 A: Excellent question, sock puppet! Fleece is different from [BSON](http://bsonspec.org), [PSON](https://github.com/dcodeIO/PSON), etc. in that it's been carefully designed to not need parsing. In performance tests with other binary formats I found that, while they were faster to parse than JSON, the total time was still dominated by allocating and freeing the resulting objects, as well as the conversion from UTF-8 data to platform strings. (I was using Objective-C, but similar issues would arise if using STL or GLib or other collection frameworks.) The way around this is to structure the encoded data more like a memory dump, with "pointers" (relative byte offsets) and fixed-width random-accessible arrays. That's what Fleece does. As a result, it's many times faster to work with than JSON; [literally _20x faster_](Performance.md) in the included benchmark run on a Macbook Pro.
 
-**Q: Can I use it in $LANGUAGE?** [where $LANGUAGE != "C++"]  
-Not currently. It would be very nice to have a non-C++ API; we just haven't written one yet. A C wrapper would come first, and then that can be glued to other languages. Contributions are welcome :)
+**Q: Can I use it in $LANGUAGE?** [where $LANGUAGE not in ("C++", "C")]  
+Not currently. It would be very nice to more bindings, and the C API should make that fairly
+straightforward since it's easy to call from other languages. (But any real API should follow
+the language's idioms, instead of being a direct translation!)
 
 **Q: Why didn't you write this in $NEW_LANGUAGE instead of crufty C++?**  
 A: I probably should have! $NEW_LANGUAGE is deservedly attracting a lot of attention for its combination of safety, readable syntax, and support for modern programming paradigms. I've been trying out $NEW_LANGUAGE and want to write more code in it. But for this I chose C++ because it's supported on all platforms, lots of people know how to use it, and it still supports high-level abstractions (unlike C.)
@@ -42,17 +45,15 @@ A: It's a reference to the mythical [Golden Fleece](https://en.wikipedia.org/wik
 
 ## Status
 
-Fleece has been used in some experimental work at Couchbase, but hasn't gone into production use.
-
-Thus far it's only been compiled with Xcode and run on Mac OS and iOS.
+Fleece is in active development, and is being used in the in-development Couchbase Lite 2.0, as part of the [LiteCore](https://github.com/couchbase/couchbase-lite-core) project.
 
 ## Requirements / Compatibility
 
 * Fleece _should_ be buildable with any C++11 compiler, such as current versions of Xcode, Clang, GCC or MSVC. (Yes, there are some Objective-C++ source files (`.mm`), but those are only used to provide Objective-C glue and Mac/iOS specific benchmarks. You can ignore them on other platforms.)
-* There _should_ be no dependencies on any libraries, other than the standard C library and the C++ STL.
+* There _should_ be no dependencies on any external libraries, other than the standard C library and the C++ STL.
 * It _should_ work correctly, and create interoperable data, on both little-endian and big-endian CPUs.
 
-However, none of those "should"s have been put to test yet, so it's likely they're not 100% true. If you encounter problems on non-Apple platforms, please file an issue and we'll fix it.
+However, we don't yet have continuous integration on all covered platforms, so it's possible those "should"s are not 100% true at the moment. If you encounter problems, please file an issue and we'll fix it.
 
 ## License
 
