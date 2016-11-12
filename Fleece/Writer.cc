@@ -113,12 +113,15 @@ namespace fleece {
 
     alloc_slice Writer::extractOutput() {
         alloc_slice output;
+#if 0 //TODO: Restore this optimization
         if (_chunks.size() == 1 && _chunks[0].start() != &_initialBuf) {
             _chunks[0].resizeToFit();
             output = alloc_slice::adopt(_chunks[0].contents());
             _chunks.clear();
             _length = 0;
-        } else {
+        } else
+#endif
+        {
             output = alloc_slice(length());
             void* dst = (void*)output.buf;
             for (auto &chunk : _chunks) {

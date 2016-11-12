@@ -187,7 +187,7 @@ public:
     }
 
 private:
-    bool _written;
+    bool _written {false};
     alloc_slice _pendingStorage;
 
     static Client* sTransactionOwner;

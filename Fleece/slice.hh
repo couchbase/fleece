@@ -115,7 +115,7 @@ namespace fleece {
 
         template <typename T>
         static T* reallocBytes(T* bytes, size_t newSz) {
-            void* newBytes = (T*)::realloc(bytes, newSz);
+            T* newBytes = (T*)::realloc(bytes, newSz);
             if (!newBytes) throw std::bad_alloc();
             return newBytes;
         }
@@ -188,35 +188,42 @@ namespace fleece {
 
 
 
-    /** An allocated range of memory. Constructors allocate, destructor frees. */
-    struct alloc_slice : private std::shared_ptr<char>, public slice {
+    /** A slice that owns a ref-counted block of memory. */
+    struct alloc_slice : public slice {
         alloc_slice()
-            :std::shared_ptr<char>(nullptr), slice() {}
-        explicit alloc_slice(size_t s)
-            :std::shared_ptr<char>((char*)newBytes(s), freer()), slice(get(),s) {}
-        explicit alloc_slice(slice s)
-            :std::shared_ptr<char>((char*)s.copy().buf, freer()), slice(get(),s.size) {}
+            :slice() {}
+        explicit alloc_slice(size_t s);
+        explicit alloc_slice(slice s);
         alloc_slice(const void* b, size_t s)
-            :std::shared_ptr<char>((char*)alloc(b,s), freer()), slice(get(),s) {}
+            :alloc_slice(slice(b, s)) { }
         alloc_slice(const void* start, const void* end)
-            :std::shared_ptr<char>((char*)alloc(start,(uint8_t*)end-(uint8_t*)start), freer()),
-             slice(get(),(uint8_t*)end-(uint8_t*)start) {}
+            :alloc_slice(slice(start, end)) {}
         explicit alloc_slice(const std::string &str)
-            :std::shared_ptr<char>((char*)alloc(&str[0], str.length()), freer()), slice(get(), str.length()) {}
+            :alloc_slice(slice(str)) {}
 
-        explicit operator bool() const               {return buf != nullptr;}
+        ~alloc_slice()                                      {if (buf) release();}
+        alloc_slice(const alloc_slice&) noexcept;
+        alloc_slice& operator=(const alloc_slice&) noexcept;
 
-        static alloc_slice adopt(slice s)            {return alloc_slice((void*)s.buf,s.size,true);}
-        static alloc_slice adopt(void* buf, size_t size) {return alloc_slice(buf,size,true);}
+        alloc_slice(alloc_slice&& s) noexcept
+        :slice(s)
+        { s.buf = nullptr; }
 
-        /** Prevents the memory from being freed after the last alloc_slice goes away.
-            Use this is something else (like an NSData) takes ownership of the heap block. */
-        slice dontFree()             {if (buf) std::get_deleter<freer>(*this)->detach();
-                                      return *this;}
+        alloc_slice& operator=(alloc_slice&& s) noexcept {
+            release();
+            assignFrom(s);
+            s.buf = nullptr;
+            return *this;
+        }
+
+        explicit operator bool() const                      {return buf != nullptr;}
+
 #ifdef __OBJC__
-        NSData* convertToNSData()   {dontFree(); return slice::convertToNSData();}
+        NSData* convertToNSData();
 #endif
 
+        void reset() noexcept;
+        void reset(size_t);
         void resize(size_t newSize);
         void append(slice);
 
@@ -225,21 +232,15 @@ namespace fleece {
         // disambiguation:
         alloc_slice& operator=(const std::string &str)      {*this = (slice)str; return *this;}
 
-        class freer {
-        public:
-            freer()                     :_detached(false){}
-            void detach()               {_detached = true;}
-            void operator()(char* ptr)  {if (!_detached) ::free(ptr);}
-        private:
-            bool _detached;
-        };
+        slice retain() noexcept;
+        void release() noexcept;
 
+        static void release(slice s) noexcept               {((alloc_slice*)&s)->release();}
 
     private:
-        static void* alloc(const void* src, size_t size);
-        explicit alloc_slice(void* adoptBuf, size_t size, bool)     // called by adopt()
-            :std::shared_ptr<char>((char*)adoptBuf, freer()), slice(get(),size) {}
-        void reset(slice);
+        struct sharedBuffer;
+        sharedBuffer* shared() noexcept;
+        void assignFrom(slice s)                            {buf = s.buf; size = s.size;}
     };
 
 

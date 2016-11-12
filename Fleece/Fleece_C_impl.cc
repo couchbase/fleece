@@ -29,7 +29,15 @@ namespace fleece {
 
 int FLSlice_Compare(FLSlice a, FLSlice b)       {return a.compare(b);}
 
-void FLSliceResult_Free(FLSliceResult s)              {free(s.buf);}
+
+static FLSliceResult toSliceResult(alloc_slice &&s) {
+    s.retain();
+    return {(void*)s.buf, s.size};
+}
+
+void FLSliceResult_Free(FLSliceResult s) {
+    alloc_slice::release({s.buf, s.size});
+}
 
 
 FLValue FLValue_FromData(FLSlice data)          {return Value::fromData(data);}
@@ -49,25 +57,6 @@ FLSlice FLValue_AsString(FLValue v)             {return v ? v->asString() : null
 FLSlice FLValue_AsData(FLValue v)               {return v ? v->asData() : nullslice;}
 FLArray FLValue_AsArray(FLValue v)              {return v ? v->asArray() : nullptr;}
 FLDict FLValue_AsDict(FLValue v)                {return v ? v->asDict() : nullptr;}
-
-
-static FLSliceResult toSliceResult(const std::string &str) {
-    FLSliceResult result;
-    result.size = str.size();
-    if (result.size > 0) {
-        result.buf = malloc(result.size);
-        if (result.buf) {
-            memcpy(result.buf, str.data(), result.size);
-            return result;
-        }
-    }
-    return {nullptr, 0};
-}
-
-static FLSliceResult toSliceResult(alloc_slice &&s) {
-    s.dontFree();
-    return {(void*)s.buf, s.size};
-}
 
 
 FLSliceResult FLValue_ToString(FLValue v) {
@@ -99,7 +88,7 @@ FLSliceResult FLData_ConvertJSON(FLSlice json, FLError *outError) {
 
 FLSliceResult FLData_Dump(FLSlice data) {
     try {
-        return toSliceResult(Value::dump(data));
+        return toSliceResult(alloc_slice(Value::dump(data)));
     } catchError(nullptr)
     return {nullptr, 0};
 }

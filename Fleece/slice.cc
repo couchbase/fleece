@@ -180,44 +180,6 @@ namespace fleece {
         return std::string((const char*)buf, size);
     }
 
-    void* alloc_slice::alloc(const void* src, size_t s) {
-        void* buf = newBytes(s);
-        ::memcpy((void*)buf, src, s);
-        return buf;
-    }
-
-
-    void alloc_slice::reset(slice s) {
-        buf = s.buf;
-        size = s.size;
-        shared_ptr::reset((char*)buf, freer());
-    }
-
-
-    alloc_slice& alloc_slice::operator=(slice s) {
-        reset(s.copy());
-        return *this;
-    }
-
-
-    void alloc_slice::resize(size_t newSize) {
-        if (newSize != size) {
-            void* newBuf = slice::reallocBytes((void*)buf, newSize);
-            size = newSize;
-            if (newBuf != buf) {
-                dontFree();
-                reset(slice(newBuf, newSize));
-            }
-        }
-    }
-
-
-    void alloc_slice::append(slice suffix) {
-        size_t oldSize = size;
-        resize(oldSize + suffix.size);
-        memcpy((void*)offset(oldSize), suffix.buf, suffix.size);
-    }
-
 
     std::string slice::hexString() const {
         static const char kDigits[17] = "0123456789abcdef";
@@ -254,6 +216,125 @@ namespace fleece {
         size_t len = dec.decode(buf, size, (void*)output.buf);
         assert(len <= output.size);
         return slice(output.buf, len);
+    }
+
+
+#pragma mark - ALLOC_SLICE
+
+
+    struct alloc_slice::sharedBuffer {
+        std::atomic<uint32_t> _refCount {1};
+        uint8_t _buf[4];
+
+        inline sharedBuffer* retain() noexcept {
+            ++_refCount;
+            return this;
+        }
+
+        inline void release() noexcept {
+            if (--_refCount == 0)
+                delete this;
+        }
+
+        static inline void* operator new(size_t basicSize, size_t bufferSize) {
+            return ::operator new(basicSize - sizeof(sharedBuffer::_buf) + bufferSize);
+        }
+
+        static inline sharedBuffer* newBuffer(size_t size) {
+            return new(size) sharedBuffer;
+        }
+
+        static inline slice newSlice(size_t size) {
+            return {&newBuffer(size)->_buf, size};
+        }
+
+        inline sharedBuffer* realloc(size_t newSize) {
+            return slice::reallocBytes(this, offsetof(sharedBuffer, _buf) + newSize);
+        }
+    };
+
+
+    alloc_slice::alloc_slice(size_t sz)
+    :slice(sharedBuffer::newSlice(sz))
+    { }
+
+
+    alloc_slice::alloc_slice(slice s)
+    :slice(s.buf ? sharedBuffer::newSlice(s.size) : nullslice)
+    {
+        if (s.buf)
+            memcpy((void*)buf, s.buf, size);
+    }
+
+
+    inline alloc_slice::sharedBuffer* alloc_slice::shared() noexcept {
+        return offsetby((sharedBuffer*)buf, -offsetof(sharedBuffer, _buf));
+    }
+
+    slice alloc_slice::retain() noexcept      {if (buf) shared()->retain(); return *this;}
+    void alloc_slice::release() noexcept      {if (buf) shared()->release();}
+
+
+    alloc_slice::alloc_slice(const alloc_slice& s) noexcept
+    :slice(s)
+    {
+        retain();
+    }
+
+    alloc_slice& alloc_slice::operator=(const alloc_slice& s) noexcept {
+        const_cast<alloc_slice&>(s).retain();
+        release();
+        assignFrom(s);
+        return *this;
+    }
+
+
+    void alloc_slice::reset() noexcept {
+        release();
+        assignFrom(nullslice);
+    }
+
+    void alloc_slice::reset(size_t sz) {
+        release();
+        assignFrom(sharedBuffer::newSlice(sz));
+    }
+
+    
+    alloc_slice& alloc_slice::operator=(slice s) {
+        if (s.buf) {
+            reset(s.size);
+            memcpy((void*)buf, s.buf, size);
+        } else {
+            reset();
+        }
+        return *this;
+    }
+
+
+    void alloc_slice::resize(size_t newSize) {
+        if (newSize == size) {
+            return;
+        } else if (buf == nullptr) {
+            reset(newSize);
+        } else {
+            sharedBuffer* newBuf;
+            if (shared()->_refCount == 1) {
+                newBuf = shared()->realloc(newSize);
+            } else {
+                newBuf = sharedBuffer::newBuffer(newSize);
+                memcpy(newBuf->_buf, buf, std::min(size, newSize));
+                release();
+            }
+            buf = newBuf->_buf;
+            size = newSize;
+        }
+    }
+
+
+    void alloc_slice::append(slice suffix) {
+        size_t oldSize = size;
+        resize(oldSize + suffix.size);
+        memcpy((void*)offset(oldSize), suffix.buf, suffix.size);
     }
 
 
