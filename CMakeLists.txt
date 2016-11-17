@@ -2,11 +2,18 @@ cmake_minimum_required (VERSION 2.6)
 project (Fleece)
 
 set(COMPILE_FLAGS   "${COMPILE_FLAGS}   -Wall -Werror")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+if(NOT MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+endif()
 
 # Debug/Release builds
-set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG}   -O0    -DDEBUG")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Ofast -DNDEBUG")
+if(NOT MSVC)
+    set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG}   -O0    -DDEBUG")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Ofast -DNDEBUG")
+else()
+    set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG} /Od /DDEBUG")
+    set(CMAKE_CXX_FLAGS_RELEASE   "${CMAKE_CXX_FLAGS_RELEASE} /O2 /DNDEBUG")
+endif()
 
 aux_source_directory(Fleece  FLEECE_SRC)
 set(FLEECE_SRC ${FLEECE_SRC} vendor/jsonsl/jsonsl.c
@@ -24,7 +31,7 @@ include_directories("Fleece"
                     "vendor/libb64" 
                     "vendor/jsonsl" )
 
-if(!WIN32)
+if(!MSVC)
 	set_source_files_properties(Fleece/Fleece_C_impl.cc  PROPERTIES
                             	COMPILE_FLAGS  -Wno-return-type-c-linkage)
 endif()
