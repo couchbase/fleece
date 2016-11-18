@@ -1,0 +1,15 @@
+//
+//  Fleece.pch
+//  Fleece
+//
+//  Created by Jens Alfke on 11/14/16.
+//  Copyright © 2016 Couchbase. All rights reserved.
+//
+
+// Prefix/precompiled header for building Fleece
+
+#ifdef __cplusplus
+    #include "Fleece.hh"
+#else
+    #include "Fleece.h"
+#endif

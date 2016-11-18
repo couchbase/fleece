@@ -134,6 +134,7 @@
 		272E5A5E1BF91DBE00848580 /* ObjCTests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ObjCTests.mm; sourceTree = "<group>"; };
 		272E5A601BF91F6C00848580 /* slice.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = slice.mm; path = ../ObjC/slice.mm; sourceTree = "<group>"; };
 		272E5A671BFA7C3100848580 /* Internal.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Internal.hh; sourceTree = "<group>"; };
+		273483F71DDA59B900B27A8C /* Fleece.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Fleece.pch; sourceTree = "<group>"; };
 		2746DD3B1D931BE9000517BC /* Benchmark.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Benchmark.hh; sourceTree = "<group>"; };
 		2747D9841CFB9BC300C48211 /* 1person.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = 1person.json; sourceTree = "<group>"; };
 		275C67DB1BFBA0F4008AA9E7 /* Fleece.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Fleece.md; sourceTree = "<group>"; };
@@ -279,6 +280,7 @@
 				275CED511D3EF7BE001DE46C /* FleeceException.hh */,
 				2715BA1D1D820C690061D92E /* PlatformCompat.hh */,
 				2746DD3B1D931BE9000517BC /* Benchmark.hh */,
+				273483F71DDA59B900B27A8C /* Fleece.pch */,
 			);
 			name = Utilities;
 			sourceTree = "<group>";
@@ -609,6 +611,8 @@
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = Fleece/Fleece.pch;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
@@ -665,6 +669,8 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = fast;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = Fleece/Fleece.pch;
 				GCC_PREPROCESSOR_DEFINITIONS = "NDEBUG=1";
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
