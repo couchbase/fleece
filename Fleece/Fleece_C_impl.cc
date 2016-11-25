@@ -27,7 +27,12 @@ namespace fleece {
 }
 
 
-int FLSlice_Compare(FLSlice a, FLSlice b)       {return a.compare(b);}
+int FLSlice_Compare(FLSlice a, FLSlice b)       {return ((slice)a).compare((slice)b); }
+
+static inline FLSlice external(slice s)
+{
+    return *((FLSlice*)&s);
+}
 
 
 static FLSliceResult toSliceResult(alloc_slice &&s) {
@@ -53,8 +58,8 @@ int64_t FLValue_AsInt(FLValue v)                {return v ? v->asInt() : 0;}
 uint64_t FLValue_AsUnsigned(FLValue v)          {return v ? v->asUnsigned() : 0;}
 float FLValue_AsFloat(FLValue v)                {return v ? v->asFloat() : 0.0;}
 double FLValue_AsDouble(FLValue v)              {return v ? v->asDouble() : 0.0;}
-FLSlice FLValue_AsString(FLValue v)             {return v ? v->asString() : nullslice;}
-FLSlice FLValue_AsData(FLValue v)               {return v ? v->asData() : nullslice;}
+FLSlice FLValue_AsString(FLValue v)             {return v ? external(v->asString()) : kFLSliceNull;}
+FLSlice FLValue_AsData(FLValue v)               {return v ? external(v->asData()) : kFLSliceNull;}
 FLArray FLValue_AsArray(FLValue v)              {return v ? v->asArray() : nullptr;}
 FLDict FLValue_AsDict(FLValue v)                {return v ? v->asDict() : nullptr;}
 
@@ -169,7 +174,7 @@ FLDictKey FLDictKey_InitWithSharedKeys(FLSlice string, FLSharedKeys sharedKeys) 
 
 FLSlice FLDictKey_GetString(const FLDictKey *key) {
     auto realKey = (const Dict::key*)key;
-    return realKey->string();
+    return external(realKey->string());
 }
 
 FLValue FLDict_GetWithKey(FLDict d, FLDictKey *k) {
