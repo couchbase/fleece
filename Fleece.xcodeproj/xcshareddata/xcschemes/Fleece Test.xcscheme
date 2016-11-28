@@ -47,7 +47,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Couchbase/Fleece/"
+      customWorkingDirectory = "$SRCROOT/"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       enableAddressSanitizer = "YES"
@@ -66,10 +66,6 @@
       <CommandLineArguments>
          <CommandLineArgument
             argument = "-r list"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "&quot;Obj-C PerfSerialize&quot;"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument

@@ -15,7 +15,7 @@
 using namespace fleece;
 
 // Directory containing test files:
-#define kTestFilesDir "/Couchbase/Fleece/Tests/"
+#define kTestFilesDir "Tests/"
 
 // Less-obnoxious names for cppunit assertions:
 #define Assert CPPUNIT_ASSERT

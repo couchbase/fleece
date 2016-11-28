@@ -86,6 +86,7 @@ TEST_CASE("Obj-C PerfParse1000PeopleNS", "[.Perf]") {
     @autoreleasepool {
         const int kSamples = 50;
         NSData *data = [NSData dataWithContentsOfFile: @kTestFilesDir "1000people.json"];
+        REQUIRE(data);
 
         Benchmark bench;
 
@@ -109,6 +110,7 @@ TEST_CASE("Obj-C PerfParse1000PeopleNS", "[.Perf]") {
 TEST_CASE("Obj-C PerfFindPersonByIndexNS", "[.Perf]") {
     @autoreleasepool {
         NSData *data = [NSData dataWithContentsOfFile: @kTestFilesDir "1000people.json"];
+        REQUIRE(data);
         NSArray *people = [NSJSONSerialization JSONObjectWithData: data options: 0 error: nullptr];
         REQUIRE([people isKindOfClass: [NSArray class]]);
 
@@ -142,6 +144,7 @@ TEST_CASE("Obj-C PerfFindPersonByIndexNS", "[.Perf]") {
 TEST_CASE("Obj-C FleeceLazyDict", "[.Perf]") {
     @autoreleasepool {
         NSData *data = [NSData dataWithContentsOfFile: @kTestFilesDir "1000people.fleece"];
+        REQUIRE(data);
         NSArray *people = [FleeceDocument objectWithFleeceData: data trusted: YES];
         REQUIRE([people isKindOfClass: [NSArray class]]);
 
@@ -159,6 +162,7 @@ TEST_CASE("Obj-C FleeceLazyDict", "[.Perf]") {
 TEST_CASE("Obj-C PerfReadNameNS", "[.Perf]") {
     @autoreleasepool {
         NSData *data = [NSData dataWithContentsOfFile: @kTestFilesDir "1person.json"];
+        REQUIRE(data);
         Stopwatch st;
         for (int j = 0; j < 1e5; j++) {
             @autoreleasepool {
@@ -174,6 +178,7 @@ TEST_CASE("Obj-C PerfReadNameNS", "[.Perf]") {
 TEST_CASE("Obj-C PerfReadName", "[.Perf]") {
     @autoreleasepool {
         NSData *data = [NSData dataWithContentsOfFile: @kTestFilesDir "1person.fleece"];
+        REQUIRE(data);
         Stopwatch st;
         for (int j = 0; j < 1e5; j++) {
             @autoreleasepool {
@@ -189,6 +194,7 @@ TEST_CASE("Obj-C PerfReadName", "[.Perf]") {
 TEST_CASE("Obj-C PerfReadNamesNS", "[.Perf]") {
     @autoreleasepool {
         NSData *data = [NSData dataWithContentsOfFile: @kTestFilesDir "1000people.json"];
+        REQUIRE(data);
         NSArray *people = [NSJSONSerialization JSONObjectWithData: data options: 0 error: nullptr];
         REQUIRE([people isKindOfClass: [NSArray class]]);
 
@@ -208,6 +214,7 @@ TEST_CASE("Obj-C PerfReadNamesNS", "[.Perf]") {
 TEST_CASE("Obj-C PerfReadNames", "[.Perf]") {
     @autoreleasepool {
         NSData *data = [NSData dataWithContentsOfFile: @kTestFilesDir "1000people.fleece"];
+        REQUIRE(data);
         NSArray *people = [FleeceDocument objectWithFleeceData: data trusted: YES];
         REQUIRE([people isKindOfClass: [NSArray class]]);
 
@@ -227,6 +234,7 @@ TEST_CASE("Obj-C PerfReadNames", "[.Perf]") {
 TEST_CASE("Obj-C PerfSerialize", "[.Perf]") {
     @autoreleasepool {
         NSData *data = [NSData dataWithContentsOfFile: @kTestFilesDir "1000people.json"];
+        REQUIRE(data);
         NSArray *people = [NSJSONSerialization JSONObjectWithData: data options: 0 error: nullptr];
         REQUIRE([people isKindOfClass: [NSArray class]]);
 
