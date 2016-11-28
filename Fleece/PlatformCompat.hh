@@ -40,7 +40,8 @@
     #define fdopen ::_fdopen
     #define fseeko fseek
     #define ftello ftell
-
+	#define strncasecmp _strnicmp
+	#define strcasecmp _stricmp
 #else
 
     #define _usuallyTrue(VAL)               __builtin_expect(VAL, true)

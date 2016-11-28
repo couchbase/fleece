@@ -20,6 +20,7 @@
 #include <assert.h>
 #include <math.h>
 #include <stdlib.h>
+#include <atomic>
 
 namespace fleece {
 
@@ -250,6 +251,10 @@ namespace fleece {
 
         inline sharedBuffer* realloc(size_t newSize) {
             return slice::reallocBytes(this, offsetof(sharedBuffer, _buf) + newSize);
+        }
+
+        static inline void operator delete(void* ptr) {
+            ::operator delete(ptr);
         }
     };
 
