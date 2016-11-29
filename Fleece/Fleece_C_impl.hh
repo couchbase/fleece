@@ -19,21 +19,8 @@ namespace fleece {
 typedef const Value* FLValue;
 typedef const Array* FLArray;
 typedef const Dict* FLDict;
-typedef struct {
-    const void* buf;
-    size_t size;
-
-    operator slice() const { return *((slice*)this); }
-} FLSlice;
 typedef FLEncoderImpl* FLEncoder;
 typedef SharedKeys* FLSharedKeys;
-
-// A convenient constant denoting a null slice.
-#ifdef _MSC_VER
-const FLSlice kFLSliceNull = { NULL, 0 };
-#else
-#define kFLSliceNull ((FLSlice){NULL, 0})
-#endif
 
 
 #include "Fleece.h" /* the C header */

@@ -32,14 +32,18 @@ extern "C" {
     typedef const struct _FLValue* FLValue;     ///< A reference to a value of any type.
     typedef const struct _FLArray* FLArray;     ///< A reference to an array value.
     typedef const struct _FLDict*  FLDict;      ///< A reference to a dictionary (map) value.
-    typedef struct _FLEncoder* FLEncoder;
-    typedef struct _FLSharedKeys* FLSharedKeys;
+    typedef struct _FLEncoder* FLEncoder;       ///< A reference to an encoder
+    typedef struct _FLSharedKeys* FLSharedKeys; ///< A reference to a shared-keys mapping
+#endif
 
 
     /** A simple reference to a block of memory. Does not imply ownership. */
     typedef struct {
         const void *buf;
         size_t size;
+#ifdef FL_IMPL
+        operator slice() const {return {buf, size};}
+#endif
     } FLSlice;
 
     /** Creates a slice pointing to the contents of a C string. */
@@ -63,28 +67,20 @@ extern "C" {
     #define kFLSliceNull ((FLSlice){nullptr, 0})
     #endif
 
-#endif
 
 #define FL_SLICE_DEFINED
 
 
-#ifdef __cplusplus
-    /** A block of memory returned from an API call. The caller takes ownership, may modify the
-        bytes, and must call FLSliceFree when done. */
-    struct FLSliceResult {
-        void *buf;      // note: not const, since caller owns the buffer
-        size_t size;
-
-        explicit operator FLSlice () {return {buf, size};}
-    };
-#else
     /** A block of memory returned from an API call. The caller takes ownership, may modify the
         bytes, and must call FLSliceFree when done. */
     typedef struct {
         void *buf;      // note: not const, since caller owns the buffer
         size_t size;
-    } FLSliceResult;
+
+#ifdef __cplusplus
+        explicit operator FLSlice () const {return {buf, size};}
 #endif
+    } FLSliceResult;
 
 
     /** Frees the memory of a FLSliceResult. */
