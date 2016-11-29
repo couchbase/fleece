@@ -65,6 +65,10 @@
 
     #define StackArray(NAME, TYPE, SIZE)    TYPE NAME[(SIZE)]
 
+    #include <unistd.h>
+    #include <stdio.h>
+    #include <sys/stat.h>
+
     namespace fleece {
         inline int mkdir_u8(const char* const path, int mode) {
             return ::mkdir(path, (mode_t)mode);
@@ -87,7 +91,7 @@
         }
 
         inline int chmod_u8(const char* const filename, int mode) {
-            return ::chmod(filename, mode);
+            return ::chmod(filename, (mode_t)mode);
         }
 
         inline FILE* fopen_u8(const char* const path, const char* const mode) {
