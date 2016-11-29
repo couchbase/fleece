@@ -41,13 +41,15 @@
     #define strncasecmp _strnicmp
     #define strcasecmp _stricmp
 
-   int mkdir_u8(const char* const path, int mode);
-   int stat_u8(const char* const filename, struct stat* const s);
-   int rmdir_u8(const char* const path);
-   int rename_u8(const char* const oldPath, const char* const newPath);
-   int unlink_u8(const char* const filename);
-   int chmod_u8(const char* const filename, int mode);
-   FILE* fopen_u8(const char* const path, const char* const mode);
+    namespace fleece {
+        int mkdir_u8(const char* const path, int mode);
+        int stat_u8(const char* const filename, struct stat* const s);
+        int rmdir_u8(const char* const path);
+        int rename_u8(const char* const oldPath, const char* const newPath);
+        int unlink_u8(const char* const filename);
+        int chmod_u8(const char* const filename, int mode);
+        FILE* fopen_u8(const char* const path, const char* const mode);
+    }
 #else
 
     #define _usuallyTrue(VAL)               __builtin_expect(VAL, true)
@@ -63,12 +65,34 @@
 
     #define StackArray(NAME, TYPE, SIZE)    TYPE NAME[(SIZE)]
 
-    #define mkdir_u8(PATH, MODE) ::mkdir(PATH, (mode_t)MODE)
-    #define stat_u8(PATH, S) ::stat(PATH, S)
-    #define rmdir_u8(PATH) ::rmdir(PATH)
-    #define rename_u8(OLD, NEW) ::rename(OLD, NEW)
-    #define unlink_u8(PATH) ::unlink(PATH)
-    #define chmod_u8(PATH, MODE) ::chmod(PATH, MODE)
-    #define fopen_u8(PATH, MODE) ::fopen(PATH, MODE)
+    namespace fleece {
+        inline int mkdir_u8(const char* const path, int mode) {
+            return ::mkdir(path, (mode_t)mode);
+        }
+
+        inline int stat_u8(const char* const filename, struct ::stat* const s) {
+            return ::stat(filename, s);
+        }
+
+        inline int rmdir_u8(const char* const path) {
+            return ::rmdir(path);
+        }
+
+        inline int rename_u8(const char* const oldPath, const char* const newPath) {
+            return ::rename(oldPath, newPath);
+        }
+
+        inline int unlink_u8(const char* const filename) {
+            return ::unlink(filename);
+        }
+
+        inline int chmod_u8(const char* const filename, int mode) {
+            return ::chmod(filename, mode);
+        }
+
+        inline FILE* fopen_u8(const char* const path, const char* const mode) {
+            return ::fopen(path, mode);
+        }
+    }
 
 #endif

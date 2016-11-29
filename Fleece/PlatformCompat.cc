@@ -1,4 +1,4 @@
-#ifdef WIN32
+#ifdef _MSC_VER
 
 #include "PlatformCompat.hh"
 #include <direct.h>
@@ -6,6 +6,8 @@
 #include <sys/stat.h>
 #include <atlbase.h>
 #include <atlconv.h>
+
+using namespace fleece;
 
 #define MIGRATE_1(from, to) from(const char* const arg1) { \
 CA2WEX<256> wide(arg1, CP_UTF8); \
@@ -30,7 +32,7 @@ int mkdir_u8(const char *path, int mode) {
     MIGRATE_ARG(path, ::_wmkdir(wpath));
 }
 
-int stat_u8(const char* const filename, struct stat * const s)
+int stat_u8(const char* const filename, struct ::stat * const s)
 {
     MIGRATE_ARG(filename, ::_wstat64i32(wfilename, (struct _stat64i32 *)s));
 }
