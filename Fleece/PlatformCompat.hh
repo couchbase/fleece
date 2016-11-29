@@ -10,7 +10,7 @@
 
 
 #ifdef _MSC_VER
-
+    #include <cstdio>
     #define _usuallyTrue(VAL)               (VAL)
     #define _usuallyFalse(VAL)              (VAL)
     #define NOINLINE                        __declspec(noinline)
@@ -35,13 +35,21 @@
     // WARNING: sizeof() will not work on this array since it's actually declared as a pointer.
     #define StackArray(NAME, TYPE, SIZE)    TYPE* NAME = (TYPE*)_malloca(sizeof(TYPE)*(SIZE))
 
-    #define MKDIR(PATH, MODE) ::_mkdir(PATH)
-    #define chmod  ::_chmod
     #define fdopen ::_fdopen
     #define fseeko fseek
     #define ftello ftell
-	#define strncasecmp _strnicmp
-	#define strcasecmp _stricmp
+    #define strncasecmp _strnicmp
+    #define strcasecmp _stricmp
+
+    namespace fleece {
+        int mkdir_u8(const char* const path, int mode);
+        int stat_u8(const char* const filename, struct stat* const s);
+        int rmdir_u8(const char* const path);
+        int rename_u8(const char* const oldPath, const char* const newPath);
+        int unlink_u8(const char* const filename);
+        int chmod_u8(const char* const filename, int mode);
+        FILE* fopen_u8(const char* const path, const char* const mode);
+    }
 #else
 
     #define _usuallyTrue(VAL)               __builtin_expect(VAL, true)
@@ -57,6 +65,38 @@
 
     #define StackArray(NAME, TYPE, SIZE)    TYPE NAME[(SIZE)]
 
-    #define MKDIR(PATH, MODE) ::mkdir(PATH, (mode_t)MODE)
+    #include <unistd.h>
+    #include <stdio.h>
+    #include <sys/stat.h>
+
+    namespace fleece {
+        inline int mkdir_u8(const char* const path, int mode) {
+            return ::mkdir(path, (mode_t)mode);
+        }
+
+        inline int stat_u8(const char* const filename, struct ::stat* const s) {
+            return ::stat(filename, s);
+        }
+
+        inline int rmdir_u8(const char* const path) {
+            return ::rmdir(path);
+        }
+
+        inline int rename_u8(const char* const oldPath, const char* const newPath) {
+            return ::rename(oldPath, newPath);
+        }
+
+        inline int unlink_u8(const char* const filename) {
+            return ::unlink(filename);
+        }
+
+        inline int chmod_u8(const char* const filename, int mode) {
+            return ::chmod(filename, (mode_t)mode);
+        }
+
+        inline FILE* fopen_u8(const char* const path, const char* const mode) {
+            return ::fopen(path, mode);
+        }
+    }
 
 #endif
