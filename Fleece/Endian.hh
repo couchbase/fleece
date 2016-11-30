@@ -1,5 +1,5 @@
 //
-//  Endian.h
+//  Endian.hh
 //  Fleece
 //
 //  Created by Jens Alfke on 1/29/15.
@@ -15,6 +15,7 @@
 
 #pragma once
 extern "C" {
+    #define __ENDIAN_SAFE
     #include "forestdb_endian.h"
 }
 
