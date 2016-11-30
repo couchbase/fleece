@@ -241,10 +241,6 @@ namespace fleece {
             return ::operator new(basicSize - sizeof(sharedBuffer::_buf) + bufferSize);
         }
 
-        static inline void operator delete(void* ptr) {
-            ::operator delete(ptr);
-        }
-
         static inline sharedBuffer* newBuffer(size_t size) {
             return new(size) sharedBuffer;
         }
