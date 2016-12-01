@@ -307,8 +307,10 @@ namespace fleece {
     
     alloc_slice& alloc_slice::operator=(slice s) {
         if (s.buf) {
+            bool noop = (s.buf == buf);
             reset(s.size);
-            memcpy((void*)buf, s.buf, size);
+            if (!noop)
+                memcpy((void*)buf, s.buf, size);
         } else {
             reset();
         }
