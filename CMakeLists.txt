@@ -3,9 +3,8 @@ cmake_policy(VERSION 3.1)
 project (Fleece)
 
 set(COMPILE_FLAGS   "${COMPILE_FLAGS}   -Wall -Werror")
-if(NOT MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-endif()
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Debug/Release builds
 if(NOT MSVC)
@@ -21,7 +20,7 @@ set(FLEECE_SRC ${FLEECE_SRC} vendor/jsonsl/jsonsl.c
                              vendor/libb64/cdecode.c
                              vendor/libb64/cencode.c)
 
-if (APPLE)
+if (APPLE AND NOT ANDROID)
     aux_source_directory(ObjC/  OBJC_SRC)
     set(FLEECE_SRC ${FLEECE_SRC} ${OBJC_SRC})
     set_source_files_properties(ObjC/Fleece+CoreFoundation.mm  PROPERTIES
