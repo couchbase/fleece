@@ -1,4 +1,5 @@
 cmake_minimum_required (VERSION 2.6)
+cmake_policy(VERSION 3.1)
 project (Fleece)
 
 set(COMPILE_FLAGS   "${COMPILE_FLAGS}   -Wall -Werror")
