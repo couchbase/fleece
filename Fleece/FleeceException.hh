@@ -7,7 +7,7 @@
 //
 
 #pragma once
-#include <exception>
+#include <stdexcept>
 #include "PlatformCompat.hh"
 
 namespace fleece {
@@ -26,26 +26,19 @@ namespace fleece {
     } ErrorCode;
 
 
-    class FleeceException : public std::exception {
+    class FleeceException : public std::runtime_error {
     public:
 
         FleeceException(ErrorCode code_, const char *what)
-        :code(code_),
-         _what(what)
+        :std::runtime_error(what)
+        ,code(code_)
         { }
-
-        virtual const char* what() const noexcept override {
-            return _what;
-        }
 
         [[noreturn]] static void _throw(ErrorCode code, const char *what);
 
         static ErrorCode getCode(const std::exception&) noexcept;
 
         const ErrorCode code;
-
-    private:
-        const char* _what;
     };
 
 
