@@ -8,6 +8,7 @@
 
 #pragma once
 #include "Fleece.hh"
+#include "Path.hh"
 #include "FleeceException.hh"
 using namespace fleece;
 
@@ -21,6 +22,7 @@ typedef const Array* FLArray;
 typedef const Dict* FLDict;
 typedef FLEncoderImpl* FLEncoder;
 typedef SharedKeys* FLSharedKeys;
+typedef Path*       FLKeyPath;
 
 
 #include "Fleece.h" /* the C header */

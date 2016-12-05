@@ -103,7 +103,7 @@ namespace fleece {
     }
 
 
-    const Value* Path::eval(const Value *root) const {
+    const Value* Path::eval(const Value *root) const noexcept {
         const Value *item = root;
         if (_usuallyFalse(!item))
             return nullptr;
@@ -116,7 +116,7 @@ namespace fleece {
     }
 
 
-    const Value* Path::Element::eval(const Value *item) const {
+    const Value* Path::Element::eval(const Value *item) const noexcept {
         if (_key) {
             auto d = item->asDict();
             if (_usuallyFalse(!d))
@@ -128,7 +128,7 @@ namespace fleece {
     }
 
     /*static*/ const Value* Path::Element::eval(char token, slice comp, int32_t index,
-                                                SharedKeys *sk, const Value *item) {
+                                                SharedKeys *sk, const Value *item) noexcept {
         if (token == '.') {
             auto d = item->asDict();
             if (_usuallyFalse(!d))
@@ -144,7 +144,7 @@ namespace fleece {
     }
 
 
-    const Value* Path::Element::getFromArray(const Value* item, int32_t index) {
+    const Value* Path::Element::getFromArray(const Value* item, int32_t index) noexcept {
         auto a = item->asArray();
         if (_usuallyFalse(!a))
             return nullptr;

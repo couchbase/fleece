@@ -29,11 +29,12 @@ extern "C" {
     //////// TYPES
 
 #ifndef FL_IMPL
-    typedef const struct _FLValue* FLValue;     ///< A reference to a value of any type.
-    typedef const struct _FLArray* FLArray;     ///< A reference to an array value.
-    typedef const struct _FLDict*  FLDict;      ///< A reference to a dictionary (map) value.
-    typedef struct _FLEncoder* FLEncoder;       ///< A reference to an encoder
-    typedef struct _FLSharedKeys* FLSharedKeys; ///< A reference to a shared-keys mapping
+    typedef const struct _FLValue* FLValue;         ///< A reference to a value of any type.
+    typedef const struct _FLArray* FLArray;         ///< A reference to an array value.
+    typedef const struct _FLDict*  FLDict;          ///< A reference to a dictionary (map) value.
+    typedef struct _FLEncoder*     FLEncoder;       ///< A reference to an encoder
+    typedef struct _FLSharedKeys*  FLSharedKeys;    ///< A reference to a shared-keys mapping
+    typedef struct _FLKeyPath*     FLKeyPath;       ///< A reference to a key path
 #endif
 
 
@@ -326,6 +327,24 @@ extern "C" {
         @param count  The number of keys in keys[] and the capacity of values[].
         @return  The number of keys that were found. */
     size_t FLDict_GetWithKeys(FLDict dict, FLDictKey keys[], FLValue values[], size_t count);
+
+
+    //////// PATH
+
+
+    /** Creates a new FLKeyPath object by compiling a path specifier string. */
+    FLKeyPath FLKeyPath_New(FLSlice specifier, FLSharedKeys, FLError *error);
+
+    /** Frees a compiled FLKeyPath object. (It's ok to pass NULL.) */
+    void FLKeyPath_Free(FLKeyPath);
+
+    /** Evaluates a compiled key-path for a given Fleece root object. */
+    FLValue FLKeyPath_Eval(FLKeyPath, FLValue root);
+
+    /** Evaluates a key-path from a specifier string, for a given Fleece root object.
+        If you only need to evaluate the path once, this is a bit faster than creating an
+        FLKeyPath object, evaluating, then freeing it. */
+    FLValue FLKeyPath_EvalOnce(FLSlice specifier, FLSharedKeys, FLValue root, FLError *error);
 
 
     //////// ENCODER

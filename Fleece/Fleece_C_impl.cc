@@ -189,6 +189,34 @@ size_t FLDict_GetWithKeys(FLDict d, FLDictKey keys[], FLValue values[], size_t c
 }
 
 
+#pragma mark - KEY-PATHS:
+
+
+FLKeyPath FLKeyPath_New(FLSlice specifier, FLSharedKeys sharedKeys, FLError *outError) {
+    try {
+        return new Path((std::string)(slice)specifier, sharedKeys);
+    } catchError(outError)
+    return nullptr;
+}
+
+void FLKeyPath_Free(FLKeyPath path) {
+    delete path;
+}
+
+FLValue FLKeyPath_Eval(FLKeyPath path, FLValue root) {
+    return path->eval(root);
+}
+
+FLValue FLKeyPath_EvalOnce(FLSlice specifier, FLSharedKeys sharedKeys, FLValue root,
+                           FLError *outError)
+{
+    try {
+        return Path::eval((std::string)(slice)specifier, sharedKeys, root);
+    } catchError(outError)
+    return nullptr;
+}
+
+
 #pragma mark - ENCODER:
 
 

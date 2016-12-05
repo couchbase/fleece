@@ -32,7 +32,7 @@ namespace fleece {
         const std::string& specifier() const        {return _specifier;}
         const std::vector<Element>& path() const    {return _path;}
 
-        const Value* eval(const Value *root) const;
+        const Value* eval(const Value *root) const noexcept;
 
         /** One-shot evaluation; faster if you're only doing it once */
         static const Value* eval(slice specifier, SharedKeys*, const Value *root);
@@ -41,15 +41,15 @@ namespace fleece {
         public:
             Element(slice property, SharedKeys *sk) :_key(new Dict::key(property, sk, false)) { }
             Element(int32_t arrayIndex)             :_index(arrayIndex) { }
-            const Value* eval(const Value*) const;
+            const Value* eval(const Value*) const noexcept;
             bool isKey() const                      {return _key != nullptr;}
             Dict::key& key() const                  {return *_key;}
             int32_t index() const                   {return _index;}
 
             static const Value* eval(char token, slice property, int32_t index, SharedKeys*,
-                                     const Value *item);
+                                     const Value *item) noexcept;
         private:
-            static const Value* getFromArray(const Value*, int32_t index);
+            static const Value* getFromArray(const Value*, int32_t index) noexcept;
 
             std::unique_ptr<Dict::key> _key {nullptr};
             int32_t _index {0};
