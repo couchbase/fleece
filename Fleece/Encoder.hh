@@ -116,10 +116,12 @@ namespace fleece {
         //////// "<<" convenience operators;
 
         // Note: overriding <<(bool) would be dangerous due to implicit conversion
-        Encoder& operator<< (int64_t i)         {writeInt(i); return *this;}
-        Encoder& operator<< (uint64_t i)        {writeUInt(i); return *this;}
-        Encoder& operator<< (int32_t i)             {writeInt(i); return *this;}
-        Encoder& operator<< (uint32_t i)        {writeUInt(i); return *this;}
+        Encoder& operator<< (long long i)           {writeInt(i); return *this;}
+        Encoder& operator<< (unsigned long long i)  {writeUInt(i); return *this;}
+        Encoder& operator<< (long i)            {writeInt(i); return *this;}
+        Encoder& operator<< (unsigned long i)   {writeUInt(i); return *this;}
+        Encoder& operator<< (int i)             {writeInt(i); return *this;}
+        Encoder& operator<< (unsigned int i)    {writeUInt(i); return *this;}
         Encoder& operator<< (double d)          {writeDouble(d); return *this;}
         Encoder& operator<< (float f)           {writeFloat(f); return *this;}
         Encoder& operator<< (const std::string &str)   {writeString(str); return *this;}
