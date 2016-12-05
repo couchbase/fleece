@@ -52,7 +52,10 @@ namespace fleece {
     }
 
     const char* JSONConverter::errorMessage() noexcept {
-        return jsonsl_strerror((jsonsl_error_t)_error);
+        if (_error == kErrTruncatedJSON)
+            return "Truncated JSON";
+        else
+            return jsonsl_strerror((jsonsl_error_t)_error);
     }
 
 
