@@ -37,6 +37,16 @@
 
 #else
 
+    #ifdef __ANDROID__
+    #include <android/api-level.h>
+    #include <math.h>
+    #if __ANDROID_API__ < 18
+    static inline double log2(double n) {
+        return ::log(n) / M_LN2;
+    }
+    #endif
+    #endif
+
     #define _usuallyTrue(VAL)               __builtin_expect(VAL, true)
     #define _usuallyFalse(VAL)              __builtin_expect(VAL, false)
     #define NOINLINE                        __attribute((noinline))

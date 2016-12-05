@@ -163,7 +163,7 @@ namespace fleece {
         }
 
         inline const Value* get(int keyToFind) const noexcept {
-            auto key = (const Value*) ::bsearch((void*)(ssize_t)keyToFind,
+            auto key = (const Value*) ::bsearch((void*)(ssize_t)(keyToFind + 1),
                                                 _first, _count, 2*kWidth,
                                                 &numericKeyCmp);
             if (!key)
@@ -405,7 +405,7 @@ namespace fleece {
 #endif
             auto key = (const Value*)keyP;
             if (key->isInteger())
-                return (int)((ssize_t)keyToFindP - key->asInt());
+                return (int)((ssize_t)keyToFindP - key->asInt() - 1);
             else
                 return -1;
         }
