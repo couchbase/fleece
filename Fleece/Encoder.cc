@@ -493,7 +493,7 @@ namespace fleece {
                 if (item->tag() == kStringTag)
                     keys[i].buf = offsetby(item, 1);                // inline string
                 else
-                    keys[i] = slice(nullptr, item->asUnsigned());   // integer
+                    keys[i] = slice(nullptr, (size_t)item->asUnsigned());   // integer
             }
         }
 

@@ -12,7 +12,7 @@
 #include <math.h>
 #include <iostream>
 #include <algorithm>
-
+#include "PlatformCompat.hh"
 
 namespace fleece {
 
