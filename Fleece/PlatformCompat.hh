@@ -37,7 +37,7 @@
 
 #else
 
-    #ifdef __ANDROID__
+    #if defined(__ANDROID__) && !defined(_LIBCPP_VERSION)
     #include <android/api-level.h>
     #include <math.h>
     #if __ANDROID_API__ < 18
@@ -53,9 +53,6 @@
 
     #ifndef __printflike
     #define __printflike(fmtarg, firstvararg) __attribute__((__format__ (__printf__, fmtarg, firstvararg)))
-    #endif
-    #ifndef __unused
-    #define __unused __attribute((unused))
     #endif
 
     #define StackArray(NAME, TYPE, SIZE)    TYPE NAME[(SIZE)]
