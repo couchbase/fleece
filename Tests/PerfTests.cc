@@ -11,8 +11,12 @@
 #include <assert.h>
 #include <unistd.h>
 
+// Catch's REQUIRE is too slow for perf testing
 #undef REQUIRE
-#define REQUIRE(X) assert(X)        // Catch's REQUIRE is too slow for perf testing
+#define REQUIRE(TEST)   while (!(TEST)) {abort();}
+#undef CHECK
+#define CHECK(TEST)     while (!(TEST)) {abort();}
+
 
 using namespace fleece;
 
