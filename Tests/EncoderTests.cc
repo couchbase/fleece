@@ -503,9 +503,9 @@ public:
     }
 
     TEST_CASE_METHOD(EncoderTests, "Dump") {
-        std::string json = "{\"foo\":123,"
-                           "\"\\\"ironic\\\"\":[null,false,true,-100,0,100,123.456,6.02e+23],"
-                           "\"\":\"hello\\nt\\\\here\"}";
+        std::string json = json5("{'foo':123,"
+                                 "'\"ironic\"':[null,false,true,-100,0,100,123.456,6.02e+23],"
+                                 "'':'hello\\nt\\\\here'}");
         JSONConverter j(enc);
         j.encodeJSON(slice(json));
         endEncoding();

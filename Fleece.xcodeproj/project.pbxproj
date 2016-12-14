@@ -35,6 +35,9 @@
 		272E5A611BF91F6C00848580 /* slice.mm in Sources */ = {isa = PBXBuildFile; fileRef = 272E5A601BF91F6C00848580 /* slice.mm */; };
 		275CED521D3EF7BE001DE46C /* FleeceException.cc in Sources */ = {isa = PBXBuildFile; fileRef = 275CED501D3EF7BE001DE46C /* FleeceException.cc */; };
 		275CED531D3EF7BE001DE46C /* FleeceException.hh in Headers */ = {isa = PBXBuildFile; fileRef = 275CED511D3EF7BE001DE46C /* FleeceException.hh */; };
+		276D15461E007D3000543B1B /* JSON5.cc in Sources */ = {isa = PBXBuildFile; fileRef = 276D15441E007D3000543B1B /* JSON5.cc */; };
+		276D15471E007D3000543B1B /* JSON5.hh in Headers */ = {isa = PBXBuildFile; fileRef = 276D15451E007D3000543B1B /* JSON5.hh */; };
+		276D15491E008E7A00543B1B /* JSON5Tests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 276D15481E008E7A00543B1B /* JSON5Tests.cc */; };
 		2770153C1D59645A008BADD7 /* cdecode.c in Sources */ = {isa = PBXBuildFile; fileRef = 277015351D596436008BADD7 /* cdecode.c */; };
 		2770153D1D59645A008BADD7 /* cencode.c in Sources */ = {isa = PBXBuildFile; fileRef = 277015371D596436008BADD7 /* cencode.c */; };
 		278163B51CE69CA800B94E32 /* Fleece_C_impl.cc in Sources */ = {isa = PBXBuildFile; fileRef = 278163B31CE69CA800B94E32 /* Fleece_C_impl.cc */; settings = {COMPILER_FLAGS = "-Wno-return-type-c-linkage"; }; };
@@ -141,6 +144,9 @@
 		275C67DC1BFBA128008AA9E7 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		275CED501D3EF7BE001DE46C /* FleeceException.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FleeceException.cc; sourceTree = "<group>"; };
 		275CED511D3EF7BE001DE46C /* FleeceException.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = FleeceException.hh; sourceTree = "<group>"; };
+		276D15441E007D3000543B1B /* JSON5.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSON5.cc; sourceTree = "<group>"; };
+		276D15451E007D3000543B1B /* JSON5.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = JSON5.hh; sourceTree = "<group>"; };
+		276D15481E008E7A00543B1B /* JSON5Tests.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSON5Tests.cc; sourceTree = "<group>"; };
 		277015351D596436008BADD7 /* cdecode.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = cdecode.c; sourceTree = "<group>"; tabWidth = 4; usesTabs = 1; };
 		277015361D596436008BADD7 /* cdecode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cdecode.h; sourceTree = "<group>"; tabWidth = 4; usesTabs = 1; };
 		277015371D596436008BADD7 /* cencode.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = cencode.c; sourceTree = "<group>"; tabWidth = 4; usesTabs = 1; };
@@ -281,6 +287,8 @@
 				2715BA1D1D820C690061D92E /* PlatformCompat.hh */,
 				2746DD3B1D931BE9000517BC /* Benchmark.hh */,
 				273483F71DDA59B900B27A8C /* Fleece.pch */,
+				276D15441E007D3000543B1B /* JSON5.cc */,
+				276D15451E007D3000543B1B /* JSON5.hh */,
 			);
 			name = Utilities;
 			sourceTree = "<group>";
@@ -314,6 +322,7 @@
 				27E3DD521DB7DB1C00F2872D /* SharedKeysTests.cc */,
 				27298E771C01A461000CFBA8 /* PerfTests.cc */,
 				272E5A5E1BF91DBE00848580 /* ObjCTests.mm */,
+				276D15481E008E7A00543B1B /* JSON5Tests.cc */,
 				278163B81CE6BB8C00B94E32 /* C_Test.c */,
 				27EC8D5B1CEBA72E00199FE6 /* mn_wordlist.h */,
 				2747D9841CFB9BC300C48211 /* 1person.json */,
@@ -397,6 +406,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				276D15471E007D3000543B1B /* JSON5.hh in Headers */,
 				27298E661C00F8A9000CFBA8 /* jsonsl.h in Headers */,
 				27E3DD4D1DB6C32400F2872D /* CatchHelper.hh in Headers */,
 				278163BD1CE7A72300B94E32 /* KeyTree.hh in Headers */,
@@ -524,6 +534,7 @@
 				27C4ACAC1CE5146500938365 /* Array.cc in Sources */,
 				270FA27A1BF53CEA005DCB13 /* Value+JSON.cc in Sources */,
 				270FA2841BF53CEA005DCB13 /* varint.cc in Sources */,
+				276D15461E007D3000543B1B /* JSON5.cc in Sources */,
 				27A924CF1D9C32E800086206 /* Path.cc in Sources */,
 				275CED521D3EF7BE001DE46C /* FleeceException.cc in Sources */,
 				278163B51CE69CA800B94E32 /* Fleece_C_impl.cc in Sources */,
@@ -552,6 +563,7 @@
 				27FDF1A61DAF01300087B4E6 /* FleeceDocument.mm in Sources */,
 				27298E781C01A461000CFBA8 /* PerfTests.cc in Sources */,
 				27E3DD531DB7DB1C00F2872D /* SharedKeysTests.cc in Sources */,
+				276D15491E008E7A00543B1B /* JSON5Tests.cc in Sources */,
 				272E5A5F1BF91DBE00848580 /* ObjCTests.mm in Sources */,
 				279AC52B1C07776A002C80DB /* ValueTests.cc in Sources */,
 				278163B91CE6BB8C00B94E32 /* C_Test.c in Sources */,

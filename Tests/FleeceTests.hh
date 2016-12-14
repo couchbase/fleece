@@ -10,6 +10,7 @@
 
 #include "Fleece.hh"
 #include "Benchmark.hh"
+#include "JSON5.hh"
 #include <ostream>
 
 using namespace fleece;
@@ -44,6 +45,11 @@ private:
     void* _mapped;
     mmap_slice(const mmap_slice&);
 };
+
+
+// Converts JSON5 to JSON; helps make JSON test input more readable!
+static inline std::string json5(const std::string &s)      {return fleece::ConvertJSON5(s);}
+
 
 
 #include "catch.hpp"
