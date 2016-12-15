@@ -62,13 +62,25 @@ namespace fleece {
         out << '"';
     }
 
+    static bool canBeUnquotedJSON5Key(slice key) {
+        if (key.size == 0 || isdigit(key[0]))
+            return false;
+        for (unsigned i = 0; i < key.size; i++) {
+            if (!isalnum(key[i]) && key[i] != '_' && key[i] != '$')
+                return false;
+        }
+        return true;
+    }
+
+    template <int VER>
     alloc_slice Value::toJSON(const SharedKeys *sk) const {
         Writer writer;
-        toJSON(writer, sk);
+        toJSON<VER>(writer, sk);
         return writer.extractOutput();
     }
 
 
+    template <int VER>
     void Value::toJSON(Writer &out, const SharedKeys *sk) const {
         switch (type()) {
             case kNull:
@@ -123,10 +135,14 @@ namespace fleece {
                     else
                         out << ',';
                     slice keyStr = iter.keyString();
-                    if (keyStr)
-                        writeJSONString(out, keyStr);
-                    else
+                    if (keyStr) {
+                        if (VER == 5 && canBeUnquotedJSON5Key(keyStr))
+                            out.write((char*)keyStr.buf, keyStr.size);
+                        else
+                            writeJSONString(out, keyStr);
+                    } else {
                         iter.key()->toJSON(out, sk);
+                    }
                     out << ':';
                     iter.value()->toJSON(out, sk);
                 }
@@ -138,4 +154,11 @@ namespace fleece {
         }
     }
 
+
+    // Explicitly instantiate both needed versions of the templates:
+    template void Value::toJSON<1>(Writer &out, const SharedKeys *sk) const;
+    template void Value::toJSON<5>(Writer &out, const SharedKeys *sk) const;
+
+    template alloc_slice Value::toJSON<1>(const SharedKeys *sk) const;
+    template alloc_slice Value::toJSON<5>(const SharedKeys *sk) const;
 }

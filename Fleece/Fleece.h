@@ -211,6 +211,10 @@ extern "C" {
         Any Data values will become base64-encoded JSON strings. */
     FLSliceResult FLValue_ToJSON(FLValue);
 
+    /** Encodes a Fleece value as JSON5, a more lenient variant of JSON that allows dictionary
+        keys to be unquoted if they're alphanumeric. This tends to be more readable. */
+    FLSliceResult FLValue_ToJSON5(FLValue v);
+
 
     //////// ARRAY
 

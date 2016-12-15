@@ -388,19 +388,21 @@ public:
             REQUIRE(v->asInt() == 42ll);
             REQUIRE(d->get(slice("barrr")) == (const Value*)nullptr);
             REQUIRE(d->toJSON() == alloc_slice("{\"f\":42}"));
+            REQUIRE(d->toJSON<5>() == alloc_slice("{f:42}"));
         }
         {
             enc.beginDictionary();
-            enc.writeKey("foo");
+            enc.writeKey("o-o");
             enc.writeInt(42);
             enc.endDictionary();
-            checkOutput("4366 6F6F 7001 8003 002A 8003");
+            checkOutput("436F 2D6F 7001 8003 002A 8003");
             auto d = checkDict(1);
-            auto v = d->get(slice("foo"));
+            auto v = d->get(slice("o-o"));
             REQUIRE(v);
             REQUIRE(v->asInt() == 42);
             REQUIRE(d->get(slice("barrr")) == (const Value*)nullptr);
-            REQUIRE(d->toJSON() == alloc_slice("{\"foo\":42}"));
+            REQUIRE(d->toJSON() == alloc_slice("{\"o-o\":42}"));
+            REQUIRE(d->toJSON<5>() == alloc_slice("{\"o-o\":42}"));
         }
     }
 

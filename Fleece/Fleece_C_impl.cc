@@ -74,14 +74,18 @@ FLSliceResult FLValue_ToString(FLValue v) {
 }
 
 
-FLSliceResult FLValue_ToJSON(FLValue v) {
+template <int VER>
+static FLSliceResult ToJSON(FLValue v) {
     if (v) {
         try {
-            return toSliceResult(v->toJSON());      // toJSON can throw
+            return toSliceResult(v->toJSON<VER>());      // toJSON can throw
         } catchError(nullptr)
     }
     return {nullptr, 0};
 }
+
+FLSliceResult FLValue_ToJSON(FLValue v)         {return ToJSON<1>(v);}
+FLSliceResult FLValue_ToJSON5(FLValue v)        {return ToJSON<5>(v);}
 
 
 FLSliceResult FLData_ConvertJSON(FLSlice json, FLError *outError) {

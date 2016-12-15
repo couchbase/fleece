@@ -111,9 +111,14 @@ namespace fleece {
 
         //////// Conversion:
 
-        /** Writes a JSON representation to a Writer. */
+        /** Writes a JSON representation to a Writer.
+            If you call it as toJSON<5>(...), writes JSON5, which leaves most keys unquoted. */
+        template <int VER =1>
         void toJSON(Writer&, const SharedKeys* =nullptr) const;
-        /** Returns a JSON representation. */
+
+        /** Returns a JSON representation.
+            If you call it as toJSON<5>(...), writes JSON5, which leaves most keys unquoted. */
+        template <int VER =1>
         alloc_slice toJSON(const SharedKeys* =nullptr) const;
 
         /** Writes a full dump of the values in the data, including offsets and hex. */
