@@ -215,6 +215,8 @@ extern "C" {
         keys to be unquoted if they're alphanumeric. This tends to be more readable. */
     FLSliceResult FLValue_ToJSON5(FLValue v);
 
+    /** Converts valid JSON5 to JSON. */
+    FLSliceResult FLJSON5_ToJSON(FLSlice json5, FLError *error);
 
     //////// ARRAY
 

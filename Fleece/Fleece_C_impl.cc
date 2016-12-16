@@ -15,6 +15,7 @@
 
 #include "Fleece_C_impl.hh"
 #include "Fleece.h"
+#include "JSON5.hh"
 
 
 namespace fleece {
@@ -92,6 +93,15 @@ FLSliceResult FLData_ConvertJSON(FLSlice json, FLError *outError) {
     FLEncoderImpl e(json.size);
     FLEncoder_ConvertJSON(&e, json);
     return FLEncoder_Finish(&e, outError);
+}
+
+
+FLSliceResult FLJSON5_ToJSON(FLSlice json5, FLError *error) {
+    try {
+        std::string json = ConvertJSON5((std::string((char*)json5.buf, json5.size)));
+        return toSliceResult(alloc_slice(json));
+    } catchError(nullptr)
+    return {};
 }
 
 
