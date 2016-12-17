@@ -7,6 +7,7 @@
 //
 
 #include "catch.hpp"
+#include <time.h>
 
 
 using namespace Catch;
@@ -17,9 +18,16 @@ using namespace Catch;
 struct CaseListReporter : public ConsoleReporter {
     CaseListReporter( ReporterConfig const& _config )
     :   ConsoleReporter( _config )
-    {}
+    {
+        auto now = time(nullptr);
+        stream << "STARTING TESTS AT " << ctime(&now) << "\n";
+    }
 
-    virtual ~CaseListReporter() CATCH_OVERRIDE { }
+    virtual ~CaseListReporter() CATCH_OVERRIDE {
+        auto now = time(nullptr);
+        stream << "ENDED TESTS AT " << ctime(&now) << "\n";
+    }
+
     static std::string getDescription() {
         return "Logs a line for every test case";
     }
