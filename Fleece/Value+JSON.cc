@@ -94,9 +94,9 @@ namespace fleece {
                 if (isInteger()) {
                     int64_t i = asInt();
                     if (isUnsigned())
-                        sprintf(str, "%llu", (uint64_t)i);
+                        sprintf(str, "%llu", (unsigned long long)i);
                     else
-                        sprintf(str, "%lld", i);
+                        sprintf(str, "%lld", (long long)i);
                 } else if (isDouble()) {
                     sprintf(str, "%.16g", asDouble());
                 } else {

@@ -53,9 +53,9 @@ namespace fleece {
                 auto offset = - (int64_t)(wide ? pointerValue<true>() : pointerValue<false>());
                 char buf[32];
                 if (base)
-                    sprintf(buf, " (@%04llx)", (int64_t)((_byte + offset) - (uint8_t*)base)); // absolute
+                    sprintf(buf, " (@%04llx)", (long long)((_byte + offset) - (uint8_t*)base)); // absolute
                 else
-                    sprintf(buf, " (@-%04llx)", -offset);
+                    sprintf(buf, " (@-%04llx)", (long long)-offset);
                 out << buf;
                 break;
             }
