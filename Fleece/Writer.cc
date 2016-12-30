@@ -211,4 +211,63 @@ namespace fleece {
         write(buf.data(), len);
     }
 
+
+#pragma mark - JSON:
+
+
+    void Writer::writeJSONBool(bool b) {
+        write(b ? "true"_sl : "false"_sl);
+    }
+
+    void Writer::writeJSONInt(int64_t i, bool forceUnsigned) {
+        char str[32];
+        write(str, sprintf(str, (forceUnsigned ?"%llu" : "%lld"), (long long)i));
+    }
+
+    void Writer::writeJSONFloat(float f) {
+        char str[32];
+        write(str, sprintf(str, "%.6g", f));
+    }
+
+    void Writer::writeJSONDouble(double f) {
+        char str[32];
+        write(str, sprintf(str, "%.16g", f));
+    }
+
+    void Writer::writeJSONString(slice str) {
+        write("\""_sl);
+        auto start = (const uint8_t*)str.buf;
+        auto end = (const uint8_t*)str.end();
+        for (auto p = start; p < end; p++) {
+            uint8_t ch = *p;
+            if (ch == '"' || ch == '\\' || ch < 32 || ch == 127) {
+                // Write characters from start up to p-1:
+                write({start, p});
+                start = p + 1;
+                switch (ch) {
+                    case '"':
+                    case '\\':
+                        write("\\"_sl);
+                        --start; // ch will be written in next pass
+                        break;
+                    case '\r':
+                        write("\\r"_sl);
+                        break;
+                    case '\n':
+                        write("\\n"_sl);
+                        break;
+                    case '\t':
+                        write("\\t"_sl);
+                        break;
+                    default: {
+                        char buf[7];
+                        write(buf, sprintf(buf, "\\u%04x", (unsigned)ch));
+                        break;
+                    }
+                }
+            }
+        }
+        write({start, end});
+        write("\""_sl);
+    }
 }

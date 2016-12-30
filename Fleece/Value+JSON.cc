@@ -26,42 +26,6 @@
 
 namespace fleece {
 
-    // Writes a JSON string, with all necessary escapes
-    static void writeJSONString(Writer &out, slice str) {
-        out << '"';
-        auto start = (const uint8_t*)str.buf;
-        auto end = (const uint8_t*)str.end();
-        for (auto p = start; p < end; p++) {
-            uint8_t ch = *p;
-            if (ch == '"' || ch == '\\' || ch < 32 || ch == 127) {
-                // Write characters from start up to p-1:
-                out.write((char*)start, p-start);
-                start = p + 1;
-                switch (ch) {
-                    case '"':
-                    case '\\':
-                        out << '\\';
-                        --start; // ch will be written in next pass
-                        break;
-                    case '\n':
-                        out << slice("\\n");
-                        break;
-                    case '\t':
-                        out << slice("\\t");
-                        break;
-                    default: {
-                        char buf[7];
-                        sprintf(buf, "\\u%04u", (unsigned)ch);
-                        out << slice(buf);
-                        break;
-                    }
-                }
-            }
-        }
-        out.write((char*)start, end-start);
-        out << '"';
-    }
-
     static bool canBeUnquotedJSON5Key(slice key) {
         if (key.size == 0 || isdigit(key[0]))
             return false;
@@ -87,26 +51,18 @@ namespace fleece {
                 out << slice("null");
                 return;
             case kBoolean:
-                out << (asBool() ? slice("true") : slice("false"));
+                out.writeJSONBool(asBool());
                 return;
-            case kNumber: {
-                char str[32];
-                if (isInteger()) {
-                    int64_t i = asInt();
-                    if (isUnsigned())
-                        sprintf(str, "%llu", (unsigned long long)i);
-                    else
-                        sprintf(str, "%lld", (long long)i);
-                } else if (isDouble()) {
-                    sprintf(str, "%.16g", asDouble());
-                } else {
-                    sprintf(str, "%.6g", asFloat());
-                }
-                out << slice(str);
+            case kNumber:
+                if (isInteger())
+                    out.writeJSONInt(asInt(), isUnsigned());
+                else if (isDouble())
+                    out.writeJSONDouble(asDouble());
+                else
+                    out.writeJSONFloat(asFloat());
                 return;
-            }
             case kString:
-                writeJSONString(out, asString());
+                out.writeJSONString(asString());
                 return;
             case kData:
                 out << '"';
@@ -139,9 +95,9 @@ namespace fleece {
                         if (VER == 5 && canBeUnquotedJSON5Key(keyStr))
                             out.write((char*)keyStr.buf, keyStr.size);
                         else
-                            writeJSONString(out, keyStr);
+                            out.writeJSONString(keyStr);
                     } else {
-                        iter.key()->toJSON(out, sk);
+                        iter.key()->toJSON(out, sk);    // non-string keys are possible...
                     }
                     out << ':';
                     iter.value()->toJSON(out, sk);

@@ -43,9 +43,10 @@ namespace fleece {
         alloc_slice extractOutput();
 
         const void* write(const void* data, size_t length);
+        const void* write(slice s)              {return write(s.buf, s.size);}
 
         Writer& operator<< (uint8_t byte)       {return operator<<(slice(&byte,1));}
-        Writer& operator<< (slice s)            {write(s.buf, s.size); return *this;}
+        Writer& operator<< (slice s)            {write(s); return *this;}
 
         void writeBase64(slice data);
         void writeDecodedBase64(slice base64String);
@@ -59,6 +60,12 @@ namespace fleece {
             @param pos  The position in the output at which to start overwriting
             @param newData  The data that replaces the old */
         void rewrite(const void *pos, slice newData);
+
+        void writeJSONBool(bool);
+        void writeJSONInt(int64_t, bool forceUnsigned =false);
+        void writeJSONFloat(float);
+        void writeJSONDouble(double);
+        void writeJSONString(slice);
 
     private:
         class Chunk {
