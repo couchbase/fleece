@@ -69,8 +69,8 @@ namespace fleece {
         slice upTo(const void* pos)                 {return slice(buf, pos);}
         slice from(const void* pos)                 {return slice(pos, end());}
 
-        const uint8_t& operator[](size_t i) const     {return ((const uint8_t*)buf)[i];}
-        slice operator()(size_t i, unsigned n) const  {return slice(offset(i), n);}
+        const uint8_t& operator[](size_t i) const   {return ((const uint8_t*)buf)[i];}
+        slice operator()(size_t i, size_t n) const  {return slice(offset(i), n);}
 
         slice read(size_t nBytes) noexcept;
         slice readAtMost(size_t nBytes) noexcept;
