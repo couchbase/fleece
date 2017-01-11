@@ -21,6 +21,9 @@
 #include <math.h>
 #include <stdlib.h>
 #include <atomic>
+#ifdef _MSC_VER
+#include "memmem.h"
+#endif
 
 namespace fleece {
 

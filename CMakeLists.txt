@@ -30,6 +30,9 @@ include_directories("Fleece"
 if(!MSVC)
 	set_source_files_properties(Fleece/Fleece_C_impl.cc  PROPERTIES
                             	COMPILE_FLAGS  -Wno-return-type-c-linkage)
+else()
+    include_directories("MSVC")
+    set(FLEECE_SRC ${FLEECE_SRC} MSVC/memmem.cc)
 endif()
 
 add_library(Fleece        SHARED  ${FLEECE_SRC})
