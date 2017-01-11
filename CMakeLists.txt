@@ -21,6 +21,9 @@ if (APPLE AND NOT ANDROID)
     set(FLEECE_SRC ${FLEECE_SRC} ${OBJC_SRC})
     set_source_files_properties(ObjC/Fleece+CoreFoundation.mm  PROPERTIES
                                 COMPILE_FLAGS  -Wno-return-type-c-linkage)
+elseif(WIN32)
+    include_directories("MSVC")
+    set(FLEECE_SRC ${FLEECE_SRC} MSVC/memmem.cc)
 endif()
 
 include_directories("Fleece" 
@@ -28,11 +31,7 @@ include_directories("Fleece"
                     "vendor/jsonsl" )
 
 if(!MSVC)
-	set_source_files_properties(Fleece/Fleece_C_impl.cc  PROPERTIES
-                            	COMPILE_FLAGS  -Wno-return-type-c-linkage)
-else()
-    include_directories("MSVC")
-    set(FLEECE_SRC ${FLEECE_SRC} MSVC/memmem.cc)
+	set_source_files_properties(Fleece/Fleece_C_impl.cc  PROPERTIES)
 endif()
 
 add_library(Fleece        SHARED  ${FLEECE_SRC})
