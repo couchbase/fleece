@@ -86,6 +86,7 @@ namespace fleece {
         bool writeDecimal(uint64_t) noexcept;
         static unsigned sizeOfDecimal(uint64_t) noexcept;
 
+        slice find(slice target) const;
         const uint8_t* findByte(uint8_t byte) const    {return (const uint8_t*)::memchr(buf, byte, size);}
         const uint8_t* findByteOrEnd(uint8_t byte) const;
         const uint8_t* findAnyByteOf(slice targetBytes);

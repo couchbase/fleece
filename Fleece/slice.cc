@@ -144,6 +144,11 @@ namespace fleece {
         return 1 + (unsigned)::floor(::log10(n));
     }
 
+    slice slice::find(slice target) const {
+        auto found = memmem(buf, size, target.buf, target.size);
+        return {found, (found ? target.size : 0)};
+    }
+
     const uint8_t* slice::findByteOrEnd(uint8_t byte) const {
         auto result = findByte(byte);
         return result ? result : (const uint8_t*)end();
