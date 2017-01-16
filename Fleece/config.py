@@ -1,0 +1,8 @@
+excluded = ["FLStr","operatorslice","operatorFLSlice"]
+default_param_name = {"FLValue":"value","FLSliceResult":"slice","FLSlice":"slice","FLArray":"array","FLArrayIterator*":"i","FLDictIterator*":"i","FLDict":"dict","FLDictKey":"key","FLKeyPath":"keyPath","FLDictKey*":"dictKey","FLSharedKeys":"shared","FLEncoder":"encoder","long":"l","ulong":"u","bool":"b","float":"f","double":"d","FLError*":"outError","int64_t":"l","uint64_t":"u"}
+param_bridge_types = ["FLSlice", "size_t", "size_t*"]
+force_no_bridge = ["FLSlice_Compare"]
+return_bridge_types = ["FLSliceResult", "FLSlice", "size_t"]
+type_map = {"int32_t":"int","uint32_t":"uint","int64_t":"long","uint64_t":"ulong","size_t":"UIntPtr","size_t*":"UIntPtr*","unsigned":"uint","FLValue":"FLValue*","FLDict":"FLDict*","FLArray":"FLArray*","FLEncoder":"FLEncoder*","FLSharedKeys":"FLSharedKeys*","FLKeyPath":"FLKeyPath*"}
+literals = {"FLSlice_Compare":".nobridge .int FLSlice_Compare FLSlice:left FLSlice:right","FLData_ConvertJSON":".bridge .FLSliceResult_b FLData_ConvertJSON FLSlice_b:json FLError*:outError","FLValue_AsString":".bridge .FLSlice_b FLValue_AsString FLValue*:value","FLValue_ToString":".bridge .FLSliceResult_b FLValue_ToString FLValue*:value","FLValue_ToJSON":".bridge .FLSliceResult_b FLValue_ToJSON FLValue*:value","FLDictKey_GetString":".bridge .FLSlice_b FLDictKey_GetString FLDictKey*:key","FLEncoder_WriteString":".bridge .bool FLEncoder_WriteString FLEncoder*:encoder FLSlice_b:slice","FLEncoder_WriteKey":"bridge .bool FLEncoder_WriteKey FLEncoder*:encoder FLSlice_b:slice","FLJSON5_ToJSON":".bridge .FLSliceResult_b FLJSON5_ToJSON FLSlice_b:json5 FLError*:error"}
+reserved = ["string"]
