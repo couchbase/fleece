@@ -115,6 +115,7 @@ extern "C" {
         JSONError,          // Error parsing JSON
         UnknownValue,       // Unparseable data in a Value (corrupt? Or from some distant future?)
         InternalError,      // Something that shouldn't happen
+        NotFound
     } FLError;
 
     /** @} */
@@ -270,6 +271,10 @@ extern "C" {
         If the database has a shared-keys mapping, you MUST use this call instead of FLDict_Get.
         Returns nullptr if the value is not found or if the dictionary is nullptr. */
     FLValue FLDict_GetSharedKey(FLDict d, FLSlice keyString, FLSharedKeys sk);
+    
+    /** Gets a string key from an FLSharedKeys object given its integer encoding 
+        (for use when FLDictIterator_GetKey returns a value of type 'Number' */
+    FLSlice FLSharedKey_GetKeyString(FLSharedKeys sk, int keyCode, FLError* outError);
 
     /** Looks up a key in an unsorted (or sorted) dictionary. Slower than FLDict_Get. */
     FLValue FLDict_GetUnsorted(FLDict, FLSlice keyString);
