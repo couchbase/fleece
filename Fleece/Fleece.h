@@ -37,7 +37,6 @@ extern "C" {
     typedef struct _FLKeyPath*     FLKeyPath;       ///< A reference to a key path
 #endif
 
-
     /** A simple reference to a block of memory. Does not imply ownership. */
     typedef struct {
         const void *buf;
@@ -83,6 +82,8 @@ extern "C" {
 #endif
     } FLSliceResult;
 
+    typedef FLSlice FLString;
+    typedef FLSliceResult FLStringResult;
 
     /** Frees the memory of a FLSliceResult. */
     void FLSliceResult_Free(FLSliceResult);
@@ -148,7 +149,7 @@ extern "C" {
     FLSliceResult FLData_ConvertJSON(FLSlice json, FLError *outError);
 
     /** Produces a human-readable dump of the Value encoded in the data. */
-    FLSliceResult FLData_Dump(FLSlice data);
+    FLStringResult FLData_Dump(FLSlice data);
 
     /** @} */
     /** \name Value Accessors
@@ -193,7 +194,7 @@ extern "C" {
     double FLValue_AsDouble(FLValue);
 
     /** Returns the exact contents of a string value, or null for all other types. */
-    FLSlice FLValue_AsString(FLValue);
+    FLString FLValue_AsString(FLValue);
 
     /** Returns the exact contents of a data value, or null for all other types. */
     FLSlice FLValue_AsData(FLValue);
@@ -206,18 +207,18 @@ extern "C" {
 
     /** Returns a string representation of any scalar value. Data values are returned in raw form.
         Arrays and dictionaries don't have a representation and will return nullptr. */
-    FLSliceResult FLValue_ToString(FLValue);
+    FLStringResult FLValue_ToString(FLValue);
 
     /** Encodes a Fleece value as JSON (or a JSON fragment.) 
         Any Data values will become base64-encoded JSON strings. */
-    FLSliceResult FLValue_ToJSON(FLValue);
+    FLStringResult FLValue_ToJSON(FLValue);
 
     /** Encodes a Fleece value as JSON5, a more lenient variant of JSON that allows dictionary
         keys to be unquoted if they're alphanumeric. This tends to be more readable. */
     FLSliceResult FLValue_ToJSON5(FLValue v);
 
     /** Converts valid JSON5 to JSON. */
-    FLSliceResult FLJSON5_ToJSON(FLSlice json5, FLError *error);
+    FLStringResult FLJSON5_ToJSON(FLString json5, FLError *error);
 
     //////// ARRAY
 
@@ -274,7 +275,7 @@ extern "C" {
     
     /** Gets a string key from an FLSharedKeys object given its integer encoding 
         (for use when FLDictIterator_GetKey returns a value of type 'Number' */
-    FLSlice FLSharedKey_GetKeyString(FLSharedKeys sk, int keyCode, FLError* outError);
+    FLString FLSharedKey_GetKeyString(FLSharedKeys sk, int keyCode, FLError* outError);
 
     /** Looks up a key in an unsorted (or sorted) dictionary. Slower than FLDict_Get. */
     FLValue FLDict_GetUnsorted(FLDict, FLSlice keyString);
@@ -325,7 +326,7 @@ extern "C" {
     FLDictKey FLDictKey_InitWithSharedKeys(FLSlice string, FLSharedKeys sharedKeys);
 
     /** Returns the string value of the key (which it was initialized with.) */
-    FLSlice FLDictKey_GetString(const FLDictKey *key);
+    FLString FLDictKey_GetString(const FLDictKey *key);
 
     /** Looks up a key in a dictionary using an FLDictKey. If the key is found, "hint" data will
         be stored inside the FLDictKey that will speed up subsequent lookups. */
@@ -430,7 +431,7 @@ extern "C" {
     /** Writes a string to an encoder. The string must be UTF-8-encoded and must not contain any
         zero bytes.
         Do _not_ use this to write a dictionary key; use FLEncoder_WriteKey instead. */
-    bool FLEncoder_WriteString(FLEncoder, FLSlice);
+    bool FLEncoder_WriteString(FLEncoder, FLString);
 
     /** Writes a raw data value (a blob) to an encoder. This can contain absolutely anything
         including null bytes. Note that this data type has no JSON representation, so if the
@@ -461,7 +462,7 @@ extern "C" {
     bool FLEncoder_BeginDict(FLEncoder, size_t reserveCount);
 
     /** Specifies the key for the next value to be written to the current dictionary. */
-    bool FLEncoder_WriteKey(FLEncoder, FLSlice);
+    bool FLEncoder_WriteKey(FLEncoder, FLString);
 
     /** Ends writing a dictionary value; pops back the previous encoding state. */
     bool FLEncoder_EndDict(FLEncoder);
