@@ -133,11 +133,7 @@ namespace fleece {
             auto d = item->asDict();
             if (_usuallyFalse(!d))
                 return nullptr;
-            int key;
-            if (sk && sk->encode(comp, key))
-                return d->get(key);
-            else
-                return d->get(comp);
+            return d->get(comp, sk);
         } else {
             return getFromArray(item, index);
         }
