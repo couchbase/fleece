@@ -177,11 +177,11 @@ namespace fleece {
         bool isWideArray() const noexcept {return (_byte[0] & 0x08) != 0;}
 
     private:
-        Value(internal::tags tag, int tiny, int byte1 = 0) {
-            _byte[0] = (uint8_t)((tag<<4) | tiny);
-            _byte[1] = (uint8_t)byte1;
-            _byte[2] = _byte[3] = 0;
-        }
+        constexpr Value(internal::tags tag, int tiny, int byte1 = 0)
+        :_byte {(uint8_t)((tag<<4) | tiny),
+                (uint8_t)byte1,
+                0, 0}
+        { }
 
         // pointer:
         Value(size_t offset, int width) {

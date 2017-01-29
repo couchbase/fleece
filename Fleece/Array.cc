@@ -112,6 +112,9 @@ namespace fleece {
         return impl(this)[index];
     }
 
+    static constexpr Array kEmptyArrayInstance;
+    const Array* const Array::kEmpty = &kEmptyArrayInstance;
+
 
 
     Array::iterator::iterator(const Array *a) noexcept
@@ -133,7 +136,7 @@ namespace fleece {
         return *this;
     }
 
-
+    
 #pragma mark - DICT:
 
 
@@ -471,6 +474,10 @@ namespace fleece {
     void Dict::sortKeys(key keys[], size_t count) noexcept {
         qsort(keys, count, sizeof(key), sortKeysCmp);
     }
+
+
+    static constexpr Dict kEmptyDictInstance;
+    const Dict* const Dict::kEmpty = &kEmptyDictInstance;
 
 
 

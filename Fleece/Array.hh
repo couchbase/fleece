@@ -40,6 +40,9 @@ namespace fleece {
             iterator and use its sequential or random-access accessors. */
         const Value* get(uint32_t index) const noexcept;
 
+        /** An empty Array. */
+        static const Array* const kEmpty;
+
         /** A stack-based array iterator */
         class iterator {
         public:
@@ -79,10 +82,14 @@ namespace fleece {
 
         iterator begin() const noexcept                  {return iterator(this);}
 
+        constexpr Array()  :Value(internal::kArrayTag, 0, 0) { }
+
+    private:
         friend class Value;
         friend class Dict;
         template <bool WIDE> friend struct dictImpl;
     };
+
 
 
     /** A Value that's a dictionary/map */
@@ -113,6 +120,9 @@ namespace fleece {
             return get(keyBytes);
         }
 #endif
+
+        /** An empty Dict. */
+        static const Dict* const kEmpty;
 
         /** A stack-based dictionary iterator */
         class iterator {
@@ -194,6 +204,8 @@ namespace fleece {
 
         /** Sorts an array of keys, a prerequisite of the multi-key get() method. */
         static void sortKeys(key keys[], size_t count) noexcept;
+
+        constexpr Dict()  :Value(internal::kDictTag, 0, 0) { }
 
     private:
         friend class Value;
