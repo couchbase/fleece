@@ -46,6 +46,14 @@ FLValue FLDict_GetWithNSString(FLDict dict, NSString* key) {
 }
 
 
+NSString* FLDictIterator_GetKeyAsNSString(FLDictIterator *i,
+                                          __unsafe_unretained NSMapTable *sharedStrings,
+                                          FLSharedKeys sk)
+{
+    return ((Dict::iterator*)i)->keyToNSString(sharedStrings, (const SharedKeys*)sk);
+}
+
+
 NSData* FLEncoder_FinishWithNSData(FLEncoder enc, NSError** outError) {
     FLError code;
     FLSliceResult result = FLEncoder_Finish(enc, &code);

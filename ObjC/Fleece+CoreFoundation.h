@@ -50,6 +50,11 @@ extern "C" {
     FLValue FLDict_GetWithNSString(FLDict, NSString*);
 
 
+    /** Returns an FLDictIterator's current key as an NSString. */
+    NSString* FLDictIterator_GetKeyAsNSString(FLDictIterator *i,
+                                              NSMapTable *sharedStrings,
+                                              FLSharedKeys);
+
     /** Same as FLEncoder_Finish, but returns result as NSData or error as NSError. */
     NSData* FLEncoder_FinishWithNSData(FLEncoder, NSError**);
 

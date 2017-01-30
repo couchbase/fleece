@@ -20,6 +20,9 @@
 #include "FleeceException.hh"
 
 
+#define LOG_CACHED_STRINGS 0
+
+
 // NSMapXXX C API isn't available in iOS
 #if TARGET_OS_IPHONE
 #define MapGet(STRINGS, KEY)           [(STRINGS) objectForKey: (__bridge id)(KEY)]
@@ -28,6 +31,15 @@
 #else
 #define MapGet(STRINGS, KEY)           (__bridge NSString*)NSMapGet((STRINGS), (KEY))
 #define MapInsert(STRINGS, KEY, VALUE) NSMapInsert((STRINGS), (KEY), (__bridge void*)(VALUE))
+#endif
+
+
+// Minimum size of NSString that will be allocated on the heap, as opposed to being a tagged ptr.
+// See <https://www.mikeash.com/pyblog/friday-qa-2015-07-31-tagged-pointer-strings.html>
+#if TARGET_RT_64_BIT
+static const size_t kMinAllocedNSStringSize = 8;
+#else
+static const size_t kMinAllocedNSStringSize = 1;  // do tagged strings exist in 32-bit? Guessing no
 #endif
 
 
@@ -75,14 +87,23 @@ namespace fleece {
             case kString: {
                 slice strSlice = asString();
                 if (sharedStrings != nil
-                               && strSlice.size >= internal::kMinSharedStringSize
+                               && strSlice.size >= std::max(internal::kMinSharedStringSize,
+                                                            kMinAllocedNSStringSize)
                                && strSlice.size <= internal::kMaxSharedStringSize) {
                     // Look up an existing shared string for this Value*:
                     NSString* str = MapGet(sharedStrings, this);
                     if (!str) {
                         str = convertString(strSlice);
                         MapInsert(sharedStrings, this, str);
+#if LOG_CACHED_STRINGS
+                        fprintf(stderr, "SHAREDSTRINGS[%p] %p --> %p %s\n", sharedStrings, this, str, str.UTF8String);
+#endif
                     }
+#if LOG_CACHED_STRINGS
+                    else {
+                        fprintf(stderr, "SHAREDSTRINGS[%p] *Used* %p --> %s\n", sharedStrings, this, str.UTF8String);
+                    }
+#endif
                     return str;
                 } else {
                     return convertString(strSlice);
@@ -102,23 +123,7 @@ namespace fleece {
                 Dict::iterator iter(asDict());
                 auto result = [[NSMutableDictionary alloc] initWithCapacity: iter.count()];
                 for (; iter; ++iter) {
-                    NSString* key = nil;
-                    if (iter.key()->isInteger() && sk) {
-                        // Decode int key using SharedKeys:
-                        auto encodedKey = (int)iter.key()->asInt();
-                        key = (__bridge NSString*)sk->platformStringForKey(encodedKey);
-                        if (!key) {
-                            slice strSlice = sk->decode(encodedKey);
-                            if (strSlice) {
-                                key = convertString(strSlice);
-                                sk->setPlatformStringForKey(encodedKey,
-                                                            CFRetain((__bridge CFStringRef)key));
-                                //TODO: Strings need to be CFRelease'd when the SharedKeys is destructed.
-                            }
-                        }
-                    }
-                    if (!key)
-                        key = iter.key()->toNSObject(sharedStrings, sk);
+                    NSString* key = iter.keyToNSString(sharedStrings, sk);
                     result[key] = iter.value()->toNSObject(sharedStrings, sk);
                 }
                 return result;
@@ -126,6 +131,40 @@ namespace fleece {
             default:
                 FleeceException::_throw(UnknownValue, "illegal typecode in Value; corrupt data?");
         }
+    }
+
+
+    NSString* Dict::iterator::keyToNSString(__unsafe_unretained NSMapTable *sharedStrings,
+                                            const SharedKeys *sk) const
+    {
+        if (!key())
+            return nil;
+        NSString* keyStr = nil;
+        if (key()->isInteger() && sk) {
+            // Decode int key using SharedKeys:
+            auto encodedKey = (int)key()->asInt();
+            keyStr = (__bridge NSString*)sk->platformStringForKey(encodedKey);
+            if (!keyStr) {
+                slice strSlice = sk->decode(encodedKey);
+                if (strSlice) {
+                    keyStr = convertString(strSlice);
+                    sk->setPlatformStringForKey(encodedKey,
+                                                CFRetain((__bridge CFStringRef)keyStr));
+                    //TODO: Strings need to be CFRelease'd when the SharedKeys is destructed.
+#if LOG_CACHED_STRINGS
+                    fprintf(stderr, "SHAREDKEY[%p] %d --> %s\n", sk, encodedKey, keyStr.UTF8String);
+#endif
+                }
+            }
+#if LOG_CACHED_STRINGS
+            else {
+                fprintf(stderr, "SHAREDKEY[%p] *Used* %d --> %s\n", sk, encodedKey, keyStr.UTF8String);
+            }
+#endif
+        }
+        if (!keyStr)
+            keyStr = key()->toNSObject(sharedStrings, sk);
+        return keyStr;
     }
 
 

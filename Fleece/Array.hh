@@ -146,6 +146,10 @@ namespace fleece {
             /** Steps forward by one or more items. (Throws if stepping past the end.) */
             iterator& operator += (uint32_t);
 
+#ifdef __OBJC__
+            NSString* keyToNSString(NSMapTable *sharedStrings, const SharedKeys *sk) const;
+#endif
+
         private:
             void readKV() noexcept;
             const Value* rawKey() noexcept             {return _a._first;}
