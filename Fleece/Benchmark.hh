@@ -8,6 +8,7 @@
 
 #pragma once
 #include <math.h>
+#include <string>
 #include <time.h>
 #include <algorithm>
 #include <vector>
@@ -39,7 +40,7 @@ class Benchmark {
 public:
     void start()        {_st.reset();}
     double elapsed()    {return _st.elapsed();}
-    void stop()         {_times.push_back(elapsed());}
+    double stop()       {double t = elapsed(); _times.push_back(t); return t;}
 
     void sort()         {std::sort(_times.begin(), _times.end());}
 
@@ -73,10 +74,24 @@ public:
 
     void reset()        {_times.clear();}
 
-    void printReport(double scale, const char *units) {
+    void printReport(double scale =1.0, const char *items =nullptr) {
         auto r = range();
-        fprintf(stderr, "Range: %g ... %g %s, Average: %g, median: %g, std dev: %.3g\n",
-                r.first*scale, r.second*scale, units,
+
+        std::string scaleName;
+        const char* kTimeScales[] = {"sec", "ms", "us", "ns"};
+        double avg = average();
+        for (unsigned i = 0; i < sizeof(kTimeScales)/sizeof(char*); ++i) {
+            scaleName = kTimeScales[i];
+            if (avg*scale >= 1.0)
+                break;
+            scale *= 1000;
+        }
+
+        if (items)
+            scaleName += std::string("/") + std::string(items);
+
+        fprintf(stderr, "Range: %.3f ... %.3f %s, Average: %.3f, median: %.3f, std dev: %.3g\n",
+                r.first*scale, r.second*scale, scaleName.c_str(),
                 average()*scale, median()*scale, stddev()*scale);
     }
 

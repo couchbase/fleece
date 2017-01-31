@@ -103,7 +103,7 @@ TEST_CASE("Obj-C PerfParse1000PeopleNS", "[.Perf]") {
 
             usleep(100);
         }
-        bench.printReport(1000, "ms");
+        bench.printReport();
     }
 }
 
@@ -137,7 +137,7 @@ TEST_CASE("Obj-C PerfFindPersonByIndexNS", "[.Perf]") {
                 bench.stop();
             }
         }
-        bench.printReport(1e9 / kIterations, "ns");
+        bench.printReport(kIterations);
     }
 }
 
@@ -262,7 +262,7 @@ TEST_CASE("Obj-C PerfSerialize", "[.Perf]") {
             }
             b.stop();
         }
-        b.printReport(1e6/rep, "us");
+        b.printReport(1, "dict");
         // 10/30/16: 12.4us/dict (using isKindOf)
         //           11.3us/dict (using category)
         fprintf(stderr, "Total size = %zu bytes\n", totalSize);

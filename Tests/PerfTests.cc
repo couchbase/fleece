@@ -50,7 +50,7 @@ TEST_CASE("Perf Convert1000People", "[.Perf]") {
 
         usleep(100);
     }
-    bench.printReport(1000, "ms");
+    bench.printReport();
 
     fprintf(stderr, "\nJSON size: %zu bytes; Fleece size: %zu bytes (%.2f%%)\n",
             input.size, lastResult.size, (lastResult.size*100.0/input.size));
@@ -70,12 +70,12 @@ TEST_CASE("Perf LoadFleece", "[.Perf]") {
             REQUIRE(root != nullptr);
             bench.stop();
         }
-        bench.printReport(1e3, "ms");
+        bench.printReport();
     }
 
     {
         fprintf(stderr, "Scanning trusted Fleece... ");
-        static const int kIterationsPerSample = 1000;
+        static const int kIterationsPerSample = 1000000;
         Benchmark bench;
         for (int i = 0; i < kIterations; i++) {
             bench.start();
@@ -85,7 +85,7 @@ TEST_CASE("Perf LoadFleece", "[.Perf]") {
             }
             bench.stop();
         }
-        bench.printReport(1e6 / kIterationsPerSample, "µs");
+        bench.printReport(1.0/kIterationsPerSample);
     }
 }
 
@@ -120,7 +120,7 @@ static void testFindPersonByIndex(int sort) {
 
         bench.stop();
     }
-    bench.printReport(1e9 / kIterations, "ns");
+    bench.printReport(1.0/kIterations);
 }
 
 TEST_CASE("Perf FindPersonByIndexUnsorted", "[.Perf]")    {testFindPersonByIndex(0);}
@@ -171,7 +171,7 @@ static void testLoadPeople(bool multiKeyGet) {
 
         bench.stop();
     }
-    bench.printReport(1e9 / 1000 / kIterations, "ns per person");
+    bench.printReport(1.0/kIterations, "person");
 }
 
 TEST_CASE("Perf LoadPeople", "[.Perf]") {testLoadPeople(false);}
