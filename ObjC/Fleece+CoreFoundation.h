@@ -62,6 +62,17 @@ extern "C" {
     /** NSError domain string for Fleece errors */
     extern NSString* const FLErrorDomain;
 
+    /** Category defining -fl_encodeTo:, which is called on objects being encoded by
+        FLEncoder_WriteNSObject (even recursively.) The Fleece library implements this method
+        for the compatible classes (NSNumber, NSString, etc.) but you can implement it for other
+        classes to allow them to be encoded. If you implement it on NSObject, you have a fallback
+        that can encode based on some other criteria (like whether the object conforms to a
+        protocol of your own) or else raise an exception. */
+    @interface NSObject (Fleece)
+    - (void) fl_encodeTo: (FLEncoder)encoder;
+    @end
+
+
 #endif
 
 
