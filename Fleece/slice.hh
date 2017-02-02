@@ -92,6 +92,7 @@ namespace fleece {
         const uint8_t* findAnyByteOf(slice targetBytes);
 
         int compare(slice) const noexcept;
+        bool caseEquivalent(slice) const noexcept;
         bool operator==(const slice &s) const       {return size==s.size &&
                                                      memcmp(buf, s.buf, size) == 0;}
         bool operator!=(const slice &s) const       {return !(*this == s);}

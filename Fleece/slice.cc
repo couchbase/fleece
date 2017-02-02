@@ -46,6 +46,15 @@ namespace fleece {
         }
     }
 
+    bool slice::caseEquivalent(slice b) const noexcept {
+        if (size != b.size)
+            return false;
+        for (size_t i = 0; i < size; i++)
+            if (tolower((*this)[i]) != tolower(b[i]))
+                return false;
+        return true;
+    }
+
     slice slice::read(size_t nBytes) noexcept {
         if (nBytes > size)
             return nullslice;
