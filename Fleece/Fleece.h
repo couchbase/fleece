@@ -89,6 +89,9 @@ extern "C" {
     void FLSliceResult_Free(FLSliceResult);
 
 
+    /** Equality test of two slices. */
+    bool FLSlice_Equal(FLSlice a, FLSlice b);
+
     /** Lexicographic comparison of two slices; basically like memcmp(), but taking into account
         differences in length. */
     int FLSlice_Compare(FLSlice, FLSlice);

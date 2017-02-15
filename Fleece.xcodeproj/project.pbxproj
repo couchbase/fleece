@@ -176,6 +176,7 @@
 		27C4AC961CDFFDA100938365 /* Performance.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = Performance.md; sourceTree = "<group>"; };
 		27C4ACAA1CE5146500938365 /* Array.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Array.cc; sourceTree = "<group>"; };
 		27C4ACAB1CE5146500938365 /* Array.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Array.hh; sourceTree = "<group>"; };
+		27D7F8791E5521CC0088FADF /* FleeceCpp.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FleeceCpp.hh; sourceTree = "<group>"; };
 		27E3DD401DB6A14200F2872D /* SharedKeys.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SharedKeys.cc; sourceTree = "<group>"; };
 		27E3DD411DB6A14200F2872D /* SharedKeys.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = SharedKeys.hh; sourceTree = "<group>"; };
 		27E3DD471DB6B86000F2872D /* catch.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = catch.hpp; sourceTree = "<group>"; };
@@ -362,6 +363,7 @@
 			isa = PBXGroup;
 			children = (
 				278163B41CE69CA800B94E32 /* Fleece.h */,
+				27D7F8791E5521CC0088FADF /* FleeceCpp.hh */,
 				278163B31CE69CA800B94E32 /* Fleece_C_impl.cc */,
 				270515551D90596000D62D05 /* Fleece_C_impl.hh */,
 				270515521D9053BE00D62D05 /* Fleece+CoreFoundation.h */,

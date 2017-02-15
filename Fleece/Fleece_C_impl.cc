@@ -16,6 +16,7 @@
 #include "Fleece_C_impl.hh"
 #include "Fleece.h"
 #include "JSON5.hh"
+#include "FleeceCpp.hh"
 
 
 namespace fleece {
@@ -28,6 +29,7 @@ namespace fleece {
 }
 
 
+bool FLSlice_Equal(FLSlice a, FLSlice b)        {return (slice)a == (slice)b;}
 int FLSlice_Compare(FLSlice a, FLSlice b)       {return ((slice)a).compare((slice)b); }
 
 static inline FLSlice external(slice s)
