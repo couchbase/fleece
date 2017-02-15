@@ -61,12 +61,6 @@ namespace fleece {
             @param newData  The data that replaces the old */
         void rewrite(const void *pos, slice newData);
 
-        void writeJSONBool(bool);
-        void writeJSONInt(int64_t, bool forceUnsigned =false);
-        void writeJSONFloat(float);
-        void writeJSONDouble(double);
-        void writeJSONString(slice);
-
     private:
         class Chunk {
         public:

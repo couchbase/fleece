@@ -20,6 +20,7 @@
 #include "FleeceException.hh"
 #include "varint.hh"
 #include "PlatformCompat.hh"
+#include "JSONEncoder.hh"
 #include <assert.h>
 #include <math.h>
 
@@ -202,6 +203,21 @@ namespace fleece {
             return nullptr;
         return (const Dict*)this;
     }
+
+
+    template <int VER>
+    alloc_slice Value::toJSON(const SharedKeys *sk) const {
+        JSONEncoder encoder;
+        if (VER >= 5)
+            encoder.setJSON5(true);
+        encoder.writeValue(this);
+        return encoder.extractOutput();
+    }
+
+
+    // Explicitly instantiate both needed versions of the templates:
+    template alloc_slice Value::toJSON<1>(const SharedKeys *sk) const;
+    template alloc_slice Value::toJSON<5>(const SharedKeys *sk) const;
 
 
 #pragma mark - VALIDATION:

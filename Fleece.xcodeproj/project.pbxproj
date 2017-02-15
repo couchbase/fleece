@@ -10,7 +10,6 @@
 		270515571D905C1D00D62D05 /* Fleece+CoreFoundation.mm in Sources */ = {isa = PBXBuildFile; fileRef = 270515531D9058F200D62D05 /* Fleece+CoreFoundation.mm */; settings = {COMPILER_FLAGS = "-Wno-return-type-c-linkage"; }; };
 		270FA2781BF53CEA005DCB13 /* Value.cc in Sources */ = {isa = PBXBuildFile; fileRef = 270FA26A1BF53CEA005DCB13 /* Value.cc */; };
 		270FA2791BF53CEA005DCB13 /* Value.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA26B1BF53CEA005DCB13 /* Value.hh */; };
-		270FA27A1BF53CEA005DCB13 /* Value+JSON.cc in Sources */ = {isa = PBXBuildFile; fileRef = 270FA26C1BF53CEA005DCB13 /* Value+JSON.cc */; };
 		270FA27B1BF53CEA005DCB13 /* Value+ObjC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 270FA26D1BF53CEA005DCB13 /* Value+ObjC.mm */; };
 		270FA27D1BF53CEA005DCB13 /* Encoder.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA26F1BF53CEA005DCB13 /* Encoder.hh */; };
 		270FA27E1BF53CEA005DCB13 /* Encoder+ObjC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 270FA2701BF53CEA005DCB13 /* Encoder+ObjC.mm */; };
@@ -62,6 +61,8 @@
 		27E3DD4D1DB6C32400F2872D /* CatchHelper.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27E3DD4B1DB6C32400F2872D /* CatchHelper.hh */; };
 		27E3DD531DB7DB1C00F2872D /* SharedKeysTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27E3DD521DB7DB1C00F2872D /* SharedKeysTests.cc */; };
 		27FDF1A61DAF01300087B4E6 /* FleeceDocument.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2797BCD01C122E9200E5C991 /* FleeceDocument.mm */; };
+		27FE87F31E53E43200C5CF3F /* JSONEncoder.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27FE87F11E53E43200C5CF3F /* JSONEncoder.cc */; };
+		27FE87F41E53E43200C5CF3F /* JSONEncoder.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27FE87F21E53E43200C5CF3F /* JSONEncoder.hh */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -109,7 +110,6 @@
 		270FA25C1BF53CAD005DCB13 /* libFleece.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libFleece.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		270FA26A1BF53CEA005DCB13 /* Value.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Value.cc; sourceTree = "<group>"; };
 		270FA26B1BF53CEA005DCB13 /* Value.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Value.hh; sourceTree = "<group>"; };
-		270FA26C1BF53CEA005DCB13 /* Value+JSON.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "Value+JSON.cc"; sourceTree = "<group>"; };
 		270FA26D1BF53CEA005DCB13 /* Value+ObjC.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "Value+ObjC.mm"; sourceTree = "<group>"; };
 		270FA26F1BF53CEA005DCB13 /* Encoder.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Encoder.hh; sourceTree = "<group>"; };
 		270FA2701BF53CEA005DCB13 /* Encoder+ObjC.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "Encoder+ObjC.mm"; sourceTree = "<group>"; };
@@ -184,6 +184,8 @@
 		27E3DD4B1DB6C32400F2872D /* CatchHelper.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = CatchHelper.hh; sourceTree = "<group>"; };
 		27E3DD521DB7DB1C00F2872D /* SharedKeysTests.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SharedKeysTests.cc; sourceTree = "<group>"; };
 		27EC8D5B1CEBA72E00199FE6 /* mn_wordlist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mn_wordlist.h; sourceTree = "<group>"; };
+		27FE87F11E53E43200C5CF3F /* JSONEncoder.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSONEncoder.cc; sourceTree = "<group>"; };
+		27FE87F21E53E43200C5CF3F /* JSONEncoder.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = JSONEncoder.hh; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -251,7 +253,6 @@
 				270FA26B1BF53CEA005DCB13 /* Value.hh */,
 				27C4ACAA1CE5146500938365 /* Array.cc */,
 				27C4ACAB1CE5146500938365 /* Array.hh */,
-				270FA26C1BF53CEA005DCB13 /* Value+JSON.cc */,
 				279AC53B1C097941002C80DB /* Value+Dump.cc */,
 				27A924CD1D9C32E800086206 /* Path.cc */,
 				27A924CE1D9C32E800086206 /* Path.hh */,
@@ -286,9 +287,11 @@
 				275CED511D3EF7BE001DE46C /* FleeceException.hh */,
 				2715BA1D1D820C690061D92E /* PlatformCompat.hh */,
 				2746DD3B1D931BE9000517BC /* Benchmark.hh */,
-				273483F71DDA59B900B27A8C /* Fleece.pch */,
+				27FE87F11E53E43200C5CF3F /* JSONEncoder.cc */,
+				27FE87F21E53E43200C5CF3F /* JSONEncoder.hh */,
 				276D15441E007D3000543B1B /* JSON5.cc */,
 				276D15451E007D3000543B1B /* JSON5.hh */,
+				273483F71DDA59B900B27A8C /* Fleece.pch */,
 			);
 			name = Utilities;
 			sourceTree = "<group>";
@@ -412,6 +415,7 @@
 				278163BD1CE7A72300B94E32 /* KeyTree.hh in Headers */,
 				27C4ACAD1CE5146500938365 /* Array.hh in Headers */,
 				2797BCAD1C0FBFDE00E5C991 /* StringTable.hh in Headers */,
+				27FE87F41E53E43200C5CF3F /* JSONEncoder.hh in Headers */,
 				270FA2831BF53CEA005DCB13 /* slice.hh in Headers */,
 				270FA2851BF53CEA005DCB13 /* varint.hh in Headers */,
 				270FA2791BF53CEA005DCB13 /* Value.hh in Headers */,
@@ -532,7 +536,6 @@
 				2770153C1D59645A008BADD7 /* cdecode.c in Sources */,
 				270FA27B1BF53CEA005DCB13 /* Value+ObjC.mm in Sources */,
 				27C4ACAC1CE5146500938365 /* Array.cc in Sources */,
-				270FA27A1BF53CEA005DCB13 /* Value+JSON.cc in Sources */,
 				270FA2841BF53CEA005DCB13 /* varint.cc in Sources */,
 				276D15461E007D3000543B1B /* JSON5.cc in Sources */,
 				27A924CF1D9C32E800086206 /* Path.cc in Sources */,
@@ -548,6 +551,7 @@
 				27298E801C04E665000CFBA8 /* Encoder.cc in Sources */,
 				27298E3C1C00F812000CFBA8 /* JSONConverter.cc in Sources */,
 				279AC53C1C097941002C80DB /* Value+Dump.cc in Sources */,
+				27FE87F31E53E43200C5CF3F /* JSONEncoder.cc in Sources */,
 				2797BCAC1C0FBFDE00E5C991 /* StringTable.cc in Sources */,
 				27298E651C00F8A9000CFBA8 /* jsonsl.c in Sources */,
 				270FA27F1BF53CEA005DCB13 /* Writer.cc in Sources */,
