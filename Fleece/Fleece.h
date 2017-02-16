@@ -7,6 +7,9 @@
 //
 
 #pragma once
+#ifndef _FLEECE_H
+#define _FLEECE_H
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -110,6 +113,14 @@ extern "C" {
     } FLValueType;
 
 
+    /** Output formats a FLEncoder can generate. */
+    typedef enum {
+        kFLEncodeFleece,
+        kFLEncodeJSON,
+        kFLEncodeJSON5
+    } FLEncoderFormat;
+
+    
     typedef enum {
         NoError = 0,
         MemoryError,        // Out of memory, or allocation failed
@@ -372,20 +383,23 @@ extern "C" {
     /** Creates a new encoder, for generating Fleece data. Call FLEncoder_Free when done. */
     FLEncoder FLEncoder_New(void);
 
-    /** Creates a new encoder, allowing some options to be customized. You generally won't
-        need to call this.
+    /** Creates a new encoder, allowing some options to be customized.
+        @param format  The output format to generate (Fleece, JSON, or JSON5.)
         @param reserveSize  The number of bytes to preallocate for the output. (Default is 256)
-        @param uniqueStrings  If true, string values that appear multiple times will be written
+        @param uniqueStrings  (Fleece only) If true, string values that appear multiple times will be written
             as a single shared value. This saves space but makes encoding slightly slower.
             You should only turn this off if you know you're going to be writing large numbers
             of non-repeated strings. Note also that the `cachePointers` option of FLDictKey
             will not work if `uniqueStrings` is off. (Default is true)
-        @param sortKeys  If true, dictionary keys are written in sorted order. This speeds up
+        @param sortKeys  (Fleece only) If true, dictionary keys are written in sorted order. This speeds up
             lookup, especially with large dictionaries, but slightly slows down encoding.
             You should only turn this off if you care about encoding speed but not access time,
             and will be writing large dictionaries with lots of keys. Note that if you turn
             this off, you can only look up keys with FLDictGetUnsorted(). (Default is true) */
-    FLEncoder FLEncoder_NewWithOptions(size_t reserveSize, bool uniqueStrings, bool sortKeys);
+    FLEncoder FLEncoder_NewWithOptions(FLEncoderFormat format,
+                                       size_t reserveSize,
+                                       bool uniqueStrings,
+                                       bool sortKeys);
 
     /** Frees the space used by an encoder. */
     void FLEncoder_Free(FLEncoder);
@@ -436,11 +450,17 @@ extern "C" {
         Do _not_ use this to write a dictionary key; use FLEncoder_WriteKey instead. */
     bool FLEncoder_WriteString(FLEncoder, FLString);
 
-    /** Writes a raw data value (a blob) to an encoder. This can contain absolutely anything
+    /** Writes a binary data value (a blob) to an encoder. This can contain absolutely anything
         including null bytes. Note that this data type has no JSON representation, so if the
         resulting value is ever encoded to JSON via FLValueToJSON, it will be transformed into
-        a base64-encoded string. */
+        a base64-encoded string.
+        If the encoder is generating JSON, the blob will be written as a base64-encoded string. */
     bool FLEncoder_WriteData(FLEncoder, FLSlice);
+
+    /** Writes raw data to the encoded JSON output. 
+        This can easily corrupt the output if you aren't careful!
+        It will always fail with an error if the output format is Fleece. */
+    bool FLEncoder_WriteRaw(FLEncoder, FLSlice);
 
 
     /** Begins writing an array value to an encoder. This pushes a new state where each
@@ -497,4 +517,9 @@ extern "C" {
 
 #ifdef __cplusplus
 }
+
+// Now include the C++ convenience wrapper:
+#include "FleeceCpp.hh"
 #endif
+
+#endif // _FLEECE_H

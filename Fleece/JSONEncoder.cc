@@ -87,12 +87,17 @@ namespace fleece {
                 writeBool(v->asBool());
                 return;
             case kNumber:
-                if (v->isInteger())
-                    writef((v->isUnsigned() ? "%llu" : "%lld"), v->asInt());
-                else if (v->isDouble())
+                if (v->isInteger()) {
+                    auto i = v->asInt();
+                    if (v->isUnsigned())
+                        writeUInt(i);
+                    else
+                        writeInt(i);
+                } else if (v->isDouble()) {
                     writeDouble(v->asDouble());
-                else
+                } else {
                     writeFloat(v->asFloat());
+                }
                 return;
             case kString:
                 writeString(v->asString());

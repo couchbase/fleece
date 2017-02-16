@@ -8,6 +8,7 @@
 
 #pragma once
 #include "Fleece.hh"
+#include "JSONEncoder.hh"
 #include "Path.hh"
 #include "FleeceException.hh"
 using namespace fleece;
@@ -37,12 +38,31 @@ namespace fleece {
 
     
     // Implementation of FLEncoder: a subclass of Encoder that keeps track of its error state.
-    struct FLEncoderImpl : public Encoder {
+    struct FLEncoderImpl {
         FLError errorCode {::NoError};
         std::string errorMessage;
-        std::unique_ptr<JSONConverter> jsonConverter {nullptr};
+        std::unique_ptr<Encoder> fleeceEncoder;
+        std::unique_ptr<JSONEncoder> jsonEncoder;
+        std::unique_ptr<JSONConverter> jsonConverter;
 
-        FLEncoderImpl(size_t reserveOutputSize =256) :Encoder(reserveOutputSize) { }
+        FLEncoderImpl(FLEncoderFormat format,
+                      size_t reserveSize =0, bool uniqueStrings =true, bool sortKeys =true)
+        {
+            if (reserveSize == 0)
+                reserveSize = 256;
+            if (format == kFLEncodeFleece) {
+                fleeceEncoder.reset(new Encoder(reserveSize));
+                fleeceEncoder->uniqueStrings(uniqueStrings);
+                fleeceEncoder->sortKeys(sortKeys);
+            } else {
+                jsonEncoder.reset(new JSONEncoder(reserveSize));
+                jsonEncoder->setJSON5(format == kFLEncodeJSON5);
+            }
+        }
+
+        bool isFleece() const {
+            return fleeceEncoder != nullptr;
+        }
 
         bool hasError() const {
             return errorCode != ::NoError;
@@ -56,11 +76,27 @@ namespace fleece {
         }
 
         void reset() {              // careful, not a real override (non-virtual method)
-            Encoder::reset();
+            if (fleeceEncoder)
+                fleeceEncoder->reset();
             if (jsonConverter)
                 jsonConverter->reset();
             errorCode = ::NoError;
         }
     };
+
+    #define ENCODER_DO(E, METHOD) \
+        (E->isFleece() ? E->fleeceEncoder->METHOD : E->jsonEncoder->METHOD)
+
+    // Body of an FLEncoder_WriteXXX function:
+    #define ENCODER_TRY(E, METHOD) \
+        try{ \
+            if (!E->hasError()) { \
+                ENCODER_DO(E, METHOD); \
+                return true; \
+            } \
+        } catch (const std::exception &x) { \
+            E->recordException(x); \
+        } \
+        return false;
 
 }

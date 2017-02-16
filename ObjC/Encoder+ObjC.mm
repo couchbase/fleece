@@ -25,7 +25,7 @@
 
 namespace fleece {
 
-    void Encoder::write(__unsafe_unretained id obj) {
+    void Encoder::writeObjC(__unsafe_unretained id obj) {
         throwIf(!obj, InvalidData, "Can't encode nil");
         [obj fl_encodeTo: this];
     }

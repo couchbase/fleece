@@ -20,11 +20,7 @@ NSMapTable* FLCreateSharedStringsTable(void) {
 
 
 bool FLEncoder_WriteNSObject(FLEncoder encoder, id obj) {
-    try {
-        encoder->write(obj);
-        return true;
-    } catchError(nullptr)
-    return false;
+    ENCODER_TRY(encoder, writeObjC(obj));
 }
 
 

@@ -7,7 +7,9 @@
 //
 
 #pragma once
+#ifndef _FLEECE_H
 #include "Fleece.h"
+#endif
 #include <string>
 
 namespace fleeceapi {
@@ -97,9 +99,15 @@ namespace fleeceapi {
             inline Value operator * () const            {return value();}
             inline explicit operator bool() const       {return (bool)value();}
             inline iterator& operator++ ()              {next(); return *this;}
+            inline bool operator!= (const iterator&)    {return value() != nullptr;}
+        private:
+            iterator() { }
+            friend class Array;
         };
 
-        inline iterator begin() const;
+        // begin/end are just provided so you can use the C++11 "for (Value v : array)" syntax.
+        inline iterator begin() const                   {return iterator(*this);}
+        inline iterator end() const                     {return iterator();}
     };
 
 
@@ -145,20 +153,28 @@ namespace fleeceapi {
             inline Value operator * () const            {return value();}
             inline explicit operator bool() const       {return (bool)value();}
             inline iterator& operator++ ()              {next(); return *this;}
+            inline bool operator!= (const iterator&)    {return value() != nullptr;}
+        private:
+            iterator() { }
+            friend class Dict;
         };
 
-        inline iterator begin() const;
-};
+        // begin/end are just provided so you can use the C++11 "for (Value v : dict)" syntax.
+        inline iterator begin() const                   {return iterator(*this);}
+        inline iterator end() const                     {return iterator();}
+    };
 
 
     class Encoder {
     public:
-        Encoder()
-        :_enc(FLEncoder_New())
-        { }
+        Encoder()                                       :_enc(FLEncoder_New()) { }
+        explicit Encoder(FLEncoder enc)                 :_enc(enc) { }
 
-        Encoder(size_t reserveSize, bool uniqueStrings =true, bool sortKeys =true)
-        :_enc(FLEncoder_NewWithOptions(reserveSize, uniqueStrings, sortKeys))
+        explicit Encoder(FLEncoderFormat format,
+                         size_t reserveSize =0,
+                         bool uniqueStrings =true,
+                         bool sortKeys =true)
+        :_enc(FLEncoder_NewWithOptions(format, reserveSize, uniqueStrings, sortKeys))
         { }
 
         ~Encoder()                                      {FLEncoder_Free(_enc);}
@@ -190,11 +206,38 @@ namespace fleeceapi {
         inline FLError error() const;
         inline const char* errorMessage() const;
 
-    private:
+        //////// "<<" convenience operators;
+
+        // Note: overriding <<(bool) would be dangerous due to implicit conversion
+        Encoder& operator<< (long long i)           {writeInt(i); return *this;}
+        Encoder& operator<< (unsigned long long i)  {writeUInt(i); return *this;}
+        Encoder& operator<< (long i)                {writeInt(i); return *this;}
+        Encoder& operator<< (unsigned long i)       {writeUInt(i); return *this;}
+        Encoder& operator<< (int i)                 {writeInt(i); return *this;}
+        Encoder& operator<< (unsigned int i)        {writeUInt(i); return *this;}
+        Encoder& operator<< (double d)              {writeDouble(d); return *this;}
+        Encoder& operator<< (float f)               {writeFloat(f); return *this;}
+        Encoder& operator<< (FLString s)            {writeString(s); return *this;}
+        Encoder& operator<< (const  char *str)      {writeString(str); return *this;}
+        Encoder& operator<< (const std::string &s)  {writeString(s); return *this;}
+        Encoder& operator<< (Value v)               {writeValue(v); return *this;}
+
+    protected:
         Encoder(const Encoder&) =delete;
         Encoder& operator=(const Encoder&) =delete;
 
         const FLEncoder _enc;
+    };
+
+    class JSONEncoder : public Encoder {
+    public:
+        JSONEncoder()                           :Encoder(kFLEncodeJSON) { }
+        inline bool writeRaw(FLSlice raw)       {return FLEncoder_WriteRaw(_enc, raw);}
+    };
+
+    class JSON5Encoder : public Encoder {
+    public:
+        JSON5Encoder()                          :Encoder(kFLEncodeJSON5) { }
     };
 
 
@@ -219,8 +262,7 @@ namespace fleeceapi {
     inline FLStringResult Value::toJSON5() const{return FLValue_ToJSON5(_val);}
 
     inline uint32_t Array::count() const        {return FLArray_Count(*this);}
-    inline Value Array::get(uint32_t index) const {return FLArray_Get(*this, index);}
-    inline Array::iterator Array::begin() const {return iterator(*this);}
+    inline Value Array::get(uint32_t i) const   {return FLArray_Get(*this, i);}
 
     inline Array::iterator::iterator(Array a)   {FLArrayIterator_Begin(a, this);}
     inline Value Array::iterator::value() const {return FLArrayIterator_GetValue(this);}
@@ -230,7 +272,6 @@ namespace fleeceapi {
     inline Value Dict::get(FLSlice key) const   {return FLDict_Get(*this, key);}
     inline Value Dict::get(FLSlice key, FLSharedKeys sk) const {return FLDict_GetSharedKey(*this, key, sk);}
     inline Value Dict::get(Dict::Key &key) const{return FLDict_GetWithKey(*this, &key._key);}
-    inline Dict::iterator Dict::begin() const   {return iterator(*this);}
 
     inline Dict::Key::Key(FLSlice s, bool c)    :_key(FLDictKey_Init(s, c)) { }
     inline Dict::Key::Key(FLSlice s, FLSharedKeys sk) :_key(FLDictKey_InitWithSharedKeys(s, sk)) { }

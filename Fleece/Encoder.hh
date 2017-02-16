@@ -72,7 +72,7 @@ namespace fleece {
 #ifdef __OBJC__
         /** Writes an Objective-C object. Supported classes are the ones allowed by
             NSJSONSerialization, as well as NSData. */
-        void write(id);
+        void writeObjC(id);
 #endif
 
         //////// Writing arrays:
@@ -127,6 +127,11 @@ namespace fleece {
         Encoder& operator<< (const std::string &str)   {writeString(str); return *this;}
         Encoder& operator<< (slice s)           {writeString(s); return *this;} // string not data!
         Encoder& operator<< (const Value *v)    {writeValue(v); return *this;}
+
+
+        // Present only for API compatibility with JSONEncoder:
+        void writeRaw(slice s)                  {FleeceException::_throw(InvalidData,
+                                                     "Cannot write raw data to Fleece encoder");}
 
     private:
         // Stores the pending values to be written to an in-progress array/dict

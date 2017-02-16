@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Writer.hh"
+#include "FleeceException.hh"
 
 
 namespace fleece {
@@ -49,6 +50,13 @@ namespace fleece {
         void writeData(slice d)                 {comma(); _out << '"'; _out.writeBase64(d);
                                                           _out << '"';}
         void writeValue(const Value*, const SharedKeys* =nullptr);
+        void writeJSON(slice json)              {comma(); _out << json;}
+        void writeRaw(slice raw)                {_out << raw;}
+
+#ifdef __OBJC__
+        void writeObjC(id)                      {FleeceException::_throw(JSONError,
+                                                    "Encoding Obj-C to JSON is unimplemented");}
+#endif
 
         //////// Writing arrays:
 
@@ -77,6 +85,10 @@ namespace fleece {
         JSONEncoder& operator<< (const std::string &str)   {writeString(str); return *this;}
         JSONEncoder& operator<< (slice s)           {writeString(s); return *this;} // string not data!
         JSONEncoder& operator<< (const Value *v)    {writeValue(v); return *this;}
+
+        // Just for API compatibility with Encoder class:
+        void beginArray(size_t)                       {beginArray();}
+        void beginDictionary(size_t)                  {beginArray();}
 
     private:
         void comma() {

@@ -16,7 +16,6 @@
 #include "Fleece_C_impl.hh"
 #include "Fleece.h"
 #include "JSON5.hh"
-#include "FleeceCpp.hh"
 
 
 namespace fleece {
@@ -92,7 +91,7 @@ FLSliceResult FLValue_ToJSON5(FLValue v)        {return ToJSON<5>(v);}
 
 
 FLSliceResult FLData_ConvertJSON(FLSlice json, FLError *outError) {
-    FLEncoderImpl e(json.size);
+    FLEncoderImpl e(kFLEncodeFleece, json.size);
     FLEncoder_ConvertJSON(&e, json);
     return FLEncoder_Finish(&e, outError);
 }
@@ -251,14 +250,13 @@ FLValue FLKeyPath_EvalOnce(FLSlice specifier, FLSharedKeys sharedKeys, FLValue r
 
 
 FLEncoder FLEncoder_New(void) {
-    return new FLEncoderImpl;
+    return FLEncoder_NewWithOptions(kFLEncodeFleece, 0, true, true);
 }
 
-FLEncoder FLEncoder_NewWithOptions(size_t reserveSize, bool uniqueStrings, bool sortKeys) {
-    auto e = new FLEncoderImpl(reserveSize);
-    e->uniqueStrings(uniqueStrings);
-    e->sortKeys(sortKeys);
-    return e;
+FLEncoder FLEncoder_NewWithOptions(FLEncoderFormat format,
+                                   size_t reserveSize, bool uniqueStrings, bool sortKeys)
+{
+    return new FLEncoderImpl(format, reserveSize, uniqueStrings, sortKeys);
 }
 
 void FLEncoder_Reset(FLEncoder e) {
@@ -270,53 +268,48 @@ void FLEncoder_Free(FLEncoder e)                         {
 }
 
 void FLEncoder_SetSharedKeys(FLEncoder e, FLSharedKeys sk) {
-    e->setSharedKeys(sk);
+    if (e->fleeceEncoder)
+        e->fleeceEncoder->setSharedKeys(sk);
 }
 
-#define ENCODER_TRY(METHOD) \
-    try{ \
-        if (!e->hasError()) { \
-            e->METHOD; \
-            return true; \
-        } \
-    } catch (const std::exception &x) { \
-        e->recordException(x); \
-    } \
-    return false;
+bool FLEncoder_WriteNull(FLEncoder e)                    {ENCODER_TRY(e, writeNull());}
+bool FLEncoder_WriteBool(FLEncoder e, bool b)            {ENCODER_TRY(e, writeBool(b));}
+bool FLEncoder_WriteInt(FLEncoder e, int64_t i)          {ENCODER_TRY(e, writeInt(i));}
+bool FLEncoder_WriteUInt(FLEncoder e, uint64_t u)        {ENCODER_TRY(e, writeUInt(u));}
+bool FLEncoder_WriteFloat(FLEncoder e, float f)          {ENCODER_TRY(e, writeFloat(f));}
+bool FLEncoder_WriteDouble(FLEncoder e, double d)        {ENCODER_TRY(e, writeDouble(d));}
+bool FLEncoder_WriteString(FLEncoder e, FLSlice s)       {ENCODER_TRY(e, writeString(s));}
+bool FLEncoder_WriteData(FLEncoder e, FLSlice d)         {ENCODER_TRY(e, writeData(d));}
+bool FLEncoder_WriteRaw(FLEncoder e, FLSlice r)          {ENCODER_TRY(e, writeRaw(r));}
 
-bool FLEncoder_WriteNull(FLEncoder e)                    {ENCODER_TRY(writeNull());}
-bool FLEncoder_WriteBool(FLEncoder e, bool b)            {ENCODER_TRY(writeBool(b));}
-bool FLEncoder_WriteInt(FLEncoder e, int64_t i)          {ENCODER_TRY(writeInt(i));}
-bool FLEncoder_WriteUInt(FLEncoder e, uint64_t u)        {ENCODER_TRY(writeUInt(u));}
-bool FLEncoder_WriteFloat(FLEncoder e, float f)          {ENCODER_TRY(writeFloat(f));}
-bool FLEncoder_WriteDouble(FLEncoder e, double d)        {ENCODER_TRY(writeDouble(d));}
-bool FLEncoder_WriteString(FLEncoder e, FLSlice s)       {ENCODER_TRY(writeString(s));}
-bool FLEncoder_WriteData(FLEncoder e, FLSlice d)         {ENCODER_TRY(writeData(d));}
+bool FLEncoder_BeginArray(FLEncoder e, size_t reserve)   {ENCODER_TRY(e, beginArray(reserve));}
+bool FLEncoder_EndArray(FLEncoder e)                     {ENCODER_TRY(e, endArray());}
+bool FLEncoder_BeginDict(FLEncoder e, size_t reserve)    {ENCODER_TRY(e, beginDictionary(reserve));}
+bool FLEncoder_WriteKey(FLEncoder e, FLSlice s)          {ENCODER_TRY(e, writeKey(s));}
+bool FLEncoder_EndDict(FLEncoder e)                      {ENCODER_TRY(e, endDictionary());}
 
-bool FLEncoder_BeginArray(FLEncoder e, size_t reserve)   {ENCODER_TRY(beginArray(reserve));}
-bool FLEncoder_EndArray(FLEncoder e)                     {ENCODER_TRY(endArray());}
-bool FLEncoder_BeginDict(FLEncoder e, size_t reserve)    {ENCODER_TRY(beginDictionary(reserve));}
-bool FLEncoder_WriteKey(FLEncoder e, FLSlice s)          {ENCODER_TRY(writeKey(s));}
-bool FLEncoder_EndDict(FLEncoder e)                      {ENCODER_TRY(endDictionary());}
-
-bool FLEncoder_WriteValue(FLEncoder e, FLValue v)        {ENCODER_TRY(writeValue(v));}
+bool FLEncoder_WriteValue(FLEncoder e, FLValue v)        {ENCODER_TRY(e, writeValue(v));}
 
 
 bool FLEncoder_ConvertJSON(FLEncoder e, FLSlice json) {
     if (!e->hasError()) {
         try {
-            JSONConverter *jc = e->jsonConverter.get();
-            if (jc) {
-                jc->reset();
+            if (e->isFleece()) {
+                JSONConverter *jc = e->jsonConverter.get();
+                if (jc) {
+                    jc->reset();
+                } else {
+                    jc = new JSONConverter(*e->fleeceEncoder);
+                    e->jsonConverter.reset(jc);
+                }
+                if (jc->encodeJSON(json)) {                   // encodeJSON can throw
+                    return true;
+                } else {
+                    e->errorCode = ::JSONError; //TODO: Save value of jc.error() somewhere
+                    e->errorMessage = jc->errorMessage();
+                }
             } else {
-                jc = new JSONConverter(*e);
-                e->jsonConverter.reset(jc);
-            }
-            if (jc->encodeJSON(json)) {                   // encodeJSON can throw
-                return true;
-            } else {
-                e->errorCode = ::JSONError; //TODO: Save value of jc.error() somewhere
-                e->errorMessage = jc->errorMessage();
+                e->jsonEncoder->writeJSON(json);
             }
         } catch (const std::exception &x) {
             e->recordException(x);
@@ -336,7 +329,7 @@ const char* FLEncoder_GetErrorMessage(FLEncoder e) {
 FLSliceResult FLEncoder_Finish(FLEncoder e, FLError *outError) {
     if (!e->hasError()) {
         try {
-            return toSliceResult(e->extractOutput());       // extractOutput can throw
+            return toSliceResult(ENCODER_DO(e, extractOutput()));       // extractOutput can throw
         } catch (const std::exception &x) {
             e->recordException(x);
         }
