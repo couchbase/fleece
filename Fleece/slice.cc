@@ -16,6 +16,7 @@
 #include "slice.hh"
 #include "encode.h"
 #include "decode.h"
+#include "Fleece.h" // for FLSlice and FLSliceResult
 #include <algorithm>
 #include <assert.h>
 #include <math.h>
@@ -237,6 +238,10 @@ namespace fleece {
     }
 
 
+    slice::slice(FLSlice s)                 :buf(s.buf), size(s.size) { }
+    slice::operator FLSlice () const        {return {buf, size};}
+
+
 #pragma mark - ALLOC_SLICE
 
 
@@ -287,6 +292,18 @@ namespace fleece {
         if (s.buf)
             memcpy((void*)buf, s.buf, size);
     }
+
+    alloc_slice::alloc_slice(FLSlice s)
+    :alloc_slice(s.buf, s.size)
+    { }
+
+    alloc_slice::alloc_slice(FLSliceResult &&sr)
+    :slice(sr.buf, sr.size)
+    {
+        sr.buf = nullptr;
+        sr.size = 0;
+    }
+
 
 
     inline alloc_slice::sharedBuffer* alloc_slice::shared() noexcept {

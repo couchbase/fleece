@@ -31,11 +31,6 @@ namespace fleece {
 bool FLSlice_Equal(FLSlice a, FLSlice b)        {return (slice)a == (slice)b;}
 int FLSlice_Compare(FLSlice a, FLSlice b)       {return ((slice)a).compare((slice)b); }
 
-static inline FLSlice external(slice s)
-{
-    return *((FLSlice*)&s);
-}
-
 
 static FLSliceResult toSliceResult(alloc_slice &&s) {
     s.retain();
@@ -60,8 +55,8 @@ int64_t FLValue_AsInt(FLValue v)                {return v ? v->asInt() : 0;}
 uint64_t FLValue_AsUnsigned(FLValue v)          {return v ? v->asUnsigned() : 0;}
 float FLValue_AsFloat(FLValue v)                {return v ? v->asFloat() : 0.0;}
 double FLValue_AsDouble(FLValue v)              {return v ? v->asDouble() : 0.0;}
-FLSlice FLValue_AsString(FLValue v)             {return v ? external(v->asString()) : kFLSliceNull;}
-FLSlice FLValue_AsData(FLValue v)               {return v ? external(v->asData()) : kFLSliceNull;}
+FLString FLValue_AsString(FLValue v)            {return v ? (FLString)v->asString() : kFLSliceNull;}
+FLSlice FLValue_AsData(FLValue v)               {return v ? (FLSlice)v->asData() : kFLSliceNull;}
 FLArray FLValue_AsArray(FLValue v)              {return v ? v->asArray() : nullptr;}
 FLDict FLValue_AsDict(FLValue v)                {return v ? v->asDict() : nullptr;}
 
@@ -155,13 +150,13 @@ FLSlice FLSharedKey_GetKeyString(FLSharedKeys sk, int keyCode, FLError* outError
 {
     slice key;
     try {
-        key = external(sk->decode((keyCode)));
+        key = sk->decode((keyCode));
         if(!key && outError != nullptr) {
             *outError = NotFound;
         }
     } catchError(outError)
     
-    return external(key);
+    return key;
 }
 
 void FLDictIterator_Begin(FLDict d, FLDictIterator* i) {
@@ -203,7 +198,7 @@ FLDictKey FLDictKey_InitWithSharedKeys(FLSlice string, FLSharedKeys sharedKeys) 
 
 FLSlice FLDictKey_GetString(const FLDictKey *key) {
     auto realKey = (const Dict::key*)key;
-    return external(realKey->string());
+    return realKey->string();
 }
 
 FLValue FLDict_GetWithKey(FLDict d, FLDictKey *k) {

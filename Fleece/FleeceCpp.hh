@@ -25,6 +25,12 @@ namespace fleeceapi {
         return std::string((char*)s.buf, s.size);
     }
 
+    static inline std::string asstring(FLStringResult &&s) {
+        auto str = std::string((char*)s.buf, s.size);
+        FLSliceResult_Free(s);
+        return str;
+    }
+
     static inline bool operator== (FLSlice s1, FLSlice s2) {return FLSlice_Equal(s1, s2);}
     static inline bool operator!= (FLSlice s1, FLSlice s2) {return !(s1 == s2);}
 
@@ -86,6 +92,7 @@ namespace fleeceapi {
         operator FLArray () const                       {return (FLArray)_val;}
 
         inline uint32_t count() const;
+        inline bool empty() const                       {return count() == 0;}
         inline Value get(uint32_t index) const;
 
         inline Value operator[] (uint32_t index) const  {return get(index);}
@@ -118,6 +125,7 @@ namespace fleeceapi {
         operator FLDict () const                        {return (FLDict)_val;}
 
         inline uint32_t count() const;
+        inline bool empty() const                       {return count() == 0;}
 
         inline Value get(FLString key) const;
         inline Value get(FLString key, FLSharedKeys sk) const;
@@ -178,6 +186,10 @@ namespace fleeceapi {
         { }
 
         ~Encoder()                                      {FLEncoder_Free(_enc);}
+
+        static FLSliceResult convertJSON(FLSlice json, FLError *error =nullptr) {
+            return FLData_ConvertJSON(json, error);
+        }
 
         operator ::FLEncoder ()                         {return _enc;}
 

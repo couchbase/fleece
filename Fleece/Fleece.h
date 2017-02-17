@@ -41,12 +41,9 @@ extern "C" {
 #endif
 
     /** A simple reference to a block of memory. Does not imply ownership. */
-    typedef struct {
+    typedef struct FLSlice {
         const void *buf;
         size_t size;
-#ifdef FL_IMPL
-        operator slice() const {return {buf, size};}
-#endif
     } FLSlice;
 
     /** Creates a slice pointing to the contents of a C string. */
@@ -76,7 +73,7 @@ extern "C" {
 
     /** A block of memory returned from an API call. The caller takes ownership, may modify the
         bytes, and must call FLSliceFree when done. */
-    typedef struct {
+    typedef struct FLSliceResult {
         void *buf;      // note: not const, since caller owns the buffer
         size_t size;
 

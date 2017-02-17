@@ -27,6 +27,7 @@
 #import <CoreFoundation/CFString.h>
 #endif
 
+struct FLSlice; struct FLSliceResult;
 
 namespace fleece {
     struct alloc_slice;
@@ -145,6 +146,8 @@ namespace fleece {
             return h;
         }
 
+        slice(FLSlice s);
+        operator FLSlice () const;
 
 #ifdef __OBJC__
         slice(NSData* data)
@@ -202,6 +205,8 @@ namespace fleece {
             :alloc_slice(slice(start, end)) {}
         explicit alloc_slice(const std::string &str)
             :alloc_slice(slice(str)) {}
+        alloc_slice(FLSlice);
+        alloc_slice(FLSliceResult&&);
 
         ~alloc_slice()                                      {if (buf) release();}
         alloc_slice(const alloc_slice&) noexcept;
@@ -243,6 +248,8 @@ namespace fleece {
         struct sharedBuffer;
         sharedBuffer* shared() noexcept;
         void assignFrom(slice s)                            {buf = s.buf; size = s.size;}
+
+        friend struct ::FLSliceResult;
     };
 
 
