@@ -10,13 +10,6 @@
 
 namespace fleece {
 
-    template <class T>
-    void JSONEncoder::writef(const char *fmt, T t) {
-        comma();
-        char str[32];
-        _out.write(str, sprintf(str, fmt, t));
-    }
-
     void JSONEncoder::writeString(slice str) {
         comma();
         _out << '"';

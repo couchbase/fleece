@@ -99,7 +99,11 @@ namespace fleece {
         }
 
         template <class T>
-        void writef(const char *fmt, T t);
+        void writef(const char *fmt, T t) {
+            comma();
+            char str[32];
+            _out.write(str, sprintf(str, fmt, t));
+        }
 
         Writer _out;
         bool _json5 {false};
