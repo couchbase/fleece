@@ -13,7 +13,7 @@
 
 static void checkIt(id obj, const char* json) {
     Encoder enc;
-    enc.write(obj);
+    enc.writeObjC(obj);
     enc.end();
     auto result = enc.extractOutput();
     auto v = Value::fromData(result);
@@ -248,7 +248,7 @@ TEST_CASE("Obj-C PerfSerialize", "[.Perf]") {
 #if 1
                 Encoder enc;
                 for (NSDictionary *person in people) {
-                    enc.write(person);
+                    enc.writeObjC(person);
                     auto d = enc.extractOutput();
                     totalSize += d.size;
                     enc.reset();

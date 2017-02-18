@@ -22,6 +22,10 @@
 - (void) fl_encodeTo: (fleece::Encoder*)enc;
 @end
 
+@interface NSObject (FleeceOptional)
+- (id) fl_substitutedEncoding;
+@end
+
 
 namespace fleece {
 
@@ -36,13 +40,28 @@ namespace fleece {
 using namespace fleece;
 
 
-@implementation NSNull (CBJSONEncoder)
+@implementation NSObject (Fleece)
+- (void) fl_encodeTo: (fleece::Encoder*)enc {
+    id encoding = nil;
+    if ([self respondsToSelector: @selector(fl_substitutedEncoding)])
+        encoding = [self fl_substitutedEncoding];
+    if (!encoding || encoding == self) {
+        NSString* msg = [NSString stringWithFormat: @"Objects of class %@ cannot be encoded",
+                         [self class]];
+        FleeceException::_throw(EncodeError, msg.UTF8String);
+    }
+    [encoding fl_encodeTo: enc];
+}
+@end
+
+
+@implementation NSNull (Fleece)
 - (void) fl_encodeTo: (fleece::Encoder*)enc {
     enc->writeNull();
 }
 @end
 
-@implementation NSNumber (CBJSONEncoder)
+@implementation NSNumber (Fleece)
 - (void) fl_encodeTo: (Encoder*)enc {
     switch (self.objCType[0]) {
         case 'b':
@@ -74,20 +93,20 @@ using namespace fleece;
 }
 @end
 
-@implementation NSString (CBJSONEncoder)
+@implementation NSString (Fleece)
 - (void) fl_encodeTo: (Encoder*)enc {
     nsstring_slice s(self);
     enc->writeString(s);
 }
 @end
 
-@implementation NSData (CBJSONEncoder)
+@implementation NSData (Fleece)
 - (void) fl_encodeTo: (Encoder*)enc {
     enc->writeData(slice(self));
 }
 @end
 
-@implementation NSArray (CBJSONEncoder)
+@implementation NSArray (Fleece)
 - (void) fl_encodeTo: (Encoder*)enc {
     enc->beginArray((uint32_t)self.count);
     for (NSString* item in self) {
@@ -97,7 +116,7 @@ using namespace fleece;
 }
 @end
 
-@implementation NSDictionary (CBJSONEncoder)
+@implementation NSDictionary (Fleece)
 - (void) fl_encodeTo: (Encoder*)enc {
     enc->beginDictionary((uint32_t)self.count);
     [self enumerateKeysAndObjectsUsingBlock:^(__unsafe_unretained id key,
