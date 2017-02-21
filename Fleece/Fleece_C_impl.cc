@@ -267,6 +267,10 @@ void FLEncoder_SetSharedKeys(FLEncoder e, FLSharedKeys sk) {
         e->fleeceEncoder->setSharedKeys(sk);
 }
 
+size_t FLEncoder_BytesWritten(FLEncoder e) {
+    return ENCODER_DO(e, bytesWritten());
+}
+
 bool FLEncoder_WriteNull(FLEncoder e)                    {ENCODER_TRY(e, writeNull());}
 bool FLEncoder_WriteBool(FLEncoder e, bool b)            {ENCODER_TRY(e, writeBool(b));}
 bool FLEncoder_WriteInt(FLEncoder e, int64_t i)          {ENCODER_TRY(e, writeInt(i));}

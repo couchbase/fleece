@@ -498,6 +498,9 @@ extern "C" {
     bool FLEncoder_ConvertJSON(FLEncoder e, FLSlice json);
 
 
+    /** Returns the number of bytes encoded so far. */
+    size_t FLEncoder_BytesWritten(FLEncoder e);
+
     /** Ends encoding; if there has been no error, it returns the encoded data, else null.
         This does not free the FLEncoder; call FLEncoder_Free (or FLEncoder_Reset) next. */
     FLSliceResult FLEncoder_Finish(FLEncoder, FLError*);

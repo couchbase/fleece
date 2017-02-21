@@ -41,6 +41,7 @@ namespace fleece {
         void sortKeys(bool b)           {_sortKeys = b;}
 
         bool isEmpty() const            {return _out.length() == 0 && _stackDepth == 1 && _items->empty();}
+        size_t bytesWritten() const     {return _out.length();} // may be an underestimate
 
         /** Ends encoding, writing the last of the data to the Writer. */
         void end();

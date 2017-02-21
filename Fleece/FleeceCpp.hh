@@ -212,6 +212,8 @@ namespace fleeceapi {
         inline bool writeKey(FLString);
         inline bool endDict();
 
+        inline size_t bytesWritten() const;
+
         inline FLSliceResult finish(FLError* =nullptr);
         inline void reset();
 
@@ -309,6 +311,7 @@ namespace fleeceapi {
     inline bool Encoder::beginDict(size_t rsv)  {return FLEncoder_BeginDict(_enc, rsv);}
     inline bool Encoder::writeKey(FLString key) {return FLEncoder_WriteKey(_enc, key);}
     inline bool Encoder::endDict()              {return FLEncoder_EndDict(_enc);}
+    inline size_t Encoder::bytesWritten() const {return FLEncoder_BytesWritten(_enc);}
     inline FLSliceResult Encoder::finish(FLError* err) {return FLEncoder_Finish(_enc, err);}
     inline void Encoder::reset()                {return FLEncoder_Reset(_enc);}
     inline FLError Encoder::error() const       {return FLEncoder_GetError(_enc);}

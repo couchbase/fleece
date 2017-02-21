@@ -14,7 +14,6 @@
 //  and limitations under the License.
 
 #include "Writer.hh"
-#include "FleeceException.hh"
 #include "PlatformCompat.hh"
 #include "decode.h"
 #include "encode.h"
@@ -77,7 +76,7 @@ namespace fleece {
                 return offset + chunk.offsetOf(pos);
             offset += chunk.length();
         }
-        FleeceException::_throw(InternalError, "invalid pos for posToOffset");
+        throw std::out_of_range("invalid pos for Writer::posToOffset");
     }
 
     const void* Writer::write(const void* data, size_t length) {

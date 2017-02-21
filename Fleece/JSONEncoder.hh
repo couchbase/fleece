@@ -27,6 +27,7 @@ namespace fleece {
         void setJSON5(bool j5)                  {_json5 = j5;}
 
         bool isEmpty() const                    {return _out.length() == 0;}
+        size_t bytesWritten() const             {return _out.length();}
 
         /** Returns the encoded data. */
         alloc_slice extractOutput()             {return _out.extractOutput();}
