@@ -263,8 +263,7 @@ void FLEncoder_Free(FLEncoder e)                         {
 }
 
 void FLEncoder_SetSharedKeys(FLEncoder e, FLSharedKeys sk) {
-    if (e->fleeceEncoder)
-        e->fleeceEncoder->setSharedKeys(sk);
+    ENCODER_DO(e, setSharedKeys(sk));
 }
 
 size_t FLEncoder_BytesWritten(FLEncoder e) {

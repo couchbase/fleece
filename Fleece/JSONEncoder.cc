@@ -71,7 +71,7 @@ namespace fleece {
     }
 
 
-    void JSONEncoder::writeValue(const Value *v, const SharedKeys *sk) {
+    void JSONEncoder::writeValue(const Value *v) {
         switch (v->type()) {
             case kNull:
                 writeNull();
@@ -101,12 +101,12 @@ namespace fleece {
             case kArray:
                 beginArray();
                 for (auto iter = v->asArray()->begin(); iter; ++iter)
-                    writeValue(iter.value(), sk);
+                    writeValue(iter.value());
                 endArray();
                 return;
             case kDict:
                 beginDictionary();
-                for (auto iter = v->asDict()->begin(sk); iter; ++iter) {
+                for (auto iter = v->asDict()->begin(_sharedKeys); iter; ++iter) {
                     slice keyStr = iter.keyString();
                     if (keyStr) {
                         writeKey(keyStr);
@@ -114,11 +114,11 @@ namespace fleece {
                         // non-string keys are possible...
                         comma();
                         _first = true;
-                        writeValue(iter.key(), sk);
+                        writeValue(iter.key());
                         _out << ':';
                         _first = true;
                     }
-                    writeValue(iter.value(), sk);
+                    writeValue(iter.value());
                 }
                 endDictionary();
                 return;

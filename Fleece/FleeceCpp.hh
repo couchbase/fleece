@@ -187,7 +187,9 @@ namespace fleeceapi {
 
         ~Encoder()                                      {FLEncoder_Free(_enc);}
 
-        static FLSliceResult convertJSON(FLSlice json, FLError *error =nullptr) {
+        void setSharedKeys(FLSharedKeys sk)             {FLEncoder_SetSharedKeys(_enc, sk);}
+
+        static FLSliceResult convertJSON(FLSlice json, FLError *error) {
             return FLData_ConvertJSON(json, error);
         }
 

@@ -112,7 +112,6 @@ namespace fleece {
         /** Associates a SharedKeys object with this Encoder. The writeKey() methods that take
             strings will consult this object to possibly map the key to an integer. */
         void setSharedKeys(SharedKeys *s) {_sharedKeys = s;}
-        SharedKeys* sharedStrings() const    {return _sharedKeys;}
 
         //////// "<<" convenience operators;
 

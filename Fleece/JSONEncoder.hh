@@ -35,6 +35,9 @@ namespace fleece {
         /** Resets the encoder so it can be used again. */
         void reset()                            {_out.reset(); _first = true;}
 
+        /** Associates a SharedKeys object with this Encoder, for use by writeValue(). */
+        void setSharedKeys(SharedKeys *s)       {_sharedKeys = s;}
+
         /////// Writing data:
 
         void writeNull()                        {comma(); _out << slice("null");}
@@ -50,7 +53,7 @@ namespace fleece {
         
         void writeData(slice d)                 {comma(); _out << '"'; _out.writeBase64(d);
                                                           _out << '"';}
-        void writeValue(const Value*, const SharedKeys* =nullptr);
+        void writeValue(const Value*);
         void writeJSON(slice json)              {comma(); _out << json;}
         void writeRaw(slice raw)                {_out << raw;}
 
@@ -109,6 +112,7 @@ namespace fleece {
         Writer _out;
         bool _json5 {false};
         bool _first {true};
+        SharedKeys *_sharedKeys {nullptr};
     };
 
 }
