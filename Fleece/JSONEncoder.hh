@@ -92,7 +92,7 @@ namespace fleece {
 
         // Just for API compatibility with Encoder class:
         void beginArray(size_t)                       {beginArray();}
-        void beginDictionary(size_t)                  {beginArray();}
+        void beginDictionary(size_t)                  {beginDictionary();}
 
     private:
         void comma() {

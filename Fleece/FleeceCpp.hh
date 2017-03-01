@@ -198,7 +198,7 @@ namespace fleeceapi {
         inline bool writeNull();
         inline bool writeBool(bool);
         inline bool writeInt(int64_t);
-        inline bool writeUInt(int64_t);
+        inline bool writeUInt(uint64_t);
         inline bool writeFloat(float);
         inline bool writeDouble(double);
         inline bool writeString(FLString);
@@ -301,7 +301,7 @@ namespace fleeceapi {
     inline bool Encoder::writeNull()            {return FLEncoder_WriteNull(_enc);}
     inline bool Encoder::writeBool(bool b)      {return FLEncoder_WriteBool(_enc, b);}
     inline bool Encoder::writeInt(int64_t n)    {return FLEncoder_WriteInt(_enc, n);}
-    inline bool Encoder::writeUInt(int64_t n)   {return FLEncoder_WriteUInt(_enc, n);}
+    inline bool Encoder::writeUInt(uint64_t n)  {return FLEncoder_WriteUInt(_enc, n);}
     inline bool Encoder::writeFloat(float n)    {return FLEncoder_WriteFloat(_enc, n);}
     inline bool Encoder::writeDouble(double n)  {return FLEncoder_WriteDouble(_enc, n);}
     inline bool Encoder::writeString(FLString s){return FLEncoder_WriteString(_enc, s);}
