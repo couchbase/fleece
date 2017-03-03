@@ -1,4 +1,9 @@
-    public unsafe struct FLArrayIterator
+#if LITECORE_PACKAGED
+    internal
+#else
+    public
+#endif 
+    unsafe struct FLArrayIterator
     {
         #pragma warning disable CS0169
 

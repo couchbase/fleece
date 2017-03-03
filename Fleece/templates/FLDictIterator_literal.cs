@@ -1,4 +1,9 @@
-		public unsafe struct FLDictIterator
+#if LITECORE_PACKAGED
+    internal
+#else
+    public
+#endif 
+    unsafe struct FLDictIterator
     {
         #pragma warning disable CS0169
 

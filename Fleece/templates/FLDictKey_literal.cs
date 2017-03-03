@@ -1,4 +1,9 @@
-    public unsafe struct FLDictKey
+#if LITECORE_PACKAGED
+    internal
+#else
+    public
+#endif 
+    unsafe struct FLDictKey
     {
         #pragma warning disable CS0169
 
