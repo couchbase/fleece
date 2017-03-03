@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Writer.hh"
+#include "Value.hh"
 #include "FleeceException.hh"
 
 
