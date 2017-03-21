@@ -14,14 +14,90 @@
 #include <vector>
 
 
+/** A high precision time unit based on POSIX's struct timespec. */
+class Timespec {
+public:
+    Timespec()                  :_spec{0, 0} { }
+    Timespec(struct timespec s) :_spec{s}    { }
+
+    static Timespec now() {
+        struct timespec ts;
+        clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
+        return Timespec(ts);
+    }
+
+    Timespec age() const {
+        return now() - *this;
+    }
+
+    operator double() const {
+        return _spec.tv_sec + _spec.tv_nsec / 1.0e9;
+    }
+
+    Timespec& operator= (double secs) {
+        _spec.tv_sec = (long)floor(secs);
+        _spec.tv_nsec = (long)((secs - floor(secs)) * 1.0e9);
+        return *this;
+    }
+
+    Timespec operator- (const Timespec &other) const {
+        return {_spec.tv_sec - other._spec.tv_sec, _spec.tv_nsec - other._spec.tv_nsec};
+    }
+
+    Timespec operator+ (const Timespec &other) const {
+        return {_spec.tv_sec + other._spec.tv_sec, _spec.tv_nsec + other._spec.tv_nsec};
+    }
+
+    Timespec& operator+= (const Timespec &other) {
+        _spec.tv_sec  += other._spec.tv_sec;
+        _spec.tv_nsec += other._spec.tv_nsec;
+        return *this;
+    }
+
+private:
+    Timespec(long secs, long nsec) :_spec{secs, nsec}  { }
+
+    struct timespec _spec;
+};
+
+
+/** A timer that can be stopped and restarted like its namesake. */
 class Stopwatch {
 public:
-    Stopwatch()         :_start(::clock()) { }
-    void reset()        {_start = clock();}
-    double elapsed()    {return (clock() - _start) / (double)CLOCKS_PER_SEC;}
-    double elapsedMS()  {return elapsed() * 1000.0;}
+    Stopwatch(bool running =true) {
+        if (running) start();
+    }
 
-    void printReport(const char *what, unsigned count, const char *item) {
+    void start() {
+        if (!_running) {
+            _running = true;
+            _start = Timespec::now();
+        }
+    }
+
+    void stop() {
+        if (_running) {
+            _running = false;
+            _total += _start.age();
+        }
+    }
+
+    void reset() {
+        _total = 0.0;
+        if (_running)
+            _start = Timespec::now();
+    }
+
+    Timespec elapsed() const {
+        Timespec e = _total;
+        if (_running)
+            e += _start.age();
+        return e;
+    }
+
+    double elapsedMS() const    {return elapsed() * 1000.0;}
+
+    void printReport(const char *what, unsigned count, const char *item) const {
         auto ms = elapsedMS();
 #ifdef NDEBUG
         fprintf(stderr, "%s took %.3f ms for %u %ss (%.3f us/%s, or %.0f %ss/sec)\n",
@@ -32,7 +108,8 @@ public:
 #endif
     }
 private:
-    clock_t _start;
+    Timespec _total, _start;
+    bool _running {false};
 };
 
 
@@ -93,6 +170,26 @@ public:
         fprintf(stderr, "Range: %.3f ... %.3f %s, Average: %.3f, median: %.3f, std dev: %.3g\n",
                 r.first*scale, r.second*scale, scaleName.c_str(),
                 average()*scale, median()*scale, stddev()*scale);
+    }
+
+    static double timeScale(double t, const char* &unit) {
+        static const char* kTimeScales[] = {"sec", "ms", "us", "ns"};
+        double scale = 1.0;
+        for (unsigned i = 0; i < sizeof(kTimeScales)/sizeof(char*); ++i) {
+            unit = kTimeScales[i];
+            if (t*scale >= 1.0)
+                break;
+            scale *= 1000;
+        }
+        return scale;
+    }
+
+    static std::string formatTime(double t) {
+        const char *unit;
+        double scale = timeScale(t, unit);
+        char str[50];
+        sprintf(str, "%.3f %s", t * scale, unit);
+        return str;
     }
 
 private:
