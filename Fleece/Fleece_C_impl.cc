@@ -162,11 +162,21 @@ FLSlice FLSharedKey_GetKeyString(FLSharedKeys sk, int keyCode, FLError* outError
 void FLDictIterator_Begin(FLDict d, FLDictIterator* i) {
     static_assert(sizeof(FLDictIterator) >= sizeof(Dict::iterator), "FLDictIterator is too small");
     new (i) Dict::iterator(d);
-    // Note: this is safe even if a is null.
+    // Note: this is safe even if d is null.
+}
+
+void FLDictIterator_BeginShared(FLDict d, FLDictIterator* i, FLSharedKeys sk) {
+    static_assert(sizeof(FLDictIterator) >= sizeof(Dict::iterator), "FLDictIterator is too small");
+    new (i) Dict::iterator(d, sk);
+    // Note: this is safe even if d is null.
 }
 
 FLValue FLDictIterator_GetKey(const FLDictIterator* i) {
     return ((Dict::iterator*)i)->key();
+}
+
+FLString FLDictIterator_GetKeyString(const FLDictIterator* i) {
+    return ((Dict::iterator*)i)->keyString();
 }
 
 FLValue FLDictIterator_GetValue(const FLDictIterator* i) {

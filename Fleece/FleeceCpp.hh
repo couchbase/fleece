@@ -95,7 +95,7 @@ namespace fleeceapi {
         inline bool empty() const                       {return count() == 0;}
         inline Value get(uint32_t index) const;
 
-        inline Value operator[] (uint32_t index) const  {return get(index);}
+        inline Value operator[] (int index) const       {return get(index);}
 
         class iterator : private FLArrayIterator {
         public:
@@ -153,7 +153,9 @@ namespace fleeceapi {
         class iterator : private FLDictIterator {
         public:
             inline iterator(Dict);
+            inline iterator(Dict, FLSharedKeys);
             inline Value key() const;
+            inline FLString keyString() const;
             inline Value value() const;
             inline bool next();
 
@@ -294,7 +296,10 @@ namespace fleeceapi {
     inline FLString Dict::Key::string() const   {return FLDictKey_GetString(&_key);}
 
     inline Dict::iterator::iterator(Dict d)     {FLDictIterator_Begin(d, this);}
+    inline Dict::iterator::iterator(Dict d, FLSharedKeys sk)
+                                                {FLDictIterator_BeginShared(d, this, sk);}
     inline Value Dict::iterator::key() const    {return FLDictIterator_GetKey(this);}
+    inline FLString Dict::iterator::keyString() const {return FLDictIterator_GetKeyString(this);}
     inline Value Dict::iterator::value() const  {return FLDictIterator_GetValue(this);}
     inline bool Dict::iterator::next()          {return FLDictIterator_Next(this);}
 

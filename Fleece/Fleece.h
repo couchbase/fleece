@@ -306,8 +306,14 @@ extern "C" {
         then FLDictIterator_Next. */
     void FLDictIterator_Begin(FLDict, FLDictIterator*);
 
+    /** Same as FLDictIterator_Begin but iterator will translate shared keys to strings. */
+    void FLDictIterator_BeginShared(FLDict, FLDictIterator*, FLSharedKeys);
+
     /** Returns the current key being iterated over. */
     FLValue FLDictIterator_GetKey(const FLDictIterator*);
+
+    /** Returns the current key's string value. */
+    FLString FLDictIterator_GetKeyString(const FLDictIterator*);
 
     /** Returns the current value being iterated over. */
     FLValue FLDictIterator_GetValue(const FLDictIterator*);
