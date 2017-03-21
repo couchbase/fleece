@@ -7,63 +7,21 @@
 //
 
 #pragma once
+#include <chrono>
 #include <math.h>
 #include <string>
-#include <time.h>
 #include <algorithm>
 #include <vector>
-
-
-/** A high precision time unit based on POSIX's struct timespec. */
-class Timespec {
-public:
-    Timespec()                  :_spec{0, 0} { }
-    Timespec(struct timespec s) :_spec{s}    { }
-
-    static Timespec now() {
-        struct timespec ts;
-        clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
-        return Timespec(ts);
-    }
-
-    Timespec age() const {
-        return now() - *this;
-    }
-
-    operator double() const {
-        return _spec.tv_sec + _spec.tv_nsec / 1.0e9;
-    }
-
-    Timespec& operator= (double secs) {
-        _spec.tv_sec = (long)floor(secs);
-        _spec.tv_nsec = (long)((secs - floor(secs)) * 1.0e9);
-        return *this;
-    }
-
-    Timespec operator- (const Timespec &other) const {
-        return {_spec.tv_sec - other._spec.tv_sec, _spec.tv_nsec - other._spec.tv_nsec};
-    }
-
-    Timespec operator+ (const Timespec &other) const {
-        return {_spec.tv_sec + other._spec.tv_sec, _spec.tv_nsec + other._spec.tv_nsec};
-    }
-
-    Timespec& operator+= (const Timespec &other) {
-        _spec.tv_sec  += other._spec.tv_sec;
-        _spec.tv_nsec += other._spec.tv_nsec;
-        return *this;
-    }
-
-private:
-    Timespec(long secs, long nsec) :_spec{secs, nsec}  { }
-
-    struct timespec _spec;
-};
 
 
 /** A timer that can be stopped and restarted like its namesake. */
 class Stopwatch {
 public:
+    using clock    = std::chrono::high_resolution_clock;
+    using time     = clock::time_point;
+    using duration = clock::duration;
+    using seconds  = std::chrono::duration<double, std::ratio<1,1>>;
+
     Stopwatch(bool running =true) {
         if (running) start();
     }
@@ -71,28 +29,28 @@ public:
     void start() {
         if (!_running) {
             _running = true;
-            _start = Timespec::now();
+            _start = clock::now();
         }
     }
 
     void stop() {
         if (_running) {
             _running = false;
-            _total += _start.age();
+            _total += clock::now() - _start;
         }
     }
 
     void reset() {
-        _total = 0.0;
+        _total = duration::zero();
         if (_running)
-            _start = Timespec::now();
+            _start = clock::now();
     }
 
-    Timespec elapsed() const {
-        Timespec e = _total;
+    double elapsed() const {
+        duration e = _total;
         if (_running)
-            e += _start.age();
-        return e;
+            e += clock::now() - _start;
+        return std::chrono::duration_cast<seconds>(e).count();
     }
 
     double elapsedMS() const    {return elapsed() * 1000.0;}
@@ -108,7 +66,8 @@ public:
 #endif
     }
 private:
-    Timespec _total, _start;
+    duration _total {0};
+    time _start;
     bool _running {false};
 };
 
