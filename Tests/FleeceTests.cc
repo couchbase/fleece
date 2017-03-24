@@ -82,10 +82,10 @@ _mapped(MAP_FAILED)
     assert(_fd != -1);
     struct stat stat;
     ::fstat(_fd, &stat);
-    size = stat.st_size;
+    setSize(stat.st_size);
     _mapped = ::mmap(nullptr, size, PROT_READ, MAP_PRIVATE, _fd, 0);
     assert(_mapped != MAP_FAILED);
-    buf = _mapped;
+    setBuf(_mapped);
 }
 
 mmap_slice::~mmap_slice() {

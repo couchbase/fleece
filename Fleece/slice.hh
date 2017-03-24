@@ -20,6 +20,7 @@
 #include <string.h>
 #include <string>
 #include <memory>
+#include <assert.h>
 
 #ifdef __OBJC__
 #import <Foundation/NSData.h>
@@ -30,8 +31,10 @@
 struct FLSlice; struct FLSliceResult;
 
 namespace fleece {
+    struct slice;
     struct alloc_slice;
 
+    
     /** Adds a byte offset to a pointer. */
     template <typename T>
     inline const T* offsetby(const T *t, ptrdiff_t offset) {
@@ -44,96 +47,53 @@ namespace fleece {
     }
 
 
-    /** A simple range of memory. No ownership implied. */
-    struct slice {
-        const void* buf;
-        size_t      size;
+    /** A simple range of memory. No ownership implied.
+        The memory range (buf and size) is immutable; the `slice` subclass changes this. */
+    struct pure_slice {
+        const void* const buf;
+        size_t      const size;
 
-        constexpr slice()                           :buf(nullptr), size(0) {}
-        constexpr slice(const void* b, size_t s)    :buf(b), size(s) {}
-        slice(const void* start,
-                        const void* end)          :buf(start), size((uint8_t*)end-(uint8_t*)start){}
-
-        slice(const std::string& str)               :buf(&str[0]), size(str.length()) {}
-        explicit slice(const char* str)             :buf(str), size(str ? strlen(str) : 0) {}
-
-        slice& operator= (alloc_slice&&) =delete;   // Disallowed: might lead to ptr to freed buf
+        constexpr pure_slice()                           :buf(nullptr), size(0) {}
+        constexpr pure_slice(const void* b, size_t s)    :buf(b), size(s) {}
 
         explicit operator bool() const              {return buf != nullptr;}
 
         const void* offset(size_t o) const          {return (uint8_t*)buf + o;}
         size_t offsetOf(const void* ptr) const      {return (uint8_t*)ptr - (uint8_t*)buf;}
         const void* end() const                     {return offset(size);}
-        void setEnd(const void* e)                  {size = (uint8_t*)e - (uint8_t*)buf;}
-        void setStart(const void* s) noexcept;
 
-        slice upTo(const void* pos)                 {return slice(buf, pos);}
-        slice from(const void* pos)                 {return slice(pos, end());}
+        inline slice upTo(const void* pos);
+        inline slice from(const void* pos);
 
         const uint8_t& operator[](size_t i) const   {return ((const uint8_t*)buf)[i];}
-        slice operator()(size_t i, size_t n) const  {return slice(offset(i), n);}
+        inline slice operator()(size_t i, size_t n) const;
 
-        slice read(size_t nBytes) noexcept;
-        slice readAtMost(size_t nBytes) noexcept;
-        bool readInto(slice dst) noexcept;
-
-        bool writeFrom(slice) noexcept;
-
-        uint8_t readByte() noexcept;     // returns 0 if slice is empty
-        uint8_t peekByte() noexcept;     // returns 0 if slice is empty
-        bool writeByte(uint8_t) noexcept;
-        uint64_t readDecimal() noexcept; // reads until it hits a non-digit or the end
-        int64_t readSignedDecimal() noexcept;
-        bool writeDecimal(uint64_t) noexcept;
-        static unsigned sizeOfDecimal(uint64_t) noexcept;
-
-        slice find(slice target) const;
-        const uint8_t* findByte(uint8_t byte) const    {return (const uint8_t*)::memchr(buf, byte, size);}
+        slice find(pure_slice target) const;
+        const uint8_t* findByte(uint8_t b) const    {return (const uint8_t*)::memchr(buf, b, size);}
         const uint8_t* findByteOrEnd(uint8_t byte) const;
-        const uint8_t* findAnyByteOf(slice targetBytes);
+        const uint8_t* findAnyByteOf(pure_slice targetBytes);
 
-        int compare(slice) const noexcept;
-        bool caseEquivalent(slice) const noexcept;
-        bool operator==(const slice &s) const       {return size==s.size &&
-                                                     memcmp(buf, s.buf, size) == 0;}
-        bool operator!=(const slice &s) const       {return !(*this == s);}
-        bool operator<(slice s) const               {return compare(s) < 0;}
-        bool operator>(slice s) const               {return compare(s) > 0;}
+        int compare(pure_slice) const noexcept;
+        bool caseEquivalent(pure_slice) const noexcept;
+        bool operator==(const pure_slice &s) const       {return size==s.size &&
+                                                                 memcmp(buf, s.buf, size) == 0;}
+        bool operator!=(const pure_slice &s) const       {return !(*this == s);}
+        bool operator<(pure_slice s) const               {return compare(s) < 0;}
+        bool operator>(pure_slice s) const               {return compare(s) > 0;}
 
-        bool hasPrefix(slice) const noexcept;
-
-        void moveStart(ptrdiff_t delta)             {buf = offsetby(buf, delta); size -= delta;}
-        bool checkedMoveStart(size_t delta)         {if (size<delta) return false;
-                                                     else {moveStart(delta); return true;}}
+        bool hasPrefix(pure_slice) const noexcept;
 
         slice copy() const;
-        void free() noexcept;
-
-        /** Raw memory allocation. Just like malloc but throws on failure. */
-        static void* newBytes(size_t sz) {
-            void* result = ::malloc(sz);
-            if (!result) throw std::bad_alloc();
-            return result;
-        }
-
-        template <typename T>
-        static T* reallocBytes(T* bytes, size_t newSz) {
-            T* newBytes = (T*)::realloc(bytes, newSz);
-            if (!newBytes) throw std::bad_alloc();
-            return newBytes;
-        }
 
         explicit operator std::string() const;
         std::string asString() const                {return (std::string)*this;}
         std::string hexString() const;
-
         std::string base64String() const;
 
         /** Decodes Base64 data from receiver into output. On success returns subrange of output
             where the decoded data is. If output is too small to hold all the decoded data, returns
             a null slice. */
-        slice readBase64Into(slice output) const;
-
+        slice readBase64Into(pure_slice output) const;
 
         #define hexCString() hexString().c_str()    // has to be a macro else dtor called too early
         #define cString() asString().c_str()        // has to be a macro else dtor called too early
@@ -146,12 +106,14 @@ namespace fleece {
             return h;
         }
 
-        slice(FLSlice s);
-        operator FLSlice () const;
+        /** Raw memory allocation. Just like malloc but throws on failure. */
+        static void* newBytes(size_t sz);
+        template <typename T>
+        static T* reallocBytes(T* bytes, size_t newSz);
 
 #ifdef __OBJC__
-        slice(NSData* data)
-        :buf(data.bytes), size(data.length) {}
+        pure_slice(NSData* data)
+        :pure_slice(data.bytes, data.length) {}
 
         NSData* copiedNSData() const {
             return buf ? [[NSData alloc] initWithBytes: buf length: size] : nil;
@@ -165,20 +127,65 @@ namespace fleece {
             return [[NSData alloc] initWithBytesNoCopy: (void*)buf length: size freeWhenDone: NO];
         }
 
-        /** Creates an NSData using initWithBytesNoCopy but with freeWhenDone:YES.
-            The data is not copied but it now belongs to the NSData object. */
-        NSData* convertToNSData() {
-            if (!buf)
-                return nil;
-            return [[NSData alloc] initWithBytesNoCopy: (void*)buf length: size freeWhenDone: YES];
-        }
-
         explicit operator NSString* () const {
             if (!buf)
                 return nil;
             return CFBridgingRelease(CFStringCreateWithBytes(nullptr, (const uint8_t*)buf, size,
                                                              kCFStringEncodingUTF8, NO));
         }
+#endif
+    protected:
+        void setBuf(const void *b)                  {(const void*&)buf = b;}
+        void setSize(size_t s)                      {(size_t&)size = s;}
+        void set(const void *b, size_t s)           {setBuf(b); setSize(s);}
+        pure_slice& operator=(pure_slice s)         {set(s.buf, s.size); return *this;}
+    };
+
+
+    /** A simple range of memory. No ownership implied.
+        Unlike its parent class pure_slice, this supports operations that change buf or size. */
+    struct slice : public pure_slice {
+        constexpr slice()                           :pure_slice() {}
+        constexpr slice(const void* b, size_t s)    :pure_slice(b, s) {}
+        slice(const void* start, const void* end)   :slice(start, (uint8_t*)end-(uint8_t*)start){}
+        inline slice(alloc_slice);
+
+        slice(const std::string& str)               :slice(&str[0], str.length()) {}
+        explicit slice(const char* str)             :slice(str, str ? strlen(str) : 0) {}
+
+        slice& operator=(pure_slice s)              {set(s.buf, s.size); return *this;}
+        slice& operator= (alloc_slice&&) =delete;   // Disallowed: might lead to ptr to freed buf
+
+        void setBuf(const void *b)                  {pure_slice::setBuf(b);}
+        void setSize(size_t s)                      {pure_slice::setSize(s);}
+        void shorten(size_t s)                      {assert(s <= size); setSize(s);}
+
+        void setEnd(const void* e)                  {setSize((uint8_t*)e - (uint8_t*)buf);}
+        void setStart(const void* s) noexcept;
+        void moveStart(ptrdiff_t delta)             {set(offsetby(buf, delta), size - delta);}
+        bool checkedMoveStart(size_t delta)         {if (size<delta) return false;
+                                                     else {moveStart(delta); return true;}}
+        slice read(size_t nBytes) noexcept;
+        slice readAtMost(size_t nBytes) noexcept;
+        bool readInto(slice dst) noexcept;
+
+        bool writeFrom(slice) noexcept;
+
+        uint8_t readByte() noexcept;     // returns 0 if slice is empty
+        uint8_t peekByte() const noexcept;     // returns 0 if slice is empty
+        bool writeByte(uint8_t) noexcept;
+        uint64_t readDecimal() noexcept; // reads until it hits a non-digit or the end
+        int64_t readSignedDecimal() noexcept;
+        bool writeDecimal(uint64_t) noexcept;
+        static unsigned sizeOfDecimal(uint64_t) noexcept;
+
+        void free() noexcept;
+
+        slice(FLSlice s);
+        operator FLSlice () const;
+
+#ifdef __OBJC__
+        slice(NSData* data)                         :pure_slice(data) {}
 #endif
     };
 
@@ -194,11 +201,11 @@ namespace fleece {
 
 
     /** A slice that owns a ref-counted block of memory. */
-    struct alloc_slice : public slice {
+    struct alloc_slice : public pure_slice {
         alloc_slice()
-            :slice() {}
+            :pure_slice() {}
         explicit alloc_slice(size_t s);
-        explicit alloc_slice(slice s);
+        explicit alloc_slice(pure_slice s);
         alloc_slice(const void* b, size_t s)
             :alloc_slice(slice(b, s)) { }
         alloc_slice(const void* start, const void* end)
@@ -213,41 +220,41 @@ namespace fleece {
         alloc_slice& operator=(const alloc_slice&) noexcept;
 
         alloc_slice(alloc_slice&& s) noexcept
-        :slice(s)
-        { s.buf = nullptr; }
+        :pure_slice(s)
+        { s.setBuf(nullptr); }
 
         alloc_slice& operator=(alloc_slice&& s) noexcept {
             release();
             assignFrom(s);
-            s.buf = nullptr;
+            s.setBuf(nullptr);
             return *this;
         }
 
-        explicit operator bool() const                      {return buf != nullptr;}
+        alloc_slice& operator= (pure_slice s);
 
-#ifdef __OBJC__
-        NSData* convertToNSData();
-#endif
+        explicit operator bool() const                      {return buf != nullptr;}
 
         void reset() noexcept;
         void reset(size_t);
         void resize(size_t newSize);
-        void append(slice);
-
-        alloc_slice& operator=(slice);
+        void append(pure_slice);
 
         // disambiguation:
         alloc_slice& operator=(const std::string &str)      {*this = (slice)str; return *this;}
 
-        slice retain() noexcept;
+        alloc_slice& retain() noexcept;
         void release() noexcept;
 
         static void release(slice s) noexcept               {((alloc_slice*)&s)->release();}
 
+        operator FLSlice () const;
+
+        void shorten(size_t s)                          {assert(s <= size); pure_slice::setSize(s);}
+
     private:
         struct sharedBuffer;
         sharedBuffer* shared() noexcept;
-        void assignFrom(slice s)                            {buf = s.buf; size = s.size;}
+        void assignFrom(pure_slice s)                       {set(s.buf, s.size);}
 
         friend struct ::FLSliceResult;
     };
@@ -273,5 +280,12 @@ namespace fleece {
     struct sliceHash {
         std::size_t operator() (slice const& s) const {return s.hash();}
     };
+
+
+    // Inlines that couldn't be implemented inside the class declaration due to forward references:
+    inline slice::slice(alloc_slice s)                             :slice(s.buf, s.size) {}
+    inline slice pure_slice::upTo(const void* pos)                 {return slice(buf, pos);}
+    inline slice pure_slice::from(const void* pos)                 {return slice(pos, end());}
+    inline slice pure_slice::operator()(size_t i, size_t n) const  {return slice(offset(i), n);}
 
 }

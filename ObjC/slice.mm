@@ -27,8 +27,7 @@ namespace fleece {
         // First try to use a direct pointer to the bytes:
         auto cstr = CFStringGetCStringPtr((__bridge CFStringRef)str, kCFStringEncodingUTF8);
         if (cstr) {
-            size = strlen(cstr);
-            buf = cstr;
+            set(cstr, strlen(cstr));
             return;
         }
 
@@ -40,22 +39,21 @@ namespace fleece {
                            encoding: NSUTF8StringEncoding options: 0
                               range: NSMakeRange(0, str.length) remainingRange: &remaining];
             if (ok && remaining.length == 0) {
-                buf = &_local;
-                size = byteCount;
+                set(&_local, byteCount);
                 return;
             }
         }
 
         // Otherwise malloc a buffer to copy the UTF-8 into:
         NSUInteger maxByteCount = [str maximumLengthOfBytesUsingEncoding: NSUTF8StringEncoding];
-        buf = newBytes(maxByteCount);
+        set(newBytes(maxByteCount), maxByteCount);
         _needsFree = true;
         BOOL ok = [str getBytes: (void*)buf maxLength: maxByteCount usedLength: &byteCount
                        encoding: NSUTF8StringEncoding options: 0
                           range: NSMakeRange(0, str.length) remainingRange: nullptr];
         if (!ok)
             throw std::runtime_error("couldn't get NSString bytes");
-        size = byteCount;
+        shorten(byteCount);
     }
 
     nsstring_slice::~nsstring_slice() {

@@ -30,11 +30,10 @@ namespace fleece {
 
     void slice::setStart(const void *s) noexcept {
         assert(s <= end());
-        size = (uint8_t*)end() - (uint8_t*)s;
-        buf = s;
+        set(s, (uint8_t*)end() - (uint8_t*)s);
     }
 
-    int slice::compare(slice b) const noexcept {
+    int pure_slice::compare(pure_slice b) const noexcept {
         // Optimized for speed
         if (this->size == b.size)
             return memcmp(this->buf, b.buf, this->size);
@@ -47,7 +46,7 @@ namespace fleece {
         }
     }
 
-    bool slice::caseEquivalent(slice b) const noexcept {
+    bool pure_slice::caseEquivalent(pure_slice b) const noexcept {
         if (size != b.size)
             return false;
         for (size_t i = 0; i < size; i++)
@@ -87,7 +86,7 @@ namespace fleece {
         return true;
     }
 
-    uint8_t slice::peekByte() noexcept {
+    uint8_t slice::peekByte() const noexcept {
         return (size > 0) ? (*this)[0] : 0;
     }
 
@@ -157,17 +156,17 @@ namespace fleece {
         return 1 + (unsigned)::floor(::log10(n));
     }
 
-    slice slice::find(slice target) const {
+    slice pure_slice::find(pure_slice target) const {
         auto found = memmem(buf, size, target.buf, target.size);
         return {found, (found ? target.size : 0)};
     }
 
-    const uint8_t* slice::findByteOrEnd(uint8_t byte) const {
+    const uint8_t* pure_slice::findByteOrEnd(uint8_t byte) const {
         auto result = findByte(byte);
         return result ? result : (const uint8_t*)end();
     }
 
-    const uint8_t* slice::findAnyByteOf(slice targetBytes) {
+    const uint8_t* pure_slice::findAnyByteOf(pure_slice targetBytes) {
         const void* result = nullptr;
         for (size_t i = 0; i < targetBytes.size; ++i) {
             auto r = findByte(targetBytes[i]);
@@ -177,9 +176,23 @@ namespace fleece {
         return (const uint8_t*)result;
     }
 
-    slice slice::copy() const {
+    /** Raw memory allocation. Just like malloc but throws on failure. */
+    void* pure_slice::newBytes(size_t sz) {
+        void* result = ::malloc(sz);
+        if (!result) throw std::bad_alloc();
+        return result;
+    }
+
+    template <typename T>
+    T* pure_slice::reallocBytes(T* bytes, size_t newSz) {
+        T* newBytes = (T*)::realloc(bytes, newSz);
+        if (!newBytes) throw std::bad_alloc();
+        return newBytes;
+    }
+
+    slice pure_slice::copy() const {
         if (buf == nullptr)
-            return *this;
+            return nullslice;
         void* copied = newBytes(size);
         ::memcpy(copied, buf, size);
         return slice(copied, size);
@@ -187,20 +200,19 @@ namespace fleece {
 
     void slice::free() noexcept {
         ::free((void*)buf);
-        buf = nullptr;
-        size = 0;
+        set(nullptr, 0);
     }
     
-    bool slice::hasPrefix(slice s) const noexcept {
+    bool pure_slice::hasPrefix(pure_slice s) const noexcept {
         return s.size > 0 && size >= s.size && ::memcmp(buf, s.buf, s.size) == 0;
     }
 
-    slice::operator std::string() const {
+    pure_slice::operator std::string() const {
         return std::string((const char*)buf, size);
     }
 
 
-    std::string slice::hexString() const {
+    std::string pure_slice::hexString() const {
         static const char kDigits[17] = "0123456789abcdef";
         std::string result;
         for (size_t i = 0; i < size; i++) {
@@ -212,7 +224,7 @@ namespace fleece {
     }
 
 
-    std::string slice::base64String() const {
+    std::string pure_slice::base64String() const {
         std::string str;
         size_t strLen = ((size + 2) / 3) * 4;
         str.resize(strLen);
@@ -227,7 +239,7 @@ namespace fleece {
     }
 
 
-    slice slice::readBase64Into(slice output) const {
+    slice pure_slice::readBase64Into(pure_slice output) const {
         size_t expectedLen = (size + 3) / 4 * 3;
         if (expectedLen > output.size)
             return nullslice;
@@ -238,7 +250,7 @@ namespace fleece {
     }
 
 
-    slice::slice(FLSlice s)                 :buf(s.buf), size(s.size) { }
+    slice::slice(FLSlice s)                 :slice(s.buf, s.size) { }
     slice::operator FLSlice () const        {return {buf, size};}
 
 
@@ -249,12 +261,16 @@ namespace fleece {
         std::atomic<uint32_t> _refCount {1};
         uint8_t _buf[4];
 
+#define assertHeapBlock(P) assert(((size_t)(P) & 0x0F) == 0)  // sanity check that block is aligned
+
         inline sharedBuffer* retain() noexcept {
+            assertHeapBlock(this);
             ++_refCount;
             return this;
         }
 
         inline void release() noexcept {
+            assertHeapBlock(this);
             if (--_refCount == 0)
                 delete this;
         }
@@ -272,22 +288,24 @@ namespace fleece {
         }
 
         inline sharedBuffer* realloc(size_t newSize) {
+            assertHeapBlock(this);
             return slice::reallocBytes(this, offsetof(sharedBuffer, _buf) + newSize);
         }
 
         static inline void operator delete(void* ptr) {
+            assertHeapBlock(ptr);
             ::operator delete(ptr);
         }
     };
 
 
     alloc_slice::alloc_slice(size_t sz)
-    :slice(sharedBuffer::newSlice(sz))
+    :pure_slice(sharedBuffer::newSlice(sz))
     { }
 
 
-    alloc_slice::alloc_slice(slice s)
-    :slice(s.buf ? sharedBuffer::newSlice(s.size) : nullslice)
+    alloc_slice::alloc_slice(pure_slice s)
+    :pure_slice(s.buf ? sharedBuffer::newSlice(s.size) : nullslice)
     {
         if (s.buf)
             memcpy((void*)buf, s.buf, size);
@@ -298,7 +316,7 @@ namespace fleece {
     { }
 
     alloc_slice::alloc_slice(FLSliceResult &&sr)
-    :slice(sr.buf, sr.size)
+    :pure_slice(sr.buf, sr.size)
     {
         sr.buf = nullptr;
         sr.size = 0;
@@ -310,12 +328,12 @@ namespace fleece {
         return offsetby((sharedBuffer*)buf, -offsetof(sharedBuffer, _buf));
     }
 
-    slice alloc_slice::retain() noexcept      {if (buf) shared()->retain(); return *this;}
+    alloc_slice& alloc_slice::retain() noexcept      {if (buf) shared()->retain(); return *this;}
     void alloc_slice::release() noexcept      {if (buf) shared()->release();}
 
 
     alloc_slice::alloc_slice(const alloc_slice& s) noexcept
-    :slice(s)
+    :pure_slice(s)
     {
         retain();
     }
@@ -339,7 +357,7 @@ namespace fleece {
     }
 
     
-    alloc_slice& alloc_slice::operator=(slice s) {
+    alloc_slice& alloc_slice::operator=(pure_slice s) {
         if (s.buf) {
             bool noop = (s.buf == buf);
             reset(s.size);
@@ -366,17 +384,19 @@ namespace fleece {
                 memcpy(newBuf->_buf, buf, std::min(size, newSize));
                 release();
             }
-            buf = newBuf->_buf;
-            size = newSize;
+            set(newBuf->_buf, newSize);
         }
     }
 
 
-    void alloc_slice::append(slice suffix) {
+    void alloc_slice::append(pure_slice suffix) {
         size_t oldSize = size;
         resize(oldSize + suffix.size);
         memcpy((void*)offset(oldSize), suffix.buf, suffix.size);
     }
+
+    
+    alloc_slice::operator FLSlice () const        {return {buf, size};}
 
 
 }

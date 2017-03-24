@@ -491,7 +491,7 @@ namespace fleece {
             if (keys[i].buf == nullptr) {
                 const Value *item = &items[2*i];
                 if (item->tag() == kStringTag)
-                    keys[i].buf = offsetby(item, 1);                // inline string
+                    keys[i].setBuf(offsetby(item, 1));                      // inline string
                 else
                     keys[i] = slice(nullptr, (size_t)item->asUnsigned());   // integer
             }

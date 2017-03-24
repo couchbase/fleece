@@ -137,7 +137,7 @@ namespace fleece {
             // This means the actual length follows as a varint:
             uint32_t realLength;
             ReadUVarInt32(&s, &realLength);
-            s.size = realLength;
+            s.setSize(realLength);
         }
         return s;
     }

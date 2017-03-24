@@ -152,8 +152,7 @@ namespace fleece {
         slice key;
         int32_t len = readVarInt(tree);
         if (len >= 0) {
-            key.buf = tree;
-            key.size = len;
+            key = slice(tree, len);
             tree += len;
         }
         return key;

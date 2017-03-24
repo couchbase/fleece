@@ -36,9 +36,11 @@ alloc_slice readFile(const char *path);
 void writeToFile(slice s, const char *path);
 
 
-struct mmap_slice : public slice {
+struct mmap_slice : public pure_slice {
     mmap_slice(const char *path);
     ~mmap_slice();
+
+    operator slice()    {return {buf, size};}
 
 private:
     int _fd;
