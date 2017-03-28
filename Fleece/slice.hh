@@ -148,7 +148,6 @@ namespace fleece {
         constexpr slice()                           :pure_slice() {}
         constexpr slice(const void* b, size_t s)    :pure_slice(b, s) {}
         slice(const void* start, const void* end)   :slice(start, (uint8_t*)end-(uint8_t*)start){}
-        inline slice(alloc_slice);
 
         slice(const std::string& str)               :slice(&str[0], str.length()) {}
         explicit slice(const char* str)             :slice(str, str ? strlen(str) : 0) {}
@@ -232,6 +231,8 @@ namespace fleece {
 
         alloc_slice& operator= (pure_slice s);
 
+        operator slice() const  {return {buf, size};}
+
         explicit operator bool() const                      {return buf != nullptr;}
 
         void reset() noexcept;
@@ -283,7 +284,6 @@ namespace fleece {
 
 
     // Inlines that couldn't be implemented inside the class declaration due to forward references:
-    inline slice::slice(alloc_slice s)                             :slice(s.buf, s.size) {}
     inline slice pure_slice::upTo(const void* pos)                 {return slice(buf, pos);}
     inline slice pure_slice::from(const void* pos)                 {return slice(pos, end());}
     inline slice pure_slice::operator()(size_t i, size_t n) const  {return slice(offset(i), n);}
