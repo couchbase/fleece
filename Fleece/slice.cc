@@ -261,7 +261,7 @@ namespace fleece {
         std::atomic<uint32_t> _refCount {1};
         uint8_t _buf[4];
 
-#define assertHeapBlock(P) assert(((size_t)(P) & 0x0F) == 0)  // sanity check that block is aligned
+#define assertHeapBlock(P) assert(((size_t)(P) & 0x07) == 0)  // sanity check that block is aligned
 
         inline sharedBuffer* retain() noexcept {
             assertHeapBlock(this);
