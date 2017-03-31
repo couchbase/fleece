@@ -14,6 +14,8 @@
     #define _usuallyTrue(VAL)               (VAL)
     #define _usuallyFalse(VAL)              (VAL)
     #define NOINLINE                        __declspec(noinline)
+	#define __unused
+    #define __typeof                        decltype
 
     #define __has_extension(X)              0
     #define __has_feature(F)                0
