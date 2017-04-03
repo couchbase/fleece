@@ -71,8 +71,10 @@ namespace fleeceapi {
         explicit operator bool() const                  {return _val != nullptr;}
         bool operator! () const                         {return _val == nullptr;}
 
+        Value& operator= (Value v)                      {_val = v._val; return *this;}
+
     protected:
-        const ::FLValue _val {nullptr};
+        ::FLValue _val {nullptr};
     };
 
 
@@ -96,6 +98,9 @@ namespace fleeceapi {
         inline Value get(uint32_t index) const;
 
         inline Value operator[] (int index) const       {return get(index);}
+
+        Array& operator= (Array a)                      {_val = a._val; return *this;}
+        Value& operator= (Value v)                      =delete;
 
         class iterator : private FLArrayIterator {
         public:
@@ -135,6 +140,9 @@ namespace fleeceapi {
 
         inline Value operator[] (FLString key) const    {return get(key);}
         inline Value operator[] (const char *key) const {return get(key);}
+
+        Dict& operator= (Dict d)                        {_val = d._val; return *this;}
+        Value& operator= (Value v)                      =delete;
 
         class Key {
         public:
