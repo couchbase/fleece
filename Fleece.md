@@ -43,7 +43,7 @@ The key ordering is very simple: integers sort before strings, and strings are c
 
 ### Pointers
 
-How do values longer than 2 bytes fit in a collection? By using **pointers**. A pointer is a special value that represents a relative offset from itself to another value. Pointers always point back (toward lower addresses) to previously-written values.
+How do values longer than 4 bytes fit in a collection? By using **pointers**. A pointer is a special value that represents a relative offset from itself to another value. Pointers always point back (toward lower addresses) to previously-written values.
 
 Pointers are transparently dereferenced, like symlinks. So if a long value needs to be added to a collection, it's written outside (before) the collection, then a pointer to it is added.
 

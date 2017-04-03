@@ -23,6 +23,8 @@ namespace fleece {
         UnknownValue,       // Unparseable data in a Value (corrupt? Or from some distant future?)
         PathSyntaxError,    // Invalid Path specifier
         InternalError,      // This shouldn't happen
+        NotFound,           // Key not found
+        SharedKeysStateError, // Incorrect use of persistent shared keys (not in transaction, etc.)
     } ErrorCode;
 
 

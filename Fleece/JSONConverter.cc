@@ -35,7 +35,7 @@ namespace fleece {
     JSONConverter::JSONConverter(Encoder &e) noexcept
     :_encoder(e),
      _jsn(jsonsl_new(50)),      // never returns nullptr, according to source code
-     _error(JSONSL_ERROR_SUCCESS),
+     _jsonError(JSONSL_ERROR_SUCCESS),
      _errorPos(0)
     {
         _jsn->data = this;
@@ -47,21 +47,27 @@ namespace fleece {
 
     void JSONConverter::reset() {
         jsonsl_reset(_jsn);
-        _error = JSONSL_ERROR_SUCCESS;
+        _jsonError = JSONSL_ERROR_SUCCESS;
         _errorPos = 0;
     }
 
     const char* JSONConverter::errorMessage() noexcept {
-        if (_error == kErrTruncatedJSON)
+        if (!_errorMessage.empty())
+            return _errorMessage.c_str();
+        else if (_jsonError == kErrExceptionThrown)
+            return "Unexpected C++ exception";
+        else if (_jsonError == kErrTruncatedJSON)
             return "Truncated JSON";
         else
-            return jsonsl_strerror((jsonsl_error_t)_error);
+            return jsonsl_strerror((jsonsl_error_t)_jsonError);
     }
 
 
     bool JSONConverter::encodeJSON(slice json) {
         _input = json;
-        _error = JSONSL_ERROR_SUCCESS;
+        _errorMessage.clear();
+        _errorCode = NoError;
+        _jsonError = JSONSL_ERROR_SUCCESS;
         _errorPos = 0;
 
         _jsn->data = this;
@@ -71,13 +77,13 @@ namespace fleece {
         jsonsl_enable_all_callbacks(_jsn);
 
         jsonsl_feed(_jsn, (char*)json.buf, json.size);
-        if (_jsn->level > 0 && !_error) {
+        if (_jsn->level > 0 && !_jsonError) {
             // Input is valid JSON so far, but truncated:
-            _error = kErrTruncatedJSON;
+            _jsonError = kErrTruncatedJSON;
             _errorPos = json.size;
         }
         jsonsl_reset(_jsn);
-        return (_error == JSONSL_ERROR_SUCCESS);
+        return (_jsonError == JSONSL_ERROR_SUCCESS);
     }
 
     /*static*/ alloc_slice JSONConverter::convertJSON(slice json, SharedKeys *sk) {
@@ -161,7 +167,7 @@ namespace fleece {
     }
 
     int JSONConverter::gotError(int err, size_t pos) noexcept {
-        _error = err;
+        _jsonError = err;
         _errorPos = pos;
         jsonsl_stop(_jsn);
         return 0;
@@ -171,6 +177,11 @@ namespace fleece {
         return gotError(err, errat - (char*)_input.buf);
     }
 
+    void JSONConverter::gotException(ErrorCode code, const char *what, size_t pos) noexcept {
+        gotError(kErrExceptionThrown, pos);
+        _errorCode = code;
+        _errorMessage = what;
+    }
 
     // Callbacks:
 
@@ -185,8 +196,10 @@ namespace fleece {
     {
         try {
             converter(jsn)->push(state);
+        } catch (const FleeceException &x) {
+            converter(jsn)->gotException(x.code, x.what(), state->pos_begin);
         } catch (...) {
-            converter(jsn)->gotError(JSONSL_ERROR_GENERIC, state->pos_begin);
+            converter(jsn)->gotException(InternalError, nullptr, state->pos_begin);
         }
     }
 
@@ -197,8 +210,10 @@ namespace fleece {
     {
         try {
             converter(jsn)->pop(state);
+        } catch (const FleeceException &x) {
+            converter(jsn)->gotException(x.code, x.what(), state->pos_begin);
         } catch (...) {
-            converter(jsn)->gotError(JSONSL_ERROR_GENERIC, state->pos_begin);
+            converter(jsn)->gotException(InternalError, nullptr, state->pos_begin);
         }
     }
 

@@ -89,7 +89,7 @@ namespace fleece {
 
     void SharedKeys::revertToCount(size_t toCount) {
         if (toCount >= count()) {
-            throwIf(toCount > count(), InternalError, "can't revert to a bigger count");
+            throwIf(toCount > count(), SharedKeysStateError, "can't revert to a bigger count");
             return;
         }
         _byKey.resize(toCount);
@@ -117,7 +117,7 @@ namespace fleece {
 
 
     void PersistentSharedKeys::transactionBegan() {
-        throwIf(_inTransaction, InternalError, "already in transaction");
+        throwIf(_inTransaction, SharedKeysStateError, "already in transaction");
         _inTransaction = true;
         read();     // Catch up with any external changes
     }
@@ -133,7 +133,7 @@ namespace fleece {
 
     // Subclass's read() method calls this
     bool PersistentSharedKeys::loadFrom(slice fleeceData) {
-        throwIf(changed(), InternalError, "can't load when already changed");
+        throwIf(changed(), SharedKeysStateError, "can't load when already changed");
         const Value *v = Value::fromData(fleeceData);
         if (!v)
             return false;
@@ -176,7 +176,7 @@ namespace fleece {
 
 
     int PersistentSharedKeys::add(slice str) {
-        throwIf(!_inTransaction, InternalError, "not in transaction");
+        throwIf(!_inTransaction, SharedKeysStateError, "not in transaction");
         return SharedKeys::add(str);
     }
 

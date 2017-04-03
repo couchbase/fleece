@@ -39,7 +39,7 @@ namespace fleece {
     
     // Implementation of FLEncoder: a subclass of Encoder that keeps track of its error state.
     struct FLEncoderImpl {
-        FLError errorCode {::NoError};
+        FLError errorCode {::kFLNoError};
         std::string errorMessage;
         std::unique_ptr<Encoder> fleeceEncoder;
         std::unique_ptr<JSONEncoder> jsonEncoder;
@@ -80,7 +80,7 @@ namespace fleece {
                 fleeceEncoder->reset();
             if (jsonConverter)
                 jsonConverter->reset();
-            errorCode = ::NoError;
+            errorCode = ::kFLNoError;
         }
     };
 

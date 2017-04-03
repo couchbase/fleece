@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Encoder.hh"
+#include "FleeceException.hh"
 #include "slice.hh"
 #include <vector>
 #include <map>
@@ -31,7 +32,8 @@ namespace fleece {
         bool encodeJSON(slice json);
 
         /** See jsonsl_error_t for error codes, plus a few more defined below. */
-        int error() noexcept                    {return _error;}
+        int jsonError() noexcept                {return _jsonError;}
+        ErrorCode errorCode() noexcept          {return _errorCode;}
         const char* errorMessage() noexcept;
         
         /** Byte offset in input where error occurred */
@@ -39,7 +41,8 @@ namespace fleece {
 
         /** Extra error codes beyond those in jsonsl_error_t. */
         enum {
-            kErrTruncatedJSON = 1000
+            kErrTruncatedJSON = 1000,
+            kErrExceptionThrown
         };
 
         /** Resets the converter, as though you'd deleted it and constructed a new one. */
@@ -53,14 +56,17 @@ namespace fleece {
         void pop(struct jsonsl_state_st *state);
         int gotError(int err, size_t pos) noexcept;
         int gotError(int err, const char *errat) noexcept;
+        void gotException(ErrorCode code, const char *what, size_t pos) noexcept;
 
     private:
         typedef std::map<size_t, uint64_t> startToLengthMap;
 
         Encoder &_encoder;                  // encoder to write to
-        struct jsonsl_st * _jsn;            // JSON parser
-        int _error;                         // Parse error from jsonsl
-        size_t _errorPos;                   // Byte index where parse error occurred
+        struct jsonsl_st * _jsn {nullptr};  // JSON parser
+        int _jsonError {0};                 // Parse error from jsonsl
+        ErrorCode _errorCode {NoError};
+        std::string _errorMessage;
+        size_t _errorPos {0};               // Byte index where parse error occurred
         slice _input;                       // Current JSON being parsed
     };
 

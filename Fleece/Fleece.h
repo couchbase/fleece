@@ -119,15 +119,16 @@ extern "C" {
 
     
     typedef enum {
-        NoError = 0,
-        MemoryError,        // Out of memory, or allocation failed
-        OutOfRange,         // Array index or iterator out of range
-        InvalidData,        // Bad input data (NaN, non-string key, etc.)
-        EncodeError,        // Structural error encoding (missing value, too many ends, etc.)
-        JSONError,          // Error parsing JSON
-        UnknownValue,       // Unparseable data in a Value (corrupt? Or from some distant future?)
-        InternalError,      // Something that shouldn't happen
-        NotFound
+        kFLNoError = 0,
+        kFLMemoryError,        // Out of memory, or allocation failed
+        kFLOutOfRange,         // Array index or iterator out of range
+        kFLInvalidData,        // Bad input data (NaN, non-string key, etc.)
+        kFLEncodeError,        // Structural error encoding (missing value, too many ends, etc.)
+        kFLJSONError,          // Error parsing JSON
+        kFLUnknownValue,       // Unparseable data in a Value (corrupt? Or from some distant future?)
+        kFLInternalError,      // Something that shouldn't happen
+        kFLNotFound,           // Key not found
+        kFLSharedKeysStateError, // Misuse of shared keys (not in transaction, etc.)
     } FLError;
 
     /** @} */

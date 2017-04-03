@@ -152,7 +152,7 @@ FLSlice FLSharedKey_GetKeyString(FLSharedKeys sk, int keyCode, FLError* outError
     try {
         key = sk->decode((keyCode));
         if(!key && outError != nullptr) {
-            *outError = NotFound;
+            *outError = kFLNotFound;
         }
     } catchError(outError)
     
@@ -313,7 +313,7 @@ bool FLEncoder_ConvertJSON(FLEncoder e, FLSlice json) {
                 if (jc->encodeJSON(json)) {                   // encodeJSON can throw
                     return true;
                 } else {
-                    e->errorCode = ::JSONError; //TODO: Save value of jc.error() somewhere
+                    e->errorCode = (FLError)jc->errorCode();
                     e->errorMessage = jc->errorMessage();
                 }
             } else {
