@@ -49,7 +49,7 @@
     #endif
     #endif
 
-    #ifndef __APPLE__
+    #if !defined(__APPLE__) && !defined(__unused)
     #define __unused __attribute__((unused))
     #endif
 
