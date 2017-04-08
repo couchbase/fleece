@@ -49,6 +49,10 @@
     #endif
     #endif
 
+    #ifndef __APPLE__
+    #define __unused __attribute__((unused))
+    #endif
+
     #define _usuallyTrue(VAL)               __builtin_expect(VAL, true)
     #define _usuallyFalse(VAL)              __builtin_expect(VAL, false)
     #define NOINLINE                        __attribute((noinline))
