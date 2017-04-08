@@ -14,7 +14,7 @@
     #define _usuallyTrue(VAL)               (VAL)
     #define _usuallyFalse(VAL)              (VAL)
     #define NOINLINE                        __declspec(noinline)
-	#define __unused
+	#define LITECORE_UNUSED
     #define __typeof                        decltype
 
     #define __has_extension(X)              0
@@ -49,8 +49,10 @@
     #endif
     #endif
 
-    #if !defined(__APPLE__) && !defined(__unused)
-    #define __unused __attribute__((unused))
+    #ifdef __APPLE__
+    #define LITECORE_UNUSED __unused
+    #else
+    #define LITECORE_UNUSED __attribute__((unused))
     #endif
 
     #define _usuallyTrue(VAL)               __builtin_expect(VAL, true)
