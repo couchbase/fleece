@@ -37,7 +37,7 @@ namespace fleece {
         void reset()                            {_out.reset(); _first = true;}
 
         /** Associates a SharedKeys object with this Encoder, for use by writeValue(). */
-        void setSharedKeys(SharedKeys *s)       {_sharedKeys = s;}
+        void setSharedKeys(const SharedKeys *s) {_sharedKeys = s;}
 
         /////// Writing data:
 
@@ -113,7 +113,7 @@ namespace fleece {
         Writer _out;
         bool _json5 {false};
         bool _first {true};
-        SharedKeys *_sharedKeys {nullptr};
+        const SharedKeys *_sharedKeys {nullptr};
     };
 
 }

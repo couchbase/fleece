@@ -208,6 +208,7 @@ namespace fleece {
     template <int VER>
     alloc_slice Value::toJSON(const SharedKeys *sk) const {
         JSONEncoder encoder;
+        encoder.setSharedKeys(sk);
         if (VER >= 5)
             encoder.setJSON5(true);
         encoder.writeValue(this);
