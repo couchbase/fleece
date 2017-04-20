@@ -43,7 +43,7 @@ namespace fleeceapi {
         static Value fromData(FLSlice data)          {return Value(FLValue_FromData(data));}
         static Value fromTrustedData(FLSlice data)   {return Value(FLValue_FromTrustedData(data));}
         
-        Value();
+        Value()                                         { }
         Value(FLValue v)                                :_val(v) { }
         operator FLValue const ()                       {return _val;}
 
