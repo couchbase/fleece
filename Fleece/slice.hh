@@ -71,7 +71,8 @@ namespace fleece {
         slice find(pure_slice target) const;
         const uint8_t* findByte(uint8_t b) const    {return (const uint8_t*)::memchr(buf, b, size);}
         const uint8_t* findByteOrEnd(uint8_t byte) const;
-        const uint8_t* findAnyByteOf(pure_slice targetBytes);
+        const uint8_t* findAnyByteOf(pure_slice targetBytes) const;
+        const uint8_t* findByteNotIn(pure_slice targetBytes) const;
 
         int compare(pure_slice) const noexcept;
         bool caseEquivalent(pure_slice) const noexcept;

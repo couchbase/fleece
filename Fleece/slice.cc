@@ -166,7 +166,7 @@ namespace fleece {
         return result ? result : (const uint8_t*)end();
     }
 
-    const uint8_t* pure_slice::findAnyByteOf(pure_slice targetBytes) {
+    const uint8_t* pure_slice::findAnyByteOf(pure_slice targetBytes) const {
         const void* result = nullptr;
         for (size_t i = 0; i < targetBytes.size; ++i) {
             auto r = findByte(targetBytes[i]);
@@ -175,6 +175,15 @@ namespace fleece {
         }
         return (const uint8_t*)result;
     }
+
+    const uint8_t* pure_slice::findByteNotIn(pure_slice targetBytes) const {
+        for (auto c = (const uint8_t*)buf; c != end(); ++c) {
+            if (!targetBytes.findByte(*c))
+                return c;
+        }
+        return nullptr;
+    }
+
 
     /** Raw memory allocation. Just like malloc but throws on failure. */
     void* pure_slice::newBytes(size_t sz) {
