@@ -334,7 +334,7 @@ namespace fleece {
 
 
     inline alloc_slice::sharedBuffer* alloc_slice::shared() noexcept {
-        return offsetby((sharedBuffer*)buf, -offsetof(sharedBuffer, _buf));
+        return offsetby((sharedBuffer*)buf, -((long long)offsetof(sharedBuffer, _buf)));
     }
 
     alloc_slice& alloc_slice::retain() noexcept      {if (buf) shared()->retain(); return *this;}
