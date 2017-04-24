@@ -15,6 +15,7 @@
 namespace fleeceapi {
     class Array;
     class Dict;
+    class KeyPath;
 
 
     static inline FLString FLStr(const std::string &s) {
@@ -73,6 +74,8 @@ namespace fleeceapi {
 
         Value& operator= (Value v)                      {_val = v._val; return *this;}
 
+        inline Value operator[] (const KeyPath &kp) const;
+
     protected:
         ::FLValue _val {nullptr};
     };
@@ -87,6 +90,27 @@ namespace fleeceapi {
     };
 
 
+    class KeyPath {
+    public:
+        KeyPath(FLSlice specifier, FLSharedKeys sk, FLError *error)
+        :_path(FLKeyPath_New(specifier, sk, error))
+        { }
+        ~KeyPath()                                      {FLKeyPath_Free(_path);}
+        explicit operator bool() const                  {return _path != nullptr;}
+
+        static Value eval(FLSlice specifier, FLSharedKeys sk, Value root, FLError *error) {
+            return FLKeyPath_EvalOnce(specifier, sk, root, error);
+        }
+
+    private:
+        KeyPath(const KeyPath&) =delete;
+        KeyPath& operator=(const KeyPath&) =delete;
+        friend class Value;
+
+        FLKeyPath _path;
+    };
+    
+    
     class Array : public Value {
     public:
         Array();
@@ -98,6 +122,7 @@ namespace fleeceapi {
         inline Value get(uint32_t index) const;
 
         inline Value operator[] (int index) const       {return get(index);}
+        inline Value operator[] (const KeyPath &kp) const {return Value::operator[](kp);}
 
         Array& operator= (Array a)                      {_val = a._val; return *this;}
         Value& operator= (Value v)                      =delete;
@@ -140,6 +165,7 @@ namespace fleeceapi {
 
         inline Value operator[] (FLString key) const    {return get(key);}
         inline Value operator[] (const char *key) const {return get(key);}
+        inline Value operator[] (const KeyPath &kp) const {return Value::operator[](kp);}
 
         Dict& operator= (Dict d)                        {_val = d._val; return *this;}
         Value& operator= (Value v)                      =delete;
@@ -286,6 +312,10 @@ namespace fleeceapi {
     inline FLStringResult Value::toString() const {return FLValue_ToString(_val);}
     inline FLStringResult Value::toJSON() const {return FLValue_ToJSON(_val);}
     inline FLStringResult Value::toJSON5() const{return FLValue_ToJSON5(_val);}
+
+    inline Value Value::operator[] (const KeyPath &kp) const
+                                                {return FLKeyPath_Eval(kp._path, _val);}
+
 
     inline uint32_t Array::count() const        {return FLArray_Count(*this);}
     inline Value Array::get(uint32_t i) const   {return FLArray_Get(*this, i);}
