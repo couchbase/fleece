@@ -113,7 +113,7 @@ namespace fleeceapi {
     
     class Array : public Value {
     public:
-        Array();
+        Array()                                         :Value() { }
         Array(FLArray a)                                :Value((FLValue)a) { }
         operator FLArray () const                       {return (FLArray)_val;}
 
@@ -150,7 +150,7 @@ namespace fleeceapi {
 
     class Dict : public Value {
     public:
-        Dict();
+        Dict()                                          :Value() { }
         Dict(FLDict d)                                  :Value((FLValue)d) { }
         operator FLDict () const                        {return (FLDict)_val;}
 
