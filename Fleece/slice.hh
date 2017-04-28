@@ -83,6 +83,7 @@ namespace fleece {
         bool operator>(pure_slice s) const               {return compare(s) > 0;}
 
         bool hasPrefix(pure_slice) const noexcept;
+        bool hasSuffix(pure_slice) const noexcept;
 
         slice copy() const;
 

@@ -216,6 +216,11 @@ namespace fleece {
         return s.size > 0 && size >= s.size && ::memcmp(buf, s.buf, s.size) == 0;
     }
 
+    bool pure_slice::hasSuffix(pure_slice s) const noexcept {
+        return s.size > 0 && size >= s.size
+            && ::memcmp(offsetby(buf, size - s.size), s.buf, s.size) == 0;
+    }
+
     pure_slice::operator std::string() const {
         return std::string((const char*)buf, size);
     }
