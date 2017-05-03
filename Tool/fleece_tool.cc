@@ -33,7 +33,7 @@ static alloc_slice readInput(FILE *in) {
     }
     if (ferror(in))
         throw "Error reading input";
-    return out.str();
+    return alloc_slice(out.str());
 }
 
 int main(int argc, const char * argv[]) {
