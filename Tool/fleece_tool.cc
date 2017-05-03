@@ -99,8 +99,8 @@ int main(int argc, const char * argv[]) {
             if (!root)
                 throw "Couldn't parse input as Fleece";
             auto json = root->toJSON();
-            fwrite(json.buf, json.size, 1, stderr);
-            fprintf(stderr, "\n");
+            fwrite(json.buf, json.size, 1, stdout);
+            fprintf(stdout, "\n");
         } else if (dump) {
             if (!Value::dump(input, cout))
                 throw "Couldn't parse input as Fleece";
