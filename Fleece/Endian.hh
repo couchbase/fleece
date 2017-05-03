@@ -50,7 +50,7 @@ namespace fleece {
         struct endian {
             endian() {}
             endian(FLT f)           {*this = f;}
-            endian(uint32_t raw)    {_swapped.asRaw = raw;}
+            endian(RAW raw)         {_swapped.asRaw = raw;}
             endian& operator= (FLT f) {
                 _swapped.asNumber = f;
                 SWAP(_swapped.asRaw);

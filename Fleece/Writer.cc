@@ -110,6 +110,14 @@ namespace fleece {
             chunk.free();
     }
 
+    std::vector<slice> Writer::output() const {
+        std::vector<slice> result;
+        result.reserve(_chunks.size());
+        for (const Chunk &chunk : _chunks)
+            result.push_back(chunk.contents());
+        return result;
+    }
+
     alloc_slice Writer::extractOutput() {
         alloc_slice output;
 #if 0 //TODO: Restore this optimization

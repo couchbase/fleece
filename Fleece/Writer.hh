@@ -38,6 +38,9 @@ namespace fleece {
         const void* curPos() const;
         size_t posToOffset(const void *pos) const;
 
+        /** Returns the data written, in pieces. Does not change the state of the Writer. */
+        std::vector<slice> output() const;
+
         /** Returns the data written. The Writer stops managing this memory; it now belongs to
             the caller and will be freed when no more alloc_slices refer to it. */
         alloc_slice extractOutput();
