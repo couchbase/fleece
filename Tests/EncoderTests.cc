@@ -151,8 +151,8 @@ public:
         json = std::string("[\"") + json + std::string("\"]");
         JSONConverter j(enc);
         j.encodeJSON(slice(json));
-        REQUIRE(j.error() == expectedErr);
-        if (j.error()) {
+        REQUIRE(j.jsonError() == expectedErr);
+        if (j.jsonError()) {
             enc.reset();
             return;
         }

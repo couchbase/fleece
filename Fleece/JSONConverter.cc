@@ -1,5 +1,5 @@
 //
-//  Encoder+JSON.cc
+//  JSONConverter.cc
 //  Fleece
 //
 //  Created by Jens Alfke on 11/21/15.
