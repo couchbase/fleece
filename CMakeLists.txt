@@ -37,6 +37,8 @@ endif()
 add_library(Fleece        SHARED  ${FLEECE_SRC})
 add_library(FleeceStatic  STATIC  ${FLEECE_SRC})
 
+add_executable(fleece Tool/fleece_tool.cc ${FLEECE_SRC})
+
 if (APPLE)
     target_link_libraries(Fleece  
                           "-framework CoreFoundation" 
