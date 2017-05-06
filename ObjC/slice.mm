@@ -19,6 +19,10 @@
 
 namespace fleece {
 
+    nsstring_slice::nsstring_slice(CFStringRef str)
+    :nsstring_slice((__bridge id)str)
+    { }
+    
     nsstring_slice::nsstring_slice(__unsafe_unretained NSString* str)
     :_needsFree(false)
     {

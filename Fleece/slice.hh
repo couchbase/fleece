@@ -22,10 +22,12 @@
 #include <memory>
 #include <assert.h>
 
+#ifdef __APPLE__
+#import <CoreFoundation/CFString.h>
+#endif
 #ifdef __OBJC__
 #import <Foundation/NSData.h>
 #import <Foundation/NSString.h>
-#import <CoreFoundation/CFString.h>
 #endif
 
 struct FLSlice; struct FLSliceResult;
@@ -264,12 +266,15 @@ namespace fleece {
 
 
 
-#ifdef __OBJC__
+#ifdef __APPLE__
     /** A slice holding the data of an NSString. It might point directly into the NSString, so
         don't modify or release the NSString while this is in scope. Or instead it might copy
         the data into a small internal buffer, or allocate it on the heap. */
     struct nsstring_slice : public slice {
-        nsstring_slice(NSString*);
+        nsstring_slice(CFStringRef);
+#ifdef __OBJC__
+        nsstring_slice(NSString *str);
+#endif
         ~nsstring_slice();
     private:
         char _local[127];
