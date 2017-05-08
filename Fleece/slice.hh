@@ -273,10 +273,11 @@ namespace fleece {
     struct nsstring_slice : public slice {
         nsstring_slice(CFStringRef);
 #ifdef __OBJC__
-        nsstring_slice(NSString *str);
+        nsstring_slice(NSString *str)   :nsstring_slice((__bridge CFStringRef)str) { }
 #endif
         ~nsstring_slice();
     private:
+        CFIndex getBytes(CFStringRef, CFIndex lengthInChars);
         char _local[127];
         bool _needsFree;
     };

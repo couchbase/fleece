@@ -1,5 +1,5 @@
 //
-//  slice.mm
+//  slice+CoreFoundation.cc
 //  Couchbase Lite Core
 //
 //  Created by Jens Alfke on 5/14/14.
@@ -14,50 +14,39 @@
 //  and limitations under the License.
 
 #include "slice.hh"
-#import <Foundation/Foundation.h>
+
+#if __APPLE__
+#include <CoreFoundation/CFString.h>
 
 
 namespace fleece {
 
     nsstring_slice::nsstring_slice(CFStringRef str)
-    :nsstring_slice((__bridge id)str)
-    { }
-    
-    nsstring_slice::nsstring_slice(__unsafe_unretained NSString* str)
     :_needsFree(false)
     {
         if (!str)
             return;
         // First try to use a direct pointer to the bytes:
-        auto cstr = CFStringGetCStringPtr((__bridge CFStringRef)str, kCFStringEncodingUTF8);
+        auto cstr = CFStringGetCStringPtr(str, kCFStringEncodingUTF8);
         if (cstr) {
             set(cstr, strlen(cstr));
             return;
         }
 
-        NSUInteger byteCount;
-        if (str.length <= sizeof(_local)) {
+        CFIndex lengthInChars = CFStringGetLength(str);
+        if (size_t(lengthInChars) <= sizeof(_local)) {
             // Next try to copy the UTF-8 into a smallish stack-based buffer:
-            NSRange remaining;
-            BOOL ok = [str getBytes: _local maxLength: sizeof(_local) usedLength: &byteCount
-                           encoding: NSUTF8StringEncoding options: 0
-                              range: NSMakeRange(0, str.length) remainingRange: &remaining];
-            if (ok && remaining.length == 0) {
-                set(&_local, byteCount);
+            set(&_local, sizeof(_local));
+            if (getBytes(str, lengthInChars))
                 return;
-            }
         }
 
         // Otherwise malloc a buffer to copy the UTF-8 into:
-        NSUInteger maxByteCount = [str maximumLengthOfBytesUsingEncoding: NSUTF8StringEncoding];
+        auto maxByteCount = CFStringGetMaximumSizeForEncoding(lengthInChars, kCFStringEncodingUTF8);
         set(newBytes(maxByteCount), maxByteCount);
         _needsFree = true;
-        BOOL ok = [str getBytes: (void*)buf maxLength: maxByteCount usedLength: &byteCount
-                       encoding: NSUTF8StringEncoding options: 0
-                          range: NSMakeRange(0, str.length) remainingRange: nullptr];
-        if (!ok)
+        if (!getBytes(str, lengthInChars))
             throw std::runtime_error("couldn't get NSString bytes");
-        shorten(byteCount);
     }
 
     nsstring_slice::~nsstring_slice() {
@@ -65,4 +54,16 @@ namespace fleece {
             ::free((void*)buf);
     }
 
+    CFIndex nsstring_slice::getBytes(CFStringRef str, CFIndex lengthInChars) {
+        CFIndex byteCount;
+        auto nChars = CFStringGetBytes(str, CFRange{0, lengthInChars}, kCFStringEncodingUTF8, 0,
+                                       false, (UInt8*)buf, size, &byteCount);
+        if (nChars < lengthInChars)
+            return false;
+        shorten(byteCount);
+        return true;
+    }
+
 }
+
+#endif //__APPLE__
