@@ -170,6 +170,7 @@
 		279AC5311C096872002C80DB /* fleece */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = fleece; sourceTree = BUILT_PRODUCTS_DIR; };
 		279AC5331C096872002C80DB /* fleece_tool.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = fleece_tool.cc; sourceTree = "<group>"; };
 		279AC53B1C097941002C80DB /* Value+Dump.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "Value+Dump.cc"; sourceTree = "<group>"; };
+		27A8B4E91EC4D0B700BB4C07 /* Stopwatch.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Stopwatch.hh; sourceTree = "<group>"; };
 		27A924CD1D9C32E800086206 /* Path.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Path.cc; sourceTree = "<group>"; };
 		27A924CE1D9C32E800086206 /* Path.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Path.hh; sourceTree = "<group>"; };
 		27C4AC941CDE843F00938365 /* Example.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = Example.md; sourceTree = "<group>"; };
@@ -288,6 +289,7 @@
 				275CED511D3EF7BE001DE46C /* FleeceException.hh */,
 				2715BA1D1D820C690061D92E /* PlatformCompat.hh */,
 				2746DD3B1D931BE9000517BC /* Benchmark.hh */,
+				27A8B4E91EC4D0B700BB4C07 /* Stopwatch.hh */,
 				27FE87F11E53E43200C5CF3F /* JSONEncoder.cc */,
 				27FE87F21E53E43200C5CF3F /* JSONEncoder.hh */,
 				276D15441E007D3000543B1B /* JSON5.cc */,
