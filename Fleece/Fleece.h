@@ -262,6 +262,9 @@ extern "C" {
     /** Returns the current value being iterated over. */
     FLValue FLArrayIterator_GetValue(const FLArrayIterator*);
 
+    /** Returns a value in the array at the given offset from the current value. */
+    FLValue FLArrayIterator_GetValueAt(const FLArrayIterator*, uint32_t offset);
+
     /** Advances the iterator to the next value, or returns false if at the end. */
     bool FLArrayIterator_Next(FLArrayIterator*);
 

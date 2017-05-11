@@ -49,21 +49,21 @@ namespace fleece {
             iterator(const Array* a) noexcept;
 
             /** Returns the number of _remaining_ items. */
-            uint32_t count() const noexcept              {return _a._count;}
+            uint32_t count() const noexcept                  {return _a._count;}
 
-            const Value* value() const noexcept          {return _value;}
+            const Value* value() const noexcept              {return _value;}
             explicit operator const Value* const () noexcept {return _value;}
-            const Value* operator-> () noexcept          {return _value;}
+            const Value* operator-> () const noexcept        {return _value;}
 
             /** Returns the current item and advances to the next. */
-            const Value* read() noexcept                 {auto v = _value; ++(*this); return v;}
+            const Value* read() noexcept                     {auto v = _value; ++(*this); return v;}
 
             /** Random access to items. Index is relative to the current item.
                 This is very fast, faster than array::get(). */
-            const Value* operator[] (unsigned i) noexcept {return _a[i];}
+            const Value* operator[] (unsigned i) noexcept    {return _a[i];}
 
             /** Returns false when the iterator reaches the end. */
-            explicit operator bool() const noexcept      {return _a._count > 0;}
+            explicit operator bool() const noexcept          {return _a._count > 0;}
 
             /** Steps to the next item. (Throws if there are no more items.) */
             iterator& operator++();
@@ -72,7 +72,7 @@ namespace fleece {
             iterator& operator += (uint32_t);
 
         private:
-            const Value* rawValue() noexcept             {return _a._first;}
+            const Value* rawValue() noexcept                 {return _a._first;}
 
             impl _a;
             const Value *_value;
@@ -80,7 +80,7 @@ namespace fleece {
             friend class Value;
         };
 
-        iterator begin() const noexcept                  {return iterator(this);}
+        iterator begin() const noexcept                      {return iterator(this);}
 
         constexpr Array()  :Value(internal::kArrayTag, 0, 0) { }
 

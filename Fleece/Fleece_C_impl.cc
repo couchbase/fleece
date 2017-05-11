@@ -125,6 +125,10 @@ FLValue FLArrayIterator_GetValue(const FLArrayIterator* i) {
     return ((Array::iterator*)i)->value();
 }
 
+FLValue FLArrayIterator_GetValueAt(const FLArrayIterator *i, uint32_t offset) {
+    return (*(Array::iterator*)i)[offset];
+}
+
 bool FLArrayIterator_Next(FLArrayIterator* i) {
     try {
         auto& iter = *(Array::iterator*)i;

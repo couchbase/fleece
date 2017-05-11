@@ -121,6 +121,8 @@ namespace fleece {
         template <int VER =1>
         alloc_slice toJSON(const SharedKeys* =nullptr) const;
 
+        std::string dump() const;
+
         /** Writes a full dump of the values in the data, including offsets and hex. */
         static bool dump(slice data, std::ostream&);
 

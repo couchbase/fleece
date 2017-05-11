@@ -130,6 +130,7 @@ namespace fleeceapi {
         class iterator : private FLArrayIterator {
         public:
             inline iterator(Array);
+            inline iterator(const FLArrayIterator &i)   :FLArrayIterator(i) { }
             inline Value value() const;
             inline bool next();
             inline valueptr operator -> () const        {return valueptr(value());}
@@ -137,6 +138,7 @@ namespace fleeceapi {
             inline explicit operator bool() const       {return (bool)value();}
             inline iterator& operator++ ()              {next(); return *this;}
             inline bool operator!= (const iterator&)    {return value() != nullptr;}
+            inline Value operator[] (unsigned n) const  {return FLArrayIterator_GetValueAt(this,n);}
         private:
             iterator() { }
             friend class Array;
@@ -188,6 +190,7 @@ namespace fleeceapi {
         public:
             inline iterator(Dict);
             inline iterator(Dict, FLSharedKeys);
+            inline iterator(const FLDictIterator &i)   :FLDictIterator(i) { }
             inline Value key() const;
             inline FLString keyString() const;
             inline Value value() const;

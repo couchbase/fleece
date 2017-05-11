@@ -154,4 +154,9 @@ namespace fleece {
         return out.str();
     }
 
+
+    std::string Value::dump() const {
+        return toJSON().asString();
+    }
+
 }
