@@ -62,7 +62,11 @@ extern "C" {
 
     // A convenient constant denoting a null slice.
     #ifdef _MSC_VER
+    #ifdef __cplusplus
     const FLSlice kFLSliceNull = { nullptr, 0 };
+    #else
+    const FLSlice kFLSliceNull = { NULL, 0 };
+    #endif
     #else
     #define kFLSliceNull ((FLSlice){nullptr, 0})
     #endif
