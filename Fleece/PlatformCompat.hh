@@ -64,5 +64,6 @@
     #endif
 
     #define StackArray(NAME, TYPE, SIZE)    TYPE NAME[(SIZE)]
+    #define WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) 0
 
 #endif
