@@ -10,6 +10,10 @@
 #ifndef _FLEECE_H
 #include "Fleece.h"
 #endif
+#ifdef __OBJC__
+#include "Fleece+CoreFoundation.h"
+#endif
+#include "slice.hh"
 #include <string>
 
 namespace fleeceapi {
@@ -212,6 +216,29 @@ namespace fleeceapi {
     };
 
 
+    /** A Dict that manages its own storage. */
+    class AllocedDict : public Dict, fleece::alloc_slice {
+    public:
+        AllocedDict()
+        { }
+
+        explicit AllocedDict(const fleece::alloc_slice &s)
+        :Dict(FLValue_AsDict(FLValue_FromData(s)))
+        ,alloc_slice(s)
+        { }
+
+        explicit AllocedDict(fleece::slice s)
+        :AllocedDict(alloc_slice(s)) { }
+
+        AllocedDict(const AllocedDict &d)
+        :Dict(d)
+        ,alloc_slice(d)
+        { }
+
+        const alloc_slice& data() const                 {return *this;}
+    };
+
+
     class Encoder {
     public:
         Encoder()                                       :_enc(FLEncoder_New()) { }
@@ -276,6 +303,12 @@ namespace fleeceapi {
         Encoder& operator<< (const  char *str)      {writeString(str); return *this;}
         Encoder& operator<< (const std::string &s)  {writeString(s); return *this;}
         Encoder& operator<< (Value v)               {writeValue(v); return *this;}
+
+#ifdef __OBJC__
+        bool writeNSObject(id obj)                 {return FLEncoder_WriteNSObject(_enc, obj);}
+        Encoder& operator<< (id obj)               {writeNSObject(obj); return *this;}
+        NSData* finishAsNSData(NSError **err)      {return FLEncoder_FinishWithNSData(_enc, err);}
+#endif
 
     protected:
         Encoder(const Encoder&) =delete;
