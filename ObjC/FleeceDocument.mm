@@ -17,7 +17,7 @@
 #import "Value.hh"
 #import "Array.hh"
 #import "Encoder.hh"
-#import "Fleece+CoreFoundation.h"
+#import "Fleece.h"
 using namespace fleece;
 
 #define UU __unsafe_unretained

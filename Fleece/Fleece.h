@@ -527,7 +527,16 @@ extern "C" {
 
 #ifdef __cplusplus
 }
+#endif
 
+
+#ifdef __OBJC__
+// Include Obj-C/CF utilities:
+#include "Fleece+CoreFoundation.h"
+#endif
+
+
+#ifdef __cplusplus
 // Now include the C++ convenience wrapper:
 #include "FleeceCpp.hh"
 #endif

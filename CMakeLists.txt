@@ -17,6 +17,7 @@ set(FLEECE_SRC ${FLEECE_SRC} vendor/jsonsl/jsonsl.c
                              vendor/libb64/cencode.c)
 
 if (APPLE AND NOT ANDROID)
+    include_directories(ObjC/)
     aux_source_directory(ObjC/  OBJC_SRC)
     set(FLEECE_SRC ${FLEECE_SRC} ${OBJC_SRC})
     set_source_files_properties(ObjC/Fleece+CoreFoundation.mm  PROPERTIES
