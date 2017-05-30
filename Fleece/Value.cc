@@ -99,7 +99,7 @@ namespace fleece {
                 return _decLittle64(n);
             }
             case kFloatTag:
-                return (int64_t)round(asDouble());
+                return (int64_t)asDouble();
             default:
                 return 0;
         }
