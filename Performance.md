@@ -26,13 +26,21 @@ Look up one name
 These come from the above test suites, run on a Macbook Pro with a 2.3 GHz Intel Core i7. (These are sizes and times, so smaller numbers are better.)
 
 
-|                           | JSON      | Fleece|
-|---------------------------|----------:|------:|
-|Data size (bytes)          |1,303,317  |911,920|
-|Convert JSON to Fleece (µs)|--         |6,400  |
-|Parse (µs)                 |17,000     |750    |
-|Parse trusted (µs)         |17,000     |0.6    |
-|Look up one name (ns)      |960        |49     |
+|                           | JSON      | Fleece| Gross Ratio | Net Ratio |
+|---------------------------|----------:|------:|------------:|----------:|
+|Data size (bytes)          |1,303,317  |911,920| 1.4x        | 1.4x      |
+|Convert JSON to Fleece (µs)|--         |6,400  | -           | -         |
+|Parse (µs)                 |17,000     |750    | 26.6x       | 2.37x     |
+|Parse trusted (µs)         |17,000     |0.6    | 28,333.3x   | 2.66x     |
+|Look up one name (ns)      |960        |49     | 19.6x       | 2.49x[1]  |
+
+Gross Ratio
+: Ratio of JSON to Fleece, excluding any cost of converting from JSON to Fleece. >1 means Fleece is better. Representative if data is converted once and then parsed / looked up a large number of times.
+
+Net Ratio
+: Ratio if JSON to Fleece, _including_ the cost of converting from JSON to Fleece _on every operation_ - i.e. "Convert JSON to Fleece" is added to all fleece operations". >1 means Fleece is better. Representative if data is converted and parsed on every operation.
+
+[1]: "Look up on name - Net" requires some additional explanation - this compares the work requires to lookup one name JSON vs one name in Fleece, assuming in both cases one is starting with the raw data and hence it must be conveted / parsed first. Specifically: (JSON_parse + JSON_lookup_one_name) / (Convert_JSON_to_Fleece + Fleece_Parse + Fleece_lookup_one_name).
 
 ## Analysis
 
