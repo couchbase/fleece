@@ -287,7 +287,7 @@ namespace fleece {
     /** Functor class for hashing the contents of a slice (using the djb2 hash algorithm.)
         Suitable for use with std::unordered_map. */
     struct sliceHash {
-        std::size_t operator() (slice const& s) const {return s.hash();}
+        std::size_t operator() (pure_slice const& s) const {return s.hash();}
     };
 
 
