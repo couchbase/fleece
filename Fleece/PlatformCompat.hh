@@ -25,6 +25,7 @@
     #define srandom(s)                      srand(s)
 
     #define localtime_r(a, b)               localtime_s(b, a)
+    #define timegm                          _mkgmtime
 
     #include <BaseTsd.h>
     typedef SSIZE_T ssize_t;
