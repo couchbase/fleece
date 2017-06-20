@@ -169,6 +169,7 @@ namespace fleece {
     int JSONConverter::gotError(int err, size_t pos) noexcept {
         _jsonError = err;
         _errorPos = pos;
+        _errorCode = JSONError;
         jsonsl_stop(_jsn);
         return 0;
     }

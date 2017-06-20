@@ -26,6 +26,7 @@ namespace fleece {
 
         /** In JSON5 mode, dictionary keys that are JavaScript identifiers will be unquoted. */
         void setJSON5(bool j5)                  {_json5 = j5;}
+        void setCanonical(bool canonical)       {_canonical = canonical;}
 
         bool isEmpty() const                    {return _out.length() == 0;}
         size_t bytesWritten() const             {return _out.length();}
@@ -54,7 +55,8 @@ namespace fleece {
         
         void writeData(slice d)                 {comma(); _out << '"'; _out.writeBase64(d);
                                                           _out << '"';}
-        void writeValue(const Value*);
+        void writeValue(const Value *v, SharedKeys *sk =nullptr);
+
         void writeJSON(slice json)              {comma(); _out << json;}
         void writeRaw(slice raw)                {_out << raw;}
 
@@ -96,6 +98,8 @@ namespace fleece {
         void beginDictionary(size_t)                  {beginDictionary();}
 
     private:
+        void writeDict(const Dict*);
+        
         void comma() {
             if (_first)
                 _first = false;
@@ -112,6 +116,7 @@ namespace fleece {
 
         Writer _out;
         bool _json5 {false};
+        bool _canonical {false};
         bool _first {true};
         const SharedKeys *_sharedKeys {nullptr};
     };

@@ -71,18 +71,26 @@ FLSliceResult FLValue_ToString(FLValue v) {
 }
 
 
-template <int VER>
-static FLSliceResult ToJSON(FLValue v) {
+FLSliceResult FLValue_ToJSONX(FLValue v,
+                              FLSharedKeys sk,
+                              bool json5,
+                              bool canonical)
+{
     if (v) {
         try {
-            return toSliceResult(v->toJSON<VER>());      // toJSON can throw
+            JSONEncoder encoder;
+            encoder.setSharedKeys(sk);
+            encoder.setJSON5(json5);
+            encoder.setCanonical(canonical);
+            encoder.writeValue(v);
+            return toSliceResult(encoder.extractOutput());
         } catchError(nullptr)
     }
     return {nullptr, 0};
 }
 
-FLSliceResult FLValue_ToJSON(FLValue v)         {return ToJSON<1>(v);}
-FLSliceResult FLValue_ToJSON5(FLValue v)        {return ToJSON<5>(v);}
+FLSliceResult FLValue_ToJSON(FLValue v)      {return FLValue_ToJSONX(v, nullptr, false, false);}
+FLSliceResult FLValue_ToJSON5(FLValue v)     {return FLValue_ToJSONX(v, nullptr, true,  false);}
 
 
 FLSliceResult FLData_ConvertJSON(FLSlice json, FLError *outError) {
@@ -300,7 +308,12 @@ bool FLEncoder_BeginDict(FLEncoder e, size_t reserve)    {ENCODER_TRY(e, beginDi
 bool FLEncoder_WriteKey(FLEncoder e, FLSlice s)          {ENCODER_TRY(e, writeKey(s));}
 bool FLEncoder_EndDict(FLEncoder e)                      {ENCODER_TRY(e, endDictionary());}
 
-bool FLEncoder_WriteValue(FLEncoder e, FLValue v)        {ENCODER_TRY(e, writeValue(v));}
+bool FLEncoder_WriteValueWithSharedKeys(FLEncoder e, FLValue v, FLSharedKeys sk)
+                                                         {ENCODER_TRY(e, writeValue(v, sk));}
+bool FLEncoder_WriteValue(FLEncoder e, FLValue v) {
+    return FLEncoder_WriteValueWithSharedKeys(e, v, nullptr);
+}
+
 
 
 bool FLEncoder_ConvertJSON(FLEncoder e, FLSlice json) {

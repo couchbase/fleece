@@ -229,6 +229,13 @@ extern "C" {
         keys to be unquoted if they're alphanumeric. This tends to be more readable. */
     FLSliceResult FLValue_ToJSON5(FLValue v);
 
+    /** Most general Fleece to JSON converter. */
+    FLSliceResult FLValue_ToJSONX(FLValue v,
+                                  FLSharedKeys sk,
+                                  bool json5,
+                                  bool canonicalForm);
+
+
     /** Converts valid JSON5 to JSON. */
     FLStringResult FLJSON5_ToJSON(FLString json5, FLError *error);
 
@@ -500,6 +507,9 @@ extern "C" {
 
     /** Writes a Fleece Value to an Encoder. */
     bool FLEncoder_WriteValue(FLEncoder, FLValue);
+
+    /** Writes a Fleece Value that uses SharedKeys to an Encoder. */
+    bool FLEncoder_WriteValueWithSharedKeys(FLEncoder, FLValue, FLSharedKeys);
 
 
     /** Parses JSON data and writes the object(s) to the encoder. (This acts as a single write,

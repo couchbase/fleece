@@ -86,7 +86,7 @@ public:
         REQUIRE(v != nullptr);
         REQUIRE(v->type() == kNumber);
         REQUIRE(!v->isDouble());
-        REQUIRE(v->asInt() == (int64_t)round(f));
+        REQUIRE(v->asInt() == (int64_t)f);
         REQUIRE(v->asFloat() == f);
         REQUIRE(v->asDouble() == (double)f);
     }
@@ -95,7 +95,7 @@ public:
         auto v = Value::fromData(result);
         REQUIRE(v != nullptr);
         REQUIRE(v->type() == kNumber);
-        REQUIRE(v->asInt() == (int64_t)round(f));
+        REQUIRE(v->asInt() == (int64_t)f);
         REQUIRE(v->asDouble() == f);
         REQUIRE(v->asFloat() == (float)f);
     }

@@ -72,14 +72,56 @@ namespace fleece {
     }
 
 
-    void JSONEncoder::writeValue(const Value *v) {
+    void JSONEncoder::writeDict(const Dict *dict) {
+        beginDictionary();
+        if (_canonical) {
+            // In canonical mode, ensure the keys are written in sorted order:
+            struct kv {
+                slice key;
+                const Value *value;
+                bool operator< (const kv &other) const {return key < other.key;}
+            };
+            std::vector<kv> items;
+            items.reserve(dict->count());
+            for (auto iter = dict->begin(_sharedKeys); iter; ++iter)
+                items.push_back({iter.keyString(), iter.value()});
+            std::sort(items.begin(), items.end());
+            for (auto &item : items) {
+                writeKey(item.key);
+                writeValue(item.value);
+            }
+        } else {
+            for (auto iter = dict->begin(_sharedKeys); iter; ++iter) {
+                slice keyStr = iter.keyString();
+                if (keyStr) {
+                    writeKey(keyStr);
+                } else {
+                    // non-string keys are possible...
+                    comma();
+                    _first = true;
+                    writeValue(iter.key());
+                    _out << ':';
+                    _first = true;
+                }
+                writeValue(iter.value());
+            }
+        }
+        endDictionary();
+    }
+
+
+    void JSONEncoder::writeValue(const Value *v, SharedKeys *sk) {
+        auto savedSK = _sharedKeys;
+        if (sk)
+            _sharedKeys = sk;
+
         switch (v->type()) {
             case kNull:
                 writeNull();
-                return;
+                break;
             case kBoolean:
                 writeBool(v->asBool());
-                return;
+                break;
             case kNumber:
                 if (v->isInteger()) {
                     auto i = v->asInt();
@@ -92,40 +134,27 @@ namespace fleece {
                 } else {
                     writeFloat(v->asFloat());
                 }
-                return;
+                break;
             case kString:
                 writeString(v->asString());
-                return;
+                break;
             case kData:
                 writeData(v->asData());
-                return;
+                break;
             case kArray:
                 beginArray();
                 for (auto iter = v->asArray()->begin(); iter; ++iter)
                     writeValue(iter.value());
                 endArray();
-                return;
+                break;
             case kDict:
-                beginDictionary();
-                for (auto iter = v->asDict()->begin(_sharedKeys); iter; ++iter) {
-                    slice keyStr = iter.keyString();
-                    if (keyStr) {
-                        writeKey(keyStr);
-                    } else {
-                        // non-string keys are possible...
-                        comma();
-                        _first = true;
-                        writeValue(iter.key());
-                        _out << ':';
-                        _first = true;
-                    }
-                    writeValue(iter.value());
-                }
-                endDictionary();
-                return;
+                writeDict(v->asDict());
+                break;
             default:
                 FleeceException::_throw(UnknownValue, "illegal typecode in Value; corrupt data?");
         }
+
+        _sharedKeys = savedSK;
     }
 
 }

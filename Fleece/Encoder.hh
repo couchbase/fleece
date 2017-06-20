@@ -68,7 +68,7 @@ namespace fleece {
         
         void writeData(slice s);
 
-        void writeValue(const Value*);
+        void writeValue(const Value*, const SharedKeys *sk =nullptr);
 
 #ifdef __OBJC__
         /** Writes an Objective-C object. Supported classes are the ones allowed by

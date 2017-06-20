@@ -8,7 +8,6 @@
 
 #include <Foundation/Foundation.h>
 #include "FleeceTests.hh"
-#include "FleeceDocument.h"
 
 
 static void checkIt(id obj, const char* json) {
@@ -141,24 +140,6 @@ TEST_CASE("Obj-C PerfFindPersonByIndexNS", "[.Perf]") {
     }
 }
 
-TEST_CASE("Obj-C FleeceLazyDict", "[.Perf]") {
-    @autoreleasepool {
-        NSData *data = [NSData dataWithContentsOfFile: @kTestFilesDir "1000people.fleece"];
-        REQUIRE(data);
-        NSArray *people = [FleeceDocument objectWithFleeceData: data trusted: YES];
-        REQUIRE([people isKindOfClass: [NSArray class]]);
-
-        int i = 0;
-        for (NSDictionary *person in people) {
-            REQUIRE(person[@"name"] != nil);
-            //NSLog(@"#%3d: count=%2lu, name=`%@`", i, person.count, person[@"name"]);
-            //NSLog(@"%@", person);
-            i++;
-        }
-        REQUIRE(i == 1000);
-    }
-}
-
 TEST_CASE("Obj-C PerfReadNameNS", "[.Perf]") {
     @autoreleasepool {
         NSData *data = [NSData dataWithContentsOfFile: @kTestFilesDir "1person.json"];
@@ -172,22 +153,6 @@ TEST_CASE("Obj-C PerfReadNameNS", "[.Perf]") {
             }
         }
         fprintf(stderr, "Getting name (NS) took %g µs\n", st.elapsedMS()/1e5*1000);
-    }
-}
-
-TEST_CASE("Obj-C PerfReadName", "[.Perf]") {
-    @autoreleasepool {
-        NSData *data = [NSData dataWithContentsOfFile: @kTestFilesDir "1person.fleece"];
-        REQUIRE(data);
-        Stopwatch st;
-        for (int j = 0; j < 1e5; j++) {
-            @autoreleasepool {
-                NSDictionary *person = [FleeceDocument objectWithFleeceData: data trusted: YES];
-                if (person[@"name"] == nil)
-                    abort();
-            }
-        }
-        fprintf(stderr, "Getting name (Fleece) took %g µs\n", st.elapsedMS()/1e5*1000);
     }
 }
 
@@ -208,26 +173,6 @@ TEST_CASE("Obj-C PerfReadNamesNS", "[.Perf]") {
             }
         }
         fprintf(stderr, "Iterating people (NS) took %g ms\n", st.elapsedMS()/10000);
-    }
-}
-
-TEST_CASE("Obj-C PerfReadNames", "[.Perf]") {
-    @autoreleasepool {
-        NSData *data = [NSData dataWithContentsOfFile: @kTestFilesDir "1000people.fleece"];
-        REQUIRE(data);
-        NSArray *people = [FleeceDocument objectWithFleeceData: data trusted: YES];
-        REQUIRE([people isKindOfClass: [NSArray class]]);
-
-        Stopwatch st;
-        for (int j = 0; j < 10000; j++) {
-            int i = 0;
-            for (NSDictionary *person in people) {
-                if (person[@"name"] == nil)
-                    abort();
-                i++;
-            }
-        }
-        fprintf(stderr, "Iterating people (Fleece) took %g ms\n", st.elapsedMS()/10000);
     }
 }
 

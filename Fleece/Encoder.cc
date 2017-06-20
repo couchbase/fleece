@@ -257,7 +257,7 @@ namespace fleece {
     }
 
 
-    void Encoder::writeValue(const Value *value) {
+    void Encoder::writeValue(const Value *value, const SharedKeys *sk) {
         switch (value->tag()) {
             case kShortIntTag:
             case kIntTag:
@@ -275,7 +275,7 @@ namespace fleece {
                 auto iter = value->asArray()->begin();
                 beginArray(iter.count());
                 for (; iter; ++iter) {
-                    writeValue(iter.value());
+                    writeValue(iter.value(), sk);
                 }
                 endArray();
                 break;
@@ -284,11 +284,17 @@ namespace fleece {
                 auto iter = value->asDict()->begin();
                 beginDictionary(iter.count());
                 for (; iter; ++iter) {
-                    if (iter.key()->isInteger())
-                        writeKey((int)iter.key()->asInt());
-                    else
+                    if (iter.key()->isInteger()) {
+                        int intKey = (int)iter.key()->asInt();
+                        if (sk && sk != _sharedKeys) {
+                            writeKey(sk->decode(intKey));
+                        } else {
+                            writeKey(intKey);
+                        }
+                    } else {
                         writeKey(iter.key()->asString());
-                    writeValue(iter.value());
+                    }
+                    writeValue(iter.value(), sk);
                 }
                 endDictionary();
                 break;

@@ -73,6 +73,10 @@ namespace fleeceapi {
         inline FLStringResult toJSON() const;
         inline FLStringResult toJSON5() const;
 
+        inline FLStringResult toJSON(FLSharedKeys sk,
+                                     bool json5 =false,
+                                     bool canonical =false);
+
         explicit operator bool() const                  {return _val != nullptr;}
         bool operator! () const                         {return _val == nullptr;}
 
@@ -348,6 +352,10 @@ namespace fleeceapi {
     inline FLStringResult Value::toString() const {return FLValue_ToString(_val);}
     inline FLStringResult Value::toJSON() const {return FLValue_ToJSON(_val);}
     inline FLStringResult Value::toJSON5() const{return FLValue_ToJSON5(_val);}
+
+    inline FLStringResult Value::toJSON(FLSharedKeys sk, bool json5, bool canonical) {
+        return FLValue_ToJSONX(_val, sk, json5, canonical);
+    }
 
     inline Value Value::operator[] (const KeyPath &kp) const
                                                 {return FLKeyPath_Eval(kp._path, _val);}
