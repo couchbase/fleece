@@ -65,7 +65,7 @@ public:
         if (items)
             scaleName += std::string("/") + std::string(items);
 
-        fprintf(stderr, "Range: %.3f ... %.3f %s, Average: %.3f, median: %.3f, std dev: %.3g\n",
+        fprintf(stderr, "Range: %7.3f ... %7.3f %s, Average: %7.3f, median: %7.3f, std dev: %5.3g\n",
                 r.first*scale, r.second*scale, scaleName.c_str(),
                 average()*scale, median()*scale, stddev()*scale);
     }
