@@ -158,7 +158,7 @@ namespace fleece {
 
     void Encoder::writeDouble(double n) {
         throwIf(std::isnan(n), InvalidData, "Can't write NaN");
-        if (n == (int64_t)n) {
+        if (n == floor(n) && n <= INT64_MAX && n >= INT64_MIN) {
             return writeInt((int64_t)n);
         } else if (n == (float)n) {
             return _writeFloat((float)n);
@@ -174,7 +174,7 @@ namespace fleece {
 
     void Encoder::writeFloat(float n) {
         throwIf(std::isnan(n), InvalidData, "Can't write NaN");
-        if (n == (int32_t)n)
+        if (n == floorf(n) && n <= INT32_MAX && n >= INT32_MIN)
             writeInt((int32_t)n);
         else
             _writeFloat(n);
