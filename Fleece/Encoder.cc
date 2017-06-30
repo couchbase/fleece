@@ -27,13 +27,15 @@
 
 
 namespace fleece {
+    using namespace internal;
 
     typedef uint8_t byte;
 
-    using namespace internal;
+    static constexpr size_t kInitialStackSize = 4;
 
     Encoder::Encoder(size_t reserveSize)
     :_out(reserveSize),
+     _stack(kInitialStackSize),
      _strings(10)
     {
         push(kSpecialTag, 1);                   // Top-level 'array' is just a single item
@@ -377,7 +379,8 @@ namespace fleece {
     }
 
     void Encoder::push(tags tag, size_t reserve) {
-        throwIf(_stackDepth >= _stack.size(), EncodeError, "nesting is too deep");
+        if (_stackDepth >= _stack.size())
+            _stack.resize(2*_stackDepth);
         _items = &_stack[_stackDepth++];
         _items->reset(tag);
         if (reserve > 0)

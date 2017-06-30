@@ -432,6 +432,20 @@ public:
         }
     }
 
+    TEST_CASE_METHOD(EncoderTests, "Deep Nesting") {
+        for (int depth = 0; depth < 100; ++depth) {
+            enc.beginArray();
+            enc.writeInt(depth);
+        }
+        for (int depth = 0; depth < 100; ++depth) {
+            char str[20];
+            sprintf(str, "Hi there %d", depth);
+            enc.writeString(str);
+            enc.endArray();
+        }
+        endEncoding();
+    }
+
     TEST_CASE_METHOD(EncoderTests, "SharedStrings") {
         enc.beginArray(4);
         enc.writeString("a");
