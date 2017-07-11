@@ -15,6 +15,7 @@
     #define _usuallyFalse(VAL)              (VAL)
     #define NOINLINE                        __declspec(noinline)
 	#define LITECORE_UNUSED
+    #define NONNULL
     #define __typeof                        decltype
 
     #define __has_extension(X)              0
@@ -60,6 +61,7 @@
     #define _usuallyTrue(VAL)               __builtin_expect(VAL, true)
     #define _usuallyFalse(VAL)              __builtin_expect(VAL, false)
     #define NOINLINE                        __attribute((noinline))
+    #define NONNULL                         __attribute__((nonnull))
 
     #ifndef __printflike
     #define __printflike(fmtarg, firstvararg) __attribute__((__format__ (__printf__, fmtarg, firstvararg)))
