@@ -42,16 +42,6 @@
 
 #else
 
-    #if defined(__ANDROID__) && !defined(_LIBCPP_VERSION)
-    #include <android/api-level.h>
-    #include <math.h>
-    #if __ANDROID_API__ < 18
-    static inline double log2(double n) {
-        return ::log(n) / M_LN2;
-    }
-    #endif
-    #endif
-
     #ifdef __APPLE__
     #define LITECORE_UNUSED __unused
     #else
