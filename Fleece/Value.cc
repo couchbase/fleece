@@ -206,19 +206,20 @@ namespace fleece {
 
 
     template <int VER>
-    alloc_slice Value::toJSON(const SharedKeys *sk) const {
+    alloc_slice Value::toJSON(const SharedKeys *sk, bool canonical) const {
         JSONEncoder encoder;
         encoder.setSharedKeys(sk);
         if (VER >= 5)
             encoder.setJSON5(true);
+        encoder.setCanonical(canonical);
         encoder.writeValue(this);
         return encoder.extractOutput();
     }
 
 
     // Explicitly instantiate both needed versions of the templates:
-    template alloc_slice Value::toJSON<1>(const SharedKeys *sk) const;
-    template alloc_slice Value::toJSON<5>(const SharedKeys *sk) const;
+    template alloc_slice Value::toJSON<1>(const SharedKeys *sk, bool canonical) const;
+    template alloc_slice Value::toJSON<5>(const SharedKeys *sk, bool canonical) const;
 
 
 #pragma mark - VALIDATION:

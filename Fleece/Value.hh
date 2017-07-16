@@ -119,7 +119,7 @@ namespace fleece {
         /** Returns a JSON representation.
             If you call it as toJSON<5>(...), writes JSON5, which leaves most keys unquoted. */
         template <int VER =1>
-        alloc_slice toJSON(const SharedKeys* =nullptr) const;
+        alloc_slice toJSON(const SharedKeys* =nullptr, bool canonical =false) const;
 
         std::string dump() const;
 
