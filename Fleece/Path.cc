@@ -22,16 +22,21 @@ namespace fleece {
         if (token == '$') {
             // Starts with "$." or "$["
             in.moveStart(1);
+            if (in.size == 0)
+                return;                 // Just "$" means the root
             token = in.readByte();
             if (token != '.' && token != '[')
                 FleeceException::_throw(PathSyntaxError, "Invalid path delimiter after $");
-        } else if (token == '[') {
-            // Starts with "["
+        } else if (token == '[' || token == '.') {
+            // Starts with "[" or "."
             in.moveStart(1);
         } else {
             // Else starts with a property name
             token = '.';
         }
+
+        if (in.size == 0 && token == '.')
+            return;                     // "." or "" mean the root
 
         while (true) {
             // Read parameter (property name or array index):
