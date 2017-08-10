@@ -24,10 +24,10 @@
 
 #ifdef __APPLE__
 #import <CoreFoundation/CFString.h>
-#endif
 #ifdef __OBJC__
 #import <Foundation/NSData.h>
 #import <Foundation/NSString.h>
+#endif
 #endif
 
 struct FLSlice; struct FLSliceResult;
