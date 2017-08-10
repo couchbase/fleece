@@ -17,6 +17,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#ifndef NDEBUG
+#include <atomic>
+#endif
+
 /*
  Value binary layout:
 
@@ -74,7 +78,7 @@ namespace fleece {
         static const uint32_t kLongArrayCount = 0x07FF;
 
 #ifndef NDEBUG
-        extern unsigned gTotalComparisons;
+        extern std::atomic<unsigned> gTotalComparisons;
 #endif
 
     }

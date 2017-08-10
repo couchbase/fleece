@@ -20,6 +20,7 @@
 #include "varint.hh"
 #include "PlatformCompat.hh"
 #include <assert.h>
+#include <atomic>
 #include <iostream>
 
 
@@ -29,7 +30,7 @@ namespace fleece {
 
 #ifndef NDEBUG
     namespace internal {
-        unsigned gTotalComparisons;
+        std::atomic<unsigned> gTotalComparisons;
     }
 #endif
 
