@@ -90,7 +90,7 @@ namespace fleece {
                 int64_t n = 0;
                 unsigned byteCount = tinyValue();
                 if ((byteCount & 0x8) == 0) {       // signed integer
-                    if (_byte[1+byteCount] & 0x80)  // ...and sign bit is set
+                    if (((uint8_t*)&_byte)[1+byteCount] & 0x80)  // ...and sign bit is set
                         n = -1;
                 } else {
                     byteCount &= 0x7;
