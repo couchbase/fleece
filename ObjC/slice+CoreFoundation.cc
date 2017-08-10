@@ -21,6 +21,18 @@
 
 namespace fleece {
 
+    alloc_slice::alloc_slice(CFStringRef str) {
+        CFIndex lengthInChars = CFStringGetLength(str);
+        resize(CFStringGetMaximumSizeForEncoding(lengthInChars, kCFStringEncodingUTF8));
+        CFIndex byteCount;
+        auto nChars = CFStringGetBytes(str, CFRange{0, lengthInChars}, kCFStringEncodingUTF8, 0,
+                                       false, (UInt8*)buf, size, &byteCount);
+        if (nChars < lengthInChars)
+            throw std::runtime_error("couldn't get CFString bytes");
+        resize(byteCount);
+    }
+    
+
     nsstring_slice::nsstring_slice(CFStringRef str)
     :_needsFree(false)
     {

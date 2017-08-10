@@ -115,6 +115,13 @@ namespace fleece {
         template <typename T>
         static T* reallocBytes(T* bytes, size_t newSz);
 
+#ifdef __APPLE__
+        CFStringRef createCFString() const {
+            if (!buf)
+                return nullptr;
+            return CFStringCreateWithBytes(nullptr, (const uint8_t*)buf, size,
+                                           kCFStringEncodingUTF8, false);
+        }
 #ifdef __OBJC__
         pure_slice(NSData* data)
         :pure_slice(data.bytes, data.length) {}
@@ -132,11 +139,9 @@ namespace fleece {
         }
 
         explicit operator NSString* () const {
-            if (!buf)
-                return nil;
-            return CFBridgingRelease(CFStringCreateWithBytes(nullptr, (const uint8_t*)buf, size,
-                                                             kCFStringEncodingUTF8, NO));
+            return CFBridgingRelease(createCFString());
         }
+#endif
 #endif
     protected:
         void setBuf(const void *b)                  {(const void*&)buf = b;}
@@ -255,6 +260,10 @@ namespace fleece {
         operator FLSlice () const;
 
         void shorten(size_t s)                          {assert(s <= size); pure_slice::setSize(s);}
+
+#ifdef __APPLE__
+        explicit alloc_slice(CFStringRef);
+#endif
 
     private:
         struct sharedBuffer;
