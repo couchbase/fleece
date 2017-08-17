@@ -8,6 +8,7 @@
 
 #pragma once
 #include "Stopwatch.hh"
+#include <assert.h>
 #include <vector>
 
 
@@ -17,7 +18,8 @@ public:
     double elapsed()    {return _st.elapsed();}
     double stop()       {double t = elapsed(); _times.push_back(t); return t;}
 
-    void sort()         {std::sort(_times.begin(), _times.end());}
+    bool empty() const  {return _times.empty();}
+    void sort()         {assert(!empty()); std::sort(_times.begin(), _times.end());}
 
     double median() {
         sort();
