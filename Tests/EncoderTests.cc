@@ -13,6 +13,7 @@
 #include "jsonsl.h"
 #include "mn_wordlist.h"
 #include <iostream>
+#include <float.h>
 
 
 namespace fleece {
@@ -76,7 +77,8 @@ public:
         auto v = Value::fromData(result);
         REQUIRE(v->type() == kNumber);
         REQUIRE(v->isInteger());
-        REQUIRE(v->isUnsigned());
+        if (i >= (UINT64_MAX >> 1))
+            REQUIRE(v->isUnsigned());
         REQUIRE(v->asUnsigned() == i);
         REQUIRE(v->asDouble() == (double)i);
     }
@@ -232,14 +234,29 @@ public:
 
     TEST_CASE_METHOD(EncoderTests, "Ints") {
         enc.writeInt( 0);       checkOutput("0000");    checkRead(0);
+        enc.writeInt( 128);     checkOutput("0080");    checkRead(128);
         enc.writeInt( 1234);    checkOutput("04D2");    checkRead(1234);
         enc.writeInt(-1234);    checkOutput("0B2E");    checkRead(-1234);
         enc.writeInt( 2047);    checkOutput("07FF");    checkRead(2047);
         enc.writeInt(-2048);    checkOutput("0800");    checkRead(-2048);
-
         enc.writeInt( 2048);    checkOutput("1100 0800 8002");    checkRead(2048);
         enc.writeInt(-2049);    checkOutput("11FF F700 8002");    checkRead(-2049);
-        enc.writeInt(0x223344); checkOutput("1244 3322 8002");    checkRead(0x223344);
+
+        for (int i = -66666; i <= 66666; ++i) {
+            enc.writeInt(i);
+            endEncoding();
+            checkRead(i);
+        }
+        for (unsigned i = 0; i <= 66666; ++i) {
+            enc.writeUInt(i);
+            endEncoding();
+            checkReadU(i);
+        }
+
+        enc.writeInt(12345678); checkOutput("134E 61BC 0000 8003"); checkRead(12345678);
+        enc.writeInt(-12345678);checkOutput("13B2 9E43 FF00 8003"); checkRead(-12345678);
+        enc.writeInt(0x223344); checkOutput("1244 3322 8002");      checkRead(0x223344);
+        enc.writeInt(0xBBCCDD); checkOutput("13DD CCBB 0000 8003"); checkRead(0xBBCCDD);
         enc.writeInt(0x11223344556677);    checkOutput("1677 6655 4433 2211 8004");
         checkRead(0x11223344556677);
         enc.writeInt(0x1122334455667788);  checkOutput("1788 7766 5544 3322 1100 8005");
@@ -250,6 +267,19 @@ public:
         checkReadU(0xCCBBAA9988776655);
         enc.writeUInt(UINT64_MAX);         checkOutput("1FFF FFFF FFFF FFFF FF00 8005");
         checkReadU(UINT64_MAX);
+
+        for (int bits = 0; bits < 64; ++bits) {
+            int64_t i = 1LL << bits;
+            enc.writeInt(i);      endEncoding();  checkRead(i);
+            enc.writeInt(-i);     endEncoding();  checkRead(-i);
+            enc.writeInt(i - 1);  endEncoding();  checkRead(i - 1);
+            enc.writeInt(1 - i);  endEncoding();  checkRead(1 - i);
+        }
+        for (int bits = 0; bits < 64; ++bits) {
+            uint64_t i = 1LLU << bits;
+            enc.writeUInt(i);     endEncoding();  checkReadU(i);
+            enc.writeUInt(i - 1); endEncoding();  checkReadU(i - 1);
+        }
     }
 
     TEST_CASE_METHOD(EncoderTests, "Floats") {
@@ -720,7 +750,7 @@ public:
         REQUIRE(person->get(keys, values, nKeys) == 10ul);
 #ifndef NDEBUG
         fprintf(stderr, "... that took %u comparisons, or %.1f/key\n",
-                internal::gTotalComparisons, internal::gTotalComparisons/(float)nKeys);
+                internal::gTotalComparisons.load(), internal::gTotalComparisons/(float)nKeys);
         internal::gTotalComparisons = 0;
 #endif
         for (unsigned i = 0; i < nKeys; ++i)
@@ -729,7 +759,7 @@ public:
         REQUIRE(person->get(keys, values, nKeys) == 10ul);
 #ifndef NDEBUG
         fprintf(stderr, "... second pass took %u comparisons, or %.1f/key\n",
-                internal::gTotalComparisons, internal::gTotalComparisons/(float)nKeys);
+                internal::gTotalComparisons.load(), internal::gTotalComparisons/(float)nKeys);
 #endif
     }
 

@@ -106,7 +106,7 @@ bool WriteUVarInt(slice *buf, uint64_t n) {
         assert(length >= 1 && length <= 8);
         int64_t result = 0;
         if (((int8_t*)src)[length-1] < 0)
-            result = -1;
+            result = -1;                        // sign-extend the result
         memcpy(&result, src, length);
         return _decLittle64(result);
     }
@@ -115,12 +115,30 @@ bool WriteUVarInt(slice *buf, uint64_t n) {
         int64_t littlen = _encLittle64(n);
         memcpy(buf, &littlen, 8);
         size_t size;
-        uint8_t trim = (n >= 0 || isUnsigned) ? 0 : 0xFF;
-        for (size = 8; size > 1; --size) {
-            if (((uint8_t*)buf)[size-1] != trim)
-                break;
+        if (isUnsigned) {
+            // Skip trailing 00 bytes
+            for (size = 8; size > 1; --size) {
+                uint8_t byte = ((uint8_t*)buf)[size-1];
+                if (byte != 0) {
+                    break;
+                }
+            }
+            return size;
+
+        } else {
+            // Skip trailing bytes that are FF (if negative) or else 00
+            uint8_t trim = (n >= 0) ? 0 : 0xFF;
+            for (size = 8; size > 1; --size) {
+                uint8_t byte = ((uint8_t*)buf)[size-1];
+                if (byte != trim) {
+                    // May have to keep an extra byte so the sign is correctly discoverable
+                    if ((byte ^ trim) & 0x80)
+                        ++size;
+                    break;
+                }
+            }
+            return size;
         }
-        return size;
     }
 
 }
