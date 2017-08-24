@@ -161,7 +161,7 @@ namespace fleece {
         throwIf(std::isnan(n), InvalidData, "Can't write NaN");
         if (n == floor(n) && n <= INT64_MAX && n >= INT64_MIN) {
             return writeInt((int64_t)n);
-        } else if (n <= FLT_MAX && n >= FLT_MIN && n == (float)n) {
+        } else if (fabs(n) <= FLT_MAX && n == (float)n) {
             return _writeFloat((float)n);
         } else {
             littleEndianDouble swapped = n;
