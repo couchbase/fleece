@@ -31,7 +31,7 @@ namespace fleece {
     class FleeceException : public std::runtime_error {
     public:
 
-        FleeceException(ErrorCode code_, const char *what)
+        FleeceException(ErrorCode code_, const std::string &what)
         :std::runtime_error(what)
         ,code(code_)
         { }

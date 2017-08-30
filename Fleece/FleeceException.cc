@@ -8,12 +8,30 @@
 
 #include "FleeceException.hh"
 #include <memory>
+#include <string>
 
 
 namespace fleece {
 
+    static const char* kErrorNames[] = {
+        "",
+        "memory error",
+        "array/iterator index out of range",
+        "invalid input data",
+        "encoder error",
+        "JSON error",
+        "unknown Fleece value; data may be corrupt",
+        "Fleece path syntax error",
+        "internal Fleece library error",
+        "key not found",
+        "incorrect use of persistent hsared keys",
+    };
+
     void FleeceException::_throw(ErrorCode code, const char *what) {
-        throw FleeceException(code, what);
+        std::string message = kErrorNames[code];
+        if (what)
+            message += std::string(": ") + what;
+        throw FleeceException(code, message);
     }
 
 
