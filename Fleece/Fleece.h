@@ -272,6 +272,9 @@ extern "C" {
     /** Returns a value in the array at the given offset from the current value. */
     FLValue FLArrayIterator_GetValueAt(const FLArrayIterator*, uint32_t offset);
 
+    /** Returns the number of items remaining to be iterated, including the current one. */
+    uint32_t FLArrayIterator_GetCount(const FLArrayIterator* i);
+
     /** Advances the iterator to the next value, or returns false if at the end. */
     bool FLArrayIterator_Next(FLArrayIterator*);
 
@@ -328,6 +331,9 @@ extern "C" {
 
     /** Returns the current value being iterated over. */
     FLValue FLDictIterator_GetValue(const FLDictIterator*);
+
+    /** Returns the number of items remaining to be iterated, including the current one. */
+    uint32_t FLDictIterator_GetCount(const FLDictIterator* i);
 
     /** Advances the iterator to the next value, or returns false if at the end. */
     bool FLDictIterator_Next(FLDictIterator*);

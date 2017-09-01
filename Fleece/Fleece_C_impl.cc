@@ -129,6 +129,10 @@ void FLArrayIterator_Begin(FLArray a, FLArrayIterator* i) {
     // Note: this is safe even if a is null.
 }
 
+uint32_t FLArrayIterator_GetCount(const FLArrayIterator* i) {
+    return ((Array::iterator*)i)->count();
+}
+
 FLValue FLArrayIterator_GetValue(const FLArrayIterator* i) {
     return ((Array::iterator*)i)->value();
 }
@@ -194,6 +198,11 @@ FLString FLDictIterator_GetKeyString(const FLDictIterator* i) {
 FLValue FLDictIterator_GetValue(const FLDictIterator* i) {
     return ((Dict::iterator*)i)->value();
 }
+
+uint32_t FLDictIterator_GetCount(const FLDictIterator* i) {
+    return ((Dict::iterator*)i)->count();
+}
+
 bool FLDictIterator_Next(FLDictIterator* i) {
     try {
         auto& iter = *(Dict::iterator*)i;

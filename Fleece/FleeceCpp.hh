@@ -140,6 +140,7 @@ namespace fleeceapi {
             inline iterator(Array);
             inline iterator(const FLArrayIterator &i)   :FLArrayIterator(i) { }
             inline Value value() const;
+            inline uint32_t count() const               {return FLArrayIterator_GetCount(this);}
             inline bool next();
             inline valueptr operator -> () const        {return valueptr(value());}
             inline Value operator * () const            {return value();}
@@ -199,6 +200,7 @@ namespace fleeceapi {
             inline iterator(Dict);
             inline iterator(Dict, FLSharedKeys);
             inline iterator(const FLDictIterator &i)   :FLDictIterator(i) { }
+            inline uint32_t count() const               {return FLDictIterator_GetCount(this);}
             inline Value key() const;
             inline FLString keyString() const;
             inline Value value() const;
