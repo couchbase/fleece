@@ -21,7 +21,7 @@
     #endif
 
 #elif __ANDROID__
-    #include <machine/endian.h>
+    #include <endian.h>
     #if _BYTE_ORDER == _LITTLE_ENDIAN
         #ifndef _LITTLE_ENDIAN
         #define _LITTLE_ENDIAN
