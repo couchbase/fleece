@@ -57,6 +57,15 @@ bool ReadUVarInt32(slice *buf, uint32_t *n);
     Returns false if there isn't enough room. */
 bool WriteUVarInt(slice *buf, uint64_t n);
 
+/** Skips a pointer past a varint without decoding it. */
+static inline const void* SkipVarInt(const void *buf) {
+    auto p = (const uint8_t*)buf;
+    uint8_t byte;
+    do {
+        byte = *p++;
+    } while (byte & 0x80);
+    return p;
+}
 
 //////// Non-varint variable-length int functions:
 

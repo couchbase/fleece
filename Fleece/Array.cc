@@ -159,17 +159,47 @@ namespace fleece {
             return nullptr;
         }
 
+        template <class T, class CMP>
+        inline const Value* search(T target, CMP comparator) const {
+            const Value *begin = _first;
+            size_t n = _count;
+            while (n > 0) {
+                size_t mid = n >> 1;
+                const Value *midVal = offsetby(begin, mid * 2*kWidth);
+                int cmp = comparator(target, midVal);
+                if (cmp == 0)
+                    return midVal;
+                else if (cmp < 0)
+                    n = mid;
+                else {
+                    begin = offsetby(midVal, 2*kWidth);
+                    n -= mid + 1;
+                }
+            }
+            return nullptr;
+        }
+
         inline const Value* get(slice keyToFind) const noexcept {
-            auto key = (const Value*) ::bsearch(&keyToFind, _first, _count, 2*kWidth, &keyCmp);
+            auto key = search(&keyToFind, [](const slice *target, const Value *val) {
+                return keyCmp(target, val);
+            });
             if (!key)
                 return nullptr;
             return deref(next(key));
         }
 
         inline const Value* get(int keyToFind) const noexcept {
-            auto key = (const Value*) ::bsearch((void*)(ssize_t)(keyToFind + 1),
-                                                _first, _count, 2*kWidth,
-                                                &numericKeyCmp);
+            auto key = search(keyToFind, [](int target, const Value *key) {
+#ifndef NDEBUG
+                ++gTotalComparisons;
+#endif
+                if (_usuallyTrue(key->tag() == kShortIntTag))
+                    return (int)(target - key->shortValue());
+                else if (_usuallyFalse(key->tag() == kIntTag))
+                    return (int)(target - key->asInt());
+                else
+                    return -1;
+            });
             if (!key)
                 return nullptr;
             return deref(next(key));
