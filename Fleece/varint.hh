@@ -17,6 +17,7 @@
 
 #include <stddef.h>
 #include "slice.hh"
+#include "PlatformCompat.hh"  // for _usuallyTrue, _usuallyFalse
 
 namespace fleece {
 
@@ -42,11 +43,38 @@ size_t SizeOfVarInt(uint64_t n);
 /** Encodes n as a varint, writing it to buf. Returns the number of bytes written. */
 size_t PutUVarInt(void *buf, uint64_t n);
 
+size_t _GetUVarInt(slice buf, uint64_t *n);   // do not call directly
+size_t _GetUVarInt32(slice buf, uint32_t *n); // do not call directly
+
 /** Decodes a varint from the bytes in buf, storing it into *n.
     Returns the number of bytes read, or 0 if the data is invalid (buffer too short or number
     too long.) */
-size_t GetUVarInt(slice buf, uint64_t *n);
-size_t GetUVarInt32(slice buf, uint32_t *n);
+static inline size_t GetUVarInt(slice buf, uint64_t *n) {
+    if (_usuallyFalse(buf.size == 0))
+        return 0;
+    uint8_t byte = buf[0];
+    if (_usuallyTrue(byte < 0x80)) {
+        *n = byte;
+        return 1;
+    }
+    return _GetUVarInt(buf, n);
+}
+
+/** Decodes a varint from the bytes in buf, storing it into *n.
+    Returns the number of bytes read, or 0 if the data is invalid (buffer too short or number
+    too long.) */
+static inline size_t GetUVarInt32(slice buf, uint32_t *n) {
+    if (_usuallyFalse(buf.size == 0))
+        return 0;
+    uint8_t byte = buf[0];
+    if (_usuallyTrue(byte < 0x80)) {
+        *n = byte;
+        return 1;
+    }
+    return _GetUVarInt32(buf, n);
+}
+
+
 
 /** Decodes a varint from buf, and advances buf to the remaining space after it.
     Returns false if the end of the buffer is reached or there is a parse error. */

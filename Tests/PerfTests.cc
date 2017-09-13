@@ -22,6 +22,30 @@ using namespace fleece;
 
 static const bool kSortKeys = true;
 
+TEST_CASE("GetUVarint performance", "[.Perf]") {
+    static constexpr int kNRounds = 10000000;
+    Benchmark bench;
+    uint8_t buf[100];
+    fprintf(stderr, "buf = %p\n", &buf);
+    for (double d = 1.0; d <= UINT64_MAX; d *= 1.5) {
+        auto n = (uint64_t)d;
+        size_t nBytes = PutUVarInt(buf, n);
+        uint64_t result = 0;
+        bench.start();
+        for (int round = 0; round < kNRounds; ++round) {
+            uint64_t nn;
+            CHECK(GetUVarInt(slice(buf, sizeof(buf)), &nn) == nBytes);
+            result += nn;
+        }
+        bench.stop();
+        CHECK(result != 1); // bogus
+        fprintf(stderr, "n = %16llx; %2zd bytes; time = %.3f ns\n",
+                n, nBytes,
+                bench.elapsed() / kNRounds * 1.0e9);
+    }
+    bench.printReport(1.0/kNRounds);
+}
+
 TEST_CASE("Perf Convert1000People", "[.Perf]") {
     static const int kSamples = 500;
 

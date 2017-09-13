@@ -43,27 +43,33 @@ size_t PutUVarInt(void *buf, uint64_t n) {
 }
 
 
-size_t GetUVarInt(slice buf, uint64_t *n) {
-    uint64_t result = 0;
-    int shift = 0;
-    for (size_t i = 0; i < buf.size; i++) {
-        uint8_t byte = ((const uint8_t*)buf.buf)[i];
-        result |= (uint64_t)(byte & 0x7f) << shift;
-        if (byte >= 0x80) {
+size_t _GetUVarInt(slice buf, uint64_t *n) {
+    // NOTE: The public inline function GetUVarInt already decodes 1-byte varints,
+    // so if we get here we can assume the varint is at least 2 bytes.
+    auto pos = (const uint8_t*)buf.buf;
+    auto end = pos + std::min(buf.size, (size_t)kMaxVarintLen64);
+    uint64_t result = *pos++ & 0x7F;
+    int shift = 7;
+    while (pos < end) {
+        uint8_t byte = *pos++;
+        if (_usuallyTrue(byte >= 0x80)) {
+            result |= (uint64_t)(byte & 0x7F) << shift;
             shift += 7;
         } else {
-            if (i > 9 || (i == 9 && byte > 1))
-                return 0; // Numeric overflow
+            result |= (uint64_t)byte << shift;
             *n = result;
-            return i + 1;
+            size_t nBytes = pos - (const uint8_t*)buf.buf;
+            if (_usuallyFalse(nBytes == kMaxVarintLen64 && byte > 1))
+                nBytes = 0; // Numeric overflow
+            return nBytes;
         }
     }
     return 0; // buffer too short
 }
 
-size_t GetUVarInt32(slice buf, uint32_t *n) {
+size_t _GetUVarInt32(slice buf, uint32_t *n) {
     uint64_t n64;
-    size_t size = GetUVarInt(buf, &n64);
+    size_t size = _GetUVarInt(buf, &n64);
     if (size == 0 || n64 > UINT32_MAX) // Numeric overflow
         return 0;
     *n = (uint32_t)n64;
