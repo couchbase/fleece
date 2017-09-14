@@ -13,8 +13,7 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#include "Value.hh"
-#include "Array.hh"
+#include "Fleece.hh"
 #include <ostream>
 #include <iomanip>
 #include <map>

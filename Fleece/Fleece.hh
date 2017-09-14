@@ -14,6 +14,7 @@
 
 #include "Value.hh"
 #include "Array.hh"
+#include "Dict.hh"
 #include "Encoder.hh"
 #include "JSONConverter.hh"
 #include "SharedKeys.hh"

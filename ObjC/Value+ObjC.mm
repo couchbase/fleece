@@ -14,8 +14,7 @@
 //  and limitations under the License.
 
 #import <Foundation/Foundation.h>
-#import "Value.hh"
-#include "Array.hh"
+#include "Fleece.hh"
 #include "SharedKeys.hh"
 #include "FleeceException.hh"
 

@@ -13,7 +13,6 @@
 namespace fleece {
 
     class Dict;
-    class SharedKeys;
 
     /** A Value that's an array. */
     class Array : public Value {
@@ -88,131 +87,6 @@ namespace fleece {
         friend class Value;
         friend class Dict;
         template <bool WIDE> friend struct dictImpl;
-    };
-
-
-
-    /** A Value that's a dictionary/map */
-    class Dict : public Value {
-    public:
-        /** The number of items in the dictionary. */
-        uint32_t count() const noexcept;
-
-        /** Looks up the Value for a string key, assuming the keys are sorted 
-            (as they are by default.) */
-        const Value* get(slice keyToFind) const noexcept;
-
-        const Value* get(slice keyToFind, SharedKeys*) const noexcept;
-
-        /** Looks up the Value for an integer key, assuming the keys are sorted
-            (as they are by default.) */
-        const Value* get(int numericKeyToFind) const noexcept;
-
-        /** Looks up the Value for a string key, without assuming the keys are sorted.
-            This is slower than get(), but works even if the Fleece data was generated without
-            sorted keys. */
-        const Value* get_unsorted(slice key) const noexcept;
-
-#ifdef __OBJC__
-        /** Looks up the Value for a key given as an NSString object. */
-        const Value* get(NSString* key) const noexcept {
-            nsstring_slice keyBytes(key);
-            return get(keyBytes);
-        }
-#endif
-
-        /** An empty Dict. */
-        static const Dict* const kEmpty;
-
-        /** A stack-based dictionary iterator */
-        class iterator {
-        public:
-            iterator(const Dict*) noexcept;
-            iterator(const Dict*, const SharedKeys*) noexcept;
-
-            /** Returns the number of _remaining_ items. */
-            uint32_t count() const noexcept                  {return _a._count;}
-
-            slice keyString() const noexcept;
-            const Value* key() const noexcept                {return _key;}
-            const Value* value() const noexcept              {return _value;}
-
-            /** Returns false when the iterator reaches the end. */
-            explicit operator bool() const noexcept          {return _a._count > 0;}
-
-            /** Steps to the next item. (Throws if there are no more items.) */
-            iterator& operator ++();
-
-            /** Steps forward by one or more items. (Throws if stepping past the end.) */
-            iterator& operator += (uint32_t);
-
-#ifdef __OBJC__
-            NSString* keyToNSString(NSMapTable *sharedStrings, const SharedKeys *sk) const;
-#endif
-
-        private:
-            void readKV() noexcept;
-            const Value* rawKey() noexcept             {return _a._first;}
-            const Value* rawValue() noexcept           {return _a.second();}
-
-            Array::impl _a;
-            const Value *_key, *_value;
-            const SharedKeys *_sharedKeys {nullptr};
-
-            friend class Value;
-        };
-        
-        iterator begin() const noexcept                      {return iterator(this);}
-        iterator begin(const SharedKeys *sk) const noexcept  {return iterator(this, sk);}
-
-        /** An abstracted key for dictionaries. It will cache the key as an encoded Value, and it
-            will cache the index at which the key was last found, which speeds up succssive
-            lookups.
-            Warning: An instance of this should be used only on a single thread.
-            Warning: If you set the `cache` flag to true, the key will cache the Value
-            representation of the string, so it should only be used with dictionaries that are
-            stored in the same encoded data. */
-        class key {
-        public:
-            key(slice rawString);
-
-            /** If the data was encoded using a SharedKeys mapping, you need to use this
-                constructor so the proper numeric encoding can be found & used. */
-            key(slice rawString, SharedKeys*, bool cachePointer =false);
-
-            slice string() const noexcept                {return _rawString;}
-            const Value* asValue() const noexcept        {return _keyValue;}
-            int compare(const key &k) const noexcept     {return _rawString.compare(k._rawString);}
-        private:
-            slice const _rawString;
-            const Value* _keyValue  {nullptr};
-            SharedKeys* _sharedKeys {nullptr};
-            uint32_t _hint          {0xFFFFFFFF};
-            int32_t _numericKey;
-            bool _cachePointer;
-            bool _hasNumericKey     {false};
-
-            template <bool WIDE> friend struct dictImpl;
-        };
-
-        /** Looks up the Value for a key, in a form that can cache the key's Fleece object.
-            Using the Fleece object is significantly faster than a normal get. */
-        const Value* get(key&) const noexcept;
-
-        /** Looks up multiple keys at once; this can be a lot faster than multiple gets.
-            @param keys  Array of key objects. MUST be sorted lexicographically in increasing order.
-            @param values  The corresponding values (or NULLs) will be written here.
-            @param count  The number of keys and values.
-            @return  The number of keys that were found. */
-        size_t get(key keys[], const Value* values[], size_t count) const noexcept;
-
-        /** Sorts an array of keys, a prerequisite of the multi-key get() method. */
-        static void sortKeys(key keys[], size_t count) noexcept;
-
-        constexpr Dict()  :Value(internal::kDictTag, 0, 0) { }
-
-    private:
-        friend class Value;
     };
 
 }

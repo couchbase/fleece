@@ -10,14 +10,11 @@
 #include <time.h>
 
 
-using namespace Catch;
-
-
 /** Custom reporter that logs a line for every test file and every test case being run.
     Use CLI args "-r list" to use it. */
-struct CaseListReporter : public ConsoleReporter {
-    CaseListReporter( ReporterConfig const& _config )
-    :   ConsoleReporter( _config )
+struct CaseListReporter : public Catch::ConsoleReporter {
+    CaseListReporter( Catch::ReporterConfig const& _config )
+    :   Catch::ConsoleReporter( _config )
     {
         auto now = time(nullptr);
         stream << "STARTING TESTS AT " << ctime(&now) << "\n";
@@ -32,7 +29,7 @@ struct CaseListReporter : public ConsoleReporter {
         return "Logs a line for every test case";
     }
 
-    virtual void testCaseStarting( TestCaseInfo const& _testInfo ) CATCH_OVERRIDE {
+    virtual void testCaseStarting( Catch::TestCaseInfo const& _testInfo ) CATCH_OVERRIDE {
         auto file = _testInfo.lineInfo.file;
         if (file != _curFile) {
             _curFile = file;
@@ -44,11 +41,11 @@ struct CaseListReporter : public ConsoleReporter {
         _sectionNesting = 0;
         ConsoleReporter::testCaseStarting(_testInfo);
     }
-    virtual void testCaseEnded( TestCaseStats const& _testCaseStats ) CATCH_OVERRIDE {
+    virtual void testCaseEnded( Catch::TestCaseStats const& _testCaseStats ) CATCH_OVERRIDE {
         ConsoleReporter::testCaseEnded(_testCaseStats);
     }
 
-    virtual void sectionStarting( SectionInfo const& _sectionInfo ) CATCH_OVERRIDE {
+    virtual void sectionStarting( Catch::SectionInfo const& _sectionInfo ) CATCH_OVERRIDE {
         if (_firstSection)
             _firstSection = false;
         else {
@@ -60,7 +57,7 @@ struct CaseListReporter : public ConsoleReporter {
         ConsoleReporter::sectionStarting(_sectionInfo);
     }
 
-    void sectionEnded( SectionStats const& sectionStats ) CATCH_OVERRIDE {
+    void sectionEnded( Catch::SectionStats const& sectionStats ) CATCH_OVERRIDE {
         --_sectionNesting;
         ConsoleReporter::sectionEnded(sectionStats);
     }

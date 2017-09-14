@@ -8,6 +8,7 @@
 
 #include "FleeceTests.hh"
 #include "JSONConverter.hh"
+#include "varint.hh"
 #include <assert.h>
 #include <unistd.h>
 

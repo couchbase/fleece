@@ -14,7 +14,7 @@
 //  and limitations under the License.
 
 #include "Encoder.hh"
-#include "Array.hh"
+#include "Fleece.hh"
 #include "SharedKeys.hh"
 #include "Endian.hh"
 #include "varint.hh"

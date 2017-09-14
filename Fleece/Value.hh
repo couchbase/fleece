@@ -18,7 +18,6 @@
 #include "FleeceException.hh"
 #include "slice.hh"
 #include "Endian.hh"
-#include "varint.hh"
 #include <stdint.h>
 #include <map>
 #ifdef __OBJC__

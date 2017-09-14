@@ -8,6 +8,7 @@
 
 #include "FleeceTests.hh"
 #include "Value.hh"
+#include "varint.hh"
 
 namespace fleece {
     using namespace internal;

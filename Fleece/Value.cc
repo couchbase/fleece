@@ -317,4 +317,28 @@ namespace fleece {
         }
     }
 
+
+    const Value* Value::deref(const Value *v, bool wide) {
+        while (v->isPointer()) {
+            v = derefPointer(v, wide);
+            wide = true;                        // subsequent pointers must be wide
+        }
+        return v;
+    }
+
+    template <bool WIDE>
+    const Value* Value::deref(const Value *v) {
+        if (v->isPointer()) {
+            v = derefPointer<WIDE>(v);
+            while (!WIDE && _usuallyFalse(v->isPointer()))
+                v = derefPointer<true>(v);      // subsequent pointers must be wide
+        }
+        return v;
+    }
+
+    // Explicitly instantiate both needed versions:
+    template const Value* Value::deref<false>(const Value *v);
+    template const Value* Value::deref<true>(const Value *v);
+
+
 }

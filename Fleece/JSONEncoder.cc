@@ -7,7 +7,7 @@
 //
 
 #include "JSONEncoder.hh"
-#include "Array.hh"
+#include "Fleece.hh"
 #include <algorithm>
 
 namespace fleece {
