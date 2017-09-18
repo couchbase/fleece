@@ -24,7 +24,7 @@ namespace fleece {
 
 
     Array::impl::impl(const Value* v) noexcept {
-        if (v == nullptr) {
+        if (_usuallyFalse(v == nullptr)) {
             _first = nullptr;
             _wide = false;
             _count = 0;
@@ -34,11 +34,11 @@ namespace fleece {
         _first = (const Value*)(&v->_byte[2]);
         _wide = v->isWideArray();
         _count = v->shortValue() & 0x07FF;
-        if (_count == kLongArrayCount) {
+        if (_usuallyFalse(_count == kLongArrayCount)) {
             // Long count is stored as a varint:
             uint32_t extraCount;
             size_t countSize = GetUVarInt32(slice(_first, 10), &extraCount);
-            assert(countSize > 0);
+            throwIf(countSize == 0, InvalidData, "invalid count in Array");
             _count += extraCount;
             _first = offsetby(_first, countSize + (countSize & 1));
         }
@@ -46,14 +46,14 @@ namespace fleece {
 
     bool Array::impl::next() {
         throwIf(_count == 0, OutOfRange, "iterating past end of array");
-        if (--_count == 0)
+        if (_usuallyFalse(--_count == 0))
             return false;
         _first = _first->next(_wide);
         return true;
     }
 
     const Value* Array::impl::operator[] (unsigned index) const noexcept {
-        if (index >= _count)
+        if (_usuallyFalse(index >= _count))
             return nullptr;
         if (_wide)
             return Value::deref<true> (offsetby(_first, kWide   * index));

@@ -47,7 +47,7 @@ namespace fleece {
 
     valueType Value::type() const noexcept {
         auto t = tag();
-        if (t == kSpecialTag) {
+        if (_usuallyFalse(t == kSpecialTag)) {
             switch (tinyValue()) {
                 case kSpecialValueFalse:
                 case kSpecialValueTrue:
@@ -81,7 +81,7 @@ namespace fleece {
                 return tinyValue() == kSpecialValueTrue;
             case kShortIntTag: {
                 uint16_t i = shortValue();
-                if (i & 0x0800)
+                if (_usuallyFalse(i & 0x0800))
                     return (int16_t)(i | 0xF000);   // sign-extend negative number
                 else
                     return i;
@@ -185,21 +185,21 @@ namespace fleece {
     }
 
     slice Value::asString() const noexcept {
-        return tag() == kStringTag ? getStringBytes() : nullslice;
+        return _usuallyTrue(tag() == kStringTag) ? getStringBytes() : nullslice;
     }
 
     slice Value::asData() const noexcept {
-        return tag() == kBinaryTag ? getStringBytes() : nullslice;
+        return _usuallyTrue(tag() == kBinaryTag) ? getStringBytes() : nullslice;
     }
 
     const Array* Value::asArray() const noexcept {
-        if (tag() != kArrayTag)
+        if (_usuallyFalse(tag() != kArrayTag))
             return nullptr;
         return (const Array*)this;
     }
 
     const Dict* Value::asDict() const noexcept {
-        if (tag() != kDictTag)
+        if (_usuallyFalse(tag() != kDictTag))
             return nullptr;
         return (const Dict*)this;
     }
@@ -229,7 +229,7 @@ namespace fleece {
         // Root value is at the end of the data and is two bytes wide:
         assert(fromData(s) != nullptr); // validate anyway, in debug builds; abort if invalid
         auto root = fastValidate(s);
-        return root ? deref<true>(root) : nullptr;
+        return _usuallyTrue(root != nullptr) ? deref<true>(root) : nullptr;
     }
 
     const Value* Value::fromData(slice s) noexcept {
@@ -240,25 +240,25 @@ namespace fleece {
     }
 
     const Value* Value::fastValidate(slice s) noexcept {
-        if (s.size < kNarrow || (s.size % kNarrow))
+        if (_usuallyFalse(s.size < kNarrow) || _usuallyFalse(s.size % kNarrow))
             return nullptr;
         auto root = (const Value*)offsetby(s.buf, s.size - internal::kNarrow);
-        if (root->isPointer()) {
+        if (_usuallyTrue(root->isPointer())) {
             // If the root is a pointer, sanity-check the destination:
             auto derefed = derefPointer<false>(root);
-            if (derefed >= root || derefed < s.buf)
+            if (_usuallyFalse(derefed >= root || derefed < s.buf))
                 return nullptr;
             root = derefed;
             // The root itself might point to a wide pointer, if the actual value is too far away:
-            if (root->isPointer()) {
+            if (_usuallyFalse(root->isPointer())) {
                 derefed = derefPointer<true>(root);
-                if (derefed >= root || derefed < s.buf)
+                if (_usuallyFalse(derefed >= root || derefed < s.buf))
                     return nullptr;
                 root = derefed;
             }
         } else {
             // If the root is a direct value there better not be any data before it:
-            if (s.size != kNarrow)
+            if (_usuallyFalse(s.size != kNarrow))
                 return nullptr;
         };
         return root;
@@ -266,30 +266,30 @@ namespace fleece {
 
     bool Value::validate(const void *dataStart, const void *dataEnd, bool wide) const noexcept {
         // First dereference a pointer:
-        if (isPointer()) {
+        if (_usuallyTrue(isPointer())) {
             auto derefed = derefPointer(this, wide);
-            return derefed >= dataStart
-                && derefed < this  // could fail if ptr wraps around past 0
-                && derefed->validate(dataStart, this, true);
+            return _usuallyTrue(derefed >= dataStart)
+                && _usuallyTrue(derefed < this)  // could fail if ptr wraps around past 0
+                && _usuallyTrue(derefed->validate(dataStart, this, true));
         }
         auto t = tag();
         size_t size = dataSize();
-        if (t == kArrayTag || t == kDictTag) {
+        if (_usuallyTrue(t == kArrayTag || t == kDictTag)) {
             wide = isWideArray();
             size_t itemCount = ((const Array*)this)->count();
-            if (t == kDictTag)
+            if (_usuallyTrue(t == kDictTag))
                 itemCount *= 2;
             // Check that size fits:
             size += itemCount * width(wide);
-            if (offsetby(this, size) > dataEnd)
+            if (_usuallyFalse(offsetby(this, size) > dataEnd))
                 return false;
 
             // Check each Array/Dict element:
-            if (itemCount > 0) {
+            if (_usuallyTrue(itemCount > 0)) {
                 auto item = Array::impl(this)._first;
                 while (itemCount-- > 0) {
                     auto second = item->next(wide);
-                    if (!item->validate(dataStart, second, wide))
+                    if (_usuallyFalse(!item->validate(dataStart, second, wide)))
                         return false;
                     item = second;
                 }

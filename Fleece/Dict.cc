@@ -38,7 +38,7 @@ namespace fleece {
             const Value *key = _first;
             for (uint32_t i = 0; i < _count; i++) {
                 const Value *val = next(key);
-                if (keyToFind.compare(keyBytes(key)) == 0)
+                if (_usuallyFalse(keyToFind.compare(keyBytes(key)) == 0))
                     return deref(val);
                 key = next(val);
             }
@@ -80,12 +80,12 @@ namespace fleece {
 
         const Value* get(Dict::key &keyToFind) const noexcept {
             auto sharedKeys = keyToFind._sharedKeys;
-            if (sharedKeys) {
+            if (_usuallyTrue(sharedKeys != nullptr)) {
                 // Look for a numeric key first:
-                if (keyToFind._hasNumericKey)
+                if (_usuallyTrue(keyToFind._hasNumericKey))
                     return get(keyToFind._numericKey);
                 // Key was not registered last we checked; see if dict contains any new keys:
-                if (_count == 0)
+                if (_usuallyFalse(_count == 0))
                     return nullptr;
                 if (lookupSharedKey(keyToFind._rawString, sharedKeys, keyToFind._numericKey)) {
                     keyToFind._hasNumericKey = true;
@@ -126,7 +126,7 @@ namespace fleece {
                 size_t mid = n >> 1;
                 const Value *midVal = offsetby(begin, mid * 2*kWidth);
                 int cmp = comparator(target, midVal);
-                if (cmp == 0)
+                if (_usuallyFalse(cmp == 0))
                     return midVal;
                 else if (cmp < 0)
                     n = mid;
@@ -245,7 +245,7 @@ namespace fleece {
             ++gTotalComparisons;
 #endif
             auto key = (const Value*)keyP;
-            if (key->isInteger())
+            if (_usuallyTrue(key->isInteger()))
                 return (int)((ssize_t)keyToFindP - key->asInt() - 1);
             else
                 return -1;
@@ -359,7 +359,7 @@ namespace fleece {
     }
 
     void Dict::iterator::readKV() noexcept {
-        if (_a._count) {
+        if (_usuallyTrue(_a._count)) {
             _key   = deref(_a._first,                _a._wide);
             _value = deref(_a._first->next(_a._wide), _a._wide);
         } else {
