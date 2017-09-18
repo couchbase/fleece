@@ -16,8 +16,8 @@
 #include "varint.hh"
 #include "slice.hh"
 #include "Endian.hh"
+#include <algorithm>
 #include <assert.h>
-#include <stdio.h>
 
 
 namespace fleece {
