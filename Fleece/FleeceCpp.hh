@@ -126,7 +126,7 @@ namespace fleeceapi {
         operator FLArray () const                       {return (FLArray)_val;}
 
         inline uint32_t count() const;
-        inline bool empty() const                       {return count() == 0;}
+        inline bool empty() const;
         inline Value get(uint32_t index) const;
 
         inline Value operator[] (int index) const       {return get(index);}
@@ -166,7 +166,7 @@ namespace fleeceapi {
         operator FLDict () const                        {return (FLDict)_val;}
 
         inline uint32_t count() const;
-        inline bool empty() const                       {return count() == 0;}
+        inline bool empty() const;
 
         inline Value get(FLString key) const;
         inline Value get(FLString key, FLSharedKeys sk) const;
@@ -364,6 +364,7 @@ namespace fleeceapi {
 
 
     inline uint32_t Array::count() const        {return FLArray_Count(*this);}
+    inline bool Array::empty() const            {return FLArray_IsEmpty(*this);}
     inline Value Array::get(uint32_t i) const   {return FLArray_Get(*this, i);}
 
     inline Array::iterator::iterator(Array a)   {FLArrayIterator_Begin(a, this);}
@@ -371,6 +372,7 @@ namespace fleeceapi {
     inline bool Array::iterator::next()         {return FLArrayIterator_Next(this);}
 
     inline uint32_t Dict::count() const         {return FLDict_Count(*this);}
+    inline bool Dict::empty() const             {return FLDict_IsEmpty(*this);}
     inline Value Dict::get(FLSlice key) const   {return FLDict_Get(*this, key);}
     inline Value Dict::get(FLSlice key, FLSharedKeys sk) const {return FLDict_GetSharedKey(*this, key, sk);}
     inline Value Dict::get(Dict::Key &key) const{return FLDict_GetWithKey(*this, &key._key);}

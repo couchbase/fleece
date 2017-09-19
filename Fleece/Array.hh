@@ -23,8 +23,7 @@ namespace fleece {
 
             impl(const Value*) noexcept;
             const Value* second() const noexcept      {return _first->next(_wide);}
-            bool next();
-            const Value* firstValue() const noexcept  {return _count ? Value::deref(_first, _wide) : nullptr;}
+            const Value* firstValue() const noexcept;
             const Value* operator[] (unsigned index) const noexcept;
             size_t indexOf(const Value *v) const noexcept;
         };
@@ -33,6 +32,8 @@ namespace fleece {
 
         /** The number of items in the array. */
         uint32_t count() const noexcept;
+
+        bool empty() const noexcept                         {return countIsZero();}
 
         /** Accesses an array item. Returns nullptr for out of range index.
             If you're accessing a lot of items of the same array, it's faster to make an
@@ -43,12 +44,12 @@ namespace fleece {
         static const Array* const kEmpty;
 
         /** A stack-based array iterator */
-        class iterator {
+        class iterator : private impl {
         public:
             iterator(const Array* a) noexcept;
 
             /** Returns the number of _remaining_ items. */
-            uint32_t count() const noexcept                  {return _a._count;}
+            uint32_t count() const noexcept                  {return _count;}
 
             const Value* value() const noexcept              {return _value;}
             explicit operator const Value* const () noexcept {return _value;}
@@ -59,10 +60,10 @@ namespace fleece {
 
             /** Random access to items. Index is relative to the current item.
                 This is very fast, faster than array::get(). */
-            const Value* operator[] (unsigned i) noexcept    {return _a[i];}
+            const Value* operator[] (unsigned i) noexcept    {return ((impl&)*this)[i];}
 
             /** Returns false when the iterator reaches the end. */
-            explicit operator bool() const noexcept          {return _a._count > 0;}
+            explicit operator bool() const noexcept          {return _count > 0;}
 
             /** Steps to the next item. (Throws if there are no more items.) */
             iterator& operator++();
@@ -71,9 +72,8 @@ namespace fleece {
             iterator& operator += (uint32_t);
 
         private:
-            const Value* rawValue() noexcept                 {return _a._first;}
+            const Value* rawValue() noexcept                 {return _first;}
 
-            impl _a;
             const Value *_value;
             
             friend class Value;

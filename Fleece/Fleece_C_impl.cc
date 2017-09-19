@@ -121,6 +121,7 @@ FLSliceResult FLData_Dump(FLSlice data) {
 
 
 uint32_t FLArray_Count(FLArray a)                    {return a ? a->count() : 0;}
+bool FLArray_IsEmpty(FLArray a)                      {return a ? a->empty() : true;}
 FLValue FLArray_Get(FLArray a, uint32_t index)       {return a ? a->get(index) : nullptr;}
 
 void FLArrayIterator_Begin(FLArray a, FLArrayIterator* i) {
@@ -155,6 +156,7 @@ bool FLArrayIterator_Next(FLArrayIterator* i) {
 
 
 uint32_t FLDict_Count(FLDict d)                          {return d ? d->count() : 0;}
+bool FLDict_IsEmpty(FLDict d)                            {return d ? d->empty() : true;}
 FLValue FLDict_Get(FLDict d, FLSlice keyString)          {return d ? d->get(keyString) : nullptr;}
 FLValue FLDict_GetUnsorted(FLDict d, FLSlice keyString)  {return d ? d->get_unsorted(keyString) : nullptr;}
 

@@ -19,6 +19,8 @@ namespace fleece {
         /** The number of items in the dictionary. */
         uint32_t count() const noexcept;
 
+        bool empty() const noexcept                         {return countIsZero();}
+
         /** Looks up the Value for a string key, assuming the keys are sorted
             (as they are by default.) */
         const Value* get(slice keyToFind) const noexcept;

@@ -22,6 +22,9 @@ namespace fleece {
     namespace internal {
         std::atomic<unsigned> gTotalComparisons;
     }
+    static inline void countComparison() {++gTotalComparisons;}
+#else
+    static inline void countComparison() { }
 #endif
 
 
@@ -56,9 +59,7 @@ namespace fleece {
 
         inline const Value* get(int keyToFind) const noexcept {
             auto key = search(keyToFind, [](int target, const Value *key) {
-#ifndef NDEBUG
-                ++gTotalComparisons;
-#endif
+                countComparison();
                 if (_usuallyTrue(key->tag() == kShortIntTag))
                     return (int)(target - key->shortValue());
                 else if (_usuallyFalse(key->tag() == kIntTag))
@@ -231,24 +232,11 @@ namespace fleece {
         }
 
         static int keyCmp(const slice *keyToFind, const Value *key) {
-#ifndef NDEBUG
-            ++gTotalComparisons;
-#endif
+            countComparison();
             if (key->isInteger())
                 return 1;
             else
                 return keyToFind->compare(keyBytes(key));
-        }
-
-        static int numericKeyCmp(const void* keyToFindP, const void* keyP) {
-#ifndef NDEBUG
-            ++gTotalComparisons;
-#endif
-            auto key = (const Value*)keyP;
-            if (_usuallyTrue(key->isInteger()))
-                return (int)((ssize_t)keyToFindP - key->asInt() - 1);
-            else
-                return -1;
         }
 
         static constexpr size_t kWidth = (WIDE ? 4 : 2);

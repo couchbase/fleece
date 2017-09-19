@@ -143,6 +143,53 @@ namespace fleece {
 #endif
 
     protected:
+        constexpr Value(internal::tags tag, int tiny, int byte1 = 0)
+        :_byte {(uint8_t)((tag<<4) | tiny),
+                (uint8_t)byte1,
+                0, 0}
+        { }
+
+        static const Value* findRoot(slice) noexcept;
+        bool validate(const void* dataStart, const void *dataEnd) const noexcept;
+        const Value* carefulDeref(bool wide,
+                                  const void *dataStart, const void *dataEnd) const noexcept;
+
+        internal::tags tag() const noexcept   {return (internal::tags)(_byte[0] >> 4);}
+        unsigned tinyValue() const noexcept   {return _byte[0] & 0x0F;}
+
+        // numbers:
+        uint16_t shortValue() const noexcept  {return (((uint16_t)_byte[0] << 8) | _byte[1]) & 0x0FFF;}
+        template<typename T> T asFloatOfType() const noexcept;
+
+        // strings:
+        slice getStringBytes() const noexcept;
+
+        // arrays/dicts:
+        bool isWideArray() const noexcept     {return (_byte[0] & 0x08) != 0;}
+        uint32_t countValue() const noexcept  {return (((uint32_t)_byte[0] << 8) | _byte[1]) & 0x07FF;}
+        bool countIsZero() const noexcept     {return _byte[1] == 0 && (_byte[0] & 0x7) == 0;}
+
+        // pointers:
+
+        Value(size_t offset, int width) {
+            offset >>= 1;
+            if (width < internal::kWide) {
+                throwIf(offset >= 0x8000, InternalError, "offset too large");
+                int16_t n = (uint16_t)_enc16(offset | 0x8000); // big-endian, high bit set
+                memcpy(_byte, &n, sizeof(n));
+            } else {
+                if (offset >= 0x80000000)
+                    FleeceException::_throw(OutOfRange, "data too large");
+                uint32_t n = (uint32_t)_enc32(offset | 0x80000000);
+                memcpy(_byte, &n, sizeof(n));
+            }
+        }
+
+        void shrinkPointer() noexcept {  // shrinks a wide pointer down to a narrow one
+            _byte[0] = _byte[2] | 0x80;
+            _byte[1] = _byte[3];
+        }
+
         bool isPointer() const noexcept       {return (_byte[0] >= (internal::kPointerTagFirst << 4));}
 
         template <bool WIDE>
@@ -151,11 +198,6 @@ namespace fleece {
                 return (_dec32(*(uint32_t*)_byte) & ~0x80000000) << 1;
             else
                 return (_dec16(*(uint16_t*)_byte) & ~0x8000) << 1;
-        }
-
-        void shrinkPointer() noexcept {
-            _byte[0] = _byte[2] | 0x80;
-            _byte[1] = _byte[3];
         }
 
         template <bool WIDE>
@@ -175,46 +217,12 @@ namespace fleece {
         template <bool WIDE>
         const Value* next() const noexcept       {return next(WIDE);}
 
-        bool isWideArray() const noexcept {return (_byte[0] & 0x08) != 0;}
-
-    private:
-        constexpr Value(internal::tags tag, int tiny, int byte1 = 0)
-        :_byte {(uint8_t)((tag<<4) | tiny),
-                (uint8_t)byte1,
-                0, 0}
-        { }
-
-        // pointer:
-        Value(size_t offset, int width) {
-            offset >>= 1;
-            if (width < internal::kWide) {
-                throwIf(offset >= 0x8000, InternalError, "offset too large");
-                int16_t n = (uint16_t)_enc16(offset | 0x8000); // big-endian, high bit set
-                memcpy(_byte, &n, sizeof(n));
-            } else {
-                if (offset >= 0x80000000)
-                    FleeceException::_throw(OutOfRange, "data too large");
-                uint32_t n = (uint32_t)_enc32(offset | 0x80000000);
-                memcpy(_byte, &n, sizeof(n));
-            }
-        }
-
-        internal::tags tag() const noexcept   {return (internal::tags)(_byte[0] >> 4);}
-        unsigned tinyValue() const noexcept   {return _byte[0] & 0x0F;}
-        uint16_t shortValue() const noexcept  {return (((uint16_t)_byte[0] << 8) | _byte[1]) & 0x0FFF;}
-        template<typename T> T asFloatOfType() const noexcept;
-
-        slice getStringBytes() const noexcept;
-
         // dump:
         size_t dataSize() const noexcept;
         typedef std::map<size_t, const Value*> mapByAddress;
         void mapAddresses(mapByAddress&) const;
         void dump(std::ostream &out, bool wide, int indent, const void *base) const;
         void writeDumpBrief(std::ostream &out, const void *base, bool wide =false) const;
-
-        static const Value* fastValidate(slice) noexcept;
-        bool validate(const void* dataStart, const void *dataEnd, bool wide) const noexcept;
 
         //////// Here's the data:
 

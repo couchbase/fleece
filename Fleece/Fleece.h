@@ -249,6 +249,9 @@ extern "C" {
     /** Returns the number of items in an array, or 0 if the pointer is nullptr. */
     uint32_t FLArray_Count(FLArray);
 
+    /** Returns true if an array is empty. Slightly faster than `FLArray_Count(a) == 0` */
+    bool FLArray_IsEmpty(FLArray);
+
     /** Returns an value at an array index, or nullptr if the index is out of range. */
     FLValue FLArray_Get(FLArray, uint32_t index);
 
@@ -288,6 +291,9 @@ extern "C" {
 
     /** Returns the number of items in a dictionary, or 0 if the pointer is nullptr. */
     uint32_t FLDict_Count(FLDict);
+
+    /** Returns true if a dictionary is empty. Slightly faster than `FLDict_Count(a) == 0` */
+    bool FLDict_IsEmpty(FLDict);
 
     /** Looks up a key in a _sorted_ dictionary, returning its value.
         Returns nullptr if the value is not found or if the dictionary is nullptr. */

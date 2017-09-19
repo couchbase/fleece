@@ -33,23 +33,17 @@ namespace fleece {
         
         _first = (const Value*)(&v->_byte[2]);
         _wide = v->isWideArray();
-        _count = v->shortValue() & 0x07FF;
+        _count = v->countValue();
         if (_usuallyFalse(_count == kLongArrayCount)) {
             // Long count is stored as a varint:
             uint32_t extraCount;
             size_t countSize = GetUVarInt32(slice(_first, 10), &extraCount);
-            throwIf(countSize == 0, InvalidData, "invalid count in Array");
-            _count += extraCount;
+            if (_usuallyTrue(countSize > 0))
+                _count += extraCount;
+            else
+                _count = 0;     // invalid data, but I'm not allowed to throw an exception
             _first = offsetby(_first, countSize + (countSize & 1));
         }
-    }
-
-    bool Array::impl::next() {
-        throwIf(_count == 0, OutOfRange, "iterating past end of array");
-        if (_usuallyFalse(--_count == 0))
-            return false;
-        _first = _first->next(_wide);
-        return true;
     }
 
     const Value* Array::impl::operator[] (unsigned index) const noexcept {
@@ -61,6 +55,12 @@ namespace fleece {
             return Value::deref<false>(offsetby(_first, kNarrow * index));
     }
 
+    const Value* Array::impl::firstValue() const noexcept {
+        if (_usuallyFalse(_count == 0))
+            return nullptr;
+        return Value::deref(_first, _wide);
+    }
+
     size_t Array::impl::indexOf(const Value *v) const noexcept {
         return ((size_t)v - (size_t)_first) / width(_wide);
     }
@@ -68,7 +68,7 @@ namespace fleece {
 
 
     uint32_t Array::count() const noexcept {
-        return Array::impl(this)._count;
+        return impl(this)._count;
     }
 
     const Value* Array::get(uint32_t index) const noexcept {
@@ -81,21 +81,24 @@ namespace fleece {
 
 
     Array::iterator::iterator(const Array *a) noexcept
-    :_a(a),
-     _value(_a.firstValue())
+    :impl(a),
+     _value(firstValue())
     { }
 
     Array::iterator& Array::iterator::operator++() {
-        _a.next();
-        _value = _a.firstValue();
+        throwIf(_count == 0, OutOfRange, "iterating past end of array");
+        if (_usuallyTrue(--_count > 0))
+            _first = _first->next(_wide);
+        _value = firstValue();
         return *this;
     }
 
     Array::iterator& Array::iterator::operator += (uint32_t n) {
-        throwIf(n > _a._count, OutOfRange, "iterating past end of array");
-        _a._count -= n;
-        _a._first = offsetby(_a._first, width(_a._wide)*n);
-        _value = _a.firstValue();
+        throwIf(n > _count, OutOfRange, "iterating past end of array");
+        _count -= n;
+        if (_usuallyTrue(_count > 0))
+            _first = offsetby(_first, width(_wide)*n);
+        _value = firstValue();
         return *this;
     }
 

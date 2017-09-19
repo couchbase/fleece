@@ -226,36 +226,25 @@ namespace fleece {
 
     
     const Value* Value::fromTrustedData(slice s) noexcept {
-        // Root value is at the end of the data and is two bytes wide:
         assert(fromData(s) != nullptr); // validate anyway, in debug builds; abort if invalid
-        auto root = fastValidate(s);
-        return _usuallyTrue(root != nullptr) ? deref<true>(root) : nullptr;
+        return findRoot(s);
     }
 
     const Value* Value::fromData(slice s) noexcept {
-        auto root = fastValidate(s);
-        if (root && !root->validate(s.buf, s.end(), true))
+        auto root = findRoot(s);
+        if (root && _usuallyFalse(!root->validate(s.buf, s.end())))
             root = nullptr;
         return root;
     }
 
-    const Value* Value::fastValidate(slice s) noexcept {
+    const Value* Value::findRoot(slice s) noexcept {
+        // Root value is at the end of the data and is two bytes wide:
         if (_usuallyFalse(s.size < kNarrow) || _usuallyFalse(s.size % kNarrow))
             return nullptr;
         auto root = (const Value*)offsetby(s.buf, s.size - internal::kNarrow);
         if (_usuallyTrue(root->isPointer())) {
-            // If the root is a pointer, sanity-check the destination:
-            auto derefed = derefPointer<false>(root);
-            if (_usuallyFalse(derefed >= root || derefed < s.buf))
-                return nullptr;
-            root = derefed;
-            // The root itself might point to a wide pointer, if the actual value is too far away:
-            if (_usuallyFalse(root->isPointer())) {
-                derefed = derefPointer<true>(root);
-                if (_usuallyFalse(derefed >= root || derefed < s.buf))
-                    return nullptr;
-                root = derefed;
-            }
+            // If the root is a pointer, sanity-check the destination, then deref:
+            return root->carefulDeref(false, s.buf, root);
         } else {
             // If the root is a direct value there better not be any data before it:
             if (_usuallyFalse(s.size != kNarrow))
@@ -264,41 +253,41 @@ namespace fleece {
         return root;
     }
 
-    bool Value::validate(const void *dataStart, const void *dataEnd, bool wide) const noexcept {
-        // First dereference a pointer:
-        if (_usuallyTrue(isPointer())) {
-            auto derefed = derefPointer(this, wide);
-            return _usuallyTrue(derefed >= dataStart)
-                && _usuallyTrue(derefed < this)  // could fail if ptr wraps around past 0
-                && _usuallyTrue(derefed->validate(dataStart, this, true));
-        }
+    bool Value::validate(const void *dataStart, const void *dataEnd) const noexcept {
         auto t = tag();
-        size_t size = dataSize();
-        if (_usuallyTrue(t == kArrayTag || t == kDictTag)) {
-            wide = isWideArray();
-            size_t itemCount = ((const Array*)this)->count();
-            if (_usuallyTrue(t == kDictTag))
-                itemCount *= 2;
-            // Check that size fits:
-            size += itemCount * width(wide);
-            if (_usuallyFalse(offsetby(this, size) > dataEnd))
-                return false;
+        if (t == kArrayTag || t == kDictTag) {
+            Array::impl array(this);
+            if (_usuallyTrue(array._count > 0)) {
+                // For validation purposes a Dict is just an array with twice as many items:
+                size_t itemCount = array._count;
+                if (_usuallyTrue(t == kDictTag))
+                    itemCount *= 2;
+                // Check that size fits:
+                auto itemsSize = itemCount * width(array._wide);
+                if (_usuallyFalse(offsetby(array._first, itemsSize) > dataEnd))
+                    return false;
 
-            // Check each Array/Dict element:
-            if (_usuallyTrue(itemCount > 0)) {
-                auto item = Array::impl(this)._first;
+                // Check each Array/Dict element:
+                auto item = array._first;
                 while (itemCount-- > 0) {
-                    auto second = item->next(wide);
-                    if (_usuallyFalse(!item->validate(dataStart, second, wide)))
-                        return false;
-                    item = second;
+                    auto nextItem = item->next(array._wide);
+                    if (item->isPointer()) {
+                        item = item->carefulDeref(array._wide, dataStart, this);
+                        if (_usuallyFalse(item == nullptr))
+                            return false;
+                        if (_usuallyFalse(!item->validate(dataStart, this)))
+                            return false;
+                    } else {
+                        if (_usuallyFalse(!item->validate(dataStart, nextItem)))
+                            return false;
+                    }
+                    item = nextItem;
                 }
+                return true;
             }
-            return true;
-        } else {
-            // Non-collection; just check that size fits:
-            return offsetby(this, size) <= dataEnd;
         }
+        // Default: just check that size fits:
+        return offsetby(this, dataSize()) <= dataEnd;
     }
 
     // This does not include the inline items in arrays/dicts
@@ -317,11 +306,30 @@ namespace fleece {
         }
     }
 
+    const Value* Value::carefulDeref(bool wide,
+                                     const void *dataStart, const void *dataEnd) const noexcept
+    {
+        auto target = derefPointer(this, wide);
+        if (_usuallyFalse(target < dataStart) || _usuallyFalse(target >= dataEnd))
+            return nullptr;
+        while (_usuallyFalse(target->isPointer())) {
+            auto target2 = derefPointer<true>(target);
+            if (_usuallyFalse(target2 < dataStart) || _usuallyFalse(target2 >= target))
+                return nullptr;
+            target = target2;
+        }
+        return target;
+    }
+
+
+#pragma mark - POINTERS:
+
 
     const Value* Value::deref(const Value *v, bool wide) {
-        while (v->isPointer()) {
+        if (v->isPointer()) {
             v = derefPointer(v, wide);
-            wide = true;                        // subsequent pointers must be wide
+            while (_usuallyFalse(v->isPointer()))
+                v = derefPointer<true>(v);      // subsequent pointers must be wide
         }
         return v;
     }
