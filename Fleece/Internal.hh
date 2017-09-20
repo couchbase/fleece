@@ -27,7 +27,7 @@
  0000iiii iiiiiiii       small integer (12-bit, signed, range ±2048)
  0001uccc iiiiiiii...    long integer (u = unsigned?; ccc = byte count - 1) LE integer follows
  0010s--- --------...    floating point (s = 0:float, 1:double). LE float data follows.
- 0011ss-- --------       special (s = 0:null, 1:false, 2:true)
+ 0011ssss --------       special values like null, true, false (see kSpecialValue constants below)
  0100cccc ssssssss...    string (cccc is byte count, or if it’s 15 then count follows as varint)
  0101cccc dddddddd...    binary data (same as string)
  0110wccc cccccccc...    array (c = 11-bit item count, if 2047 then count follows as varint;
@@ -44,10 +44,14 @@ namespace fleece {
 
         enum {
             kNarrow = 2,
-            kWide   = 4
+            kWide   = 4,
+            kFat    = 10,
         };
 
-        static inline int width(bool wide) { return wide ? kWide : kNarrow; }
+        static inline int width(uint8_t wide) {
+            static constexpr int kWidths[3] = {kNarrow, kWide, kFat};
+            return kWidths[wide];
+        }
 
         // The actual tags used in the encoded data, i.e. high 4 bits of 1st byte:
         enum tags : uint8_t {
@@ -62,11 +66,15 @@ namespace fleece {
             kPointerTagFirst = 8            // 9...15 are also pointers
         };
 
-        // Interpretation of ss-- in a special value:
+        // First byte of a special value (including the tag plus the 'ssss' bits)
         enum {
-            kSpecialValueNull = 0x00,       // 0000
-            kSpecialValueFalse= 0x04,       // 0100
-            kSpecialValueTrue = 0x08,       // 1000
+            kSpecialValueNull         = (kSpecialTag << 4) | 0x00,   // 0011 0000
+            kSpecialValueFalse        = (kSpecialTag << 4) | 0x04,   // 0011 0100
+            kSpecialValueTrue         = (kSpecialTag << 4) | 0x08,   // 0011 1000
+
+            // These special values are never stored; they're only found as Value*s in memory.
+            kSpecialValueMutableArray = (kSpecialTag << 4) | 0x01,   // 0011 0001
+            kSpecialValueMutableDict  = (kSpecialTag << 4) | 0x02,   // 0011 0010
         };
 
         // Min/max length of string that will be considered for sharing
@@ -76,6 +84,8 @@ namespace fleece {
 
         // Minimum array count that has to be stored outside the header
         static const uint32_t kLongArrayCount = 0x07FF;
+
+        class MutableValue;
 
 #ifndef NDEBUG
         extern std::atomic<unsigned> gTotalComparisons;

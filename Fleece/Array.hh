@@ -7,7 +7,6 @@
 //
 
 #pragma once
-
 #include "Value.hh"
 
 namespace fleece {
@@ -16,18 +15,6 @@ namespace fleece {
 
     /** A Value that's an array. */
     class Array : public Value {
-        struct impl {
-            const Value* _first;
-            uint32_t _count;
-            bool _wide;
-
-            impl(const Value*) noexcept;
-            const Value* second() const noexcept      {return _first->next(_wide);}
-            const Value* firstValue() const noexcept;
-            const Value* operator[] (unsigned index) const noexcept;
-            size_t indexOf(const Value *v) const noexcept;
-        };
-
     public:
 
         /** The number of items in the array. */
@@ -43,6 +30,23 @@ namespace fleece {
         /** An empty Array. */
         static const Array* const kEmpty;
 
+    private:
+        class impl {
+        public:
+            impl(const Value*) noexcept;
+
+            const Value* _first;
+            uint32_t _count;
+            uint8_t _wide;
+
+            const Value* second() const noexcept      {return _first->next(_wide);}
+            const Value* firstValue() const noexcept;
+            const Value* operator[] (unsigned index) const noexcept;
+            size_t indexOf(const Value *v) const noexcept;
+            void offset(uint32_t n);
+        };
+
+    public:
         /** A stack-based array iterator */
         class iterator : private impl {
         public:
@@ -60,7 +64,7 @@ namespace fleece {
 
             /** Random access to items. Index is relative to the current item.
                 This is very fast, faster than array::get(). */
-            const Value* operator[] (unsigned i) noexcept    {return ((impl&)*this)[i];}
+            const Value* operator[] (unsigned i) noexcept    {return impl::operator[](i);}
 
             /** Returns false when the iterator reaches the end. */
             explicit operator bool() const noexcept          {return _count > 0;}
@@ -83,7 +87,10 @@ namespace fleece {
 
         constexpr Array()  :Value(internal::kArrayTag, 0, 0) { }
 
+    protected:
+        constexpr Array(internal::tags tag, int tiny, int byte1 = 0)  :Value(tag, tiny, byte1) { }
     private:
+        friend class MutableArray;
         friend class Value;
         friend class Dict;
         template <bool WIDE> friend struct dictImpl;

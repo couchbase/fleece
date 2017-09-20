@@ -261,9 +261,9 @@ namespace fleece {
     const Value* Dict::get(slice keyToFind) const noexcept {
         if (isWideArray())
             return dictImpl<true>(this).get(keyToFind);
-            else
-                return dictImpl<false>(this).get(keyToFind);
-                }
+        else
+            return dictImpl<false>(this).get(keyToFind);
+    }
 
     const Value* Dict::get(slice keyToFind, SharedKeys *sk) const noexcept {
         if (isWideArray())
@@ -296,7 +296,6 @@ namespace fleece {
     static int sortKeysCmp(const void *a, const void *b) {
         auto k1 = (Dict::key*)a, k2 = (Dict::key*)b;
         return k1->compare(*k2);
-
     }
 
     void Dict::sortKeys(key keys[], size_t count) noexcept {

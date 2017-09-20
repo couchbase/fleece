@@ -48,10 +48,14 @@ namespace fleece {
     valueType Value::type() const noexcept {
         auto t = tag();
         if (_usuallyFalse(t == kSpecialTag)) {
-            switch (tinyValue()) {
+            switch (_byte[0]) {
                 case kSpecialValueFalse:
                 case kSpecialValueTrue:
                     return kBoolean;
+                case kSpecialValueMutableArray:
+                    return kArray;
+                case kSpecialValueMutableDict:
+                    return kDict;
                 case kSpecialValueNull:
                 default:
                     return kNull;
@@ -65,7 +69,7 @@ namespace fleece {
     bool Value::asBool() const noexcept {
         switch (tag()) {
             case kSpecialTag:
-                return tinyValue() == kSpecialValueTrue;
+                return _byte[0] != kSpecialValueFalse && _byte[0] != kSpecialValueNull;
             case kShortIntTag:
             case kIntTag:
             case kFloatTag:
@@ -78,7 +82,7 @@ namespace fleece {
     int64_t Value::asInt() const noexcept {
         switch (tag()) {
             case kSpecialTag:
-                return tinyValue() == kSpecialValueTrue;
+                return _byte[0] == kSpecialValueTrue;
             case kShortIntTag: {
                 uint16_t i = shortValue();
                 if (_usuallyFalse(i & 0x0800))
@@ -155,7 +159,7 @@ namespace fleece {
                 break;
             }
             case kSpecialTag: {
-                switch (tinyValue()) {
+                switch (_byte[0]) {
                     case kSpecialValueNull:
                         str = (char*)"null";
                         break;
@@ -165,6 +169,9 @@ namespace fleece {
                     case kSpecialValueTrue:
                         str = (char*)"true";
                         break;
+                    case kSpecialValueMutableArray:
+                    case kSpecialValueMutableDict:
+                        return alloc_slice();
                     default:
                         str = (char*)"{?special?}";
                         break;
@@ -179,7 +186,7 @@ namespace fleece {
                 break;
             }
             default:
-                return alloc_slice(asString());
+                return alloc_slice();
         }
         return alloc_slice(str);
     }
@@ -193,13 +200,19 @@ namespace fleece {
     }
 
     const Array* Value::asArray() const noexcept {
-        if (_usuallyFalse(tag() != kArrayTag))
+        if (_usuallyFalse(tag() != kArrayTag && _byte[0] != kSpecialValueMutableArray))
             return nullptr;
         return (const Array*)this;
     }
 
+    MutableArray* Value::asMutableArray() const noexcept {
+        if (_usuallyFalse(_byte[0] != kSpecialValueMutableArray))
+            return nullptr;
+        return (MutableArray*)this;
+    }
+
     const Dict* Value::asDict() const noexcept {
-        if (_usuallyFalse(tag() != kDictTag))
+        if (_usuallyFalse(tag() != kDictTag && _byte[0] != kSpecialValueMutableDict))
             return nullptr;
         return (const Dict*)this;
     }
@@ -285,6 +298,9 @@ namespace fleece {
                 }
                 return true;
             }
+        } else if (_usuallyFalse(t == kSpecialTag)) {
+            if (_usuallyFalse(_byte[0] & 0x3))
+                return 0;       // Ephemeral value (mutable): illegal in stored data
         }
         // Default: just check that size fits:
         return offsetby(this, dataSize()) <= dataEnd;

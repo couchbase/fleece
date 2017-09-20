@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		270515571D905C1D00D62D05 /* Fleece+CoreFoundation.mm in Sources */ = {isa = PBXBuildFile; fileRef = 270515531D9058F200D62D05 /* Fleece+CoreFoundation.mm */; settings = {COMPILER_FLAGS = "-Wno-return-type-c-linkage"; }; };
+		270873081F71BAF500DA944C /* MutableArray.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270873061F71BAF500DA944C /* MutableArray.hh */; };
+		270873091F71BAF500DA944C /* MutableArray.cc in Sources */ = {isa = PBXBuildFile; fileRef = 270873071F71BAF500DA944C /* MutableArray.cc */; };
+		2708730B1F71CA5A00DA944C /* MutableTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2708730A1F71CA5A00DA944C /* MutableTests.cc */; };
 		270FA2781BF53CEA005DCB13 /* Value.cc in Sources */ = {isa = PBXBuildFile; fileRef = 270FA26A1BF53CEA005DCB13 /* Value.cc */; };
 		270FA2791BF53CEA005DCB13 /* Value.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA26B1BF53CEA005DCB13 /* Value.hh */; };
 		270FA27B1BF53CEA005DCB13 /* Value+ObjC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 270FA26D1BF53CEA005DCB13 /* Value+ObjC.mm */; };
@@ -107,6 +110,9 @@
 		270515521D9053BE00D62D05 /* Fleece+CoreFoundation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Fleece+CoreFoundation.h"; sourceTree = "<group>"; };
 		270515531D9058F200D62D05 /* Fleece+CoreFoundation.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "Fleece+CoreFoundation.mm"; path = "../ObjC/Fleece+CoreFoundation.mm"; sourceTree = "<group>"; };
 		270515551D90596000D62D05 /* Fleece_C_impl.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Fleece_C_impl.hh; sourceTree = "<group>"; };
+		270873061F71BAF500DA944C /* MutableArray.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MutableArray.hh; sourceTree = "<group>"; };
+		270873071F71BAF500DA944C /* MutableArray.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MutableArray.cc; sourceTree = "<group>"; };
+		2708730A1F71CA5A00DA944C /* MutableTests.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MutableTests.cc; sourceTree = "<group>"; };
 		270FA25C1BF53CAD005DCB13 /* libFleece.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libFleece.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		270FA26A1BF53CEA005DCB13 /* Value.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Value.cc; sourceTree = "<group>"; };
 		270FA26B1BF53CEA005DCB13 /* Value.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Value.hh; sourceTree = "<group>"; };
@@ -260,6 +266,8 @@
 				27CA08411F6B0E9400FF8C71 /* Dict.cc */,
 				27CA08401F6B0E9400FF8C71 /* Dict.hh */,
 				279AC53B1C097941002C80DB /* Value+Dump.cc */,
+				270873061F71BAF500DA944C /* MutableArray.hh */,
+				270873071F71BAF500DA944C /* MutableArray.cc */,
 				27A924CD1D9C32E800086206 /* Path.cc */,
 				27A924CE1D9C32E800086206 /* Path.hh */,
 				27298E7F1C04E665000CFBA8 /* Encoder.cc */,
@@ -330,6 +338,7 @@
 				279AC52A1C07776A002C80DB /* ValueTests.cc */,
 				272E5A5B1BF800A100848580 /* EncoderTests.cc */,
 				27E3DD521DB7DB1C00F2872D /* SharedKeysTests.cc */,
+				2708730A1F71CA5A00DA944C /* MutableTests.cc */,
 				27298E771C01A461000CFBA8 /* PerfTests.cc */,
 				272E5A5E1BF91DBE00848580 /* ObjCTests.mm */,
 				276D15481E008E7A00543B1B /* JSON5Tests.cc */,
@@ -435,6 +444,7 @@
 				278163B61CE69CA800B94E32 /* Fleece.h in Headers */,
 				275CED531D3EF7BE001DE46C /* FleeceException.hh in Headers */,
 				27E3DD431DB6A14200F2872D /* SharedKeys.hh in Headers */,
+				270873081F71BAF500DA944C /* MutableArray.hh in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -548,6 +558,7 @@
 				275CED521D3EF7BE001DE46C /* FleeceException.cc in Sources */,
 				278163B51CE69CA800B94E32 /* Fleece_C_impl.cc in Sources */,
 				270515571D905C1D00D62D05 /* Fleece+CoreFoundation.mm in Sources */,
+				270873091F71BAF500DA944C /* MutableArray.cc in Sources */,
 				272E5A611BF91F6C00848580 /* slice+CoreFoundation.cc in Sources */,
 				270FA2821BF53CEA005DCB13 /* slice.cc in Sources */,
 				270FA2781BF53CEA005DCB13 /* Value.cc in Sources */,
@@ -575,6 +586,7 @@
 				27E3DD531DB7DB1C00F2872D /* SharedKeysTests.cc in Sources */,
 				276D15491E008E7A00543B1B /* JSON5Tests.cc in Sources */,
 				272E5A5F1BF91DBE00848580 /* ObjCTests.mm in Sources */,
+				2708730B1F71CA5A00DA944C /* MutableTests.cc in Sources */,
 				279AC52B1C07776A002C80DB /* ValueTests.cc in Sources */,
 				278163B91CE6BB8C00B94E32 /* C_Test.c in Sources */,
 			);

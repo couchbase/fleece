@@ -29,6 +29,7 @@ namespace fleece {
 
     class Array;
     class Dict;
+    class MutableArray;
     class Writer;
     class SharedKeys;
 
@@ -101,6 +102,9 @@ namespace fleece {
 
         /** If this value is an array, returns it cast to 'const Array*', else returns nullptr. */
         const Array* asArray() const noexcept;
+
+        /** If this value is a mutable array, returns it cast as such, else nullptr. */
+        MutableArray* asMutableArray() const noexcept;
 
         /** If this value is a dictionary, returns it cast to 'const Dict*', else returns nullptr. */
         const Dict* asDict() const noexcept;
@@ -212,8 +216,8 @@ namespace fleece {
         template <bool WIDE>
         static const Value* deref(const Value *v);
 
-        const Value* next(bool wide) const noexcept
-                                {return offsetby(this, wide ? internal::kWide : internal::kNarrow);}
+        const Value* next(uint8_t wide) const noexcept
+                                                {return offsetby(this, internal::width(wide));}
         template <bool WIDE>
         const Value* next() const noexcept       {return next(WIDE);}
 
@@ -230,6 +234,7 @@ namespace fleece {
 
         friend class Array;
         friend class Dict;
+        friend class internal::MutableValue;
         friend class Encoder;
         friend class ValueTests;
         friend class EncoderTests;
