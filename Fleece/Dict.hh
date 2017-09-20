@@ -47,6 +47,30 @@ namespace fleece {
         /** An empty Dict. */
         static const Dict* const kEmpty;
 
+
+        class iterator;
+
+        iterator begin() const noexcept                      {return iterator(this);}
+        iterator begin(const SharedKeys *sk) const noexcept  {return iterator(this, sk);}
+
+
+        class key;
+
+        /** Looks up the Value for a key, in a form that can cache the key's Fleece object.
+            Using the Fleece object is significantly faster than a normal get. */
+        const Value* get(key&) const noexcept;
+
+        /** Looks up multiple keys at once; this can be a lot faster than multiple gets.
+            @param keys  Array of key objects. MUST be sorted lexicographically in increasing order.
+            @param values  The corresponding values (or NULLs) will be written here.
+            @param count  The number of keys and values.
+            @return  The number of keys that were found. */
+        size_t get(key keys[], const Value* values[], size_t count) const noexcept;
+
+        /** Sorts an array of keys, a prerequisite of the multi-key get() method. */
+        static void sortKeys(key keys[], size_t count) noexcept;
+
+
         /** A stack-based dictionary iterator */
         class iterator {
         public:
@@ -54,14 +78,14 @@ namespace fleece {
             iterator(const Dict*, const SharedKeys*) noexcept;
 
             /** Returns the number of _remaining_ items. */
-            uint32_t count() const noexcept                  {return _a._count;}
+            uint32_t count() const noexcept                  {return _d._count;}
 
             slice keyString() const noexcept;
             const Value* key() const noexcept                {return _key;}
             const Value* value() const noexcept              {return _value;}
 
             /** Returns false when the iterator reaches the end. */
-            explicit operator bool() const noexcept          {return _a._count > 0;}
+            explicit operator bool() const noexcept          {return _d._count > 0;}
 
             /** Steps to the next item. (Throws if there are no more items.) */
             iterator& operator ++();
@@ -75,18 +99,16 @@ namespace fleece {
 
         private:
             void readKV() noexcept;
-            const Value* rawKey() noexcept             {return _a._first;}
-            const Value* rawValue() noexcept           {return _a.second();}
+            const Value* rawKey() noexcept             {return _d._first;}
+            const Value* rawValue() noexcept           {return _d.second();}
 
-            Array::impl _a;
+            Array::impl _d;
             const Value *_key, *_value;
             const SharedKeys *_sharedKeys {nullptr};
 
             friend class Value;
         };
 
-        iterator begin() const noexcept                      {return iterator(this);}
-        iterator begin(const SharedKeys *sk) const noexcept  {return iterator(this, sk);}
 
         /** An abstracted key for dictionaries. It will cache the key as an encoded Value, and it
             will cache the index at which the key was last found, which speeds up succssive
@@ -118,24 +140,7 @@ namespace fleece {
             template <bool WIDE> friend struct dictImpl;
         };
 
-        /** Looks up the Value for a key, in a form that can cache the key's Fleece object.
-            Using the Fleece object is significantly faster than a normal get. */
-        const Value* get(key&) const noexcept;
-
-        /** Looks up multiple keys at once; this can be a lot faster than multiple gets.
-            @param keys  Array of key objects. MUST be sorted lexicographically in increasing order.
-            @param values  The corresponding values (or NULLs) will be written here.
-            @param count  The number of keys and values.
-            @return  The number of keys that were found. */
-        size_t get(key keys[], const Value* values[], size_t count) const noexcept;
-
-        /** Sorts an array of keys, a prerequisite of the multi-key get() method. */
-        static void sortKeys(key keys[], size_t count) noexcept;
-
         constexpr Dict()  :Value(internal::kDictTag, 0, 0) { }
-
-    private:
-        friend class Value;
     };
 
 }

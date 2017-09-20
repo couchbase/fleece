@@ -178,6 +178,7 @@
 		27A8B4E91EC4D0B700BB4C07 /* Stopwatch.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Stopwatch.hh; sourceTree = "<group>"; };
 		27A924CD1D9C32E800086206 /* Path.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Path.cc; sourceTree = "<group>"; };
 		27A924CE1D9C32E800086206 /* Path.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Path.hh; sourceTree = "<group>"; };
+		27B546351F72FBEF00DC0638 /* DictImpl.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DictImpl.hh; sourceTree = "<group>"; };
 		27C4AC941CDE843F00938365 /* Example.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = Example.md; sourceTree = "<group>"; };
 		27C4AC961CDFFDA100938365 /* Performance.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = Performance.md; sourceTree = "<group>"; };
 		27C4ACAA1CE5146500938365 /* Array.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Array.cc; sourceTree = "<group>"; };
@@ -265,6 +266,7 @@
 				27C4ACAB1CE5146500938365 /* Array.hh */,
 				27CA08411F6B0E9400FF8C71 /* Dict.cc */,
 				27CA08401F6B0E9400FF8C71 /* Dict.hh */,
+				27B546351F72FBEF00DC0638 /* DictImpl.hh */,
 				279AC53B1C097941002C80DB /* Value+Dump.cc */,
 				270873061F71BAF500DA944C /* MutableArray.hh */,
 				270873071F71BAF500DA944C /* MutableArray.cc */,

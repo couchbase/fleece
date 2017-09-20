@@ -31,15 +31,14 @@ namespace fleece {
         static const Array* const kEmpty;
 
     private:
-        class impl {
-        public:
+        struct impl {
             impl(const Value*) noexcept;
 
             const Value* _first;
             uint32_t _count;
             uint8_t _wide;
 
-            const Value* second() const noexcept      {return _first->next(_wide);}
+            const Value* second() const noexcept            {return _first->next(_wide);}
             const Value* firstValue() const noexcept;
             const Value* operator[] (unsigned index) const noexcept;
             size_t indexOf(const Value *v) const noexcept;
