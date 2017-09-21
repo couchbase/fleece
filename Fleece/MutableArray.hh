@@ -8,55 +8,10 @@
 
 #pragma once
 #include "Array.hh"
+#include "MutableValue.hh"
 
 namespace fleece {
-    class MutableArray;
     class MutableDict;
-
-
-    namespace internal {
-        class MutableValue : public Value {
-        public:
-            MutableValue()
-            :Value(internal::kSpecialTag, internal::kSpecialValueNull) { }
-
-            static const Value* derefPointer(const MutableValue *v) {
-                return (Value*)( _dec64(*(size_t*)v) << 1 );
-            }
-
-            const Value* deref() const {
-                return isPointer() ? derefPointer(this) : this;
-            }
-
-            void set(internal::tags tag, int tiny) {
-                _byte[0] = (uint8_t)((tag<<4) | tiny);
-            }
-
-            void set(internal::tags tag, int tiny, int byte1) {
-                set(tag, tiny);
-                _byte[1] = (uint8_t)byte1;
-            }
-
-            void set(Null);
-            void set(bool);
-            void set(int i)         {set((int64_t)i);}
-            void set(int64_t);
-            void set(uint64_t);
-            void set(slice s)       {set(internal::kStringTag, s);}
-            void set(const Value*);
-
-            void copy(const Value*);
-
-            MutableArray* makeArrayMutable();
-            MutableDict* makeDictMutable();
-
-        private:
-            void set(uint64_t i, bool isSmall, bool isUnsigned);
-            void set(internal::tags, slice s);
-
-            uint8_t _moreBytes[6];  // For a total of 10 bytes, enough to hold all value types
-        };
-    }
 
 
     class MutableArray : public Array {
@@ -73,6 +28,8 @@ namespace fleece {
         MutableArray(const Array*);
 
         uint32_t count() const                      {return (uint32_t)_items.size();}
+
+        bool isChanged() const;
 
         template <typename T>
         void set(uint32_t index, T t)               {_items[index].set(t);}
@@ -97,6 +54,7 @@ namespace fleece {
 
     private:
         std::vector<internal::MutableValue> _items;
+        bool _changed {false};
 
         friend class Array::impl;
     };

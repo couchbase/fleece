@@ -29,6 +29,8 @@ namespace fleece {
 
         MutableDict(const Dict*);
 
+        bool isChanged() const;
+
         // Warning: Modifying a MutableDict invalidates all Dict::iterators on it!
 
         template <typename T>
@@ -51,10 +53,12 @@ namespace fleece {
     private:
         internal::MutableValue& makeValueForKey(slice key);
         MutableArray* kvArray();
+        void markChanged();
 
         std::unordered_map<slice, internal::MutableValue, sliceHash> _map;
         std::deque<alloc_slice> _backingSlices;
         std::unique_ptr<MutableArray> _kvArray;
+        bool _changed {false};
         bool _sortKeys {false};
 
         friend class Array::impl;

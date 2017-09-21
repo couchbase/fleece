@@ -45,7 +45,7 @@ namespace fleece {
         enum {
             kNarrow = 2,
             kWide   = 4,
-            kFat    = 10,
+            kFat    = 16,
         };
 
         static inline int width(uint8_t wide) {

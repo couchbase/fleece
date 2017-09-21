@@ -57,6 +57,8 @@
 		27A924D01D9C32E800086206 /* Path.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27A924CE1D9C32E800086206 /* Path.hh */; };
 		27BED6221F73056A008AA71B /* MutableDict.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27BED6201F73056A008AA71B /* MutableDict.cc */; };
 		27BED6231F73056A008AA71B /* MutableDict.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27BED6211F73056A008AA71B /* MutableDict.hh */; };
+		27AFA1551F7426FD00A0FC2E /* MutableValue.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27AFA1531F7426FD00A0FC2E /* MutableValue.hh */; };
+		27AFA1561F7426FD00A0FC2E /* MutableValue.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27AFA1541F7426FD00A0FC2E /* MutableValue.cc */; };
 		27C4ACAC1CE5146500938365 /* Array.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27C4ACAA1CE5146500938365 /* Array.cc */; };
 		27C4ACAD1CE5146500938365 /* Array.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C4ACAB1CE5146500938365 /* Array.hh */; };
 		27CA08421F6B0E9400FF8C71 /* Dict.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27CA08401F6B0E9400FF8C71 /* Dict.hh */; };
@@ -183,6 +185,8 @@
 		27B546351F72FBEF00DC0638 /* DictImpl.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DictImpl.hh; sourceTree = "<group>"; };
 		27BED6201F73056A008AA71B /* MutableDict.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MutableDict.cc; sourceTree = "<group>"; };
 		27BED6211F73056A008AA71B /* MutableDict.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MutableDict.hh; sourceTree = "<group>"; };
+		27AFA1531F7426FD00A0FC2E /* MutableValue.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MutableValue.hh; sourceTree = "<group>"; };
+		27AFA1541F7426FD00A0FC2E /* MutableValue.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MutableValue.cc; sourceTree = "<group>"; };
 		27C4AC941CDE843F00938365 /* Example.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = Example.md; sourceTree = "<group>"; };
 		27C4AC961CDFFDA100938365 /* Performance.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = Performance.md; sourceTree = "<group>"; };
 		27C4ACAA1CE5146500938365 /* Array.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Array.cc; sourceTree = "<group>"; };
@@ -272,6 +276,8 @@
 				27CA08401F6B0E9400FF8C71 /* Dict.hh */,
 				27B546351F72FBEF00DC0638 /* DictImpl.hh */,
 				279AC53B1C097941002C80DB /* Value+Dump.cc */,
+				27AFA1531F7426FD00A0FC2E /* MutableValue.hh */,
+				27AFA1541F7426FD00A0FC2E /* MutableValue.cc */,
 				270873061F71BAF500DA944C /* MutableArray.hh */,
 				270873071F71BAF500DA944C /* MutableArray.cc */,
 				27BED6201F73056A008AA71B /* MutableDict.cc */,
@@ -440,6 +446,7 @@
 				27CA08421F6B0E9400FF8C71 /* Dict.hh in Headers */,
 				2797BCAD1C0FBFDE00E5C991 /* StringTable.hh in Headers */,
 				27FE87F41E53E43200C5CF3F /* JSONEncoder.hh in Headers */,
+				27AFA1551F7426FD00A0FC2E /* MutableValue.hh in Headers */,
 				270FA2831BF53CEA005DCB13 /* slice.hh in Headers */,
 				270FA2851BF53CEA005DCB13 /* varint.hh in Headers */,
 				270FA2791BF53CEA005DCB13 /* Value.hh in Headers */,
@@ -580,6 +587,7 @@
 				27298E3C1C00F812000CFBA8 /* JSONConverter.cc in Sources */,
 				279AC53C1C097941002C80DB /* Value+Dump.cc in Sources */,
 				27FE87F31E53E43200C5CF3F /* JSONEncoder.cc in Sources */,
+				27AFA1561F7426FD00A0FC2E /* MutableValue.cc in Sources */,
 				2797BCAC1C0FBFDE00E5C991 /* StringTable.cc in Sources */,
 				27298E651C00F8A9000CFBA8 /* jsonsl.c in Sources */,
 				270FA27F1BF53CEA005DCB13 /* Writer.cc in Sources */,

@@ -28,11 +28,21 @@ namespace fleece {
     }
 
     
+    bool MutableDict::isChanged() const {
+        if (_changed)
+            return true;
+        for (auto &item : _map)
+            if (item.second.isChanged())
+                return true;
+        return false;
+    }
+
+
     MutableValue& MutableDict::makeValueForKey(slice key) {
         auto it = _map.find(key);
         if (it != _map.end())
             return it->second;
-        _kvArray.reset();
+        markChanged();
         alloc_slice allocedKey(key);
         _backingSlices.push_back(allocedKey);
         return _map[allocedKey];    // allocates new pair
@@ -41,14 +51,14 @@ namespace fleece {
 
     void MutableDict::remove(slice key) {
         _map.erase(key);        //FIX: Should remove it from _backingSlices too
-        _kvArray.reset();
+        markChanged();
     }
 
 
     void MutableDict::removeAll() {
         _map.clear();
         _backingSlices.clear();
-        _kvArray.reset();
+        markChanged();
     }
 
 
@@ -57,6 +67,12 @@ namespace fleece {
             _sortKeys = s;
             _kvArray.reset();
         }
+    }
+
+
+    void MutableDict::markChanged() {
+        _kvArray.reset();
+        _changed = true;
     }
 
 

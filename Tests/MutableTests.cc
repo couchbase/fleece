@@ -51,7 +51,9 @@ namespace fleece {
             CHECK(!i);
         }
 
+        CHECK(!ma.isChanged());
         ma.resize(9);
+        CHECK(ma.isChanged());
         REQUIRE(ma.count() == 9);
         REQUIRE(a->count() == 9);
         REQUIRE(!a->empty());
@@ -118,7 +120,9 @@ namespace fleece {
         ma.set(1, 456);
 
         MutableArray mb;
+        CHECK(!mb.isChanged());
         mb.append(&ma);
+        CHECK(mb.isChanged());
 
         CHECK(mb.get(0) == &ma);
         CHECK(mb.makeArrayMutable(0) == &ma);
@@ -185,6 +189,7 @@ namespace fleece {
             Dict::iterator i(d);
             CHECK(!i);
         }
+        CHECK(!md.isChanged());
 
         md.set("null"_sl, nullValue);
         md.set("f"_sl, false);
