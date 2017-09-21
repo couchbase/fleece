@@ -30,6 +30,7 @@ namespace fleece {
     class Array;
     class Dict;
     class MutableArray;
+    class MutableDict;
     class Writer;
     class SharedKeys;
 
@@ -44,6 +45,12 @@ namespace fleece {
         kArray,
         kDict
     };
+
+
+    class Null {
+    };
+
+    constexpr Null nullValue;
 
 
     /* An encoded data value */
@@ -109,6 +116,9 @@ namespace fleece {
         /** If this value is a dictionary, returns it cast to 'const Dict*', else returns nullptr. */
         const Dict* asDict() const noexcept;
 
+        /** If this value is a mutable dict, returns it cast as such, else nullptr. */
+        MutableDict* asMutableDict() const noexcept;
+
         /** Converts any _non-collection_ type to string form. */
         alloc_slice toString() const;
 
@@ -172,6 +182,8 @@ namespace fleece {
         bool isWideArray() const noexcept     {return (_byte[0] & 0x08) != 0;}
         uint32_t countValue() const noexcept  {return (((uint32_t)_byte[0] << 8) | _byte[1]) & 0x07FF;}
         bool countIsZero() const noexcept     {return _byte[1] == 0 && (_byte[0] & 0x7) == 0;}
+        bool isMutableArray() const noexcept  {return _byte[0] == internal::kSpecialValueMutableArray;}
+        bool isMutableDict() const noexcept   {return _byte[0] == internal::kSpecialValueMutableDict;}
 
         // pointers:
 
@@ -206,6 +218,7 @@ namespace fleece {
 
         template <bool WIDE>
         static const Value* derefPointer(const Value *v) {
+            assert(v->pointerValue<WIDE>() > 0);
             return offsetby(v, -(ptrdiff_t)v->pointerValue<WIDE>());
         }
         static const Value* derefPointer(const Value *v, bool wide) {

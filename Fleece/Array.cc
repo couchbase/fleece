@@ -15,6 +15,7 @@
 
 #include "Array.hh"
 #include "MutableArray.hh"
+#include "MutableDict.hh"
 #include "Internal.hh"
 #include "PlatformCompat.hh"
 #include "varint.hh"
@@ -34,7 +35,8 @@ namespace fleece {
             _first = nullptr;
             _wide = false;
             _count = 0;
-        } else if (_usuallyTrue(v->_byte[0] != kSpecialValueMutableArray)) {
+        } else if (_usuallyTrue(v->tag() >= kArrayTag)) {
+            // Normal Array (or Dict, viewed as alternating keys/values)
             _first = (const Value*)(&v->_byte[2]);
             _wide = v->isWideArray();
             _count = v->countValue();
@@ -49,11 +51,25 @@ namespace fleece {
                 _first = offsetby(_first, countSize + (countSize & 1));
             }
         } else {
-            auto mut = (MutableArray*)v;
-            _count = (uint32_t)mut->_items.size();
+            // Mutable Array or Dict:
+            MutableArray *mut;
+            if (v->isMutableArray()) {
+                mut = (MutableArray*)v;
+                _count = mut->count();
+            } else {
+                 mut = ((MutableDict*)v)->kvArray();
+                _count = mut->count() / 2;
+            }
             _first = mut->first();
             _wide = kMutableWide;
         }
+    }
+
+    const Value* Array::impl::deref(const Value *v) const noexcept {
+        if (_usuallyTrue(_wide != kMutableWide))
+            return Value::deref(v, _wide);
+        else
+            return ((MutableValue*)v)->deref();
     }
 
     const Value* Array::impl::operator[] (unsigned index) const noexcept {
@@ -70,10 +86,8 @@ namespace fleece {
     const Value* Array::impl::firstValue() const noexcept {
         if (_usuallyFalse(_count == 0))
             return nullptr;
-        else if (_usuallyTrue(_wide != kMutableWide))
-            return Value::deref(_first, _wide);
         else
-            return ((MutableValue*)_first)->deref();
+            return deref(_first);
     }
 
     size_t Array::impl::indexOf(const Value *v) const noexcept {

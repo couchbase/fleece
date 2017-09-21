@@ -40,6 +40,7 @@ namespace fleece {
 
             const Value* second() const noexcept            {return _first->next(_wide);}
             const Value* firstValue() const noexcept;
+            const Value* deref(const Value*) const noexcept;
             const Value* operator[] (unsigned index) const noexcept;
             size_t indexOf(const Value *v) const noexcept;
             void offset(uint32_t n);
@@ -89,9 +90,10 @@ namespace fleece {
     protected:
         constexpr Array(internal::tags tag, int tiny, int byte1 = 0)  :Value(tag, tiny, byte1) { }
     private:
-        friend class MutableArray;
         friend class Value;
         friend class Dict;
+        friend class MutableArray;
+        friend class MutableDict;
         template <bool WIDE> friend struct dictImpl;
     };
 

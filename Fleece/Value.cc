@@ -200,21 +200,27 @@ namespace fleece {
     }
 
     const Array* Value::asArray() const noexcept {
-        if (_usuallyFalse(tag() != kArrayTag && _byte[0] != kSpecialValueMutableArray))
+        if (_usuallyFalse(tag() != kArrayTag && !isMutableArray()))
             return nullptr;
         return (const Array*)this;
     }
 
     MutableArray* Value::asMutableArray() const noexcept {
-        if (_usuallyFalse(_byte[0] != kSpecialValueMutableArray))
+        if (_usuallyFalse(!isMutableArray()))
             return nullptr;
         return (MutableArray*)this;
     }
 
     const Dict* Value::asDict() const noexcept {
-        if (_usuallyFalse(tag() != kDictTag && _byte[0] != kSpecialValueMutableDict))
+        if (_usuallyFalse(tag() != kDictTag && !isMutableDict()))
             return nullptr;
         return (const Dict*)this;
+    }
+
+    MutableDict* Value::asMutableDict() const noexcept {
+        if (_usuallyFalse(!isMutableDict()))
+            return nullptr;
+        return (MutableDict*)this;
     }
 
 

@@ -3,7 +3,7 @@
 //  Fleece
 //
 //  Created by Jens Alfke on 9/19/17.
-//Copyright © 2017 Couchbase. All rights reserved.
+//  Copyright © 2017 Couchbase. All rights reserved.
 //
 
 #include "MutableArray.hh"
@@ -21,7 +21,7 @@ namespace fleece {
         static_assert(kFat == sizeof(MutableValue), "kFat is wrong");
 
 
-        void MutableValue::setNull() {
+        void MutableValue::set(Null) {
             set(kSpecialTag, kSpecialValueNull);
         }
 

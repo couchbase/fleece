@@ -8,6 +8,7 @@
 
 #include "Dict.hh"
 #include "DictImpl.hh"
+#include "MutableDict.hh"
 #include "SharedKeys.hh"
 #include "Internal.hh"
 #include "PlatformCompat.hh"
@@ -22,46 +23,61 @@ namespace fleece {
 
 
     uint32_t Dict::count() const noexcept {
-        return Array::impl(this)._count;
+        if (_usuallyFalse(isMutableDict()))
+            return ((const MutableDict*)this)->count();
+        else
+            return Array::impl(this)._count;
     }
 
     const Value* Dict::get_unsorted(slice keyToFind) const noexcept {
-        if (isWideArray())
+        if (_usuallyFalse(isMutableDict()))
+            return ((const MutableDict*)this)->get(keyToFind);
+        else if (isWideArray())
             return dictImpl<true>(this).get_unsorted(keyToFind);
         else
             return dictImpl<false>(this).get_unsorted(keyToFind);
     }
 
     const Value* Dict::get(slice keyToFind) const noexcept {
-        if (isWideArray())
+        if (_usuallyFalse(isMutableDict()))
+            return ((const MutableDict*)this)->get(keyToFind);
+        else if (isWideArray())
             return dictImpl<true>(this).get(keyToFind);
         else
             return dictImpl<false>(this).get(keyToFind);
     }
 
     const Value* Dict::get(slice keyToFind, SharedKeys *sk) const noexcept {
-        if (isWideArray())
+        if (_usuallyFalse(isMutableDict()))
+            return ((const MutableDict*)this)->get(keyToFind);
+        else if (isWideArray())
             return dictImpl<true>(this).get(keyToFind, sk);
         else
             return dictImpl<false>(this).get(keyToFind, sk);
     }
 
     const Value* Dict::get(int keyToFind) const noexcept {
-        if (isWideArray())
+        if (_usuallyFalse(isMutableDict()))
+            return ((const MutableDict*)this)->get(keyToFind);
+        else if (isWideArray())
             return dictImpl<true>(this).get(keyToFind);
         else
             return dictImpl<false>(this).get(keyToFind);
     }
 
     const Value* Dict::get(key &keyToFind) const noexcept {
-        if (isWideArray())
+        if (_usuallyFalse(isMutableDict()))
+            return ((const MutableDict*)this)->get(keyToFind);
+        else if (isWideArray())
             return dictImpl<true>(this).get(keyToFind);
         else
             return dictImpl<false>(this).get(keyToFind);
     }
 
     size_t Dict::get(key keys[], const Value* values[], size_t count) const noexcept {
-        if (isWideArray())
+        if (_usuallyFalse(isMutableDict()))
+            return ((const MutableDict*)this)->get(keys, values, count);
+        else if (isWideArray())
             return dictImpl<true>(this).get(keys, values, count);
         else
             return dictImpl<false>(this).get(keys, values, count);
@@ -121,8 +137,8 @@ namespace fleece {
 
     void Dict::iterator::readKV() noexcept {
         if (_usuallyTrue(_d._count)) {
-            _key   = deref(_d._first,                _d._wide);
-            _value = deref(_d._first->next(_d._wide), _d._wide);
+            _key   = _d.deref(_d._first);
+            _value = _d.deref(_d.second());
         } else {
             _key = _value = nullptr;
         }

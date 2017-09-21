@@ -8,6 +8,7 @@
 
 #include "FleeceTests.hh"
 #include "MutableArray.hh"
+#include "MutableDict.hh"
 
 namespace fleece {
 
@@ -32,6 +33,7 @@ namespace fleece {
         CHECK(v->toString() == nullslice);
         CHECK(v->asDict() == nullptr);
         CHECK(v->asArray() == &ma);
+        CHECK(v->asMutableDict() == nullptr);
         CHECK(v->asMutableArray() == &ma);
     }
 
@@ -57,7 +59,7 @@ namespace fleece {
         for (int i = 0; i < 9; i++)
             REQUIRE(a->get(i)->type() == kNull);
 
-        ma.setNull(0);
+        ma.set(0, nullValue);
         ma.set(1, false);
         ma.set(2, true);
         ma.set(3, 0);
@@ -143,5 +145,111 @@ namespace fleece {
         CHECK(mc->get(0)->asString() == "totoro"_sl);
         CHECK(mc->get(1)->asString() == "catbus"_sl);
     }
+
+
+    TEST_CASE("MutableDict attributes", "[Mutable]") {
+        MutableDict md;
+        const Value *v = &md;
+
+        CHECK(v->type() == kDict);
+
+        CHECK(v->asBool() == true);
+        CHECK(v->asInt() == 0);
+        CHECK(v->asUnsigned() == 0);
+        CHECK(v->asFloat() == 0.0);
+        CHECK(v->asDouble() == 0.0);
+
+        CHECK(!v->isInteger());
+        CHECK(!v->isUnsigned());
+        CHECK(!v->isDouble());
+
+        CHECK(v->asString() == nullslice);
+        CHECK(v->asData() == nullslice);
+        CHECK(v->toString() == nullslice);
+        CHECK(v->asArray() == nullptr);
+        CHECK(v->asDict() == &md);
+        CHECK(v->asMutableArray() == nullptr);
+        CHECK(v->asMutableDict() == &md);
+    }
+
+
+    TEST_CASE("MutableDict set values", "[Mutable]") {
+        MutableDict md;
+        const Dict *d = &md;
+
+        REQUIRE(d->count() == 0);
+        //REQUIRE(d->empty());  //FIX!
+        CHECK(d->get("foo"_sl) == nullptr);
+
+        {
+            Dict::iterator i(d);
+            CHECK(!i);
+        }
+
+        md.set("null"_sl, nullValue);
+        md.set("f"_sl, false);
+        md.set("t"_sl, true);
+        md.set("z"_sl, 0);
+        md.set("-"_sl, -123);
+        md.set("+"_sl, 2017);
+        md.set("hi"_sl, 123456789);
+        md.set("lo"_sl, -123456789);
+        md.set("str"_sl, "Hot dog"_sl);
+
+        static const slice kExpectedKeys[9] = {
+            "+"_sl, "-"_sl, "f"_sl, "hi"_sl, "lo"_sl, "null"_sl, "str"_sl, "t"_sl, "z"_sl};
+        static const valueType kExpectedTypes[9] = {
+            kNumber, kNumber, kBoolean, kNumber, kNumber, kNull, kString, kBoolean, kNumber};
+        for (int i = 0; i < 9; i++)
+            REQUIRE(d->get(kExpectedKeys[i])->type() == kExpectedTypes[i]);
+
+        CHECK(d->get("f"_sl)->asBool() == false);
+        CHECK(d->get("t"_sl)->asBool() == true);
+        CHECK(d->get("z"_sl)->asInt() == 0);
+        CHECK(d->get("-"_sl)->asInt() == -123);
+        CHECK(d->get("+"_sl)->asInt() == 2017);
+        CHECK(d->get("hi"_sl)->asInt() == 123456789);
+        CHECK(d->get("lo"_sl)->asInt() == -123456789);
+        CHECK(d->get("str"_sl)->asString() == "Hot dog"_sl);
+        CHECK(d->get("foo"_sl) == nullptr);
+
+        {
+            bool found[9] = { };
+            Dict::iterator i(d);
+            for (int n = 0; n < 9; ++n) {
+                std::cerr << "Item " << n << ": " << i.keyString() << " = " << (void*)i.value() << "\n";
+                CHECK(i);
+                slice key = i.keyString();
+                auto j = std::find(&kExpectedKeys[0], &kExpectedKeys[9], key) - &kExpectedKeys[0];
+                REQUIRE(j < 9);
+                REQUIRE(found[j] == false);
+                found[j] = true;
+                CHECK(i.value() != nullptr);
+                CHECK(i.value()->type() == kExpectedTypes[j]);
+                ++i;
+            }
+            CHECK(!i);
+        }
+
+        md.sortKeys(true);
+        {
+            Dict::iterator i(d);
+            for (int n = 0; n < 9; ++n) {
+                std::cerr << "Item " << n << ": " << i.keyString() << " = " << (void*)i.value() << "\n";
+                CHECK(i);
+                CHECK(i.keyString() == kExpectedKeys[n]);
+                CHECK(i.value()->type() == kExpectedTypes[n]);
+                ++i;
+            }
+            CHECK(!i);
+        }
+
+        md.remove("lo"_sl);
+        CHECK(d->get("lo"_sl) == nullptr);
+
+        CHECK(d->toJSON() == "{\"+\":2017,\"-\":-123,\"f\":false,\"hi\":123456789,\"null\":null,\"str\":\"Hot dog\",\"t\":true,\"z\":0}"_sl);
+    }
+
+
 }
 

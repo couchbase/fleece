@@ -37,7 +37,7 @@ namespace fleece {
                 _byte[1] = (uint8_t)byte1;
             }
 
-            void setNull();
+            void set(Null);
             void set(bool);
             void set(int i)         {set((int64_t)i);}
             void set(int64_t);
@@ -73,8 +73,6 @@ namespace fleece {
         MutableArray(const Array*);
 
         uint32_t count() const                      {return (uint32_t)_items.size();}
-
-        void setNull(uint32_t index)                {_items[index].setNull();}
 
         template <typename T>
         void set(uint32_t index, T t)               {_items[index].set(t);}
