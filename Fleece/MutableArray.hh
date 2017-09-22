@@ -50,7 +50,7 @@ namespace fleece {
         void remove(uint32_t where, uint32_t n);
 
     protected:
-        const internal::MutableValue* first() const           {return &_items[0];}
+        const internal::MutableValue* first() const           {return &_items.front();}
 
     private:
         std::vector<internal::MutableValue> _items;

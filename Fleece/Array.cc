@@ -60,7 +60,7 @@ namespace fleece {
                  mut = ((MutableDict*)v)->kvArray();
                 _count = mut->count() / 2;
             }
-            _first = mut->first();
+            _first = _count ? mut->first() : nullptr;
             _wide = kMutableWide;
         }
     }

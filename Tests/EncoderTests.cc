@@ -271,9 +271,11 @@ public:
         for (int bits = 0; bits < 64; ++bits) {
             int64_t i = 1LL << bits;
             enc.writeInt(i);      endEncoding();  checkRead(i);
-            enc.writeInt(-i);     endEncoding();  checkRead(-i);
-            enc.writeInt(i - 1);  endEncoding();  checkRead(i - 1);
-            enc.writeInt(1 - i);  endEncoding();  checkRead(1 - i);
+            if (bits < 63) {
+                enc.writeInt(-i);     endEncoding();  checkRead(-i);
+                enc.writeInt(i - 1);  endEncoding();  checkRead(i - 1);
+                enc.writeInt(1 - i);  endEncoding();  checkRead(1 - i);
+            }
         }
         for (int bits = 0; bits < 64; ++bits) {
             uint64_t i = 1LLU << bits;
