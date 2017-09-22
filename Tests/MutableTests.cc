@@ -256,5 +256,68 @@ namespace fleece {
     }
 
 
+    TEST_CASE("Encoding deltas", "[Mutable]") {
+        alloc_slice data;
+        {
+            Encoder enc;
+            enc.beginArray();
+            enc << "totoro";
+            enc << "catbus";
+            enc.endArray();
+            data = enc.extractOutput();
+        }
+        std::cerr << "Original data: " << data << "\n";
+        const Array* fleeceArray = Value::fromData(data)->asArray();
+        std::cerr << "Contents:      " << fleeceArray->toJSON().asString() << "\n";
+
+        Encoder enc2;
+        enc2.setBase(data);
+        enc2.beginArray();
+        enc2 << fleeceArray->get(1);
+        enc2 << fleeceArray->get(0);
+        enc2.endArray();
+        alloc_slice data2 = enc2.extractOutput();
+        std::cerr << "Delta:         " << data2 << "\n";
+
+        data.append(data2);
+        const Array* newArray = Value::fromData(data)->asArray();
+        std::cerr << "Contents:      " << newArray->toJSON().asString() << "\n";
+    }
+
+
+    TEST_CASE("Encoding mutable dict", "[Mutable]") {
+        alloc_slice data;
+        {
+            Encoder enc;
+            enc.beginDictionary();
+            enc.writeKey("Name");
+            enc << "totoro";
+            enc.writeKey("Vehicle");
+            enc << "catbus";
+            enc.endDictionary();
+            data = enc.extractOutput();
+        }
+        const Dict* originalDict = Value::fromData(data)->asDict();
+        std::cerr << "Contents:      " << originalDict->toJSON().asString() << "\n";
+        std::cerr << "Original data: " << data << "\n\n";
+        Value::dump(data, std::cerr);
+
+        MutableDict update(originalDict);
+        update.set("Friend"_sl, "catbus"_sl);
+        update.set("Vehicle"_sl, "top"_sl);
+
+        Encoder enc2;
+        enc2.setBase(data);
+        enc2.reuseBaseStrings();
+        enc2.writeValue(&update);
+        alloc_slice data2 = enc2.extractOutput();
+
+        data.append(data2);
+        const Dict* newDict = Value::fromData(data)->asDict();
+        std::cerr << "\nContents:      " << newDict->toJSON().asString() << "\n";
+        std::cerr << "Delta:         " << data2 << "\n\n";
+        Value::dump(data, std::cerr);
+    }
+
 }
 

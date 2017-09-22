@@ -55,10 +55,10 @@
 		279AC53C1C097941002C80DB /* Value+Dump.cc in Sources */ = {isa = PBXBuildFile; fileRef = 279AC53B1C097941002C80DB /* Value+Dump.cc */; };
 		27A924CF1D9C32E800086206 /* Path.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27A924CD1D9C32E800086206 /* Path.cc */; };
 		27A924D01D9C32E800086206 /* Path.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27A924CE1D9C32E800086206 /* Path.hh */; };
-		27BED6221F73056A008AA71B /* MutableDict.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27BED6201F73056A008AA71B /* MutableDict.cc */; };
-		27BED6231F73056A008AA71B /* MutableDict.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27BED6211F73056A008AA71B /* MutableDict.hh */; };
 		27AFA1551F7426FD00A0FC2E /* MutableValue.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27AFA1531F7426FD00A0FC2E /* MutableValue.hh */; };
 		27AFA1561F7426FD00A0FC2E /* MutableValue.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27AFA1541F7426FD00A0FC2E /* MutableValue.cc */; };
+		27BED6221F73056A008AA71B /* MutableDict.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27BED6201F73056A008AA71B /* MutableDict.cc */; };
+		27BED6231F73056A008AA71B /* MutableDict.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27BED6211F73056A008AA71B /* MutableDict.hh */; };
 		27C4ACAC1CE5146500938365 /* Array.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27C4ACAA1CE5146500938365 /* Array.cc */; };
 		27C4ACAD1CE5146500938365 /* Array.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C4ACAB1CE5146500938365 /* Array.hh */; };
 		27CA08421F6B0E9400FF8C71 /* Dict.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27CA08401F6B0E9400FF8C71 /* Dict.hh */; };
@@ -182,11 +182,11 @@
 		27A8B4E91EC4D0B700BB4C07 /* Stopwatch.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Stopwatch.hh; sourceTree = "<group>"; };
 		27A924CD1D9C32E800086206 /* Path.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Path.cc; sourceTree = "<group>"; };
 		27A924CE1D9C32E800086206 /* Path.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Path.hh; sourceTree = "<group>"; };
+		27AFA1531F7426FD00A0FC2E /* MutableValue.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MutableValue.hh; sourceTree = "<group>"; };
+		27AFA1541F7426FD00A0FC2E /* MutableValue.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MutableValue.cc; sourceTree = "<group>"; };
 		27B546351F72FBEF00DC0638 /* DictImpl.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DictImpl.hh; sourceTree = "<group>"; };
 		27BED6201F73056A008AA71B /* MutableDict.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MutableDict.cc; sourceTree = "<group>"; };
 		27BED6211F73056A008AA71B /* MutableDict.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MutableDict.hh; sourceTree = "<group>"; };
-		27AFA1531F7426FD00A0FC2E /* MutableValue.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MutableValue.hh; sourceTree = "<group>"; };
-		27AFA1541F7426FD00A0FC2E /* MutableValue.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MutableValue.cc; sourceTree = "<group>"; };
 		27C4AC941CDE843F00938365 /* Example.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = Example.md; sourceTree = "<group>"; };
 		27C4AC961CDFFDA100938365 /* Performance.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = Performance.md; sourceTree = "<group>"; };
 		27C4ACAA1CE5146500938365 /* Array.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Array.cc; sourceTree = "<group>"; };
@@ -679,6 +679,7 @@
 				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_HIDDEN_VIRTUAL_FUNCTIONS = YES;
 				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
 				GCC_WARN_SHADOW = YES;
 				GCC_WARN_SIGN_COMPARE = YES;
@@ -739,6 +740,7 @@
 				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_HIDDEN_VIRTUAL_FUNCTIONS = YES;
 				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
 				GCC_WARN_SHADOW = YES;
 				GCC_WARN_SIGN_COMPARE = YES;

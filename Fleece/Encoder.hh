@@ -40,6 +40,13 @@ namespace fleece {
             sorted order. This makes dict::get faster but makes the encoder slightly slower. */
         void sortKeys(bool b)           {_sortKeys = b;}
 
+        /** Sets the base Fleece data that the encoded data will be appended to.
+            Any writeValue() calls whose Value points into the base data will be written as
+            pointers. */
+        void setBase(slice base)        {_base = base;}
+
+        void reuseBaseStrings();
+
         bool isEmpty() const            {return _out.length() == 0 && _stackDepth == 1 && _items->empty();}
         size_t bytesWritten() const     {return _out.length();} // may be an underestimate
 
@@ -106,8 +113,11 @@ namespace fleece {
         /** Writes a key to the current dictionary. This must be called before adding a value. */
         void writeKey(slice);
 
-        /** Writes a numeric key to the current dictionary. This must be called before adding a value. */
+        /** Writes a numeric key (encoded with SharedKeys) to the current dictionary. */
         void writeKey(int);
+
+        /** Writes a string Value as a key to the current dictionary. */
+        void writeKey(const Value*);
 
         /** Associates a SharedKeys object with this Encoder. The writeKey() methods that take
             strings will consult this object to possibly map the key to an integer. */
@@ -116,7 +126,8 @@ namespace fleece {
         //////// "<<" convenience operators;
 
         // Note: overriding <<(bool) would be dangerous due to implicit conversion
-        Encoder& operator<< (long long i)           {writeInt(i); return *this;}
+        Encoder& operator<< (Null)              {writeNull(); return *this;}
+        Encoder& operator<< (long long i)       {writeInt(i); return *this;}
         Encoder& operator<< (unsigned long long i)  {writeUInt(i); return *this;}
         Encoder& operator<< (long i)            {writeInt(i); return *this;}
         Encoder& operator<< (unsigned long i)   {writeUInt(i); return *this;}
@@ -147,13 +158,17 @@ namespace fleece {
         void addItem(Value v);
         void writeRawValue(slice rawValue, bool canInline =true);
         void writeValue(internal::tags, uint8_t buf[], size_t size, bool canInline =true);
-        void writePointer(size_t pos);
+        bool valueIsInBase(const Value *value) const;
+        void reuseBaseStrings(const Value*, bool asKey =false);
+        void cacheString(slice s, bool asKey, size_t offsetInBase);
+        void writePointer(ssize_t pos);
         void writeSpecial(uint8_t special);
         void writeInt(uint64_t i, bool isShort, bool isUnsigned);
         void _writeFloat(float);
         slice writeData(internal::tags, slice s);
         slice _writeString(slice, bool asKey);
-        [[noreturn]] void throwUnexpectedKey();
+        void addingKey();
+        void addedKey(slice str);
         size_t nextWritePos();
         void sortDict(valueArray &items);
         void checkPointerWidths(valueArray *items);
@@ -176,6 +191,7 @@ namespace fleece {
         StringTable _strings;        // Maps strings to the offsets where they appear as values
         bool _uniqueStrings {true};  // Should strings be uniqued before writing?
         SharedKeys *_sharedKeys {nullptr};  // Client-provided key-to-int mapping
+        slice _base;                 // Base Fleece data being appended to (if any)
         bool _sortKeys      {true};  // Should dictionary keys be sorted?
         bool _writingKey    {false}; // True if Value being written is a key
         bool _blockedOnKey  {false}; // True if writes should be refused

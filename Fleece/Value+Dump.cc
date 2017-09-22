@@ -62,7 +62,7 @@ namespace fleece {
     }
 
     // writes an ASCII dump of this value and its contained values (NOT following pointers).
-    void Value::dump(std::ostream &out, bool wide, int indent, const void *base) const {
+    size_t Value::dump(std::ostream &out, bool wide, int indent, const void *base) const {
         size_t pos = _byte - (uint8_t*)base;
         char buf[64];
         sprintf(buf, "%04zx: %02x %02x", pos, _byte[0], _byte[1]);
@@ -86,15 +86,15 @@ namespace fleece {
             case kArrayTag: {
                 out << ":\n";
                 for (auto i = asArray()->begin(); i; ++i) {
-                    i.rawValue()->dump(out, isWideArray(), 1, base);
+                    size += i.rawValue()->dump(out, isWideArray(), 1, base);
                 }
                 break;
             }
             case kDictTag: {
                 out << ":\n";
                 for (auto i = asDict()->begin(); i; ++i) {
-                    i.rawKey()  ->dump(out, isWideArray(), 1, base);
-                    i.rawValue()->dump(out, isWideArray(), 2, base);
+                    size += i.rawKey()  ->dump(out, isWideArray(), 1, base);
+                    size += i.rawValue()->dump(out, isWideArray(), 2, base);
                 }
                 break;
             }
@@ -102,6 +102,7 @@ namespace fleece {
                 out << "\n";
                 break;
         }
+        return size + (size & 1);
     }
 
 
@@ -141,8 +142,11 @@ namespace fleece {
         if (actualRoot != root)
             actualRoot->mapAddresses(byAddress);
         // Dump them ordered by address:
+        size_t pos = (size_t)data.buf;
         for (auto &i : byAddress) {
-            i.second->dump(out, false, 0, data.buf);
+            if (i.first != pos)
+                out << "  {skip " << std::hex << (i.first - pos) << "}\n";
+            pos = i.first + i.second->dump(out, false, 0, data.buf);
         }
         return true;
     }
