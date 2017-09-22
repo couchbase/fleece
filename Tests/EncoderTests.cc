@@ -595,7 +595,7 @@ public:
 #if 0
         // Dump the string table and some statistics:
         auto &strings = enc._strings;
-        unsigned i = 0, totalMisses = 0, totalStrLength = 0, totalKeys = 0;
+        unsigned i = 0, totalMisses = 0, totalStrLength = 0;
         for (auto iter = strings.begin(); iter != strings.end(); ++iter) {
             if (iter->buf) {
                 auto hash = StringTable::hash(iter);
@@ -609,18 +609,15 @@ public:
                     totalMisses += misses;
                 }
                 totalStrLength += iter->size;
-                if (iter.Value().usedAsKey)
-                    totalKeys++;
                 fprintf(stderr, "\t%5X: (%08X%s) `%.*s` --> %u\n", i, hash, x, (int)iter->size, iter->buf, iter.Value().offset);
             } else {
                 fprintf(stderr, "\t%5X: ----\n", i);
             }
             ++i;
         }
-        fprintf(stderr, "Capacity %zd, %zu occupied (%.0f%%), %zd keys, average of %.3g misses\n",
+        fprintf(stderr, "Capacity %zd, %zu occupied (%.0f%%), average of %.3g misses\n",
                 strings.tableSize(), strings.count(),
                 strings.count()/(double)strings.tableSize()*100.0,
-                totalKeys,
                 totalMisses / (double)strings.count());
         fprintf(stderr, "Total string size %u bytes\n", totalStrLength);
 #endif

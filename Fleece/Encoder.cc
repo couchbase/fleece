@@ -218,7 +218,7 @@ namespace fleece {
     }
 
     // Returns the location where s got written to, if possible, just like writeData above.
-    slice Encoder::_writeString(slice s, bool asKey) {
+    slice Encoder::_writeString(slice s) {
         // Check whether this string's already been written:
         if (_usuallyTrue(_uniqueStrings && s.size >= kNarrow && s.size <= kMaxSharedStringSize)) {
             auto &entry = _strings.find(s);
@@ -228,8 +228,6 @@ namespace fleece {
 #ifndef NDEBUG
                 _numSavedStrings++;
 #endif
-                if (asKey)
-                    entry.second.usedAsKey = true;
                 return entry.first;
             } else {
                 auto offset = _base.size + nextWritePos();
@@ -241,7 +239,7 @@ namespace fleece {
                         fprintf(stderr, "---- new encoder ----\n");
                     fprintf(stderr, "Caching `%.*s` --> %u\n", (int)s.size, s.buf, offset);
 #endif
-                    StringTable::info i = {asKey, (uint32_t)offset};
+                    StringTable::info i = {(uint32_t)offset};
                     _strings.addAt(entry, s, i);
                 }
                 return s;
@@ -252,17 +250,17 @@ namespace fleece {
     }
 
     // Adds a preexisting string to the cache
-    void Encoder::cacheString(slice s, bool asKey, size_t offsetInBase) {
+    void Encoder::cacheString(slice s, size_t offsetInBase) {
         if (_usuallyTrue(_uniqueStrings && s.size >= kNarrow && s.size <= kMaxSharedStringSize)) {            auto &entry = _strings.find(s);
             if (entry.first.buf == nullptr) {
-                StringTable::info i = {asKey, (unsigned)offsetInBase};
+                StringTable::info i = {(unsigned)offsetInBase};
                 _strings.addAt(entry, s, i);
             }
         }
     }
 
     void Encoder::writeString(const std::string &s) {
-        _writeString(slice(s), false);
+        _writeString(slice(s));
     }
 
     void Encoder::writeData(slice s) {
@@ -274,10 +272,10 @@ namespace fleece {
         reuseBaseStrings(Value::fromTrustedData(_base));
     }
 
-    void Encoder::reuseBaseStrings(const Value *value, bool asKey) {
+    void Encoder::reuseBaseStrings(const Value *value) {
         switch (value->tag()) {
             case kStringTag:
-                cacheString(value->asString(), asKey, (size_t)value - (ssize_t)_base.buf);
+                cacheString(value->asString(), (size_t)value - (ssize_t)_base.buf);
                 break;
             case kArrayTag:
                 for (Array::iterator iter(value->asArray()); iter; ++iter)
@@ -285,7 +283,7 @@ namespace fleece {
                 break;
             case kDictTag:
                 for (Dict::iterator iter(value->asDict()); iter; ++iter) {
-                    reuseBaseStrings(iter.key(), true);
+                    reuseBaseStrings(iter.key());
                     reuseBaseStrings(iter.value());
                 }
                 break;
@@ -428,7 +426,7 @@ namespace fleece {
             return;
         }
         addingKey();
-        addedKey(_writeString(s, true));
+        addedKey(_writeString(s));
     }
 
     void Encoder::writeKey(int n) {
@@ -604,25 +602,4 @@ namespace fleece {
         }
     }
 
-    // Writes an array of strings, containing all the strings that have appeared as dictionary keys
-    // so far. The array is structured as a hash table; it's literally organized as a dump of a
-    // StringTable. That means that a reader can use the same hash function and algorithm as
-    // StringTable to very quickly convert a platform string to a Fleece Value.
-    void Encoder::writeKeyTable() {
-        StringTable keys;
-        for (auto iter = _strings.begin(); iter != _strings.end(); ++iter) {
-            if (iter->buf && iter.value().usedAsKey)
-                keys.add(iter, iter.value());
-        }
-
-        beginArray();
-        for (auto iter = keys.begin(); iter != keys.end(); ++iter) {
-            if (iter->buf) {
-                writeString(iter);
-            } else {
-                writeNull();
-            }
-        }
-        endArray();
-    }
 }

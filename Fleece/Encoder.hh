@@ -71,7 +71,7 @@ namespace fleece {
         void writeDouble(double);
 
         void writeString(const std::string&);
-        void writeString(slice s)           {(void)_writeString(s, false);}
+        void writeString(slice s)           {(void)_writeString(s);}
         
         void writeData(slice s);
 
@@ -159,14 +159,14 @@ namespace fleece {
         void writeRawValue(slice rawValue, bool canInline =true);
         void writeValue(internal::tags, uint8_t buf[], size_t size, bool canInline =true);
         bool valueIsInBase(const Value *value) const;
-        void reuseBaseStrings(const Value*, bool asKey =false);
-        void cacheString(slice s, bool asKey, size_t offsetInBase);
+        void reuseBaseStrings(const Value*);
+        void cacheString(slice s, size_t offsetInBase);
         void writePointer(ssize_t pos);
         void writeSpecial(uint8_t special);
         void writeInt(uint64_t i, bool isShort, bool isUnsigned);
         void _writeFloat(float);
         slice writeData(internal::tags, slice s);
-        slice _writeString(slice, bool asKey);
+        slice _writeString(slice);
         void addingKey();
         void addedKey(slice str);
         size_t nextWritePos();
@@ -175,9 +175,6 @@ namespace fleece {
         void fixPointers(valueArray *items);
         void endCollection(internal::tags tag);
         void push(internal::tags tag, size_t reserve);
-
-        // experimental, may become public in some form
-        void writeKeyTable();
 
         Encoder(const Encoder&) = delete;
         Encoder& operator=(const Encoder&) = delete;

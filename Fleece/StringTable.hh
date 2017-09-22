@@ -19,9 +19,8 @@ namespace fleece {
         ~StringTable();
 
         struct info {
-            unsigned usedAsKey  : 1;    // Used by Encoder
-            unsigned offset     :31;    // Used by Encoder
-            uint32_t hash;              // only field used by StringTable itself
+            uint32_t offset;            // Used by clients (Encoder, SharedKeys)
+            uint32_t hash;              // Used by StringTable itself
         };
 
         typedef std::pair<slice, info> slot;
