@@ -15,6 +15,7 @@
 
 namespace fleece {
 
+    /** A mutable subclass of Dict. */
     class MutableDict : public Dict {
     public:
 
@@ -22,11 +23,12 @@ namespace fleece {
         :Dict(internal::kSpecialTag, internal::kSpecialValueMutableDict)
         { }
 
-        MutableDict(uint32_t capacity)
+        MutableDict(uint32_t initialCapacity)
         :Dict(internal::kSpecialTag, internal::kSpecialValueMutableDict)
-        ,_map(capacity)
+        ,_map(initialCapacity)
         { }
 
+        /** Constructs a mutable copy of the given Dict. */
         MutableDict(const Dict*);
 
         bool isChanged() const;
@@ -41,7 +43,17 @@ namespace fleece {
         void remove(slice key);
         void removeAll();
 
+        /** Sets whether iterators will visit keys in sorted order (as in a regular Dict.)
+            The default is false. */
         void sortKeys(bool s);
+
+        /** Promotes an Array value to a MutableArray (in place) and returns it.
+            Or if the value is already a MutableArray, just returns it. Else returns null. */
+        MutableArray* makeArrayMutable(slice key);
+
+        /** Promotes a Dict value to a MutableDict (in place) and returns it.
+            Or if the value is already a MutableDict, just returns it. Else returns null. */
+        MutableDict* makeDictMutable(slice key);
 
         // Dict overrides:
         uint32_t count() const noexcept                         {return (uint32_t)_map.size();}
@@ -51,6 +63,7 @@ namespace fleece {
         size_t get(key keys[], const Value* values[], size_t count) const noexcept {abort();}
 
     private:
+        internal::MutableValue* _get(slice keyToFind) const noexcept;
         internal::MutableValue& makeValueForKey(slice key);
         MutableArray* kvArray();
         void markChanged();

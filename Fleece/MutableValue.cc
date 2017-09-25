@@ -10,10 +10,21 @@
 #include "MutableArray.hh"
 #include "MutableDict.hh"
 #include "varint.hh"
+#include <algorithm>
 
 namespace fleece { namespace internal {
+    using namespace std;
+
 
     static_assert(kFat == sizeof(MutableValue), "kFat is wrong");
+
+
+    void MutableValue::reset() {
+        if (_malloced) {
+            free( (void*)deref() );
+            _malloced = false;
+        }
+    }
 
 
     void MutableValue::set(Null) {
@@ -41,35 +52,67 @@ namespace fleece { namespace internal {
     }
 
 
-    void MutableValue::set(tags tag, slice s) {
-        if (s.size <= kMaxInlineValueSize) {
+    void MutableValue::_set(tags tag, slice s) {
+        if (s.size <= kMaxInlineValueSize - 1) {
+            // Short strings can go inline:
             setHeader(tag, (int)s.size);
             memcpy(&_byte[1], s.buf, s.size);
         } else {
-            assert(s.size <= kMaxInlineValueSize); // TODO
+            // Allocate a string Value on the heap. (Adapted from Encoder::writeData)
+            auto buf = (uint8_t*)malloc(2 + kMaxVarintLen32 + s.size);
+            auto strVal = new (buf) Value (kStringTag, (uint8_t)min(s.size, (size_t)0xF));
+            size_t bufLen = 1;
+            if (s.size >= 0x0F)
+                bufLen += PutUVarInt(&buf[1], s.size);
+            memcpy(&buf[bufLen], s.buf, s.size);
+            reset();
+            _setPointer(strVal);
+            _malloced = _changed = true;
         }
     }
 
 
-    void MutableValue::_set(const Value* v) {
+    // Setter subroutine that stores a (fat) pointer. Does not set _changed.
+    void MutableValue::_setPointer(const Value* v) {
         throwIf(v == nullptr, InvalidData, "Can't set an array element to nullptr");
-        // Store a (fat) pointer:
         int64_t n = _enc64((int64_t)v >> 1);
         memcpy(&_byte[0], &n, sizeof(n));
         _byte[0] |= 0x80;
     }
 
 
-    void MutableValue::copy(const Value* v) {
-        throwIf(v == nullptr, InvalidData, "Can't set an array element to nullptr");
+    void MutableValue::set(const Value* v) {
+        reset();
+        _changed = true;
         auto t = v->type();
-        if (t == kArray || t == kDict) {
-            _set(v); // Just store a pointer to the array/dict
-        } else {
-            size_t size = v->dataSize();
-            assert(size <= sizeof(*this));
-            memcpy(this, v, size);
+        if (t != kArray && t != kDict) {
+            auto size = v->dataSize();
+            if (size <= kNarrow) {
+                // Tiny value can be copied inline
+                memcpy(&_byte[0], v, size);
+                return;
+            }
         }
+        // Otherwise store a pointer to it
+        _setPointer(v);
+    }
+
+
+    void MutableValue::copy(const Value* v) {
+        reset();
+        auto t = v->type();
+        if (t != kArray && t != kDict) {
+            size_t size = v->dataSize();
+            if (size <= kMaxInlineValueSize) {
+                // Value fits inline
+                memcpy(&_byte[0], v, size);
+            } else {
+                // Value is too large to fit, so allocate a new heap block for it:
+                v = (const Value*) slice(v, size).copy().buf;
+                _malloced = true;
+            }
+        }
+        _setPointer(v);
     }
 
 

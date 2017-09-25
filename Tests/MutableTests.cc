@@ -319,5 +319,45 @@ namespace fleece {
         Value::dump(data, std::cerr);
     }
 
+
+    TEST_CASE("Larger mutable dict", "[Mutable]") {
+        mmap_slice data(kTestFilesDir "1person.fleece");
+        auto person = Value::fromTrustedData(data)->asDict();
+
+        std::cerr << "Original data: " << data << "\n";
+        std::cerr << "Contents:      " << person->toJSON().asString() << "\n";
+        Value::dump(data, std::cerr);
+
+        MutableDict mp(person);
+        mp.set("age"_sl, 31);
+        MutableArray *friends = mp.makeArrayMutable("friends"_sl);
+        auto frend = friends->makeDictMutable(1);
+        frend->set("name"_sl, "Reddy Kill-a-Watt"_sl);
+
+        Encoder enc;
+        enc.setBase(data);
+        enc.reuseBaseStrings();
+        enc.writeValue(&mp);
+        alloc_slice data2 = enc.extractOutput();
+
+        alloc_slice combined(data);
+        combined.append(data2);
+        const Dict* newDict = Value::fromData(combined)->asDict();
+        std::cerr << "\n\nContents:      " << newDict->toJSON().asString() << "\n";
+        std::cerr << "Delta:         " << data2 << "\n\n";
+        Value::dump(combined, std::cerr);
+
+    }
+
+
+    TEST_CASE("Mutable long strings", "[Mutable]") {
+        const char *chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        MutableArray ma(50);
+        for (int len = 0; len < 50; ++len)
+            ma.set(len, slice(chars, len));
+        for (int len = 0; len < 50; ++len)
+            CHECK(ma.get(len)->asString() == slice(chars, len));
+    }
+
 }
 

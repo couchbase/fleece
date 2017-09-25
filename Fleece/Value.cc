@@ -315,7 +315,7 @@ namespace fleece {
     // This does not include the inline items in arrays/dicts
     size_t Value::dataSize() const noexcept {
         switch(tag()) {
-            case kShortIntTag:
+            case kShortIntTag:  return 2;
             case kSpecialTag:   return 2;
             case kFloatTag:     return isDouble() ? 10 : 6;
             case kIntTag:       return 2 + (tinyValue() & 0x07);

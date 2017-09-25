@@ -17,9 +17,16 @@ namespace fleece {
     MutableArray::MutableArray(const Array *a)
     :MutableArray(a->count())
     {
+        bool fromMut = a->isMutableArray();
         auto dst = _items.begin();
         for (Array::iterator src(a); src; ++src, ++dst) {
-            dst->copy(src.value());
+            auto v = src.value();
+            if (fromMut) {
+                dst->copy(v);
+            } else {
+                dst->set(v);
+                dst->setChanged(false);
+            }
         }
     }
 
@@ -51,6 +58,12 @@ namespace fleece {
         throwIf(where + n > count(), OutOfRange, "remove range is past end of array");
         auto at = _items.begin() + where;
         _items.erase(at, at + n);
+        _changed = true;
+    }
+
+
+    void MutableArray::removeAll() {
+        _items.clear();
         _changed = true;
     }
 

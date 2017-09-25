@@ -20,11 +20,17 @@ namespace fleece {
     }
 
 
-    const Value* MutableDict::get(slice key) const noexcept {
+    MutableValue* MutableDict::_get(slice key) const noexcept {
         auto it = _map.find(key);
         if (it == _map.end())
             return nullptr;
-        return it->second.deref();
+        return const_cast<MutableValue*>(&it->second);
+    }
+
+
+    const Value* MutableDict::get(slice key) const noexcept {
+        auto val = _get(key);
+        return val ? val->deref() : nullptr;
     }
 
     
@@ -35,6 +41,17 @@ namespace fleece {
             if (item.second.isChanged())
                 return true;
         return false;
+    }
+
+
+    MutableArray* MutableDict::makeArrayMutable(slice key) {
+        auto mval = _get(key);
+        return mval ? mval->makeArrayMutable() : nullptr;
+    }
+
+    MutableDict* MutableDict::makeDictMutable(slice key) {
+        auto mval = _get(key);
+        return mval ? mval->makeDictMutable() : nullptr;
     }
 
 
