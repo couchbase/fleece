@@ -20,7 +20,7 @@ namespace fleece { namespace internal {
 
 
     MutableValue::MutableValue(const MutableValue &mv)
-    :_exists(true)
+    :_exists(mv._exists)
     ,_changed(false)
     ,_malloced(false)
     {
@@ -29,6 +29,25 @@ namespace fleece { namespace internal {
         else
             memcpy(&_byte, &mv._byte, kMaxInlineValueSize);
     }
+
+
+    MutableValue::MutableValue( MutableValue &&mv) {
+        memcpy(&_byte, &mv._byte, sizeof(MutableValue));
+        mv._malloced = false;
+    }
+
+    MutableValue& MutableValue::operator=(const MutableValue &mv) {
+        copy(&mv);
+        return *this;
+    }
+
+    MutableValue& MutableValue::operator=(MutableValue &&mv) {
+        reset();
+        memcpy(&_byte, &mv._byte, sizeof(MutableValue));
+        mv._malloced = false;
+        return *this;
+    }
+
 
 
     void MutableValue::reset() {
@@ -119,6 +138,7 @@ namespace fleece { namespace internal {
             if (size <= kMaxInlineValueSize) {
                 // Value fits inline
                 memcpy(&_byte[0], v, size);
+                return;
             } else {
                 // Value is too large to fit, so allocate a new heap block for it:
                 v = (const Value*) slice(v, size).copy().buf;

@@ -26,6 +26,9 @@ namespace fleece {
             { }
 
             MutableValue(const MutableValue&);
+            MutableValue(MutableValue&&);
+            MutableValue& operator=(const MutableValue&);
+            MutableValue& operator=(MutableValue&&);
 
             ~MutableValue()             {reset();}
 
