@@ -157,6 +157,8 @@ namespace fleece {
 #endif
 
     protected:
+        Value() { }
+        
         constexpr Value(internal::tags tag, int tiny, int byte1 = 0)
         :_byte {(uint8_t)((tag<<4) | tiny),
                 (uint8_t)byte1,

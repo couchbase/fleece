@@ -143,6 +143,9 @@ namespace fleece {
         constexpr Dict()  :Value(internal::kDictTag, 0, 0) { }
     protected:
         constexpr Dict(internal::tags tag, int tiny, int byte1 = 0)  :Value(tag, tiny, byte1) { }
+
+        friend class MutableArray;
+        friend class MutableDict;
     };
 
 }

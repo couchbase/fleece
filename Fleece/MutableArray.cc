@@ -17,14 +17,13 @@ namespace fleece {
     MutableArray::MutableArray(const Array *a)
     :MutableArray(a->count())
     {
-        bool fromMut = a->isMutableArray();
-        auto dst = _items.begin();
-        for (Array::iterator src(a); src; ++src, ++dst) {
-            auto v = src.value();
-            if (fromMut) {
-                dst->copy(v);
-            } else {
-                dst->set(v);
+        _source = a;
+        if (a->isMutableArray()) {
+            _items = ((MutableArray*)a)->_items;
+        } else {
+            auto dst = _items.begin();
+            for (Array::iterator src(a); src; ++src, ++dst) {
+                dst->set(src.value());
                 dst->setChanged(false);
             }
         }

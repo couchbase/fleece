@@ -19,6 +19,18 @@ namespace fleece { namespace internal {
     static_assert(kFat == sizeof(MutableValue), "kFat is wrong");
 
 
+    MutableValue::MutableValue(const MutableValue &mv)
+    :_exists(true)
+    ,_changed(false)
+    ,_malloced(false)
+    {
+        if (mv._malloced)
+            copy(&mv);
+        else
+            memcpy(&_byte, &mv._byte, kMaxInlineValueSize);
+    }
+
+
     void MutableValue::reset() {
         if (_malloced) {
             free( (void*)deref() );
@@ -78,6 +90,7 @@ namespace fleece { namespace internal {
         int64_t n = _enc64((int64_t)v >> 1);
         memcpy(&_byte[0], &n, sizeof(n));
         _byte[0] |= 0x80;
+        _exists = true;
     }
 
 
@@ -116,35 +129,21 @@ namespace fleece { namespace internal {
     }
 
 
-    MutableArray* MutableValue::makeArrayMutable() {
+    const Value* MutableValue::makeMutable(valueType ifType) {
         const Value *val = deref();
-        switch (val->tag()) {
-            case kArrayTag: {
-                auto ma = new MutableArray((const Array*)val);
-                set(ma);
-                return ma;
-            }
-            case kSpecialTag:
-                return val->asMutableArray();
-            default:
-                return nullptr;
-        }
-    }
+        if (val->type() != ifType)
+            return nullptr;                                 // wrong type
+        if (val->tag() == kSpecialTag)
+            return val;                                     // already mutable
 
-
-    MutableDict* MutableValue::makeDictMutable() {
-        const Value *val = deref();
-        switch (val->tag()) {
-            case kDictTag: {
-                auto ma = new MutableDict((const Dict*)val);
-                set(ma);
-                return ma;
-            }
-            case kSpecialTag:
-                return val->asMutableDict();
-            default:
-                return nullptr;
-        }
+        const Value *newMutableResult;
+        if (ifType == kArray)
+            newMutableResult = new MutableArray((const Array*)val);
+        else
+            newMutableResult = new MutableDict((const Dict*)val);
+        set(newMutableResult);
+        _malloced = true;
+        return newMutableResult;
     }
 
 } }

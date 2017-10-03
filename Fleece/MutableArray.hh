@@ -31,6 +31,7 @@ namespace fleece {
 
         uint32_t count() const                      {return (uint32_t)_items.size();}
 
+        const Array* source() const                 {return _source;}
         bool isChanged() const;
 
         template <typename T>
@@ -38,11 +39,11 @@ namespace fleece {
 
         /** Promotes an Array item to a MutableArray (in place) and returns it.
             Or if the item is already a MutableArray, just returns it. Else returns null. */
-        MutableArray* makeArrayMutable(uint32_t i)  {return _items[i].makeArrayMutable();}
+        MutableArray* makeArrayMutable(uint32_t i)  {return (MutableArray*)_items[i].makeMutable(kArray);}
 
         /** Promotes a Dict item to a MutableDict (in place) and returns it.
             Or if the item is already a MutableDict, just returns it. Else returns null. */
-        MutableDict* makeDictMutable(uint32_t i)    {return _items[i].makeDictMutable();}
+        MutableDict* makeDictMutable(uint32_t i)    {return (MutableDict*)_items[i].makeMutable(kDict);}
 
         // Warning: Changing the size of a MutableArray invalidates all Array::iterators on it!
 
@@ -63,6 +64,7 @@ namespace fleece {
 
     private:
         std::vector<internal::MutableValue> _items;
+        const Array* _source {nullptr};
         bool _changed {false};
 
         friend class Array::impl;

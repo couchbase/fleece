@@ -181,10 +181,15 @@ namespace fleece {
         MutableDict md;
         const Dict *d = &md;
 
+        REQUIRE(md.count() == 0);
         REQUIRE(d->count() == 0);
         //REQUIRE(d->empty());  //FIX!
         CHECK(d->get("foo"_sl) == nullptr);
 
+        {
+            MutableDict::iterator i(md);
+            CHECK(!i);
+        }
         {
             Dict::iterator i(d);
             CHECK(!i);
@@ -236,7 +241,6 @@ namespace fleece {
             CHECK(!i);
         }
 
-        md.sortKeys(true);
         {
             Dict::iterator i(d);
             for (int n = 0; n < 9; ++n) {
@@ -253,10 +257,27 @@ namespace fleece {
         CHECK(d->get("lo"_sl) == nullptr);
 
         CHECK(d->toJSON() == "{\"+\":2017,\"-\":-123,\"f\":false,\"hi\":123456789,\"null\":null,\"str\":\"Hot dog\",\"t\":true,\"z\":0}"_sl);
+
+        md.removeAll();
+        CHECK(md.count() == 0);
+        {
+            MutableDict::iterator i(md);
+            CHECK(!i);
+        }
     }
 
 
-    TEST_CASE("Encoding deltas", "[Mutable]") {
+    TEST_CASE("Mutable long strings", "[Mutable]") {
+        const char *chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        MutableArray ma(50);
+        for (int len = 0; len < 50; ++len)
+            ma.set(len, slice(chars, len));
+        for (int len = 0; len < 50; ++len)
+            CHECK(ma.get(len)->asString() == slice(chars, len));
+    }
+
+
+    TEST_CASE("Encoding mutable array", "[Mutable]") {
         alloc_slice data;
         {
             Encoder enc;
@@ -278,6 +299,7 @@ namespace fleece {
         enc2.endArray();
         alloc_slice data2 = enc2.extractOutput();
         std::cerr << "Delta:         " << data2 << "\n";
+        REQUIRE(data2.size == 8);      // may change slightly with changes to implementation
 
         data.append(data2);
         const Array* newArray = Value::fromData(data)->asArray();
@@ -303,20 +325,68 @@ namespace fleece {
         Value::dump(data, std::cerr);
 
         MutableDict update(originalDict);
+        CHECK(update.count() == 2);
         update.set("Friend"_sl, "catbus"_sl);
+        CHECK(update.count() == 3);
         update.set("Vehicle"_sl, "top"_sl);
+        CHECK(update.count() == 3);
+
+        {
+            MutableDict::iterator i(update);
+            CHECK(i);
+            CHECK(i.keyString() == "Friend"_sl);
+            CHECK(i.value()->asString() == "catbus"_sl);
+            ++i;
+            CHECK(i);
+            CHECK(i.keyString() == "Name"_sl);
+            CHECK(i.value()->asString() == "totoro"_sl);
+            ++i;
+            CHECK(i);
+            CHECK(i.keyString() == "Vehicle"_sl);
+            CHECK(i.value()->asString() == "top"_sl);
+            ++i;
+            CHECK(!i);
+        }
+
+        {
+            Dict::iterator i(&update);
+            CHECK(i.count() == 3);
+            CHECK(i);
+            CHECK(i.keyString() == "Friend"_sl);
+            CHECK(i.value()->asString() == "catbus"_sl);
+            ++i;
+            CHECK(i);
+            CHECK(i.keyString() == "Name"_sl);
+            CHECK(i.value()->asString() == "totoro"_sl);
+            ++i;
+            CHECK(i);
+            CHECK(i.keyString() == "Vehicle"_sl);
+            CHECK(i.value()->asString() == "top"_sl);
+            ++i;
+            CHECK(!i);
+        }
 
         Encoder enc2;
         enc2.setBase(data);
         enc2.reuseBaseStrings();
         enc2.writeValue(&update);
         alloc_slice data2 = enc2.extractOutput();
+        REQUIRE(data2.size == 28);      // may change slightly with changes to implementation
 
-        data.append(data2);
-        const Dict* newDict = Value::fromData(data)->asDict();
+        alloc_slice combinedData(data);
+        combinedData.append(data2);
+        const Dict* newDict = Value::fromData(combinedData)->asDict();
         std::cerr << "\nContents:      " << newDict->toJSON().asString() << "\n";
         std::cerr << "Delta:         " << data2 << "\n\n";
-        Value::dump(data, std::cerr);
+        Value::dump(combinedData, std::cerr);
+
+        // Check that removeAll works when there's a base Dict:
+        update.removeAll();
+        CHECK(update.count() == 0);
+        {
+            MutableDict::iterator i(update);
+            CHECK(!i);
+        }
     }
 
 
@@ -347,16 +417,6 @@ namespace fleece {
         std::cerr << "Delta:         " << data2 << "\n\n";
         Value::dump(combined, std::cerr);
 
-    }
-
-
-    TEST_CASE("Mutable long strings", "[Mutable]") {
-        const char *chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        MutableArray ma(50);
-        for (int len = 0; len < 50; ++len)
-            ma.set(len, slice(chars, len));
-        for (int len = 0; len < 50; ++len)
-            CHECK(ma.get(len)->asString() == slice(chars, len));
     }
 
 }

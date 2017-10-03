@@ -20,9 +20,12 @@ namespace fleece {
         public:
             MutableValue()
             :Value(internal::kSpecialTag, internal::kSpecialValueNull)
+            ,_exists(false)
             ,_changed(false)
             ,_malloced(false)
             { }
+
+            MutableValue(const MutableValue&);
 
             ~MutableValue()             {reset();}
 
@@ -37,9 +40,12 @@ namespace fleece {
             void setData(slice s)       {_set(internal::kBinaryTag, s);}
             void set(const Value* v);
 
-            MutableArray* makeArrayMutable();   ///< Promotes Array value to MutableArray
-            MutableDict* makeDictMutable();     ///< Promotes Dict value to MutableDict
+            /** Promotes Array or Dict value to mutable equivalent and returns it. */
+            const Value* makeMutable(valueType ifType);
 
+            bool exists() const         {return _exists;}
+            void setNonexistent()       {set(nullValue); _exists = false;}
+            
             bool isChanged() const      {return _changed;}
             void setChanged(bool c)     {_changed = c;}
 
@@ -53,7 +59,7 @@ namespace fleece {
             void setHeader(internal::tags tag, int tiny) {
                 reset();
                 _byte[0] = (uint8_t)((tag<<4) | tiny);
-                _changed = true;
+                _changed = _exists = true;
             }
             void setHeader(internal::tags tag, int tiny, int byte1) {
                 _byte[1] = (uint8_t)byte1;
@@ -71,9 +77,12 @@ namespace fleece {
             static constexpr size_t kMaxInlineValueSize = 10; // Enough room to hold ints & doubles
 
             uint8_t _moreBytes[kMaxInlineValueSize - sizeof(_byte)];
-            bool _changed :1;       // Means value has changed since I was created
+            bool _exists   :1;      // If false, there's nothing stored here
+            bool _changed  :1;      // Means value has changed since I was created
             bool _malloced :1;      // Means Value I point to is a malloced block owned by me
             bool _unused[5];        // Just brings total size up to 16 bytes
+
+            friend class fleece::MutableDict;
         };
     }
 

@@ -306,7 +306,7 @@ namespace fleece {
             }
         } else if (_usuallyFalse(t == kSpecialTag)) {
             if (_usuallyFalse(_byte[0] & 0x3))
-                return 0;       // Ephemeral value (mutable): illegal in stored data
+                return false;       // Ephemeral value (mutable): illegal in stored data
         }
         // Default: just check that size fits:
         return offsetby(this, dataSize()) <= dataEnd;
