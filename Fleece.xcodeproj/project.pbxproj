@@ -32,6 +32,15 @@
 		272E5A5D1BF800A100848580 /* EncoderTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 272E5A5B1BF800A100848580 /* EncoderTests.cc */; };
 		272E5A5F1BF91DBE00848580 /* ObjCTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 272E5A5E1BF91DBE00848580 /* ObjCTests.mm */; };
 		272E5A611BF91F6C00848580 /* slice+CoreFoundation.cc in Sources */ = {isa = PBXBuildFile; fileRef = 272E5A601BF91F6C00848580 /* slice+CoreFoundation.cc */; };
+		2734B89E1F8583FF00BE5249 /* MArray.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8951F8583FF00BE5249 /* MArray.hh */; };
+		2734B89F1F8583FF00BE5249 /* MValue.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8961F8583FF00BE5249 /* MValue.hh */; };
+		2734B8A01F8583FF00BE5249 /* MutableArray+ObjC.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8971F8583FF00BE5249 /* MutableArray+ObjC.hh */; };
+		2734B8A11F8583FF00BE5249 /* MutableArray+ObjC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2734B8981F8583FF00BE5249 /* MutableArray+ObjC.mm */; };
+		2734B8A21F8583FF00BE5249 /* MutableDict+ObjC.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8991F8583FF00BE5249 /* MutableDict+ObjC.hh */; };
+		2734B8A41F8583FF00BE5249 /* MCollection.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2734B89B1F8583FF00BE5249 /* MCollection.hh */; };
+		2734B8A51F8583FF00BE5249 /* MDict.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2734B89C1F8583FF00BE5249 /* MDict.hh */; };
+		2734B8A61F8583FF00BE5249 /* MutableDict+ObjC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2734B89D1F8583FF00BE5249 /* MutableDict+ObjC.mm */; };
+		2734B8A71F85842300BE5249 /* MutableTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2734B89A1F8583FF00BE5249 /* MutableTests.mm */; };
 		275CED521D3EF7BE001DE46C /* FleeceException.cc in Sources */ = {isa = PBXBuildFile; fileRef = 275CED501D3EF7BE001DE46C /* FleeceException.cc */; };
 		275CED531D3EF7BE001DE46C /* FleeceException.hh in Headers */ = {isa = PBXBuildFile; fileRef = 275CED511D3EF7BE001DE46C /* FleeceException.hh */; };
 		276D15461E007D3000543B1B /* JSON5.cc in Sources */ = {isa = PBXBuildFile; fileRef = 276D15441E007D3000543B1B /* JSON5.cc */; };
@@ -138,6 +147,15 @@
 		272E5A601BF91F6C00848580 /* slice+CoreFoundation.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "slice+CoreFoundation.cc"; path = "../ObjC/slice+CoreFoundation.cc"; sourceTree = "<group>"; };
 		272E5A671BFA7C3100848580 /* Internal.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Internal.hh; sourceTree = "<group>"; };
 		273483F71DDA59B900B27A8C /* Fleece.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Fleece.pch; sourceTree = "<group>"; };
+		2734B8951F8583FF00BE5249 /* MArray.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = MArray.hh; sourceTree = "<group>"; };
+		2734B8961F8583FF00BE5249 /* MValue.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = MValue.hh; sourceTree = "<group>"; };
+		2734B8971F8583FF00BE5249 /* MutableArray+ObjC.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = "MutableArray+ObjC.hh"; sourceTree = "<group>"; };
+		2734B8981F8583FF00BE5249 /* MutableArray+ObjC.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "MutableArray+ObjC.mm"; sourceTree = "<group>"; };
+		2734B8991F8583FF00BE5249 /* MutableDict+ObjC.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = "MutableDict+ObjC.hh"; sourceTree = "<group>"; };
+		2734B89A1F8583FF00BE5249 /* MutableTests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = MutableTests.mm; sourceTree = "<group>"; };
+		2734B89B1F8583FF00BE5249 /* MCollection.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = MCollection.hh; sourceTree = "<group>"; };
+		2734B89C1F8583FF00BE5249 /* MDict.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = MDict.hh; sourceTree = "<group>"; };
+		2734B89D1F8583FF00BE5249 /* MutableDict+ObjC.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "MutableDict+ObjC.mm"; sourceTree = "<group>"; };
 		2746DD3B1D931BE9000517BC /* Benchmark.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Benchmark.hh; sourceTree = "<group>"; };
 		2747D9841CFB9BC300C48211 /* 1person.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = 1person.json; sourceTree = "<group>"; };
 		2750735D1F4B5F0F003D2CCE /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
@@ -250,6 +268,7 @@
 		270FA25E1BF53CAD005DCB13 /* Fleece */ = {
 			isa = PBXGroup;
 			children = (
+				2734B8941F8583FF00BE5249 /* Mutable */,
 				27E3DD2A1DB1C17900F2872D /* ObjC */,
 				278163B71CE6A07A00B94E32 /* Fleece.hh */,
 				272E5A671BFA7C3100848580 /* Internal.hh */,
@@ -349,6 +368,22 @@
 			name = Libraries;
 			sourceTree = "<group>";
 		};
+		2734B8941F8583FF00BE5249 /* Mutable */ = {
+			isa = PBXGroup;
+			children = (
+				2734B8961F8583FF00BE5249 /* MValue.hh */,
+				2734B89B1F8583FF00BE5249 /* MCollection.hh */,
+				2734B8951F8583FF00BE5249 /* MArray.hh */,
+				2734B89C1F8583FF00BE5249 /* MDict.hh */,
+				2734B8971F8583FF00BE5249 /* MutableArray+ObjC.hh */,
+				2734B8981F8583FF00BE5249 /* MutableArray+ObjC.mm */,
+				2734B8991F8583FF00BE5249 /* MutableDict+ObjC.hh */,
+				2734B89D1F8583FF00BE5249 /* MutableDict+ObjC.mm */,
+				2734B89A1F8583FF00BE5249 /* MutableTests.mm */,
+			);
+			path = Mutable;
+			sourceTree = "<group>";
+		};
 		277015321D596436008BADD7 /* libb64 */ = {
 			isa = PBXGroup;
 			children = (
@@ -418,16 +453,22 @@
 				276D15471E007D3000543B1B /* JSON5.hh in Headers */,
 				27298E661C00F8A9000CFBA8 /* jsonsl.h in Headers */,
 				27E3DD4D1DB6C32400F2872D /* CatchHelper.hh in Headers */,
+				2734B8A51F8583FF00BE5249 /* MDict.hh in Headers */,
 				278163BD1CE7A72300B94E32 /* KeyTree.hh in Headers */,
 				27C4ACAD1CE5146500938365 /* Array.hh in Headers */,
+				2734B89E1F8583FF00BE5249 /* MArray.hh in Headers */,
 				27CA08421F6B0E9400FF8C71 /* Dict.hh in Headers */,
 				2797BCAD1C0FBFDE00E5C991 /* StringTable.hh in Headers */,
 				27FE87F41E53E43200C5CF3F /* JSONEncoder.hh in Headers */,
 				270FA2831BF53CEA005DCB13 /* slice.hh in Headers */,
+				2734B8A01F8583FF00BE5249 /* MutableArray+ObjC.hh in Headers */,
 				270FA2851BF53CEA005DCB13 /* varint.hh in Headers */,
+				2734B89F1F8583FF00BE5249 /* MValue.hh in Headers */,
 				270FA2791BF53CEA005DCB13 /* Value.hh in Headers */,
 				270FA2811BF53CEA005DCB13 /* Endian.hh in Headers */,
 				270FA2871BF53D32005DCB13 /* forestdb_endian.h in Headers */,
+				2734B8A21F8583FF00BE5249 /* MutableDict+ObjC.hh in Headers */,
+				2734B8A41F8583FF00BE5249 /* MCollection.hh in Headers */,
 				27E3DD4C1DB6C32400F2872D /* CaseListReporter.hh in Headers */,
 				270FA2801BF53CEA005DCB13 /* Writer.hh in Headers */,
 				270FA27D1BF53CEA005DCB13 /* Encoder.hh in Headers */,
@@ -548,12 +589,14 @@
 				275CED521D3EF7BE001DE46C /* FleeceException.cc in Sources */,
 				278163B51CE69CA800B94E32 /* Fleece_C_impl.cc in Sources */,
 				270515571D905C1D00D62D05 /* Fleece+CoreFoundation.mm in Sources */,
+				2734B8A61F8583FF00BE5249 /* MutableDict+ObjC.mm in Sources */,
 				272E5A611BF91F6C00848580 /* slice+CoreFoundation.cc in Sources */,
 				270FA2821BF53CEA005DCB13 /* slice.cc in Sources */,
 				270FA2781BF53CEA005DCB13 /* Value.cc in Sources */,
 				27E3DD421DB6A14200F2872D /* SharedKeys.cc in Sources */,
 				2770153D1D59645A008BADD7 /* cencode.c in Sources */,
 				27CA08431F6B0E9400FF8C71 /* Dict.cc in Sources */,
+				2734B8A11F8583FF00BE5249 /* MutableArray+ObjC.mm in Sources */,
 				278163BC1CE7A72300B94E32 /* KeyTree.cc in Sources */,
 				27298E801C04E665000CFBA8 /* Encoder.cc in Sources */,
 				27298E3C1C00F812000CFBA8 /* JSONConverter.cc in Sources */,
@@ -575,6 +618,7 @@
 				27E3DD531DB7DB1C00F2872D /* SharedKeysTests.cc in Sources */,
 				276D15491E008E7A00543B1B /* JSON5Tests.cc in Sources */,
 				272E5A5F1BF91DBE00848580 /* ObjCTests.mm in Sources */,
+				2734B8A71F85842300BE5249 /* MutableTests.mm in Sources */,
 				279AC52B1C07776A002C80DB /* ValueTests.cc in Sources */,
 				278163B91CE6BB8C00B94E32 /* C_Test.c in Sources */,
 			);
