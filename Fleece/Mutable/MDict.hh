@@ -17,12 +17,13 @@ namespace fleece {
     class MDict : public MCollection<Native> {
     public:
         using MValue = MValue<Native>;
+        using MCollection = MCollection<Native>;
         using MapType = std::unordered_map<slice, MValue, sliceHash>;
 
         MDict() { }
 
-        void init(MValue *mv, MCollection<Native> *parent) {
-            MCollection<Native>::init(mv, parent);
+        void init(MValue *mv, MCollection *parent) {
+            MCollection::init(mv, parent);
             _dict = (const Dict*)mv->value();
             _count = _dict->count();
             _map.clear();
@@ -43,7 +44,7 @@ namespace fleece {
             if (i != _map.end())
                 return !i->second.isEmpty();
             else
-                return _dict->get(key, MCollection<Native>::_sharedKeys) != nullptr;
+                return _dict->get(key, MCollection::sharedKeys()) != nullptr;
         }
 
         const MValue* get(slice key) const {
@@ -62,11 +63,11 @@ namespace fleece {
             if (i != _map.end()) {
                 if (val.isEmpty() && i->second.isEmpty())
                     return;
-                MCollection<Native>::mutate();
+                MCollection::mutate();
                 _count += !val.isEmpty() - !i->second.isEmpty();
                 i->second = val;
             } else {
-                if (_dict->get(key, MCollection<Native>::_sharedKeys)) {
+                if (_dict->get(key, MCollection::sharedKeys())) {
                     if (val.isEmpty())
                         --_count;
                 } else {
@@ -75,7 +76,7 @@ namespace fleece {
                     else
                         ++_count;
                 }
-                MCollection<Native>::mutate();
+                MCollection::mutate();
                 _setInMap(key, val);
             }
         }
@@ -93,9 +94,9 @@ namespace fleece {
         void clear() {
             if (_count == 0)
                 return;
-            MCollection<Native>::mutate();
+            MCollection::mutate();
             _map.clear();
-            for (Dict::iterator i(_dict, MCollection<Native>::_sharedKeys); i; ++i)
+            for (Dict::iterator i(_dict, MCollection::sharedKeys()); i; ++i)
                 _map.emplace(i.keyString(), MValue::empty);
             _count = 0;
         }
@@ -106,7 +107,7 @@ namespace fleece {
                 if (!item.second.isEmpty())
                     callback(item.first, item.second);
             }
-            for (Dict::iterator i(_dict, MCollection<Native>::_sharedKeys); i; ++i) {
+            for (Dict::iterator i(_dict, MCollection::sharedKeys()); i; ++i) {
                 slice key = i.keyString();
                 if (_map.find(key) == _map.end())
                     callback(key, MValue(i.value()));
@@ -114,7 +115,7 @@ namespace fleece {
         }
 
         void encodeTo(Encoder &enc) const {
-            if (!MCollection<Native>::isMutated()) {
+            if (!MCollection::isMutated()) {
                 enc << _dict;
             } else {
                 enc.beginDictionary(count());

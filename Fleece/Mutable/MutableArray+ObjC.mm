@@ -12,6 +12,17 @@
 #define UU __unsafe_unretained
 
 
+@interface NSObject (Fleece)
+@property (readonly, nonatomic) fleece::MCollection<id>* fl_collection;
+@end
+
+@implementation NSObject (Fleece)
+- (fleece::MCollection<id>*) fl_collection {
+    return nullptr;
+}
+@end
+
+
 namespace fleece {
 
     template<>
@@ -31,11 +42,8 @@ namespace fleece {
     }
 
     template<>
-    void MValue<id>::nativeChangeSlot(MValue<id> *newSlot) {
-        if (_value || [_native isKindOfClass: [FleeceArray class]]
-                   || [_native isKindOfClass: [FleeceDict class]]) {
-            [_native setSlot: newSlot from: this];
-        }
+    MCollection<id>* MValue<id>::fromNative(id native) {
+        return [native fl_collection];
     }
 
     template<>
@@ -67,11 +75,11 @@ using namespace fleece;
     return self;
 }
 
-- (instancetype) initWithMArray: (const MArray<id>&)mArray {
+- (instancetype) initWithCopyOfMArray: (const MArray<id>&)mArray isMutable: (bool)isMutable {
     self = [super init];
     if (self) {
         _array.init(mArray);
-        _mutable = true;
+        _mutable = isMutable;
         NSLog(@"INIT FleeceArray %p", self);
     }
     return self;
@@ -79,21 +87,36 @@ using namespace fleece;
 
 
 - (id) copyWithZone:(NSZone *)zone {
-    if (_mutable)
-        return [[[self class] alloc] initWithMArray: _array];
-    else
+    if (!_mutable)
         return self;
+    return [[[self class] alloc] initWithCopyOfMArray: _array isMutable: false];
 }
 
 
 - (NSMutableArray*) mutableCopyWithZone:(NSZone *)zone {
-    return [[[self class] alloc] initWithMArray: _array];
+    return [[[self class] alloc] initWithCopyOfMArray: _array isMutable: true];
 }
 
 
-- (void) setSlot: (MValue<id>*)newSlot from: (MValue<id>*)oldSlot {
-    NSLog(@"FleeceArray %p: change parent from=%p to=%p", self, oldSlot, newSlot);
-    _array.setSlot(newSlot, oldSlot);
+- (void) fl_encodeTo: (Encoder*)enc {
+    _array.encodeTo(*enc);
+}
+
+
+- (MCollection<id>*) fl_collection {
+    return &_array;
+}
+
+
+[[noreturn]] static void throwRangeException(NSUInteger index) {
+    [NSException raise: NSRangeException format: @"Array index %zu is out of range", index];
+    abort();
+}
+
+
+[[noreturn]] static void throwNilValueException() {
+    [NSException raise: NSInvalidArgumentException format: @"Attempt to store nil value in array"];
+    abort();
 }
 
 
@@ -103,49 +126,53 @@ using namespace fleece;
 
 
 - (id) objectAtIndex: (NSUInteger)index {
-    return _array.get((uint32_t)index).asNative(&_array, _mutable);
-}
-
-
-- (void) fl_encodeTo: (Encoder*)enc {
-    _array.encodeTo(*enc);
+    auto &val = _array.get((uint32_t)index);
+    if (_usuallyFalse(val.isEmpty()))
+        throwRangeException(index);
+    return val.asNative(&_array, _mutable);
 }
 
 
 - (void)addObject:(UU id)anObject {
     NSParameterAssert(_mutable);
-    NSParameterAssert(anObject != nil);
-    _array.insert(_array.count(), anObject);
+    if (_usuallyFalse(!_array.insert(_array.count(), anObject)))
+        throwNilValueException();
 }
 
 
 - (void)insertObject:(UU id)anObject atIndex:(NSUInteger)index {
     NSParameterAssert(_mutable);
-    NSParameterAssert(index <= _array.count());
-    NSParameterAssert(anObject != nil);
-    _array.insert((uint32_t)index, anObject);
+    if (_usuallyFalse(!_array.insert((uint32_t)index, anObject))) {
+        if (!anObject)
+            throwNilValueException();
+        else
+            throwRangeException(index);
+    }
 }
 
 
 - (void)removeLastObject {
     NSParameterAssert(_mutable);
-    NSParameterAssert(_array.count() > 0);
-    _array.remove(_array.count()-1);
+    if (!_array.remove(_array.count()-1))
+        throwRangeException(0);
 }
 
 
 - (void)removeObjectAtIndex:(NSUInteger)index {
     NSParameterAssert(_mutable);
-    NSParameterAssert(index < _array.count());
-    _array.remove((uint32_t)index);
+    if (_usuallyFalse(!_array.remove((uint32_t)index)))
+        throwRangeException(index);
 }
 
 
-- (void)replaceObjectAtIndex:(NSUInteger)index withObject:(id)anObject {
+- (void)replaceObjectAtIndex:(NSUInteger)index withObject:(UU id)anObject {
     NSParameterAssert(_mutable);
-    NSParameterAssert(index < _array.count());
-    NSParameterAssert(anObject != nil);
-    _array.set((uint32_t)index, anObject);
+    if (_usuallyFalse(!_array.set((uint32_t)index, anObject))) {
+        if (!anObject)
+            throwNilValueException();
+        else
+            throwRangeException(index);
+    }
 }
 
 
@@ -184,13 +211,22 @@ using namespace fleece;
     state->state += n;
     return n;
 }
+#endif
 
+
+#if 0
 // This is what the %@ substitution calls.
 - (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level {
     NSMutableString* desc = [@"[\n" mutableCopy];
-    for (auto iter = _array->begin(); iter; ++iter) {
-        NSString* valStr = (NSString*)iter->toJSON();
-        [desc appendFormat: @"    %@,\n", valStr];
+    uint32_t count = _array.count();
+    for (uint32_t i = 0; i < count; ++i) {
+        [desc appendString: @"    "];
+        auto mVal = _array.get(i);
+        if (mVal.value())
+            [desc appendString: (NSString*)mVal.value()->toJSON()];
+        else
+            [desc appendString: [mVal.asNative(&_array, _mutable) description]];
+        [desc appendString: @",\n"];
     };
     [desc appendString: @"]"];
     return desc;

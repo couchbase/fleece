@@ -88,10 +88,26 @@ namespace fleece {
             _value = nullptr;
         }
 
+        void nativeChangeSlot(MValue *newSlot) {
+            MCollection<Native>* val = fromNative(_native);
+            if (val)
+                val->setSlot(newSlot, this);
+        }
+
     protected:
         // These methods must be specialized for each specific Native type:
+
+        /** Must instantiate and return a Native object corresponding to the receiver.
+             May cache the object by assigning it to `_native`.
+             @param parent  The owning collection, if any
+             @param asMutable  True if the Native object should be a mutable collection.
+             @return  A new Native object corresponding to the receiver. */
         Native toNative(MCollection<id> *parent, bool asMutable);
-        void nativeChangeSlot(MValue *newSlot);
+
+        /** Must return the MCollection object corresponding to _native, if any. */
+        static MCollection<Native>* fromNative(Native);
+
+        /** Must write the Native object to the encoder as a Fleece value. */
         static void encodeNative(Encoder&, Native);
 
     private:

@@ -12,10 +12,10 @@
 
 
 @interface FleeceDict : NSMutableDictionary
+
 - (instancetype) initWithMValue: (fleece::MValue<id>*)mv
                        inParent: (fleece::MCollection<id>*)parent
                       isMutable: (bool)isMutable;
-- (void) setSlot: (fleece::MValue<id>*)newSlot from: (fleece::MValue<id>*)oldSlot;
 
 - (BOOL)containsObjectForKey:(NSString *)key;
 @end

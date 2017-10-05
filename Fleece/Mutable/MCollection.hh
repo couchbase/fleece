@@ -36,13 +36,17 @@ namespace fleece {
 
     public:
         void setSlot(MValue *newSlot, MValue *oldSlot) {
-            assert(_slot == oldSlot);
-            _slot = newSlot;
-            if (!newSlot)
-                _parent = nullptr;
+            if (_slot == oldSlot) {
+                _slot = newSlot;
+                if (!newSlot)
+                    _parent = nullptr;
+            }
         }
 
     protected:
+        alloc_slice originalData() const            {return _data;}
+        SharedKeys* sharedKeys() const              {return _sharedKeys;}
+        
         bool isMutated() const {
             return !_slot || _slot->isMutated();
         }
@@ -54,6 +58,7 @@ namespace fleece {
                 _parent->mutate();
         }
 
+    private:
         MValue*         _slot {nullptr};            // Value representing this collection
         MCollection*    _parent {nullptr};          // Parent collection
         alloc_slice     _data;                      // Fleece data; ensures it doesn't go away
@@ -65,16 +70,20 @@ namespace fleece {
     template <class Native>
     class MRoot : private MCollection<Native> {
     public:
+        using MCollection = MCollection<Native>;
+
+        MRoot() =default;
+
         MRoot(alloc_slice fleeceData,
               SharedKeys *sk,
               const Value *value,
               bool mutableContainers =true)
-        :MCollection<Native>(fleeceData, sk)
+        :MCollection(fleeceData, sk)
         ,_rootSlot(value)
         ,_mutableContainers(mutableContainers)
         {
             assert(value != nullptr);
-            MCollection<Native>::init(&_rootSlot, nullptr);
+            MCollection::init(&_rootSlot, nullptr);
         }
 
         MRoot(alloc_slice fleeceData,
@@ -83,8 +92,10 @@ namespace fleece {
         :MRoot(fleeceData, sk, Value::fromData(fleeceData), mutableContainers)
         { }
 
-        alloc_slice originalData() const    {return MCollection<Native>::_data;}
-        SharedKeys* sharedKeys() const      {return MCollection<Native>::_sharedKeys;}
+        explicit operator bool() const      {return !_rootSlot.isEmpty();}
+
+        alloc_slice originalData() const    {return MCollection::originalData();}
+        SharedKeys* sharedKeys() const      {return MCollection::sharedKeys();}
 
         Native asNative() const             {return _rootSlot.asNative(this, _mutableContainers);}
         bool isMutated() const              {return _rootSlot.isMutated();}

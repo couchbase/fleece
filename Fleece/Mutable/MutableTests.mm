@@ -9,6 +9,7 @@
 #include <Foundation/Foundation.h>
 #include "FleeceTests.hh"
 #include "MutableDict+ObjC.hh"
+#include "FleeceDocument.h"
 
 
 static alloc_slice encode(id obj) {
@@ -47,8 +48,6 @@ TEST_CASE("MValue", "[Mutable]") {
 }
 
 
-
-
 TEST_CASE("MDict", "[Mutable]") {
     auto data = encode(@{@"greeting": @"hi",
                          @"array":    @[@"boo", @NO],
@@ -56,6 +55,7 @@ TEST_CASE("MDict", "[Mutable]") {
     MRoot<id> root(data);
     CHECK(!root.isMutated());
     NSMutableDictionary* dict = root.asNative();
+    NSLog(@"FleeceDict = %@", dict);
     CHECK(([sortedKeys(dict) isEqual: @[@"array", @"dict", @"greeting"]]));
     CHECK([dict[@"greeting"] isEqual: @"hi"]);
     CHECK(dict[@"x"] == nil);
@@ -84,6 +84,7 @@ TEST_CASE("MArray", "[Mutable]") {
     MRoot<id> root(data);
     CHECK(!root.isMutated());
     NSMutableArray* array = root.asNative();
+    NSLog(@"FleeceArray = %@", array);
     NSLog(@"Check item 0");
     CHECK([array[0] isEqual: @"hi"]);
     NSLog(@"Check item 1");
@@ -103,4 +104,38 @@ TEST_CASE("MArray", "[Mutable]") {
     CHECK(fleece2JSON(encode(array)) == "[[3.14,2.17],[\"boo\",true],\"NEW\",42]");
     CHECK(fleece2JSON(encode(root))   == "[[3.14,2.17],[\"boo\",true],\"NEW\",42]");
 
+}
+
+
+TEST_CASE("MDict no root", "[Mutable]") {
+    NSMutableDictionary* dict;
+    @autoreleasepool {
+        auto data = encode(@{@"greeting": @"hi",
+                             @"array":    @[@"boo", @NO],
+                             @"dict":     @{@"melt": @32, @"boil": @212}});
+        dict = [FleeceDocument objectFromFleeceSlice: data
+                                          sharedKeys: nullptr
+                                   mutableContainers: YES];
+    }
+    NSLog(@"FleeceDict = %@", dict);
+    CHECK(([sortedKeys(dict) isEqual: @[@"array", @"dict", @"greeting"]]));
+    CHECK([dict[@"greeting"] isEqual: @"hi"]);
+    CHECK(dict[@"x"] == nil);
+
+    NSMutableDictionary* nested = dict[@"dict"];
+    CHECK(([sortedKeys(nested) isEqual: @[@"boil", @"melt"]]));
+    CHECK(([nested isEqual: @{@"melt": @32, @"boil": @212}]));
+    CHECK([nested[@"melt"] isEqual: @32]);
+    CHECK([nested[@"boil"] isEqual: @212]);
+    CHECK(nested[@"freeze"] == nil);
+    CHECK(([nested isEqual: @{@"melt": @32, @"boil": @212}]));
+    //CHECK(!root.isMutated());
+
+    nested[@"freeze"] = @[@32, @"Fahrenheit"];
+    //CHECK(root.isMutated());
+    [nested removeObjectForKey: @"melt"];
+    CHECK(([nested isEqual: @{@"freeze": @[@32, @"Fahrenheit"], @"boil": @212}]));
+
+    CHECK(fleece2JSON(encode(dict)) == "{array:[\"boo\",false],dict:{boil:212,freeze:[32,\"Fahrenheit\"]},greeting:\"hi\"}");
+//    CHECK(fleece2JSON(encode(root)) == "{array:[\"boo\",false],dict:{boil:212,freeze:[32,\"Fahrenheit\"]},greeting:\"hi\"}");
 }

@@ -17,11 +17,12 @@ namespace fleece {
     class MArray : public MCollection<Native> {
     public:
         using MValue = MValue<Native>;
+        using MCollection = MCollection<Native>;
 
         MArray() { }
 
-        void init(MValue *mv, MCollection<Native> *parent) {
-            MCollection<Native>::init(mv, parent);
+        void init(MValue *mv, MCollection *parent) {
+            MCollection::init(mv, parent);
             _array = (const Array*)mv->value();
             _vec.clear();
             _vec.resize(_array->count());
@@ -36,21 +37,25 @@ namespace fleece {
             return (uint32_t)_vec.size();
         }
 
-        const MValue& get(uint32_t i) const {
+        const MValue& get(size_t i) const {
             if (i >= _vec.size())
                 return MValue::empty;
             const MValue &val = _vec[i];
             if (val.isEmpty())
-                const_cast<MValue&>(val) = _array->get(i);
+                const_cast<MValue&>(val) = _array->get((uint32_t)i);
             return val;
         }
 
-        void set(uint32_t i, Native val) {
-            assert(i < count());
-            MCollection<Native>::mutate();
+        bool set(size_t i, Native val) {
+            if (i >= count() || val == nullptr)
+                return false;
+            MCollection::mutate();
             _vec[i] = val;
+            return true;
         }
 
+        // Loads the Fleece Values of all items into _array.
+        // Called by insert() and remove() before they perturb the array indexing.
         void populateVec() {
             uint32_t i = 0;
             for (auto &v : _vec) {
@@ -59,31 +64,37 @@ namespace fleece {
             }
         }
 
-        void insert(uint32_t i, Native val) {
-            assert(i <= count());
-            MCollection<Native>::mutate();
-            if (i < count())
+        bool insert(size_t i, Native val) {
+            size_t cnt = count();
+            if (i > cnt || val == nullptr)
+                return false;
+            else if (i < cnt)
                 populateVec();
+            MCollection::mutate();
             _vec.emplace(_vec.begin() + i, val);
+            return true;
         }
 
-        void remove(uint32_t i) {
-            assert(i < count());
-            MCollection<Native>::mutate();
-            if (i < count()-1)
+        bool remove(size_t i) {
+            size_t cnt = count();
+            if (i >= cnt)
+                return false;
+            else if (i < cnt-1)
                 populateVec();
+            MCollection::mutate();
             _vec.erase(_vec.begin() + i);
+            return true;
         }
 
         void clear() {
             if (_vec.empty())
                 return;
-            MCollection<Native>::mutate();
+            MCollection::mutate();
             _vec.clear();
         }
 
         void encodeTo(Encoder &enc) const {
-            if (!MCollection<Native>::isMutated()) {
+            if (!MCollection::isMutated()) {
                 enc << _array;
             } else {
                 enc.beginArray(count());

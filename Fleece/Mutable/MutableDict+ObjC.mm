@@ -30,10 +30,10 @@ using namespace fleece;
     return self;
 }
 
-- (instancetype) initWithMDict: (const MDict<id>&)mDict isMutable: (bool)isMutable {
+- (instancetype) initWithCopyOfMDict: (const MDict<id>&)mDict isMutable: (bool)isMutable {
     self = [super init];
     if (self) {
-        _dict = mDict;
+        _dict = mDict;              // this copies mDict into _dict
         _mutable = isMutable;
         NSLog(@"INIT FleeceDict %p", self);
     }
@@ -42,25 +42,24 @@ using namespace fleece;
 
 
 - (instancetype) copyWithZone:(NSZone *)zone {
-    if (_mutable)
-        return [[[self class] alloc] initWithMDict: _dict isMutable: false];
-    else
+    if (!_mutable)
         return self;
+    return [[[self class] alloc] initWithCopyOfMDict: _dict isMutable: false];
 }
 
 
 - (instancetype) mutableCopyWithZone:(NSZone *)zone {
-    return [[[self class] alloc] initWithMDict: _dict isMutable: true];
-}
-
-
-- (void) setSlot: (fleece::MValue<id>*)newSlot from: (fleece::MValue<id>*)oldSlot {
-    _dict.setSlot(newSlot, oldSlot);
+    return [[[self class] alloc] initWithCopyOfMDict: _dict isMutable: true];
 }
 
 
 - (void) fl_encodeTo: (Encoder*)enc {
     _dict.encodeTo(*enc);
+}
+
+
+- (MCollection<id>*) fl_collection {
+    return &_dict;
 }
 
 
@@ -78,9 +77,7 @@ using namespace fleece;
     if (![key isKindOfClass: [NSString class]])
         return nil;
     auto value = _dict.get(nsstring_slice(key));
-    id result = value ? value->asNative(&_dict, _mutable) : nil;
-    NSLog(@"objectForKey: '%@' = %@", key, result);//TEMP
-    return result;
+    return value ? value->asNative(&_dict, _mutable) : nil;
 }
 
 
@@ -107,7 +104,6 @@ using namespace fleece;
     _dict.enumerate(^(slice key, const MValue<id> &value) {
         [keys addObject: (NSString*)key];
     });
-    NSLog(@"allKeys = %@", keys);//TEMP
     return keys;
 }
 
@@ -158,20 +154,32 @@ using namespace fleece;
 #endif
 
 
+#if 0
 // This is what the %@ substitution calls.
 - (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level {
     NSMutableString* desc = [@"{\n" mutableCopy];
-    _dict.enumerate(^(slice key, const MValue<id> &value) {
+    __block NSUInteger n = 0;
+    _dict.enumerate(^(slice key, const MValue<id> &mValue) {
+        if (n++ > 0)
+            [desc appendString: @",\n"];
         for (NSUInteger i = 0; i <= level; i++)
             [desc appendString: @"    "];
-        [desc appendFormat: @"\"%.*s\": %@,\n",
-                        (int)key.size, key.buf,
-                        [value.asNative(&_dict, _mutable) descriptionWithLocale: locale /*indent: level+1*/]];
+        id value = mValue.asNative(&_dict, _mutable);
+        NSString* valueDesc;
+        if ([value respondsToSelector: @selector(descriptionWithLocale:indent:)])
+            valueDesc = [value descriptionWithLocale: locale indent: level+1];
+        else if ([value respondsToSelector: @selector(descriptionWithLocale:)])
+            valueDesc = [value descriptionWithLocale: locale];
+        else
+            valueDesc = [value description];
+        [desc appendFormat: @"\"%.*s\": %@", (int)key.size, key.buf, valueDesc];
     });
+    [desc appendString: @"\n"];
     for (NSUInteger i = 0; i < level; i++)
         [desc appendString: @"    "];
     [desc appendString: @"}"];
     return desc;
 }
+#endif
 
 @end
