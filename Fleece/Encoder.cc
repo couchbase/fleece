@@ -218,21 +218,19 @@ namespace fleece {
     }
 
     // Returns the location where s got written to, if possible, just like writeData above.
-    slice Encoder::_writeString(slice s, bool asKey) {
+    slice Encoder::_writeString(slice s) {
         // Check whether this string's already been written:
         if (_usuallyTrue(_uniqueStrings && s.size >= kNarrow && s.size <= kMaxSharedStringSize)) {
             auto &entry = _strings.find(s);
             if (entry.first.buf != nullptr) {
 //                fprintf(stderr, "Found `%.*s` --> %u\n", (int)s.size, s.buf, entry.second);
-                writePointer(entry.second.offset);
+                writePointer(entry.second.offset - _base.size);
 #ifndef NDEBUG
                 _numSavedStrings++;
 #endif
-                if (asKey)
-                    entry.second.usedAsKey = true;
                 return entry.first;
             } else {
-                auto offset = nextWritePos();
+                auto offset = _base.size + nextWritePos();
                 throwIf(offset > 1u<<31, MemoryError, "encoded data too large");
                 s = writeData(kStringTag, s);
                 if (s.buf) {
@@ -241,7 +239,7 @@ namespace fleece {
                         fprintf(stderr, "---- new encoder ----\n");
                     fprintf(stderr, "Caching `%.*s` --> %u\n", (int)s.size, s.buf, offset);
 #endif
-                    StringTable::info i = {asKey, (uint32_t)offset};
+                    StringTable::info i = {(uint32_t)offset};
                     _strings.addAt(entry, s, i);
                 }
                 return s;
@@ -251,8 +249,18 @@ namespace fleece {
         }
     }
 
+    // Adds a preexisting string to the cache
+    void Encoder::cacheString(slice s, size_t offsetInBase) {
+        if (_usuallyTrue(_uniqueStrings && s.size >= kNarrow && s.size <= kMaxSharedStringSize)) {            auto &entry = _strings.find(s);
+            if (entry.first.buf == nullptr) {
+                StringTable::info i = {(unsigned)offsetInBase};
+                _strings.addAt(entry, s, i);
+            }
+        }
+    }
+
     void Encoder::writeString(const std::string &s) {
-        _writeString(slice(s), false);
+        _writeString(slice(s));
     }
 
     void Encoder::writeData(slice s) {
@@ -260,8 +268,38 @@ namespace fleece {
     }
 
 
-    void Encoder::writeValue(const Value *value, const SharedKeys *sk) {
+    void Encoder::reuseBaseStrings() {
+        reuseBaseStrings(Value::fromTrustedData(_base));
+    }
+
+    void Encoder::reuseBaseStrings(const Value *value) {
         switch (value->tag()) {
+            case kStringTag:
+                cacheString(value->asString(), (size_t)value - (ssize_t)_base.buf);
+                break;
+            case kArrayTag:
+                for (Array::iterator iter(value->asArray()); iter; ++iter)
+                    reuseBaseStrings(iter.value());
+                break;
+            case kDictTag:
+                for (Dict::iterator iter(value->asDict()); iter; ++iter) {
+                    reuseBaseStrings(iter.key());
+                    reuseBaseStrings(iter.value());
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+
+#pragma mark - WRITING VALUES:
+
+
+    void Encoder::writeValue(const Value *value, const SharedKeys *sk) {
+        if (valueIsInBase(value)) {
+            writePointer( (ssize_t)value - (ssize_t)_base.end() );
+        } else switch (value->tag()) {
             case kShortIntTag:
             case kIntTag:
             case kFloatTag:
@@ -310,8 +348,22 @@ namespace fleece {
 
 #pragma mark - POINTERS:
 
-    // Pointers are added here as absolute positions in the stream (and fixed up before writing)
-    void Encoder::writePointer(size_t p)   {addItem(Value(p, kWide));}
+
+    // Pointers are added here as absolute positions in the stream, then fixed up before they're
+    // written to the output. This is because we don't know yet what the position of the pointer
+    // itself will be.
+    // When there's a base (i.e. we're writing a delta), we calculate the absolute position as
+    // being from the start of the base data. That way we can represent pointers back into the base
+    // without having to write negative numbers as positions.
+
+    bool Encoder::valueIsInBase(const Value *value) const {
+        return _base && value >= _base.buf && value < _base.end();
+    }
+
+    // Parameter p is an offset into the current stream, not taking into account the base.
+    void Encoder::writePointer(ssize_t p)   {
+        addItem(Value(_base.size + p, kWide));
+    }
 
     // Check whether any pointers in _items can't fit in a narrow Value:
     void Encoder::checkPointerWidths(valueArray *items) {
@@ -319,7 +371,7 @@ namespace fleece {
             size_t base = nextWritePos();
             for (auto v = items->begin(); v != items->end(); ++v) {
                 if (v->isPointer()) {
-                    size_t pos = v->pointerValue<true>();
+                    ssize_t pos = v->pointerValue<true>() - _base.size;
                     if (base - pos >= 0x10000) {
                         items->wide = true;
                         break;
@@ -336,8 +388,8 @@ namespace fleece {
         int width = items->wide ? kWide : kNarrow;
         for (auto v = items->begin(); v != items->end(); ++v) {
             if (v->isPointer()) {
-                size_t pos = v->pointerValue<true>();
-                assert(pos < base);
+                ssize_t pos = v->pointerValue<true>() - _base.size;
+                assert(pos < (ssize_t)base);
                 pos = base - pos;
                 *v = Value(pos, width);
             }
@@ -347,7 +399,19 @@ namespace fleece {
 
 #pragma mark - ARRAYS / DICTIONARIES:
 
-    void Encoder::writeKey(const std::string &s)   {writeKey(slice(s));}
+    void Encoder::addingKey() {
+        if (_usuallyFalse(!_blockedOnKey)) {
+            if (_items->tag == kDictTag)
+                FleeceException::_throw(EncodeError, "need a value after a key");
+            else
+                FleeceException::_throw(EncodeError, "not writing a dictionary");
+        }
+        _blockedOnKey = false;
+    }
+
+    void Encoder::writeKey(const std::string &s) {
+        writeKey(slice(s));
+    }
 
     void Encoder::writeKey(slice s) {
         int encoded;
@@ -355,28 +419,32 @@ namespace fleece {
             writeKey(encoded);
             return;
         }
-        if (_usuallyFalse(!_blockedOnKey))
-            throwUnexpectedKey();
-        _blockedOnKey = false;
-        s = _writeString(s, true);
-        if (_sortKeys)
-            _items->keys.push_back(s);
+        addingKey();
+        addedKey(_writeString(s));
     }
 
     void Encoder::writeKey(int n) {
-        if (_usuallyFalse(!_blockedOnKey))
-            throwUnexpectedKey();
-        _blockedOnKey = false;
+        addingKey();
         writeInt(n);
-        if (_sortKeys)
-            _items->keys.push_back(nullslice);
+        addedKey(nullslice);
     }
 
-    void Encoder::throwUnexpectedKey() {
-        if (_items->tag == kDictTag)
-            FleeceException::_throw(EncodeError, "need a value after a key");
-        else
-            FleeceException::_throw(EncodeError, "not writing a dictionary");
+    void Encoder::writeKey(const Value *key) {
+        slice str = key->asString();
+        if (str) {
+            addingKey();
+            writeValue(key, nullptr);
+            addedKey(str);
+        } else {
+            throwIf(!key->isInteger(), InvalidData, "Key must be a string or integer");
+            throwIf(!valueIsInBase(key), InvalidData, "Numeric key must be in the base");
+            writeKey((int)key->asInt());
+        }
+    }
+
+    void Encoder::addedKey(slice str) {
+        if (_sortKeys)
+            _items->keys.push_back(str);
     }
 
     void Encoder::push(tags tag, size_t reserve) {
@@ -528,25 +596,5 @@ namespace fleece {
         }
     }
 
-    // Writes an array of strings, containing all the strings that have appeared as dictionary keys
-    // so far. The array is structured as a hash table; it's literally organized as a dump of a
-    // StringTable. That means that a reader can use the same hash function and algorithm as
-    // StringTable to very quickly convert a platform string to a Fleece Value.
-    void Encoder::writeKeyTable() {
-        StringTable keys;
-        for (auto iter = _strings.begin(); iter != _strings.end(); ++iter) {
-            if (iter->buf && iter.value().usedAsKey)
-                keys.add(iter, iter.value());
-        }
-
-        beginArray();
-        for (auto iter = keys.begin(); iter != keys.end(); ++iter) {
-            if (iter->buf) {
-                writeString(iter);
-            } else {
-                writeNull();
-            }
-        }
-        endArray();
-    }
 }
+

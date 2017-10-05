@@ -45,6 +45,12 @@ namespace fleece {
     };
 
 
+    class Null {
+    };
+
+    constexpr Null nullValue;
+
+
     /* An encoded data value */
     class Value {
     public:
@@ -202,6 +208,7 @@ namespace fleece {
 
         template <bool WIDE>
         static const Value* derefPointer(const Value *v) {
+            assert(v->pointerValue<WIDE>() > 0);
             return offsetby(v, -(ptrdiff_t)v->pointerValue<WIDE>());
         }
         static const Value* derefPointer(const Value *v, bool wide) {
@@ -221,7 +228,7 @@ namespace fleece {
         size_t dataSize() const noexcept;
         typedef std::map<size_t, const Value*> mapByAddress;
         void mapAddresses(mapByAddress&) const;
-        void dump(std::ostream &out, bool wide, int indent, const void *base) const;
+        size_t dump(std::ostream &out, bool wide, int indent, const void *base) const;
         void writeDumpBrief(std::ostream &out, const void *base, bool wide =false) const;
 
         //////// Here's the data:

@@ -58,7 +58,7 @@ namespace fleece {
         return _byKey[key];
     }
 
-    
+
     SharedKeys::PlatformString SharedKeys::platformStringForKey(int key) const {
         throwIf(key < 0, InvalidData, "key must be non-negative");
         if ((unsigned)key >= _platformStringsByKey.size())
@@ -81,7 +81,7 @@ namespace fleece {
         _byKey.emplace_back(str);
         str = _byKey.back();
         auto id = (uint32_t)count();
-        StringTable::info info{true, id};
+        StringTable::info info{id};
         _table.add(str, info);
         return id;
     }
@@ -97,7 +97,7 @@ namespace fleece {
         _table.clear();
         uint32_t key = 0;
         for (auto i = _byKey.begin(); i != _byKey.end(); ++i) {
-            StringTable::info info{true, key++};
+            StringTable::info info{key++};
             _table.add(*i, info);
         }
     }
@@ -110,7 +110,7 @@ namespace fleece {
     PersistentSharedKeys::PersistentSharedKeys()
     { }
 
-    
+
     bool PersistentSharedKeys::refresh() {
         return !_inTransaction && read();
     }
@@ -122,7 +122,7 @@ namespace fleece {
         read();     // Catch up with any external changes
     }
 
-    
+
     void PersistentSharedKeys::transactionEnded() {
         if (_inTransaction) {
             _committedPersistedCount = _persistedCount;
@@ -181,3 +181,4 @@ namespace fleece {
     }
 
 }
+

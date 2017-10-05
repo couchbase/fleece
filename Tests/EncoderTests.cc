@@ -145,7 +145,7 @@ public:
             REQUIRE(v->asUnsigned() == (uint64_t)i);
         }
     }
-    
+
     void checkJSONStr(std::string json,
                       const char *expectedStr,
                       int expectedErr = JSONSL_ERROR_SUCCESS)
@@ -271,9 +271,11 @@ public:
         for (int bits = 0; bits < 64; ++bits) {
             int64_t i = 1LL << bits;
             enc.writeInt(i);      endEncoding();  checkRead(i);
-            enc.writeInt(-i);     endEncoding();  checkRead(-i);
-            enc.writeInt(i - 1);  endEncoding();  checkRead(i - 1);
-            enc.writeInt(1 - i);  endEncoding();  checkRead(1 - i);
+            if (bits < 63) {
+                enc.writeInt(-i);     endEncoding();  checkRead(-i);
+                enc.writeInt(i - 1);  endEncoding();  checkRead(i - 1);
+                enc.writeInt(1 - i);  endEncoding();  checkRead(1 - i);
+            }
         }
         for (int bits = 0; bits < 64; ++bits) {
             uint64_t i = 1LLU << bits;
@@ -593,7 +595,7 @@ public:
 #if 0
         // Dump the string table and some statistics:
         auto &strings = enc._strings;
-        unsigned i = 0, totalMisses = 0, totalStrLength = 0, totalKeys = 0;
+        unsigned i = 0, totalMisses = 0, totalStrLength = 0;
         for (auto iter = strings.begin(); iter != strings.end(); ++iter) {
             if (iter->buf) {
                 auto hash = StringTable::hash(iter);
@@ -607,18 +609,15 @@ public:
                     totalMisses += misses;
                 }
                 totalStrLength += iter->size;
-                if (iter.Value().usedAsKey)
-                    totalKeys++;
                 fprintf(stderr, "\t%5X: (%08X%s) `%.*s` --> %u\n", i, hash, x, (int)iter->size, iter->buf, iter.Value().offset);
             } else {
                 fprintf(stderr, "\t%5X: ----\n", i);
             }
             ++i;
         }
-        fprintf(stderr, "Capacity %zd, %zu occupied (%.0f%%), %zd keys, average of %.3g misses\n",
+        fprintf(stderr, "Capacity %zd, %zu occupied (%.0f%%), average of %.3g misses\n",
                 strings.tableSize(), strings.count(),
                 strings.count()/(double)strings.tableSize()*100.0,
-                totalKeys,
                 totalMisses / (double)strings.count());
         fprintf(stderr, "Total string size %u bytes\n", totalStrLength);
 #endif
@@ -849,3 +848,4 @@ public:
         REQUIRE(keys[(unsigned)9999].buf == nullptr);
     }
 };
+
