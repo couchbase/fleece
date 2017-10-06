@@ -49,7 +49,8 @@ namespace fleece {
         virtual
 #endif
         ~MValue() {
-            setNative(nullptr);
+            if (_native)
+                nativeChangeSlot(nullptr);
         }
 
         MValue& operator= (MValue &&mv) noexcept {
@@ -73,6 +74,7 @@ namespace fleece {
             return *this;
         }
 
+        const Value* value() const  {return _value;}
         bool isEmpty() const        {return _value == nullptr && _native == nullptr;}
         bool isMutated() const      {return _value == nullptr;}
 
@@ -80,10 +82,6 @@ namespace fleece {
             if (!_native && _value)
                 return const_cast<MValue*>(this)->toNative(const_cast<MCollection<Native>*>(parent));
             return _native;
-        }
-
-        const Value* value() const {
-            return _value;
         }
 
         void encodeTo(Encoder &enc) const {
@@ -106,7 +104,7 @@ namespace fleece {
             @param parent  The owning collection, if any
             @param asMutable  True if the Native object should be a mutable collection.
             @return  A new Native object corresponding to the receiver. */
-        Native toNative(MCollection<id> *parent);
+        Native toNative(MCollection<Native> *parent);
 
         /** Must return the MCollection object corresponding to _native,
             or null if the object doesn't correspond to a collection. */

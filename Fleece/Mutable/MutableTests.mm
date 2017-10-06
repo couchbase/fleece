@@ -9,6 +9,7 @@
 #include <Foundation/Foundation.h>
 #include "FleeceTests.hh"
 #include "MutableDict+ObjC.hh"
+#include "MRoot.hh"
 #include "FleeceDocument.h"
 
 
@@ -95,7 +96,7 @@ TEST_CASE("MDict", "[Mutable]") {
     std::cerr <<   "Delta:         " << delta.size << " bytes: " << delta << "\n\n";
     Value::dump(combinedData, std::cerr);
     }
-    CHECK(Context::gInstanceCount == 0);
+    CHECK(internal::Context::gInstanceCount == 0);
 }
 
 
@@ -106,11 +107,8 @@ TEST_CASE("MArray", "[Mutable]") {
     CHECK(!root.isMutated());
     NSMutableArray* array = root.asNative();
     NSLog(@"FleeceArray = %@", array);
-    NSLog(@"Check item 0");
     CHECK([array[0] isEqual: @"hi"]);
-    NSLog(@"Check item 1");
     CHECK([array[2] isEqual: @42]);
-    NSLog(@"Check item 2");
     CHECK(([array[1] isEqual: @[@"boo", @NO]]));
 
     array[0] = @[@(3.14), @(2.17)];
@@ -125,7 +123,7 @@ TEST_CASE("MArray", "[Mutable]") {
     CHECK(fleece2JSON(encode(array)) == "[[3.14,2.17],[\"boo\",true],\"NEW\",42]");
     CHECK(fleece2JSON(encode(root))   == "[[3.14,2.17],[\"boo\",true],\"NEW\",42]");
     }
-    CHECK(Context::gInstanceCount == 0);
+    CHECK(internal::Context::gInstanceCount == 0);
 }
 
 
@@ -141,6 +139,7 @@ TEST_CASE("MDict no root", "[Mutable]") {
                                    mutableContainers: YES];
     }
     NSLog(@"FleeceDict = %@", dict);
+    //CHECK(!((FleeceDict*)dict).isMutated);
     CHECK(([sortedKeys(dict) isEqual: @[@"array", @"dict", @"greeting"]]));
     CHECK([dict[@"greeting"] isEqual: @"hi"]);
     CHECK(dict[@"x"] == nil);
@@ -152,17 +151,16 @@ TEST_CASE("MDict no root", "[Mutable]") {
     CHECK([nested[@"boil"] isEqual: @212]);
     CHECK(nested[@"freeze"] == nil);
     CHECK(([nested isEqual: @{@"melt": @32, @"boil": @212}]));
-    //CHECK(!root.isMutated());
+    //CHECK(!((FleeceDict*)dict).isMutated);
 
     nested[@"freeze"] = @[@32, @"Fahrenheit"];
-    //CHECK(root.isMutated());
+    //CHECK(((FleeceDict*)dict).isMutated);
     [nested removeObjectForKey: @"melt"];
     CHECK(([nested isEqual: @{@"freeze": @[@32, @"Fahrenheit"], @"boil": @212}]));
 
     CHECK(fleece2JSON(encode(dict)) == "{array:[\"boo\",false],dict:{boil:212,freeze:[32,\"Fahrenheit\"]},greeting:\"hi\"}");
-//    CHECK(fleece2JSON(encode(root)) == "{array:[\"boo\",false],dict:{boil:212,freeze:[32,\"Fahrenheit\"]},greeting:\"hi\"}");
     }
-    CHECK(Context::gInstanceCount == 0);
+    CHECK(internal::Context::gInstanceCount == 0);
 }
 
 
@@ -180,5 +178,5 @@ TEST_CASE("Adding mutable collections", "[Mutable]") {
     [array addObject: @YES];
     CHECK(fleece2JSON(encode(root)) == "{array:[\"boo\",false,true],dict:{boil:212,melt:32},greeting:\"hi\",new:[\"boo\",false,true]}");
     }
-    CHECK(Context::gInstanceCount == 0);
+    CHECK(internal::Context::gInstanceCount == 0);
 }

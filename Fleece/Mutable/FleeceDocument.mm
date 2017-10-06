@@ -9,6 +9,7 @@
 #import "FleeceDocument.h"
 #import "MutableArray+ObjC.hh"
 #import "MutableDict+ObjC.hh"
+#import "MRoot.hh"
 
 using namespace fleece;
 

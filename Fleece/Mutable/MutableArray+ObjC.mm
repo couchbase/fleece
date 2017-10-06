@@ -28,12 +28,6 @@
 
 namespace fleece {
 
-    Context* Context::gNullContext = new Context;
-    
-#if DEBUG
-    std::atomic_int Context::gInstanceCount;
-#endif
-
     // These are the three MValue methods that have to be implemented in any specialization,
     // here specialized for <id>.
 

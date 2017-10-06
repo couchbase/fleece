@@ -13,52 +13,37 @@
 
 namespace fleece {
 
-    struct Context {
-        Context(const alloc_slice &data, SharedKeys *sk, bool mutableContainers)
-        :_data(data)
-        ,_sharedKeys(sk)
-        ,_mutableContainers(mutableContainers)
-        {
-            //std::cerr << "INIT Context " << this << "\n";
-#if DEBUG
-            ++gInstanceCount;
-#endif
+    namespace internal {
+        /** Fleece backing-store state shared between all MCollections based on it. */
+        struct Context {
+            Context(const alloc_slice &data, SharedKeys *sk, bool mutableContainers);
+            Context();
+    #if DEBUG
+            virtual ~Context();
+            static std::atomic_int gInstanceCount;
+    #endif
+            static Context* const gNullContext;
+
+            alloc_slice      _data;                     // Fleece data; ensures it doesn't go away
+            SharedKeys*      _sharedKeys {nullptr};     // SharedKeys to use with Dicts
+            std::atomic_uint _refCount {0};             // Reference count
+            bool             _mutableContainers {true}; // Should arrays/dicts be created mutable?
+        };
+
+        static inline Context* retain(Context *ctx) {
+            ++ctx->_refCount;
+            return ctx;
         }
 
-#if DEBUG
-        static std::atomic_int gInstanceCount;
-
-        virtual ~Context() {
-            assert(this != gNullContext);
-            --gInstanceCount;
-            //std::cerr << "DTOR Context " << this << "\n";
+        static inline void release(Context *ctx) {
+            if (--ctx->_refCount == 0)
+                delete ctx;
         }
-#endif
-
-        Context()
-        :_refCount(0x7FFFFFFF)
-        { }
-
-        static Context* gNullContext;
-
-        alloc_slice      _data;                     // Fleece data; ensures it doesn't go away
-        SharedKeys*      _sharedKeys {nullptr};     // SharedKeys to use with Dicts
-        std::atomic_uint _refCount {0};             // Reference count
-        bool             _mutableContainers {true}; // Should arrays/dicts be created mutable?
-    };
-
-    static inline Context* retain(Context *ctx) {
-        ++ctx->_refCount;
-        return ctx;
-    }
-
-    static inline void release(Context *ctx) {
-        if (--ctx->_refCount == 0)
-            delete ctx;
     }
 
 
-    /** Abstract superclass of MArray and MDict. Manages upward connections to slot & parent. */
+    /** Abstract superclass of MArray and MDict.
+        Keeps a Context, and manages upward connections to slot & parent. */
     template <class Native>
     class MCollection {
     protected:
@@ -69,9 +54,7 @@ namespace fleece {
 #if DEBUG
         virtual
 #endif
-        ~MCollection() {
-            release(_context);
-        }
+        ~MCollection()                      {release(_context);}
 
         void init(MValue *slot, MCollection *parent) {
             assert(slot);
@@ -79,7 +62,7 @@ namespace fleece {
             _slot = slot;
             _parent = parent;
             if (_slot->value())
-                _context = retain(_parent->_context);
+                _context = internal::retain(_parent->_context);
         }
 
     public:
@@ -96,11 +79,9 @@ namespace fleece {
         SharedKeys* sharedKeys() const      {return _context->_sharedKeys;}
         bool mutableContainers() const      {return _context->_mutableContainers;}
 
-    protected:
-        bool isMutated() const {
-            return !_slot || _slot->isMutated();
-        }
+        bool isMutated() const              {return !_slot || _slot->isMutated();}
 
+    protected:
         void mutate() {
             if (_slot)
                 _slot->mutate();
@@ -109,68 +90,12 @@ namespace fleece {
         }
 
         // Only for use by MRoot
-        MCollection(Context *context)
-        :_context(retain(context))
-        { }
+        MCollection(internal::Context *context)     :_context(internal::retain(context)) { }
 
     private:
-        MValue*         _slot {nullptr};            // Value representing this collection
-        MCollection*    _parent {nullptr};          // Parent collection
-        Context*        _context {nullptr};         // Document data, sharedKeys, etc.
-    };
-
-
-    /** Top-level object; a type of special single-element Collection that contains the root. */
-    template <class Native>
-    class MRoot : private MCollection<Native> {
-    public:
-        using MCollection = MCollection<Native>;
-
-        MRoot() =default;
-
-        MRoot(alloc_slice fleeceData,
-              SharedKeys *sk,
-              const Value *value,
-              bool mutableContainers =true)
-        :MCollection(new Context(fleeceData, sk, mutableContainers))
-        ,_slot(value)
-        { }
-
-        MRoot(alloc_slice fleeceData,
-              SharedKeys *sk =nullptr,
-              bool mutableContainers =true)
-        :MRoot(fleeceData, sk, Value::fromData(fleeceData), mutableContainers)
-        { }
-
-        static Native asNative(alloc_slice fleeceData,
-                               SharedKeys *sk =nullptr,
-                               bool mutableContainers =true)
-        {
-            MRoot root(fleeceData, sk, mutableContainers);
-            return root.asNative();
-        }
-
-        explicit operator bool() const      {return !_slot.isEmpty();}
-
-        alloc_slice originalData() const    {return MCollection::originalData();}
-        SharedKeys* sharedKeys() const      {return MCollection::sharedKeys();}
-
-        Native asNative() const             {return _slot.asNative(this);}
-        bool isMutated() const              {return _slot.isMutated();}
-        void encodeTo(Encoder &enc) const   {_slot.encodeTo(enc);}
-
-        alloc_slice encode() const          {Encoder enc; encodeTo(enc); return enc.extractOutput();}
-
-        alloc_slice encodeDelta() const {
-            Encoder enc;
-            enc.setBase(originalData());
-            enc.reuseBaseStrings();
-            encodeTo(enc);
-            return enc.extractOutput();
-        }
-
-    private:
-        MValue<Native>  _slot;              // My contents: a holder for the actual root object
+        MValue*             _slot {nullptr};        // Value representing this collection
+        MCollection*        _parent {nullptr};      // Parent collection
+        internal::Context*  _context {nullptr};     // Document data, sharedKeys, etc.
     };
 
 }
