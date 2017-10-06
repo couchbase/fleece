@@ -7,6 +7,7 @@
 //
 
 #include "MutableDict+ObjC.hh"
+#include "MutableArray+ObjC.hh"
 
 using namespace fleece;
 
@@ -77,12 +78,28 @@ using namespace fleece;
     if (![key isKindOfClass: [NSString class]])
         return nil;
     auto value = _dict.get(nsstring_slice(key));
-    return value ? value->asNative(&_dict, _mutable) : nil;
+    return value ? value->asNative(&_dict) : nil;
+}
+
+
+#pragma mark - MUTATION:
+
+
+- (void) checkNoParent: (UU id)value {
+    auto collection = [value fl_collection];
+    if (collection) {
+        if (collection->parent()) {
+            [NSException raise: NSInternalInconsistencyException
+                        format: @"Can't add %@ %p to %@ %p, it's already in a collection",
+                                 [value class], value, [self class], self];
+        }
+    }
 }
 
 
 - (void)setObject:(id)value forKey:(id)key {
     NSParameterAssert(_mutable);
+    //[self checkNoParent: value];
     _dict.set(nsstring_slice(key), value);
 }
 
@@ -117,7 +134,7 @@ using namespace fleece;
     __block BOOL stop = NO;
     _dict.enumerate(^(slice key, const MValue<id> &value) {
         if (!stop)
-            block((NSString*)key, value.asNative(&_dict, _mutable), &stop);
+            block((NSString*)key, value.asNative(&_dict), &stop);
     });
 }
 
@@ -134,7 +151,7 @@ using namespace fleece;
     if (index >= _count)
         return 0;
 
-    auto iter = _dict->begin();
+    auto iter = _dict.begin();
     iter += (uint32_t)index;
     NSUInteger n = 0;
     for (; iter; ++iter) {
@@ -164,7 +181,7 @@ using namespace fleece;
             [desc appendString: @",\n"];
         for (NSUInteger i = 0; i <= level; i++)
             [desc appendString: @"    "];
-        id value = mValue.asNative(&_dict, _mutable);
+        id value = mValue.asNative(_dict, _mutable);
         NSString* valueDesc;
         if ([value respondsToSelector: @selector(descriptionWithLocale:indent:)])
             valueDesc = [value descriptionWithLocale: locale indent: level+1];

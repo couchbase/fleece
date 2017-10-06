@@ -15,7 +15,15 @@ namespace fleece {
 
 
     /** Stores a Value together with its native equivalent.
-        Can be changed to a different native value (which clears the original Value pointer.) */
+
+        Can be changed to a different native value (which clears the original Value pointer.)
+        The "Native" type is expected to be some type of smart pointer that holds a strong
+        reference to a native object. (In Objective-C++, the type 'id' works because ARC ensures
+        that the object is retained/released as necessary.)
+
+        You will have to implement three methods in any specialization of this class; they're
+        in the 'protected:' section below. These deal with creating Native objects from Fleece
+        Values; mapping a Native back to a MValue; and encoding a Native object. */
     template <class Native>
     class MValue {
     public:
@@ -37,6 +45,9 @@ namespace fleece {
             }
         }
 
+#if DEBUG
+        virtual
+#endif
         ~MValue() {
             setNative(nullptr);
         }
@@ -65,10 +76,9 @@ namespace fleece {
         bool isEmpty() const        {return _value == nullptr && _native == nullptr;}
         bool isMutated() const      {return _value == nullptr;}
 
-        Native asNative(const MCollection<id> *parent, bool asMutable) const {
+        Native asNative(const MCollection<Native> *parent) const {
             if (!_native && _value)
-                return const_cast<MValue*>(this)->toNative(const_cast<MCollection<id>*>(parent),
-                                                           asMutable);
+                return const_cast<MValue*>(this)->toNative(const_cast<MCollection<Native>*>(parent));
             return _native;
         }
 
@@ -88,34 +98,37 @@ namespace fleece {
             _value = nullptr;
         }
 
-        void nativeChangeSlot(MValue *newSlot) {
-            MCollection<Native>* val = fromNative(_native);
-            if (val)
-                val->setSlot(newSlot, this);
-        }
-
     protected:
         // These methods must be specialized for each specific Native type:
 
         /** Must instantiate and return a Native object corresponding to the receiver.
-             May cache the object by assigning it to `_native`.
-             @param parent  The owning collection, if any
-             @param asMutable  True if the Native object should be a mutable collection.
-             @return  A new Native object corresponding to the receiver. */
-        Native toNative(MCollection<id> *parent, bool asMutable);
+            May cache the object by assigning it to `_native`.
+            @param parent  The owning collection, if any
+            @param asMutable  True if the Native object should be a mutable collection.
+            @return  A new Native object corresponding to the receiver. */
+        Native toNative(MCollection<id> *parent);
 
-        /** Must return the MCollection object corresponding to _native, if any. */
-        static MCollection<Native>* fromNative(Native);
+        /** Must return the MCollection object corresponding to _native,
+            or null if the object doesn't correspond to a collection. */
+        static MCollection<Native>* collectionFromNative(Native);
 
         /** Must write the Native object to the encoder as a Fleece value. */
         static void encodeNative(Encoder&, Native);
 
     private:
+        void nativeChangeSlot(MValue *newSlot) {
+            MCollection<Native>* collection = collectionFromNative(_native);
+            if (collection)
+                collection->setSlot(newSlot, this);
+        }
+
         void setNative(Native n) {
             if (_native != n) {
                 if (_native)
                     nativeChangeSlot(nullptr);
                 _native = n;
+                if (_native)
+                    nativeChangeSlot(this);
             }
         }
 

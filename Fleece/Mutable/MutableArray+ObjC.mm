@@ -12,6 +12,9 @@
 #define UU __unsafe_unretained
 
 
+// Defines an fl_collection property that returns null by default.
+// FleeceArray and FleeceDictionary override this to return their MCollection instance.
+// This is used by the implementation of MValue<id>::encodeNative(), below.
 @interface NSObject (Fleece)
 @property (readonly, nonatomic) fleece::MCollection<id>* fl_collection;
 @end
@@ -25,24 +28,33 @@
 
 namespace fleece {
 
+    Context* Context::gNullContext = new Context;
+    
+#if DEBUG
+    std::atomic_int Context::gInstanceCount;
+#endif
+
+    // These are the three MValue methods that have to be implemented in any specialization,
+    // here specialized for <id>.
+
     template<>
-    id MValue<id>::toNative(MCollection<id> *parent, bool asMutable) {
+    id MValue<id>::toNative(MCollection<id> *parent) {
         switch (_value->type()) {
             case kArray:
                 return _native = [[FleeceArray alloc] initWithMValue: this
                                                             inParent: parent
-                                                           isMutable: asMutable];
+                                                           isMutable: parent->mutableContainers()];
             case kDict:
                 return _native = [[FleeceDict alloc] initWithMValue: this
                                                            inParent: parent
-                                                          isMutable: asMutable];
+                                                          isMutable: parent->mutableContainers()];
             default:
                 return /*_native =*/ _value->toNSObject();
         }
     }
 
     template<>
-    MCollection<id>* MValue<id>::fromNative(id native) {
+    MCollection<id>* MValue<id>::collectionFromNative(id native) {
         return [native fl_collection];
     }
 
@@ -129,7 +141,7 @@ using namespace fleece;
     auto &val = _array.get((uint32_t)index);
     if (_usuallyFalse(val.isEmpty()))
         throwRangeException(index);
-    return val.asNative(&_array, _mutable);
+    return val.asNative(&_array);
 }
 
 

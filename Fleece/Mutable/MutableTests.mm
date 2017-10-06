@@ -42,13 +42,15 @@ static std::string fleece2JSON(alloc_slice fleece) {
 
 
 TEST_CASE("MValue", "[Mutable]") {
+    @autoreleasepool {
     MValue<id> val(@"hi");
-    REQUIRE([val.asNative(nullptr, false) isEqual: @"hi"]);
+    REQUIRE([val.asNative(nullptr) isEqual: @"hi"]);
     REQUIRE(val.value() == nullptr);
+    }
 }
 
-
 TEST_CASE("MDict", "[Mutable]") {
+    @autoreleasepool {
     auto data = encode(@{@"greeting": @"hi",
                          @"array":    @[@"boo", @NO],
                          @"dict":     @{@"melt": @32, @"boil": @212}});
@@ -76,10 +78,29 @@ TEST_CASE("MDict", "[Mutable]") {
 
     CHECK(fleece2JSON(encode(dict)) == "{array:[\"boo\",false],dict:{boil:212,freeze:[32,\"Fahrenheit\"]},greeting:\"hi\"}");
     CHECK(fleece2JSON(encode(root)) == "{array:[\"boo\",false],dict:{boil:212,freeze:[32,\"Fahrenheit\"]},greeting:\"hi\"}");
+
+    alloc_slice newData = root.encode();
+
+    // Delta encoding:
+    alloc_slice delta = root.encodeDelta();
+    REQUIRE(delta.buf != nullptr);
+    CHECK(delta.size == 52); // may change
+
+    alloc_slice combinedData(data);
+    combinedData.append(delta);
+    const Dict* newDict = Value::fromData(combinedData)->asDict();
+    std::cerr << "\nContents:      " << newDict->toJSON().asString() << "\n";
+    std::cerr <<   "Old:           " << data.size << " bytes: " << data << "\n\n";
+    std::cerr <<   "New:           " << newData.size << " bytes: " << newData << "\n\n";
+    std::cerr <<   "Delta:         " << delta.size << " bytes: " << delta << "\n\n";
+    Value::dump(combinedData, std::cerr);
+    }
+    CHECK(Context::gInstanceCount == 0);
 }
 
 
 TEST_CASE("MArray", "[Mutable]") {
+    @autoreleasepool {
     auto data = encode(@[@"hi", @[@"boo", @NO], @42]);
     MRoot<id> root(data);
     CHECK(!root.isMutated());
@@ -103,11 +124,13 @@ TEST_CASE("MArray", "[Mutable]") {
 
     CHECK(fleece2JSON(encode(array)) == "[[3.14,2.17],[\"boo\",true],\"NEW\",42]");
     CHECK(fleece2JSON(encode(root))   == "[[3.14,2.17],[\"boo\",true],\"NEW\",42]");
-
+    }
+    CHECK(Context::gInstanceCount == 0);
 }
 
 
 TEST_CASE("MDict no root", "[Mutable]") {
+    @autoreleasepool {
     NSMutableDictionary* dict;
     @autoreleasepool {
         auto data = encode(@{@"greeting": @"hi",
@@ -138,4 +161,24 @@ TEST_CASE("MDict no root", "[Mutable]") {
 
     CHECK(fleece2JSON(encode(dict)) == "{array:[\"boo\",false],dict:{boil:212,freeze:[32,\"Fahrenheit\"]},greeting:\"hi\"}");
 //    CHECK(fleece2JSON(encode(root)) == "{array:[\"boo\",false],dict:{boil:212,freeze:[32,\"Fahrenheit\"]},greeting:\"hi\"}");
+    }
+    CHECK(Context::gInstanceCount == 0);
+}
+
+
+TEST_CASE("Adding mutable collections", "[Mutable]") {
+    @autoreleasepool {
+    auto data = encode(@{@"array":    @[@"boo", @NO],
+                         @"dict":     @{@"boil": @212, @"melt": @32, },
+                         @"greeting": @"hi"});
+    MRoot<id> root(data);
+    CHECK(!root.isMutated());
+    NSMutableDictionary* dict = root.asNative();
+
+    id array = dict[@"array"];
+    dict[@"new"] = array;
+    [array addObject: @YES];
+    CHECK(fleece2JSON(encode(root)) == "{array:[\"boo\",false,true],dict:{boil:212,melt:32},greeting:\"hi\",new:[\"boo\",false,true]}");
+    }
+    CHECK(Context::gInstanceCount == 0);
 }

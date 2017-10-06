@@ -15,7 +15,7 @@ using namespace fleece;
 
 @implementation FleeceDocument
 {
-    MRoot<id> _root;
+    MRoot<id>* _root;
 }
 
 
@@ -25,7 +25,7 @@ using namespace fleece;
 {
     self = [super init];
     if (self) {
-        _root = MRoot<id>(fleeceData, (SharedKeys*)sharedKeys, mutableContainers);
+        _root = new MRoot<id>(fleeceData, (SharedKeys*)sharedKeys, mutableContainers);
         if (!_root)
             self = nil;
     }
@@ -33,8 +33,14 @@ using namespace fleece;
 }
 
 
+- (void)dealloc
+{
+    delete _root;
+}
+
+
 - (id) rootObject {
-    return _root.asNative();
+    return _root->asNative();
 }
 
 
