@@ -10,6 +10,7 @@
 #include "JSONConverter.hh"
 #include "KeyTree.hh"
 #include "Path.hh"
+#include "Internal.hh"
 #include "jsonsl.h"
 #include "mn_wordlist.h"
 #include <iostream>
@@ -439,6 +440,7 @@ public:
     }
 
     TEST_CASE_METHOD(EncoderTests, "DictionaryNumericKeys") {
+        internal::gDisableNecessarySharedKeysCheck = true;
         {
             enc.beginDictionary();
             enc.writeKey(0);
@@ -462,6 +464,7 @@ public:
             REQUIRE(d->get(slice("barrr")) == (const Value*)nullptr);
             REQUIRE(d->toJSON() == alloc_slice("{0:23,1:42,2047:-1}"));
         }
+        internal::gDisableNecessarySharedKeysCheck = false;
     }
 
     TEST_CASE_METHOD(EncoderTests, "Deep Nesting") {

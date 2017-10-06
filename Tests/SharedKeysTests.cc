@@ -364,10 +364,21 @@ TEST_CASE("encoding") {
         const Value *v = root->get(typeKey);
         REQUIRE(v);
         REQUIRE(v->asString() == "animal"_sl);
+
+        internal::gDisableNecessarySharedKeysCheck = true;
+        REQUIRE(root->get("type"_sl) == nullptr);
+        internal::gDisableNecessarySharedKeysCheck = false;
+
+        REQUIRE(root->get("type"_sl, &sk) == v);
+
         const Dict *atts = root->get(attsKey)->asDict();
         REQUIRE(atts);
-        REQUIRE(atts->get("thumbnail.jpg"_sl) != nullptr);
         REQUIRE(atts->get(typeKey) != nullptr);
+        REQUIRE(atts->get("thumbnail.jpg"_sl, &sk) != nullptr);
+        internal::gDisableNecessarySharedKeysCheck = true;
+        REQUIRE(atts->get("thumbnail.jpg"_sl) != nullptr);  // check key wasn't encoded to int
+        internal::gDisableNecessarySharedKeysCheck = false;
+
     }
     SECTION("Dict::key lookup") {
         // Use a Dict::key:
@@ -378,7 +389,7 @@ TEST_CASE("encoding") {
         REQUIRE(v->asString() == "animal"_sl);
         const Dict *atts = root->get(attsKey)->asDict();
         REQUIRE(atts);
-        REQUIRE(atts->get("thumbnail.jpg"_sl) != nullptr);
+        REQUIRE(atts->get("thumbnail.jpg"_sl, &sk) != nullptr);
         REQUIRE(atts->get(typeKey) != nullptr);
         REQUIRE(atts->get(attsKey) == nullptr);
 

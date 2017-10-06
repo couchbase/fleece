@@ -21,6 +21,7 @@ namespace fleece {
 #ifndef NDEBUG
     namespace internal {
         std::atomic<unsigned> gTotalComparisons;
+        bool gDisableNecessarySharedKeysCheck = false;
     }
     static inline void countComparison() {++gTotalComparisons;}
 #else
@@ -37,6 +38,11 @@ namespace fleece {
         :impl(d)
         { }
 
+        bool givenNecessarySharedKeys(SharedKeys *sk) const {
+            return sk || (_count == 0 || deref(_first)->tag() == kStringTag)
+                || gDisableNecessarySharedKeysCheck;
+        }
+
         const Value* get_unsorted(slice keyToFind) const noexcept {
             const Value *key = _first;
             for (uint32_t i = 0; i < _count; i++) {
@@ -48,13 +54,18 @@ namespace fleece {
             return nullptr;
         }
 
-        inline const Value* get(slice keyToFind) const noexcept {
+        inline const Value* getUnshared(slice keyToFind) const noexcept {
             auto key = search(&keyToFind, [](const slice *target, const Value *val) {
                 return keyCmp(target, val);
             });
             if (!key)
                 return nullptr;
             return deref(next(key));
+        }
+
+        inline const Value* get(slice keyToFind) const noexcept {
+            assert(givenNecessarySharedKeys(nullptr));
+            return getUnshared(keyToFind);
         }
 
         inline const Value* get(int keyToFind) const noexcept {
@@ -73,14 +84,16 @@ namespace fleece {
         }
 
         inline const Value* get(slice keyToFind, SharedKeys *sharedKeys) const noexcept {
+            assert(givenNecessarySharedKeys(sharedKeys));
             int encoded;
             if (sharedKeys && lookupSharedKey(keyToFind, sharedKeys, encoded))
                 return get(encoded);
-            return get(keyToFind);
+            return getUnshared(keyToFind);
         }
 
         const Value* get(Dict::key &keyToFind) const noexcept {
             auto sharedKeys = keyToFind._sharedKeys;
+            assert(givenNecessarySharedKeys(sharedKeys));
             if (_usuallyTrue(sharedKeys != nullptr)) {
                 // Look for a numeric key first:
                 if (_usuallyTrue(keyToFind._hasNumericKey))
@@ -325,8 +338,11 @@ namespace fleece {
 
     slice Dict::iterator::keyString() const noexcept {
         slice keyStr = _key->asString();
-        if (!keyStr && _key->isInteger() && _sharedKeys)
-            keyStr = _sharedKeys->decode((int)_key->asInt());
+        if (!keyStr && _key->isInteger()) {
+            assert(_sharedKeys || gDisableNecessarySharedKeysCheck);
+            if (_sharedKeys)
+                keyStr = _sharedKeys->decode((int)_key->asInt());
+        }
         return keyStr;
     }
 

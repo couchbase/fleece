@@ -79,6 +79,7 @@ namespace fleece {
 
 #ifndef NDEBUG
         extern std::atomic<unsigned> gTotalComparisons;
+        extern bool gDisableNecessarySharedKeysCheck;
 #endif
 
     }
