@@ -296,8 +296,16 @@ namespace fleece {
 #pragma mark - WRITING VALUES:
 
 
+    bool Encoder::isNarrowValue(const Value *value) {
+        if (value->tag() >= kArrayTag)
+            return value->countIsZero();
+        else
+            return value->dataSize() <= kNarrow;
+    }
+
+
     void Encoder::writeValue(const Value *value, const SharedKeys *sk) {
-        if (valueIsInBase(value)) {
+        if (valueIsInBase(value) && !isNarrowValue(value)) {
             writePointer( (ssize_t)value - (ssize_t)_base.end() );
         } else switch (value->tag()) {
             case kShortIntTag:

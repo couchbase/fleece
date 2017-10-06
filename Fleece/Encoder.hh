@@ -161,6 +161,7 @@ namespace fleece {
         bool valueIsInBase(const Value *value) const;
         void reuseBaseStrings(const Value*);
         void cacheString(slice s, size_t offsetInBase);
+        static bool isNarrowValue(const Value *value);
         void writePointer(ssize_t pos);
         void writeSpecial(uint8_t special);
         void writeInt(uint64_t i, bool isShort, bool isUnsigned);
