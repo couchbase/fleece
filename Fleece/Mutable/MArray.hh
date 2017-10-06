@@ -21,8 +21,8 @@ namespace fleece {
 
         MArray() { }
 
-        void init(MValue *mv, MCollection *parent) {
-            MCollection::init(mv, parent);
+        void initInSlot(MValue *mv, MCollection *parent) {
+            MCollection::initInSlot(mv, parent);
             _array = (const Array*)mv->value();
             _vec.clear();
             _vec.resize(_array->count());

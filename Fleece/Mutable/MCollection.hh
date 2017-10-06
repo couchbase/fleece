@@ -18,7 +18,7 @@ namespace fleece {
         struct Context {
             Context(const alloc_slice &data, SharedKeys *sk, bool mutableContainers);
             Context();
-    #if DEBUG
+    #ifndef NDEBUG
             virtual ~Context();
             static std::atomic_int gInstanceCount;
     #endif
@@ -51,16 +51,17 @@ namespace fleece {
 
         MCollection() =default;
 
-#if DEBUG
+#ifndef NDEBUG
         virtual
 #endif
         ~MCollection()                      {release(_context);}
 
-        void init(MValue *slot, MCollection *parent) {
+        void initInSlot(MValue *slot, MCollection *parent) {
             assert(slot);
             assert(!_context);
             _slot = slot;
             _parent = parent;
+            _mutated = _slot->isMutated();
             if (_slot->value())
                 _context = internal::retain(_parent->_context);
         }
@@ -79,14 +80,17 @@ namespace fleece {
         SharedKeys* sharedKeys() const      {return _context->_sharedKeys;}
         bool mutableContainers() const      {return _context->_mutableContainers;}
 
-        bool isMutated() const              {return !_slot || _slot->isMutated();}
+        bool isMutated() const              {return _mutated;}
 
     protected:
         void mutate() {
-            if (_slot)
-                _slot->mutate();
-            if (_parent)
-                _parent->mutate();
+            if (!_mutated) {
+                _mutated = true;
+                if (_slot)
+                    _slot->mutate();
+                if (_parent)
+                    _parent->mutate();
+            }
         }
 
         // Only for use by MRoot
@@ -96,6 +100,7 @@ namespace fleece {
         MValue*             _slot {nullptr};        // Value representing this collection
         MCollection*        _parent {nullptr};      // Parent collection
         internal::Context*  _context {nullptr};     // Document data, sharedKeys, etc.
+        bool                _mutated {true};        // Has my value changed from the backing store?
     };
 
 }

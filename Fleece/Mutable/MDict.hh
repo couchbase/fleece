@@ -22,8 +22,8 @@ namespace fleece {
 
         MDict() { }
 
-        void init(MValue *mv, MCollection *parent) {
-            MCollection::init(mv, parent);
+        void initInSlot(MValue *mv, MCollection *parent) {
+            MCollection::initInSlot(mv, parent);
             _dict = (const Dict*)mv->value();
             _count = _dict->count();
             _map.clear();

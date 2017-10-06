@@ -17,13 +17,13 @@ namespace fleece {
     ,_mutableContainers(mutableContainers)
     {
         //std::cerr << "INIT Context " << this << "\n";
-#if DEBUG
+#ifndef NDEBUG
         ++gInstanceCount;
 #endif
     }
 
 
-#if DEBUG
+#ifndef NDEBUG
     std::atomic_int Context::gInstanceCount;
 
 

@@ -15,5 +15,8 @@
 - (instancetype) initWithMValue: (fleece::MValue<id>*)mv
                        inParent: (fleece::MCollection<id>*)parent
                       isMutable: (bool)isMutable;
+
+@property (readonly, nonatomic) bool isMutated;
+
 @end
 

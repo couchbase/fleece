@@ -74,7 +74,7 @@ using namespace fleece;
 {
     self = [super init];
     if (self) {
-        _array.init(mv, parent);
+        _array.initInSlot(mv, parent);
         _mutable = isMutable;
         NSLog(@"INIT FleeceArray %p with parent=%p", self, mv);
     }
@@ -136,6 +136,14 @@ using namespace fleece;
     if (_usuallyFalse(val.isEmpty()))
         throwRangeException(index);
     return val.asNative(&_array);
+}
+
+
+#pragma mark - MUTATION:
+
+
+- (bool) isMutated {
+    return _array.isMutated();
 }
 
 

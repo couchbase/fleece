@@ -8,6 +8,7 @@
 
 #include <Foundation/Foundation.h>
 #include "FleeceTests.hh"
+#include "MutableArray+ObjC.hh"
 #include "MutableDict+ObjC.hh"
 #include "MRoot.hh"
 #include "FleeceDocument.h"
@@ -139,7 +140,7 @@ TEST_CASE("MDict no root", "[Mutable]") {
                                    mutableContainers: YES];
     }
     NSLog(@"FleeceDict = %@", dict);
-    //CHECK(!((FleeceDict*)dict).isMutated);
+    CHECK(!((FleeceDict*)dict).isMutated);
     CHECK(([sortedKeys(dict) isEqual: @[@"array", @"dict", @"greeting"]]));
     CHECK([dict[@"greeting"] isEqual: @"hi"]);
     CHECK(dict[@"x"] == nil);
@@ -151,10 +152,11 @@ TEST_CASE("MDict no root", "[Mutable]") {
     CHECK([nested[@"boil"] isEqual: @212]);
     CHECK(nested[@"freeze"] == nil);
     CHECK(([nested isEqual: @{@"melt": @32, @"boil": @212}]));
-    //CHECK(!((FleeceDict*)dict).isMutated);
+    CHECK(!((FleeceDict*)dict).isMutated);
 
     nested[@"freeze"] = @[@32, @"Fahrenheit"];
-    //CHECK(((FleeceDict*)dict).isMutated);
+    CHECK(((FleeceArray*)nested).isMutated);
+    CHECK(((FleeceDict*)dict).isMutated);
     [nested removeObjectForKey: @"melt"];
     CHECK(([nested isEqual: @{@"freeze": @[@32, @"Fahrenheit"], @"boil": @212}]));
 

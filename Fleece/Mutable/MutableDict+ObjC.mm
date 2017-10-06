@@ -25,7 +25,7 @@ using namespace fleece;
                       isMutable: (bool)isMutable {
     self = [super init];
     if (self) {
-        _dict.init(mv, parent);
+        _dict.initInSlot(mv, parent);
         _mutable = isMutable;
     }
     return self;
@@ -83,6 +83,11 @@ using namespace fleece;
 
 
 #pragma mark - MUTATION:
+
+
+- (bool) isMutated {
+    return _dict.isMutated();
+}
 
 
 - (void) checkNoParent: (UU id)value {

@@ -45,7 +45,7 @@ namespace fleece {
             }
         }
 
-#if DEBUG
+#ifndef NDEBUG
         virtual
 #endif
         ~MValue() {

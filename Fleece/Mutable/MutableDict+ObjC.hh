@@ -18,4 +18,7 @@
                       isMutable: (bool)isMutable;
 
 - (BOOL)containsObjectForKey:(NSString *)key;
+
+@property (readonly, nonatomic) bool isMutated;
+
 @end
