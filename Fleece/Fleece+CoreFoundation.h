@@ -30,7 +30,8 @@ extern "C" {
 
 
 #ifdef __OBJC__
-
+#import <Foundation/NSMapTable.h>
+    
     // Equivalents of the above functions that take & return Objective-C object types:
     
     /** Writes a Core Foundation (or Objective-C) object to an Encoder.
@@ -62,12 +63,13 @@ extern "C" {
     /** NSError domain string for Fleece errors */
     extern NSString* const FLErrorDomain;
 
-    /** Category defining -fl_substitutedEncoding, which is called on objects being encoded by
-        FLEncoder_WriteNSObject (even recursively) if the encoder doesn't know how to encode
-        them. You can implement this method in your classes and return any encodable object,
-        which will be encoded in place of your object. */
+
     @interface NSObject (Fleece)
-    - (id) fl_substitutedEncoding;
+    /** This method is called on objects being encoded by
+        FLEncoder_WriteNSObject (even recursively) if the encoder doesn't know how to encode
+        them. You can implement this method in your classes. In it, call the encoder to write
+        a single object (which may of course be an array or dictionary.) */
+    - (void) fl_encodeToFLEncoder: (FLEncoder)enc;
     @end
 
 

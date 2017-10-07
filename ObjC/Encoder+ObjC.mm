@@ -1,5 +1,5 @@
 //
-//  Encoder.mm
+//  Encoder+ObjC.mm
 //  Fleece
 //
 //  Created by Jens Alfke on 1/29/15.
@@ -15,15 +15,12 @@
 
 #import <Foundation/Foundation.h>
 #import "Encoder.hh"
-#include "FleeceException.hh"
+#import "Fleece_C_impl.hh"
+#import "FleeceException.hh"
 
 
-@interface NSObject (Fleece)
+@interface NSObject (FleeceInternal)
 - (void) fl_encodeTo: (fleece::Encoder*)enc;
-@end
-
-@interface NSObject (FleeceOptional)
-- (id) fl_substitutedEncoding;
 @end
 
 
@@ -31,7 +28,8 @@ namespace fleece {
 
     void Encoder::writeObjC(__unsafe_unretained id obj) {
         throwIf(!obj, InvalidData, "Can't encode nil");
-        [obj fl_encodeTo: this];
+        FLEncoderImpl enc(this);
+        [obj fl_encodeToFLEncoder: &enc];
     }
 
 }
@@ -41,16 +39,19 @@ using namespace fleece;
 
 
 @implementation NSObject (Fleece)
+- (void) fl_encodeToFLEncoder: (FLEncoder)enc {
+    // Fall back to the internal fl_encodeTo:, which takes a raw C++ Encoder*.
+    [self fl_encodeTo: ((FLEncoderImpl*)enc)->fleeceEncoder.get()];
+}
+@end
+
+
+@implementation NSObject (FleeceInternal)
 - (void) fl_encodeTo: (fleece::Encoder*)enc {
-    id encoding = nil;
-    if ([self respondsToSelector: @selector(fl_substitutedEncoding)])
-        encoding = [self fl_substitutedEncoding];
-    if (!encoding || encoding == self) {
-        NSString* msg = [NSString stringWithFormat: @"Objects of class %@ cannot be encoded",
-                         [self class]];
-        FleeceException::_throw(EncodeError, msg.UTF8String);
-    }
-    [encoding fl_encodeTo: enc];
+    // Default implementation -- object doesn't implement Fleece encoding at all.
+    NSString* msg = [NSString stringWithFormat: @"Objects of class %@ cannot be encoded",
+                     [self class]];
+    FleeceException::_throw(EncodeError, msg.UTF8String);
 }
 @end
 

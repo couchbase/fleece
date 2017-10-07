@@ -9,8 +9,9 @@
 #pragma once
 #include "MCollection.hh"
 #include <unordered_map>
+#include <vector>
 
-namespace fleece {
+namespace fleeceapi {
 
     /** A mutable dictionary of MValues. */
     template <class Native>
@@ -18,14 +19,14 @@ namespace fleece {
     public:
         using MValue = MValue<Native>;
         using MCollection = MCollection<Native>;
-        using MapType = std::unordered_map<slice, MValue, sliceHash>;
+        using MapType = std::unordered_map<slice, MValue, fleece::sliceHash>;
 
         MDict() { }
 
         void initInSlot(MValue *mv, MCollection *parent) {
             MCollection::initInSlot(mv, parent);
-            _dict = (const Dict*)mv->value();
-            _count = _dict->count();
+            _dict = mv->value().asDict();
+            _count = _dict.count();
             _map.clear();
         }
 
@@ -44,13 +45,13 @@ namespace fleece {
             if (i != _map.end())
                 return !i->second.isEmpty();
             else
-                return _dict->get(key, MCollection::sharedKeys()) != nullptr;
+                return _dict.get(key, MCollection::sharedKeys()) != nullptr;
         }
 
         const MValue* get(slice key) const {
             auto i = _map.find(key);
             if (i == _map.end()) {
-                auto value = _dict->get(key);//FIX
+                auto value = _dict.get(key, MCollection::sharedKeys());
                 if (!value)
                     return nullptr;
                 i = const_cast<MDict*>(this)->_setInMap(key, value);
@@ -67,7 +68,7 @@ namespace fleece {
                 _count += !val.isEmpty() - !i->second.isEmpty();
                 i->second = val;
             } else {
-                if (_dict->get(key, MCollection::sharedKeys())) {
+                if (_dict.get(key, MCollection::sharedKeys())) {
                     if (val.isEmpty())
                         --_count;
                 } else {
@@ -118,23 +119,20 @@ namespace fleece {
             if (!MCollection::isMutated()) {
                 enc << _dict;
             } else {
-                enc.beginDictionary(count());
+                enc.beginDict(count());
                 enumerate([&](slice key, const MValue &mv) mutable {
                     enc.writeKey(key);
                     mv.encodeTo(enc);
                 });
-                enc.endDictionary();
+                enc.endDict();
             }
         }
 
-        // This method must be implemented for each specific Native type:
-        static MDict* fromNative(Native);
-
     private:
-        const Dict* _dict {nullptr};
-        uint32_t _count {0};
-        MapType _map;  //
-        std::vector<alloc_slice> _newKeys;                  // storage for new key slices for _map
+        Dict                     _dict;     // Base Fleece dict (if any)
+        uint32_t                 _count {0};// Current count
+        MapType                  _map;      // Maps changed keys --> MValues
+        std::vector<alloc_slice> _newKeys;  // storage for new key slices for _map
     };
 
 }

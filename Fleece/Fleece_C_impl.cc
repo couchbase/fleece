@@ -299,6 +299,14 @@ void FLEncoder_SetSharedKeys(FLEncoder e, FLSharedKeys sk) {
     ENCODER_DO(e, setSharedKeys(sk));
 }
 
+void FLEncoder_MakeDelta(FLEncoder e, FLSlice base, bool reuseStrings) {
+    if (e->isFleece()) {
+        e->fleeceEncoder->setBase(base);
+        if(reuseStrings)
+            e->fleeceEncoder->reuseBaseStrings();
+    }
+}
+
 size_t FLEncoder_BytesWritten(FLEncoder e) {
     return ENCODER_DO(e, bytesWritten());
 }

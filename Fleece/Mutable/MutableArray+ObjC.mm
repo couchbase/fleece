@@ -8,6 +8,7 @@
 
 #include "MutableArray+ObjC.hh"
 #include "MutableDict+ObjC.hh"
+#include "PlatformCompat.hh"
 
 #define UU __unsafe_unretained
 
@@ -15,35 +16,35 @@
 // Defines an fl_collection property that returns null by default.
 // FleeceArray and FleeceDictionary override this to return their MCollection instance.
 // This is used by the implementation of MValue<id>::encodeNative(), below.
-@interface NSObject (Fleece)
-@property (readonly, nonatomic) fleece::MCollection<id>* fl_collection;
+@interface NSObject (FleeceMutable)
+@property (readonly, nonatomic) fleeceapi::MCollection<id>* fl_collection;
 @end
 
-@implementation NSObject (Fleece)
-- (fleece::MCollection<id>*) fl_collection {
+@implementation NSObject (FleeceMutable)
+- (fleeceapi::MCollection<id>*) fl_collection {
     return nullptr;
 }
 @end
 
 
-namespace fleece {
+namespace fleeceapi {
 
     // These are the three MValue methods that have to be implemented in any specialization,
     // here specialized for <id>.
 
     template<>
     id MValue<id>::toNative(MCollection<id> *parent) {
-        switch (_value->type()) {
-            case kArray:
+        switch (_value.type()) {
+            case kFLArray:
                 return _native = [[FleeceArray alloc] initWithMValue: this
                                                             inParent: parent
                                                            isMutable: parent->mutableContainers()];
-            case kDict:
+            case kFLDict:
                 return _native = [[FleeceDict alloc] initWithMValue: this
                                                            inParent: parent
                                                           isMutable: parent->mutableContainers()];
             default:
-                return /*_native =*/ _value->toNSObject();
+                return /*_native =*/ _value.asNSObject();
         }
     }
 
@@ -54,13 +55,13 @@ namespace fleece {
 
     template<>
     void MValue<id>::encodeNative(Encoder &enc, id obj) {
-        enc.writeObjC(obj);
+        enc << obj;
     }
 
 }
 
 
-using namespace fleece;
+using namespace fleeceapi;
 
 @implementation FleeceArray
 {
@@ -68,8 +69,8 @@ using namespace fleece;
     bool _mutable;
 }
 
-- (instancetype) initWithMValue: (fleece::MValue<id>*)mv
-                       inParent: (fleece::MCollection<id>*)parent
+- (instancetype) initWithMValue: (fleeceapi::MValue<id>*)mv
+                       inParent: (fleeceapi::MCollection<id>*)parent
                       isMutable: (bool)isMutable
 {
     self = [super init];
@@ -104,8 +105,10 @@ using namespace fleece;
 }
 
 
-- (void) fl_encodeTo: (Encoder*)enc {
-    _array.encodeTo(*enc);
+- (void) fl_encodeToFLEncoder: (FLEncoder)enc {
+    Encoder encoder(enc);
+    _array.encodeTo(encoder);
+    encoder.release();
 }
 
 

@@ -7,6 +7,7 @@
 //
 
 #include "FleeceTests.hh"
+#include "Fleece.hh"
 #include "JSONConverter.hh"
 #include "varint.hh"
 #include <assert.h>

@@ -13,20 +13,24 @@
 #include "MRoot.hh"
 #include "FleeceDocument.h"
 
+using namespace fleeceapi;
+
 
 static alloc_slice encode(id obj) {
     Encoder enc;
-    enc.writeObjC(obj);
-    enc.end();
-    return enc.extractOutput();
+    enc << obj;
+    alloc_slice result( enc.finish() );
+    if (!result)
+        INFO("Fleece encoder error " << enc.error() << ": " << enc.errorMessage());
+    REQUIRE(result);
+    return result;
 }
 
 
 static alloc_slice encode(const MRoot<id> &val) {
     Encoder enc;
     val.encodeTo(enc);
-    enc.end();
-    return enc.extractOutput();
+    return enc.finish();
 }
 
 
@@ -39,7 +43,7 @@ static std::string fleece2JSON(alloc_slice fleece) {
     auto v = Value::fromData(fleece);
     if (!v)
         return "INVALID_FLEECE";
-    return v->toJSON<5>().asString();
+    return alloc_slice(v.toJSON5()).asString();
 }
 
 
@@ -90,12 +94,14 @@ TEST_CASE("MDict", "[Mutable]") {
 
     alloc_slice combinedData(data);
     combinedData.append(delta);
-    const Dict* newDict = Value::fromData(combinedData)->asDict();
-    std::cerr << "\nContents:      " << newDict->toJSON().asString() << "\n";
+    Dict newDict = Value::fromData(combinedData).asDict();
+    std::cerr << "\nContents:      " << alloc_slice(newDict.toJSON()).asString() << "\n";
     std::cerr <<   "Old:           " << data.size << " bytes: " << data << "\n\n";
     std::cerr <<   "New:           " << newData.size << " bytes: " << newData << "\n\n";
     std::cerr <<   "Delta:         " << delta.size << " bytes: " << delta << "\n\n";
-    Value::dump(combinedData, std::cerr);
+
+    alloc_slice dump(FLData_Dump(combinedData));
+    std::cerr << dump.asString();
     }
     CHECK(internal::Context::gInstanceCount == 0);
 }

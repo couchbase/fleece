@@ -8,6 +8,7 @@
 
 #include <Foundation/Foundation.h>
 #include "FleeceTests.hh"
+#include "Fleece.hh"
 
 
 static void checkIt(id obj, const char* json) {

@@ -10,7 +10,7 @@
 #include "MCollection.hh"
 #include <vector>
 
-namespace fleece {
+namespace fleeceapi {
 
     /** A mutable array of MValues. */
     template <class Native>
@@ -23,9 +23,9 @@ namespace fleece {
 
         void initInSlot(MValue *mv, MCollection *parent) {
             MCollection::initInSlot(mv, parent);
-            _array = (const Array*)mv->value();
+            _array = mv->value().asArray();
             _vec.clear();
-            _vec.resize(_array->count());
+            _vec.resize(_array.count());
         }
 
         void init(const MArray &a) {
@@ -42,7 +42,7 @@ namespace fleece {
                 return MValue::empty;
             const MValue &val = _vec[i];
             if (val.isEmpty())
-                const_cast<MValue&>(val) = _array->get((uint32_t)i);
+                const_cast<MValue&>(val) = _array[(uint32_t)i];
             return val;
         }
 
@@ -60,7 +60,7 @@ namespace fleece {
             uint32_t i = 0;
             for (auto &v : _vec) {
                 if (v.isEmpty())
-                    v = _array->get(i++);
+                    v = _array[i++];
             }
         }
 
@@ -101,7 +101,7 @@ namespace fleece {
                 uint32_t i = 0;
                 for (auto &v : _vec) {
                     if (v.isEmpty())
-                        enc.writeValue(_array->get(i));
+                        enc.writeValue(_array[i]);
                     else
                         v.encodeTo(enc);
                     ++i;
@@ -110,12 +110,9 @@ namespace fleece {
             }
         }
 
-        // This method must be implemented for each specific Native type:
-        static MArray* fromNative(Native);
-
     private:
-        const Array*        _array {nullptr};
-        std::vector<MValue> _vec;
+        Array               _array;     // Base Fleece Array (if any)
+        std::vector<MValue> _vec;       // Current array; empty MValues are unmodified
     };
 
 }

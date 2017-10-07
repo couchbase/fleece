@@ -8,6 +8,10 @@
 
 #import <Foundation/Foundation.h>
 #include "Fleece.h"
+#ifdef __cplusplus
+#include "slice.hh"
+#endif
+
 
 @interface FleeceDocument : NSObject
 

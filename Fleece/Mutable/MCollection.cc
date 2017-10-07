@@ -8,10 +8,10 @@
 
 #include "MCollection.hh"
 
-namespace fleece {
+namespace fleeceapi {
     using namespace internal;
 
-    Context::Context(const alloc_slice &data, SharedKeys *sk, bool mutableContainers)
+    Context::Context(const alloc_slice &data, FLSharedKeys sk, bool mutableContainers)
     :_data(data)
     ,_sharedKeys(sk)
     ,_mutableContainers(mutableContainers)

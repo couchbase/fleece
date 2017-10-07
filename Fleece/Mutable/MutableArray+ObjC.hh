@@ -12,8 +12,8 @@
 
 
 @interface FleeceArray : NSMutableArray
-- (instancetype) initWithMValue: (fleece::MValue<id>*)mv
-                       inParent: (fleece::MCollection<id>*)parent
+- (instancetype) initWithMValue: (fleeceapi::MValue<id>*)mv
+                       inParent: (fleeceapi::MCollection<id>*)parent
                       isMutable: (bool)isMutable;
 
 @property (readonly, nonatomic) bool isMutated;

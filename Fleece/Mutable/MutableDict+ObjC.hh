@@ -13,8 +13,8 @@
 
 @interface FleeceDict : NSMutableDictionary
 
-- (instancetype) initWithMValue: (fleece::MValue<id>*)mv
-                       inParent: (fleece::MCollection<id>*)parent
+- (instancetype) initWithMValue: (fleeceapi::MValue<id>*)mv
+                       inParent: (fleeceapi::MCollection<id>*)parent
                       isMutable: (bool)isMutable;
 
 - (BOOL)containsObjectForKey:(NSString *)key;

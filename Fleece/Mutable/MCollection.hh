@@ -11,12 +11,12 @@
 #include <atomic>
 #include <iostream>
 
-namespace fleece {
+namespace fleeceapi {
 
     namespace internal {
         /** Fleece backing-store state shared between all MCollections based on it. */
         struct Context {
-            Context(const alloc_slice &data, SharedKeys *sk, bool mutableContainers);
+            Context(const alloc_slice &data, FLSharedKeys sk, bool mutableContainers);
             Context();
     #ifndef NDEBUG
             virtual ~Context();
@@ -25,7 +25,7 @@ namespace fleece {
             static Context* const gNullContext;
 
             alloc_slice      _data;                     // Fleece data; ensures it doesn't go away
-            SharedKeys*      _sharedKeys {nullptr};     // SharedKeys to use with Dicts
+            FLSharedKeys      _sharedKeys {nullptr};     // SharedKeys to use with Dicts
             std::atomic_uint _refCount {0};             // Reference count
             bool             _mutableContainers {true}; // Should arrays/dicts be created mutable?
         };
@@ -77,7 +77,7 @@ namespace fleece {
 
         MCollection* parent() const         {return _parent;}
         alloc_slice originalData() const    {return _context->_data;}
-        SharedKeys* sharedKeys() const      {return _context->_sharedKeys;}
+        FLSharedKeys sharedKeys() const      {return _context->_sharedKeys;}
         bool mutableContainers() const      {return _context->_mutableContainers;}
 
         bool isMutated() const              {return _mutated;}

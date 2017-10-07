@@ -433,6 +433,14 @@ extern "C" {
     /** Tells the encoder to use a shared-keys mapping when encoding dictionary keys. */
     void FLEncoder_SetSharedKeys(FLEncoder, FLSharedKeys);
 
+    /** Tells the encoder to create a delta from the given Fleece document, instead of a standalone
+        document. Any calls to FLEncoder_WriteValue() where the value points inside the base data
+        will write a pointer back to the original value. If `reuseStrings` is true, then writing a
+        string that already exists in the base will just create a pointer back to the original.
+        The resulting data returned by FLEncoder_Finish() will *NOT* be standalone; it can only
+        be used by first appending it to the base data. */
+    void FLEncoder_MakeDelta(FLEncoder e, FLSlice base, bool reuseStrings);
+
     /** Resets the state of an encoder without freeing it. It can then be reused to encode
         another value. */
     void FLEncoder_Reset(FLEncoder);

@@ -69,7 +69,9 @@ namespace fleece {
 
     alloc_slice Encoder::extractOutput() {
         end();
-        return _out.extractOutput();
+        alloc_slice out = _out.extractOutput();
+        throwIf(out.size == 0, EncodeError, "No data written to Encoder");
+        return out;
     }
 
     // Returns position in the stream of the next write. Pads stream to even pos if necessary.

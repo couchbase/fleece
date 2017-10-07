@@ -9,7 +9,7 @@
 // Prefix/precompiled header for building Fleece
 
 #ifdef __cplusplus
-    #include "Fleece.hh"
+    #include "slice.hh"
 #else
     #include "Fleece.h"
 #endif

@@ -40,6 +40,7 @@ namespace fleece {
     // Implementation of FLEncoder: a subclass of Encoder that keeps track of its error state.
     struct FLEncoderImpl {
         FLError errorCode {::kFLNoError};
+        bool ownsFleeceEncoder {true};
         std::string errorMessage;
         std::unique_ptr<Encoder> fleeceEncoder;
         std::unique_ptr<JSONEncoder> jsonEncoder;
@@ -60,6 +61,16 @@ namespace fleece {
             }
         }
 
+        FLEncoderImpl(Encoder *encoder)
+        :ownsFleeceEncoder(false)
+        ,fleeceEncoder(encoder)
+        { }
+
+        ~FLEncoderImpl() {
+            if (!ownsFleeceEncoder)
+                fleeceEncoder.release();
+        }
+
         bool isFleece() const {
             return fleeceEncoder != nullptr;
         }
@@ -75,7 +86,7 @@ namespace fleece {
             }
         }
 
-        void reset() {              // careful, not a real override (non-virtual method)
+        void reset() {
             if (fleeceEncoder)
                 fleeceEncoder->reset();
             if (jsonConverter)

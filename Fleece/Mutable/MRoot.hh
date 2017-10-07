@@ -8,7 +8,7 @@
 
 #include "MCollection.hh"
 
-namespace fleece {
+namespace fleeceapi {
 
     /** Top-level object; a type of special single-element Collection that contains the root. */
     template <class Native>
@@ -19,21 +19,21 @@ namespace fleece {
         MRoot() =default;
 
         MRoot(alloc_slice fleeceData,
-              SharedKeys *sk,
-              const Value *value,
+              FLSharedKeys sk,
+              Value value,
               bool mutableContainers =true)
         :MCollection(new internal::Context(fleeceData, sk, mutableContainers))
         ,_slot(value)
         { }
 
         MRoot(alloc_slice fleeceData,
-              SharedKeys *sk =nullptr,
+              FLSharedKeys sk =nullptr,
               bool mutableContainers =true)
         :MRoot(fleeceData, sk, Value::fromData(fleeceData), mutableContainers)
         { }
 
         static Native asNative(alloc_slice fleeceData,
-                               SharedKeys *sk =nullptr,
+                               FLSharedKeys sk =nullptr,
                                bool mutableContainers =true)
         {
             MRoot root(fleeceData, sk, mutableContainers);
@@ -43,20 +43,19 @@ namespace fleece {
         explicit operator bool() const      {return !_slot.isEmpty();}
 
         alloc_slice originalData() const    {return MCollection::originalData();}
-        SharedKeys* sharedKeys() const      {return MCollection::sharedKeys();}
+        FLSharedKeys sharedKeys() const      {return MCollection::sharedKeys();}
 
         Native asNative() const             {return _slot.asNative(this);}
         bool isMutated() const              {return _slot.isMutated();}
         void encodeTo(Encoder &enc) const   {_slot.encodeTo(enc);}
 
-        alloc_slice encode() const          {Encoder enc; encodeTo(enc); return enc.extractOutput();}
+        alloc_slice encode() const          {Encoder enc; encodeTo(enc); return enc.finish();}
 
         alloc_slice encodeDelta() const {
             Encoder enc;
-            enc.setBase(originalData());
-            enc.reuseBaseStrings();
+            enc.makeDelta(originalData());
             encodeTo(enc);
-            return enc.extractOutput();
+            return enc.finish();
         }
 
     private:

@@ -9,6 +9,7 @@
 //
 
 #include "FleeceTests.hh"
+#include "Fleece.hh"
 #include "Path.hh"
 #include <iostream>
 

@@ -20,7 +20,16 @@ NSMapTable* FLCreateSharedStringsTable(void) {
 
 
 bool FLEncoder_WriteNSObject(FLEncoder encoder, id obj) {
-    ENCODER_TRY(encoder, writeObjC(obj));
+    try {
+        if (!encoder->hasError()) {
+            throwIf(!obj, InvalidData, "Can't encode nil");
+            [obj fl_encodeToFLEncoder: encoder];
+        }
+        return true;
+    } catch (const std::exception &x) {
+        encoder->recordException(x);
+    }
+    return false;
 }
 
 

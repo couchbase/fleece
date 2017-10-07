@@ -7,9 +7,12 @@
 //
 
 #pragma once
-#include "Fleece.hh"
+#include "FleeceCpp.hh"
+#include "slice.hh"
 
-namespace fleece {
+namespace fleeceapi {
+    using slice = fleece::slice;
+    using alloc_slice = fleece::alloc_slice;
 
     template <class Native> class MCollection;
 
@@ -29,7 +32,7 @@ namespace fleece {
     public:
         constexpr MValue()                    { }
         constexpr MValue(Native n)            :_native(n) { }
-        constexpr MValue(const Value *v)      :_value(v) { }
+        MValue(Value v)                       :_value(v) { }
 
         static const MValue empty;
 
@@ -74,9 +77,9 @@ namespace fleece {
             return *this;
         }
 
-        const Value* value() const  {return _value;}
-        bool isEmpty() const        {return _value == nullptr && _native == nullptr;}
-        bool isMutated() const      {return _value == nullptr;}
+        Value  value() const  {return _value;}
+        bool isEmpty() const        {return !_value && !_native;}
+        bool isMutated() const      {return !_value;}
 
         Native asNative(const MCollection<Native> *parent) const {
             if (!_native && _value)
@@ -130,7 +133,7 @@ namespace fleece {
             }
         }
 
-        const Value* _value  {nullptr};     // Fleece value; null if I'm new or modified
+        Value  _value  {nullptr};     // Fleece value; null if I'm new or modified
         Native       _native {nullptr};     // Cached or new/modified native value
     };
 

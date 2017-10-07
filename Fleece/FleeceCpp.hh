@@ -84,6 +84,12 @@ namespace fleeceapi {
 
         inline Value operator[] (const KeyPath &kp) const;
 
+#ifdef __OBJC__
+        inline id asNSObject(FLSharedKeys sharedKeys =nullptr, NSMapTable *sharedStrings =nil) const {
+            return FLValue_GetNSObject(_val, sharedKeys, sharedStrings);
+        }
+#endif
+
     protected:
         ::FLValue _val {nullptr};
     };
@@ -257,9 +263,13 @@ namespace fleeceapi {
         :_enc(FLEncoder_NewWithOptions(format, reserveSize, uniqueStrings, sortKeys))
         { }
 
+        void release()                                  {_enc = nullptr;}
+        
         ~Encoder()                                      {FLEncoder_Free(_enc);}
 
         void setSharedKeys(FLSharedKeys sk)             {FLEncoder_SetSharedKeys(_enc, sk);}
+
+        inline void makeDelta(FLSlice base, bool reuseStrings =true);
 
         static FLSliceResult convertJSON(FLSlice json, FLError *error) {
             return FLData_ConvertJSON(json, error);
@@ -320,7 +330,7 @@ namespace fleeceapi {
         Encoder(const Encoder&) =delete;
         Encoder& operator=(const Encoder&) =delete;
 
-        const FLEncoder _enc;
+        FLEncoder _enc;
     };
 
     class JSONEncoder : public Encoder {
@@ -389,6 +399,8 @@ namespace fleeceapi {
     inline Value Dict::iterator::value() const  {return FLDictIterator_GetValue(this);}
     inline bool Dict::iterator::next()          {return FLDictIterator_Next(this);}
 
+    inline void Encoder::makeDelta(FLSlice base, bool reuseStrings)
+                                                {FLEncoder_MakeDelta(_enc, base, reuseStrings);}
     inline bool Encoder::writeNull()            {return FLEncoder_WriteNull(_enc);}
     inline bool Encoder::writeBool(bool b)      {return FLEncoder_WriteBool(_enc, b);}
     inline bool Encoder::writeInt(int64_t n)    {return FLEncoder_WriteInt(_enc, n);}

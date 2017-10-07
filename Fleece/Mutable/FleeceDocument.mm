@@ -11,7 +11,7 @@
 #import "MutableDict+ObjC.hh"
 #import "MRoot.hh"
 
-using namespace fleece;
+using namespace fleeceapi;
 
 
 @implementation FleeceDocument
@@ -20,13 +20,13 @@ using namespace fleece;
 }
 
 
-- (instancetype) initWithFleeceData: (fleece::alloc_slice)fleeceData
+- (instancetype) initWithFleeceData: (fleeceapi::alloc_slice)fleeceData
                          sharedKeys: (FLSharedKeys)sharedKeys
                   mutableContainers: (bool)mutableContainers
 {
     self = [super init];
     if (self) {
-        _root = new MRoot<id>(fleeceData, (SharedKeys*)sharedKeys, mutableContainers);
+        _root = new MRoot<id>(fleeceData, (FLSharedKeys)sharedKeys, mutableContainers);
         if (!_root)
             self = nil;
     }
@@ -45,11 +45,11 @@ using namespace fleece;
 }
 
 
-+ (id) objectFromFleeceSlice: (fleece::alloc_slice)fleeceData
++ (id) objectFromFleeceSlice: (fleeceapi::alloc_slice)fleeceData
                   sharedKeys: (FLSharedKeys)sharedKeys
            mutableContainers: (bool)mutableContainers
 {
-    MRoot<id> root(fleeceData, (SharedKeys*)sharedKeys, mutableContainers);
+    MRoot<id> root(fleeceData, (FLSharedKeys)sharedKeys, mutableContainers);
     return root.asNative();
 }
 

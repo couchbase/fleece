@@ -8,8 +8,10 @@
 
 #include "MutableDict+ObjC.hh"
 #include "MutableArray+ObjC.hh"
+#include "PlatformCompat.hh"
 
 using namespace fleece;
+using namespace fleeceapi;
 
 #define UU __unsafe_unretained
 
@@ -54,8 +56,10 @@ using namespace fleece;
 }
 
 
-- (void) fl_encodeTo: (Encoder*)enc {
-    _dict.encodeTo(*enc);
+- (void) fl_encodeToFLEncoder: (FLEncoder)enc {
+    Encoder encoder(enc);
+    _dict.encodeTo(encoder);
+    encoder.release();
 }
 
 
