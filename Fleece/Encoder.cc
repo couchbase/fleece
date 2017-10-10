@@ -70,7 +70,8 @@ namespace fleece {
     alloc_slice Encoder::extractOutput() {
         end();
         alloc_slice out = _out.extractOutput();
-        throwIf(out.size == 0, EncodeError, "No data written to Encoder");
+        if (out.size == 0)
+            out.reset();
         return out;
     }
 
