@@ -6,14 +6,14 @@
 //  Copyright © 2017 Couchbase. All rights reserved.
 //
 
-#include "MutableDict+ObjC.hh"
-#include "MutableArray+ObjC.hh"
+#include "MutableDict+ObjC.h"
+#import "MValue+ObjC.hh"
+#import "MDict.hh"
+#import "MDictIterator.hh"
 #include "PlatformCompat.hh"
 
 using namespace fleece;
 using namespace fleeceapi;
-
-#define UU __unsafe_unretained
 
 
 @implementation FleeceDict
@@ -21,6 +21,16 @@ using namespace fleeceapi;
     MDict<id> _dict;
     bool _mutable;
 }
+
+
+- (instancetype) init {
+    self = [super init];
+    if (self) {
+        _mutable = true;
+    }
+    return self;
+}
+
 
 - (instancetype) initWithMValue: (MValue<id>*)mv
                        inParent: (MCollection<id>*)parent
@@ -33,12 +43,14 @@ using namespace fleeceapi;
     return self;
 }
 
-- (instancetype) initWithCopyOfMDict: (const MDict<id>&)mDict isMutable: (bool)isMutable {
+
+- (instancetype) initWithCopyOfMDict: (const MDict<id>&)mDict
+                           isMutable: (bool)isMutable
+{
     self = [super init];
     if (self) {
         _dict = mDict;              // this copies mDict into _dict
         _mutable = isMutable;
-        NSLog(@"INIT FleeceDict %p", self);
     }
     return self;
 }
@@ -81,8 +93,7 @@ using namespace fleeceapi;
 - (id) objectForKey: (UU id)key {
     if (![key isKindOfClass: [NSString class]])
         return nil;
-    auto value = _dict.get(nsstring_slice(key));
-    return value ? value->asNative(&_dict) : nil;
+    return _dict.get(nsstring_slice(key)).asNative(&_dict);
 }
 
 
@@ -127,9 +138,8 @@ using namespace fleeceapi;
 
 - (NSArray*) allKeys {
     NSMutableArray* keys = [NSMutableArray arrayWithCapacity: _dict.count()];
-    _dict.enumerate(^(slice key, const MValue<id> &value) {
-        [keys addObject: (NSString*)key];
-    });
+    for (MDict<id>::iterator i(_dict); i; ++i)
+        [keys addObject: (NSString*)i.key()];
     return keys;
 }
 
@@ -141,10 +151,11 @@ using namespace fleeceapi;
 
 - (void) enumerateKeysAndObjectsUsingBlock: (void (^)(UU id key, UU id obj, BOOL *stop))block {
     __block BOOL stop = NO;
-    _dict.enumerate(^(slice key, const MValue<id> &value) {
-        if (!stop)
-            block((NSString*)key, value.asNative(&_dict), &stop);
-    });
+    for (MDict<id>::iterator i(_dict); i; ++i) {
+        block((NSString*)i.key(), i.nativeValue(), &stop);
+        if (stop)
+            break;
+    }
 }
 
 

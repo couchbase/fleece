@@ -9,23 +9,24 @@
 #pragma once
 #include "MValue.hh"
 #include <atomic>
-#include <iostream>
 
 namespace fleeceapi {
 
     namespace internal {
+
         /** Fleece backing-store state shared between all MCollections based on it. */
         struct Context {
             Context(const alloc_slice &data, FLSharedKeys sk, bool mutableContainers);
             Context();
-    #ifndef NDEBUG
-            virtual ~Context();
+#ifndef NDEBUG
+            ~Context();
             static std::atomic_int gInstanceCount;
-    #endif
+#endif
+            /** An empty context. (Clients point to this instead of nullptr.) */
             static Context* const gNullContext;
 
             alloc_slice      _data;                     // Fleece data; ensures it doesn't go away
-            FLSharedKeys      _sharedKeys {nullptr};     // SharedKeys to use with Dicts
+            FLSharedKeys     _sharedKeys {nullptr};     // SharedKeys to use with Dicts
             std::atomic_uint _refCount {0};             // Reference count
             bool             _mutableContainers {true}; // Should arrays/dicts be created mutable?
         };
@@ -43,18 +44,31 @@ namespace fleeceapi {
 
 
     /** Abstract superclass of MArray and MDict.
-        Keeps a Context, and manages upward connections to slot & parent. */
+        Keeps a strong reference to a Context, and manages upward connections to slot & parent. */
     template <class Native>
     class MCollection {
+    public:
+        /** Returns true if the child containers in this collection should be mutable. */
+        bool mutableContainers() const      {return _context->_mutableContainers;}
+
+        /** Returns true if this collection or its contents (at any level) have been modified. */
+        bool isMutated() const              {return _mutated;}
+
+        /** The original Fleece data that the entire document was read from. */
+        alloc_slice originalData() const    {return _context->_data;}
+
+        /** The FLSharedKeys used for encoding dictionary keys. */
+        FLSharedKeys sharedKeys() const     {return _context->_sharedKeys;}
+
+        /** The parent collection, if any. */
+        MCollection* parent() const         {return _parent;}
+
     protected:
         using MValue = MValue<Native>;
 
-        MCollection() =default;
-
-#ifndef NDEBUG
-        virtual
-#endif
-        ~MCollection()                      {release(_context);}
+        MCollection()                               =default;
+        MCollection(internal::Context *context)     :_context(internal::retain(context)) { }
+        ~MCollection()                              {release(_context);}
 
         void initInSlot(MValue *slot, MCollection *parent) {
             assert(slot);
@@ -66,7 +80,6 @@ namespace fleeceapi {
                 _context = internal::retain(_parent->_context);
         }
 
-    public:
         void setSlot(MValue *newSlot, MValue *oldSlot) {
             if (_slot == oldSlot) {
                 _slot = newSlot;
@@ -75,14 +88,15 @@ namespace fleeceapi {
             }
         }
 
-        MCollection* parent() const         {return _parent;}
-        alloc_slice originalData() const    {return _context->_data;}
-        FLSharedKeys sharedKeys() const      {return _context->_sharedKeys;}
-        bool mutableContainers() const      {return _context->_mutableContainers;}
+        internal::Context* context() const {
+            return _context;
+        }
+        
+        void setContext(internal::Context *ctx) {
+            assert(!_context);
+            _context = internal::retain(ctx);
+        }
 
-        bool isMutated() const              {return _mutated;}
-
-    protected:
         void mutate() {
             if (!_mutated) {
                 _mutated = true;
@@ -93,14 +107,13 @@ namespace fleeceapi {
             }
         }
 
-        // Only for use by MRoot
-        MCollection(internal::Context *context)     :_context(internal::retain(context)) { }
-
     private:
         MValue*             _slot {nullptr};        // Value representing this collection
         MCollection*        _parent {nullptr};      // Parent collection
-        internal::Context*  _context {nullptr};     // Document data, sharedKeys, etc.
+        internal::Context*  _context {nullptr};     // Document data, sharedKeys, etc. NEVER NULL
         bool                _mutated {true};        // Has my value changed from the backing store?
+
+        friend MValue;
     };
 
 }

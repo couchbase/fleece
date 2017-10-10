@@ -1,73 +1,34 @@
 //
-//  MutableArray+ObjC.cc
+//  MutableArray+ObjC.mm
 //  Fleece
 //
 //  Created by Jens Alfke on 5/28/17.
 //  Copyright © 2017 Couchbase. All rights reserved.
 //
 
-#include "MutableArray+ObjC.hh"
-#include "MutableDict+ObjC.hh"
-#include "PlatformCompat.hh"
-
-#define UU __unsafe_unretained
-
-
-// Defines an fl_collection property that returns null by default.
-// FleeceArray and FleeceDictionary override this to return their MCollection instance.
-// This is used by the implementation of MValue<id>::encodeNative(), below.
-@interface NSObject (FleeceMutable)
-@property (readonly, nonatomic) fleeceapi::MCollection<id>* fl_collection;
-@end
-
-@implementation NSObject (FleeceMutable)
-- (fleeceapi::MCollection<id>*) fl_collection {
-    return nullptr;
-}
-@end
-
-
-namespace fleeceapi {
-
-    // These are the three MValue methods that have to be implemented in any specialization,
-    // here specialized for <id>.
-
-    template<>
-    id MValue<id>::toNative(MCollection<id> *parent) {
-        switch (_value.type()) {
-            case kFLArray:
-                return _native = [[FleeceArray alloc] initWithMValue: this
-                                                            inParent: parent
-                                                           isMutable: parent->mutableContainers()];
-            case kFLDict:
-                return _native = [[FleeceDict alloc] initWithMValue: this
-                                                           inParent: parent
-                                                          isMutable: parent->mutableContainers()];
-            default:
-                return /*_native =*/ _value.asNSObject();
-        }
-    }
-
-    template<>
-    MCollection<id>* MValue<id>::collectionFromNative(id native) {
-        return [native fl_collection];
-    }
-
-    template<>
-    void MValue<id>::encodeNative(Encoder &enc, id obj) {
-        enc << obj;
-    }
-
-}
-
+#import "MutableArray+ObjC.h"
+#import "MValue+ObjC.hh"
+#import "MArray.hh"
+#import "PlatformCompat.hh"
 
 using namespace fleeceapi;
+
 
 @implementation FleeceArray
 {
     MArray<id> _array;
     bool _mutable;
 }
+
+
+- (instancetype) init {
+    self = [super init];
+    if (self) {
+        _mutable = true;
+    }
+    return self;
+}
+
 
 - (instancetype) initWithMValue: (fleeceapi::MValue<id>*)mv
                        inParent: (fleeceapi::MCollection<id>*)parent
@@ -77,17 +38,16 @@ using namespace fleeceapi;
     if (self) {
         _array.initInSlot(mv, parent);
         _mutable = isMutable;
-        NSLog(@"INIT FleeceArray %p with parent=%p", self, mv);
     }
     return self;
 }
+
 
 - (instancetype) initWithCopyOfMArray: (const MArray<id>&)mArray isMutable: (bool)isMutable {
     self = [super init];
     if (self) {
         _array.init(mArray);
         _mutable = isMutable;
-        NSLog(@"INIT FleeceArray %p", self);
     }
     return self;
 }
@@ -135,7 +95,7 @@ using namespace fleeceapi;
 
 
 - (id) objectAtIndex: (NSUInteger)index {
-    auto &val = _array.get((uint32_t)index);
+    auto &val = _array.get(index);
     if (_usuallyFalse(val.isEmpty()))
         throwRangeException(index);
     return val.asNative(&_array);
@@ -170,15 +130,20 @@ using namespace fleeceapi;
 
 - (void)removeLastObject {
     NSParameterAssert(_mutable);
-    if (!_array.remove(_array.count()-1))
+    if (_usuallyFalse(!_array.remove(_array.count()-1)))
         throwRangeException(0);
 }
 
 
 - (void)removeObjectAtIndex:(NSUInteger)index {
+    [self removeObjectsInRange: {index, 1}];
+}
+
+
+- (void)removeObjectsInRange:(NSRange)range {
     NSParameterAssert(_mutable);
-    if (_usuallyFalse(!_array.remove((uint32_t)index)))
-        throwRangeException(index);
+    if (_usuallyFalse(!_array.remove(range.location, range.length)))
+        throwRangeException(range.location + range.length - 1);
 }
 
 
@@ -199,8 +164,6 @@ using namespace fleeceapi;
 }
 
 
-
-#if 0
 // Fast enumeration -- for(in) loops use this.
 - (NSUInteger) countByEnumeratingWithState: (NSFastEnumerationState *)state
                                    objects: (id __unsafe_unretained [])stackBuf
@@ -209,14 +172,13 @@ using namespace fleeceapi;
     NSUInteger index = state->state;
     if (index == 0)
         state->mutationsPtr = &state->extra[0]; // this has to be pointed to something non-nullptr
-    if (index >= _count)
+    NSUInteger count = _array.count();
+    if (index >= count)
         return 0;
 
-    auto iter = _array->begin();
-    iter += (uint32_t)index;
     NSUInteger n = 0;
-    for (; iter; ++iter) {
-        id v = [_document objectForValue: iter.value()];
+    for (; index < count; ++index) {
+        id v = _array.get(index).asNative(_array.parent());
         assert(v);
         CFAutorelease(CFBridgingRetain(v));
         stackBuf[n++] = v;
@@ -228,7 +190,6 @@ using namespace fleeceapi;
     state->state += n;
     return n;
 }
-#endif
 
 
 #if 0

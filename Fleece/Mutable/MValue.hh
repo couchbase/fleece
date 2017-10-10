@@ -48,9 +48,6 @@ namespace fleeceapi {
             }
         }
 
-#ifndef NDEBUG
-        virtual
-#endif
         ~MValue() {
             if (_native)
                 nativeChangeSlot(nullptr);
@@ -82,12 +79,21 @@ namespace fleeceapi {
         bool isMutated() const      {return !_value;}
 
         Native asNative(const MCollection<Native> *parent) const {
-            if (!_native && _value)
-                return const_cast<MValue*>(this)->toNative(const_cast<MCollection<Native>*>(parent));
-            return _native;
+            if (_native || !_value) {
+                return _native;
+            } else {
+                bool cacheIt = false;
+                Native n = toNative(const_cast<MValue*>(this),
+                                    const_cast<MCollection<Native>*>(parent),
+                                    cacheIt);
+                if (cacheIt)
+                    const_cast<MValue*>(this)->_native = n;
+                return n;
+            }
         }
 
         void encodeTo(Encoder &enc) const {
+            assert(!isEmpty());
             if (_value)
                 enc << _value;
             else
@@ -102,14 +108,17 @@ namespace fleeceapi {
     protected:
         // These methods must be specialized for each specific Native type:
 
-        /** Must instantiate and return a Native object corresponding to the receiver.
-            May cache the object by assigning it to `_native`.
-            @param parent  The owning collection, if any
-            @param asMutable  True if the Native object should be a mutable collection.
-            @return  A new Native object corresponding to the receiver. */
-        Native toNative(MCollection<Native> *parent);
+        /** Must instantiate and return a Native object corresponding to `mv->value()`.
+            @param mv  The mutable value to create the Native object for.
+            @param parent  The owning collection, if any.
+            @param cacheIt  Set this to `true` if the Native object should be cached as part of
+                     the MValue and returned automatically on the next call. This can help
+                     performance if instantiation is slow, and it's _required_ when the value is
+                     an Array or Dict.
+            @return  A new Native object corresponding to mv's current value. */
+        static Native toNative(MValue *mv, MCollection<Native> *parent, bool &cacheIt);
 
-        /** Must return the MCollection object corresponding to _native,
+        /** Must return the MCollection object corresponding to the Native object,
             or null if the object doesn't correspond to a collection. */
         static MCollection<Native>* collectionFromNative(Native);
 
@@ -134,7 +143,7 @@ namespace fleeceapi {
         }
 
         Value  _value  {nullptr};     // Fleece value; null if I'm new or modified
-        Native       _native {nullptr};     // Cached or new/modified native value
+        Native _native {nullptr};     // Cached or new/modified native value
     };
 
 

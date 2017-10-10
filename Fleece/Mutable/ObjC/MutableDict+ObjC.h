@@ -1,5 +1,5 @@
 //
-//  MutableDict+ObjC.hh
+//  MutableDict+ObjC.h
 //  Fleece
 //
 //  Created by Jens Alfke on 5/28/17.
@@ -7,15 +7,10 @@
 //
 
 #pragma once
-#include "MDict.hh"
 #include <Foundation/Foundation.h>
 
 
 @interface FleeceDict : NSMutableDictionary
-
-- (instancetype) initWithMValue: (fleeceapi::MValue<id>*)mv
-                       inParent: (fleeceapi::MCollection<id>*)parent
-                      isMutable: (bool)isMutable;
 
 - (BOOL)containsObjectForKey:(NSString *)key;
 

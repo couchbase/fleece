@@ -19,8 +19,8 @@ namespace fleeceapi {
         MRoot() =default;
 
         MRoot(alloc_slice fleeceData,
-              FLSharedKeys sk,
               Value value,
+              FLSharedKeys sk =nullptr,
               bool mutableContainers =true)
         :MCollection(new internal::Context(fleeceData, sk, mutableContainers))
         ,_slot(value)
@@ -29,7 +29,7 @@ namespace fleeceapi {
         MRoot(alloc_slice fleeceData,
               FLSharedKeys sk =nullptr,
               bool mutableContainers =true)
-        :MRoot(fleeceData, sk, Value::fromData(fleeceData), mutableContainers)
+        :MRoot(fleeceData, Value::fromData(fleeceData), sk, mutableContainers)
         { }
 
         static Native asNative(alloc_slice fleeceData,
@@ -43,12 +43,12 @@ namespace fleeceapi {
         explicit operator bool() const      {return !_slot.isEmpty();}
 
         alloc_slice originalData() const    {return MCollection::originalData();}
-        FLSharedKeys sharedKeys() const      {return MCollection::sharedKeys();}
+        FLSharedKeys sharedKeys() const     {return MCollection::sharedKeys();}
 
         Native asNative() const             {return _slot.asNative(this);}
         bool isMutated() const              {return _slot.isMutated();}
-        void encodeTo(Encoder &enc) const   {_slot.encodeTo(enc);}
 
+        void encodeTo(Encoder &enc) const   {_slot.encodeTo(enc);}
         alloc_slice encode() const          {Encoder enc; encodeTo(enc); return enc.finish();}
 
         alloc_slice encodeDelta() const {
