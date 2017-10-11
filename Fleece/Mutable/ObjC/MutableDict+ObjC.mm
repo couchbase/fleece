@@ -19,26 +19,15 @@ using namespace fleeceapi;
 @implementation FleeceDict
 {
     MDict<id> _dict;
-    bool _mutable;
-}
-
-
-- (instancetype) init {
-    self = [super init];
-    if (self) {
-        _mutable = true;
-    }
-    return self;
 }
 
 
 - (instancetype) initWithMValue: (MValue<id>*)mv
                        inParent: (MCollection<id>*)parent
-                      isMutable: (bool)isMutable {
+{
     self = [super init];
     if (self) {
         _dict.initInSlot(mv, parent);
-        _mutable = isMutable;
     }
     return self;
 }
@@ -49,15 +38,14 @@ using namespace fleeceapi;
 {
     self = [super init];
     if (self) {
-        _dict = mDict;              // this copies mDict into _dict
-        _mutable = isMutable;
+        _dict.initAsCopyOf(mDict, isMutable);
     }
     return self;
 }
 
 
 - (instancetype) copyWithZone:(NSZone *)zone {
-    if (!_mutable)
+    if (!_dict.isMutable())
         return self;
     return [[[self class] alloc] initWithCopyOfMDict: _dict isMutable: false];
 }
@@ -100,6 +88,12 @@ using namespace fleeceapi;
 #pragma mark - MUTATION:
 
 
+[[noreturn]] static void throwMutationException() {
+    [NSException raise: NSInternalInconsistencyException format: @"Dictionary is immutable"];
+    abort();
+}
+
+
 - (bool) isMutated {
     return _dict.isMutated();
 }
@@ -118,21 +112,21 @@ using namespace fleeceapi;
 
 
 - (void)setObject:(id)value forKey:(id)key {
-    NSParameterAssert(_mutable);
     //[self checkNoParent: value];
-    _dict.set(nsstring_slice(key), value);
+    if (!_dict.set(nsstring_slice(key), value))
+        throwMutationException();
 }
 
 
 - (void)removeObjectForKey:(id)key {
-    NSParameterAssert(_mutable);
-    _dict.remove(nsstring_slice(key));
+    if (!_dict.remove(nsstring_slice(key)))
+        throwMutationException();
 }
 
 
 - (void)removeAllObjects {
-    NSParameterAssert(_mutable);
-    _dict.clear();
+    if (!_dict.clear())
+        throwMutationException();
 }
 
 

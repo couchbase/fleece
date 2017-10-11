@@ -18,18 +18,29 @@ namespace fleeceapi {
 
         MRoot() =default;
 
-        MRoot(alloc_slice fleeceData,
-              Value value,
-              FLSharedKeys sk =nullptr,
-              bool mutableContainers =true)
-        :MCollection(new internal::Context(fleeceData, sk, mutableContainers))
+        explicit MRoot(MContext *context,
+                       Value value,
+                       bool isMutable)
+        :MCollection(context, isMutable)
         ,_slot(value)
         { }
 
-        MRoot(alloc_slice fleeceData,
-              FLSharedKeys sk =nullptr,
-              bool mutableContainers =true)
-        :MRoot(fleeceData, Value::fromData(fleeceData), sk, mutableContainers)
+        explicit MRoot(MContext *context,
+                       bool isMutable =true)
+        :MRoot(context, Value::fromData(context->data()), isMutable)
+        { }
+
+        explicit MRoot(alloc_slice fleeceData,
+                       FLSharedKeys sk,
+                       Value value,
+                       bool isMutable =true)
+        :MRoot(new MContext(fleeceData, sk), isMutable)
+        { }
+
+        explicit MRoot(alloc_slice fleeceData,
+                       FLSharedKeys sk =nullptr,
+                       bool isMutable =true)
+        :MRoot(fleeceData, sk, Value::fromData(fleeceData), isMutable)
         { }
 
         static Native asNative(alloc_slice fleeceData,
@@ -42,8 +53,7 @@ namespace fleeceapi {
 
         explicit operator bool() const      {return !_slot.isEmpty();}
 
-        alloc_slice originalData() const    {return MCollection::originalData();}
-        FLSharedKeys sharedKeys() const     {return MCollection::sharedKeys();}
+        MContext* context() const           {return MCollection::context();}
 
         Native asNative() const             {return _slot.asNative(this);}
         bool isMutated() const              {return _slot.isMutated();}
@@ -53,7 +63,7 @@ namespace fleeceapi {
 
         alloc_slice encodeDelta() const {
             Encoder enc;
-            enc.makeDelta(originalData());
+            enc.makeDelta(context()->data());
             encodeTo(enc);
             return enc.finish();
         }

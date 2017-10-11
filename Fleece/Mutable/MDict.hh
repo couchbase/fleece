@@ -25,7 +25,7 @@ namespace fleeceapi {
         using MapType = std::unordered_map<slice, MValue, fleece::sliceHash>;
 
         /** Constructs an empty MDict not connected to any existing Fleece Dict. */
-        MDict() { }
+        MDict() :MCollection() { }
 
         /** Constructs an MDict that shadows a Dict stored in `mv` and contained in `parent`.
             This is what you'd call from MValue::toNative. */
@@ -37,15 +37,20 @@ namespace fleeceapi {
             been created with the existing-Dict constructor. Useful in situations where you can't
             pass parameters to the constructor (i.e. when embedding an MDict in an Objective-C++
             object.) */
-        void initInSlot(MValue *mv, MCollection *parent) {
-            MCollection::initInSlot(mv, parent);
+        void initInSlot(MValue *mv, MCollection *parent, bool isMutable) {
+            MCollection::initInSlot(mv, parent, isMutable);
+            assert(!_dict);
             _dict = mv->value().asDict();
             _count = _dict.count();
-            _map.clear();
+        }
+
+        void initInSlot(MValue *mv, MCollection *parent) {
+            initInSlot(mv, parent, parent->mutableChildren());
         }
 
         /** Copies the MDict d into the receiver. */
-        void init(const MDict &d) {
+        void initAsCopyOf(const MDict &d, bool isMutable) {
+            MCollection::initAsCopyOf(d, isMutable);
             _dict = d._dict;
             _map = d._map;
             _count = d._count;
@@ -62,14 +67,14 @@ namespace fleeceapi {
             if (i != _map.end())
                 return !i->second.isEmpty();
             else
-                return _dict.get(key, MCollection::sharedKeys()) != nullptr;
+                return _dict.get(key, sharedKeys()) != nullptr;
         }
 
         /** Returns the value for the given key, or an empty MValue if it's not found. */
         const MValue& get(slice key) const {
             auto i = _map.find(key);
             if (i == _map.end()) {
-                auto value = _dict.get(key, MCollection::sharedKeys());
+                auto value = _dict.get(key, sharedKeys());
                 if (!value)
                     return MValue::empty;
                 i = const_cast<MDict*>(this)->_setInMap(key, value);
@@ -78,43 +83,49 @@ namespace fleeceapi {
         }
 
         /** Stores a value for a key. */
-        void set(slice key, const MValue &val) {
+        bool set(slice key, const MValue &val) {
+            if (!MCollection::isMutable())
+                return false;
             auto i = _map.find(key);
             if (i != _map.end()) {
                 if (val.isEmpty() && i->second.isEmpty())
-                    return;
+                    return true;
                 MCollection::mutate();
                 _count += !val.isEmpty() - !i->second.isEmpty();
                 i->second = val;
             } else {
-                if (_dict.get(key, MCollection::sharedKeys())) {
+                if (_dict.get(key, sharedKeys())) {
                     if (val.isEmpty())
                         --_count;
                 } else {
                     if (val.isEmpty())
-                        return;
+                        return true;
                     else
                         ++_count;
                 }
                 MCollection::mutate();
                 _setInMap(key, val);
             }
+            return true;
         }
 
         /** Removes the value, if any, for a key. */
-        void remove(slice key) {
-            set(key, MValue());
+        bool remove(slice key) {
+            return set(key, MValue());
         }
 
         /** Removes all items from the dictionary. */
-        void clear() {
+        bool clear() {
+            if (!MCollection::isMutable())
+                return false;
             if (_count == 0)
-                return;
+                return true;
             MCollection::mutate();
             _map.clear();
-            for (Dict::iterator i(_dict, MCollection::sharedKeys()); i; ++i)
+            for (Dict::iterator i(_dict, sharedKeys()); i; ++i)
                 _map.emplace(i.keyString(), MValue::empty);
             _count = 0;
+            return true;
         }
 
         using iterator = MDictIterator<Native>;     // defined in MDictIterator.hh
@@ -135,6 +146,9 @@ namespace fleeceapi {
                 enc.endDict();
             }
         }
+
+        /** The FLSharedKeys used for encoding dictionary keys. */
+        FLSharedKeys sharedKeys() const     {return MCollection::context()->sharedKeys();}
 
     private:
         typename MDict::MapType::iterator _setInMap(slice key, const MValue &val) {

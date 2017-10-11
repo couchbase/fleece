@@ -28,13 +28,11 @@ namespace fleeceapi {
             case kFLArray:
                 cacheIt = true;
                 return [[FleeceArray alloc] initWithMValue: mv
-                                                  inParent: parent
-                                                 isMutable: parent->mutableContainers()];
+                                                  inParent: parent];
             case kFLDict:
                 cacheIt = true;
                 return [[FleeceDict alloc] initWithMValue: mv
-                                                 inParent: parent
-                                                isMutable: parent->mutableContainers()];
+                                                 inParent: parent];
             default:
                 return mv->value().asNSObject();
         }

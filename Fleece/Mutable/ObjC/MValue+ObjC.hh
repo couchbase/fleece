@@ -27,8 +27,7 @@
 @interface FleeceArray ()
 
 - (instancetype) initWithMValue: (fleeceapi::MValue<id>*)mv
-                       inParent: (fleeceapi::MCollection<id>*)parent
-                      isMutable: (bool)isMutable;
+                       inParent: (fleeceapi::MCollection<id>*)parent;
 
 @end
 
@@ -36,8 +35,7 @@
 @interface FleeceDict ()
 
 - (instancetype) initWithMValue: (fleeceapi::MValue<id>*)mv
-                       inParent: (fleeceapi::MCollection<id>*)parent
-                      isMutable: (bool)isMutable;
+                       inParent: (fleeceapi::MCollection<id>*)parent;
 
 @end
 

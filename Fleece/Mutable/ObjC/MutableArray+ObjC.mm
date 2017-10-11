@@ -17,27 +17,15 @@ using namespace fleeceapi;
 @implementation FleeceArray
 {
     MArray<id> _array;
-    bool _mutable;
-}
-
-
-- (instancetype) init {
-    self = [super init];
-    if (self) {
-        _mutable = true;
-    }
-    return self;
 }
 
 
 - (instancetype) initWithMValue: (fleeceapi::MValue<id>*)mv
                        inParent: (fleeceapi::MCollection<id>*)parent
-                      isMutable: (bool)isMutable
 {
     self = [super init];
     if (self) {
         _array.initInSlot(mv, parent);
-        _mutable = isMutable;
     }
     return self;
 }
@@ -46,15 +34,14 @@ using namespace fleeceapi;
 - (instancetype) initWithCopyOfMArray: (const MArray<id>&)mArray isMutable: (bool)isMutable {
     self = [super init];
     if (self) {
-        _array.init(mArray);
-        _mutable = isMutable;
+        _array.initAsCopyOf(mArray, isMutable);
     }
     return self;
 }
 
 
 - (id) copyWithZone:(NSZone *)zone {
-    if (!_mutable)
+    if (!_array.isMutable())
         return self;
     return [[[self class] alloc] initWithCopyOfMArray: _array isMutable: false];
 }
@@ -105,21 +92,28 @@ using namespace fleeceapi;
 #pragma mark - MUTATION:
 
 
+- (void) requireMutable {
+    if (!_array.isMutable())
+        [NSException raise: NSInternalInconsistencyException format: @"Array is immutable"];
+}
+
+
 - (bool) isMutated {
     return _array.isMutated();
 }
 
 
 - (void)addObject:(UU id)anObject {
-    NSParameterAssert(_mutable);
-    if (_usuallyFalse(!_array.insert(_array.count(), anObject)))
+    if (_usuallyFalse(!_array.insert(_array.count(), anObject))) {
+        [self requireMutable];
         throwNilValueException();
+    }
 }
 
 
 - (void)insertObject:(UU id)anObject atIndex:(NSUInteger)index {
-    NSParameterAssert(_mutable);
     if (_usuallyFalse(!_array.insert((uint32_t)index, anObject))) {
+        [self requireMutable];
         if (!anObject)
             throwNilValueException();
         else
@@ -129,9 +123,10 @@ using namespace fleeceapi;
 
 
 - (void)removeLastObject {
-    NSParameterAssert(_mutable);
-    if (_usuallyFalse(!_array.remove(_array.count()-1)))
+    if (_usuallyFalse(!_array.remove(_array.count()-1))) {
+        [self requireMutable];
         throwRangeException(0);
+    }
 }
 
 
@@ -141,15 +136,16 @@ using namespace fleeceapi;
 
 
 - (void)removeObjectsInRange:(NSRange)range {
-    NSParameterAssert(_mutable);
-    if (_usuallyFalse(!_array.remove(range.location, range.length)))
+    if (_usuallyFalse(!_array.remove(range.location, range.length))) {
+        [self requireMutable];
         throwRangeException(range.location + range.length - 1);
+    }
 }
 
 
 - (void)replaceObjectAtIndex:(NSUInteger)index withObject:(UU id)anObject {
-    NSParameterAssert(_mutable);
     if (_usuallyFalse(!_array.set((uint32_t)index, anObject))) {
+        [self requireMutable];
         if (!anObject)
             throwNilValueException();
         else
@@ -159,8 +155,8 @@ using namespace fleeceapi;
 
 
 - (void)removeAllObjects {
-    NSParameterAssert(_mutable);
-    _array.clear();
+    if (_usuallyFalse(!_array.clear()))
+        [self requireMutable];
 }
 
 

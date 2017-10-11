@@ -1,45 +1,44 @@
 //
-//  MCollection.cc
+//  MContext.cc
 //  Fleece
 //
 //  Created by Jens Alfke on 10/5/17.
 //Copyright © 2017 Couchbase. All rights reserved.
 //
 
-#include "MCollection.hh"
+#include "MContext.hh"
 
 namespace fleeceapi {
-    using namespace internal;
 
-    Context::Context(const alloc_slice &data, FLSharedKeys sk, bool mutableContainers)
+    MContext::MContext(const alloc_slice &data, FLSharedKeys sk)
     :_data(data)
     ,_sharedKeys(sk)
-    ,_mutableContainers(mutableContainers)
     {
-        //std::cerr << "INIT Context " << this << "\n";
 #ifndef NDEBUG
+        //std::cerr << "INIT Context " << this << "\n";
         ++gInstanceCount;
 #endif
     }
 
 
 #ifndef NDEBUG
-    std::atomic_int Context::gInstanceCount;
-
-
-    Context::~Context() {
-        assert(this != gNullContext);
-        --gInstanceCount;
-        //std::cerr << "DTOR Context " << this << "\n";
-    }
+    std::atomic_int MContext::gInstanceCount;
 #endif
 
 
-    Context::Context()
+    MContext::~MContext() {
+        assert(this != gNullContext);
+#ifndef NDEBUG
+        --gInstanceCount;
+        //std::cerr << "DTOR Context " << this << "\n";
+#endif
+    }
+
+
+    MContext::MContext()
     :_refCount(0x7FFFFFFF)
     { }
 
-    Context* const Context::gNullContext = new Context;
-
+    MContext* const MContext::gNullContext = new MContext;
 
 }

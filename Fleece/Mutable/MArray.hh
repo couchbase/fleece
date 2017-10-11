@@ -20,7 +20,7 @@ namespace fleeceapi {
         using MCollection = MCollection<Native>;
 
         /** Constructs an empty MArray not connected to any existing Fleece Array. */
-        MArray() { }
+        MArray() :MCollection() { }
 
         /** Constructs an MArray that shadows an Array stored in `mv` and contained in `parent`.
             This is what you'd call from MValue::toNative. */
@@ -32,16 +32,20 @@ namespace fleeceapi {
             been created with the existing-Array constructor. Useful in situations where you can't
             pass parameters to the constructor (i.e. when embedding an MArray in an Objective-C++
             object.) */
-        void initInSlot(MValue *mv, MCollection *parent) {
-            MCollection::initInSlot(mv, parent);
+        void initInSlot(MValue *mv, MCollection *parent, bool isMutable) {
+            MCollection::initInSlot(mv, parent, isMutable);
+            assert(!_array);
             _array = mv->value().asArray();
-            _vec.clear();
             _vec.resize(_array.count());
         }
 
+        void initInSlot(MValue *mv, MCollection *parent) {
+            initInSlot(mv, parent, parent->mutableChildren());
+        }
+
         /** Copies the MArray a into the receiver. */
-        void init(const MArray &a) {
-            MCollection::setContext(a.context());
+        void initAsCopyOf(const MArray &a, bool isMutable) {
+            MCollection::initAsCopyOf(a, isMutable);
             _array = a._array;
             _vec = a._vec;
         }
@@ -65,6 +69,8 @@ namespace fleeceapi {
         /** Stores a Native value into the array.
             If the index is out of range, returns false. */
         bool set(size_t i, Native val) {
+            if (!MCollection::isMutable())
+                return false;
             if (i >= count() || val == nullptr)
                 return false;
             MCollection::mutate();
@@ -75,6 +81,8 @@ namespace fleeceapi {
         /** Inserts the value `val` into the array at index `i`,
             or returns false if the array is out of range (greater than the count.) */
         bool insert(size_t i, Native val) {
+            if (!MCollection::isMutable())
+                return false;
             size_t cnt = count();
             if (i > cnt || val == nullptr)
                 return false;
@@ -87,6 +95,8 @@ namespace fleeceapi {
 
         /** Removes `n` values starting at index `i`, or returns false if the range is invalid */
         bool remove(size_t i, size_t n =1) {
+            if (!MCollection::isMutable())
+                return false;
             size_t end = i + n;
             if (end <= i)
                 return (end == i);
@@ -101,11 +111,14 @@ namespace fleeceapi {
         }
 
         /** Removes all items from the array. */
-        void clear() {
+        bool clear() {
+            if (!MCollection::isMutable())
+                return false;
             if (_vec.empty())
-                return;
+                return true;
             MCollection::mutate();
             _vec.clear();
+            return true;
         }
 
         /** Writes the array to an Encoder as a single Value. */
