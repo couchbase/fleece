@@ -433,6 +433,13 @@ extern "C" {
     /** Tells the encoder to use a shared-keys mapping when encoding dictionary keys. */
     void FLEncoder_SetSharedKeys(FLEncoder, FLSharedKeys);
 
+    /** Associates an arbitrary user-defined value with the encoder. */
+    void FLEncoder_SetExtraInfo(FLEncoder e, void *info);
+
+    /** Returns the user-defined value associated with the encoder; NULL by default. */
+    void* FLEncoder_GetExtraInfo(FLEncoder e);
+
+
     /** Tells the encoder to create a delta from the given Fleece document, instead of a standalone
         document. Any calls to FLEncoder_WriteValue() where the value points inside the base data
         will write a pointer back to the original value. If `reuseStrings` is true, then writing a

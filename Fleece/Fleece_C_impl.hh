@@ -40,11 +40,12 @@ namespace fleece {
     // Implementation of FLEncoder: a subclass of Encoder that keeps track of its error state.
     struct FLEncoderImpl {
         FLError errorCode {::kFLNoError};
-        bool ownsFleeceEncoder {true};
+        const bool ownsFleeceEncoder {true};
         std::string errorMessage;
         std::unique_ptr<Encoder> fleeceEncoder;
         std::unique_ptr<JSONEncoder> jsonEncoder;
         std::unique_ptr<JSONConverter> jsonConverter;
+        void* extraInfo {nullptr};
 
         FLEncoderImpl(FLEncoderFormat format,
                       size_t reserveSize =0, bool uniqueStrings =true, bool sortKeys =true)

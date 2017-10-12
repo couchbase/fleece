@@ -370,6 +370,14 @@ const char* FLEncoder_GetErrorMessage(FLEncoder e) {
     return e->hasError() ? e->errorMessage.c_str() : nullptr;
 }
 
+void FLEncoder_SetExtraInfo(FLEncoder e, void *info) {
+    e->extraInfo = info;
+}
+
+void* FLEncoder_GetExtraInfo(FLEncoder e) {
+    return e->extraInfo;
+}
+
 FLSliceResult FLEncoder_Finish(FLEncoder e, FLError *outError) {
     if (!e->hasError()) {
         try {
