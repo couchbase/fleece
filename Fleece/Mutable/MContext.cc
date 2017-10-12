@@ -15,7 +15,6 @@ namespace fleeceapi {
     ,_sharedKeys(sk)
     {
 #ifndef NDEBUG
-        //std::cerr << "INIT Context " << this << "\n";
         ++gInstanceCount;
 #endif
     }
@@ -30,7 +29,6 @@ namespace fleeceapi {
         assert(this != gNullContext);
 #ifndef NDEBUG
         --gInstanceCount;
-        //std::cerr << "DTOR Context " << this << "\n";
 #endif
     }
 

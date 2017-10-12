@@ -50,6 +50,10 @@ namespace fleeceapi {
             _vec = a._vec;
         }
 
+        Array baseArray() const {
+            return _array;
+        }
+
         /** Returns the number of items in the array. */
         uint32_t count() const {
             return (uint32_t)_vec.size();
@@ -58,10 +62,10 @@ namespace fleeceapi {
         /** Returns a reference to the MValue of the item at the given index.
             If the index is out of range, returns an empty MValue. */
         const MValue& get(size_t i) const {
-            if (i >= _vec.size())
+            if (_usuallyFalse(i >= _vec.size()))
                 return MValue::empty;
             const MValue &val = _vec[i];
-            if (val.isEmpty())
+            if (_usuallyTrue(val.isEmpty()))
                 const_cast<MValue&>(val) = _array[(uint32_t)i];
             return val;
         }
@@ -69,9 +73,9 @@ namespace fleeceapi {
         /** Stores a Native value into the array.
             If the index is out of range, returns false. */
         bool set(size_t i, Native val) {
-            if (!MCollection::isMutable())
+            if (_usuallyFalse(!MCollection::isMutable()))
                 return false;
-            if (i >= count() || val == nullptr)
+            if (_usuallyFalse(i >= count() || val == nullptr))
                 return false;
             MCollection::mutate();
             _vec[i] = val;
@@ -81,10 +85,10 @@ namespace fleeceapi {
         /** Inserts the value `val` into the array at index `i`,
             or returns false if the array is out of range (greater than the count.) */
         bool insert(size_t i, Native val) {
-            if (!MCollection::isMutable())
+            if (_usuallyFalse(!MCollection::isMutable()))
                 return false;
             size_t cnt = count();
-            if (i > cnt || val == nullptr)
+            if (_usuallyFalse(i > cnt || val == nullptr))
                 return false;
             else if (i < cnt)
                 populateVec();
@@ -93,15 +97,19 @@ namespace fleeceapi {
             return true;
         }
 
+        bool append(Native val) {
+            return insert(count(), val);
+        }
+
         /** Removes `n` values starting at index `i`, or returns false if the range is invalid */
         bool remove(size_t i, size_t n =1) {
-            if (!MCollection::isMutable())
+            if (_usuallyFalse(!MCollection::isMutable()))
                 return false;
             size_t end = i + n;
             if (end <= i)
                 return (end == i);
             size_t cnt = count();
-            if (end > cnt)
+            if (_usuallyFalse(end > cnt))
                 return false;
             if (end < cnt)
                 populateVec();
@@ -112,7 +120,7 @@ namespace fleeceapi {
 
         /** Removes all items from the array. */
         bool clear() {
-            if (!MCollection::isMutable())
+            if (_usuallyFalse(!MCollection::isMutable()))
                 return false;
             if (_vec.empty())
                 return true;
@@ -145,7 +153,7 @@ namespace fleeceapi {
         void populateVec() {
             uint32_t i = 0;
             for (auto &v : _vec) {
-                if (v.isEmpty())
+                if (_usuallyTrue(v.isEmpty()))
                     v = _array[i++];
             }
         }

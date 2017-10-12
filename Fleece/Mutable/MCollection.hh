@@ -9,6 +9,7 @@
 #pragma once
 #include "MValue.hh"
 #include "MContext.hh"
+#include "PlatformCompat.hh"
 
 namespace fleeceapi {
 
@@ -37,7 +38,9 @@ namespace fleeceapi {
     protected:
         using MValue = MValue<Native>;
 
-        MCollection()                               =default;
+        MCollection()
+        :MCollection(MContext::gNullContext, true)
+        { }
 
         MCollection(MContext *context, bool isMutable)
         :_context(context->retain())
@@ -45,27 +48,30 @@ namespace fleeceapi {
         ,_mutableChildren(isMutable)
         { }
 
-        ~MCollection()                              {if (_context) _context->release();}
+        ~MCollection() {
+            _context->release();
+        }
 
         void initInSlot(MValue *slot, MCollection *parent, bool isMutable) {
             assert(slot);
-            assert(!_context);
+            assert(_context == MContext::gNullContext);
             _slot = slot;
             _parent = parent;
             _mutable = isMutable;
             _mutableChildren = isMutable;
             _mutated = _slot->isMutated();
             if (_slot->value())
-                _context = _parent->_context->retain();
+                setContext(_parent->_context);
         }
 
         void initAsCopyOf(const MCollection &original, bool isMutable) {
+            assert(_context == MContext::gNullContext);
             setContext(original._context);
             _mutable = _mutableChildren = isMutable;
         }
 
         void setSlot(MValue *newSlot, MValue *oldSlot) {
-            if (_slot == oldSlot) {
+            if (_usuallyTrue(_slot == oldSlot)) {
                 _slot = newSlot;
                 if (!newSlot)
                     _parent = nullptr;
@@ -73,8 +79,10 @@ namespace fleeceapi {
         }
 
         void setContext(MContext *ctx) {
-            assert(!_context);
-            _context = ctx->retain();
+            if (_usuallyTrue(ctx != _context)) {
+                _context->release();
+                _context = ctx->retain();
+            }
         }
 
         void mutate() {
@@ -89,6 +97,9 @@ namespace fleeceapi {
         }
 
     private:
+        MCollection(const MCollection&) =delete;
+        MCollection& operator= (const MCollection &) =delete;
+
         MValue*         _slot {nullptr};            // Value representing this collection
         MCollection*    _parent {nullptr};          // Parent collection
         MContext*       _context {nullptr};         // Document data, sharedKeys, etc. NEVER NULL

@@ -69,6 +69,9 @@ namespace fleeceapi {
         }
 
     private:
+        MRoot(const MRoot&) =delete;
+        MRoot& operator= (const MRoot &) =delete;
+
         MValue<Native>  _slot;              // My contents: a holder for the actual root object
     };
 

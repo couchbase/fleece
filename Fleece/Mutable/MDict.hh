@@ -77,6 +77,8 @@ namespace fleeceapi {
                 auto value = _dict.get(key, sharedKeys());
                 if (!value)
                     return MValue::empty;
+                // Add an entry to the map, so that the caller can associate a Native object
+                // with the value, and to speed up the next lookup
                 i = const_cast<MDict*>(this)->_setInMap(key, value);
             }
             return i->second;
@@ -84,22 +86,24 @@ namespace fleeceapi {
 
         /** Stores a value for a key. */
         bool set(slice key, const MValue &val) {
-            if (!MCollection::isMutable())
+            if (_usuallyFalse(!MCollection::isMutable()))
                 return false;
             auto i = _map.find(key);
             if (i != _map.end()) {
-                if (val.isEmpty() && i->second.isEmpty())
-                    return true;
+                // Found in _map; update value:
+                if (_usuallyFalse(val.isEmpty() && i->second.isEmpty()))
+                    return true;    // no-op
                 MCollection::mutate();
                 _count += !val.isEmpty() - !i->second.isEmpty();
                 i->second = val;
             } else {
+                // Not found; check _dict:
                 if (_dict.get(key, sharedKeys())) {
                     if (val.isEmpty())
                         --_count;
                 } else {
                     if (val.isEmpty())
-                        return true;
+                        return true;    // no-op
                     else
                         ++_count;
                 }

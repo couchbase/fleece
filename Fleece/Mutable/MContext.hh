@@ -8,6 +8,7 @@
 
 #pragma once
 #include "MValue.hh"
+#include "PlatformCompat.hh"
 #include <atomic>
 
 namespace fleeceapi {
@@ -36,7 +37,7 @@ namespace fleeceapi {
         }
 
         inline void release() {
-            if (--_refCount == 0)
+            if (_usuallyFalse(--_refCount == 0))
                 delete this;
         }
 

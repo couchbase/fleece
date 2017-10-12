@@ -174,7 +174,7 @@ using namespace fleeceapi;
 
     NSUInteger n = 0;
     for (; index < count; ++index) {
-        id v = _array.get(index).asNative(_array.parent());
+        id v = _array.get(index).asNative(&_array);
         assert(v);
         CFAutorelease(CFBridgingRetain(v));
         stackBuf[n++] = v;

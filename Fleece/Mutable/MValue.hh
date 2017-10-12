@@ -8,6 +8,7 @@
 
 #pragma once
 #include "FleeceCpp.hh"
+#include "PlatformCompat.hh"
 #include "slice.hh"
 
 namespace fleeceapi {
@@ -39,8 +40,8 @@ namespace fleeceapi {
         MValue(const MValue &mv)    =default;
 
         MValue(MValue &&mv) noexcept
-        :_native(mv._native)
-        ,_value(mv._value)
+        :_value(mv._value)
+        ,_native(mv._native)
         {
             if (mv._native) {
                 mv.nativeChangeSlot(this);
@@ -67,16 +68,17 @@ namespace fleeceapi {
         }
 
         MValue& operator= (Native n) {
-            if (_native != n) {
+            if (_usuallyTrue(_native != n)) {
                 setNative(n);
                 _value = nullptr;
             }
             return *this;
         }
 
-        Value  value() const  {return _value;}
+        Value value() const         {return _value;}
         bool isEmpty() const        {return !_value && !_native;}
         bool isMutated() const      {return !_value;}
+        bool hasNative() const      {return _native != nullptr;}
 
         Native asNative(const MCollection<Native> *parent) const {
             if (_native || !_value) {
@@ -133,7 +135,7 @@ namespace fleeceapi {
         }
 
         void setNative(Native n) {
-            if (_native != n) {
+            if (_usuallyTrue(_native != n)) {
                 if (_native)
                     nativeChangeSlot(nullptr);
                 _native = n;
@@ -142,8 +144,8 @@ namespace fleeceapi {
             }
         }
 
-        Value  _value  {nullptr};     // Fleece value; null if I'm new or modified
-        Native _native {nullptr};     // Cached or new/modified native value
+        Value  _value;              // Fleece value; null if I'm new or modified
+        Native _native {nullptr};   // Cached or new/modified native value
     };
 
 
