@@ -35,14 +35,11 @@
 		2734B89E1F8583FF00BE5249 /* MArray.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8951F8583FF00BE5249 /* MArray.hh */; };
 		2734B89F1F8583FF00BE5249 /* MValue.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8961F8583FF00BE5249 /* MValue.hh */; };
 		2734B8A01F8583FF00BE5249 /* MutableArray+ObjC.h in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8971F8583FF00BE5249 /* MutableArray+ObjC.h */; };
-		2734B8A11F8583FF00BE5249 /* MutableArray+ObjC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2734B8981F8583FF00BE5249 /* MutableArray+ObjC.mm */; };
 		2734B8A21F8583FF00BE5249 /* MutableDict+ObjC.h in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8991F8583FF00BE5249 /* MutableDict+ObjC.h */; };
 		2734B8A41F8583FF00BE5249 /* MCollection.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2734B89B1F8583FF00BE5249 /* MCollection.hh */; };
 		2734B8A51F8583FF00BE5249 /* MDict.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2734B89C1F8583FF00BE5249 /* MDict.hh */; };
-		2734B8A61F8583FF00BE5249 /* MutableDict+ObjC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2734B89D1F8583FF00BE5249 /* MutableDict+ObjC.mm */; };
 		2734B8A71F85842300BE5249 /* MutableTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2734B89A1F8583FF00BE5249 /* MutableTests.mm */; };
 		2734B8AD1F859AEC00BE5249 /* FleeceDocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8AB1F859AEC00BE5249 /* FleeceDocument.h */; };
-		2734B8AE1F859AEC00BE5249 /* FleeceDocument.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2734B8AC1F859AEC00BE5249 /* FleeceDocument.mm */; };
 		2734B8B11F870FB400BE5249 /* MContext.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2734B8B01F870FB400BE5249 /* MContext.cc */; };
 		275CED521D3EF7BE001DE46C /* FleeceException.cc in Sources */ = {isa = PBXBuildFile; fileRef = 275CED501D3EF7BE001DE46C /* FleeceException.cc */; };
 		275CED531D3EF7BE001DE46C /* FleeceException.hh in Headers */ = {isa = PBXBuildFile; fileRef = 275CED511D3EF7BE001DE46C /* FleeceException.hh */; };
@@ -68,7 +65,38 @@
 		27C4ACAD1CE5146500938365 /* Array.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C4ACAB1CE5146500938365 /* Array.hh */; };
 		27CA08421F6B0E9400FF8C71 /* Dict.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27CA08401F6B0E9400FF8C71 /* Dict.hh */; };
 		27CA08431F6B0E9400FF8C71 /* Dict.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27CA08411F6B0E9400FF8C71 /* Dict.cc */; };
-		27D721211F8C04F100AA4458 /* MValue+ObjC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27D721201F8C04F100AA4458 /* MValue+ObjC.mm */; };
+		27D7215E1F8E8EEA00AA4458 /* MutableDict+ObjC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2734B89D1F8583FF00BE5249 /* MutableDict+ObjC.mm */; };
+		27D721651F8E8EEA00AA4458 /* MValue+ObjC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27D721201F8C04F100AA4458 /* MValue+ObjC.mm */; };
+		27D721661F8E8EEA00AA4458 /* FleeceDocument.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2734B8AC1F859AEC00BE5249 /* FleeceDocument.mm */; };
+		27D721671F8E8EEA00AA4458 /* MutableArray+ObjC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2734B8981F8583FF00BE5249 /* MutableArray+ObjC.mm */; };
+		27D721721F8E8EEA00AA4458 /* JSON5.hh in Headers */ = {isa = PBXBuildFile; fileRef = 276D15451E007D3000543B1B /* JSON5.hh */; };
+		27D721731F8E8EEA00AA4458 /* jsonsl.h in Headers */ = {isa = PBXBuildFile; fileRef = 27298E4A1C00F8A9000CFBA8 /* jsonsl.h */; };
+		27D721741F8E8EEA00AA4458 /* CatchHelper.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27E3DD4B1DB6C32400F2872D /* CatchHelper.hh */; };
+		27D721751F8E8EEA00AA4458 /* MDict.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2734B89C1F8583FF00BE5249 /* MDict.hh */; };
+		27D721761F8E8EEA00AA4458 /* FleeceDocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8AB1F859AEC00BE5249 /* FleeceDocument.h */; };
+		27D721771F8E8EEA00AA4458 /* KeyTree.hh in Headers */ = {isa = PBXBuildFile; fileRef = 278163BB1CE7A72300B94E32 /* KeyTree.hh */; };
+		27D721781F8E8EEA00AA4458 /* Array.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C4ACAB1CE5146500938365 /* Array.hh */; };
+		27D721791F8E8EEA00AA4458 /* MArray.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8951F8583FF00BE5249 /* MArray.hh */; };
+		27D7217A1F8E8EEA00AA4458 /* Dict.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27CA08401F6B0E9400FF8C71 /* Dict.hh */; };
+		27D7217B1F8E8EEA00AA4458 /* StringTable.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2797BCAB1C0FBFDE00E5C991 /* StringTable.hh */; };
+		27D7217C1F8E8EEA00AA4458 /* JSONEncoder.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27FE87F21E53E43200C5CF3F /* JSONEncoder.hh */; };
+		27D7217D1F8E8EEA00AA4458 /* slice.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2751BF53CEA005DCB13 /* slice.hh */; };
+		27D7217E1F8E8EEA00AA4458 /* MutableArray+ObjC.h in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8971F8583FF00BE5249 /* MutableArray+ObjC.h */; };
+		27D7217F1F8E8EEA00AA4458 /* varint.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2771BF53CEA005DCB13 /* varint.hh */; };
+		27D721801F8E8EEA00AA4458 /* MValue.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8961F8583FF00BE5249 /* MValue.hh */; };
+		27D721811F8E8EEA00AA4458 /* Value.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA26B1BF53CEA005DCB13 /* Value.hh */; };
+		27D721821F8E8EEA00AA4458 /* Endian.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2731BF53CEA005DCB13 /* Endian.hh */; };
+		27D721831F8E8EEA00AA4458 /* forestdb_endian.h in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2861BF53D32005DCB13 /* forestdb_endian.h */; };
+		27D721841F8E8EEA00AA4458 /* MutableDict+ObjC.h in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8991F8583FF00BE5249 /* MutableDict+ObjC.h */; };
+		27D721851F8E8EEA00AA4458 /* MCollection.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2734B89B1F8583FF00BE5249 /* MCollection.hh */; };
+		27D721861F8E8EEA00AA4458 /* CaseListReporter.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27E3DD4A1DB6C32400F2872D /* CaseListReporter.hh */; };
+		27D721871F8E8EEA00AA4458 /* Writer.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2721BF53CEA005DCB13 /* Writer.hh */; };
+		27D721881F8E8EEA00AA4458 /* Encoder.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA26F1BF53CEA005DCB13 /* Encoder.hh */; };
+		27D721891F8E8EEA00AA4458 /* Path.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27A924CE1D9C32E800086206 /* Path.hh */; };
+		27D7218A1F8E8EEA00AA4458 /* Fleece.h in Headers */ = {isa = PBXBuildFile; fileRef = 278163B41CE69CA800B94E32 /* Fleece.h */; };
+		27D7218B1F8E8EEA00AA4458 /* FleeceException.hh in Headers */ = {isa = PBXBuildFile; fileRef = 275CED511D3EF7BE001DE46C /* FleeceException.hh */; };
+		27D7218C1F8E8EEA00AA4458 /* SharedKeys.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27E3DD411DB6A14200F2872D /* SharedKeys.hh */; };
+		27D721961F8E900400AA4458 /* libFleeceMutableObjC.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D721901F8E8EEA00AA4458 /* libFleeceMutableObjC.a */; };
 		27E3DD421DB6A14200F2872D /* SharedKeys.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27E3DD401DB6A14200F2872D /* SharedKeys.cc */; };
 		27E3DD431DB6A14200F2872D /* SharedKeys.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27E3DD411DB6A14200F2872D /* SharedKeys.hh */; };
 		27E3DD4C1DB6C32400F2872D /* CaseListReporter.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27E3DD4A1DB6C32400F2872D /* CaseListReporter.hh */; };
@@ -92,6 +120,20 @@
 			proxyType = 1;
 			remoteGlobalIDString = 270FA25B1BF53CAD005DCB13;
 			remoteInfo = Fleece;
+		};
+		27D721911F8E8FE500AA4458 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 270FA2541BF53CAD005DCB13 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 270FA25B1BF53CAD005DCB13;
+			remoteInfo = Fleece;
+		};
+		27D721931F8E8FEB00AA4458 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 270FA2541BF53CAD005DCB13 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 27D721511F8E8EEA00AA4458;
+			remoteInfo = FleeceMutableObjC;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -209,6 +251,7 @@
 		27D721221F8C053900AA4458 /* MValue+ObjC.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "MValue+ObjC.hh"; sourceTree = "<group>"; };
 		27D721241F8C4B7500AA4458 /* MDictIterator.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MDictIterator.hh; sourceTree = "<group>"; };
 		27D721501F8D8F3F00AA4458 /* MContext.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MContext.hh; sourceTree = "<group>"; };
+		27D721901F8E8EEA00AA4458 /* libFleeceMutableObjC.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libFleeceMutableObjC.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		27D7F8791E5521CC0088FADF /* FleeceCpp.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FleeceCpp.hh; sourceTree = "<group>"; };
 		27E3DD401DB6A14200F2872D /* SharedKeys.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SharedKeys.cc; sourceTree = "<group>"; };
 		27E3DD411DB6A14200F2872D /* SharedKeys.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = SharedKeys.hh; sourceTree = "<group>"; };
@@ -236,6 +279,7 @@
 			files = (
 				272E5A571BF7FEB200848580 /* libstdc++.tbd in Frameworks */,
 				272E5A551BF7FE9C00848580 /* libFleece.a in Frameworks */,
+				27D721961F8E900400AA4458 /* libFleeceMutableObjC.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -244,6 +288,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				279AC5381C096B5C002C80DB /* libFleece.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		27D721701F8E8EEA00AA4458 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -265,6 +316,7 @@
 				272E5A651BFA4B5300848580 /* Libraries */,
 				270FA25D1BF53CAD005DCB13 /* Products */,
 				2750735D1F4B5F0F003D2CCE /* CMakeLists.txt */,
+				27D721951F8E900400AA4458 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -274,6 +326,7 @@
 				270FA25C1BF53CAD005DCB13 /* libFleece.a */,
 				272E5A4B1BF7FE5600848580 /* Test */,
 				279AC5311C096872002C80DB /* fleece */,
+				27D721901F8E8EEA00AA4458 /* libFleeceMutableObjC.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -452,6 +505,13 @@
 			path = ObjC;
 			sourceTree = "<group>";
 		};
+		27D721951F8E900400AA4458 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		27E3DD2A1DB1C17900F2872D /* ObjC */ = {
 			isa = PBXGroup;
 			children = (
@@ -510,6 +570,40 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		27D721711F8E8EEA00AA4458 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				27D721721F8E8EEA00AA4458 /* JSON5.hh in Headers */,
+				27D721731F8E8EEA00AA4458 /* jsonsl.h in Headers */,
+				27D721741F8E8EEA00AA4458 /* CatchHelper.hh in Headers */,
+				27D721751F8E8EEA00AA4458 /* MDict.hh in Headers */,
+				27D721761F8E8EEA00AA4458 /* FleeceDocument.h in Headers */,
+				27D721771F8E8EEA00AA4458 /* KeyTree.hh in Headers */,
+				27D721781F8E8EEA00AA4458 /* Array.hh in Headers */,
+				27D721791F8E8EEA00AA4458 /* MArray.hh in Headers */,
+				27D7217A1F8E8EEA00AA4458 /* Dict.hh in Headers */,
+				27D7217B1F8E8EEA00AA4458 /* StringTable.hh in Headers */,
+				27D7217C1F8E8EEA00AA4458 /* JSONEncoder.hh in Headers */,
+				27D7217D1F8E8EEA00AA4458 /* slice.hh in Headers */,
+				27D7217E1F8E8EEA00AA4458 /* MutableArray+ObjC.h in Headers */,
+				27D7217F1F8E8EEA00AA4458 /* varint.hh in Headers */,
+				27D721801F8E8EEA00AA4458 /* MValue.hh in Headers */,
+				27D721811F8E8EEA00AA4458 /* Value.hh in Headers */,
+				27D721821F8E8EEA00AA4458 /* Endian.hh in Headers */,
+				27D721831F8E8EEA00AA4458 /* forestdb_endian.h in Headers */,
+				27D721841F8E8EEA00AA4458 /* MutableDict+ObjC.h in Headers */,
+				27D721851F8E8EEA00AA4458 /* MCollection.hh in Headers */,
+				27D721861F8E8EEA00AA4458 /* CaseListReporter.hh in Headers */,
+				27D721871F8E8EEA00AA4458 /* Writer.hh in Headers */,
+				27D721881F8E8EEA00AA4458 /* Encoder.hh in Headers */,
+				27D721891F8E8EEA00AA4458 /* Path.hh in Headers */,
+				27D7218A1F8E8EEA00AA4458 /* Fleece.h in Headers */,
+				27D7218B1F8E8EEA00AA4458 /* FleeceException.hh in Headers */,
+				27D7218C1F8E8EEA00AA4458 /* SharedKeys.hh in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
@@ -542,6 +636,7 @@
 			);
 			dependencies = (
 				272E5A541BF7FE8200848580 /* PBXTargetDependency */,
+				27D721941F8E8FEB00AA4458 /* PBXTargetDependency */,
 			);
 			name = Test;
 			productName = Test;
@@ -565,6 +660,24 @@
 			productName = Tool;
 			productReference = 279AC5311C096872002C80DB /* fleece */;
 			productType = "com.apple.product-type.tool";
+		};
+		27D721511F8E8EEA00AA4458 /* FleeceMutableObjC */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 27D7218D1F8E8EEA00AA4458 /* Build configuration list for PBXNativeTarget "FleeceMutableObjC" */;
+			buildPhases = (
+				27D721521F8E8EEA00AA4458 /* Sources */,
+				27D721701F8E8EEA00AA4458 /* Frameworks */,
+				27D721711F8E8EEA00AA4458 /* Headers */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				27D721921F8E8FE500AA4458 /* PBXTargetDependency */,
+			);
+			name = FleeceMutableObjC;
+			productName = Fleece;
+			productReference = 27D721901F8E8EEA00AA4458 /* libFleeceMutableObjC.a */;
+			productType = "com.apple.product-type.library.static";
 		};
 /* End PBXNativeTarget section */
 
@@ -599,6 +712,7 @@
 			projectRoot = "";
 			targets = (
 				270FA25B1BF53CAD005DCB13 /* Fleece */,
+				27D721511F8E8EEA00AA4458 /* FleeceMutableObjC */,
 				272E5A4A1BF7FE5600848580 /* Test */,
 				279AC5301C096872002C80DB /* Tool */,
 			);
@@ -621,16 +735,12 @@
 				275CED521D3EF7BE001DE46C /* FleeceException.cc in Sources */,
 				278163B51CE69CA800B94E32 /* Fleece_C_impl.cc in Sources */,
 				270515571D905C1D00D62D05 /* Fleece+CoreFoundation.mm in Sources */,
-				2734B8A61F8583FF00BE5249 /* MutableDict+ObjC.mm in Sources */,
 				272E5A611BF91F6C00848580 /* slice+CoreFoundation.cc in Sources */,
 				270FA2821BF53CEA005DCB13 /* slice.cc in Sources */,
 				270FA2781BF53CEA005DCB13 /* Value.cc in Sources */,
 				27E3DD421DB6A14200F2872D /* SharedKeys.cc in Sources */,
 				2770153D1D59645A008BADD7 /* cencode.c in Sources */,
 				27CA08431F6B0E9400FF8C71 /* Dict.cc in Sources */,
-				27D721211F8C04F100AA4458 /* MValue+ObjC.mm in Sources */,
-				2734B8AE1F859AEC00BE5249 /* FleeceDocument.mm in Sources */,
-				2734B8A11F8583FF00BE5249 /* MutableArray+ObjC.mm in Sources */,
 				278163BC1CE7A72300B94E32 /* KeyTree.cc in Sources */,
 				27298E801C04E665000CFBA8 /* Encoder.cc in Sources */,
 				27298E3C1C00F812000CFBA8 /* JSONConverter.cc in Sources */,
@@ -666,6 +776,17 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		27D721521F8E8EEA00AA4458 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				27D721651F8E8EEA00AA4458 /* MValue+ObjC.mm in Sources */,
+				27D721671F8E8EEA00AA4458 /* MutableArray+ObjC.mm in Sources */,
+				27D7215E1F8E8EEA00AA4458 /* MutableDict+ObjC.mm in Sources */,
+				27D721661F8E8EEA00AA4458 /* FleeceDocument.mm in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -678,6 +799,16 @@
 			isa = PBXTargetDependency;
 			target = 270FA25B1BF53CAD005DCB13 /* Fleece */;
 			targetProxy = 279AC5391C09759C002C80DB /* PBXContainerItemProxy */;
+		};
+		27D721921F8E8FE500AA4458 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 270FA25B1BF53CAD005DCB13 /* Fleece */;
+			targetProxy = 27D721911F8E8FE500AA4458 /* PBXContainerItemProxy */;
+		};
+		27D721941F8E8FEB00AA4458 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 27D721511F8E8EEA00AA4458 /* FleeceMutableObjC */;
+			targetProxy = 27D721931F8E8FEB00AA4458 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -714,6 +845,8 @@
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_CPP_EXCEPTIONS = YES;
+				GCC_ENABLE_CPP_RTTI = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -777,6 +910,8 @@
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_CPP_EXCEPTIONS = YES;
+				GCC_ENABLE_CPP_RTTI = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = fast;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -808,10 +943,7 @@
 		270FA2681BF53CAD005DCB13 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
 				EXECUTABLE_PREFIX = lib;
-				GCC_ENABLE_CPP_EXCEPTIONS = YES;
-				GCC_ENABLE_CPP_RTTI = YES;
 				HEADER_SEARCH_PATHS = /usr/local/include/;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "macosx iphoneos iphonesimulator appletvos appletvsimulator";
@@ -821,10 +953,7 @@
 		270FA2691BF53CAD005DCB13 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
 				EXECUTABLE_PREFIX = lib;
-				GCC_ENABLE_CPP_EXCEPTIONS = YES;
-				GCC_ENABLE_CPP_RTTI = YES;
 				HEADER_SEARCH_PATHS = /usr/local/include/;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "macosx iphoneos iphonesimulator appletvos appletvsimulator";
@@ -858,6 +987,26 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PRODUCT_NAME = fleece;
+			};
+			name = Release;
+		};
+		27D7218E1F8E8EEA00AA4458 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EXECUTABLE_PREFIX = lib;
+				HEADER_SEARCH_PATHS = /usr/local/include/;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "macosx iphoneos iphonesimulator appletvos appletvsimulator";
+			};
+			name = Debug;
+		};
+		27D7218F1F8E8EEA00AA4458 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EXECUTABLE_PREFIX = lib;
+				HEADER_SEARCH_PATHS = /usr/local/include/;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "macosx iphoneos iphonesimulator appletvos appletvsimulator";
 			};
 			name = Release;
 		};
@@ -896,6 +1045,15 @@
 			buildConfigurations = (
 				279AC5361C096872002C80DB /* Debug */,
 				279AC5371C096872002C80DB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		27D7218D1F8E8EEA00AA4458 /* Build configuration list for PBXNativeTarget "FleeceMutableObjC" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				27D7218E1F8E8EEA00AA4458 /* Debug */,
+				27D7218F1F8E8EEA00AA4458 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
