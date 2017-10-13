@@ -374,7 +374,7 @@ namespace fleece {
     alloc_slice& alloc_slice::operator=(pure_slice s) {
         if (s.buf) {
             bool noop = (s.buf == buf);
-            reset(s.size);
+            resize(s.size);
             if (!noop)
                 memcpy((void*)buf, s.buf, size);
         } else {
