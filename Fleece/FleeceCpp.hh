@@ -345,6 +345,17 @@ namespace fleeceapi {
     };
 
 
+    // Use this instead of Encoder if you don't own the FLEncoder
+    class SharedEncoder : public Encoder {
+    public:
+        explicit SharedEncoder(FLEncoder enc)   :Encoder(enc) { }
+
+        ~SharedEncoder() {
+            release(); // prevents Encoder from freeing the FLEncoder
+        }
+    };
+
+
 
     inline FLValueType Value::type() const      {return FLValue_GetType(_val);}
     inline bool Value::isInteger() const        {return FLValue_IsInteger(_val);}

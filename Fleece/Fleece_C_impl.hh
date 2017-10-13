@@ -93,6 +93,7 @@ namespace fleece {
             if (jsonConverter)
                 jsonConverter->reset();
             errorCode = ::kFLNoError;
+            extraInfo = nullptr;
         }
     };
 
