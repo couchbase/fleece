@@ -26,6 +26,7 @@ namespace fleece {
     static inline void countComparison() {++gTotalComparisons;}
 #else
     static inline void countComparison() { }
+    static const bool gDisableNecessarySharedKeysCheck = false;
 #endif
 
 
