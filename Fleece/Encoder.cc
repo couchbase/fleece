@@ -78,11 +78,7 @@ namespace fleece {
     // Returns position in the stream of the next write. Pads stream to even pos if necessary.
     size_t Encoder::nextWritePos() {
         size_t pos = _out.length();
-        if (pos & 1) {
-            byte zero = 0;
-            _out.write(&zero, 1);
-            pos++;
-        }
+        assert(pos % 2 == 0); // encoded values should already be padded to even length
         return pos;
     }
 
@@ -116,6 +112,7 @@ namespace fleece {
     void Encoder::writeValue(tags tag, byte buf[], size_t size, bool canInline) {
         buf[0] |= tag << 4;
         writeRawValue(slice(buf, size), canInline);
+        _out.padToEvenLength();
     }
 
     void Encoder::writeRawValue(slice rawValue, bool canInline) {
@@ -214,8 +211,10 @@ namespace fleece {
                 bufLen += PutUVarInt(&buf[1], s.size);
             if (s.size == 0)
                 buf[bufLen++] = 0;
-            writeValue(tag, buf, bufLen, false);       // write header/count
+            buf[0] |= tag << 4;
+            writeRawValue({buf, bufLen}, false);       // write header/count
             dst = _out.write(s.buf, s.size);
+            _out.padToEvenLength();
         }
         return slice(dst, s.size);
     }
@@ -316,6 +315,7 @@ namespace fleece {
             case kFloatTag:
             case kSpecialTag:
                 writeRawValue(slice(value, value->dataSize()));
+                _out.padToEvenLength();
                 break;
             case kStringTag:
                 writeString(value->asString());
@@ -454,17 +454,24 @@ namespace fleece {
     }
 
     void Encoder::addedKey(slice str) {
-        if (_sortKeys)
+        if (_usuallyTrue(_sortKeys))
             _items->keys.push_back(str);
     }
 
     void Encoder::push(tags tag, size_t reserve) {
-        if (_stackDepth >= _stack.size())
+        if (_usuallyFalse(_stackDepth >= _stack.size()))
             _stack.resize(2*_stackDepth);
         _items = &_stack[_stackDepth++];
         _items->reset(tag);
-        if (reserve > 0)
+        if (reserve > 0) {
             _items->reserve(reserve);
+            if (_usuallyTrue(tag == kDictTag)) {
+                _items->reserve(2 * reserve);
+                _items->keys.reserve(reserve);
+            } else {
+                _items->reserve(reserve);
+            }
+        }
     }
 
     void Encoder::beginArray(size_t reserve) {

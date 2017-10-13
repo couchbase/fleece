@@ -23,13 +23,13 @@ static void checkIt(id obj, const char* json) {
 }
 
 
-TEST_CASE("Obj-C Special") {
+TEST_CASE("Obj-C Special", "[Encoder]") {
     checkIt([NSNull null], "null");
     checkIt(@NO,  "false");
     checkIt(@YES, "true");
 }
 
-TEST_CASE("Obj-C Ints") {
+TEST_CASE("Obj-C Ints", "[Encoder]") {
     checkIt( @0,    "0");
     checkIt(@-1,    "-1");
     checkIt( @1234, "1234");
@@ -43,14 +43,14 @@ TEST_CASE("Obj-C Ints") {
     checkIt(@(UINT64_MAX),  "18446744073709551615");
 }
 
-TEST_CASE("Obj-C Floats") {
+TEST_CASE("Obj-C Floats", "[Encoder]") {
     checkIt(@0.5,  "0.5");
     checkIt(@-0.5, "-0.5");
     checkIt(@((float)M_PI), "3.14159");
     checkIt(@((double)M_PI), "3.141592653589793");
 }
 
-TEST_CASE("Obj-C Strings") {
+TEST_CASE("Obj-C Strings", "[Encoder]") {
     checkIt(@"",                    "\"\"");
     checkIt(@"!",                   "\"!\"");
     checkIt(@"müßchop",             "\"müßchop\"");
@@ -63,7 +63,7 @@ TEST_CASE("Obj-C Strings") {
     checkIt(@"line1\01\02line2",    "\"line1\\u0001\\u0002line2\"");
 }
 
-TEST_CASE("Obj-C Arrays") {
+TEST_CASE("Obj-C Arrays", "[Encoder]") {
     checkIt(@[], "[]");
     checkIt(@[@123], "[123]");
     checkIt(@[@123, @"howdy", @1234.5678], "[123,\"howdy\",1234.5678]");
@@ -71,7 +71,7 @@ TEST_CASE("Obj-C Arrays") {
     checkIt(@[@"flumpety", @"flumpety", @"flumpety"], "[\"flumpety\",\"flumpety\",\"flumpety\"]");
 }
 
-TEST_CASE("Obj-C Dictionaries") {
+TEST_CASE("Obj-C Dictionaries", "[Encoder]") {
     checkIt(@{}, "{}");
     checkIt(@{@"n":@123}, "{\"n\":123}");
     checkIt(@{@"n":@123, @"slang":@"howdy", @"long":@1234.5678},

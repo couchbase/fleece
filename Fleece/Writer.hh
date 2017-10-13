@@ -54,6 +54,9 @@ namespace fleece {
         void writeBase64(slice data);
         void writeDecodedBase64(slice base64String);
 
+        /** Pads output to even length by writing a zero byte if necessary. */
+        void padToEvenLength();
+
         /** Reserves space for data without actually writing anything yet.
             The data must be written later using rewrite() otherwise there will be garbage in
             the output. */
@@ -75,6 +78,7 @@ namespace fleece {
             void free() noexcept;
             void reset()              {_available.setStart(_start);}
             const void* write(const void* data, size_t length);
+            bool pad();
             void resizeToFit() noexcept;
             void* start()             {return _start;}
             size_t length() const     {return (int8_t*)_available.buf - (int8_t*)_start;}

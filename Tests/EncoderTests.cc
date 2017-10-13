@@ -206,7 +206,7 @@ public:
 
 #pragma mark - TESTS
 
-    TEST_CASE_METHOD(EncoderTests, "Empty") {
+    TEST_CASE_METHOD(EncoderTests, "Empty", "[Encoder]") {
         REQUIRE(enc.isEmpty());
         enc.beginArray();
         REQUIRE(!enc.isEmpty());
@@ -221,19 +221,19 @@ public:
         REQUIRE(enc2.isEmpty());
     }
 
-    TEST_CASE_METHOD(EncoderTests, "Pointer") {
+    TEST_CASE_METHOD(EncoderTests, "Pointer", "[Encoder]") {
         uint8_t data[2] = {0x80, 0x02};
         auto v = (const Value*)data;
         REQUIRE(pointerValue<false>(v) == 4u);
     }
 
-    TEST_CASE_METHOD(EncoderTests, "Special") {
+    TEST_CASE_METHOD(EncoderTests, "Special", "[Encoder]") {
         enc.writeNull();        checkOutput("3000");
         enc.writeBool(false);   checkOutput("3400");    checkReadBool(false);
         enc.writeBool(true);    checkOutput("3800");    checkReadBool(true);
     }
 
-    TEST_CASE_METHOD(EncoderTests, "Ints") {
+    TEST_CASE_METHOD(EncoderTests, "Ints", "[Encoder]") {
         enc.writeInt( 0);       checkOutput("0000");    checkRead(0);
         enc.writeInt( 128);     checkOutput("0080");    checkRead(128);
         enc.writeInt( 1234);    checkOutput("04D2");    checkRead(1234);
@@ -285,7 +285,7 @@ public:
         }
     }
 
-    TEST_CASE_METHOD(EncoderTests, "Floats") {
+    TEST_CASE_METHOD(EncoderTests, "Floats", "[Encoder]") {
         enc.writeFloat( 0.5);   checkOutput("2000 0000 003F 8003");           checkReadFloat( 0.5);
         enc.writeFloat(-0.5);   checkOutput("2000 0000 00BF 8003");           checkReadFloat(-0.5);
         enc.writeFloat((float)M_PI); checkOutput("2000 DB0F 4940 8003");      checkReadFloat((float)M_PI);
@@ -307,7 +307,7 @@ public:
         enc.writeDouble((float)M_PI); checkOutput("2000 DB0F 4940 8003");      checkReadDouble((float)M_PI);
 }
 
-    TEST_CASE_METHOD(EncoderTests, "Strings") {
+    TEST_CASE_METHOD(EncoderTests, "Strings", "[Encoder]") {
         enc.writeString("");    checkOutput("4000");            checkReadString("");
         enc.writeString("a");   checkOutput("4161");            checkReadString("a");
         enc.writeString("ab");  checkOutput("4261 6200 8002");  checkReadString("ab");
@@ -334,7 +334,7 @@ public:
         checkReadString(cstr);
     }
 
-    TEST_CASE_METHOD(EncoderTests, "Arrays") {
+    TEST_CASE_METHOD(EncoderTests, "Arrays", "[Encoder]") {
         {
             enc.beginArray();
             enc.endArray();
@@ -394,7 +394,7 @@ public:
 #endif
     }
 
-    TEST_CASE_METHOD(EncoderTests, "LongArrays") {
+    TEST_CASE_METHOD(EncoderTests, "LongArrays", "[Encoder]") {
         testArrayOfLength(0x7FE);
         testArrayOfLength(0x7FF);
         testArrayOfLength(0x800);
@@ -402,7 +402,7 @@ public:
         testArrayOfLength(0xFFFF);
     }
 
-    TEST_CASE_METHOD(EncoderTests, "Dictionaries") {
+    TEST_CASE_METHOD(EncoderTests, "Dictionaries", "[Encoder]") {
         {
             enc.beginDictionary();
             enc.endDictionary();
@@ -439,7 +439,7 @@ public:
         }
     }
 
-    TEST_CASE_METHOD(EncoderTests, "DictionaryNumericKeys") {
+    TEST_CASE_METHOD(EncoderTests, "DictionaryNumericKeys", "[Encoder]") {
         internal::gDisableNecessarySharedKeysCheck = true;
         {
             enc.beginDictionary();
@@ -467,7 +467,7 @@ public:
         internal::gDisableNecessarySharedKeysCheck = false;
     }
 
-    TEST_CASE_METHOD(EncoderTests, "Deep Nesting") {
+    TEST_CASE_METHOD(EncoderTests, "Deep Nesting", "[Encoder]") {
         for (int depth = 0; depth < 100; ++depth) {
             enc.beginArray();
             enc.writeInt(depth);
@@ -481,7 +481,7 @@ public:
         endEncoding();
     }
 
-    TEST_CASE_METHOD(EncoderTests, "SharedStrings") {
+    TEST_CASE_METHOD(EncoderTests, "SharedStrings", "[Encoder]") {
         enc.beginArray(4);
         enc.writeString("a");
         enc.writeString("hello");
@@ -495,7 +495,7 @@ public:
 
 #pragma mark - JSON:
 
-    TEST_CASE_METHOD(EncoderTests, "JSONStrings") {
+    TEST_CASE_METHOD(EncoderTests, "JSONStrings", "[Encoder]") {
         checkJSONStr("", "");
         checkJSONStr("x", "x");
         checkJSONStr("\\\"", "\"");
@@ -528,7 +528,7 @@ public:
         checkJSONStr("lmao\\uDE1C\\uD83D!", nullptr, JSONSL_ERROR_INVALID_CODEPOINT);
     }
 
-    TEST_CASE_METHOD(EncoderTests, "JSON") {
+    TEST_CASE_METHOD(EncoderTests, "JSON", "[Encoder]") {
         slice json("{\"\":\"hello\\nt\\\\here\","
                             "\"\\\"ironic\\\"\":[null,false,true,-100,0,100,123.456,6.02e+23],"
                             "\"foo\":123}");
@@ -540,7 +540,7 @@ public:
         REQUIRE((slice)output == json);
     }
 
-    TEST_CASE_METHOD(EncoderTests, "JSONBinary") {
+    TEST_CASE_METHOD(EncoderTests, "JSONBinary", "[Encoder]") {
         enc.beginArray();
         enc.writeData(slice("not-really-binary"));
         enc.endArray();
@@ -553,7 +553,7 @@ public:
         REQUIRE(w.extractOutput() == alloc_slice("not-really-binary"));
     }
 
-    TEST_CASE_METHOD(EncoderTests, "Dump") {
+    TEST_CASE_METHOD(EncoderTests, "Dump", "[Encoder]") {
         std::string json = json5("{'foo':123,"
                                  "'\"ironic\"':[null,false,true,-100,0,100,123.456,6.02e+23],"
                                  "'':'hello\\nt\\\\here'}");
@@ -587,7 +587,7 @@ public:
             "0050: 80 07       : &Dict[3] (@0042)\n"));
     }
 
-    TEST_CASE_METHOD(EncoderTests, "ConvertPeople") {
+    TEST_CASE_METHOD(EncoderTests, "ConvertPeople", "[Encoder]") {
         alloc_slice input = readFile(kTestFilesDir "1000people.json");
 
         enc.uniqueStrings(true);
@@ -640,7 +640,7 @@ public:
 #endif
     }
 
-    TEST_CASE_METHOD(EncoderTests, "FindPersonByIndexUnsorted") {
+    TEST_CASE_METHOD(EncoderTests, "FindPersonByIndexUnsorted", "[Encoder]") {
         mmap_slice doc(kTestFilesDir "1000people.fleece");
         auto root = Value::fromTrustedData(doc)->asArray();
         auto person = root->get(123)->asDict();
@@ -649,7 +649,7 @@ public:
         REQUIRE(nameStr == std::string("Concepcion Burns"));
     }
 
-    TEST_CASE_METHOD(EncoderTests, "FindPersonByIndexSorted") {
+    TEST_CASE_METHOD(EncoderTests, "FindPersonByIndexSorted", "[Encoder]") {
         mmap_slice doc(kTestFilesDir "1000people.fleece");
         auto root = Value::fromTrustedData(doc)->asArray();
         auto person = root->get(123)->asDict();
@@ -659,7 +659,7 @@ public:
         REQUIRE(nameStr == std::string("Concepcion Burns"));
     }
 
-    TEST_CASE_METHOD(EncoderTests, "FindPersonByIndexKeyed") {
+    TEST_CASE_METHOD(EncoderTests, "FindPersonByIndexKeyed", "[Encoder]") {
         {
             Dict::key nameKey(slice("name"), nullptr, true);
 
@@ -712,7 +712,7 @@ public:
         }
     }
 
-    TEST_CASE_METHOD(EncoderTests, "LookupManyKeys") {
+    TEST_CASE_METHOD(EncoderTests, "LookupManyKeys", "[Encoder]") {
         mmap_slice doc(kTestFilesDir "1person.fleece");
         auto person = Value::fromTrustedData(doc)->asDict();
 
@@ -765,7 +765,7 @@ public:
 #endif
     }
 
-    TEST_CASE_METHOD(EncoderTests, "Paths") {
+    TEST_CASE_METHOD(EncoderTests, "Paths", "[Encoder]") {
         alloc_slice input = readFile(kTestFilesDir "1000people.json");
         JSONConverter jr(enc);
         jr.encodeJSON(input);
@@ -788,7 +788,7 @@ public:
 
 #pragma mark - KEY TREE:
 
-    TEST_CASE_METHOD(EncoderTests, "KeyTree") {
+    TEST_CASE_METHOD(EncoderTests, "KeyTree", "[Encoder]") {
         bool verbose = false;
 
         char eeeeeeee[1024] = "";

@@ -87,6 +87,14 @@ namespace fleece {
         return result;
     }
 
+    void Writer::padToEvenLength() {
+        if (_length & 1) {
+            if (_usuallyFalse(!_chunks.back().pad()))
+                writeToNewChunk("\0", 1);
+            ++_length;
+        }
+    }
+
     const void* Writer::writeToNewChunk(const void* data, size_t length) {
         if (_usuallyTrue(_chunkSize <= 64*1024))
             _chunkSize *= 2;
@@ -185,6 +193,13 @@ namespace fleece {
             ::memcpy((void*)result, data, length);
         _available.moveStart(length);
         return result;
+    }
+
+    bool Writer::Chunk::pad() {
+        if (_usuallyFalse(_available.size == 0))
+            return false;
+        _available.writeByte(0);
+        return true;
     }
 
     void Writer::Chunk::resizeToFit() noexcept {
