@@ -108,6 +108,14 @@ using namespace fleece;
 @end
 
 @implementation NSArray (Fleece)
+- (void) fl_encodeToFLEncoder: (FLEncoder)enc {
+    FLEncoder_BeginArray(enc, (uint32_t)self.count);
+    for (NSString* item in self) {
+        [item fl_encodeToFLEncoder: enc];
+    }
+    FLEncoder_EndArray(enc);
+}
+
 - (void) fl_encodeTo: (Encoder*)enc {
     enc->beginArray((uint32_t)self.count);
     for (NSString* item in self) {
@@ -118,6 +126,17 @@ using namespace fleece;
 @end
 
 @implementation NSDictionary (Fleece)
+- (void) fl_encodeToFLEncoder: (FLEncoder)enc {
+    FLEncoder_BeginDict(enc, (uint32_t)self.count);
+    [self enumerateKeysAndObjectsUsingBlock:^(__unsafe_unretained id key,
+                                              __unsafe_unretained id value, BOOL *stop) {
+        nsstring_slice slice(key);
+        FLEncoder_WriteKey(enc, slice);
+        [value fl_encodeToFLEncoder: enc];
+    }];
+    FLEncoder_EndDict(enc);
+}
+
 - (void) fl_encodeTo: (Encoder*)enc {
     enc->beginDictionary((uint32_t)self.count);
     [self enumerateKeysAndObjectsUsingBlock:^(__unsafe_unretained id key,
