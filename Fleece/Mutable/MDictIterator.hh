@@ -49,6 +49,8 @@ namespace fleeceapi {
                 return *_mvalue;
             }
 
+            Native nativeKey() const;
+
             Native nativeValue()  {
                 return mvalue().asNative(&_dict);
             }

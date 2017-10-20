@@ -70,7 +70,7 @@ namespace fleece {
             iterator& operator += (uint32_t);
 
 #ifdef __OBJC__
-            NSString* keyToNSString(NSMapTable *sharedStrings, const SharedKeys *sk) const;
+            NSString* keyToNSString(NSMapTable *sharedStrings) const;
 #endif
 
         private:

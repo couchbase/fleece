@@ -54,9 +54,35 @@ namespace fleece {
     }
 
 
-    static NSString* convertString(slice strSlice) {
-        auto str = (NSString*)strSlice;
+    static NSString* convertString(pure_slice strSlice) {
+        auto str = strSlice.asNSString();
         throwIf(!str, InvalidData, "Invalid UTF-8 in string");
+        return str;
+    }
+
+
+    NSString* pure_slice::asNSString(NSMapTable *sharedStrings) const {
+        if (sharedStrings == nil || size < std::max(internal::kMinSharedStringSize,
+                                                    kMinAllocedNSStringSize)
+                                 || size > internal::kMaxSharedStringSize)
+            return convertString(*this);
+
+        // Look up an existing shared string for this Value*:
+        NSString* str = MapGet(sharedStrings, buf);
+        if (!str) {
+            str = convertString(*this);
+            MapInsert(sharedStrings, buf, str);
+#if LOG_CACHED_STRINGS
+            fprintf(stderr, "SHAREDSTRINGS[%p] %p --> %p %s\n",
+                    sharedStrings, buf, str, str.UTF8String);
+#endif
+        }
+#if LOG_CACHED_STRINGS
+        else {
+            fprintf(stderr, "SHAREDSTRINGS[%p] *Used* %p --> %s\n",
+                    sharedStrings, buf, str.UTF8String);
+        }
+#endif
         return str;
     }
 
@@ -83,31 +109,8 @@ namespace fleece {
                     float f = asFloat();
                     return CFBridgingRelease(CFNumberCreate(nullptr, kCFNumberFloatType,  &f));
                 }
-            case kString: {
-                slice strSlice = asString();
-                if (sharedStrings != nil
-                               && strSlice.size >= std::max(internal::kMinSharedStringSize,
-                                                            kMinAllocedNSStringSize)
-                               && strSlice.size <= internal::kMaxSharedStringSize) {
-                    // Look up an existing shared string for this Value*:
-                    NSString* str = MapGet(sharedStrings, this);
-                    if (!str) {
-                        str = convertString(strSlice);
-                        MapInsert(sharedStrings, this, str);
-#if LOG_CACHED_STRINGS
-                        fprintf(stderr, "SHAREDSTRINGS[%p] %p --> %p %s\n", sharedStrings, this, str, str.UTF8String);
-#endif
-                    }
-#if LOG_CACHED_STRINGS
-                    else {
-                        fprintf(stderr, "SHAREDSTRINGS[%p] *Used* %p --> %s\n", sharedStrings, this, str.UTF8String);
-                    }
-#endif
-                    return str;
-                } else {
-                    return convertString(strSlice);
-                }
-            }
+            case kString:
+                return asString().asNSString(sharedStrings);
             case kData:
                 return asData().copiedNSData();
             case kArray: {
@@ -119,10 +122,10 @@ namespace fleece {
                 return result;
             }
             case kDict: {
-                Dict::iterator iter(asDict());
+                Dict::iterator iter(asDict(), sk);
                 auto result = [[NSMutableDictionary alloc] initWithCapacity: iter.count()];
                 for (; iter; ++iter) {
-                    NSString* key = iter.keyToNSString(sharedStrings, sk);
+                    NSString* key = iter.keyToNSString(sharedStrings);
                     result[key] = iter.value()->toNSObject(sharedStrings, sk);
                 }
                 return result;
@@ -133,36 +136,35 @@ namespace fleece {
     }
 
 
-    NSString* Dict::iterator::keyToNSString(__unsafe_unretained NSMapTable *sharedStrings,
-                                            const SharedKeys *sk) const
+    NSString* Dict::iterator::keyToNSString(__unsafe_unretained NSMapTable *sharedStrings) const
     {
         if (!key())
             return nil;
         NSString* keyStr = nil;
-        if (key()->isInteger() && sk) {
+        if (key()->isInteger() && _sharedKeys) {
             // Decode int key using SharedKeys:
             auto encodedKey = (int)key()->asInt();
-            keyStr = (__bridge NSString*)sk->platformStringForKey(encodedKey);
+            keyStr = (__bridge NSString*)_sharedKeys->platformStringForKey(encodedKey);
             if (!keyStr) {
-                slice strSlice = sk->decode(encodedKey);
+                slice strSlice = _sharedKeys->decode(encodedKey);
                 if (strSlice) {
                     keyStr = convertString(strSlice);
-                    sk->setPlatformStringForKey(encodedKey,
+                    _sharedKeys->setPlatformStringForKey(encodedKey,
                                                 CFRetain((__bridge CFStringRef)keyStr));
                     //TODO: Strings need to be CFRelease'd when the SharedKeys is destructed.
 #if LOG_CACHED_STRINGS
-                    fprintf(stderr, "SHAREDKEY[%p] %d --> %s\n", sk, encodedKey, keyStr.UTF8String);
+                    fprintf(stderr, "SHAREDKEY[%p] %d --> %s\n", _sharedKeys, encodedKey, keyStr.UTF8String);
 #endif
                 }
             }
 #if LOG_CACHED_STRINGS
             else {
-                fprintf(stderr, "SHAREDKEY[%p] *Used* %d --> %s\n", sk, encodedKey, keyStr.UTF8String);
+                fprintf(stderr, "SHAREDKEY[%p] *Used* %d --> %s\n", _sharedKeys, encodedKey, keyStr.UTF8String);
             }
 #endif
         }
         if (!keyStr)
-            keyStr = key()->toNSObject(sharedStrings, sk);
+            keyStr = key()->toNSObject(sharedStrings, _sharedKeys);
         return keyStr;
     }
 

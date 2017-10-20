@@ -51,11 +51,10 @@ FLValue FLDict_GetWithNSString(FLDict dict, NSString* key) {
 }
 
 
-NSString* FLDictIterator_GetKeyAsNSString(FLDictIterator *i,
-                                          __unsafe_unretained NSMapTable *sharedStrings,
-                                          FLSharedKeys sk)
+NSString* FLDictIterator_GetKeyAsNSString(const FLDictIterator *i,
+                                          __unsafe_unretained NSMapTable *sharedStrings)
 {
-    return ((Dict::iterator*)i)->keyToNSString(sharedStrings, (const SharedKeys*)sk);
+    return ((Dict::iterator*)i)->keyToNSString(sharedStrings);
 }
 
 

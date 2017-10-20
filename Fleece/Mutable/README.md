@@ -3,7 +3,7 @@
 ## Introduction
 This is an optional component of Fleece that addresses two concerns with integrating Fleece into an application or framework:
 
-* **Mutability:**The Fleece API uses the raw encoded data directly, instead of translating it into transient objects the way JSON or XML APIs do. Fleece object references are just pointers into the data. This makes the API very lightweight, but also means that it’s impractical for the objects to be mutable: changing a value is very likely to change its size, which means pushing aside all the following data, invalidating its pointers.
+* **Mutability:** The Fleece API uses the raw encoded data directly, instead of translating it into transient objects the way JSON or XML APIs do. Fleece object references are just pointers into the data. This makes the API very lightweight, but also means that it’s impractical for the objects to be mutable: changing a value is very likely to change its size, which means pushing aside all the following data, invalidating its pointers.
 
 * **Integration with native object classes:** If Fleece is being used as part of a framework (like Couchbase Lite), then the values it stores should be exposed as objects in the framework being used by the developer.  This isn’t hard on its own, though it’s annoying boilerplate. But it gets quite difficult when combined with mutability, as we’ve discovered while implementing Couchbase Lite 2.
 

@@ -27,6 +27,7 @@
 #ifdef __OBJC__
 #import <Foundation/NSData.h>
 #import <Foundation/NSString.h>
+@class NSMapTable;
 #endif
 #endif
 
@@ -138,9 +139,8 @@ namespace fleece {
             return [[NSData alloc] initWithBytesNoCopy: (void*)buf length: size freeWhenDone: NO];
         }
 
-        explicit operator NSString* () const {
-            return CFBridgingRelease(createCFString());
-        }
+        NSString* asNSString() const                {return CFBridgingRelease(createCFString());}
+        NSString* asNSString(NSMapTable *sharedStrings) const;
 #endif
 #endif
     protected:

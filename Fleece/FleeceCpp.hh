@@ -216,7 +216,12 @@ namespace fleeceapi {
             inline Value operator * () const            {return value();}
             inline explicit operator bool() const       {return (bool)value();}
             inline iterator& operator++ ()              {next(); return *this;}
-            inline bool operator!= (const iterator&)    {return value() != nullptr;}
+            inline bool operator!= (const iterator&) const    {return value() != nullptr;}
+
+#ifdef __OBJC__
+            inline NSString* keyAsNSString(NSMapTable *sharedStrings) const
+                                    {return FLDictIterator_GetKeyAsNSString(this, sharedStrings);}
+#endif
         private:
             iterator() { }
             friend class Dict;
