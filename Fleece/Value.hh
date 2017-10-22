@@ -48,7 +48,7 @@ namespace fleece {
     class Null {
     };
 
-    constexpr Null nullValue;
+    constexpr Null nullValue();
 
 
     /* An encoded data value */
