@@ -24,7 +24,7 @@ namespace fleece {
         "Fleece path syntax error",
         "internal Fleece library error",
         "key not found",
-        "incorrect use of persistent hsared keys",
+        "incorrect use of persistent shared keys",
     };
 
     void FleeceException::_throw(ErrorCode code, const char *what) {
