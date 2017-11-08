@@ -77,7 +77,7 @@ namespace fleece {
         }
 
         bool hasError() const {
-            return errorCode != ::NoError;
+            return errorCode != kFLNoError;
         }
 
         void recordException(const std::exception &x) noexcept {
