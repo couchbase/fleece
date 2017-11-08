@@ -249,7 +249,7 @@ namespace fleeceapi {
 
         AllocedDict(const AllocedDict &d)
         :Dict(d)
-        ,alloc_slice(d)
+        ,alloc_slice(static_cast<const fleece::alloc_slice&>(d))
         { }
 
         const alloc_slice& data() const                 {return *this;}
