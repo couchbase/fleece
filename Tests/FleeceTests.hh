@@ -12,12 +12,18 @@
 #include "JSON5.hh"
 #include "Benchmark.hh"
 #include <ostream>
+#ifdef _MSC_VER
+#include <windows.h>
+#endif
 
 using namespace fleece;
 
 // Directory containing test files:
+#ifdef _MSC_VER
+#define kTestFilesDir "..\\Tests\\"
+#else
 #define kTestFilesDir "Tests/"
-
+#endif
 
 // Some operators to make slice work with AssertEqual:
 namespace fleece {
@@ -39,8 +45,13 @@ struct mmap_slice : public pure_slice {
     operator slice()    {return {buf, size};}
 
 private:
-    int _fd;
     void* _mapped;
+#ifdef _MSC_VER
+    HANDLE _fileHandle{INVALID_HANDLE_VALUE};
+    HANDLE _mapHandle{INVALID_HANDLE_VALUE};
+#else
+    int _fd;
+#endif
     mmap_slice(const mmap_slice&);
 };
 

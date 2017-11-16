@@ -746,7 +746,7 @@ public:
 //            Dict::key(slice("n")),
 //            Dict::key(slice("z")),
         };
-        unsigned nKeys = sizeof(keys) / sizeof(keys[0]);
+        const unsigned nKeys = sizeof(keys) / sizeof(keys[0]);
         Dict::sortKeys(keys, nKeys);
 
 #ifndef NDEBUG
@@ -799,7 +799,7 @@ public:
         memset(&eeeeeeee[0], 'e', sizeof(eeeeeeee)-1);
 
 #if 1
-        size_t n = sizeof(mn_words)/sizeof(char*);
+        const size_t n = sizeof(mn_words)/sizeof(char*);
         const char* rawStrings[n];
         memcpy(rawStrings, mn_words, sizeof(mn_words));
         rawStrings[0] = eeeeeeee;

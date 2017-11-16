@@ -11,7 +11,11 @@
 #include "JSONConverter.hh"
 #include "varint.hh"
 #include <assert.h>
+#include <chrono>
+#include <thread>
+#ifndef _MSC_VER
 #include <unistd.h>
+#endif
 
 // Catch's REQUIRE is too slow for perf testing
 #undef REQUIRE
@@ -81,7 +85,7 @@ TEST_CASE("Perf Convert1000People", "[.Perf]") {
         }
         bench.stop();
 
-        usleep(100);
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
     bench.printReport();
 

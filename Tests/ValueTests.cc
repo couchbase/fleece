@@ -6,9 +6,11 @@
 //  Copyright (c) 2015-2016 Couchbase. All rights reserved.
 //
 
+#define NOMINMAX
 #include "FleeceTests.hh"
 #include "Value.hh"
 #include "varint.hh"
+#undef NOMINMAX
 
 namespace fleece {
     using namespace internal;

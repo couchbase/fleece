@@ -17,9 +17,17 @@
 #include "slice.hh"
 #include <assert.h>
 #include <fcntl.h>
+
+#ifndef _MSC_VER
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#else
+#include <io.h>
+#include <windows.h>
+#define ssize_t int
+#define MAP_FAILED nullptr
+#endif
 
 using namespace fleece;
 
@@ -76,29 +84,53 @@ std::string sliceToHexDump(slice result, size_t width) {
 #endif
 
 mmap_slice::mmap_slice(const char *path)
+#ifdef _MSC_VER
+    :
+#else
 :_fd(-1),
+#endif
 _mapped(MAP_FAILED)
 {
-    _fd = ::open(path, O_RDONLY);
+#ifndef _MSC_VER
+     _fd = ::open(path, O_RDONLY);
     assert(_fd != -1);
     struct stat stat;
     ::fstat(_fd, &stat);
     setSize(stat.st_size);
     _mapped = ::mmap(nullptr, size, PROT_READ, MAP_PRIVATE, _fd, 0);
+#else
+    _fileHandle = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+    LARGE_INTEGER size;
+    const BOOL gotSize = GetFileSizeEx(_fileHandle, &size);
+    if(gotSize == 0) {
+        return;
+    }
+
+    setSize(size.QuadPart);
+    _mapHandle = CreateFileMappingA(_fileHandle, nullptr, PAGE_READONLY, size.HighPart, size.LowPart, "FileMappingObject");
+    _mapped = MapViewOfFile(_mapHandle, FILE_MAP_READ, 0, 0, size.QuadPart);
+#endif
     assert(_mapped != MAP_FAILED);
     setBuf(_mapped);
 }
 
 mmap_slice::~mmap_slice() {
-    if (_mapped != MAP_FAILED)
+    if (_mapped != MAP_FAILED) {
+#ifdef _MSC_VER
+        UnmapViewOfFile(_mapped);
+        CloseHandle(_fileHandle);
+        CloseHandle(_mapHandle);
+#else
         munmap((void*)buf, size);
-    if (_fd != -1)
-        close(_fd);
+        if (_fd != -1)
+            close(_fd);
+#endif
+    }
 }
 
 
 alloc_slice readFile(const char *path) {
-    int fd = ::open(path, O_RDONLY);
+    int fd = ::open(path, O_RDONLY | O_BINARY);
     assert(fd != -1);
     struct stat stat;
     fstat(fd, &stat);
@@ -110,7 +142,7 @@ alloc_slice readFile(const char *path) {
 }
 
 void writeToFile(slice s, const char *path) {
-    int fd = ::open(path, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    int fd = ::open(path, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0600);
     assert(fd != -1);
     ssize_t written = ::write(fd, s.buf, s.size);
     REQUIRE(written == (ssize_t)s.size);
