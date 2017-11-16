@@ -6,10 +6,12 @@
 //  Copyright (c) 2015-2016 Couchbase. All rights reserved.
 //
 
+#ifdef FLEECE_TEST_PROGRAM
 #define CATCH_CONFIG_CONSOLE_WIDTH 120
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 
 #include "CaseListReporter.hh"
+#endif
 
 #include "FleeceTests.hh"
 #include "slice.hh"
@@ -21,7 +23,7 @@
 
 using namespace fleece;
 
-
+#ifdef FLEECE_TEST_PROGRAM
 namespace fleece {
     std::ostream& operator<< (std::ostream& o, slice s) {
         o << "slice[";
@@ -35,7 +37,6 @@ namespace fleece {
         return o << "\"" << std::string((char*)s.buf, s.size) << "\"]";
     }
 }
-
 
 std::string sliceToHex(slice result) {
     std::string hex;
@@ -72,7 +73,7 @@ std::string sliceToHexDump(slice result, size_t width) {
     }
     return hex;
 }
-
+#endif
 
 mmap_slice::mmap_slice(const char *path)
 :_fd(-1),

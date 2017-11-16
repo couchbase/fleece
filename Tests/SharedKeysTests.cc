@@ -366,9 +366,13 @@ TEST_CASE("encoding") {
         REQUIRE(v);
         REQUIRE(v->asString() == "animal"_sl);
 
+#ifndef NDEBUG
         internal::gDisableNecessarySharedKeysCheck = true;
+#endif
         REQUIRE(root->get("type"_sl) == nullptr);
+#ifndef NDEBUG
         internal::gDisableNecessarySharedKeysCheck = false;
+#endif
 
         REQUIRE(root->get("type"_sl, &sk) == v);
 
@@ -376,9 +380,13 @@ TEST_CASE("encoding") {
         REQUIRE(atts);
         REQUIRE(atts->get(typeKey) != nullptr);
         REQUIRE(atts->get("thumbnail.jpg"_sl, &sk) != nullptr);
+#ifndef NDEBUG
         internal::gDisableNecessarySharedKeysCheck = true;
+#endif
         REQUIRE(atts->get("thumbnail.jpg"_sl) != nullptr);  // check key wasn't encoded to int
+#ifndef NDEBUG
         internal::gDisableNecessarySharedKeysCheck = false;
+#endif
 
     }
     SECTION("Dict::key lookup") {

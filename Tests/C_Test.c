@@ -8,5 +8,5 @@
 
 
 // This is just to make sure that the C header actually parses in C, with no C++-isms.
-#include "fleece.h"
+#include "Fleece.h"
 

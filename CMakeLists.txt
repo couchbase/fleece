@@ -27,8 +27,8 @@ elseif(WIN32)
     set(FLEECE_SRC ${FLEECE_SRC} MSVC/memmem.cc)
 endif()
 
-include_directories("Fleece" 
-                    "vendor/libb64" 
+include_directories("Fleece"
+                    "vendor/libb64"
                     "vendor/jsonsl" )
 
 if(!MSVC)
@@ -40,8 +40,21 @@ add_library(FleeceStatic  STATIC  ${FLEECE_SRC})
 
 add_executable(fleece Tool/fleece_tool.cc ${FLEECE_SRC})
 
+# Fleece Tests
+aux_source_directory(Tests FLEECE_TEST_SRC)
+include_directories(Tests vendor/catch)
+add_executable(FleeceTests EXCLUDE_FROM_ALL ${FLEECE_TEST_SRC})
+target_link_libraries(FleeceTests FleeceStatic)
+target_compile_definitions(FleeceTests PRIVATE FLEECE_TEST_PROGRAM)
+file(COPY Tests/1000people.json DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Tests)
+file(COPY Tests/1person.fleece DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Tests)
+file(COPY Tests/1person.json DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Tests)
+
 if (APPLE)
-    target_link_libraries(Fleece  
-                          "-framework CoreFoundation" 
-                          "-framework Foundation")
+    target_link_libraries(Fleece
+                           "-framework CoreFoundation"
+                           "-framework Foundation")
+    target_link_libraries(FleeceTests
+                            "-framework CoreFoundation"
+                            "-framework Foundation")
 endif()

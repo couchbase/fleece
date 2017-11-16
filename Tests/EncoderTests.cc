@@ -440,7 +440,9 @@ public:
     }
 
     TEST_CASE_METHOD(EncoderTests, "DictionaryNumericKeys", "[Encoder]") {
+#ifndef NDEBUG
         internal::gDisableNecessarySharedKeysCheck = true;
+#endif
         {
             enc.beginDictionary();
             enc.writeKey(0);
@@ -464,7 +466,9 @@ public:
             REQUIRE(d->get(slice("barrr")) == (const Value*)nullptr);
             REQUIRE(d->toJSON() == alloc_slice("{0:23,1:42,2047:-1}"));
         }
+#ifndef NDEBUG
         internal::gDisableNecessarySharedKeysCheck = false;
+#endif
     }
 
     TEST_CASE_METHOD(EncoderTests, "Deep Nesting", "[Encoder]") {
