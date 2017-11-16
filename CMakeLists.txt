@@ -42,6 +42,9 @@ add_executable(fleece Tool/fleece_tool.cc ${FLEECE_SRC})
 
 # Fleece Tests
 aux_source_directory(Tests FLEECE_TEST_SRC)
+if(NOT APPLE)
+    LIST(REMOVE_ITEM FLEECE_TEST_SRC Tests/ObjCTests.mm)
+endif()
 include_directories(Tests vendor/catch)
 add_executable(FleeceTests EXCLUDE_FROM_ALL ${FLEECE_TEST_SRC})
 target_link_libraries(FleeceTests FleeceStatic)
