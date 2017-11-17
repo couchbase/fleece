@@ -67,6 +67,8 @@ namespace fleece {
 
         inline slice upTo(const void* pos);
         inline slice from(const void* pos);
+        inline slice upTo(size_t offset);
+        inline slice from(size_t offset);
 
         const uint8_t& operator[](size_t i) const   {return ((const uint8_t*)buf)[i];}
         inline slice operator()(size_t i, size_t n) const;
@@ -303,6 +305,8 @@ namespace fleece {
     // Inlines that couldn't be implemented inside the class declaration due to forward references:
     inline slice pure_slice::upTo(const void* pos)                 {return slice(buf, pos);}
     inline slice pure_slice::from(const void* pos)                 {return slice(pos, end());}
+    inline slice pure_slice::upTo(size_t off)                      {return slice(buf, off);}
+    inline slice pure_slice::from(size_t off)                      {return slice(offset(off), end());}
     inline slice pure_slice::operator()(size_t i, size_t n) const  {return slice(offset(i), n);}
 
 }
