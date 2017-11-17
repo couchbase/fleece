@@ -22,6 +22,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#define O_BINARY 0
 #else
 #include <io.h>
 #include <windows.h>
