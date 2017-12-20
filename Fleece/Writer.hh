@@ -36,7 +36,7 @@ namespace fleece {
 
         size_t length() const                   {return _length;}
         const void* curPos() const;
-        size_t posToOffset(const void *pos) const;
+        size_t posToOffset(const void *pos NONNULL) const;
 
         /** Returns the data written, in pieces. Does not change the state of the Writer. */
         std::vector<slice> output() const;
@@ -65,7 +65,7 @@ namespace fleece {
         /** Overwrites already-written data.
             @param pos  The position in the output at which to start overwriting
             @param newData  The data that replaces the old */
-        void rewrite(const void *pos, slice newData);
+        void rewrite(const void *pos NONNULL, slice newData);
 
     private:
         class Chunk {

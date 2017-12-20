@@ -207,17 +207,17 @@ namespace fleece {
         }
 
         template <bool WIDE>
-        static const Value* derefPointer(const Value *v) {
+        static const Value* derefPointer(const Value *v NONNULL) {
             assert(v->pointerValue<WIDE>() > 0);
             return offsetby(v, -(ptrdiff_t)v->pointerValue<WIDE>());
         }
-        static const Value* derefPointer(const Value *v, bool wide) {
+        static const Value* derefPointer(const Value *v NONNULL, bool wide) {
             return wide ? derefPointer<true>(v) : derefPointer<false>(v);
         }
-        static const Value* deref(const Value *v, bool wide);
+        static const Value* deref(const Value *v NONNULL, bool wide);
 
         template <bool WIDE>
-        static const Value* deref(const Value *v);
+        static const Value* deref(const Value *v NONNULL);
 
         const Value* next(bool wide) const noexcept
                                 {return offsetby(this, wide ? internal::kWide : internal::kNarrow);}

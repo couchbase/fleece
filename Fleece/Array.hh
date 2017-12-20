@@ -46,6 +46,7 @@ namespace fleece {
         /** A stack-based array iterator */
         class iterator : private impl {
         public:
+            /** Constructs an iterator. It's OK if the Array pointer is null. */
             iterator(const Array* a) noexcept;
 
             /** Returns the number of _remaining_ items. */

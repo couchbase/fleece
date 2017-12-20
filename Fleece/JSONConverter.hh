@@ -52,11 +52,11 @@ namespace fleece {
         static alloc_slice convertJSON(slice json, SharedKeys *sk =nullptr);
 
     //private:
-        void push(struct jsonsl_state_st *state);
-        void pop(struct jsonsl_state_st *state);
+        void push(struct jsonsl_state_st *state NONNULL);
+        void pop(struct jsonsl_state_st *state NONNULL);
         int gotError(int err, size_t pos) noexcept;
-        int gotError(int err, const char *errat) noexcept;
-        void gotException(ErrorCode code, const char *what, size_t pos) noexcept;
+        int gotError(int err, const char *errat NONNULL) noexcept;
+        void gotException(ErrorCode code, const char *what NONNULL, size_t pos) noexcept;
 
     private:
         typedef std::map<size_t, uint64_t> startToLengthMap;

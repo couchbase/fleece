@@ -133,7 +133,7 @@ using namespace fleeceapi;
 - (NSArray*) allKeys {
     NSMutableArray* keys = [NSMutableArray arrayWithCapacity: _dict.count()];
     for (MDict<id>::iterator i(_dict); i; ++i)
-        [keys addObject: (NSString*)i.key()];
+        [keys addObject: i.key().asNSString()];
     return keys;
 }
 
@@ -146,7 +146,7 @@ using namespace fleeceapi;
 - (void) enumerateKeysAndObjectsUsingBlock: (void (^)(UU id key, UU id obj, BOOL *stop))block {
     __block BOOL stop = NO;
     for (MDict<id>::iterator i(_dict); i; ++i) {
-        block((NSString*)i.key(), i.nativeValue(), &stop);
+        block(i.key().asNSString(), i.nativeValue(), &stop);
         if (stop)
             break;
     }

@@ -15,6 +15,7 @@
 
 #pragma once
 
+#include "PlatformCompat.hh"
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -62,11 +63,11 @@ namespace fleece {
         explicit operator bool() const              {return buf != nullptr;}
 
         const void* offset(size_t o) const          {return (uint8_t*)buf + o;}
-        size_t offsetOf(const void* ptr) const      {return (uint8_t*)ptr - (uint8_t*)buf;}
+        size_t offsetOf(const void* ptr NONNULL) const {return (uint8_t*)ptr - (uint8_t*)buf;}
         const void* end() const                     {return offset(size);}
 
-        inline slice upTo(const void* pos);
-        inline slice from(const void* pos);
+        inline slice upTo(const void* pos NONNULL);
+        inline slice from(const void* pos NONNULL);
         inline slice upTo(size_t offset);
         inline slice from(size_t offset);
 
@@ -146,9 +147,10 @@ namespace fleece {
 #endif
 #endif
     protected:
-        void setBuf(const void *b)                  {(const void*&)buf = b;}
-        void setSize(size_t s)                      {(size_t&)size = s;}
-        void set(const void *b, size_t s)           {setBuf(b); setSize(s);}
+        void setBuf(const void *b NONNULL)          {const_cast<const void*&>(buf) = b;}
+        void setSize(size_t s)                      {const_cast<size_t&>(size) = s;}
+        void set(const void *b, size_t s)           {const_cast<const void*&>(buf) = b;
+                                                     setSize(s);}
         pure_slice& operator=(pure_slice s)         {set(s.buf, s.size); return *this;}
     };
 
@@ -158,7 +160,8 @@ namespace fleece {
     struct slice : public pure_slice {
         constexpr slice()                           :pure_slice() {}
         constexpr slice(const void* b, size_t s)    :pure_slice(b, s) {}
-        slice(const void* start, const void* end)   :slice(start, (uint8_t*)end-(uint8_t*)start){}
+        slice(const void* start NONNULL, const void* end NONNULL)
+                                                    :slice(start, (uint8_t*)end-(uint8_t*)start){}
 
         slice(const std::string& str)               :slice(&str[0], str.length()) {}
         explicit slice(const char* str)             :slice(str, str ? strlen(str) : 0) {}
@@ -166,12 +169,12 @@ namespace fleece {
         slice& operator=(pure_slice s)              {set(s.buf, s.size); return *this;}
         slice& operator= (alloc_slice&&) =delete;   // Disallowed: might lead to ptr to freed buf
 
-        void setBuf(const void *b)                  {pure_slice::setBuf(b);}
+        void setBuf(const void *b NONNULL)          {pure_slice::setBuf(b);}
         void setSize(size_t s)                      {pure_slice::setSize(s);}
         void shorten(size_t s)                      {assert(s <= size); setSize(s);}
 
-        void setEnd(const void* e)                  {setSize((uint8_t*)e - (uint8_t*)buf);}
-        void setStart(const void* s) noexcept;
+        void setEnd(const void* e NONNULL)          {setSize((uint8_t*)e - (uint8_t*)buf);}
+        void setStart(const void* s NONNULL) noexcept;
         void moveStart(ptrdiff_t delta)             {set(offsetby(buf, delta), size - delta);}
         bool checkedMoveStart(size_t delta)         {if (size<delta) return false;
                                                      else {moveStart(delta); return true;}}
@@ -205,7 +208,7 @@ namespace fleece {
 
 
     // Literal syntax for slices: "foo"_sl
-    inline constexpr slice operator "" _sl (const char *str, size_t length)
+    inline constexpr slice operator "" _sl (const char *str NONNULL, size_t length)
         {return slice(str, length);}
 
 
@@ -218,7 +221,7 @@ namespace fleece {
         explicit alloc_slice(pure_slice s);
         alloc_slice(const void* b, size_t s)
             :alloc_slice(slice(b, s)) { }
-        alloc_slice(const void* start, const void* end)
+        alloc_slice(const void* start NONNULL, const void* end NONNULL)
             :alloc_slice(slice(start, end)) {}
         explicit alloc_slice(const std::string &str)
             :alloc_slice(slice(str)) {}
@@ -231,12 +234,12 @@ namespace fleece {
 
         alloc_slice(alloc_slice&& s) noexcept
         :pure_slice(s)
-        { s.setBuf(nullptr); }
+        { s.set(nullptr, 0); }
 
         alloc_slice& operator=(alloc_slice&& s) noexcept {
             release();
             assignFrom(s);
-            s.setBuf(nullptr);
+            s.set(nullptr, 0);
             return *this;
         }
 
@@ -252,6 +255,7 @@ namespace fleece {
         void append(pure_slice);
 
         // disambiguation:
+        alloc_slice& operator=(const char *str NONNULL)     {*this = (slice)str; return *this;}
         alloc_slice& operator=(const std::string &str)      {*this = (slice)str; return *this;}
 
         alloc_slice& retain() noexcept;

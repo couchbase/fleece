@@ -38,7 +38,7 @@ namespace fleece {
 
 #ifdef __OBJC__
         /** Looks up the Value for a key given as an NSString object. */
-        const Value* get(NSString* key) const noexcept {
+        const Value* get(NSString* key NONNULL) const noexcept {
             nsstring_slice keyBytes(key);
             return get(keyBytes);
         }
@@ -50,7 +50,10 @@ namespace fleece {
         /** A stack-based dictionary iterator */
         class iterator {
         public:
+            /** Constructs an iterator. It's OK for the Dict to be null. */
             iterator(const Dict*) noexcept;
+
+            /** Constructs an iterator on a Dict using shared keys. It's OK for the Dict to be null. */
             iterator(const Dict*, const SharedKeys*) noexcept;
 
             /** Returns the number of _remaining_ items. */

@@ -75,7 +75,7 @@ namespace fleece {
 
         void writeData(slice s);
 
-        void writeValue(const Value*, const SharedKeys *sk =nullptr);
+        void writeValue(const Value* NONNULL, const SharedKeys *sk =nullptr);
 
 #ifdef __OBJC__
         /** Writes an Objective-C object. Supported classes are the ones allowed by
@@ -117,7 +117,7 @@ namespace fleece {
         void writeKey(int);
 
         /** Writes a string Value as a key to the current dictionary. */
-        void writeKey(const Value*);
+        void writeKey(const Value* NONNULL);
 
         /** Associates a SharedKeys object with this Encoder. The writeKey() methods that take
             strings will consult this object to possibly map the key to an integer. */
@@ -137,7 +137,7 @@ namespace fleece {
         Encoder& operator<< (float f)           {writeFloat(f); return *this;}
         Encoder& operator<< (const std::string &str)   {writeString(str); return *this;}
         Encoder& operator<< (slice s)           {writeString(s); return *this;} // string not data!
-        Encoder& operator<< (const Value *v)    {writeValue(v); return *this;}
+        Encoder& operator<< (const Value *v NONNULL)    {writeValue(v); return *this;}
 
 
         // Present only for API compatibility with JSONEncoder:
@@ -158,10 +158,10 @@ namespace fleece {
         void addItem(Value v);
         void writeRawValue(slice rawValue, bool canInline =true);
         void writeValue(internal::tags, uint8_t buf[], size_t size, bool canInline =true);
-        bool valueIsInBase(const Value *value) const;
-        void reuseBaseStrings(const Value*);
+        bool valueIsInBase(const Value *value NONNULL) const;
+        void reuseBaseStrings(const Value* NONNULL);
         void cacheString(slice s, size_t offsetInBase);
-        static bool isNarrowValue(const Value *value);
+        static bool isNarrowValue(const Value *value NONNULL);
         void writePointer(ssize_t pos);
         void writeSpecial(uint8_t special);
         void writeInt(uint64_t i, bool isShort, bool isUnsigned);
@@ -172,8 +172,8 @@ namespace fleece {
         void addedKey(slice str);
         size_t nextWritePos();
         void sortDict(valueArray &items);
-        void checkPointerWidths(valueArray *items);
-        void fixPointers(valueArray *items);
+        void checkPointerWidths(valueArray *items NONNULL);
+        void fixPointers(valueArray *items NONNULL);
         void endCollection(internal::tags tag);
         void push(internal::tags tag, size_t reserve);
 

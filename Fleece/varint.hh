@@ -41,15 +41,15 @@ enum {
 size_t SizeOfVarInt(uint64_t n);
 
 /** Encodes n as a varint, writing it to buf. Returns the number of bytes written. */
-size_t PutUVarInt(void *buf, uint64_t n);
+size_t PutUVarInt(void *buf NONNULL, uint64_t n);
 
-size_t _GetUVarInt(slice buf, uint64_t *n);   // do not call directly
-size_t _GetUVarInt32(slice buf, uint32_t *n); // do not call directly
+size_t _GetUVarInt(slice buf, uint64_t *n NONNULL);   // do not call directly
+size_t _GetUVarInt32(slice buf, uint32_t *n NONNULL); // do not call directly
 
 /** Decodes a varint from the bytes in buf, storing it into *n.
     Returns the number of bytes read, or 0 if the data is invalid (buffer too short or number
     too long.) */
-static inline size_t GetUVarInt(slice buf, uint64_t *n) {
+static inline size_t GetUVarInt(slice buf, uint64_t *n NONNULL) {
     if (_usuallyFalse(buf.size == 0))
         return 0;
     uint8_t byte = buf[0];
@@ -63,7 +63,7 @@ static inline size_t GetUVarInt(slice buf, uint64_t *n) {
 /** Decodes a varint from the bytes in buf, storing it into *n.
     Returns the number of bytes read, or 0 if the data is invalid (buffer too short or number
     too long.) */
-static inline size_t GetUVarInt32(slice buf, uint32_t *n) {
+static inline size_t GetUVarInt32(slice buf, uint32_t *n NONNULL) {
     if (_usuallyFalse(buf.size == 0))
         return 0;
     uint8_t byte = buf[0];
@@ -78,15 +78,15 @@ static inline size_t GetUVarInt32(slice buf, uint32_t *n) {
 
 /** Decodes a varint from buf, and advances buf to the remaining space after it.
     Returns false if the end of the buffer is reached or there is a parse error. */
-bool ReadUVarInt(slice *buf, uint64_t *n);
-bool ReadUVarInt32(slice *buf, uint32_t *n);
+bool ReadUVarInt(slice *buf NONNULL, uint64_t *n NONNULL);
+bool ReadUVarInt32(slice *buf NONNULL, uint32_t *n NONNULL);
 
 /** Encodes a varint into buf, and advances buf to the remaining space after it.
     Returns false if there isn't enough room. */
-bool WriteUVarInt(slice *buf, uint64_t n);
+bool WriteUVarInt(slice *buf NONNULL, uint64_t n);
 
 /** Skips a pointer past a varint without decoding it. */
-static inline const void* SkipVarInt(const void *buf) {
+static inline const void* SkipVarInt(const void *buf NONNULL) {
     auto p = (const uint8_t*)buf;
     uint8_t byte;
     do {
@@ -99,12 +99,12 @@ static inline const void* SkipVarInt(const void *buf) {
 
 /** Encodes an integer `n` to `buf` and returns the number of bytes used (1-8).
     if `isUnsigned` is true, the number is treated as unsigned (uint64_t.) */
-size_t PutIntOfLength(void *buf, int64_t n, bool isUnsigned =false);
+size_t PutIntOfLength(void *buf NONNULL, int64_t n, bool isUnsigned =false);
 
 /** Encodes an unsigned integer `n` to `buf` and returns the number of bytes used (1-8). */
-inline size_t PutUIntOfLength(void *buf, uint64_t n) {return PutIntOfLength(buf, n, true);}
+inline size_t PutUIntOfLength(void *buf NONNULL, uint64_t n) {return PutIntOfLength(buf, n, true);}
 
 /** Returns a signed integer decoded from `length` bytes starting at `buf`. */
-int64_t GetIntOfLength(const void *buf, unsigned length);
+int64_t GetIntOfLength(const void *buf NONNULL, unsigned length);
 
 }
