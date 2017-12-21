@@ -25,40 +25,44 @@ using namespace fleece;
 #define kTestFilesDir "Tests/"
 #endif
 
-// Some operators to make slice work with AssertEqual:
-namespace fleece {
-    std::ostream& operator<< (std::ostream& o, slice s);
+namespace fleece_test {
+    std::string sliceToHex(slice);
+    std::string sliceToHexDump(slice, size_t width = 16);
+    std::ostream& dumpSlice(std::ostream&, slice);
+
+    alloc_slice readFile(const char *path);
+    void writeToFile(slice s, const char *path);
+
+
+    struct mmap_slice : public pure_slice {
+        mmap_slice(const char *path);
+        ~mmap_slice();
+
+        operator slice()    {return {buf, size};}
+
+    private:
+        void* _mapped;
+    #ifdef _MSC_VER
+        HANDLE _fileHandle{INVALID_HANDLE_VALUE};
+        HANDLE _mapHandle{INVALID_HANDLE_VALUE};
+    #else
+        int _fd;
+    #endif
+        mmap_slice(const mmap_slice&);
+    };
+
+    // Converts JSON5 to JSON; helps make JSON test input more readable!
+    static inline std::string json5(const std::string &s)      {return fleece::ConvertJSON5(s);}
 }
 
-std::string sliceToHex(slice);
-std::string sliceToHexDump(slice, size_t width = 16);
+using namespace fleece_test;
 
+namespace fleece {
+    // to make slice work with Catch's logging. This has to be in the 'fleece' namespace.
+    static inline std::ostream& operator<< (std::ostream& o, slice s) {
+        return dumpSlice(o, s);
+    }
+}
 
-alloc_slice readFile(const char *path);
-void writeToFile(slice s, const char *path);
-
-
-struct mmap_slice : public pure_slice {
-    mmap_slice(const char *path);
-    ~mmap_slice();
-
-    operator slice()    {return {buf, size};}
-
-private:
-    void* _mapped;
-#ifdef _MSC_VER
-    HANDLE _fileHandle{INVALID_HANDLE_VALUE};
-    HANDLE _mapHandle{INVALID_HANDLE_VALUE};
-#else
-    int _fd;
-#endif
-    mmap_slice(const mmap_slice&);
-};
-
-
-// Converts JSON5 to JSON; helps make JSON test input more readable!
-static inline std::string json5(const std::string &s)      {return fleece::ConvertJSON5(s);}
-
-
-
+// This has to come last so that '<<' overrides can be used by Catch.
 #include "catch.hpp"

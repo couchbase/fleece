@@ -41,6 +41,7 @@
 		2734B8A71F85842300BE5249 /* MutableTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2734B89A1F8583FF00BE5249 /* MutableTests.mm */; };
 		2734B8AD1F859AEC00BE5249 /* FleeceDocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8AB1F859AEC00BE5249 /* FleeceDocument.h */; };
 		2734B8B11F870FB400BE5249 /* MContext.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2734B8B01F870FB400BE5249 /* MContext.cc */; };
+		27393C941FEC30E300FBFE59 /* FleeceTestsMain.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27393C931FEC30E300FBFE59 /* FleeceTestsMain.cc */; };
 		275CED521D3EF7BE001DE46C /* FleeceException.cc in Sources */ = {isa = PBXBuildFile; fileRef = 275CED501D3EF7BE001DE46C /* FleeceException.cc */; };
 		275CED531D3EF7BE001DE46C /* FleeceException.hh in Headers */ = {isa = PBXBuildFile; fileRef = 275CED511D3EF7BE001DE46C /* FleeceException.hh */; };
 		276D15461E007D3000543B1B /* JSON5.cc in Sources */ = {isa = PBXBuildFile; fileRef = 276D15441E007D3000543B1B /* JSON5.cc */; };
@@ -207,6 +208,7 @@
 		2734B8AF1F870F2600BE5249 /* MRoot.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MRoot.hh; sourceTree = "<group>"; };
 		2734B8B01F870FB400BE5249 /* MContext.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MContext.cc; sourceTree = "<group>"; };
 		2734B8B21F8BE11200BE5249 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		27393C931FEC30E300FBFE59 /* FleeceTestsMain.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FleeceTestsMain.cc; sourceTree = "<group>"; };
 		2746DD3B1D931BE9000517BC /* Benchmark.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Benchmark.hh; sourceTree = "<group>"; };
 		2747D9841CFB9BC300C48211 /* 1person.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = 1person.json; sourceTree = "<group>"; };
 		2750735D1F4B5F0F003D2CCE /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
@@ -410,6 +412,7 @@
 		272E5A441BF7FD1700848580 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				27393C931FEC30E300FBFE59 /* FleeceTestsMain.cc */,
 				272E5A451BF7FD8F00848580 /* FleeceTests.cc */,
 				272E5A5A1BF8004100848580 /* FleeceTests.hh */,
 				279AC52A1C07776A002C80DB /* ValueTests.cc */,
@@ -760,6 +763,7 @@
 				272E5A521BF7FE7100848580 /* FleeceTests.cc in Sources */,
 				27298E781C01A461000CFBA8 /* PerfTests.cc in Sources */,
 				27E3DD531DB7DB1C00F2872D /* SharedKeysTests.cc in Sources */,
+				27393C941FEC30E300FBFE59 /* FleeceTestsMain.cc in Sources */,
 				276D15491E008E7A00543B1B /* JSON5Tests.cc in Sources */,
 				272E5A5F1BF91DBE00848580 /* ObjCTests.mm in Sources */,
 				2734B8A71F85842300BE5249 /* MutableTests.mm in Sources */,
