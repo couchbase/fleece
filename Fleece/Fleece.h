@@ -227,10 +227,10 @@ extern "C" {
 
     /** Encodes a Fleece value as JSON5, a more lenient variant of JSON that allows dictionary
         keys to be unquoted if they're alphanumeric. This tends to be more readable. */
-    FLSliceResult FLValue_ToJSON5(FLValue v);
+    FLStringResult FLValue_ToJSON5(FLValue v);
 
     /** Most general Fleece to JSON converter. */
-    FLSliceResult FLValue_ToJSONX(FLValue v,
+    FLStringResult FLValue_ToJSONX(FLValue v,
                                   FLSharedKeys sk,
                                   bool json5,
                                   bool canonicalForm);
