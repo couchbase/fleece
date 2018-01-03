@@ -126,13 +126,19 @@ namespace fleece {
         template <int VER =1>
         alloc_slice toJSON(const SharedKeys* =nullptr, bool canonical =false) const;
 
-        std::string dump() const;
+        /** Returns a JSON string representation of a Value. */
+        std::string toJSONString() const;
 
         /** Writes a full dump of the values in the data, including offsets and hex. */
         static bool dump(slice data, std::ostream&);
 
         /** Returns a full dump of the values in the data, including offsets and hex. */
         static std::string dump(slice data);
+
+        /** A static 'null' Value, as a convenience.
+            (This is not a null pointer, rather a pointer to a Value whose type is kNull.) */
+        static const Value* const kNullValue;
+
 
 #ifdef __OBJC__
         //////// Convenience methods for Objective-C (Cocoa):
@@ -154,6 +160,8 @@ namespace fleece {
                 (uint8_t)byte1,
                 0, 0}
         { }
+
+        static const Value kNullInstance;
 
         static const Value* findRoot(slice) noexcept;
         bool validate(const void* dataStart, const void *dataEnd) const noexcept;

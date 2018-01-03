@@ -43,6 +43,10 @@ namespace fleece {
     };
 
 
+    constexpr Value Value::kNullInstance = Value{kSpecialTag, kSpecialValueNull};
+    const Value* const Value::kNullValue = &kNullInstance;
+
+
 #pragma mark - TYPE CHECK / CONVERSION:
 
     valueType Value::type() const noexcept {
@@ -220,6 +224,11 @@ namespace fleece {
     // Explicitly instantiate both needed versions of the templates:
     template alloc_slice Value::toJSON<1>(const SharedKeys *sk, bool canonical) const;
     template alloc_slice Value::toJSON<5>(const SharedKeys *sk, bool canonical) const;
+
+
+    std::string Value::toJSONString() const {
+        return toJSON().asString();
+    }
 
 
 #pragma mark - VALIDATION:
