@@ -38,10 +38,10 @@ namespace fleeceapi {
             }
 
             slice key() const       {return _key;}
-            Value value() const     {return _iteratingMap ? _mvalue->value() : _dictIter.value();}
+            Value value() const     {return _mvalue ? _mvalue->value() : _dictIter.value();}
 
             const MValue& mvalue() {
-                if (_iteratingMap)
+                if (_mvalue)
                     return *_mvalue;
                 // Fleece Dict iterator doesn't have an MValue, so add the key/value to the _map:
                 auto i = const_cast<MDict&>(_dict)._setInMap(_key, MValue(_dictIter.value()));
@@ -70,12 +70,12 @@ namespace fleeceapi {
                         ++_mapIter;
                     }
                 }
+                _mvalue = nullptr;
 
                 while (_dictIter) {
                     // Skip overwritten keys in the original Fleece Dict:
                     if (_dict._map.find(_dictIter.keyString()) == _mapEnd) {
                         _key = slice(_dictIter.keyString());
-                        _mvalue = nullptr;
                         return;         // found an item in _dict
                     }
                     ++_dictIter;
