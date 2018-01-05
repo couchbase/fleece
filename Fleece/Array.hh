@@ -61,7 +61,7 @@ namespace fleece {
 
             /** Random access to items. Index is relative to the current item.
                 This is very fast, faster than array::get(). */
-            const Value* operator[] (unsigned i) noexcept    {return ((impl&)*this)[i];}
+            const Value* operator[] (unsigned i) const noexcept    {return ((impl&)*this)[i];}
 
             /** Returns false when the iterator reaches the end. */
             explicit operator bool() const noexcept          {return _count > 0;}
