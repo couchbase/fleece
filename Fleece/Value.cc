@@ -43,7 +43,7 @@ namespace fleece {
     };
 
 
-    constexpr Value Value::kNullInstance = Value{kSpecialTag, kSpecialValueNull};
+    const Value Value::kNullInstance = Value{kSpecialTag, kSpecialValueNull};
     const Value* const Value::kNullValue = &kNullInstance;
 
 
