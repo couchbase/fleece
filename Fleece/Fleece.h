@@ -356,6 +356,8 @@ extern "C" {
     } FLDictKey;
 
     /** Initializes an FLDictKey struct with a key string.
+        Warning: the input string's memory MUST remain valid for as long as the FLDictKey is in
+        use! (The FLDictKey stores a pointer to the string, but does not copy it.)
         @param string  The key string (UTF-8).
         @param cachePointers  If true, the FLDictKey is allowed to cache a direct Value pointer
                 representation of the key. This provides faster lookup, but means that it can

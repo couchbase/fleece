@@ -189,7 +189,9 @@ namespace fleeceapi {
 
         class Key {
         public:
-            Key(FLSlice strng, bool cachePointers =false);
+            // Warning: the input string's memory MUST remain valid for as long as the Key is in
+            // use! (The Key stores a pointer to the string, but does not copy it.)
+            Key(FLSlice string, bool cachePointers =false);
             Key(FLSlice string, FLSharedKeys sharedKeys);
             inline FLString string() const;
             operator FLString() const                   {return string();}

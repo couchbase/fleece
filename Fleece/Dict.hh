@@ -100,10 +100,15 @@ namespace fleece {
             stored in the same encoded data. */
         class key {
         public:
+            /** Constructs a key from a string.
+                Warning: the input string's memory MUST remain valid for as long as the key is in
+                use! (The key stores a pointer to the string, but does not copy it.) */
             key(slice rawString);
 
-            /** If the data was encoded using a SharedKeys mapping, you need to use this
-                constructor so the proper numeric encoding can be found & used. */
+            /** Constructs a key from a string. If the data was encoded using a SharedKeys mapping,
+                you need to use this constructor so the proper numeric encoding can be found & used.
+                Warning: the input string's memory MUST remain valid for as long as the key is in
+                use! (The key may store a pointer to the string, but does not copy it.) */
             key(slice rawString, SharedKeys*, bool cachePointer =false);
 
             slice string() const noexcept                {return _rawString;}
