@@ -35,9 +35,6 @@
 
     #define __printflike(A, B) 
 
-    // MSVC doesn't support C99 so it doesn't have variable-length C arrays.
-    // WARNING: sizeof() will not work on this array since it's actually declared as a pointer.
-    #define StackArray(NAME, TYPE, SIZE)    TYPE* NAME = (TYPE*)_malloca(sizeof(TYPE)*(SIZE))
     #include <winapifamily.h>
 
 #else
@@ -57,7 +54,6 @@
     #define __printflike(fmtarg, firstvararg) __attribute__((__format__ (__printf__, fmtarg, firstvararg)))
     #endif
 
-    #define StackArray(NAME, TYPE, SIZE)    TYPE NAME[(SIZE)]
     #define WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) 0
 
 #endif

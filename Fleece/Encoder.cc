@@ -20,6 +20,7 @@
 #include "varint.hh"
 #include "FleeceException.hh"
 #include "PlatformCompat.hh"
+#include "TempArray.hh"
 #include <algorithm>
 #include <assert.h>
 #include <cmath>
@@ -511,7 +512,8 @@ namespace fleece {
 
         checkPointerWidths(items);
 
-        auto count = (uint32_t)items->size();    // includes keys if this is a dict!
+        auto nValues = items->size();    // includes keys if this is a dict!
+        auto count = (uint32_t)nValues;
         if (items->tag == kDictTag)
             count /= 2;
 
@@ -533,12 +535,11 @@ namespace fleece {
         fixPointers(items);
 
         // Write the values:
-        if (count > 0) {
-            auto nValues = items->size();
+        if (nValues > 0) {
             if (items->wide) {
                 _out.write(&(*items)[0], kWide*nValues);
             } else {
-                StackArray(narrow, uint16_t, nValues);
+                TempArray(narrow, uint16_t, nValues);
                 size_t i = 0;
                 for (auto v = items->begin(); v != items->end(); ++v, ++i) {
                     ::memcpy(&narrow[i], &*v, kNarrow);
@@ -594,7 +595,7 @@ namespace fleece {
         }
 
         // Construct an array that describes the permutation of item indices:
-        StackArray(indices, const slice*, n);
+        TempArray(indices, const slice*, n);
         const slice* base = &keys[0];
         for (unsigned i = 0; i < n; i++)
             indices[i] = base + i;
@@ -602,7 +603,7 @@ namespace fleece {
         // indices[i] is now a pointer to the Value that should go at index i
 
         // Now rewrite items according to the permutation in indices:
-        StackArray(oldBuf, char, 2*n * sizeof(Value));
+        TempArray(oldBuf, char, 2*n * sizeof(Value));
         auto old = (Value*)oldBuf;
         memcpy(old, &items[0], 2*n * sizeof(Value));
         for (size_t i = 0; i < n; i++) {
