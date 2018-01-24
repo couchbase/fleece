@@ -6,6 +6,8 @@
 //  Copyright © 2018 Couchbase. All rights reserved.
 //
 
+#ifndef _MSC_VER
+
 #include "FleeceTests.hh"
 #include "Fleece.hh"
 #include "TempArray.hh"
@@ -46,3 +48,5 @@ TEST_CASE("TempArray") {
     for (size_t n = 1; n < 10000000; n *= 7)
         stackEm<uint64_t>(n, n >= 1024/8);
 }
+
+#endif
