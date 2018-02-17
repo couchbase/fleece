@@ -24,7 +24,7 @@
 #ifdef _MSC_VER
 
     #define TempArray(NAME, TYPE, SIZE) \
-        std::unique_ptr<TYPE, decltype(_freea)*> NAME##_ptr((TYPE *)_malloca(SIZE * sizeof(TYPE)), _freea);\
+        std::unique_ptr<TYPE, decltype(_freea)*> NAME##_ptr((TYPE *)_malloca((SIZE) * sizeof(TYPE)), _freea);\
         TYPE* NAME = NAME##_ptr.get()
 
 #else
