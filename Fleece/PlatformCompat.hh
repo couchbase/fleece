@@ -32,9 +32,6 @@
     #define __has_feature(F)                0
     #define __func__                        __FUNCTION__
 
-    #define random()                        rand()
-    #define srandom(s)                      srand(s)
-
     #define localtime_r(a, b)               localtime_s(b, a)
     #define timegm                          _mkgmtime
 
