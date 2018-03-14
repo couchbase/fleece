@@ -52,6 +52,7 @@ namespace fleeceapi {
             assert(!_dict);
             _dict = mv->value().asDict();
             _count = _dict.count();
+            _map.reserve(5);
         }
 
         void initInSlot(MValue *mv, MCollection *parent) {
