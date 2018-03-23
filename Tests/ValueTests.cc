@@ -16,10 +16,14 @@
 // limitations under the License.
 //
 
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
+
 #include "FleeceTests.hh"
 #include "Value.hh"
 #include "varint.hh"
+
 #undef NOMINMAX
 
 namespace fleece {
