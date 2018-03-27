@@ -175,7 +175,7 @@ namespace fleece {
         void addedKey(slice str);
         size_t nextWritePos();
         void sortDict(valueArray &items);
-        void checkPointerWidths(valueArray *items NONNULL);
+        void checkPointerWidths(valueArray *items NONNULL, size_t writePos);
         void fixPointers(valueArray *items NONNULL);
         void endCollection(internal::tags tag);
         void push(internal::tags tag, size_t reserve);

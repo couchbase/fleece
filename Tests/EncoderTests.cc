@@ -507,6 +507,24 @@ public:
         REQUIRE(a->toJSON() == alloc_slice("[\"a\",\"hello\",\"a\",\"hello\"]"));
     }
 
+    TEST_CASE("Widening Edge Case", "[Encoder]") {
+        // Tests an edge case in the Encoder's logic for widening an array/dict when a pointer
+        // reaches back 64KB. See couchbase/couchbase-lite-core#493
+        static constexpr size_t kMinStringLen = 60000, kMaxStringLen = 70000;
+        char *string = new char[kMaxStringLen];
+        memset(string, 'x', kMaxStringLen);
+        for (size_t stringLen = kMinStringLen; stringLen <= kMaxStringLen; ++stringLen) {
+            Encoder enc;
+            enc.beginArray();
+            enc.writeString("hi");
+            enc.writeString("there");
+            enc.writeString(slice{string, stringLen});
+            enc.endArray();
+            auto data = enc.extractOutput();
+        }
+        delete [] string;
+    }
+
 #pragma mark - JSON:
 
     TEST_CASE_METHOD(EncoderTests, "JSONStrings", "[Encoder]") {

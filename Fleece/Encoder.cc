@@ -53,7 +53,7 @@ namespace fleece {
         throwIf(_items->size() > 1, EncodeError, "top level must have only one value");
 
         if (_items->size() > 0) {
-            checkPointerWidths(_items);
+            checkPointerWidths(_items, nextWritePos());
             fixPointers(_items);
             Value &root = (*_items)[0];
             if (_items->wide) {
@@ -381,9 +381,8 @@ namespace fleece {
     }
 
     // Check whether any pointers in _items can't fit in a narrow Value:
-    void Encoder::checkPointerWidths(valueArray *items) {
+    void Encoder::checkPointerWidths(valueArray *items, size_t base) {
         if (!items->wide) {
-            size_t base = nextWritePos();
             for (auto v = items->begin(); v != items->end(); ++v) {
                 if (v->isPointer()) {
                     ssize_t pos = v->pointerValue<true>() - _base.size;
@@ -513,8 +512,6 @@ namespace fleece {
         if (_sortKeys && tag == kDictTag)
             sortDict(*items);
 
-        checkPointerWidths(items);
-
         auto nValues = items->size();    // includes keys if this is a dict!
         auto count = (uint32_t)nValues;
         if (items->tag == kDictTag)
@@ -531,6 +528,9 @@ namespace fleece {
             if (bufLen & 1)
                 buf[bufLen++] = 0;
         }
+
+        checkPointerWidths(items, nextWritePos() + bufLen);
+
         if (items->wide)
             buf[0] |= 0x08;     // "wide" flag
         writeValue(items->tag, buf, bufLen, (count==0));          // can inline only if empty
