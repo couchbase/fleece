@@ -415,5 +415,10 @@ namespace fleece {
     
     alloc_slice::operator FLSlice () const        {return {buf, size};}
 
+    alloc_slice::operator FLSliceResult () {
+        retain();
+        return {(void*)buf, size};
+    }
+
 
 }
