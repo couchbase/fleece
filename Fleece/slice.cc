@@ -270,6 +270,10 @@ namespace fleece {
     slice::slice(FLSlice s)                 :slice(s.buf, s.size) { }
     slice::operator FLSlice () const        {return {buf, size};}
 
+    slice::operator FLSliceResult () const {
+        return FLSliceResult(alloc_slice(*this));
+    }
+
 
 #pragma mark - ALLOC_SLICE
 

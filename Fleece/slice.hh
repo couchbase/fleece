@@ -199,6 +199,7 @@ namespace fleece {
 
         slice(FLSlice s);
         operator FLSlice () const;
+        explicit operator FLSliceResult () const;
 
 #ifdef __OBJC__
         slice(NSData* data)                         :pure_slice(data) {}
