@@ -268,7 +268,7 @@ namespace fleece {
         static void release(slice s) noexcept               {((alloc_slice*)&s)->release();}
 
         operator FLSlice () const;
-        operator FLSliceResult ();
+        explicit operator FLSliceResult ();
 
         void shorten(size_t s)                          {assert(s <= size); pure_slice::setSize(s);}
 
