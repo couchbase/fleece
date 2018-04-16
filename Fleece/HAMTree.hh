@@ -15,12 +15,24 @@ namespace fleece {
 
     class HAMTree {
     public:
-        HAMTree() { }
+        HAMTree()
+        :_root()
+        { }
+
+        ~HAMTree() {
+            _root.freeChildren();
+        }
 
         void insert(Key, Val);
         bool remove(Key);
 
         Val get(Key);
+
+        unsigned count() {
+            return _root.itemCount();
+        }
+
+        void dump(std::ostream &out);
 
     private:
         using hash_t = uint32_t;
@@ -46,6 +58,8 @@ namespace fleece {
             ,_val(v)
             { }
 
+            void dump(std::ostream&);
+
             hash_t const _hash;
             Key const _key;
             Val _val;
@@ -53,33 +67,49 @@ namespace fleece {
 
         struct InteriorNode : public Node {
             uint32_t _bitmap {0};
-            Node* _children[kMaxChildren] {};
+            Node* _children[kMaxChildren];
 
             InteriorNode()
-            :Node(kMaxChildren)
+            :InteriorNode(kMaxChildren)
             { }
-            ~InteriorNode();
+
+            InteriorNode* newInteriorNode(uint8_t capacity);
+            void freeChildren();
+
+            uint8_t childCount();
+            unsigned itemCount();
             LeafNode* find(hash_t);
-            void insert(hash_t, unsigned shift, Key key, Val val);
+            InteriorNode* insert(hash_t, unsigned shift, Key key, Val val);
             bool remove(hash_t hash, unsigned shift, Key key);
 
-            static int childIndex(hash_t hash, unsigned shift =0)  {
+            void dump(std::ostream &out, unsigned indent =1);
+
+        private:
+            InteriorNode(uint8_t capacity)
+            :Node(capacity)
+            {
+                memset(_children, 0, _capacity * sizeof(Node*));
+            }
+
+            void* operator new(size_t, uint8_t capacity);
+
+            static unsigned childBitNumber(hash_t hash, unsigned shift =0)  {
                 return (hash >> shift) & (kMaxChildren - 1);
             }
 
-            bool hasChild(int i) const  {return ((_bitmap & (1 << i)) != 0);}
+            int childIndexForBitNumber(unsigned bitNumber);
 
-            Node* childAtIndex(int i) {return _children[i];}  //TODO: use popcount
-
-            void setChildAtIndex(int i, Node *child) {
-                _children[i] = child;
-                _bitmap |= (1 << i);
+            bool hasChild(int i) const  {
+                return ((_bitmap & (1 << i)) != 0);
             }
 
-            void removeChildAtIndex(int i) {
-                _children[i] = nullptr;
-                _bitmap &= ~(1 << i);
-            }
+            Node*& childForBitNumber(int i);
+            InteriorNode* addChildForBitNumber(int i, Node *child);
+            InteriorNode* _addChildForBitNumber(int bitNo, Node *child);
+            void replaceChildForBitNumber(int i, Node *child);
+            void removeChildForBitNumber(int i);
+
+            InteriorNode* grow();
         };
 
         InteriorNode _root;
