@@ -20,24 +20,22 @@ namespace fleece {
     Val HAMTree::get(Key key) {
         hash_t hash = key.hash();
         LeafNode *leaf = _root.find(hash);
-        if (leaf && leaf->_hash == hash && leaf->_key == key)
+        if (leaf && leaf->matches(hash, key))
             return leaf->_val;
         else
             return {};
     }
 
 
-    HAMTree::LeafNode* HAMTree::InteriorNode::find(hash_t hash) {
-        hash_t i = childBitNumber(hash);
-        if (!hasChild(i))
+    HAMTree::LeafNode* HAMTree::InteriorNode::find(hash_t hash) const {
+        int bitNo = childBitNumber(hash);
+        if (!hasChild(bitNo))
             return nullptr;
-        Node *child = childForBitNumber(i);
-        assert(child);
-
+        Node *child = childForBitNumber(bitNo);
         if (child->isLeaf())
             return (LeafNode*)child;
         else
-            return ((InteriorNode*)child)->find(hash >> kBitSlice);
+            return ((InteriorNode*)child)->find(hash >> kBitShift);
     }
 
 
@@ -51,38 +49,40 @@ namespace fleece {
 #pragma mark - INSERT
 
     void HAMTree::insert(Key key, Val val) {
-        _root.insert(key.hash(), 0, key, val);
+        _root.insert(LeafNode(key, val), 0);
     }
 
 
-    HAMTree::InteriorNode* HAMTree::InteriorNode::insert(hash_t hash, unsigned shift, Key key, Val val) {
-        assert(shift + kBitSlice < 8*sizeof(hash_t));//TEMP
-        hash_t i = childBitNumber(hash, shift);
-        if (!hasChild(i)) {
+    HAMTree::InteriorNode*
+    HAMTree::InteriorNode::insert(const LeafNode &target, unsigned shift) {
+        assert(shift + kBitShift < 8*sizeof(hash_t));//TEMP: Handle hash collisions
+        int bitNo = childBitNumber(target._hash, shift);
+        if (!hasChild(bitNo)) {
             // No child -- add a leaf:
-            return addChildForBitNumber(i, new LeafNode(hash, key, val));
+            return addChild(bitNo, new LeafNode(target));
         }
-        Node *child = childForBitNumber(i);
-        if (child->isLeaf()) {
+        Node* &childRef = childForBitNumber(bitNo);
+        if (childRef->isLeaf()) {
             // Child is a leaf -- is it the right key?
-            LeafNode* leaf = (LeafNode*)child;
-            if (leaf->_hash == hash && leaf->_key == key) {
-                leaf->_val = val;
+            LeafNode* leaf = (LeafNode*)childRef;
+            if (leaf->matches(target)) {
+                leaf->_val = target._val;
+                return this;
+            } else {
+                // Nope, need to create a new interior node:
+                int level = shift / kBitShift;
+                InteriorNode* node = newInteriorNode(2 + (level<1) + (level<3));
+                childRef = node;
+                int childBitNo = childBitNumber(leaf->_hash, shift+kBitShift);
+                node->addChild(childBitNo, leaf);
+                node->insert(target, shift+kBitShift);
                 return this;
             }
-            // Nope, need to create a new interior node:
-            int level = shift / kBitSlice;
-            InteriorNode* node = newInteriorNode(2 + (level<1) + (level<3));
-            replaceChildForBitNumber(i, node);
-            node->addChildForBitNumber(childBitNumber(leaf->_hash, shift+kBitSlice), leaf);
-            node->insert(hash, shift+kBitSlice, key, val);
-            return this;
         } else {
             // Progress down to interior node...
-            auto node = ((InteriorNode*)child)->insert(hash, shift+kBitSlice, key, val);
-            if (node != child) {
-                childForBitNumber(i) = node;
-            }
+            auto node = ((InteriorNode*)childRef)->insert(target, shift+kBitShift);
+            if (node != childRef)
+                childRef = node;
             return this;
         }
     }
@@ -92,32 +92,33 @@ namespace fleece {
 
 
     bool HAMTree::remove(Key key) {
-        return _root.remove(key.hash(), 0, key);
+        return _root.remove(Target(key), 0);
     }
 
 
-    bool HAMTree::InteriorNode::remove(hash_t hash, unsigned shift, Key key) {
-        assert(shift + kBitSlice < 8*sizeof(hash_t));//TEMP
-        hash_t i = childBitNumber(hash, shift);
-        if (!hasChild(i))
+    bool HAMTree::InteriorNode::remove(const Target &target, unsigned shift) {
+        assert(shift + kBitShift < 8*sizeof(hash_t));//TEMP
+        int bitNo = childBitNumber(target._hash, shift);
+        if (!hasChild(bitNo))
             return false;
-        Node *child = childForBitNumber(i);
+        int childIndex = childIndexForBitNumber(bitNo);
+        Node *child = _children[childIndex];
         if (child->isLeaf()) {
             // Child is a leaf -- is it the right key?
             LeafNode* leaf = (LeafNode*)child;
-            if (leaf->_hash == hash && leaf->_key == key) {
-                removeChildForBitNumber(i);
+            if (leaf->matches(target)) {
+                removeChild(bitNo, childIndex);
                 delete leaf;
                 return true;
             }
             return false;
         } else {
-            // Progress down to interior node...
+            // Recurse into child node...
             auto node = (InteriorNode*)child;
-            if (!node->remove(hash, shift+kBitSlice, key))
+            if (!node->remove(target, shift+kBitShift))
                 return false;
             if (node->_bitmap == 0) {
-                removeChildForBitNumber(i);
+                removeChild(bitNo, childIndex);     // child node is now empty, so remove it
                 delete node;
             }
             return true;
@@ -128,12 +129,12 @@ namespace fleece {
 #pragma mark - CHILD ARRAY MANAGEMENT
 
 
-    uint8_t HAMTree::InteriorNode::childCount() {
+    uint8_t HAMTree::InteriorNode::childCount() const {
         return (uint8_t) std::__pop_count(_bitmap);
     }
 
 
-    unsigned HAMTree::InteriorNode::itemCount() {
+    unsigned HAMTree::InteriorNode::itemCount() const {
         unsigned count = 0;
         uint8_t n = childCount();
         for (uint8_t i = 0; i < n; ++i) {
@@ -147,40 +148,37 @@ namespace fleece {
     }
 
 
-    int HAMTree::InteriorNode::childIndexForBitNumber(unsigned bitNumber) {
-        return std::__pop_count( _bitmap & ((1u << bitNumber) - 1) );
+    int HAMTree::InteriorNode::childIndexForBitNumber(unsigned bitNo) const {
+        return std::__pop_count( _bitmap & ((bitmap_t(1) << bitNo) - 1) );
     }
 
 
-    HAMTree::Node*& HAMTree::InteriorNode::childForBitNumber(int bitNo) {
+    HAMTree::Node*&
+    HAMTree::InteriorNode::childForBitNumber(int bitNo) {
         auto i = childIndexForBitNumber(bitNo);
         assert(i < _capacity);
         return _children[i];
     }
 
-    HAMTree::InteriorNode* HAMTree::InteriorNode::addChildForBitNumber(int bitNo, Node *child) {
+    HAMTree::InteriorNode*
+    HAMTree::InteriorNode::addChild(int bitNo, int childIndex, Node *child) {
         InteriorNode* node = (childCount() < _capacity) ? this : grow();
-        return node->_addChildForBitNumber(bitNo, child);
+        return node->_addChildForBitNumber(bitNo, childIndex, child);
     }
 
 
-    HAMTree::InteriorNode* HAMTree::InteriorNode::_addChildForBitNumber(int bitNo, Node *child) {
-        int i = childIndexForBitNumber(bitNo);
+    HAMTree::InteriorNode*
+    HAMTree::InteriorNode::_addChildForBitNumber(int bitNo, int i, Node *child) {
         memmove(&_children[i+1], &_children[i], (_capacity - i - 1)*sizeof(Node*));
         _children[i] = child;
-        _bitmap |= (1 << bitNo);
+        _bitmap |= (bitmap_t(1) << bitNo);
         return this;
     }
 
-    void HAMTree::InteriorNode::replaceChildForBitNumber(int bitNo, Node *child) {
-        childForBitNumber(bitNo) = child;
-    }
-
-    void HAMTree::InteriorNode::removeChildForBitNumber(int bitNo) {
-        int i = childIndexForBitNumber(bitNo);
+    void HAMTree::InteriorNode::removeChild(int bitNo, int i) {
         assert(i < _capacity);
         memmove(&_children[i], &_children[i+1], (_capacity - i - 1)*sizeof(Node*));
-        _bitmap &= ~(1 << bitNo);
+        _bitmap &= ~(bitmap_t(1) << bitNo);
     }
 
 
@@ -191,15 +189,15 @@ namespace fleece {
         return ::operator new(size - (kMaxChildren - capacity)*sizeof(Node*));
     }
 
-    HAMTree::InteriorNode* HAMTree::InteriorNode::newInteriorNode(uint8_t capacity) {
-        return new (capacity) InteriorNode(capacity);
+    HAMTree::InteriorNode*
+    HAMTree::InteriorNode::newInteriorNode(uint8_t capacity, InteriorNode *orig) {
+        return new (capacity) InteriorNode(capacity, orig);
     }
 
-    HAMTree::InteriorNode* HAMTree::InteriorNode::grow() {
+    HAMTree::InteriorNode*
+    HAMTree::InteriorNode::grow() {
         assert(_capacity < kMaxChildren);
-        InteriorNode* newNode = newInteriorNode(_capacity + 1);
-        newNode->_bitmap = _bitmap;
-        memcpy(newNode->_children, _children, _capacity*sizeof(Node*));
+        InteriorNode* newNode = newInteriorNode(_capacity + 1, this);
         delete this;
         return newNode;
     }

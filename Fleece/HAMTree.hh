@@ -36,80 +36,123 @@ namespace fleece {
 
     private:
         using hash_t = uint32_t;
-        using bitmap_t = uint32_t;
-        static constexpr int kBitSlice = 5;
-        static constexpr int kMaxChildren = 1 << kBitSlice;
+        using bitmap_t = uint64_t;
+        static constexpr int kBitShift = 6;
+        static constexpr int kMaxChildren = 1 << kBitShift;
         static_assert(sizeof(bitmap_t) == kMaxChildren / 8, "Wrong constants");
 
-        struct Node {
-            uint8_t const _capacity;
+
+        class Node {
+        public:
             Node(uint8_t capacity)
             :_capacity(capacity)
             { }
 
             bool isLeaf() const {return _capacity == 0;}
+
+        protected:
+            uint8_t const _capacity;
         };
 
-        struct LeafNode : public Node {
-            LeafNode(hash_t h, Key k, Val v)
+
+        class Target : public Node {
+        public:
+            Target(Key k)
+            :Target(k.hash(), k)
+            { }
+
+            bool matches(hash_t h, Key k) const {
+                return _hash == h && _key == k;
+            }
+
+            bool matches(const Target &target) {
+                return matches(target._hash, target._key);
+            }
+
+            hash_t const _hash;
+            Key const _key;
+
+        protected:
+            Target(hash_t h, Key k)
             :Node(0)
             ,_hash(h)
             ,_key(k)
+            { }
+        };
+
+
+        class LeafNode : public Target {
+        public:
+            LeafNode(hash_t h, Key k, Val v)
+            :Target(h, k)
             ,_val(v)
+            { }
+
+            LeafNode(Key k, Val v)
+            :LeafNode(k.hash(), k, v)
             { }
 
             void dump(std::ostream&);
 
-            hash_t const _hash;
-            Key const _key;
             Val _val;
         };
 
-        struct InteriorNode : public Node {
-            uint32_t _bitmap {0};
-            Node* _children[kMaxChildren];
 
+        class InteriorNode : public Node {
+        public:
             InteriorNode()
-            :InteriorNode(kMaxChildren)
+            :InteriorNode(kMaxChildren, nullptr)
             { }
 
-            InteriorNode* newInteriorNode(uint8_t capacity);
+            InteriorNode* newInteriorNode(uint8_t capacity, InteriorNode *orig =nullptr);
             void freeChildren();
 
-            uint8_t childCount();
-            unsigned itemCount();
-            LeafNode* find(hash_t);
-            InteriorNode* insert(hash_t, unsigned shift, Key key, Val val);
-            bool remove(hash_t hash, unsigned shift, Key key);
+            uint8_t childCount() const;
+            unsigned itemCount() const;
+            LeafNode* find(hash_t) const;
+            InteriorNode* insert(const LeafNode &target, unsigned shift);
+            bool remove(const Target &target, unsigned shift);
 
             void dump(std::ostream &out, unsigned indent =1);
 
         private:
-            InteriorNode(uint8_t capacity)
-            :Node(capacity)
-            {
-                memset(_children, 0, _capacity * sizeof(Node*));
-            }
+            static void* operator new(size_t, uint8_t capacity);
 
-            void* operator new(size_t, uint8_t capacity);
+            InteriorNode(uint8_t capacity, InteriorNode* orig =nullptr)
+            :Node(capacity)
+            ,_bitmap(orig ? orig->_bitmap : 0)
+            {
+                if (orig)
+                    memcpy(_children, orig->_children, orig->_capacity*sizeof(Node*));
+                else
+                    memset(_children, 0, _capacity*sizeof(Node*));
+            }
 
             static unsigned childBitNumber(hash_t hash, unsigned shift =0)  {
                 return (hash >> shift) & (kMaxChildren - 1);
             }
 
-            int childIndexForBitNumber(unsigned bitNumber);
+            int childIndexForBitNumber(unsigned bitNumber) const;
 
             bool hasChild(int i) const  {
-                return ((_bitmap & (1 << i)) != 0);
+                return ((_bitmap & (bitmap_t(1) << i)) != 0);
             }
 
-            Node*& childForBitNumber(int i);
-            InteriorNode* addChildForBitNumber(int i, Node *child);
-            InteriorNode* _addChildForBitNumber(int bitNo, Node *child);
-            void replaceChildForBitNumber(int i, Node *child);
-            void removeChildForBitNumber(int i);
+            Node*& childForBitNumber(int bitNo);
+            Node* const& childForBitNumber(int bitNo) const {
+                return const_cast<InteriorNode*>(this)->childForBitNumber(bitNo);
+            }
+            InteriorNode* addChild(int bitNo, int childIndex, Node *child);
+            InteriorNode* addChild(int bitNo, Node *child) {
+                return addChild(bitNo, childIndexForBitNumber(bitNo), child);
+            }
+            InteriorNode* _addChildForBitNumber(int bitNo, int childIndex, Node *child);
+            void removeChild(int bitNo, int childIndex);
 
             InteriorNode* grow();
+
+            bitmap_t _bitmap {0};
+            Node* _children[kMaxChildren];
         };
 
         InteriorNode _root;
