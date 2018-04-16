@@ -64,6 +64,9 @@
 		27A924D01D9C32E800086206 /* Path.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27A924CE1D9C32E800086206 /* Path.hh */; };
 		27C4ACAC1CE5146500938365 /* Array.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27C4ACAA1CE5146500938365 /* Array.cc */; };
 		27C4ACAD1CE5146500938365 /* Array.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C4ACAB1CE5146500938365 /* Array.hh */; };
+		27C8DF072084102900A99BFC /* HAMTree.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C8DF052084102900A99BFC /* HAMTree.hh */; };
+		27C8DF082084102900A99BFC /* HAMTree.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27C8DF062084102900A99BFC /* HAMTree.cc */; };
+		27C8DF0A208521B600A99BFC /* HAMTreeTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27C8DF09208521B600A99BFC /* HAMTreeTests.cc */; };
 		27CA08421F6B0E9400FF8C71 /* Dict.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27CA08401F6B0E9400FF8C71 /* Dict.hh */; };
 		27CA08431F6B0E9400FF8C71 /* Dict.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27CA08411F6B0E9400FF8C71 /* Dict.cc */; };
 		27D7215E1F8E8EEA00AA4458 /* MutableDict+ObjC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2734B89D1F8583FF00BE5249 /* MutableDict+ObjC.mm */; };
@@ -249,6 +252,9 @@
 		27C4AC961CDFFDA100938365 /* Performance.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = Performance.md; sourceTree = "<group>"; };
 		27C4ACAA1CE5146500938365 /* Array.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Array.cc; sourceTree = "<group>"; };
 		27C4ACAB1CE5146500938365 /* Array.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Array.hh; sourceTree = "<group>"; };
+		27C8DF052084102900A99BFC /* HAMTree.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HAMTree.hh; sourceTree = "<group>"; };
+		27C8DF062084102900A99BFC /* HAMTree.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = HAMTree.cc; sourceTree = "<group>"; };
+		27C8DF09208521B600A99BFC /* HAMTreeTests.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = HAMTreeTests.cc; sourceTree = "<group>"; };
 		27CA08401F6B0E9400FF8C71 /* Dict.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Dict.hh; sourceTree = "<group>"; };
 		27CA08411F6B0E9400FF8C71 /* Dict.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Dict.cc; sourceTree = "<group>"; };
 		27D721201F8C04F100AA4458 /* MValue+ObjC.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = "MValue+ObjC.mm"; sourceTree = "<group>"; };
@@ -391,6 +397,8 @@
 				276D15441E007D3000543B1B /* JSON5.cc */,
 				276D15451E007D3000543B1B /* JSON5.hh */,
 				273483F71DDA59B900B27A8C /* Fleece.pch */,
+				27C8DF052084102900A99BFC /* HAMTree.hh */,
+				27C8DF062084102900A99BFC /* HAMTree.cc */,
 			);
 			name = Utilities;
 			sourceTree = "<group>";
@@ -418,6 +426,7 @@
 			isa = PBXGroup;
 			children = (
 				27393C931FEC30E300FBFE59 /* FleeceTestsMain.cc */,
+				27C8DF09208521B600A99BFC /* HAMTreeTests.cc */,
 				272E5A451BF7FD8F00848580 /* FleeceTests.cc */,
 				272E5A5A1BF8004100848580 /* FleeceTests.hh */,
 				279AC52A1C07776A002C80DB /* ValueTests.cc */,
@@ -573,6 +582,7 @@
 				27E3DD4C1DB6C32400F2872D /* CaseListReporter.hh in Headers */,
 				270FA2801BF53CEA005DCB13 /* Writer.hh in Headers */,
 				270FA27D1BF53CEA005DCB13 /* Encoder.hh in Headers */,
+				27C8DF072084102900A99BFC /* HAMTree.hh in Headers */,
 				27A924D01D9C32E800086206 /* Path.hh in Headers */,
 				278163B61CE69CA800B94E32 /* Fleece.h in Headers */,
 				275CED531D3EF7BE001DE46C /* FleeceException.hh in Headers */,
@@ -736,6 +746,7 @@
 			files = (
 				270FA27E1BF53CEA005DCB13 /* Encoder+ObjC.mm in Sources */,
 				2770153C1D59645A008BADD7 /* cdecode.c in Sources */,
+				27C8DF082084102900A99BFC /* HAMTree.cc in Sources */,
 				270FA27B1BF53CEA005DCB13 /* Value+ObjC.mm in Sources */,
 				27C4ACAC1CE5146500938365 /* Array.cc in Sources */,
 				270FA2841BF53CEA005DCB13 /* varint.cc in Sources */,
@@ -770,6 +781,7 @@
 				272E5A521BF7FE7100848580 /* FleeceTests.cc in Sources */,
 				27F666442017E26700A8ED31 /* SupportTests.cc in Sources */,
 				27298E781C01A461000CFBA8 /* PerfTests.cc in Sources */,
+				27C8DF0A208521B600A99BFC /* HAMTreeTests.cc in Sources */,
 				27E3DD531DB7DB1C00F2872D /* SharedKeysTests.cc in Sources */,
 				27393C941FEC30E300FBFE59 /* FleeceTestsMain.cc in Sources */,
 				276D15491E008E7A00543B1B /* JSON5Tests.cc in Sources */,
