@@ -15,19 +15,158 @@ using namespace std;
 namespace fleece {
 
 
-#pragma mark - GET
+    using hash_t = uint32_t;
+    using bitmap_t = uint64_t;
+    static constexpr int kBitShift = 6;                      // must be log2(8*sizeof(bitmap_t))
+    static constexpr int kMaxChildren = 1 << kBitShift;
+    static_assert(sizeof(bitmap_t) == kMaxChildren / 8, "Wrong constants");
 
-    Val HAMTree::get(Key key) {
-        hash_t hash = key.hash();
-        LeafNode *leaf = _root.find(hash);
-        if (leaf && leaf->matches(hash, key))
-            return leaf->_val;
-        else
-            return {};
+
+    namespace hamtree {
+
+        class Node {
+        public:
+            Node(uint8_t capacity)
+            :_capacity(capacity)
+            { }
+
+            bool isLeaf() const {return _capacity == 0;}
+
+        protected:
+            uint8_t const _capacity;
+        };
+
+
+        class Target : public Node {
+        public:
+            Target(Key k)
+            :Target(k.hash(), k)
+            { }
+
+            bool matches(hash_t h, Key k) const {
+                return _hash == h && _key == k;
+            }
+
+            bool matches(const Target &target) {
+                return matches(target._hash, target._key);
+            }
+
+            hash_t const _hash;
+            Key const _key;
+
+        protected:
+            Target(hash_t h, Key k)
+            :Node(0)
+            ,_hash(h)
+            ,_key(k)
+            { }
+        };
+
+
+        class LeafNode : public Target {
+        public:
+            LeafNode(hash_t h, Key k, Val v)
+            :Target(h, k)
+            ,_val(v)
+            { }
+
+            LeafNode(Key k, Val v)
+            :LeafNode(k.hash(), k, v)
+            { }
+
+            void dump(std::ostream&);
+
+            Val _val;
+        };
+
+
+        class InteriorNode : public Node {
+        public:
+            static InteriorNode* newInteriorNode(uint8_t capacity, InteriorNode *orig =nullptr);
+            void freeChildren();
+
+            uint8_t childCount() const;
+            unsigned itemCount() const;
+            LeafNode* find(hash_t) const;
+            InteriorNode* insert(const LeafNode &target, unsigned shift);
+            bool remove(const Target &target, unsigned shift);
+
+            void dump(std::ostream &out, unsigned indent =1);
+
+        private:
+            static void* operator new(size_t, uint8_t capacity);
+
+            InteriorNode(uint8_t capacity, InteriorNode* orig =nullptr)
+            :Node(capacity)
+            ,_bitmap(orig ? orig->_bitmap : 0)
+            {
+                if (orig)
+                    memcpy(_children, orig->_children, orig->_capacity*sizeof(Node*));
+                else
+                    memset(_children, 0, _capacity*sizeof(Node*));
+            }
+
+            static unsigned childBitNumber(hash_t hash, unsigned shift =0)  {
+                return (hash >> shift) & (kMaxChildren - 1);
+            }
+
+            int childIndexForBitNumber(unsigned bitNumber) const;
+
+            bool hasChild(int i) const  {
+                return ((_bitmap & (bitmap_t(1) << i)) != 0);
+            }
+
+            Node*& childForBitNumber(int bitNo);
+            Node* const& childForBitNumber(int bitNo) const {
+                return const_cast<InteriorNode*>(this)->childForBitNumber(bitNo);
+            }
+            InteriorNode* addChild(int bitNo, int childIndex, Node *child);
+            InteriorNode* addChild(int bitNo, Node *child) {
+                return addChild(bitNo, childIndexForBitNumber(bitNo), child);
+            }
+            InteriorNode* _addChildForBitNumber(int bitNo, int childIndex, Node *child);
+            void removeChild(int bitNo, int childIndex);
+
+            InteriorNode* grow();
+
+            bitmap_t _bitmap {0};
+            Node* _children[kMaxChildren];
+        };
+
+    } // end namespace
+
+    using namespace hamtree;
+
+
+#pragma mark - HAMTREE
+
+
+    HAMTree::HAMTree()
+    { }
+
+    HAMTree::~HAMTree() {
+        if (_root)
+            _root->freeChildren();
     }
 
 
-    HAMTree::LeafNode* HAMTree::InteriorNode::find(hash_t hash) const {
+    unsigned HAMTree::count() const {
+        return _root ? _root->itemCount() : 0;
+    }
+
+
+    Val HAMTree::get(Key key) const {
+        if (_root) {
+            hash_t hash = key.hash();
+            LeafNode *leaf = _root->find(hash);
+            if (leaf && leaf->matches(hash, key))
+                return leaf->_val;
+        }
+        return {};
+    }
+
+
+    LeafNode* InteriorNode::find(hash_t hash) const {
         int bitNo = childBitNumber(hash);
         if (!hasChild(bitNo))
             return nullptr;
@@ -41,7 +180,8 @@ namespace fleece {
 
     void HAMTree::dump(std::ostream &out) {
         out << "HAMTree {\n";
-        _root.dump(out);
+        if (_root)
+            _root->dump(out);
         out << "}\n";
     }
 
@@ -49,12 +189,14 @@ namespace fleece {
 #pragma mark - INSERT
 
     void HAMTree::insert(Key key, Val val) {
-        _root.insert(LeafNode(key, val), 0);
+        if (!_root)
+            _root.reset( InteriorNode::newInteriorNode(kMaxChildren) );
+        _root->insert(LeafNode(key, val), 0);
     }
 
 
-    HAMTree::InteriorNode*
-    HAMTree::InteriorNode::insert(const LeafNode &target, unsigned shift) {
+    InteriorNode*
+    InteriorNode::insert(const LeafNode &target, unsigned shift) {
         assert(shift + kBitShift < 8*sizeof(hash_t));//TEMP: Handle hash collisions
         int bitNo = childBitNumber(target._hash, shift);
         if (!hasChild(bitNo)) {
@@ -92,11 +234,11 @@ namespace fleece {
 
 
     bool HAMTree::remove(Key key) {
-        return _root.remove(Target(key), 0);
+        return _root != nullptr && _root->remove(Target(key), 0);
     }
 
 
-    bool HAMTree::InteriorNode::remove(const Target &target, unsigned shift) {
+    bool InteriorNode::remove(const Target &target, unsigned shift) {
         assert(shift + kBitShift < 8*sizeof(hash_t));//TEMP
         int bitNo = childBitNumber(target._hash, shift);
         if (!hasChild(bitNo))
@@ -129,12 +271,12 @@ namespace fleece {
 #pragma mark - CHILD ARRAY MANAGEMENT
 
 
-    uint8_t HAMTree::InteriorNode::childCount() const {
+    uint8_t InteriorNode::childCount() const {
         return (uint8_t) std::__pop_count(_bitmap);
     }
 
 
-    unsigned HAMTree::InteriorNode::itemCount() const {
+    unsigned InteriorNode::itemCount() const {
         unsigned count = 0;
         uint8_t n = childCount();
         for (uint8_t i = 0; i < n; ++i) {
@@ -148,34 +290,31 @@ namespace fleece {
     }
 
 
-    int HAMTree::InteriorNode::childIndexForBitNumber(unsigned bitNo) const {
+    int InteriorNode::childIndexForBitNumber(unsigned bitNo) const {
         return std::__pop_count( _bitmap & ((bitmap_t(1) << bitNo) - 1) );
     }
 
 
-    HAMTree::Node*&
-    HAMTree::InteriorNode::childForBitNumber(int bitNo) {
+    Node*& InteriorNode::childForBitNumber(int bitNo) {
         auto i = childIndexForBitNumber(bitNo);
         assert(i < _capacity);
         return _children[i];
     }
 
-    HAMTree::InteriorNode*
-    HAMTree::InteriorNode::addChild(int bitNo, int childIndex, Node *child) {
+    InteriorNode* InteriorNode::addChild(int bitNo, int childIndex, Node *child) {
         InteriorNode* node = (childCount() < _capacity) ? this : grow();
         return node->_addChildForBitNumber(bitNo, childIndex, child);
     }
 
 
-    HAMTree::InteriorNode*
-    HAMTree::InteriorNode::_addChildForBitNumber(int bitNo, int i, Node *child) {
+    InteriorNode* InteriorNode::_addChildForBitNumber(int bitNo, int i, Node *child) {
         memmove(&_children[i+1], &_children[i], (_capacity - i - 1)*sizeof(Node*));
         _children[i] = child;
         _bitmap |= (bitmap_t(1) << bitNo);
         return this;
     }
 
-    void HAMTree::InteriorNode::removeChild(int bitNo, int i) {
+    void InteriorNode::removeChild(int bitNo, int i) {
         assert(i < _capacity);
         memmove(&_children[i], &_children[i+1], (_capacity - i - 1)*sizeof(Node*));
         _bitmap &= ~(bitmap_t(1) << bitNo);
@@ -185,24 +324,24 @@ namespace fleece {
 #pragma mark - HOUSEKEEPING
 
 
-    void* HAMTree::InteriorNode::operator new(size_t size, uint8_t capacity) {
+    void* InteriorNode::operator new(size_t size, uint8_t capacity) {
         return ::operator new(size - (kMaxChildren - capacity)*sizeof(Node*));
     }
 
-    HAMTree::InteriorNode*
-    HAMTree::InteriorNode::newInteriorNode(uint8_t capacity, InteriorNode *orig) {
+    InteriorNode*
+    InteriorNode::newInteriorNode(uint8_t capacity, InteriorNode *orig) {
         return new (capacity) InteriorNode(capacity, orig);
     }
 
-    HAMTree::InteriorNode*
-    HAMTree::InteriorNode::grow() {
+    InteriorNode*
+    InteriorNode::grow() {
         assert(_capacity < kMaxChildren);
         InteriorNode* newNode = newInteriorNode(_capacity + 1, this);
         delete this;
         return newNode;
     }
 
-    void HAMTree::InteriorNode::freeChildren() {
+    void InteriorNode::freeChildren() {
         uint8_t n = childCount();
         for (uint8_t i = 0; i < n; ++i) {
             auto child = _children[i];
@@ -217,7 +356,7 @@ namespace fleece {
         }
     }
 
-    void HAMTree::InteriorNode::dump(ostream &out, unsigned indent) {
+    void InteriorNode::dump(ostream &out, unsigned indent) {
         uint8_t n = childCount();
         out << string(2*indent, ' ') << "{";
         uint8_t leafCount = n;
@@ -242,7 +381,7 @@ namespace fleece {
     }
 
 
-    void HAMTree::LeafNode::dump(std::ostream &out) {
+    void LeafNode::dump(std::ostream &out) {
         char str[30];
         sprintf(str, " %08x", _hash);
         out << str;
