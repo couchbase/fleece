@@ -9,6 +9,9 @@
 
 namespace fleece {
 
+
+#pragma mark - GET
+
     Val HAMTree::get(Key key) {
         hash_t hash = key.hash();
         LeafNode *leaf = _root.find(hash);
@@ -32,6 +35,8 @@ namespace fleece {
             return ((InteriorNode*)child)->find(hash >> kBitSlice);
     }
 
+
+#pragma mark - INSERT
 
     void HAMTree::insert(Key key, Val val) {
         return _root.insert(key.hash(), 0, key, val);
@@ -63,6 +68,43 @@ namespace fleece {
         } else {
             // Progress down to interior node...
             ((InteriorNode*)child)->insert(hash, shift+kBitSlice, key, val);
+        }
+    }
+
+
+#pragma mark - REMOVE
+
+
+    bool HAMTree::remove(Key key) {
+        return _root.remove(key.hash(), 0, key);
+    }
+
+
+    bool HAMTree::InteriorNode::remove(hash_t hash, unsigned shift, Key key) {
+        assert(shift + kBitSlice < 8*sizeof(hash_t));//TEMP
+        hash_t i = childIndex(hash, shift);
+        if (!hasChild(i))
+            return false;
+        Node *child = childAtIndex(i);
+        if (child->isLeaf()) {
+            // Child is a leaf -- is it the right key?
+            LeafNode* leaf = (LeafNode*)child;
+            if (leaf->_hash == hash && leaf->_key == key) {
+                removeChildAtIndex(i);
+                delete leaf;
+                return true;
+            }
+            return false;
+        } else {
+            // Progress down to interior node...
+            auto node = (InteriorNode*)child;
+            if (!node->remove(hash, shift+kBitSlice, key))
+                return false;
+            if (node->_bitmap == 0) {
+                removeChildAtIndex(i);
+                delete node;
+            }
+            return true;
         }
     }
 

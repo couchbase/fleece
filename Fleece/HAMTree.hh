@@ -61,6 +61,7 @@ namespace fleece {
             ~InteriorNode();
             LeafNode* find(hash_t);
             void insert(hash_t, unsigned shift, Key key, Val val);
+            bool remove(hash_t hash, unsigned shift, Key key);
 
             static int childIndex(hash_t hash, unsigned shift =0)  {
                 return (hash >> shift) & (kMaxChildren - 1);
@@ -73,6 +74,11 @@ namespace fleece {
             void setChildAtIndex(int i, Node *child) {
                 _children[i] = child;
                 _bitmap |= (1 << i);
+            }
+
+            void removeChildAtIndex(int i) {
+                _children[i] = nullptr;
+                _bitmap &= ~(1 << i);
             }
         };
 
