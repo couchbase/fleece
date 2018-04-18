@@ -249,6 +249,35 @@ size_t FLDict_GetWithKeys(FLDict d, FLDictKey keys[], FLValue values[], size_t c
 }
 
 
+#pragma mark - DEEP ITERATOR:
+
+
+FLDeepIterator FLDeepIterator_New(FLValue v, FLSharedKeys sk)   {return new DeepIterator(v, sk);}
+void FLDeepIterator_Free(FLDeepIterator i)                      {delete i;}
+FLValue FLDeepIterator_GetValue(FLDeepIterator i)               {return i->value();}
+FLSlice FLDeepIterator_GetKey(FLDeepIterator i)                 {return i->keyString();}
+uint32_t FLDeepIterator_GetIndex(FLDeepIterator i)              {return i->index();}
+size_t FLDeepIterator_GetDepth(FLDeepIterator i)                {return i->path().size();}
+void FLDeepIterator_SkipChildren(FLDeepIterator i)              {i->skipChildren();}
+
+bool FLDeepIterator_Next(FLDeepIterator i) {
+    i->next();
+    return i->value() != nullptr;
+}
+
+void FLDeepIterator_GetPath(FLDeepIterator i, FLPathComponent* *outPath, size_t *outDepth) {
+    static_assert(sizeof(FLPathComponent) == sizeof(DeepIterator::PathComponent),
+                  "FLPathComponent does not match PathComponent");
+    auto &path = i->path();
+    *outPath = (FLPathComponent*) path.data();
+    *outDepth = path.size();
+}
+
+FLSliceResult FLDeepIterator_GetJSONPointer(FLDeepIterator i) {
+    return toSliceResult(alloc_slice(i->jsonPointer()));
+}
+
+
 #pragma mark - KEY-PATHS:
 
 

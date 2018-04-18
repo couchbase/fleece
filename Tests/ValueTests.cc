@@ -23,10 +23,13 @@
 #include "FleeceTests.hh"
 #include "Value.hh"
 #include "varint.hh"
+#include "DeepIterator.hh"
+#include <sstream>
 
 #undef NOMINMAX
 
 namespace fleece {
+    using namespace std;
     using namespace internal;
 
     class ValueTests {  // Value declares this as a friend so it can call private API
@@ -95,6 +98,54 @@ namespace fleece {
 
     TEST_CASE("Deref") {
         ValueTests::testDeref();
+    }
+
+    TEST_CASE("DeepIterator") {
+        alloc_slice input = readFile(kTestFilesDir "1person.fleece");
+        auto person = Value::fromData(input);
+
+        {
+            // Check iterating null:
+            DeepIterator i(nullptr);
+            CHECK(i.value() == nullptr);
+            CHECK(!i);
+            i.next();
+        }
+
+        {
+            // Check iterating a non-collection (a string in this case):
+            auto str = person->asDict()->get("_id"_sl);
+            CHECK(str->type() == kString);
+            DeepIterator i(str);
+            CHECK(i);
+            CHECK(i.value() == str);
+            CHECK(i.keyString() == nullslice);
+            CHECK(i.index() == 0);
+            CHECK(i.path().size() == 0);
+            i.next();
+            CHECK(!i);
+        }
+
+        {
+            stringstream s;
+            for (DeepIterator i(person, nullptr); i; ++i) {
+                s << i.jsonPointer() << ": " << i.value()->toString().asString() << "\n";
+            }
+            //cerr << s.str();
+            CHECK(s.str() == readFile(kTestFilesDir "1person-deepIterOutput.txt").asString());
+        }
+
+        {
+            stringstream s;
+            for (DeepIterator i(person, nullptr); i; ++i) {
+                if (i.path().empty())
+                    continue;
+                s << i.jsonPointer() << ": " << i.value()->toString().asString() << "\n";
+                i.skipChildren();
+            }
+            //cerr << s.str();
+            CHECK(s.str() == readFile(kTestFilesDir "1person-shallowIterOutput.txt").asString());
+        }
     }
 
 }

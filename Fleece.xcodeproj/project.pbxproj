@@ -49,6 +49,8 @@
 		276D15491E008E7A00543B1B /* JSON5Tests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 276D15481E008E7A00543B1B /* JSON5Tests.cc */; };
 		2770153C1D59645A008BADD7 /* cdecode.c in Sources */ = {isa = PBXBuildFile; fileRef = 277015351D596436008BADD7 /* cdecode.c */; };
 		2770153D1D59645A008BADD7 /* cencode.c in Sources */ = {isa = PBXBuildFile; fileRef = 277015371D596436008BADD7 /* cencode.c */; };
+		2776AA21208678AA004ACE85 /* DeepIterator.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2776AA1F208678AA004ACE85 /* DeepIterator.cc */; };
+		2776AA22208678AA004ACE85 /* DeepIterator.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2776AA20208678AA004ACE85 /* DeepIterator.hh */; };
 		278163B51CE69CA800B94E32 /* Fleece_C_impl.cc in Sources */ = {isa = PBXBuildFile; fileRef = 278163B31CE69CA800B94E32 /* Fleece_C_impl.cc */; settings = {COMPILER_FLAGS = "-Wno-return-type-c-linkage"; }; };
 		278163B61CE69CA800B94E32 /* Fleece.h in Headers */ = {isa = PBXBuildFile; fileRef = 278163B41CE69CA800B94E32 /* Fleece.h */; };
 		278163B91CE6BB8C00B94E32 /* C_Test.c in Sources */ = {isa = PBXBuildFile; fileRef = 278163B81CE6BB8C00B94E32 /* C_Test.c */; };
@@ -230,6 +232,10 @@
 		2770153F1D5A3B2C008BADD7 /* encode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = encode.h; sourceTree = "<group>"; };
 		277015401D5A63B9008BADD7 /* CHANGELOG */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CHANGELOG; sourceTree = "<group>"; };
 		277015411D5A64B4008BADD7 /* AUTHORS */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = AUTHORS; sourceTree = "<group>"; };
+		2776AA1F208678AA004ACE85 /* DeepIterator.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DeepIterator.cc; sourceTree = "<group>"; };
+		2776AA20208678AA004ACE85 /* DeepIterator.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DeepIterator.hh; sourceTree = "<group>"; };
+		2776AA232086C94B004ACE85 /* 1person-deepIterOutput.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "1person-deepIterOutput.txt"; sourceTree = "<group>"; };
+		2776AA242086CC1F004ACE85 /* 1person-shallowIterOutput.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "1person-shallowIterOutput.txt"; sourceTree = "<group>"; };
 		278163B31CE69CA800B94E32 /* Fleece_C_impl.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Fleece_C_impl.cc; sourceTree = "<group>"; };
 		278163B41CE69CA800B94E32 /* Fleece.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Fleece.h; sourceTree = "<group>"; };
 		278163B71CE6A07A00B94E32 /* Fleece.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Fleece.hh; sourceTree = "<group>"; };
@@ -351,6 +357,8 @@
 				27CA08411F6B0E9400FF8C71 /* Dict.cc */,
 				27CA08401F6B0E9400FF8C71 /* Dict.hh */,
 				279AC53B1C097941002C80DB /* Value+Dump.cc */,
+				2776AA1F208678AA004ACE85 /* DeepIterator.cc */,
+				2776AA20208678AA004ACE85 /* DeepIterator.hh */,
 				27A924CD1D9C32E800086206 /* Path.cc */,
 				27A924CE1D9C32E800086206 /* Path.hh */,
 				27298E7F1C04E665000CFBA8 /* Encoder.cc */,
@@ -430,6 +438,8 @@
 				278163B81CE6BB8C00B94E32 /* C_Test.c */,
 				27EC8D5B1CEBA72E00199FE6 /* mn_wordlist.h */,
 				2747D9841CFB9BC300C48211 /* 1person.json */,
+				2776AA232086C94B004ACE85 /* 1person-deepIterOutput.txt */,
+				2776AA242086CC1F004ACE85 /* 1person-shallowIterOutput.txt */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -556,6 +566,7 @@
 				2734B8AD1F859AEC00BE5249 /* FleeceDocument.h in Headers */,
 				278163BD1CE7A72300B94E32 /* KeyTree.hh in Headers */,
 				27C4ACAD1CE5146500938365 /* Array.hh in Headers */,
+				2776AA22208678AA004ACE85 /* DeepIterator.hh in Headers */,
 				2734B89E1F8583FF00BE5249 /* MArray.hh in Headers */,
 				27CA08421F6B0E9400FF8C71 /* Dict.hh in Headers */,
 				2797BCAD1C0FBFDE00E5C991 /* StringTable.hh in Headers */,
@@ -757,6 +768,7 @@
 				279AC53C1C097941002C80DB /* Value+Dump.cc in Sources */,
 				27FE87F31E53E43200C5CF3F /* JSONEncoder.cc in Sources */,
 				2797BCAC1C0FBFDE00E5C991 /* StringTable.cc in Sources */,
+				2776AA21208678AA004ACE85 /* DeepIterator.cc in Sources */,
 				27298E651C00F8A9000CFBA8 /* jsonsl.c in Sources */,
 				270FA27F1BF53CEA005DCB13 /* Writer.cc in Sources */,
 			);
