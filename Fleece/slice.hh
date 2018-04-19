@@ -319,3 +319,12 @@ namespace fleece {
     inline slice pure_slice::operator()(size_t i, size_t n) const  {return slice(offset(i), n);}
 
 }
+
+namespace std {
+    template<> struct hash<fleece::slice> {
+        std::size_t operator() (fleece::pure_slice const& s) const {return s.hash();}
+    };
+    template<> struct hash<fleece::alloc_slice> {
+        std::size_t operator() (fleece::pure_slice const& s) const {return s.hash();}
+    };
+}

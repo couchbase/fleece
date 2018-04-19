@@ -12,7 +12,7 @@
 using namespace fleece;
 
 TEST_CASE("Empty HAMTree", "[HAMTree]") {
-    HAMTree tree;
+    HAMTree<alloc_slice,int> tree;
     CHECK(tree.count() == 0);
     CHECK(tree.get(alloc_slice("foo")) == 0);
     CHECK(!tree.remove(alloc_slice("foo")));
@@ -22,7 +22,7 @@ TEST_CASE("Tiny HAMTree Insert", "[HAMTree]") {
     auto key = alloc_slice("foo");
     auto val = 123;
 
-    HAMTree tree;
+    HAMTree<alloc_slice,int> tree;
     tree.insert(key, val);
     CHECK(tree.get(key) == val);
     CHECK(tree.count() == 1);
@@ -42,7 +42,7 @@ TEST_CASE("Bigger HAMTree Insert", "[HAMTree]") {
         values[i] = 1+i;
     }
 
-    HAMTree tree;
+    HAMTree<alloc_slice,int> tree;
     for (int i = 0; i < N; i++) {
         tree.insert(keys[i], values[i]);
         CHECK(tree.count() == i + 1);
@@ -59,7 +59,7 @@ TEST_CASE("Tiny HAMTree Remove", "[HAMTree]") {
     auto key = alloc_slice("foo");
     auto val = 123;
 
-    HAMTree tree;
+    HAMTree<alloc_slice,int> tree;
     tree.insert(key, val);
     CHECK(tree.remove(key));
     CHECK(tree.get(key) == 0);
@@ -78,7 +78,7 @@ TEST_CASE("Bigger HAMTree Remove", "[HAMTree]") {
         values[i] = 1+i;
     }
 
-    HAMTree tree;
+    HAMTree<alloc_slice,int> tree;
     for (int i = 0; i < N; i++) {
         tree.insert(keys[i], values[i]);
     }

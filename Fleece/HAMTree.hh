@@ -11,28 +11,27 @@
 
 namespace fleece {
 
-    using Key = alloc_slice;
-    using Val = int;
-
     namespace hamtree {
-        class InteriorNode;
+        template <class Key, class Val> class InteriorNode;
     }
 
+
+    template <class Key, class Val>
     class HAMTree {
     public:
         HAMTree();
         ~HAMTree();
 
-        void insert(Key, Val);
-        bool remove(Key);
+        void insert(const Key&, Val);
+        bool remove(const Key&);
 
-        Val get(Key) const;
+        Val get(const Key&) const;
 
         unsigned count() const;
 
         void dump(std::ostream &out);
 
     private:
-        std::unique_ptr<hamtree::InteriorNode> _root;
+        std::unique_ptr<hamtree::InteriorNode<Key, Val>> _root;
     };
 }
