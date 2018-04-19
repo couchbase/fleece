@@ -22,6 +22,7 @@
 #include "Writer.hh"
 #include "StringTable.hh"
 #include <array>
+#include "function_ref.hh"
 #include <vector>
 
 
@@ -78,7 +79,17 @@ namespace fleece {
 
         void writeData(slice s);
 
-        void writeValue(const Value* NONNULL, const SharedKeys *sk =nullptr);
+        void writeValue(const Value* NONNULL v,
+                        const SharedKeys *sk =nullptr)      {writeValue(v, sk, nullptr);}
+
+        using WriteValueFunc = function_ref<bool(const Value *key, const Value *value)>;
+
+        /** Alternative writeValue that invokes a callback before writing any Value.
+            If the callback returns false, the value is written as usual, otherwise it's skipped;
+            the callback can invoke the Encoder to write a different Value instead if it likes. */
+        void writeValue(const Value* NONNULL v,
+                        const SharedKeys *sk,
+                        WriteValueFunc fn)                  {writeValue(v, sk, &fn);}
 
 #ifdef __OBJC__
         /** Writes an Objective-C object. Supported classes are the ones allowed by
@@ -121,6 +132,7 @@ namespace fleece {
 
         /** Writes a string Value as a key to the current dictionary. */
         void writeKey(const Value* NONNULL);
+        void writeKey(const Value* NONNULL, SharedKeys*);
 
         /** Associates a SharedKeys object with this Encoder. The writeKey() methods that take
             strings will consult this object to possibly map the key to an integer. */
@@ -179,6 +191,7 @@ namespace fleece {
         void fixPointers(valueArray *items NONNULL);
         void endCollection(internal::tags tag);
         void push(internal::tags tag, size_t reserve);
+        void writeValue(const Value* NONNULL, const SharedKeys*, const WriteValueFunc*);
 
         Encoder(const Encoder&) = delete;
         Encoder& operator=(const Encoder&) = delete;

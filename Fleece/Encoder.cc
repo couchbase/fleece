@@ -310,7 +310,10 @@ namespace fleece {
     }
 
 
-    void Encoder::writeValue(const Value *value, const SharedKeys *sk) {
+    void Encoder::writeValue(const Value *value,
+                             const SharedKeys *sk,
+                             const WriteValueFunc *writeNestedValue)
+    {
         if (valueIsInBase(value) && !isNarrowValue(value)) {
             writePointer( (ssize_t)value - (ssize_t)_base.end() );
         } else switch (value->tag()) {
@@ -331,7 +334,8 @@ namespace fleece {
                 auto iter = value->asArray()->begin();
                 beginArray(iter.count());
                 for (; iter; ++iter) {
-                    writeValue(iter.value(), sk);
+                    if (!writeNestedValue || !(*writeNestedValue)(nullptr, iter.value()))
+                        writeValue(iter.value(), sk, writeNestedValue);
                 }
                 endArray();
                 break;
@@ -340,17 +344,21 @@ namespace fleece {
                 auto iter = value->asDict()->begin();
                 beginDictionary(iter.count());
                 for (; iter; ++iter) {
-                    if (iter.key()->isInteger()) {
-                        int intKey = (int)iter.key()->asInt();
-                        if (sk && sk != _sharedKeys) {
-                            writeKey(sk->decode(intKey));
+                    if (!writeNestedValue || !(*writeNestedValue)(iter.key(), iter.value())) {
+                        if (iter.key()->isInteger()) {
+                            int intKey = (int)iter.key()->asInt();
+                            if (sk && sk != _sharedKeys) {
+                                slice keySlice = sk->decode(intKey);
+                                throwIf(!keySlice, InvalidData, "Unrecognized integer key");
+                                writeKey(keySlice);
+                            } else {
+                                writeKey(intKey);
+                            }
                         } else {
-                            writeKey(intKey);
+                            writeKey(iter.key()->asString());
                         }
-                    } else {
-                        writeKey(iter.key()->asString());
+                        writeValue(iter.value(), sk, writeNestedValue);
                     }
-                    writeValue(iter.value(), sk);
                 }
                 endDictionary();
                 break;
@@ -453,6 +461,21 @@ namespace fleece {
             throwIf(!key->isInteger(), InvalidData, "Key must be a string or integer");
             throwIf(!valueIsInBase(key), InvalidData, "Numeric key must be in the base");
             writeKey((int)key->asInt());
+        }
+    }
+
+    void Encoder::writeKey(const Value *key, SharedKeys *sk) {
+        if (key->isInteger()) {
+            int intKey = (int)key->asInt();
+            if (sk && sk != _sharedKeys) {
+                slice keySlice = sk->decode(intKey);
+                throwIf(!keySlice, InvalidData, "Unrecognized integer key");
+                writeKey(keySlice);
+            } else {
+                writeKey(intKey);
+            }
+        } else {
+            writeKey(key->asString());
         }
     }
 

@@ -114,6 +114,9 @@ namespace fleece {
         /** If this value is a dictionary, returns it cast to 'const Dict*', else returns nullptr. */
         const Dict* asDict() const noexcept;
 
+        static const Array* asArray(const Value *v)     {return v ?v->asArray() : nullptr;}
+        static const Dict*  asDict(const Value *v)      {return v ?v->asDict()  : nullptr;}
+
         /** Converts any _non-collection_ type to string form. */
         alloc_slice toString() const;
 
