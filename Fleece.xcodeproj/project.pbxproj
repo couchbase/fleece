@@ -22,7 +22,7 @@
 		270FA2851BF53CEA005DCB13 /* varint.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2771BF53CEA005DCB13 /* varint.hh */; };
 		270FA2871BF53D32005DCB13 /* forestdb_endian.h in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2861BF53D32005DCB13 /* forestdb_endian.h */; };
 		27298E3C1C00F812000CFBA8 /* JSONConverter.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27298E3A1C00F812000CFBA8 /* JSONConverter.cc */; };
-		27298E651C00F8A9000CFBA8 /* jsonsl.c in Sources */ = {isa = PBXBuildFile; fileRef = 27298E491C00F8A9000CFBA8 /* jsonsl.c */; };
+		27298E651C00F8A9000CFBA8 /* jsonsl.c in Sources */ = {isa = PBXBuildFile; fileRef = 27298E491C00F8A9000CFBA8 /* jsonsl.c */; settings = {COMPILER_FLAGS = "-Wno-unreachable-code-break"; }; };
 		27298E661C00F8A9000CFBA8 /* jsonsl.h in Headers */ = {isa = PBXBuildFile; fileRef = 27298E4A1C00F8A9000CFBA8 /* jsonsl.h */; };
 		27298E781C01A461000CFBA8 /* PerfTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27298E771C01A461000CFBA8 /* PerfTests.cc */; };
 		27298E801C04E665000CFBA8 /* Encoder.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27298E7F1C04E665000CFBA8 /* Encoder.cc */; };
@@ -191,7 +191,6 @@
 		272E5A451BF7FD8F00848580 /* FleeceTests.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FleeceTests.cc; sourceTree = "<group>"; };
 		272E5A4B1BF7FE5600848580 /* Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Test; sourceTree = BUILT_PRODUCTS_DIR; };
 		272E5A561BF7FEB200848580 /* libstdc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libstdc++.tbd"; path = "usr/lib/libstdc++.tbd"; sourceTree = SDKROOT; };
-		272E5A581BF7FED600848580 /* libcppunit-1.13.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libcppunit-1.13.0.dylib"; path = "/usr/local/Cellar/cppunit/1.13.2/lib/libcppunit-1.13.0.dylib"; sourceTree = "<absolute>"; };
 		272E5A5A1BF8004100848580 /* FleeceTests.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FleeceTests.hh; sourceTree = "<group>"; };
 		272E5A5B1BF800A100848580 /* EncoderTests.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EncoderTests.cc; sourceTree = "<group>"; };
 		272E5A5E1BF91DBE00848580 /* ObjCTests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ObjCTests.mm; sourceTree = "<group>"; };
@@ -238,6 +237,12 @@
 		2776AA242086CC1F004ACE85 /* 1person-shallowIterOutput.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "1person-shallowIterOutput.txt"; sourceTree = "<group>"; };
 		2776AA2E20880087004ACE85 /* MValue+Cpp.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "MValue+Cpp.hh"; sourceTree = "<group>"; };
 		2776AA2F2088FEC3004ACE85 /* function_ref.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = function_ref.hh; sourceTree = "<group>"; };
+		2776AA44208A6C5A004ACE85 /* Project.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Project.xcconfig; sourceTree = "<group>"; };
+		2776AA45208A6C5A004ACE85 /* Project_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Project_Debug.xcconfig; sourceTree = "<group>"; };
+		2776AA46208A6C5A004ACE85 /* Project_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Project_Release.xcconfig; sourceTree = "<group>"; };
+		2776AA47208A6C5A004ACE85 /* XcodeWarnings.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = XcodeWarnings.xcconfig; sourceTree = "<group>"; };
+		2776AA48208A6CED004ACE85 /* FleeceStaticLib.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FleeceStaticLib.xcconfig; sourceTree = "<group>"; };
+		2776AA49208A6E01004ACE85 /* FleeceTest.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FleeceTest.xcconfig; sourceTree = "<group>"; };
 		278163B31CE69CA800B94E32 /* Fleece_C_impl.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Fleece_C_impl.cc; sourceTree = "<group>"; };
 		278163B41CE69CA800B94E32 /* Fleece.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Fleece.h; sourceTree = "<group>"; };
 		278163B71CE6A07A00B94E32 /* Fleece.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Fleece.hh; sourceTree = "<group>"; };
@@ -326,6 +331,7 @@
 				278163B21CE69C7300B94E32 /* C */,
 				279AC5321C096872002C80DB /* Tool */,
 				272E5A441BF7FD1700848580 /* Tests */,
+				2776AA43208A6C5A004ACE85 /* xcconfigs */,
 				27298E3E1C00F8A9000CFBA8 /* vendor */,
 				272E5A651BFA4B5300848580 /* Libraries */,
 				270FA25D1BF53CAD005DCB13 /* Products */,
@@ -450,7 +456,6 @@
 		272E5A651BFA4B5300848580 /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
-				272E5A581BF7FED600848580 /* libcppunit-1.13.0.dylib */,
 				272E5A561BF7FEB200848580 /* libstdc++.tbd */,
 			);
 			name = Libraries;
@@ -488,6 +493,20 @@
 				277015411D5A64B4008BADD7 /* AUTHORS */,
 			);
 			path = libb64;
+			sourceTree = "<group>";
+		};
+		2776AA43208A6C5A004ACE85 /* xcconfigs */ = {
+			isa = PBXGroup;
+			children = (
+				2776AA44208A6C5A004ACE85 /* Project.xcconfig */,
+				2776AA45208A6C5A004ACE85 /* Project_Debug.xcconfig */,
+				2776AA46208A6C5A004ACE85 /* Project_Release.xcconfig */,
+				2776AA48208A6CED004ACE85 /* FleeceStaticLib.xcconfig */,
+				2776AA49208A6E01004ACE85 /* FleeceTest.xcconfig */,
+				2776AA47208A6C5A004ACE85 /* XcodeWarnings.xcconfig */,
+			);
+			name = xcconfigs;
+			path = Xcode/xcconfigs;
 			sourceTree = "<group>";
 		};
 		278163B21CE69C7300B94E32 /* C */ = {
@@ -843,164 +862,41 @@
 /* Begin XCBuildConfiguration section */
 		270FA2651BF53CAD005DCB13 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2776AA45208A6C5A004ACE85 /* Project_Debug.xcconfig */;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ADDRESS_SANITIZER_CONTAINER_OVERFLOW = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "-";
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_TESTABILITY = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_CPP_EXCEPTIONS = YES;
-				GCC_ENABLE_CPP_RTTI = YES;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = Fleece/Fleece.pch;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
-				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
-				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
-				GCC_WARN_SHADOW = YES;
-				GCC_WARN_SIGN_COMPARE = YES;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
-				LLVM_LTO = NO;
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
-				MTL_ENABLE_DEBUG_INFO = YES;
-				ONLY_ACTIVE_ARCH = NO;
-				RUN_CLANG_STATIC_ANALYZER = YES;
-				SDKROOT = macosx;
-				TVOS_DEPLOYMENT_TARGET = 9.0;
-				WATCHOS_DEPLOYMENT_TARGET = 2.0;
 			};
 			name = Debug;
 		};
 		270FA2661BF53CAD005DCB13 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2776AA46208A6C5A004ACE85 /* Project_Release.xcconfig */;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ADDRESS_SANITIZER_CONTAINER_OVERFLOW = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "-";
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_NS_ASSERTIONS = NO;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_ENABLE_CPP_EXCEPTIONS = YES;
-				GCC_ENABLE_CPP_RTTI = YES;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_OPTIMIZATION_LEVEL = fast;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = Fleece/Fleece.pch;
-				GCC_PREPROCESSOR_DEFINITIONS = "NDEBUG=1";
-				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
-				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
-				GCC_WARN_SHADOW = YES;
-				GCC_WARN_SIGN_COMPARE = YES;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
-				LLVM_LTO = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
-				MTL_ENABLE_DEBUG_INFO = NO;
-				RUN_CLANG_STATIC_ANALYZER = YES;
-				SDKROOT = macosx;
-				TVOS_DEPLOYMENT_TARGET = 9.0;
-				WATCHOS_DEPLOYMENT_TARGET = 2.0;
 			};
 			name = Release;
 		};
 		270FA2681BF53CAD005DCB13 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2776AA48208A6CED004ACE85 /* FleeceStaticLib.xcconfig */;
 			buildSettings = {
-				EXECUTABLE_PREFIX = lib;
-				HEADER_SEARCH_PATHS = /usr/local/include/;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SUPPORTED_PLATFORMS = "macosx iphoneos iphonesimulator appletvos appletvsimulator";
 			};
 			name = Debug;
 		};
 		270FA2691BF53CAD005DCB13 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2776AA48208A6CED004ACE85 /* FleeceStaticLib.xcconfig */;
 			buildSettings = {
-				EXECUTABLE_PREFIX = lib;
-				HEADER_SEARCH_PATHS = /usr/local/include/;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SUPPORTED_PLATFORMS = "macosx iphoneos iphonesimulator appletvos appletvsimulator";
 			};
 			name = Release;
 		};
 		272E5A501BF7FE5600848580 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				RUN_CLANG_STATIC_ANALYZER = NO;
 			};
 			name = Debug;
 		};
 		272E5A511BF7FE5600848580 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				RUN_CLANG_STATIC_ANALYZER = NO;
 			};
 			name = Release;
 		};

@@ -121,9 +121,9 @@ using namespace fleeceapi;
 }
 
 
-- (void)setObject:(id)value forKey:(id)key {
+- (void)setObject:(id)value forKey:(id<NSCopying>)key {
     //[self checkNoParent: value];
-    if (!_dict.set(nsstring_slice(key), value))
+    if (!_dict.set(nsstring_slice((NSString*)key), value))
         throwMutationException();
 }
 
