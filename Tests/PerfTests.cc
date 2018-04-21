@@ -20,7 +20,6 @@
 #include "Fleece.hh"
 #include "JSONConverter.hh"
 #include "varint.hh"
-#include <assert.h>
 #include <chrono>
 #include <thread>
 #ifndef _MSC_VER

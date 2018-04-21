@@ -18,7 +18,6 @@
 
 #include "FleeceTests.hh"
 #include "slice.hh"
-#include <assert.h>
 #include <fcntl.h>
 
 #ifndef _MSC_VER
@@ -95,7 +94,7 @@ namespace fleece_test {
     {
     #ifndef _MSC_VER
          _fd = ::open(path, O_RDONLY);
-        assert(_fd != -1);
+        REQUIRE(_fd != -1);
         struct stat stat;
         ::fstat(_fd, &stat);
         setSize(stat.st_size);
@@ -112,7 +111,7 @@ namespace fleece_test {
         _mapHandle = CreateFileMappingA(_fileHandle, nullptr, PAGE_READONLY, size.HighPart, size.LowPart, "FileMappingObject");
         _mapped = MapViewOfFile(_mapHandle, FILE_MAP_READ, 0, 0, size.QuadPart);
     #endif
-        assert(_mapped != MAP_FAILED);
+        REQUIRE(_mapped != MAP_FAILED);
         setBuf(_mapped);
     }
 
@@ -133,7 +132,7 @@ namespace fleece_test {
 
     alloc_slice readFile(const char *path) {
         int fd = ::open(path, O_RDONLY | O_BINARY);
-        assert(fd != -1);
+        REQUIRE(fd != -1);
         struct stat stat;
         fstat(fd, &stat);
         alloc_slice data(stat.st_size);
@@ -145,7 +144,7 @@ namespace fleece_test {
 
     void writeToFile(slice s, const char *path) {
         int fd = ::open(path, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0600);
-        assert(fd != -1);
+        REQUIRE(fd != -1);
         ssize_t written = ::write(fd, s.buf, s.size);
         REQUIRE(written == (ssize_t)s.size);
         ::close(fd);
