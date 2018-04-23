@@ -1,11 +1,12 @@
 //
-//  HAMTree.cc
+//  MHashTree.cc
 //  Fleece
 //
 //  Copyright © 2018 Couchbase. All rights reserved.
 //
 
-#include "HAMTree.hh"
+#include "MHashTree.hh"
+#include "Bitmap.hh"
 #include <algorithm>
 #include <ostream>
 #include <string>
@@ -16,15 +17,16 @@ namespace fleece {
 
 
     using hash_t = size_t;
-    using bitmap_t = uint64_t;
-    static constexpr int kBitShift = 6;                      // must be log2(8*sizeof(bitmap_t))
-    static constexpr int kMaxChildren = 1 << kBitShift;
+    using bitmap_t = Bitmap<uint32_t>;
+    static constexpr unsigned kBitShift = 5;                      // must be log2(8*sizeof(bitmap_t))
+    static constexpr unsigned kMaxChildren = 1 << kBitShift;
     static_assert(sizeof(bitmap_t) == kMaxChildren / 8, "Wrong constants");
 
 
-    namespace hamtree {
+    namespace mhashtree {
 
 
+        // Base class of nodes within a MHashTree.
         class Node {
         public:
             Node(uint8_t capacity)
@@ -38,7 +40,7 @@ namespace fleece {
         };
 
 
-
+        // A node with a key and hash
         template <class Key>
         class Target : public Node {
         public:
@@ -66,7 +68,7 @@ namespace fleece {
         };
 
 
-
+        // A leaf node that holds a single key and value.
         template <class Key, class Val>
         class LeafNode : public Target<Key> {
         public:
@@ -85,7 +87,7 @@ namespace fleece {
         };
 
 
-
+        // An interior node holds a small compact hash table mapping to Nodes.
         template <class Key, class Val>
         class InteriorNode : public Node {
         public:
@@ -99,8 +101,8 @@ namespace fleece {
 
 
             void freeChildren() {
-                uint8_t n = childCount();
-                for (uint8_t i = 0; i < n; ++i) {
+                unsigned n = childCount();
+                for (unsigned i = 0; i < n; ++i) {
                     auto child = _children[i];
                     if (child) {
                         if (child->isLeaf())
@@ -116,8 +118,8 @@ namespace fleece {
 
             unsigned itemCount() const {
                 unsigned count = 0;
-                uint8_t n = childCount();
-                for (uint8_t i = 0; i < n; ++i) {
+                unsigned n = childCount();
+                for (unsigned i = 0; i < n; ++i) {
                     auto child = _children[i];
                     if (child->isLeaf())
                         count += 1;
@@ -129,7 +131,7 @@ namespace fleece {
 
 
             LeafNode* findNearest(hash_t hash) const {
-                int bitNo = childBitNumber(hash);
+                unsigned bitNo = childBitNumber(hash);
                 if (!hasChild(bitNo))
                     return nullptr;
                 Node *child = childForBitNumber(bitNo);
@@ -142,7 +144,7 @@ namespace fleece {
 
             InteriorNode* insert(const Target &target, const Val &val, unsigned shift) {
                 assert(shift + kBitShift < 8*sizeof(hash_t));//TEMP: Handle hash collisions
-                int bitNo = childBitNumber(target._hash, shift);
+                unsigned bitNo = childBitNumber(target._hash, shift);
                 if (!hasChild(bitNo)) {
                     // No child -- add a leaf:
                     return addChild(bitNo, new LeafNode(target, val));
@@ -156,10 +158,10 @@ namespace fleece {
                         return this;
                     } else {
                         // Nope, need to create a new interior node:
-                        int level = shift / kBitShift;
+                        unsigned level = shift / kBitShift;
                         InteriorNode* node = newNode(2 + (level<1) + (level<3));
                         childRef = node;
-                        int childBitNo = childBitNumber(leaf->_hash, shift+kBitShift);
+                        unsigned childBitNo = childBitNumber(leaf->_hash, shift+kBitShift);
                         node->addChild(childBitNo, leaf);
                         node->insert(target, val, shift+kBitShift);
                         return this;
@@ -176,10 +178,10 @@ namespace fleece {
 
             bool remove(const Target &target, unsigned shift) {
                 assert(shift + kBitShift < 8*sizeof(hash_t));//TEMP
-                int bitNo = childBitNumber(target._hash, shift);
+                unsigned bitNo = childBitNumber(target._hash, shift);
                 if (!hasChild(bitNo))
                     return false;
-                int childIndex = childIndexForBitNumber(bitNo);
+                unsigned childIndex = childIndexForBitNumber(bitNo);
                 Node *child = _children[childIndex];
                 if (child->isLeaf()) {
                     // Child is a leaf -- is it the right key?
@@ -196,7 +198,7 @@ namespace fleece {
                     auto node = (InteriorNode*)child;
                     if (!node->remove(target, shift+kBitShift))
                         return false;
-                    if (node->_bitmap == 0) {
+                    if (node->_bitmap.empty()) {
                         removeChild(bitNo, childIndex);     // child node is now empty, so remove it
                         delete node;
                     }
@@ -206,10 +208,10 @@ namespace fleece {
 
 
             void dump(std::ostream &out, unsigned indent =1) {
-                uint8_t n = childCount();
+                unsigned n = childCount();
                 out << string(2*indent, ' ') << "{";
-                uint8_t leafCount = n;
-                for (uint8_t i = 0; i < n; ++i) {
+                unsigned leafCount = n;
+                for (unsigned i = 0; i < n; ++i) {
                     auto child = _children[i];
                     if (!child->isLeaf()) {
                         --leafCount;
@@ -220,7 +222,7 @@ namespace fleece {
                 if (leafCount > 0) {
                     if (leafCount < n)
                         out << "\n" << string(2*indent, ' ') << " ";
-                    for (uint8_t i = 0; i < n; ++i) {
+                    for (unsigned i = 0; i < n; ++i) {
                         auto child = _children[i];
                         if (child->isLeaf())
                             ((LeafNode*)child)->dump(out);
@@ -241,7 +243,7 @@ namespace fleece {
 
             InteriorNode(uint8_t capacity, InteriorNode* orig =nullptr)
             :Node(capacity)
-            ,_bitmap(orig ? orig->_bitmap : 0)
+            ,_bitmap(orig ? orig->_bitmap : bitmap_t())
             {
                 if (orig)
                     memcpy(_children, orig->_children, orig->_capacity*sizeof(Node*));
@@ -258,8 +260,8 @@ namespace fleece {
             }
 
 
-            uint8_t childCount() const {
-                return (uint8_t) std::__pop_count(_bitmap);
+            unsigned childCount() const {
+                return _bitmap.bitCount();
             }
 
 
@@ -268,51 +270,51 @@ namespace fleece {
             }
 
 
-            int childIndexForBitNumber(unsigned bitNo) const {
-                return std::__pop_count( _bitmap & ((bitmap_t(1) << bitNo) - 1) );
+            unsigned childIndexForBitNumber(unsigned bitNo) const {
+                return _bitmap.indexOfBit(bitNo);
             }
 
 
-            bool hasChild(int i) const  {
-                return ((_bitmap & (bitmap_t(1) << i)) != 0);
+            bool hasChild(unsigned bitNo) const  {
+                return _bitmap.containsBit(bitNo);
             }
 
 
-            Node*& childForBitNumber(int bitNo) {
+            Node*& childForBitNumber(unsigned bitNo) {
                 auto i = childIndexForBitNumber(bitNo);
                 assert(i < _capacity);
                 return _children[i];
             }
 
 
-            Node* const& childForBitNumber(int bitNo) const {
+            Node* const& childForBitNumber(unsigned bitNo) const {
                 return const_cast<InteriorNode*>(this)->childForBitNumber(bitNo);
             }
 
 
-            InteriorNode* addChild(int bitNo, Node *child) {
+            InteriorNode* addChild(unsigned bitNo, Node *child) {
                 return addChild(bitNo, childIndexForBitNumber(bitNo), child);
             }
 
-            InteriorNode* addChild(int bitNo, int childIndex, Node *child) {
+            InteriorNode* addChild(unsigned bitNo, unsigned childIndex, Node *child) {
                 InteriorNode* node = (childCount() < _capacity) ? this : grow();
                 return node->_addChild(bitNo, childIndex, child);
             }
 
-            InteriorNode* _addChild(int bitNo, int childIndex, Node *child) {
+            InteriorNode* _addChild(unsigned bitNo, unsigned childIndex, Node *child) {
                 assert(child);
                 memmove(&_children[childIndex+1], &_children[childIndex],
                         (_capacity - childIndex - 1)*sizeof(Node*));
                 _children[childIndex] = child;
-                _bitmap |= (bitmap_t(1) << bitNo);
+                _bitmap.addBit(bitNo);
                 return this;
             }
 
 
-            void removeChild(int bitNo, int childIndex) {
+            void removeChild(unsigned bitNo, unsigned childIndex) {
                 assert(childIndex < _capacity);
                 memmove(&_children[childIndex], &_children[childIndex+1], (_capacity - childIndex - 1)*sizeof(Node*));
-                _bitmap &= ~(bitmap_t(1) << bitNo);
+                _bitmap.removeBit(bitNo);
             }
 
 
@@ -323,28 +325,28 @@ namespace fleece {
     } // end namespace
 
 
-#pragma mark - HAMTREE ITSELF
+#pragma mark - MHashTree ITSELF
 
 
-    using namespace hamtree;
+    using namespace mhashtree;
 
     template <class Key, class Val>
-    HAMTree<Key,Val>::HAMTree()
+    MHashTree<Key,Val>::MHashTree()
     { }
 
     template <class Key, class Val>
-    HAMTree<Key,Val>::~HAMTree() {
+    MHashTree<Key,Val>::~MHashTree() {
         if (_root)
             _root->freeChildren();
     }
 
     template <class Key, class Val>
-    unsigned HAMTree<Key,Val>::count() const {
+    unsigned MHashTree<Key,Val>::count() const {
         return _root ? _root->itemCount() : 0;
     }
 
     template <class Key, class Val>
-    Val HAMTree<Key,Val>::get(const Key &key) const {
+    Val MHashTree<Key,Val>::get(const Key &key) const {
         if (_root) {
             hash_t hash = std::hash<Key>()(key);
             LeafNode<Key,Val> *leaf = _root->findNearest(hash);
@@ -355,20 +357,20 @@ namespace fleece {
     }
 
     template <class Key, class Val>
-    void HAMTree<Key,Val>::insert(const Key &key, Val val) {
+    void MHashTree<Key,Val>::insert(const Key &key, Val val) {
         if (!_root)
             _root.reset( InteriorNode<Key,Val>::newRoot() );
         _root->insert(Target<Key>(key), val, 0);
     }
 
     template <class Key, class Val>
-    bool HAMTree<Key,Val>::remove(const Key &key) {
+    bool MHashTree<Key,Val>::remove(const Key &key) {
         return _root != nullptr && _root->remove(Target<Key>(key), 0);
     }
 
     template <class Key, class Val>
-    void HAMTree<Key,Val>::dump(std::ostream &out) {
-        out << "HAMTree {";
+    void MHashTree<Key,Val>::dump(std::ostream &out) {
+        out << "MHashTree {";
         if (_root) {
             out << "\n";
             _root->dump(out);
@@ -377,6 +379,6 @@ namespace fleece {
     }
 
 
-    template class HAMTree<alloc_slice, int>;
+    template class MHashTree<alloc_slice, int>;
 
 }

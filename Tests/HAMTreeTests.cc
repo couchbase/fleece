@@ -1,5 +1,5 @@
 //
-//  HAMTreeTests.cc
+//  MHashTreeTests.cc
 //  Fleece
 //
 //  Copyright © 2018 Couchbase. All rights reserved.
@@ -7,22 +7,22 @@
 
 #include "FleeceTests.hh"
 #include "Value.hh"
-#include "HAMTree.hh"
+#include "MHashTree.hh"
 
 using namespace fleece;
 
-TEST_CASE("Empty HAMTree", "[HAMTree]") {
-    HAMTree<alloc_slice,int> tree;
+TEST_CASE("Empty MHashTree", "[MHashTree]") {
+    MHashTree<alloc_slice,int> tree;
     CHECK(tree.count() == 0);
     CHECK(tree.get(alloc_slice("foo")) == 0);
     CHECK(!tree.remove(alloc_slice("foo")));
 }
 
-TEST_CASE("Tiny HAMTree Insert", "[HAMTree]") {
+TEST_CASE("Tiny MHashTree Insert", "[MHashTree]") {
     auto key = alloc_slice("foo");
     auto val = 123;
 
-    HAMTree<alloc_slice,int> tree;
+    MHashTree<alloc_slice,int> tree;
     tree.insert(key, val);
     CHECK(tree.get(key) == val);
     CHECK(tree.count() == 1);
@@ -30,7 +30,7 @@ TEST_CASE("Tiny HAMTree Insert", "[HAMTree]") {
     tree.dump(std::cerr);
 }
 
-TEST_CASE("Bigger HAMTree Insert", "[HAMTree]") {
+TEST_CASE("Bigger MHashTree Insert", "[MHashTree]") {
     static constexpr int N = 1000;
     std::vector<alloc_slice> keys(N);
     std::vector<int> values(N);
@@ -42,8 +42,8 @@ TEST_CASE("Bigger HAMTree Insert", "[HAMTree]") {
         values[i] = 1+i;
     }
 
-    HAMTree<alloc_slice,int> tree;
-    for (int i = 0; i < N; i++) {
+    MHashTree<alloc_slice,int> tree;
+    for (unsigned i = 0; i < N; i++) {
         tree.insert(keys[i], values[i]);
         CHECK(tree.count() == i + 1);
 //        for (int j = i; j >= 0; --j)
@@ -55,18 +55,18 @@ TEST_CASE("Bigger HAMTree Insert", "[HAMTree]") {
     tree.dump(std::cerr);
 }
 
-TEST_CASE("Tiny HAMTree Remove", "[HAMTree]") {
+TEST_CASE("Tiny MHashTree Remove", "[MHashTree]") {
     auto key = alloc_slice("foo");
     auto val = 123;
 
-    HAMTree<alloc_slice,int> tree;
+    MHashTree<alloc_slice,int> tree;
     tree.insert(key, val);
     CHECK(tree.remove(key));
     CHECK(tree.get(key) == 0);
     CHECK(tree.count() == 0);
 }
 
-TEST_CASE("Bigger HAMTree Remove", "[HAMTree]") {
+TEST_CASE("Bigger MHashTree Remove", "[MHashTree]") {
     static constexpr int N = 10000;
     std::vector<alloc_slice> keys(N);
     std::vector<int> values(N);
@@ -78,7 +78,7 @@ TEST_CASE("Bigger HAMTree Remove", "[HAMTree]") {
         values[i] = 1+i;
     }
 
-    HAMTree<alloc_slice,int> tree;
+    MHashTree<alloc_slice,int> tree;
     for (int i = 0; i < N; i++) {
         tree.insert(keys[i], values[i]);
     }

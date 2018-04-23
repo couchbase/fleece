@@ -1,5 +1,5 @@
 //
-//  HAMTree.hh
+//  MHashTree.hh
 //  Fleece
 //  Copyright © 2018 Couchbase. All rights reserved.
 //
@@ -11,16 +11,16 @@
 
 namespace fleece {
 
-    namespace hamtree {
+    namespace mhashtree {
         template <class Key, class Val> class InteriorNode;
     }
 
 
     template <class Key, class Val>
-    class HAMTree {
+    class MHashTree {
     public:
-        HAMTree();
-        ~HAMTree();
+        MHashTree();
+        ~MHashTree();
 
         void insert(const Key&, Val);
         bool remove(const Key&);
@@ -32,6 +32,6 @@ namespace fleece {
         void dump(std::ostream &out);
 
     private:
-        std::unique_ptr<hamtree::InteriorNode<Key, Val>> _root;
+        std::unique_ptr<mhashtree::InteriorNode<Key, Val>> _root;
     };
 }
