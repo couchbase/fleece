@@ -23,15 +23,21 @@ namespace fleece {
         using offset = uint32_t;
 
         union Node;
+        class MInteriorNode;
 
 
-        // Interior class representing a leaf node
+        // Internal class representing a leaf node
         class Leaf {
         public:
             const Value* key() const;
             const Value* value() const;
             slice keyString() const;
 
+            hash_t hash() const             {return keyString().hash();}
+
+            bool matches(slice key) const   {return keyString() == key;}
+
+            void dump(std::ostream&) const;
         private:
             offset _keyOffset;              // Little-endian
             offset _valueOffset;            // Little-endian; always ORed with 1 as a tag
@@ -51,10 +57,24 @@ namespace fleece {
             bool hasChild(unsigned bitNo) const;
             const Node* childForBitNumber(unsigned bitNo) const;
 
+            bitmap_t bitmap() const;
+
+            void dump(std::ostream&, unsigned indent) const;
+
+        private:
             bitmap_t _bitmap;              // Little-endian
             offset _childrenOffset;        // Little-endian
         };
+
+
+        union Node {
+            Leaf leaf;
+            Interior interior;
+
+            bool isLeaf() const                 {return (leaf._valueOffset & 1) != 0;}
+        };
     }
+
 
     /** The root of an immutable tree encoded alongside Fleece data. */
     class HashTree {
@@ -67,11 +87,13 @@ namespace fleece {
 
         unsigned count() const;
 
-        void dump(std::ostream &out);
+        void dump(std::ostream &out) const;
 
     private:
         const hashtree::Interior* getRoot() const;
 
         uint32_t _rootOffset;
+
+        friend class hashtree::MInteriorNode;
     };
 }

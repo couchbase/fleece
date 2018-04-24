@@ -5,21 +5,24 @@
 //
 
 #pragma once
+#include "HashTree.hh"
 #include "slice.hh"
-#include "Value.hh"
 #include <memory>
 
 namespace fleece {
 
-    namespace mhashtree {
-        template <class Key, class Val> class InteriorNode;
+    namespace hashtree {
+        class MInteriorNode;
     }
 
 
-    template <class Key, class Val>
     class MHashTree {
     public:
+        using Key = alloc_slice;
+        using Val = const Value*;
+
         MHashTree();
+        MHashTree(const HashTree*);
         ~MHashTree();
 
         void insert(const Key&, Val);
@@ -32,6 +35,7 @@ namespace fleece {
         void dump(std::ostream &out);
 
     private:
-        std::unique_ptr<mhashtree::InteriorNode<Key, Val>> _root;
+        const HashTree* _imRoot {nullptr};
+        std::unique_ptr<hashtree::MInteriorNode> _root;
     };
 }

@@ -6,6 +6,7 @@
 //
 
 #include "MHashTree.hh"
+#include "HashTree.hh"
 #include "Bitmap.hh"
 #include <algorithm>
 #include <ostream>
@@ -16,43 +17,86 @@ using namespace std;
 namespace fleece {
 
 
-    using hash_t = size_t;
+    using hash_t = uint32_t;
     using bitmap_t = Bitmap<uint32_t>;
     static constexpr unsigned kBitShift = 5;                      // must be log2(8*sizeof(bitmap_t))
     static constexpr unsigned kMaxChildren = 1 << kBitShift;
     static_assert(sizeof(bitmap_t) == kMaxChildren / 8, "Wrong constants");
 
 
-    namespace mhashtree {
+    namespace hashtree {
+        using Key = alloc_slice;
+        using Val = const Value*;
+
+
+        class MNode;
+        class MTarget;
+
+        // Pointer to any type of node. Mutable nodes are tagged by setting the LSB.
+        class NodeRef {
+        public:
+            NodeRef()                               :_addr(0) { }
+            NodeRef(MNode* n)                       :_addr(size_t(n) | 1) {assert(n);}
+            NodeRef(const Node* n)                  :_addr(size_t(n)) {assert(n);}
+            NodeRef(const Leaf* n)                  :_addr(size_t(n)) {assert(n);}
+
+            operator bool () const                  {return _addr != 0;}
+
+            bool isMutable() const                  {return (_addr & 1) != 0;}
+
+            MNode* asMutable() const {
+                return isMutable() ? _asMutable() : nullptr;
+            }
+
+            const Node* asImmutable() const {
+                return isMutable() ? nullptr : _asImmutable();
+            }
+
+            bool isLeaf() const;
+            hash_t hash() const;
+            bool matches(const MTarget&) const;
+            void dump(ostream&, unsigned indent);
+
+        private:
+            MNode* _asMutable() const               {return (MNode*)(_addr & ~1);}
+            const Node* _asImmutable() const        {return (const Node*)_addr;}
+
+                size_t _addr;
+        };
 
 
         // Base class of nodes within a MHashTree.
-        class Node {
+        class MNode {
         public:
-            Node(uint8_t capacity)
+            MNode(int8_t capacity)
             :_capacity(capacity)
             { }
 
-            bool isLeaf() const {return _capacity == 0;}
+            bool isLeaf() const     {return _capacity == 0;}
 
         protected:
-            uint8_t const _capacity;
+            uint8_t capacity() const {
+                assert(_capacity > 0);
+                return _capacity;
+            }
+
+        private:
+            int8_t const _capacity;
         };
 
 
         // A node with a key and hash
-        template <class Key>
-        class Target : public Node {
+        class MTarget {
         public:
-            Target(Key k)
-            :Target(std::hash<Key>()(k), k)
+            MTarget(Key k)
+            :MTarget(k.hash(), k)
             { }
 
             bool matches(hash_t h, Key k) const {
                 return _hash == h && _key == k;
             }
 
-            bool matches(const Target &target) {
+            bool matches(const MTarget &target) const {
                 return matches(target._hash, target._key);
             }
 
@@ -60,26 +104,25 @@ namespace fleece {
             Key const _key;
 
         protected:
-            Target(hash_t h, Key k)
-            :Node(0)
-            ,_hash(h)
+            MTarget(hash_t h, Key k)
+            :_hash(h)
             ,_key(k)
             { }
         };
 
 
         // A leaf node that holds a single key and value.
-        template <class Key, class Val>
-        class LeafNode : public Target<Key> {
+        class MLeafNode : public MNode, public MTarget {
         public:
-            LeafNode(const Target<Key> &t, const Val &v)
-            :Target<Key>(t)
+            MLeafNode(const MTarget &t, const Val &v)
+            :MNode(0)
+            ,MTarget(t)
             ,_val(v)
             { }
 
             void dump(std::ostream &out) {
                 char str[30];
-                sprintf(str, " %08zx", Target<Key>::_hash);
+                sprintf(str, " %08x", _hash);
                 out << str;
             }
 
@@ -88,27 +131,26 @@ namespace fleece {
 
 
         // An interior node holds a small compact hash table mapping to Nodes.
-        template <class Key, class Val>
-        class InteriorNode : public Node {
+        class MInteriorNode : public MNode {
         public:
-            using Target = Target<Key>;
-            using LeafNode = LeafNode<Key,Val>;
 
-
-            static InteriorNode* newRoot() {
-                return newNode(kMaxChildren);
+            static MInteriorNode* newRoot(const HashTree *imTree) {
+                if (imTree)
+                    return mutableCopy(imTree->getRoot());
+                else
+                    return newNode(kMaxChildren);
             }
 
 
             void freeChildren() {
                 unsigned n = childCount();
                 for (unsigned i = 0; i < n; ++i) {
-                    auto child = _children[i];
+                    auto child = _children[i].asMutable();
                     if (child) {
                         if (child->isLeaf())
-                            delete (LeafNode*)child;
+                            delete (MLeafNode*)child;
                         else {
-                            ((InteriorNode*)child)->freeChildren();
+                            ((MInteriorNode*)child)->freeChildren();
                             delete child;
                         }
                     }
@@ -116,107 +158,123 @@ namespace fleece {
             }
 
 
-            unsigned itemCount() const {
+            unsigned leafCount() const {
                 unsigned count = 0;
                 unsigned n = childCount();
                 for (unsigned i = 0; i < n; ++i) {
                     auto child = _children[i];
-                    if (child->isLeaf())
-                        count += 1;
-                    else
-                        count += ((InteriorNode*)child)->itemCount();
+                    if (child.isMutable()) {
+                        if (child.asMutable()->isLeaf())
+                            count += 1;
+                        else
+                            count += ((MInteriorNode*)child.asMutable())->leafCount();
+                    } else {
+                        if (child.asImmutable()->isLeaf())
+                            count += 1;
+                        else
+                            count += child.asImmutable()->interior.leafCount();
+                    }
                 }
                 return count;
             }
 
 
-            LeafNode* findNearest(hash_t hash) const {
+            NodeRef findNearest(hash_t hash) const {
                 unsigned bitNo = childBitNumber(hash);
                 if (!hasChild(bitNo))
-                    return nullptr;
-                Node *child = childForBitNumber(bitNo);
-                if (child->isLeaf())
-                    return (LeafNode*)child;    // closest match; not guaranteed to have right hash
-                else
-                    return ((InteriorNode*)child)->findNearest(hash >> kBitShift);  // recurse...
+                    return NodeRef();
+                NodeRef child = childForBitNumber(bitNo);
+                if (child.isMutable()) {
+                    auto mchild = child.asMutable();
+                    if (mchild->isLeaf())
+                        return child;    // closest match; not guaranteed to have right hash
+                    else
+                        return ((MInteriorNode*)mchild)->findNearest(hash >> kBitShift);  // recurse...
+                } else {
+                    auto ichild = child.asImmutable();
+                    if (ichild->isLeaf())
+                        return child;
+                    else
+                        return ichild->interior.findNearest(hash);
+                }
             }
 
 
-            InteriorNode* insert(const Target &target, const Val &val, unsigned shift) {
+            MInteriorNode* insert(const MTarget &target, const Val &val, unsigned shift) {
                 assert(shift + kBitShift < 8*sizeof(hash_t));//TEMP: Handle hash collisions
                 unsigned bitNo = childBitNumber(target._hash, shift);
                 if (!hasChild(bitNo)) {
                     // No child -- add a leaf:
-                    return addChild(bitNo, new LeafNode(target, val));
+                    return addChild(bitNo, new MLeafNode(target, val));
                 }
-                Node* &childRef = childForBitNumber(bitNo);
-                if (childRef->isLeaf()) {
-                    // Child is a leaf -- is it the right key?
-                    LeafNode* leaf = (LeafNode*)childRef;
-                    if (leaf->matches(target)) {
-                        leaf->_val = val;
+                NodeRef &childRef = childForBitNumber(bitNo);
+                if (childRef.isLeaf()) {
+                    if (childRef.matches(target._key)) {
+                        // Leaf node matches this key; update or copy it:
+                        if (childRef.isMutable())
+                            ((MLeafNode*)childRef.asMutable())->_val = val;
+                        else
+                            childRef = new MLeafNode(target, val);
                         return this;
                     } else {
-                        // Nope, need to create a new interior node:
-                        unsigned level = shift / kBitShift;
-                        InteriorNode* node = newNode(2 + (level<1) + (level<3));
-                        childRef = node;
-                        unsigned childBitNo = childBitNumber(leaf->_hash, shift+kBitShift);
-                        node->addChild(childBitNo, leaf);
+                        // Nope, need to promote the leaf to an interior node & add new key:
+                        MInteriorNode *node = promoteLeaf(childRef, shift);
                         node->insert(target, val, shift+kBitShift);
                         return this;
                     }
                 } else {
                     // Progress down to interior node...
-                    auto node = ((InteriorNode*)childRef)->insert(target, val, shift+kBitShift);
-                    if (node != childRef)
-                        childRef = node;
+                    auto child = (MInteriorNode*)childRef.asMutable();
+                    if (!child)
+                        child = mutableCopy(&childRef.asImmutable()->interior);
+                    childRef = child->insert(target, val, shift+kBitShift);
                     return this;
                 }
             }
 
 
-            bool remove(const Target &target, unsigned shift) {
+            bool remove(const MTarget &target, unsigned shift) {
                 assert(shift + kBitShift < 8*sizeof(hash_t));//TEMP
                 unsigned bitNo = childBitNumber(target._hash, shift);
                 if (!hasChild(bitNo))
                     return false;
                 unsigned childIndex = childIndexForBitNumber(bitNo);
-                Node *child = _children[childIndex];
-                if (child->isLeaf()) {
+                NodeRef childRef = _children[childIndex];
+                if (childRef.isLeaf()) {
                     // Child is a leaf -- is it the right key?
-                    LeafNode* leaf = (LeafNode*)child;
-                    if (leaf->matches(target)) {
+                    if (childRef.matches(target)) {
                         removeChild(bitNo, childIndex);
-                        delete leaf;
+                        delete (MLeafNode*)childRef.asMutable();
                         return true;
                     } else {
                         return false;
                     }
                 } else {
                     // Recurse into child node...
-                    auto node = (InteriorNode*)child;
-                    if (!node->remove(target, shift+kBitShift))
+                    auto child = (MInteriorNode*)childRef.asMutable();
+                    if (!child)
+                        child = mutableCopy(&childRef.asImmutable()->interior);
+                    if (!child->remove(target, shift+kBitShift))
                         return false;
-                    if (node->_bitmap.empty()) {
+                    if (child->_bitmap.empty()) {
                         removeChild(bitNo, childIndex);     // child node is now empty, so remove it
-                        delete node;
+                        delete child;
                     }
                     return true;
                 }
             }
 
 
-            void dump(std::ostream &out, unsigned indent =1) {
+            void dump(std::ostream &out, unsigned indent =1) const {
                 unsigned n = childCount();
                 out << string(2*indent, ' ') << "{";
                 unsigned leafCount = n;
                 for (unsigned i = 0; i < n; ++i) {
                     auto child = _children[i];
-                    if (!child->isLeaf()) {
+                    if (!child.isLeaf()) {
                         --leafCount;
                         out << "\n";
-                        ((InteriorNode*)child)->dump(out, indent+1);
+                        child.dump(out, indent+1);
                     }
                 }
                 if (leafCount > 0) {
@@ -224,8 +282,8 @@ namespace fleece {
                         out << "\n" << string(2*indent, ' ') << " ";
                     for (unsigned i = 0; i < n; ++i) {
                         auto child = _children[i];
-                        if (child->isLeaf())
-                            ((LeafNode*)child)->dump(out);
+                        if (child.isLeaf())
+                            child.dump(out, indent+1);
                     }
                 }
                 out << " }";
@@ -233,28 +291,46 @@ namespace fleece {
 
 
         private:
-            static InteriorNode* newNode(uint8_t capacity, InteriorNode *orig =nullptr) {
-                return new (capacity) InteriorNode(capacity, orig);
+            static MInteriorNode* newNode(int8_t capacity, MInteriorNode *orig =nullptr) {
+                return new (capacity) MInteriorNode(capacity, orig);
             }
 
-            static void* operator new(size_t size, uint8_t capacity) {
-                return ::operator new(size - (kMaxChildren - capacity)*sizeof(Node*));
+            static MInteriorNode* mutableCopy(const Interior *iNode) {
+                auto childCount = iNode->childCount();
+                auto node = newNode((uint8_t)childCount);
+                node->_bitmap = asBitmap(iNode->bitmap());
+                for (unsigned i = 0; i < childCount; ++i)
+                    node->_children[i] = NodeRef(iNode->childAtIndex(i));
+                return node;
             }
 
-            InteriorNode(uint8_t capacity, InteriorNode* orig =nullptr)
-            :Node(capacity)
-            ,_bitmap(orig ? orig->_bitmap : bitmap_t())
+            static MInteriorNode* promoteLeaf(NodeRef& childLeaf, unsigned shift) {
+                unsigned level = shift / kBitShift;
+                MInteriorNode* node = newNode(2 + (level<1) + (level<3));
+                unsigned childBitNo = childBitNumber(childLeaf.hash(), shift+kBitShift);
+                node->addChild(childBitNo, childLeaf);
+                childLeaf = node; // replace immutable node
+                return node;
+            }
+
+            static void* operator new(size_t size, int8_t capacity) {
+                return ::operator new(size + capacity*sizeof(NodeRef));
+            }
+
+            MInteriorNode(int8_t cap, MInteriorNode* orig =nullptr)
+            :MNode(cap)
+            ,_bitmap(orig ? orig->_bitmap : Bitmap<bitmap_t>{})
             {
                 if (orig)
-                    memcpy(_children, orig->_children, orig->_capacity*sizeof(Node*));
+                    memcpy(_children, orig->_children, orig->capacity()*sizeof(NodeRef));
                 else
-                    memset(_children, 0, _capacity*sizeof(Node*));
+                    memset(_children, 0, cap*sizeof(NodeRef));
             }
 
 
-            InteriorNode* grow() {
-                assert(_capacity < kMaxChildren);
-                InteriorNode* replacement = newNode(_capacity + 1, this);
+            MInteriorNode* grow() {
+                assert(capacity() < kMaxChildren);
+                MInteriorNode* replacement = newNode(capacity() + 1, this);
                 delete this;
                 return replacement;
             }
@@ -280,47 +356,75 @@ namespace fleece {
             }
 
 
-            Node*& childForBitNumber(unsigned bitNo) {
+            NodeRef& childForBitNumber(unsigned bitNo) {
                 auto i = childIndexForBitNumber(bitNo);
-                assert(i < _capacity);
+                assert(i < capacity());
                 return _children[i];
             }
 
 
-            Node* const& childForBitNumber(unsigned bitNo) const {
-                return const_cast<InteriorNode*>(this)->childForBitNumber(bitNo);
+            NodeRef const& childForBitNumber(unsigned bitNo) const {
+                return const_cast<MInteriorNode*>(this)->childForBitNumber(bitNo);
             }
 
 
-            InteriorNode* addChild(unsigned bitNo, Node *child) {
+            MInteriorNode* addChild(unsigned bitNo, NodeRef child) {
                 return addChild(bitNo, childIndexForBitNumber(bitNo), child);
             }
 
-            InteriorNode* addChild(unsigned bitNo, unsigned childIndex, Node *child) {
-                InteriorNode* node = (childCount() < _capacity) ? this : grow();
+            MInteriorNode* addChild(unsigned bitNo, unsigned childIndex, NodeRef child) {
+                MInteriorNode* node = (childCount() < capacity()) ? this : grow();
                 return node->_addChild(bitNo, childIndex, child);
             }
 
-            InteriorNode* _addChild(unsigned bitNo, unsigned childIndex, Node *child) {
+            MInteriorNode* _addChild(unsigned bitNo, unsigned childIndex, NodeRef child) {
                 assert(child);
                 memmove(&_children[childIndex+1], &_children[childIndex],
-                        (_capacity - childIndex - 1)*sizeof(Node*));
+                        (capacity() - childIndex - 1)*sizeof(NodeRef));
                 _children[childIndex] = child;
                 _bitmap.addBit(bitNo);
                 return this;
             }
 
-
             void removeChild(unsigned bitNo, unsigned childIndex) {
-                assert(childIndex < _capacity);
-                memmove(&_children[childIndex], &_children[childIndex+1], (_capacity - childIndex - 1)*sizeof(Node*));
+                assert(childIndex < capacity());
+                memmove(&_children[childIndex], &_children[childIndex+1], (capacity() - childIndex - 1)*sizeof(NodeRef));
                 _bitmap.removeBit(bitNo);
             }
 
 
-            bitmap_t _bitmap {0};
-            Node* _children[kMaxChildren /*_capacity*/];      // Actual array size is dynamic
+            Bitmap<bitmap_t> _bitmap {0};
+            NodeRef _children[0];  // Actually dynamic array NodeRef[_capacity]
         };
+
+
+#pragma mark - NODEREF
+
+
+        bool NodeRef::isLeaf() const {
+            return isMutable() ? _asMutable()->isLeaf() : _asImmutable()->isLeaf();
+        }
+
+        hash_t NodeRef::hash() const {
+            assert(isLeaf());
+            return isMutable() ? ((MLeafNode*)_asMutable())->_hash : _asImmutable()->leaf.hash();
+        }
+
+        bool NodeRef::matches(const MTarget &target) const {
+            assert(isLeaf());
+            return isMutable() ? ((MLeafNode*)_asMutable())->matches(target)
+                               : _asImmutable()->leaf.matches(target._key);
+        }
+
+        void NodeRef::dump(ostream &out, unsigned indent) {
+            if (isMutable())
+                isLeaf() ? ((MLeafNode*)_asMutable())->dump(out)
+                         : ((MInteriorNode*)_asMutable())->dump(out, indent);
+            else
+                isLeaf() ? _asImmutable()->leaf.dump(out)
+                         : _asImmutable()->interior.dump(out, indent);
+        }
+
 
     } // end namespace
 
@@ -328,57 +432,75 @@ namespace fleece {
 #pragma mark - MHashTree ITSELF
 
 
-    using namespace mhashtree;
+    using namespace hashtree;
 
-    template <class Key, class Val>
-    MHashTree<Key,Val>::MHashTree()
+    MHashTree::MHashTree()
     { }
 
-    template <class Key, class Val>
-    MHashTree<Key,Val>::~MHashTree() {
+    MHashTree::MHashTree(const HashTree *tree)
+    :_imRoot(tree)
+    { }
+
+    MHashTree::~MHashTree() {
         if (_root)
             _root->freeChildren();
     }
 
-    template <class Key, class Val>
-    unsigned MHashTree<Key,Val>::count() const {
-        return _root ? _root->itemCount() : 0;
+    unsigned MHashTree::count() const {
+        if (_root)
+            return _root->leafCount();
+        else if (_imRoot)
+            return _imRoot->count();
+        else
+            return 0;
     }
 
-    template <class Key, class Val>
-    Val MHashTree<Key,Val>::get(const Key &key) const {
+    Val MHashTree::get(const Key &key) const {
         if (_root) {
-            hash_t hash = std::hash<Key>()(key);
-            LeafNode<Key,Val> *leaf = _root->findNearest(hash);
-            if (leaf && leaf->matches(hash, key))
-                return leaf->_val;
+            hash_t hash = key.hash();
+            NodeRef leaf = _root->findNearest(hash);
+            if (leaf) {
+                if (leaf.isMutable()) {
+                    auto mleaf = (MLeafNode*)leaf.asMutable();
+                    if (mleaf->matches(hash, key))
+                        return mleaf->_val;
+                } else {
+                    if (leaf.asImmutable()->leaf.matches(key))
+                        return leaf.asImmutable()->leaf.value();
+                }
+            }
+        } else if (_imRoot) {
+            return _imRoot->get(key);
         }
-        return {};
+        return nullptr;
     }
 
-    template <class Key, class Val>
-    void MHashTree<Key,Val>::insert(const Key &key, Val val) {
+    void MHashTree::insert(const Key &key, Val val) {
         if (!_root)
-            _root.reset( InteriorNode<Key,Val>::newRoot() );
-        _root->insert(Target<Key>(key), val, 0);
+            _root.reset( MInteriorNode::newRoot(_imRoot) );
+        _root->insert(MTarget(key), val, 0);
     }
 
-    template <class Key, class Val>
-    bool MHashTree<Key,Val>::remove(const Key &key) {
-        return _root != nullptr && _root->remove(Target<Key>(key), 0);
-    }
-
-    template <class Key, class Val>
-    void MHashTree<Key,Val>::dump(std::ostream &out) {
-        out << "MHashTree {";
-        if (_root) {
-            out << "\n";
-            _root->dump(out);
+    bool MHashTree::remove(const Key &key) {
+        if (!_root) {
+            if (!_imRoot)
+                return false;
+            _root.reset( MInteriorNode::newRoot(_imRoot) );
         }
-        out << "}\n";
+        return _root->remove(MTarget(key), 0);
     }
 
-
-    template class MHashTree<alloc_slice, int>;
+    void MHashTree::dump(std::ostream &out) {
+        if (_imRoot && !_root) {
+            _imRoot->dump(out);
+        } else {
+            out << "MHashTree {";
+            if (_root) {
+                out << "\n";
+                _root->dump(out);
+            }
+            out << "}\n";
+        }
+    }
 
 }

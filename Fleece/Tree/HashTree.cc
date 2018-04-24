@@ -22,25 +22,24 @@ namespace fleece {
 
     namespace hashtree {
 
-        union Node {
-            Leaf leaf;
-            Interior interior;
-
-            bool isLeaf() const                 {return (leaf._valueOffset & 1) != 0;}
-        };
-
-
         const Value* Leaf::key() const        {return deref(_keyOffset, Value);}
         const Value* Leaf::value() const      {return deref(_keyOffset, Value);}
         slice Leaf::keyString() const         {return deref(_valueOffset & ~1, Value)->asString();}
 
+        void Leaf::dump(std::ostream &out) const {
+            char str[30];
+            sprintf(str, " [%08x]", hash());
+            out << str;
+        }
 
-        bool Interior::hasChild(unsigned bitNo) const {return asBitmap(_bitmap).containsBit(bitNo);}
-        unsigned Interior::childCount() const         {return asBitmap(_bitmap).bitCount();}
+        bitmap_t Interior::bitmap() const     {return _decLittle32(_bitmap);}
+
+        bool Interior::hasChild(unsigned bitNo) const {return asBitmap(bitmap()).containsBit(bitNo);}
+        unsigned Interior::childCount() const         {return asBitmap(bitmap()).bitCount();}
         const Node* Interior::childAtIndex(int i) const {return deref(_childrenOffset, Node) + i;}
 
         const Node* Interior::childForBitNumber(unsigned bitNo) const {
-            return hasChild(bitNo) ? childAtIndex( asBitmap(_bitmap).indexOfBit(bitNo) ) : nullptr;
+            return hasChild(bitNo) ? childAtIndex( asBitmap(bitmap()).indexOfBit(bitNo) ) : nullptr;
         }
 
         // Finds the leaf node that's closest to the given hash. May not be exact.
@@ -67,6 +66,30 @@ namespace fleece {
             return count;
         }
 
+        void Interior::dump(std::ostream &out, unsigned indent =1) const {
+            unsigned n = childCount();
+            out << string(2*indent, ' ') << "[";
+            unsigned leafCount = n;
+            auto child = childAtIndex(0);
+            for (unsigned i = 0; i < n; ++i, ++child) {
+                if (!child->isLeaf()) {
+                    --leafCount;
+                    out << "\n";
+                    child->interior.dump(out, indent+1);
+                }
+            }
+            if (leafCount > 0) {
+                if (leafCount < n)
+                    out << "\n" << string(2*indent, ' ') << " ";
+                child = childAtIndex(0);
+                for (unsigned i = 0; i < n; ++i, ++child) {
+                    if (child->isLeaf())
+                        child->leaf.dump(out);
+                }
+            }
+            out << " ]";
+        }
+
     }
 
     using namespace hashtree;
@@ -90,6 +113,16 @@ namespace fleece {
     unsigned HashTree::count() const {
         auto root = getRoot();
         return root ? root->leafCount() : 0;
+    }
+
+    void HashTree::dump(ostream &out) const {
+        auto root = getRoot();
+        out << "HashTree {";
+        if (root) {
+            out << "\n";
+            root->dump(out);
+        }
+        out << "}\n";
     }
 
 }
