@@ -8,6 +8,7 @@
 #include "MHashTree.hh"
 #include "HashTree.hh"
 #include "Bitmap.hh"
+#include "Writer.hh"
 #include <algorithm>
 #include <ostream>
 #include <string>
@@ -31,6 +32,11 @@ namespace fleece {
 
         class MNode;
         class MTarget;
+
+
+        static void encodeOffset(offset &o, size_t curPos) {
+            o = _encLittle32(offset(curPos - o));
+        }
 
         // Pointer to any type of node. Mutable nodes are tagged by setting the LSB.
         class NodeRef {
@@ -85,7 +91,7 @@ namespace fleece {
         };
 
 
-        // A node with a key and hash
+        // A key and hash
         class MTarget {
         public:
             MTarget(Key k)
@@ -119,6 +125,29 @@ namespace fleece {
             ,MTarget(t)
             ,_val(v)
             { }
+
+            pair<offset,offset> writeTo(Writer &writer) {
+                // Write key:
+                auto keyPos = writer.length();
+                uint8_t header = 0x40 | (_key.size & 0x0F);     // Fake Fleece string header
+                writer.write(&header, 1);
+                writer.write(_key);
+                writer.padToEvenLength();
+
+                // Write value (just as an integer for now) //FIX
+                auto valPos = writer.length();
+                auto val = size_t(_val);
+                uint8_t buf[2] = { uint8_t(val >> 8), uint8_t(val & 0xFF) };
+                writer.write(buf, sizeof(buf));
+
+                return {offset(keyPos), offset(valPos)};
+            }
+
+            static void encodeOffsets(pair<offset,offset> &offsets, size_t curPos) {
+                encodeOffset(offsets.first, curPos);
+                encodeOffset(offsets.second, curPos);
+                *(uint8_t*)&offsets.second |= 1;        // tag to denote a leaf
+            }
 
             void dump(std::ostream &out) {
                 char str[30];
@@ -262,6 +291,52 @@ namespace fleece {
                     }
                     return true;
                 }
+            }
+
+
+            pair<offset,offset> writeTo(Writer &writer) {
+                unsigned n = childCount();
+                pair<offset,offset> children[n];
+
+                // Let each interior-node child write its children array:
+                for (unsigned i = 0; i < n; ++i) {
+                    auto child = _children[i];
+                    if (child.isMutable()) {
+                        if (child.isLeaf())
+                            children[i] = ((MLeafNode*)child.asMutable())->writeTo(writer);
+                        else
+                            children[i] = ((MInteriorNode*)child.asMutable())->writeTo(writer);
+                    } else {
+                        abort(); //TODO
+                    }
+                }
+
+                // Convert positions into offsets:
+                const auto childrenPos = writer.length();
+                auto curPos = childrenPos;
+                for (unsigned i = 0; i < n; ++i) {
+                    if (_children[i].isLeaf())
+                        MLeafNode::encodeOffsets(children[i], curPos);
+                    else
+                        MInteriorNode::encodeOffsets(children[i], curPos);
+                    curPos += sizeof(children[i]);
+                }
+                writer.write(children, n * sizeof(children[0]));
+
+                return {bitmap_t(_bitmap), childrenPos};
+            }
+
+            static void encodeOffsets(pair<offset,offset> &offsets, size_t curPos) {
+                offsets.first = _encLittle32(offsets.first);    // This is a bitmap not an offset!
+                encodeOffset(offsets.second, curPos);
+            }
+
+            offset writeRootTo(Writer &writer) {
+                auto offsets = writeTo(writer);
+                size_t curPos = writer.length();
+                encodeOffsets(offsets, curPos);
+                writer.write(&offsets, sizeof(offsets));
+                return offset(curPos);
             }
 
 
@@ -488,6 +563,13 @@ namespace fleece {
             _root.reset( MInteriorNode::newRoot(_imRoot) );
         }
         return _root->remove(MTarget(key), 0);
+    }
+
+    offset MHashTree::writeTo(Writer &writer) {
+        if (_root)
+            return _root->writeRootTo(writer);
+        else
+            abort(); //TODO
     }
 
     void MHashTree::dump(std::ostream &out) {

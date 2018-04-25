@@ -59,8 +59,7 @@ namespace fleece {
         /** Returns the encoded data. This implicitly calls end(). */
         alloc_slice extractOutput();
 
-        /** Resets the encoder so it can be used again. This creates a new empty Writer,
-            which can be accessed via the writer() method. */
+        /** Resets the encoder so it can be used again. */
         void reset();
 
         /////// Writing data:

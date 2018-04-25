@@ -18,13 +18,13 @@ using namespace std;
 namespace fleece {
 
     // The `offset` type is interpreted as a little-endian offset down from the containing object.
-    #define deref(OFF, TYPE)    ((const TYPE*)((uint8_t*)this - _decLittle32(OFF)))
+    #define deref(OFF, TYPE)    ((const TYPE*)((uint8_t*)this - (OFF)))
 
     namespace hashtree {
 
         const Value* Leaf::key() const        {return deref(_keyOffset, Value);}
-        const Value* Leaf::value() const      {return deref(_keyOffset, Value);}
-        slice Leaf::keyString() const         {return deref(_valueOffset & ~1, Value)->asString();}
+        const Value* Leaf::value() const      {return deref(_valueOffset & ~1, Value);}
+        slice Leaf::keyString() const         {return deref(_keyOffset, Value)->asString();}
 
         void Leaf::dump(std::ostream &out) const {
             char str[30];
@@ -95,33 +95,32 @@ namespace fleece {
     using namespace hashtree;
 
 
+    const HashTree* HashTree::fromData(slice data) {
+        return (const HashTree*)offsetby(data.end(), -sizeof(Interior));
+    }
+
+
     const Interior* HashTree::getRoot() const {
-        return _rootOffset ? deref(_rootOffset, hashtree::Interior) : nullptr;
+        return (const Interior*)this;
     }
 
     const Value* HashTree::get(Key key) const {
         auto root = getRoot();
-        if (root) {
-            hash_t hash = (hash_t)std::hash<Key>()(key);
-            auto leaf = root->findNearest(hash);
-            if (leaf && leaf->keyString() == key)
-                return leaf->value();
-        }
+        hash_t hash = (hash_t)std::hash<Key>()(key);
+        auto leaf = root->findNearest(hash);
+        if (leaf && leaf->keyString() == key)
+            return leaf->value();
         return nullptr;
     }
 
     unsigned HashTree::count() const {
-        auto root = getRoot();
-        return root ? root->leafCount() : 0;
+        return getRoot()->leafCount();
     }
 
     void HashTree::dump(ostream &out) const {
-        auto root = getRoot();
         out << "HashTree {";
-        if (root) {
-            out << "\n";
-            root->dump(out);
-        }
+        out << "\n";
+        getRoot()->dump(out);
         out << "}\n";
     }
 

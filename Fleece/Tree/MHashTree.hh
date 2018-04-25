@@ -10,7 +10,7 @@
 #include <memory>
 
 namespace fleece {
-
+    class Writer;
     namespace hashtree {
         class MInteriorNode;
     }
@@ -31,6 +31,8 @@ namespace fleece {
         Val get(const Key&) const;
 
         unsigned count() const;
+
+        uint32_t writeTo(Writer&);
 
         void dump(std::ostream &out);
 

@@ -22,6 +22,21 @@ namespace fleece {
 
         using offset = uint32_t;
 
+        struct endian {
+            uint8_t bytes[4];
+
+            endian(offset o) {
+                o = _encLittle32(o);
+                memcpy(bytes, &o, sizeof(bytes));
+            }
+
+            operator offset() const {
+                offset o;
+                memcpy(&o, bytes, sizeof(o));
+                return _decLittle32(o);
+            }
+        };
+
         union Node;
         class MInteriorNode;
 
@@ -39,8 +54,8 @@ namespace fleece {
 
             void dump(std::ostream&) const;
         private:
-            offset _keyOffset;              // Little-endian
-            offset _valueOffset;            // Little-endian; always ORed with 1 as a tag
+            endian _keyOffset;
+            endian _valueOffset;
 
             friend union Node;
         };
@@ -62,8 +77,8 @@ namespace fleece {
             void dump(std::ostream&, unsigned indent) const;
 
         private:
-            bitmap_t _bitmap;              // Little-endian
-            offset _childrenOffset;        // Little-endian
+            endian _bitmap;
+            endian _childrenOffset;
         };
 
 
@@ -81,7 +96,7 @@ namespace fleece {
     public:
         using Key = slice;
 
-        static const HashTree* at(const void *address)         {return (const HashTree*)address;}
+        static const HashTree* fromData(slice data);
 
         const Value* get(Key) const;
 
@@ -91,8 +106,6 @@ namespace fleece {
 
     private:
         const hashtree::Interior* getRoot() const;
-
-        uint32_t _rootOffset;
 
         friend class hashtree::MInteriorNode;
     };
