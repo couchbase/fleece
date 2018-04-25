@@ -12,6 +12,15 @@
 #include <memory>
 
 namespace fleece { namespace hashtree {
+
+    /*
+         Data format:
+             Interior Node                  Leaf Node
+             bitmap   [4 byte int]          key   [4 byte offset]
+             children [4 byte offset]       value [4 byte offset]
+
+             Children: Contiguous array of interior or leaf nodes
+     */
     
     using hash_t = uint32_t;
     using bitmap_t = uint32_t;
@@ -51,7 +60,7 @@ namespace fleece { namespace hashtree {
 
         bool matches(slice key) const   {return keyString() == key;}
 
-        void dump(std::ostream&) const;
+        void dump(std::ostream&, unsigned indent) const;
     private:
         endian _keyOffset;
         endian _valueOffset;

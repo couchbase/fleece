@@ -21,6 +21,9 @@ namespace fleece {
         MHashTree(const HashTree*);
         ~MHashTree();
 
+        MHashTree& operator= (MHashTree&&);
+        MHashTree& operator= (const HashTree*);
+
         void insert(slice key, const Value*);
         bool remove(slice key);
 

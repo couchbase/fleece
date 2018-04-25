@@ -27,10 +27,13 @@ namespace fleece {
         const Value* Leaf::value() const      {return deref(_valueOffset & ~1, Value);}
         slice Leaf::keyString() const         {return deref(_keyOffset, Value)->asString();}
 
-        void Leaf::dump(std::ostream &out) const {
-            char str[30];
-            sprintf(str, " (%08x)", hash());
-            out << str;
+        void Leaf::dump(std::ostream &out, unsigned indent) const {
+            char hashStr[30];
+            sprintf(hashStr, "[%08x ", hash());
+            out << string(2*indent, ' ') << hashStr << '"';
+            auto k = keyString();
+            out.write((char*)k.buf, k.size);
+            out << "\"=" << value()->toJSONString() << "]";
         }
 
         
@@ -71,23 +74,13 @@ namespace fleece {
         void Interior::dump(std::ostream &out, unsigned indent =1) const {
             unsigned n = childCount();
             out << string(2*indent, ' ') << "[";
-            unsigned leafCount = n;
             auto child = childAtIndex(0);
             for (unsigned i = 0; i < n; ++i, ++child) {
-                if (!child->isLeaf()) {
-                    --leafCount;
-                    out << "\n";
+                out << "\n";
+                if (child->isLeaf())
+                    child->leaf.dump(out, indent+1);
+                else
                     child->interior.dump(out, indent+1);
-                }
-            }
-            if (leafCount > 0) {
-                if (leafCount < n)
-                    out << "\n" << string(2*indent, ' ') << " ";
-                child = childAtIndex(0);
-                for (unsigned i = 0; i < n; ++i, ++child) {
-                    if (child->isLeaf())
-                        child->leaf.dump(out);
-                }
             }
             out << " ]";
         }
