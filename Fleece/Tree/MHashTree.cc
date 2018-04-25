@@ -7,6 +7,7 @@
 
 #include "MHashTree.hh"
 #include "HashTree.hh"
+#include "HashTree+Internal.hh"
 #include "Bitmap.hh"
 #include "Writer.hh"
 #include <algorithm>
@@ -26,12 +27,20 @@ namespace fleece {
 
 
     namespace hashtree {
-        using Key = alloc_slice;
-        using Val = const Value*;
-
-
         class MNode;
-        class MTarget;
+
+
+        // Just a key and its hash
+        struct Target {
+            explicit Target(slice k) :key(k), hash(k.hash()) { }
+
+            bool operator== (const Target &b) const {
+                return hash == b.hash && key == b.key;
+            }
+
+            slice const key;
+            hash_t const hash;
+        };
 
 
         static void encodeOffset(offset &o, size_t curPos) {
@@ -60,7 +69,7 @@ namespace fleece {
 
             bool isLeaf() const;
             hash_t hash() const;
-            bool matches(const MTarget&) const;
+            bool matches(Target) const;
             void dump(ostream&, unsigned indent);
 
         private:
@@ -91,53 +100,35 @@ namespace fleece {
         };
 
 
-        // A key and hash
-        class MTarget {
-        public:
-            MTarget(Key k)
-            :MTarget(k.hash(), k)
-            { }
-
-            bool matches(hash_t h, Key k) const {
-                return _hash == h && _key == k;
-            }
-
-            bool matches(const MTarget &target) const {
-                return matches(target._hash, target._key);
-            }
-
-            hash_t const _hash;
-            Key const _key;
-
-        protected:
-            MTarget(hash_t h, Key k)
-            :_hash(h)
-            ,_key(k)
-            { }
-        };
-
-
         // A leaf node that holds a single key and value.
-        class MLeafNode : public MNode, public MTarget {
+        class MLeafNode : public MNode {
         public:
-            MLeafNode(const MTarget &t, const Val &v)
+            MLeafNode(const Target &t, const Value *v)
             :MNode(0)
-            ,MTarget(t)
-            ,_val(v)
+            ,_hash(t.hash)
+            ,_key(t.key)
+            ,_value(v)
             { }
+
+            bool matches(Target target) const {
+                return _hash == target.hash && _key == target.key;
+            }
 
             pair<offset,offset> writeTo(Writer &writer) {
                 // Write key:
                 auto keyPos = writer.length();
-                uint8_t header = 0x40 | (_key.size & 0x0F);     // Fake Fleece string header
+                assert(_key.size < 16);
+                uint8_t header = 0x40 | (_key.size & 0x0F);     //FIX: Fake Fleece string header
                 writer.write(&header, 1);
                 writer.write(_key);
                 writer.padToEvenLength();
 
                 // Write value (just as an integer for now) //FIX
                 auto valPos = writer.length();
-                auto val = size_t(_val);
-                uint8_t buf[2] = { uint8_t(val >> 8), uint8_t(val & 0xFF) };
+                assert(_value->isInteger());
+                auto val = _value->asInt();
+                assert(val >= -0x7FF && val <= 0x7FF);
+                uint8_t buf[2] = { uint8_t(val >> 8), uint8_t(val & 0xFF) };    //FIX: Fake Fleece int
                 writer.write(buf, sizeof(buf));
 
                 return {offset(keyPos), offset(valPos)};
@@ -155,7 +146,9 @@ namespace fleece {
                 out << str;
             }
 
-            Val _val;
+            alloc_slice const _key;
+            hash_t const _hash;
+            const Value* _value;
         };
 
 
@@ -171,19 +164,18 @@ namespace fleece {
             }
 
 
-            void freeChildren() {
+            void deleteTree() {
                 unsigned n = childCount();
                 for (unsigned i = 0; i < n; ++i) {
                     auto child = _children[i].asMutable();
                     if (child) {
                         if (child->isLeaf())
                             delete (MLeafNode*)child;
-                        else {
-                            ((MInteriorNode*)child)->freeChildren();
-                            delete child;
-                        }
+                        else
+                            ((MInteriorNode*)child)->deleteTree();
                     }
                 }
+                delete this;
             }
 
 
@@ -229,19 +221,19 @@ namespace fleece {
             }
 
 
-            MInteriorNode* insert(const MTarget &target, const Val &val, unsigned shift) {
+            MInteriorNode* insert(Target target, const Value *val, unsigned shift) {
                 assert(shift + kBitShift < 8*sizeof(hash_t));//TEMP: Handle hash collisions
-                unsigned bitNo = childBitNumber(target._hash, shift);
+                unsigned bitNo = childBitNumber(target.hash, shift);
                 if (!hasChild(bitNo)) {
                     // No child -- add a leaf:
                     return addChild(bitNo, new MLeafNode(target, val));
                 }
                 NodeRef &childRef = childForBitNumber(bitNo);
                 if (childRef.isLeaf()) {
-                    if (childRef.matches(target._key)) {
+                    if (childRef.matches(target)) {
                         // Leaf node matches this key; update or copy it:
                         if (childRef.isMutable())
-                            ((MLeafNode*)childRef.asMutable())->_val = val;
+                            ((MLeafNode*)childRef.asMutable())->_value = val;
                         else
                             childRef = new MLeafNode(target, val);
                         return this;
@@ -262,9 +254,9 @@ namespace fleece {
             }
 
 
-            bool remove(const MTarget &target, unsigned shift) {
+            bool remove(Target target, unsigned shift) {
                 assert(shift + kBitShift < 8*sizeof(hash_t));//TEMP
-                unsigned bitNo = childBitNumber(target._hash, shift);
+                unsigned bitNo = childBitNumber(target.hash, shift);
                 if (!hasChild(bitNo))
                     return false;
                 unsigned childIndex = childIndexForBitNumber(bitNo);
@@ -485,10 +477,10 @@ namespace fleece {
             return isMutable() ? ((MLeafNode*)_asMutable())->_hash : _asImmutable()->leaf.hash();
         }
 
-        bool NodeRef::matches(const MTarget &target) const {
+        bool NodeRef::matches(Target target) const {
             assert(isLeaf());
             return isMutable() ? ((MLeafNode*)_asMutable())->matches(target)
-                               : _asImmutable()->leaf.matches(target._key);
+                               : _asImmutable()->leaf.matches(target.key);
         }
 
         void NodeRef::dump(ostream &out, unsigned indent) {
@@ -518,7 +510,7 @@ namespace fleece {
 
     MHashTree::~MHashTree() {
         if (_root)
-            _root->freeChildren();
+            _root->deleteTree();
     }
 
     unsigned MHashTree::count() const {
@@ -530,15 +522,15 @@ namespace fleece {
             return 0;
     }
 
-    Val MHashTree::get(const Key &key) const {
+    const Value* MHashTree::get(slice key) const {
         if (_root) {
-            hash_t hash = key.hash();
-            NodeRef leaf = _root->findNearest(hash);
+            Target target(key);
+            NodeRef leaf = _root->findNearest(target.hash);
             if (leaf) {
                 if (leaf.isMutable()) {
                     auto mleaf = (MLeafNode*)leaf.asMutable();
-                    if (mleaf->matches(hash, key))
-                        return mleaf->_val;
+                    if (mleaf->matches(target))
+                        return mleaf->_value;
                 } else {
                     if (leaf.asImmutable()->leaf.matches(key))
                         return leaf.asImmutable()->leaf.value();
@@ -550,19 +542,19 @@ namespace fleece {
         return nullptr;
     }
 
-    void MHashTree::insert(const Key &key, Val val) {
+    void MHashTree::insert(slice key, const Value* val) {
         if (!_root)
-            _root.reset( MInteriorNode::newRoot(_imRoot) );
-        _root->insert(MTarget(key), val, 0);
+            _root = MInteriorNode::newRoot(_imRoot);
+        _root->insert(Target(key), val, 0);
     }
 
-    bool MHashTree::remove(const Key &key) {
+    bool MHashTree::remove(slice key) {
         if (!_root) {
             if (!_imRoot)
                 return false;
-            _root.reset( MInteriorNode::newRoot(_imRoot) );
+            _root = MInteriorNode::newRoot(_imRoot);
         }
-        return _root->remove(MTarget(key), 0);
+        return _root->remove(Target(key), 0);
     }
 
     offset MHashTree::writeTo(Writer &writer) {

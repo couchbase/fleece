@@ -7,6 +7,7 @@
 //
 
 #include "HashTree.hh"
+#include "HashTree+Internal.hh"
 #include "Bitmap.hh"
 #include "Endian.hh"
 #include <algorithm>
@@ -28,10 +29,11 @@ namespace fleece {
 
         void Leaf::dump(std::ostream &out) const {
             char str[30];
-            sprintf(str, " [%08x]", hash());
+            sprintf(str, " (%08x)", hash());
             out << str;
         }
 
+        
         bitmap_t Interior::bitmap() const     {return _decLittle32(_bitmap);}
 
         bool Interior::hasChild(unsigned bitNo) const {return asBitmap(bitmap()).containsBit(bitNo);}
@@ -104,10 +106,9 @@ namespace fleece {
         return (const Interior*)this;
     }
 
-    const Value* HashTree::get(Key key) const {
+    const Value* HashTree::get(slice key) const {
         auto root = getRoot();
-        hash_t hash = (hash_t)std::hash<Key>()(key);
-        auto leaf = root->findNearest(hash);
+        auto leaf = root->findNearest(key.hash());
         if (leaf && leaf->keyString() == key)
             return leaf->value();
         return nullptr;
@@ -118,10 +119,9 @@ namespace fleece {
     }
 
     void HashTree::dump(ostream &out) const {
-        out << "HashTree {";
-        out << "\n";
+        out << "HashTree [\n";
         getRoot()->dump(out);
-        out << "}\n";
+        out << "]\n";
     }
 
 }

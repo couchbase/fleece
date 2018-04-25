@@ -235,6 +235,7 @@
 		2770153F1D5A3B2C008BADD7 /* encode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = encode.h; sourceTree = "<group>"; };
 		277015401D5A63B9008BADD7 /* CHANGELOG */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CHANGELOG; sourceTree = "<group>"; };
 		277015411D5A64B4008BADD7 /* AUTHORS */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = AUTHORS; sourceTree = "<group>"; };
+		2776AA702090EF05004ACE85 /* HashTree+Internal.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "HashTree+Internal.hh"; sourceTree = "<group>"; };
 		277F45AE208E871000A0D159 /* HashTree.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HashTree.hh; sourceTree = "<group>"; };
 		277F45AF208E871000A0D159 /* HashTree.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = HashTree.cc; sourceTree = "<group>"; };
 		277F45B3208E9A9100A0D159 /* Bitmap.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Bitmap.hh; sourceTree = "<group>"; };
@@ -370,6 +371,7 @@
 				27298E761C00FB48000CFBA8 /* JSONConverter.hh */,
 				27E3DD401DB6A14200F2872D /* SharedKeys.cc */,
 				27E3DD411DB6A14200F2872D /* SharedKeys.hh */,
+				277F45B2208E9A6700A0D159 /* Tree */,
 				270FA28D1BF53FB0005DCB13 /* Utilities */,
 			);
 			path = Fleece;
@@ -401,8 +403,8 @@
 				27FE87F21E53E43200C5CF3F /* JSONEncoder.hh */,
 				276D15441E007D3000543B1B /* JSON5.cc */,
 				276D15451E007D3000543B1B /* JSON5.hh */,
+				277F45B3208E9A9100A0D159 /* Bitmap.hh */,
 				273483F71DDA59B900B27A8C /* Fleece.pch */,
-				277F45B2208E9A6700A0D159 /* Tree */,
 			);
 			name = Utilities;
 			sourceTree = "<group>";
@@ -492,9 +494,9 @@
 		277F45B2208E9A6700A0D159 /* Tree */ = {
 			isa = PBXGroup;
 			children = (
-				277F45B3208E9A9100A0D159 /* Bitmap.hh */,
 				277F45AE208E871000A0D159 /* HashTree.hh */,
 				277F45AF208E871000A0D159 /* HashTree.cc */,
+				2776AA702090EF05004ACE85 /* HashTree+Internal.hh */,
 				27C8DF052084102900A99BFC /* MHashTree.hh */,
 				27C8DF062084102900A99BFC /* MHashTree.cc */,
 			);

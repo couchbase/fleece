@@ -6,25 +6,73 @@
 //
 
 #include "FleeceTests.hh"
+#include "Fleece.hh"
 #include "MHashTree.hh"
 #include "Writer.hh"
 
 using namespace fleece;
 
-TEST_CASE("Empty MHashTree", "[MHashTree]") {
+
+class HashTreeTests {
+public:
     MHashTree tree;
+    std::vector<alloc_slice> keys;
+    const Array* values;
+    alloc_slice _valueBuf;
+
+    void createItems(size_t N) {
+        Encoder enc;
+        enc.beginArray(N);
+        for (size_t i = 0; i < N; i++)
+            enc.writeInt(i + 1);
+        enc.endArray();
+        _valueBuf = enc.extractOutput();
+        values = Value::fromTrustedData(_valueBuf)->asArray();
+
+        keys.resize(N);
+        for (size_t i = 0; i < N; i++) {
+            char buf[100];
+            sprintf(buf, "Key %zu, %zu", i, i*i);
+            keys[i] = alloc_slice(buf);
+        }
+    }
+
+    void insertItems(bool verbose= false, bool check =false) {
+        const size_t N = keys.size();
+        for (size_t i = 0; i < N; i++) {
+            if (verbose)
+                std::cerr << "\n##### Inserting #" << (i+1)
+                          << ", " << std::hex << keys[i].hash() << "\n";
+            tree.insert(keys[i], values->get(uint32_t(i)));
+            if (verbose)
+                tree.dump(std::cerr);
+            if (check) {
+                CHECK(tree.count() == i + 1);
+                for (ssize_t j = i; j >= 0; --j)
+                    CHECK(tree.get(keys[j]) == values->get(uint32_t(i)));
+            }
+        }
+    }
+
+};
+
+
+#pragma mark - TEST CASES:
+
+
+
+TEST_CASE_METHOD(HashTreeTests, "Empty MHashTree", "[HashTree]") {
     CHECK(tree.count() == 0);
     CHECK(tree.get(alloc_slice("foo")) == 0);
     CHECK(!tree.remove(alloc_slice("foo")));
 }
 
 
-TEST_CASE("Tiny MHashTree Insert", "[MHashTree]") {
+TEST_CASE_METHOD(HashTreeTests, "Tiny MHashTree Insert", "[HashTree]") {
     auto key = alloc_slice("foo");
     auto val = (const Value*)123;
-
-    MHashTree tree;
     tree.insert(key, val);
+
     CHECK(tree.get(key) == val);
     CHECK(tree.count() == 1);
 
@@ -32,41 +80,21 @@ TEST_CASE("Tiny MHashTree Insert", "[MHashTree]") {
 }
 
 
-TEST_CASE("Bigger MHashTree Insert", "[MHashTree]") {
+TEST_CASE_METHOD(HashTreeTests, "Bigger MHashTree Insert", "[HashTree]") {
     static constexpr int N = 1000;
-    std::vector<alloc_slice> keys(N);
-    std::vector<const Value*> values(N);
-    
+    createItems(N);
+    insertItems();
     for (int i = 0; i < N; i++) {
-        char buf[100];
-        sprintf(buf, "Key %d, squared is %d", i, i*i);
-        keys[i] = alloc_slice(buf);
-        values[i] = (const Value*)size_t(1+i);
-    }
-
-    MHashTree tree;
-    for (unsigned i = 0; i < N; i++) {
-//        std::cerr << "\n##### Inserting #" << (i+1) << ", " << std::hex << keys[i].hash() << "\n";
-        tree.insert(keys[i], values[i]);
-//        tree.dump(std::cerr);
-        CHECK(tree.count() == i + 1);
-#if 0
-        for (int j = i; j >= 0; --j)
-            CHECK(tree.get(keys[j]) == values[j]);
-#endif
-    }
-    for (int i = 0; i < N; i++) {
-        CHECK(tree.get(keys[i]) == values[i]);
+        CHECK(tree.get(keys[i]) == values->get(uint32_t(i)));
     }
     tree.dump(std::cerr);
 }
 
 
-TEST_CASE("Tiny MHashTree Remove", "[MHashTree]") {
+TEST_CASE_METHOD(HashTreeTests, "Tiny MHashTree Remove", "[HashTree]") {
     auto key = alloc_slice("foo");
     auto val = (const Value*)123;
 
-    MHashTree tree;
     tree.insert(key, val);
     CHECK(tree.remove(key));
     CHECK(tree.get(key) == 0);
@@ -74,43 +102,31 @@ TEST_CASE("Tiny MHashTree Remove", "[MHashTree]") {
 }
 
 
-TEST_CASE("Bigger MHashTree Remove", "[MHashTree]") {
+TEST_CASE_METHOD(HashTreeTests, "Bigger MHashTree Remove", "[HashTree]") {
     static constexpr int N = 10000;
-    std::vector<alloc_slice> keys(N);
-    std::vector<const Value*> values(N);
+    createItems(N);
+    insertItems();
 
-    for (int i = 0; i < N; i++) {
-        char buf[100];
-        sprintf(buf, "Key %d, squared is %d", i, i*i);
-        keys[i] = alloc_slice(buf);
-        values[i] = (const Value*)size_t(1+i);
-    }
-
-    MHashTree tree;
-    for (int i = 0; i < N; i++) {
-        tree.insert(keys[i], values[i]);
-    }
     for (int i = 0; i < N; i += 3) {
         tree.remove(keys[i]);
     }
     for (int i = 0; i < N; i++) {
-        CHECK(tree.get(keys[i]) == ((i%3) ? values[i] : 0));
+        CHECK(tree.get(keys[i]) == ((i%3) ? values->get(uint32_t(i)) : nullptr));
     }
     CHECK(tree.count() == N - 1 - (N / 3));
 }
 
 
-TEST_CASE("Tiny MHashTree Write", "[MHashTree]") {
-    auto key = alloc_slice("foo");
-    auto val = (const Value*)123;
-
-    MHashTree mtree;
-    mtree.insert(key, val);
+TEST_CASE_METHOD(HashTreeTests, "Tiny MHashTree Write", "[HashTree]") {
+    createItems(10);
+    auto key = keys[8];
+    auto val = values->get(8);
+    tree.insert(key, val);
 
     Writer w;
-    auto offset = mtree.writeTo(w);
+    auto offset = tree.writeTo(w);
     alloc_slice data = w.extractOutput();
-    REQUIRE(data.size == 22); // could change if encoding changes
+    REQUIRE(data.size == 28); // could change if encoding changes
     std::cerr << "Data: " << data.hexString()
               << "\noffset = " << offset << " of " << data.size << "\n";
 
@@ -118,35 +134,56 @@ TEST_CASE("Tiny MHashTree Write", "[MHashTree]") {
     const HashTree *tree = HashTree::fromData(data);
     CHECK(tree->count() == 1);
     auto value = tree->get(key);
-    CHECK(value->asInt() == 123);
+    REQUIRE(value);
+    CHECK(value->asInt() == 9);
 }
 
 
-TEST_CASE("Bigger MHashTree Write", "[MHashTree]") {
+TEST_CASE_METHOD(HashTreeTests, "Bigger MHashTree Write", "[HashTree]") {
     static constexpr int N = 100;
-    std::vector<alloc_slice> keys(N);
-    std::vector<const Value*> values(N);
-
-    for (int i = 0; i < N; i++) {
-        char buf[100];
-        sprintf(buf, "Key %d, squared is %d", i, i*i);
-        keys[i] = alloc_slice(buf);
-        values[i] = (const Value*)size_t(1+i);
-    }
-
-    MHashTree mtree;
-    for (int i = 0; i < N; i++) {
-        mtree.insert(keys[i], values[i]);
-    }
+    createItems(N);
+    insertItems();
 
     Writer w;
-    auto offset = mtree.writeTo(w);
+    auto offset = tree.writeTo(w);
+    alloc_slice data = w.extractOutput();
+//    std::cerr << "Data: " << data.hexString() << "\noffset = " << offset << " of " << data.size << "\n";
+
+    // Now read it as an immutable HashTree:
+    const HashTree *itree = HashTree::fromData(data);
+    CHECK(itree->count() == N);
+}
+
+
+TEST_CASE_METHOD(HashTreeTests, "Tiny HashTree Mutate", "[HashTree]") {
+    createItems(10);
+    tree.insert(keys[9], values->get(9));
+
+    Writer w;
+    auto offset = tree.writeTo(w);
     alloc_slice data = w.extractOutput();
     std::cerr << "Data: " << data.hexString()
     << "\noffset = " << offset << " of " << data.size << "\n";
 
-    // Now read it as an immutable HashTree:
-    const HashTree *tree = HashTree::fromData(data);
-    CHECK(tree->count() == N);
+    const HashTree *itree = HashTree::fromData(data);
+    itree->dump(std::cerr);
 
+    // Wrap in a MHashTree and get the key:
+    MHashTree tree2(itree);
+    
+    tree2.dump(std::cerr);
+    CHECK(tree2.count() == 1);
+    auto value = tree2.get(keys[9]);
+    REQUIRE(value);
+    CHECK(value->isInteger());
+    CHECK(value->asInt() == 10);
+
+    // Modify the value for the key:
+    tree2.insert(keys[9], values->get(3));
+
+    tree2.dump(std::cerr);
+    CHECK(tree2.count() == 1);
+    value = tree2.get(keys[9]);
+    REQUIRE(value);
+    CHECK(value->asInt() == 4);
 }

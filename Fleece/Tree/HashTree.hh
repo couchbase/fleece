@@ -9,96 +9,21 @@
 #pragma once
 #include "slice.hh"
 #include "Value.hh"
-#include <memory>
 
 namespace fleece {
 
     namespace hashtree {
-        using hash_t = uint32_t;
-        using bitmap_t = uint32_t;
-        static constexpr int kBitShift = 5;                      // must be log2(8*sizeof(bitmap_t))
-        static constexpr int kMaxChildren = 1 << kBitShift;
-        static_assert(sizeof(bitmap_t) == kMaxChildren / 8, "Wrong constants");
-
-        using offset = uint32_t;
-
-        struct endian {
-            uint8_t bytes[4];
-
-            endian(offset o) {
-                o = _encLittle32(o);
-                memcpy(bytes, &o, sizeof(bytes));
-            }
-
-            operator offset() const {
-                offset o;
-                memcpy(&o, bytes, sizeof(o));
-                return _decLittle32(o);
-            }
-        };
-
-        union Node;
+        class Interior;
         class MInteriorNode;
-
-
-        // Internal class representing a leaf node
-        class Leaf {
-        public:
-            const Value* key() const;
-            const Value* value() const;
-            slice keyString() const;
-
-            hash_t hash() const             {return keyString().hash();}
-
-            bool matches(slice key) const   {return keyString() == key;}
-
-            void dump(std::ostream&) const;
-        private:
-            endian _keyOffset;
-            endian _valueOffset;
-
-            friend union Node;
-        };
-
-
-        // Internal class representing an interior node
-        struct Interior {
-        public:
-            const Leaf* findNearest(hash_t hash) const;
-            unsigned leafCount() const;
-
-            unsigned childCount() const;
-            const Node* childAtIndex(int i) const;
-            bool hasChild(unsigned bitNo) const;
-            const Node* childForBitNumber(unsigned bitNo) const;
-
-            bitmap_t bitmap() const;
-
-            void dump(std::ostream&, unsigned indent) const;
-
-        private:
-            endian _bitmap;
-            endian _childrenOffset;
-        };
-
-
-        union Node {
-            Leaf leaf;
-            Interior interior;
-
-            bool isLeaf() const                 {return (leaf._valueOffset & 1) != 0;}
-        };
     }
 
 
     /** The root of an immutable tree encoded alongside Fleece data. */
     class HashTree {
     public:
-        using Key = slice;
-
         static const HashTree* fromData(slice data);
 
-        const Value* get(Key) const;
+        const Value* get(slice) const;
 
         unsigned count() const;
 

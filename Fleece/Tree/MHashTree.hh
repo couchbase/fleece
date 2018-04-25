@@ -7,7 +7,6 @@
 #pragma once
 #include "HashTree.hh"
 #include "slice.hh"
-#include <memory>
 
 namespace fleece {
     class Writer;
@@ -18,17 +17,14 @@ namespace fleece {
 
     class MHashTree {
     public:
-        using Key = alloc_slice;
-        using Val = const Value*;
-
         MHashTree();
         MHashTree(const HashTree*);
         ~MHashTree();
 
-        void insert(const Key&, Val);
-        bool remove(const Key&);
+        void insert(slice key, const Value*);
+        bool remove(slice key);
 
-        Val get(const Key&) const;
+        const Value* get(slice key) const;
 
         unsigned count() const;
 
@@ -38,6 +34,6 @@ namespace fleece {
 
     private:
         const HashTree* _imRoot {nullptr};
-        std::unique_ptr<hashtree::MInteriorNode> _root;
+        hashtree::MInteriorNode* _root {nullptr};
     };
 }
