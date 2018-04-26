@@ -9,7 +9,7 @@
 #include "HashTree.hh"
 #include "HashTree+Internal.hh"
 #include "Bitmap.hh"
-#include "Writer.hh"
+#include "Encoder.hh"
 #include <algorithm>
 #include <ostream>
 #include <string>
@@ -109,23 +109,11 @@ namespace fleece {
                 return _hash == target.hash && _key == target.key;
             }
 
-            pair<offset,offset> writeTo(Writer &writer) {
-                // Write key:
-                auto keyPos = writer.length();
-                assert(_key.size < 16);
-                uint8_t header = 0x40 | (_key.size & 0x0F);     //FIX: Fake Fleece string header
-                writer.write(&header, 1);
-                writer.write(_key);
-                writer.padToEvenLength();
-
-                // Write value (just as an integer for now) //FIX
-                auto valPos = writer.length();
-                assert(_value->isInteger());
-                auto val = _value->asInt();
-                assert(val >= -0x7FF && val <= 0x7FF);
-                uint8_t buf[2] = { uint8_t(val >> 8), uint8_t(val & 0xFF) };    //FIX: Fake Fleece int
-                writer.write(buf, sizeof(buf));
-
+            pair<offset,offset> writeTo(Encoder &enc) {
+                enc.writeString(_key);
+                auto keyPos = enc.finishItem();
+                enc.writeValue(_value);
+                auto valPos = enc.finishItem();
                 return {offset(keyPos), offset(valPos)};
             }
 
@@ -286,7 +274,7 @@ namespace fleece {
             }
 
 
-            pair<offset,offset> writeTo(Writer &writer) {
+            pair<offset,offset> writeTo(Encoder &enc) {
                 unsigned n = childCount();
                 pair<offset,offset> children[n];
 
@@ -295,16 +283,16 @@ namespace fleece {
                     auto child = _children[i];
                     if (child.isMutable()) {
                         if (child.isLeaf())
-                            children[i] = ((MLeafNode*)child.asMutable())->writeTo(writer);
+                            children[i] = ((MLeafNode*)child.asMutable())->writeTo(enc);
                         else
-                            children[i] = ((MInteriorNode*)child.asMutable())->writeTo(writer);
+                            children[i] = ((MInteriorNode*)child.asMutable())->writeTo(enc);
                     } else {
                         abort(); //TODO
                     }
                 }
 
                 // Convert positions into offsets:
-                const auto childrenPos = writer.length();
+                const auto childrenPos = enc.nextWritePos();
                 auto curPos = childrenPos;
                 for (unsigned i = 0; i < n; ++i) {
                     if (_children[i].isLeaf())
@@ -313,7 +301,7 @@ namespace fleece {
                         MInteriorNode::encodeOffsets(children[i], curPos);
                     curPos += sizeof(children[i]);
                 }
-                writer.write(children, n * sizeof(children[0]));
+                enc.writeRaw({children, n * sizeof(children[0])});
 
                 return {bitmap_t(_bitmap), childrenPos};
             }
@@ -323,11 +311,11 @@ namespace fleece {
                 encodeOffset(offsets.second, curPos);
             }
 
-            offset writeRootTo(Writer &writer) {
-                auto offsets = writeTo(writer);
-                size_t curPos = writer.length();
+            offset writeRootTo(Encoder &enc) {
+                auto offsets = writeTo(enc);
+                size_t curPos = enc.nextWritePos();
                 encodeOffsets(offsets, curPos);
-                writer.write(&offsets, sizeof(offsets));
+                enc.writeRaw({&offsets, sizeof(offsets)});
                 return offset(curPos);
             }
 
@@ -561,9 +549,9 @@ namespace fleece {
         return _root->remove(Target(key), 0);
     }
 
-    offset MHashTree::writeTo(Writer &writer) {
+    offset MHashTree::writeTo(Encoder &enc) {
         if (_root)
-            return _root->writeRootTo(writer);
+            return _root->writeRootTo(enc);
         else
             abort(); //TODO
     }

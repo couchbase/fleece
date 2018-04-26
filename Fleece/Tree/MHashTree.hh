@@ -9,7 +9,7 @@
 #include "slice.hh"
 
 namespace fleece {
-    class Writer;
+    class Encoder;
     namespace hashtree {
         class MInteriorNode;
     }
@@ -31,7 +31,7 @@ namespace fleece {
 
         unsigned count() const;
 
-        uint32_t writeTo(Writer&);
+        uint32_t writeTo(Encoder&);
 
         void dump(std::ostream &out);
 

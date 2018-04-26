@@ -8,7 +8,7 @@
 #include "FleeceTests.hh"
 #include "Fleece.hh"
 #include "MHashTree.hh"
-#include "Writer.hh"
+#include "Encoder.hh"
 
 using namespace fleece;
 
@@ -140,9 +140,9 @@ TEST_CASE_METHOD(HashTreeTests, "Tiny MHashTree Write", "[HashTree]") {
     auto val = values->get(8);
     tree.insert(key, val);
 
-    Writer w;
-    auto offset = tree.writeTo(w);
-    alloc_slice data = w.extractOutput();
+    Encoder enc;
+    auto offset = tree.writeTo(enc);
+    alloc_slice data = enc.extractOutput();
     REQUIRE(data.size == 30); // could change if encoding changes
     std::cerr << "Data: " << data.hexString()
               << "\noffset = " << offset << " of " << data.size << "\n";
@@ -162,9 +162,9 @@ TEST_CASE_METHOD(HashTreeTests, "Bigger MHashTree Write", "[HashTree]") {
     createItems(N);
     insertItems();
 
-    Writer w;
-    auto offset = tree.writeTo(w);
-    alloc_slice data = w.extractOutput();
+    Encoder enc;
+    auto offset = tree.writeTo(enc);
+    alloc_slice data = enc.extractOutput();
 //    std::cerr << "Data: " << data.hexString() << "\noffset = " << offset << " of " << data.size << "\n";
 
     // Now read it as an immutable HashTree:
@@ -177,9 +177,9 @@ TEST_CASE_METHOD(HashTreeTests, "Tiny HashTree Mutate", "[HashTree]") {
     createItems(10);
     tree.insert(keys[9], values->get(9));
 
-    Writer w;
-    auto offset = tree.writeTo(w);
-    alloc_slice data = w.extractOutput();
+    Encoder enc;
+    auto offset = tree.writeTo(enc);
+    alloc_slice data = enc.extractOutput();
 
     const HashTree *itree = HashTree::fromData(data);
     itree->dump(std::cerr);
@@ -209,9 +209,9 @@ TEST_CASE_METHOD(HashTreeTests, "Bigger HashTree Mutate by replacing", "[HashTre
     createItems(100);
     insertItems(100);
 
-    Writer w;
-    auto offset = tree.writeTo(w);
-    alloc_slice data = w.extractOutput();
+    Encoder enc;
+    auto offset = tree.writeTo(enc);
+    alloc_slice data = enc.extractOutput();
 
     const HashTree *itree = HashTree::fromData(data);
     itree->dump(std::cerr);
@@ -241,9 +241,9 @@ TEST_CASE_METHOD(HashTreeTests, "Bigger HashTree Mutate by inserting", "[HashTre
     createItems(20);
     insertItems(10);
 
-    Writer w;
-    auto offset = tree.writeTo(w);
-    alloc_slice data = w.extractOutput();
+    Encoder enc;
+    auto offset = tree.writeTo(enc);
+    alloc_slice data = enc.extractOutput();
     const HashTree *itree = HashTree::fromData(data);
     tree = itree;
     checkTree(10);

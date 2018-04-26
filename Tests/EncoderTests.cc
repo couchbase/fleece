@@ -818,6 +818,75 @@ public:
         REQUIRE(name->asString() == slice("Marva Morse"));
     }
 
+    TEST_CASE_METHOD(EncoderTests, "Multi-Item", "[Encoder]") {
+        enc.suppressTrailer();
+        size_t pos[10];
+        unsigned n = 0;
+
+        enc.beginDictionary();
+        enc.writeKey("foo");
+        enc.writeInt(17);
+        enc.endDictionary();
+        pos[n++] = enc.finishItem();
+
+        enc.beginDictionary();
+        enc.writeKey("bar");
+        enc.writeInt(123456789);
+        enc.endDictionary();
+        pos[n++] = enc.finishItem();
+
+        enc.beginArray();
+        enc.writeBool(false);
+        enc.writeBool(true);
+        enc.endArray();
+        pos[n++] = enc.finishItem();
+
+        enc.writeString("LOL BUTTS"_sl);
+        pos[n++] = enc.finishItem();
+
+        enc.writeString("X"_sl);
+        pos[n++] = enc.finishItem();
+
+        enc.writeInt(17);
+        pos[n++] = enc.finishItem();
+
+        endEncoding();
+        pos[n] = result.size;
+        for (unsigned i = 0; i < n; i++)
+            CHECK(pos[i] < pos[i+1]);
+        CHECK(result.size == pos[n-1] + 2);
+
+        auto dict = (const Dict*)&result[pos[0]];
+        REQUIRE(dict->type() == kDict);
+        CHECK(dict->count() == 1);
+        REQUIRE(dict->get("foo"_sl));
+        CHECK(dict->get("foo"_sl)->asInt() == 17);
+
+        dict = (const Dict*)&result[pos[1]];
+        REQUIRE(dict->type() == kDict);
+        CHECK(dict->count() == 1);
+        REQUIRE(dict->get("bar"_sl));
+        CHECK(dict->get("bar"_sl)->asInt() == 123456789);
+
+        auto array = (const Array*)&result[pos[2]];
+        REQUIRE(array->type() == kArray);
+        REQUIRE(array->count() == 2);
+        CHECK(array->get(0)->type() == kBoolean);
+        CHECK(array->get(1)->type() == kBoolean);
+
+        auto str = (const Value*)&result[pos[3]];
+        REQUIRE(str->type() == kString);
+        CHECK(str->asString() == "LOL BUTTS"_sl);
+
+        str = (const Value*)&result[pos[4]];
+        REQUIRE(str->type() == kString);
+        CHECK(str->asString() == "X"_sl);
+
+        auto num = (const Value*)&result[pos[5]];
+        REQUIRE(num->type() == kNumber);
+        CHECK(num->asInt() == 17);
+    }
+
 #pragma mark - KEY TREE:
 
     TEST_CASE_METHOD(EncoderTests, "KeyTree", "[Encoder]") {

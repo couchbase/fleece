@@ -52,7 +52,7 @@ namespace fleece {
         throwIf(_stackDepth > 1, EncodeError, "unclosed array/dict");
         throwIf(_items->size() > 1, EncodeError, "top level must have only one value");
 
-        if (_items->size() > 0) {
+        if (_trailer && !_items->empty()) {
             checkPointerWidths(_items, nextWritePos());
             fixPointers(_items);
             Value &root = (*_items)[0];
@@ -71,6 +71,25 @@ namespace fleece {
         _stackDepth = 0;
     }
 
+    size_t Encoder::finishItem() {
+        throwIf(_stackDepth > 1, EncodeError, "unclosed array/dict");
+        throwIf(!_items || _items->empty(), EncodeError, "No item to end");
+
+        size_t itemPos;
+        const Value *item = &(*_items)[0];
+        if (item->isPointer()) {
+            itemPos = item->pointerValue<true>() - _base.size;
+        } else {
+            itemPos = nextWritePos();
+            _out.write(item, (_items->wide ? kWide : kNarrow));
+        }
+        _items->clear();
+        _items = nullptr;
+        _stackDepth = 0;
+        push(kSpecialTag, 1);
+        return itemPos;
+    }
+
     alloc_slice Encoder::extractOutput() {
         end();
         alloc_slice out = _out.extractOutput();
@@ -82,7 +101,10 @@ namespace fleece {
     // Returns position in the stream of the next write. Pads stream to even pos if necessary.
     size_t Encoder::nextWritePos() {
         size_t pos = _out.length();
-        assert(pos % 2 == 0); // encoded values should already be padded to even length
+        if (pos & 1) {
+            _out.write("\0"_sl);
+            pos++;
+        }
         return pos;
     }
 

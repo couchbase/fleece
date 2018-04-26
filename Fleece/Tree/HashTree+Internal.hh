@@ -15,7 +15,7 @@
 namespace fleece { namespace hashtree {
 
     /*
-         Data format:
+        Data format:
 
         Interior Node:                  Leaf Node:
             bitmap   [4-byte int]          key   [4-byte offset]

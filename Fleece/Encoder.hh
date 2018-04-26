@@ -142,9 +142,11 @@ namespace fleece {
         Encoder& operator<< (const Value *v NONNULL)    {writeValue(v); return *this;}
 
 
-        // Present only for API compatibility with JSONEncoder:
-        void writeRaw(slice s)                  {FleeceException::_throw(InvalidData,
-                                                     "Cannot write raw data to Fleece encoder");}
+        // For advanced use cases only... be careful!
+        void suppressTrailer()                  {_trailer = false;}
+        void writeRaw(slice s)                  {_out.write(s);}
+        size_t nextWritePos();
+        size_t finishItem();
 
     private:
         // Stores the pending values to be written to an in-progress array/dict
@@ -172,7 +174,6 @@ namespace fleece {
         slice _writeString(slice);
         void addingKey();
         void addedKey(slice str);
-        size_t nextWritePos();
         void sortDict(valueArray &items);
         void checkPointerWidths(valueArray *items NONNULL, size_t writePos);
         void fixPointers(valueArray *items NONNULL);
@@ -195,6 +196,7 @@ namespace fleece {
         bool _sortKeys      {true};  // Should dictionary keys be sorted?
         bool _writingKey    {false}; // True if Value being written is a key
         bool _blockedOnKey  {false}; // True if writes should be refused
+        bool _trailer       {true};  // Write standard trailer at end?
 
         friend class EncoderTests;
 #ifndef NDEBUG
