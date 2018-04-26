@@ -10,6 +10,7 @@
 #include "slice.hh"
 #include "Value.hh"
 #include "Bitmap.hh"
+#include "Encoder.hh"
 #include <memory>
 
 namespace fleece { namespace hashtree {
@@ -72,6 +73,27 @@ namespace fleece { namespace hashtree {
         bool matches(slice key) const   {return keyString() == key;}
 
         void dump(std::ostream&, unsigned indent) const;
+
+        uint32_t keyOffset() const             {return _keyOffset;}
+        uint32_t valueOffset() const           {return _keyOffset;}
+
+        Leaf(uint32_t keyPos, uint32_t valuePos)
+        :_keyOffset(keyPos)
+        ,_valueOffset(valuePos)
+        { }
+
+        void makeRelativeTo(uint32_t pos) {
+            _keyOffset = pos - _keyOffset;
+            _valueOffset = (pos - _valueOffset) | 1;
+        }
+
+        Leaf makeAbsolute(uint32_t pos) const {
+            return Leaf(pos - _keyOffset, pos - (_valueOffset & ~1));
+        }
+
+        Leaf writeTo(Encoder&) const;
+
+
     private:
         endian _keyOffset;
         endian _valueOffset;
@@ -95,6 +117,23 @@ namespace fleece { namespace hashtree {
 
         void dump(std::ostream&, unsigned indent) const;
 
+        uint32_t childrenOffset() const             {return _childrenOffset;}
+
+        Interior(bitmap_t bitmap, uint32_t childrenPos)
+        :_bitmap(bitmap)
+        ,_childrenOffset(childrenPos)
+        { }
+        
+        void makeRelativeTo(uint32_t pos) {
+            _childrenOffset = pos - _childrenOffset;
+        }
+
+        Interior makeAbsolute(uint32_t pos) const {
+            return Interior(_bitmap, pos - _childrenOffset);
+        }
+
+        Interior writeTo(Encoder&) const;
+
     private:
         endian _bitmap;
         endian _childrenOffset;
@@ -105,7 +144,9 @@ namespace fleece { namespace hashtree {
         Leaf leaf;
         Interior interior;
 
+        Node() { }
         bool isLeaf() const                 {return (leaf._valueOffset & 1) != 0;}
     };
+    
 } }
 

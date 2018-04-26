@@ -27,6 +27,12 @@ namespace fleece {
         const Value* Leaf::value() const      {return deref(_valueOffset & ~1, Value);}
         slice Leaf::keyString() const         {return deref(_keyOffset, Value)->asString();}
 
+        Leaf Leaf::writeTo(Encoder &enc) const {
+            assert(enc.base()); //TODO
+            auto pos = int32_t((char*)this - (char*)enc.base().end());
+            return makeAbsolute(pos);
+        }
+
         void Leaf::dump(std::ostream &out, unsigned indent) const {
             char hashStr[30];
             sprintf(hashStr, "[%08x ", hash());
@@ -83,6 +89,12 @@ namespace fleece {
                     child->interior.dump(out, indent+1);
             }
             out << " ]";
+        }
+
+        Interior Interior::writeTo(Encoder &enc) const {
+            assert(enc.base()); //TODO
+            auto pos = int32_t((char*)this - (char*)enc.base().end());
+            return makeAbsolute(pos);
         }
 
     }

@@ -71,6 +71,13 @@ public:
         }
     }
 
+    alloc_slice encodeTree() {
+        Encoder enc;
+        enc.suppressTrailer();
+        tree.writeTo(enc);
+        return enc.extractOutput();
+    }
+
 };
 
 
@@ -102,7 +109,7 @@ TEST_CASE_METHOD(HashTreeTests, "Bigger MHashTree Insert", "[HashTree]") {
     static constexpr int N = 1000;
     createItems(N);
     insertItems();
-    tree.dump(std::cerr);
+//    tree.dump(std::cerr);
     checkTree(N);
 }
 
@@ -140,12 +147,9 @@ TEST_CASE_METHOD(HashTreeTests, "Tiny MHashTree Write", "[HashTree]") {
     auto val = values->get(8);
     tree.insert(key, val);
 
-    Encoder enc;
-    auto offset = tree.writeTo(enc);
-    alloc_slice data = enc.extractOutput();
+    alloc_slice data = encodeTree();
     REQUIRE(data.size == 30); // could change if encoding changes
-    std::cerr << "Data: " << data.hexString()
-              << "\noffset = " << offset << " of " << data.size << "\n";
+    std::cerr << data.size << " bytes encoded: " << data.hexString() << "\n";
 
     // Now read it as an immutable HashTree:
     const HashTree *tree = HashTree::fromData(data);
@@ -162,9 +166,7 @@ TEST_CASE_METHOD(HashTreeTests, "Bigger MHashTree Write", "[HashTree]") {
     createItems(N);
     insertItems();
 
-    Encoder enc;
-    auto offset = tree.writeTo(enc);
-    alloc_slice data = enc.extractOutput();
+    alloc_slice data = encodeTree();
 //    std::cerr << "Data: " << data.hexString() << "\noffset = " << offset << " of " << data.size << "\n";
 
     // Now read it as an immutable HashTree:
@@ -177,10 +179,7 @@ TEST_CASE_METHOD(HashTreeTests, "Tiny HashTree Mutate", "[HashTree]") {
     createItems(10);
     tree.insert(keys[9], values->get(9));
 
-    Encoder enc;
-    auto offset = tree.writeTo(enc);
-    alloc_slice data = enc.extractOutput();
-
+    alloc_slice data = encodeTree();
     const HashTree *itree = HashTree::fromData(data);
     itree->dump(std::cerr);
 
@@ -209,17 +208,14 @@ TEST_CASE_METHOD(HashTreeTests, "Bigger HashTree Mutate by replacing", "[HashTre
     createItems(100);
     insertItems(100);
 
-    Encoder enc;
-    auto offset = tree.writeTo(enc);
-    alloc_slice data = enc.extractOutput();
-
+    alloc_slice data = encodeTree();
     const HashTree *itree = HashTree::fromData(data);
-    itree->dump(std::cerr);
+//    itree->dump(std::cerr);
 
     // Wrap in a MHashTree and get the key:
     tree = itree;
 
-    tree.dump(std::cerr);
+//    tree.dump(std::cerr);
     checkTree(100);
 
     for (int i = 0; i < 10; ++i) {
@@ -241,9 +237,7 @@ TEST_CASE_METHOD(HashTreeTests, "Bigger HashTree Mutate by inserting", "[HashTre
     createItems(20);
     insertItems(10);
 
-    Encoder enc;
-    auto offset = tree.writeTo(enc);
-    alloc_slice data = enc.extractOutput();
+    alloc_slice data = encodeTree();
     const HashTree *itree = HashTree::fromData(data);
     tree = itree;
     checkTree(10);
@@ -259,10 +253,45 @@ TEST_CASE_METHOD(HashTreeTests, "Bigger HashTree Mutate by inserting", "[HashTre
     }
 
     for (int i = 0; i <= 5; ++i) {
-        std::cerr << "\n#### Remove " << (3*i + 2) << ":\n";
+//        std::cerr << "\n#### Remove " << (3*i + 2) << ":\n";
         CHECK(tree.remove(keys[3*i + 2]));
-        tree.dump(std::cerr);
+//        tree.dump(std::cerr);
         CHECK(tree.count() == 19 - i);
     }
     tree.dump(std::cerr);
+}
+
+
+TEST_CASE_METHOD(HashTreeTests, "HashTree Re-Encode Delta", "[HashTree]") {
+    static const unsigned N = 100;
+    createItems(N);
+    insertItems(N/2);
+
+    alloc_slice data = encodeTree();
+    const HashTree *itree = HashTree::fromData(data);
+    tree = itree;
+
+    for (unsigned i = N/2; i < N/2 + 5; i++)
+        tree.insert(keys[i], values->get(uint32_t(i)));
+//    for (unsigned i = 0; i < (N-2)/3; ++i)
+//        CHECK(tree.remove(keys[3*i + 2]));
+
+    tree.dump(std::cerr);
+
+    Encoder enc;
+    enc.setBase(data);
+    enc.suppressTrailer();
+    tree.writeTo(enc);
+    alloc_slice delta = enc.extractOutput();
+
+    std::cerr << "Original is " << data.size << " bytes encoded:\t" << data.hexString() << "\n";
+    std::cerr << "Delta is " << delta.size << " bytes encoded:\t" << data.hexString() << "\n";
+
+    alloc_slice total(data.size + delta.size);
+    memcpy((void*)&total[0],         data.buf, data.size);
+    memcpy((void*)&total[data.size], delta.buf, delta.size);
+
+    itree = HashTree::fromData(total);
+    std::cerr << "\nFinal immutable tree:\n";
+    itree->dump(std::cerr);
 }

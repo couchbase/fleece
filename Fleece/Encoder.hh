@@ -147,6 +147,7 @@ namespace fleece {
         void writeRaw(slice s)                  {_out.write(s);}
         size_t nextWritePos();
         size_t finishItem();
+        slice base() const                      {return _base;}
 
     private:
         // Stores the pending values to be written to an in-progress array/dict

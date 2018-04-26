@@ -22,7 +22,7 @@ namespace fleece {
         class MNode;
 
 
-        using offset = uint32_t;
+        using offset_t = int32_t;
 
 
         // Just a key and its hash
@@ -61,6 +61,7 @@ namespace fleece {
             bool isLeaf() const;
             hash_t hash() const;
             bool matches(Target) const;
+            Node writeTo(Encoder &enc);
             void dump(ostream&, unsigned indent) const;
 
         private:
@@ -80,8 +81,9 @@ namespace fleece {
 
             bool isLeaf() const     {return _capacity == 0;}
 
-            static void encodeOffset(offset &o, size_t curPos) {
-                o = _encLittle32(offset(curPos - o));
+            static void encodeOffset(offset_t &o, size_t curPos) {
+                assert((ssize_t)curPos > o);
+                o = _encLittle32(offset_t(curPos - o));
             }
 
         protected:
@@ -109,18 +111,12 @@ namespace fleece {
                 return _hash == target.hash && _key == target.key;
             }
 
-            pair<offset,offset> writeTo(Encoder &enc) {
+            Leaf writeTo(Encoder &enc) {
                 enc.writeString(_key);
                 auto keyPos = enc.finishItem();
                 enc.writeValue(_value);
                 auto valPos = enc.finishItem();
-                return {offset(keyPos), offset(valPos)};
-            }
-
-            static void encodeOffsets(pair<offset,offset> &offsets, size_t curPos) {
-                encodeOffset(offsets.first, curPos);
-                encodeOffset(offsets.second, curPos);
-                *(uint8_t*)&offsets.second |= 1;        // tag to denote a leaf
+                return Leaf(offset_t(keyPos), offset_t(valPos));
             }
 
             void dump(std::ostream &out, unsigned indent) {
@@ -274,49 +270,47 @@ namespace fleece {
             }
 
 
-            pair<offset,offset> writeTo(Encoder &enc) {
+            static offset_t encodeImmutableOffset(const Node *inode, offset_t off, const Encoder &enc) {
+                ssize_t o = (((char*)inode - (char*)enc.base().buf) - off) - enc.base().size;
+                assert(o < 0 && o > INT32_MIN);
+                return offset_t(o);
+            }
+
+
+            Interior writeTo(Encoder &enc) {
                 unsigned n = childCount();
-                pair<offset,offset> children[n];
+                Node nodes[n];
 
-                // Let each interior-node child write its children array:
-                for (unsigned i = 0; i < n; ++i) {
-                    auto child = _children[i];
-                    if (child.isMutable()) {
-                        if (child.isLeaf())
-                            children[i] = ((MLeafNode*)child.asMutable())->writeTo(enc);
-                        else
-                            children[i] = ((MInteriorNode*)child.asMutable())->writeTo(enc);
-                    } else {
-                        abort(); //TODO
-                    }
-                }
+                // Let each (mutable) child node write its data, and collect the child nodes.
+                // The offsets in the Node objects are absolute positions in the encoded output,
+                // except for ones that are bitmaps.
+                for (unsigned i = 0; i < n; ++i)
+                    nodes[i] = _children[i].writeTo(enc);
 
-                // Convert positions into offsets:
-                const auto childrenPos = enc.nextWritePos();
+                // Convert the Nodes' absolute positions into offsets:
+                const offset_t childrenPos = (offset_t)enc.nextWritePos();
                 auto curPos = childrenPos;
                 for (unsigned i = 0; i < n; ++i) {
+                    auto &node = nodes[i];
                     if (_children[i].isLeaf())
-                        MLeafNode::encodeOffsets(children[i], curPos);
+                        node.leaf.makeRelativeTo(curPos);
                     else
-                        MInteriorNode::encodeOffsets(children[i], curPos);
-                    curPos += sizeof(children[i]);
+                        node.interior.makeRelativeTo(curPos);
+                    curPos += sizeof(nodes[i]);
                 }
-                enc.writeRaw({children, n * sizeof(children[0])});
 
-                return {bitmap_t(_bitmap), childrenPos};
+                // Write the list of children, and return its position & my bitmap:
+                enc.writeRaw({nodes, n * sizeof(nodes[0])});
+                return Interior(bitmap_t(_bitmap), childrenPos);
             }
 
-            static void encodeOffsets(pair<offset,offset> &offsets, size_t curPos) {
-                offsets.first = _encLittle32(offsets.first);    // This is a bitmap not an offset!
-                encodeOffset(offsets.second, curPos);
-            }
 
-            offset writeRootTo(Encoder &enc) {
-                auto offsets = writeTo(enc);
-                size_t curPos = enc.nextWritePos();
-                encodeOffsets(offsets, curPos);
-                enc.writeRaw({&offsets, sizeof(offsets)});
-                return offset(curPos);
+            offset_t writeRootTo(Encoder &enc) {
+                auto intNode = writeTo(enc);
+                auto curPos = (offset_t)enc.nextWritePos();
+                intNode.makeRelativeTo(curPos);
+                enc.writeRaw({&intNode, sizeof(intNode)});
+                return offset_t(curPos);
             }
 
 
@@ -435,7 +429,7 @@ namespace fleece {
 
 
             Bitmap<bitmap_t> _bitmap {0};
-            NodeRef _children[0];           // Variable-size array; capacity is _capacity
+            NodeRef _children[0];           // Variable-size array; size is given by _capacity
         };
 
 
@@ -455,6 +449,24 @@ namespace fleece {
             assert(isLeaf());
             return isMutable() ? ((MLeafNode*)_asMutable())->matches(target)
                                : _asImmutable()->leaf.matches(target.key);
+        }
+
+        Node NodeRef::writeTo(Encoder &enc) {
+            Node node;
+            if (isMutable()) {
+                auto mchild = asMutable();
+                if (mchild->isLeaf())
+                    node.leaf = ((MLeafNode*)mchild)->writeTo(enc);
+                else
+                    node.interior = ((MInteriorNode*)mchild)->writeTo(enc);
+            } else {
+                auto ichild = asImmutable();
+                if (ichild->isLeaf())
+                    node.leaf = ichild->leaf.writeTo(enc);
+                else
+                    node.interior = ichild->interior.writeTo(enc);
+            }
+            return node;
         }
 
         void NodeRef::dump(ostream &out, unsigned indent) const {
@@ -549,7 +561,7 @@ namespace fleece {
         return _root->remove(Target(key), 0);
     }
 
-    offset MHashTree::writeTo(Encoder &enc) {
+    uint32_t MHashTree::writeTo(Encoder &enc) {
         if (_root)
             return _root->writeRootTo(enc);
         else
