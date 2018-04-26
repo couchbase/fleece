@@ -152,6 +152,7 @@ TEST_CASE_METHOD(HashTreeTests, "Tiny MHashTree Write", "[HashTree]") {
     CHECK(tree->count() == 1);
     auto value = tree->get(key);
     REQUIRE(value);
+    CHECK(value->isInteger());
     CHECK(value->asInt() == 8);
 }
 

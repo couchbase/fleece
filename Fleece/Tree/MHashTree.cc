@@ -18,16 +18,11 @@ using namespace std;
 
 namespace fleece {
 
-
-    using hash_t = uint32_t;
-    using bitmap_t = Bitmap<uint32_t>;
-    static constexpr unsigned kBitShift = 5;                      // must be log2(8*sizeof(bitmap_t))
-    static constexpr unsigned kMaxChildren = 1 << kBitShift;
-    static_assert(sizeof(bitmap_t) == kMaxChildren / 8, "Wrong constants");
-
-
     namespace hashtree {
         class MNode;
+
+
+        using offset = uint32_t;
 
 
         // Just a key and its hash
@@ -43,11 +38,7 @@ namespace fleece {
         };
 
 
-        static void encodeOffset(offset &o, size_t curPos) {
-            o = _encLittle32(offset(curPos - o));
-        }
-
-        // Pointer to any type of node. Mutable nodes are tagged by setting the LSB.
+        // Holds a pointer to any type of node. Mutable nodes are tagged by setting the LSB.
         class NodeRef {
         public:
             NodeRef()                               :_addr(0) { }
@@ -88,6 +79,10 @@ namespace fleece {
             { }
 
             bool isLeaf() const     {return _capacity == 0;}
+
+            static void encodeOffset(offset &o, size_t curPos) {
+                o = _encLittle32(offset(curPos - o));
+            }
 
         protected:
             uint8_t capacity() const {
@@ -366,7 +361,7 @@ namespace fleece {
                 unsigned level = shift / kBitShift;
                 MInteriorNode* node = newNode(2 + (level<1) + (level<3));
                 unsigned childBitNo = childBitNumber(childLeaf.hash(), shift+kBitShift);
-                node->addChild(childBitNo, childLeaf);
+                node = node->addChild(childBitNo, childLeaf);
                 childLeaf = node; // replace immutable node
                 return node;
             }
@@ -452,11 +447,11 @@ namespace fleece {
 
 
             Bitmap<bitmap_t> _bitmap {0};
-            NodeRef _children[0];  // Actually dynamic array NodeRef[_capacity]
+            NodeRef _children[0];           // Variable-size array; capacity is _capacity
         };
 
 
-#pragma mark - NODEREF
+#pragma mark - NODEREF METHODS
 
 
         bool NodeRef::isLeaf() const {
