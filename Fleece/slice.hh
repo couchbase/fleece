@@ -94,6 +94,8 @@ namespace fleece {
         bool hasPrefix(pure_slice) const noexcept;
         bool hasSuffix(pure_slice) const noexcept;
 
+        bool contains(const void *addr) const noexcept;
+
         slice copy() const;
 
         explicit operator std::string() const;

@@ -28,9 +28,16 @@ namespace fleece {
         slice Leaf::keyString() const         {return deref(_keyOffset, Value)->asString();}
 
         Leaf Leaf::writeTo(Encoder &enc) const {
-            assert(enc.base()); //TODO
-            auto pos = int32_t((char*)this - (char*)enc.base().end());
-            return makeAbsolute(pos);
+            if (enc.base().contains(this)) {
+                auto pos = int32_t((char*)this - (char*)enc.base().end());
+                return makeAbsolute(pos);
+            } else {
+                enc.writeValue(key());
+                auto keyPos = enc.finishItem();
+                enc.writeValue(value());
+                auto valuePos = enc.finishItem();
+                return Leaf(uint32_t(keyPos), uint32_t(valuePos));
+            }
         }
 
         void Leaf::dump(std::ostream &out, unsigned indent) const {
@@ -92,9 +99,33 @@ namespace fleece {
         }
 
         Interior Interior::writeTo(Encoder &enc) const {
-            assert(enc.base()); //TODO
-            auto pos = int32_t((char*)this - (char*)enc.base().end());
-            return makeAbsolute(pos);
+            if (enc.base().contains(this)) {
+                auto pos = int32_t((char*)this - (char*)enc.base().end());
+                return makeAbsolute(pos);
+            } else {
+                //FIX: DRY FAIL: This is nearly identical to MInteriorNode::writeTo()
+                unsigned n = childCount();
+                Node nodes[n];
+                for (unsigned i = 0; i < n; ++i) {
+                    auto child = childAtIndex(i);
+                    if (child->isLeaf())
+                        nodes[i].leaf = child->leaf.writeTo(enc);
+                    else
+                        nodes[i].interior = child->interior.writeTo(enc);
+                }
+                const uint32_t childrenPos = (uint32_t)enc.nextWritePos();
+                auto curPos = childrenPos;
+                for (unsigned i = 0; i < n; ++i) {
+                    auto &node = nodes[i];
+                    if (childAtIndex(i)->isLeaf())
+                        node.leaf.makeRelativeTo(curPos);
+                    else
+                        node.interior.makeRelativeTo(curPos);
+                    curPos += sizeof(nodes[i]);
+                }
+                enc.writeRaw({nodes, n * sizeof(nodes[0])});
+                return Interior(bitmap_t(_bitmap), childrenPos);
+            }
         }
 
     }

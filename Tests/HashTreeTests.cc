@@ -263,18 +263,18 @@ TEST_CASE_METHOD(HashTreeTests, "Bigger HashTree Mutate by inserting", "[HashTre
 
 
 TEST_CASE_METHOD(HashTreeTests, "HashTree Re-Encode Delta", "[HashTree]") {
-    static const unsigned N = 100;
-    createItems(N);
-    insertItems(N/2);
+    static const unsigned N = 50;
+    createItems(2*N);
+    insertItems(N);
 
     alloc_slice data = encodeTree();
     const HashTree *itree = HashTree::fromData(data);
     tree = itree;
 
-    for (unsigned i = N/2; i < N/2 + 5; i++)
+    for (unsigned i = N; i < N + 10; i++)
         tree.insert(keys[i], values->get(uint32_t(i)));
-//    for (unsigned i = 0; i < (N-2)/3; ++i)
-//        CHECK(tree.remove(keys[3*i + 2]));
+    for (unsigned i = 2; i < N + 5; i += 3)
+        CHECK(tree.remove(keys[i]));
 
     tree.dump(std::cerr);
 
@@ -286,6 +286,9 @@ TEST_CASE_METHOD(HashTreeTests, "HashTree Re-Encode Delta", "[HashTree]") {
 
     std::cerr << "Original is " << data.size << " bytes encoded:\t" << data.hexString() << "\n";
     std::cerr << "Delta is " << delta.size << " bytes encoded:\t" << data.hexString() << "\n";
+
+    alloc_slice full = encodeTree();
+    std::cerr << "Full rewrite would be " << full.size << " bytes encoded.\n";
 
     alloc_slice total(data.size + delta.size);
     memcpy((void*)&total[0],         data.buf, data.size);

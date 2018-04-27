@@ -36,6 +36,10 @@ namespace fleece {
         set(s, (uint8_t*)end() - (uint8_t*)s);
     }
 
+    bool pure_slice::contains(const void *addr) const noexcept {
+        return addr >= buf && addr < end();
+    }
+
     int pure_slice::compare(pure_slice b) const noexcept {
         // Optimized for speed
         if (this->size == b.size)

@@ -92,8 +92,7 @@ namespace fleece {
                 return _capacity;
             }
 
-        private:
-            int8_t const _capacity;
+            int8_t _capacity;
         };
 
 
@@ -365,8 +364,11 @@ namespace fleece {
 
             MInteriorNode* grow() {
                 assert(capacity() < kMaxChildren);
-                MInteriorNode* replacement = newNode(capacity() + 1, this);
-                delete this;
+                auto replacement = (MInteriorNode*)realloc(this,
+                                        sizeof(MInteriorNode) + (capacity()+1)*sizeof(NodeRef));
+                if (!replacement)
+                    throw std::bad_alloc();
+                replacement->_capacity++;
                 return replacement;
             }
 
