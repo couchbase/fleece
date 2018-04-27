@@ -45,6 +45,9 @@ namespace fleece {
             NodeRef(MNode* n)                       :_addr(size_t(n) | 1) {assert(n);}
             NodeRef(const Node* n)                  :_addr(size_t(n)) {}
             NodeRef(const Leaf* n)                  :_addr(size_t(n)) {}
+            NodeRef(const Interior* n)              :_addr(size_t(n)) {}
+
+            void reset()                            {_addr = 0;}
 
             operator bool () const                  {return _addr != 0;}
 
@@ -61,6 +64,10 @@ namespace fleece {
             bool isLeaf() const;
             hash_t hash() const;
             bool matches(Target) const;
+
+            unsigned childCount() const;
+            NodeRef childAtIndex(unsigned index) const;
+
             Node writeTo(Encoder &enc);
             void dump(ostream&, unsigned indent) const;
 
@@ -138,9 +145,20 @@ namespace fleece {
 
             static MInterior* newRoot(const HashTree *imTree) {
                 if (imTree)
-                    return mutableCopy(imTree->getRoot());
+                    return mutableCopy(imTree->rootNode());
                 else
                     return newNode(kMaxChildren);
+            }
+
+
+            unsigned childCount() const {
+                return _bitmap.bitCount();
+            }
+
+
+            NodeRef childAtIndex(unsigned index) {
+                assert(index < capacity());
+                return _children[index];
             }
 
 
@@ -373,11 +391,6 @@ namespace fleece {
             }
 
 
-            unsigned childCount() const {
-                return _bitmap.bitCount();
-            }
-
-
             static unsigned childBitNumber(hash_t hash, unsigned shift =0)  {
                 return (hash >> shift) & (kMaxChildren - 1);
             }
@@ -452,6 +465,19 @@ namespace fleece {
             return isMutable() ? ((MLeaf*)_asMutable())->matches(target)
                                : _asImmutable()->leaf.matches(target.key);
         }
+
+        unsigned NodeRef::childCount() const {
+            assert(!isLeaf());
+            return isMutable() ? ((MInterior*)_asMutable())->childCount()
+                               : _asImmutable()->interior.childCount();
+        }
+
+        NodeRef NodeRef::childAtIndex(unsigned index) const {
+            assert(!isLeaf());
+            return isMutable() ? ((MInterior*)_asMutable())->childAtIndex(index)
+                               : _asImmutable()->interior.childAtIndex(index);
+        }
+
 
         Node NodeRef::writeTo(Encoder &enc) {
             Node node;
@@ -528,6 +554,15 @@ namespace fleece {
             return 0;
     }
 
+    NodeRef MHashTree::rootNode() const {
+        if (_root)
+            return _root;
+        else if (_imRoot)
+            return _imRoot->rootNode();
+        else
+            return {};
+    }
+
     const Value* MHashTree::get(slice key) const {
         if (_root) {
             Target target(key);
@@ -564,10 +599,14 @@ namespace fleece {
     }
 
     uint32_t MHashTree::writeTo(Encoder &enc) {
-        if (_root)
+        if (_root) {
             return _root->writeRootTo(enc);
-        else
-            abort(); //TODO
+        } else if (_imRoot) {
+            unique_ptr<MInterior> tempRoot( MInterior::newRoot(_imRoot) );
+            return tempRoot->writeRootTo(enc);
+        } else {
+            return 0;
+        }
     }
 
     void MHashTree::dump(std::ostream &out) {
@@ -581,6 +620,92 @@ namespace fleece {
             }
             out << "}\n";
         }
+    }
+
+
+#pragma mark - ITERATOR
+
+
+    namespace hashtree {
+
+        struct iteratorImpl {
+            static constexpr size_t kMaxDepth = (8*sizeof(hash_t) + kBitShift - 1) / kBitShift;
+
+            struct pos {
+                NodeRef parent;         // Always an interior node
+                int index;              // Current child index
+            };
+            NodeRef node;
+            pos current;
+            pos stack[kMaxDepth];
+            unsigned depth;
+
+            iteratorImpl(NodeRef root)
+            :current {root, -1}
+            ,depth {0}
+            { }
+
+            pair<slice,const Value*> next() {
+                while (unsigned(++current.index) >= current.parent.childCount()) {
+                    if (depth > 0) {
+                        // Pop the stack:
+                        current = stack[--depth];
+                    } else {
+                        node.reset();      // at end
+                        return {};
+                    }
+                }
+
+                // Get the current node:
+                while (true) {
+                    node = current.parent.childAtIndex(current.index);
+                    if (node.isLeaf())
+                        break;
+
+                    // If it's an interior node, recurse into its children:
+                    assert(depth < kMaxDepth);
+                    stack[depth++] = current;
+                    current = {node, 0};
+                }
+
+                // Return the current leaf's key/value:
+                if (node.isMutable()) {
+                    auto leaf = ((MLeaf*)node.asMutable());
+                    return {leaf->_key, leaf->_value};
+                } else {
+                    auto &leaf = node.asImmutable()->leaf;
+                    return {leaf.keyString(), leaf.value()};
+                }
+            }
+        };
+
+    }
+
+
+
+    HashTree::iterator::iterator(const MHashTree &tree)
+    :iterator(tree.rootNode())
+    { }
+
+    HashTree::iterator::iterator(const HashTree *tree)
+    :iterator(tree->rootNode())
+    { }
+
+
+    HashTree::iterator::iterator(NodeRef root)
+    :_impl(new iteratorImpl(root))
+    {
+        if (!_impl->current.parent)
+            _value = nullptr;
+        else
+            tie(_key, _value) = _impl->next();
+    }
+
+    HashTree::iterator::~iterator() =default;
+
+    HashTree::iterator& MHashTree::iterator::operator++() {
+        tie(_key, _value) = _impl->next();
+        return *this;
     }
 
 }

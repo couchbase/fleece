@@ -138,12 +138,12 @@ namespace fleece {
     }
 
 
-    const Interior* HashTree::getRoot() const {
+    const Interior* HashTree::rootNode() const {
         return (const Interior*)this;
     }
 
     const Value* HashTree::get(slice key) const {
-        auto root = getRoot();
+        auto root = rootNode();
         auto leaf = root->findNearest(key.hash());
         if (leaf && leaf->keyString() == key)
             return leaf->value();
@@ -151,12 +151,12 @@ namespace fleece {
     }
 
     unsigned HashTree::count() const {
-        return getRoot()->leafCount();
+        return rootNode()->leafCount();
     }
 
     void HashTree::dump(ostream &out) const {
         out << "HashTree [\n";
-        getRoot()->dump(out);
+        rootNode()->dump(out);
         out << "]\n";
     }
 

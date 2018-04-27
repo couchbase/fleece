@@ -7,11 +7,13 @@
 #pragma once
 #include "HashTree.hh"
 #include "slice.hh"
+#include <memory>
 
 namespace fleece {
     class Encoder;
     namespace hashtree {
         class MInterior;
+        class NodeRef;
     }
 
 
@@ -31,12 +33,20 @@ namespace fleece {
 
         unsigned count() const;
 
+        bool isChanged() const                  {return _root != nullptr;}
+
         uint32_t writeTo(Encoder&);
 
         void dump(std::ostream &out);
 
+        using iterator = HashTree::iterator;
+        
     private:
+        hashtree::NodeRef rootNode() const;
+
         const HashTree* _imRoot {nullptr};
         hashtree::MInterior* _root {nullptr};
+
+        friend class HashTree::iterator;
     };
 }

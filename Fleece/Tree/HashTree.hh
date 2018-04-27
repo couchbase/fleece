@@ -12,9 +12,13 @@
 
 namespace fleece {
 
+    class MHashTree;
+
     namespace hashtree {
         class Interior;
         class MInterior;
+        class NodeRef;
+        class iteratorImpl;
     }
 
 
@@ -29,9 +33,27 @@ namespace fleece {
 
         void dump(std::ostream &out) const;
 
+
+        class iterator {
+        public:
+            iterator(const MHashTree&);
+            iterator(const HashTree*);
+            ~iterator();
+            slice key() const noexcept                      {return _key;}
+            const Value* value() const noexcept             {return _value;}
+            explicit operator bool() const noexcept         {return _value != nullptr;}
+            iterator& operator ++();
+        private:
+            iterator(hashtree::NodeRef);
+            std::unique_ptr<hashtree::iteratorImpl> _impl;
+            slice _key;
+            const Value *_value;
+        };
+
     private:
-        const hashtree::Interior* getRoot() const;
+        const hashtree::Interior* rootNode() const;
 
         friend class hashtree::MInterior;
+        friend class MHashTree;
     };
 }
