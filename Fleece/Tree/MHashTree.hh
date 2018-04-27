@@ -11,7 +11,7 @@
 namespace fleece {
     class Encoder;
     namespace hashtree {
-        class MInteriorNode;
+        class MInterior;
     }
 
 
@@ -37,6 +37,6 @@ namespace fleece {
 
     private:
         const HashTree* _imRoot {nullptr};
-        hashtree::MInteriorNode* _root {nullptr};
+        hashtree::MInterior* _root {nullptr};
     };
 }

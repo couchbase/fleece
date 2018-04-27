@@ -14,7 +14,7 @@ namespace fleece {
 
     namespace hashtree {
         class Interior;
-        class MInteriorNode;
+        class MInterior;
     }
 
 
@@ -32,6 +32,6 @@ namespace fleece {
     private:
         const hashtree::Interior* getRoot() const;
 
-        friend class hashtree::MInteriorNode;
+        friend class hashtree::MInterior;
     };
 }

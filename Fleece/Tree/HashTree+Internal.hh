@@ -58,7 +58,7 @@ namespace fleece { namespace hashtree {
 
 
     union Node;
-    class MInteriorNode;
+    class MInterior;
 
 
     // Internal class representing a leaf node
