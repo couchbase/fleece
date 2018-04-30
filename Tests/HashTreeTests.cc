@@ -114,6 +114,11 @@ TEST_CASE_METHOD(HashTreeTests, "Tiny MHashTree Insert", "[HashTree]") {
     CHECK(tree.count() == 1);
 
     tree.dump(cerr);
+
+    // Check that insertion-with-callback passes value to callback and supports failure:
+    const Value *existingVal = nullptr;
+    CHECK(!tree.insert(key, [&](const Value *val) {existingVal = val; return nullptr;}));
+    CHECK(existingVal == val);
 }
 
 

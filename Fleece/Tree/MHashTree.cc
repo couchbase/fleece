@@ -25,9 +25,11 @@ namespace fleece {
         using offset_t = int32_t;
 
 
-        // Just a key and its hash
+        // Specifies an insertion/deletion
         struct Target {
-            explicit Target(slice k) :key(k), hash(k.hash()) { }
+            explicit Target(slice k, MHashTree::InsertCallback *callback =nullptr)
+            :key(k), hash(k.hash()), insertCallback(callback)
+            { }
 
             bool operator== (const Target &b) const {
                 return hash == b.hash && key == b.key;
@@ -35,6 +37,7 @@ namespace fleece {
 
             slice const key;
             hash_t const hash;
+            MHashTree::InsertCallback *insertCallback {nullptr};
         };
 
 
@@ -64,27 +67,31 @@ namespace fleece {
             bool isLeaf() const;
             hash_t hash() const;
             bool matches(Target) const;
+            const Value* value() const;
 
             unsigned childCount() const;
             NodeRef childAtIndex(unsigned index) const;
 
             Node writeTo(Encoder &enc);
+            uint32_t writeTo(Encoder &enc, bool writeKey);
             void dump(ostream&, unsigned indent) const;
 
         private:
             MNode* _asMutable() const               {return (MNode*)(_addr & ~1);}
             const Node* _asImmutable() const        {return (const Node*)_addr;}
 
-                size_t _addr;
+            size_t _addr;
         };
 
 
         // Base class of nodes within a MHashTree.
         class MNode {
         public:
-            MNode(int8_t capacity)
-            :_capacity(capacity)
-            { }
+            MNode(unsigned capacity)
+            :_capacity(int8_t(capacity))
+            {
+                assert(capacity <= kMaxChildren);
+            }
 
             bool isLeaf() const     {return _capacity == 0;}
 
@@ -117,12 +124,12 @@ namespace fleece {
                 return _hash == target.hash && _key == target.key;
             }
 
-            Leaf writeTo(Encoder &enc) {
-                enc.writeString(_key);
-                auto keyPos = enc.finishItem();
-                enc.writeValue(_value);
-                auto valPos = enc.finishItem();
-                return Leaf(offset_t(keyPos), offset_t(valPos));
+            uint32_t writeTo(Encoder &enc, bool writeKey) {
+                if (writeKey)
+                    enc.writeString(_key);
+                else
+                    enc.writeValue(_value);
+                return (uint32_t)enc.finishItem();
             }
 
             void dump(std::ostream &out, unsigned indent) {
@@ -215,17 +222,25 @@ namespace fleece {
             }
 
 
-            MInterior* insert(Target target, const Value *val, unsigned shift) {
+            // Recursive insertion method. On success returns either 'this', or a new node that
+            // replaces 'this'. On failure (i.e. callback returned nullptr) returns nullptr.
+            MInterior* insert(const Target &target, unsigned shift) {
                 assert(shift + kBitShift < 8*sizeof(hash_t));//FIX: //TODO: Handle hash collisions
                 unsigned bitNo = childBitNumber(target.hash, shift);
                 if (!hasChild(bitNo)) {
                     // No child -- add a leaf:
+                    const Value *val = (*target.insertCallback)(nullptr);
+                    if (!val)
+                        return nullptr;
                     return addChild(bitNo, new MLeaf(target, val));
                 }
                 NodeRef &childRef = childForBitNumber(bitNo);
                 if (childRef.isLeaf()) {
                     if (childRef.matches(target)) {
                         // Leaf node matches this key; update or copy it:
+                        const Value *val = (*target.insertCallback)(childRef.value());
+                        if (!val)
+                            return nullptr;
                         if (childRef.isMutable())
                             ((MLeaf*)childRef.asMutable())->_value = val;
                         else
@@ -234,15 +249,23 @@ namespace fleece {
                     } else {
                         // Nope, need to promote the leaf to an interior node & add new key:
                         MInterior *node = promoteLeaf(childRef, shift);
-                        node->insert(target, val, shift+kBitShift);
+                        auto insertedNode = node->insert(target, shift+kBitShift);
+                        if (!insertedNode) {
+                            delete node;
+                            return nullptr;
+                        }
+                        childRef = insertedNode;
                         return this;
                     }
                 } else {
                     // Progress down to interior node...
                     auto child = (MInterior*)childRef.asMutable();
                     if (!child)
-                        child = mutableCopy(&childRef.asImmutable()->interior);
-                    childRef = child->insert(target, val, shift+kBitShift);
+                        child = mutableCopy(&childRef.asImmutable()->interior, 1);
+                    child = child->insert(target, shift+kBitShift);
+                    if (child)
+                        childRef = child;
+                    //FIX: This can leak if child is created by mutableCopy, but then
                     return this;
                 }
             }
@@ -296,13 +319,26 @@ namespace fleece {
 
             Interior writeTo(Encoder &enc) {
                 unsigned n = childCount();
+
+                // `nodes` is an in-memory staging area for the child nodes I'll write.
+                // The offsets in it are absolute positions in the encoded output,
+                // except for ones that are bitmaps.
                 Node nodes[n];
 
-                // Let each (mutable) child node write its data, and collect the child nodes.
-                // The offsets in the Node objects are absolute positions in the encoded output,
-                // except for ones that are bitmaps.
-                for (unsigned i = 0; i < n; ++i)
-                    nodes[i] = _children[i].writeTo(enc);
+                // Write interior nodes, then leaf node Values, then leaf node keys.
+                // This keeps the keys near me, for better locality of reference.
+                for (unsigned i = 0; i < n; ++i) {
+                    if (!_children[i].isLeaf())
+                        nodes[i] = _children[i].writeTo(enc);
+                }
+                for (unsigned i = 0; i < n; ++i) {
+                    if (_children[i].isLeaf())
+                        nodes[i].leaf._valueOffset = _children[i].writeTo(enc, false);
+                }
+                for (unsigned i = 0; i < n; ++i) {
+                    if (_children[i].isLeaf())
+                        nodes[i].leaf._keyOffset = _children[i].writeTo(enc, true);
+                }
 
                 // Convert the Nodes' absolute positions into offsets:
                 const offset_t childrenPos = (offset_t)enc.nextWritePos();
@@ -343,13 +379,13 @@ namespace fleece {
 
 
         private:
-            static MInterior* newNode(int8_t capacity, MInterior *orig =nullptr) {
+            static MInterior* newNode(unsigned capacity, MInterior *orig =nullptr) {
                 return new (capacity) MInterior(capacity, orig);
             }
 
-            static MInterior* mutableCopy(const Interior *iNode) {
+            static MInterior* mutableCopy(const Interior *iNode, unsigned extraCapacity =0) {
                 auto childCount = iNode->childCount();
-                auto node = newNode((uint8_t)childCount);
+                auto node = newNode(childCount + extraCapacity);
                 node->_bitmap = asBitmap(iNode->bitmap());
                 for (unsigned i = 0; i < childCount; ++i)
                     node->_children[i] = NodeRef(iNode->childAtIndex(i));
@@ -361,15 +397,14 @@ namespace fleece {
                 MInterior* node = newNode(2 + (level<1) + (level<3));
                 unsigned childBitNo = childBitNumber(childLeaf.hash(), shift+kBitShift);
                 node = node->addChild(childBitNo, childLeaf);
-                childLeaf = node; // replace immutable node
                 return node;
             }
 
-            static void* operator new(size_t size, int8_t capacity) {
+            static void* operator new(size_t size, unsigned capacity) {
                 return ::operator new(size + capacity*sizeof(NodeRef));
             }
 
-            MInterior(int8_t cap, MInterior* orig =nullptr)
+            MInterior(unsigned cap, MInterior* orig =nullptr)
             :MNode(cap)
             ,_bitmap(orig ? orig->_bitmap : Bitmap<bitmap_t>{})
             {
@@ -460,6 +495,11 @@ namespace fleece {
             return isMutable() ? ((MLeaf*)_asMutable())->_hash : _asImmutable()->leaf.hash();
         }
 
+        const Value* NodeRef::value() const {
+            assert(isLeaf());
+            return isMutable() ? ((MLeaf*)_asMutable())->_value : _asImmutable()->leaf.value();
+        }
+
         bool NodeRef::matches(Target target) const {
             assert(isLeaf());
             return isMutable() ? ((MLeaf*)_asMutable())->matches(target)
@@ -480,21 +520,21 @@ namespace fleece {
 
 
         Node NodeRef::writeTo(Encoder &enc) {
+            assert(!isLeaf());
             Node node;
-            if (isMutable()) {
-                auto mchild = asMutable();
-                if (mchild->isLeaf())
-                    node.leaf = ((MLeaf*)mchild)->writeTo(enc);
-                else
-                    node.interior = ((MInterior*)mchild)->writeTo(enc);
-            } else {
-                auto ichild = asImmutable();
-                if (ichild->isLeaf())
-                    node.leaf = ichild->leaf.writeTo(enc);
-                else
-                    node.interior = ichild->interior.writeTo(enc);
-            }
+            if (isMutable())
+                node.interior = ((MInterior*)asMutable())->writeTo(enc);
+            else
+                node.interior = asImmutable()->interior.writeTo(enc);
             return node;
+        }
+
+        uint32_t NodeRef::writeTo(Encoder &enc, bool writeKey) {
+            assert(isLeaf());
+            if (isMutable())
+                return ((MLeaf*)asMutable())->writeTo(enc, writeKey);
+            else
+                return asImmutable()->leaf.writeTo(enc, writeKey);
         }
 
         void NodeRef::dump(ostream &out, unsigned indent) const {
@@ -583,10 +623,18 @@ namespace fleece {
         return nullptr;
     }
 
-    void MHashTree::insert(slice key, const Value* val) {
+    bool MHashTree::insert(slice key, InsertCallback callback) {
         if (!_root)
             _root = MInterior::newRoot(_imRoot);
-        _root = _root->insert(Target(key), val, 0);
+        auto result = _root->insert(Target(key, &callback), 0);
+        if (!result)
+            return false;
+        _root = result;
+        return true;
+    }
+
+    void MHashTree::insert(slice key, const Value* val) {
+        insert(key, [=](const Value*){ return val; });
     }
 
     bool MHashTree::remove(slice key) {

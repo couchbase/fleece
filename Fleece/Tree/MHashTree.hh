@@ -7,6 +7,7 @@
 #pragma once
 #include "HashTree.hh"
 #include "slice.hh"
+#include <functional>
 #include <memory>
 
 namespace fleece {
@@ -26,7 +27,10 @@ namespace fleece {
         MHashTree& operator= (MHashTree&&);
         MHashTree& operator= (const HashTree*);
 
+        using InsertCallback = std::function<const Value*(const Value*)>;
+
         void insert(slice key, const Value*);
+        bool insert(slice key, InsertCallback);
         bool remove(slice key);
 
         const Value* get(slice key) const;

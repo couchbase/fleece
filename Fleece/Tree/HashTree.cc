@@ -27,16 +27,16 @@ namespace fleece {
         const Value* Leaf::value() const      {return deref(_valueOffset & ~1, Value);}
         slice Leaf::keyString() const         {return deref(_keyOffset, Value)->asString();}
 
-        Leaf Leaf::writeTo(Encoder &enc) const {
+        uint32_t Leaf::writeTo(Encoder &enc, bool writeKey) const {
             if (enc.base().contains(this)) {
                 auto pos = int32_t((char*)this - (char*)enc.base().end());
-                return makeAbsolute(pos);
+                return pos - (writeKey ? _keyOffset : _valueOffset);
             } else {
-                enc.writeValue(key());
-                auto keyPos = enc.finishItem();
-                enc.writeValue(value());
-                auto valuePos = enc.finishItem();
-                return Leaf(uint32_t(keyPos), uint32_t(valuePos));
+                if (writeKey)
+                    enc.writeValue(key());
+                else
+                    enc.writeValue(value());
+                return (uint32_t)enc.finishItem();
             }
         }
 
@@ -108,11 +108,20 @@ namespace fleece {
                 Node nodes[n];
                 for (unsigned i = 0; i < n; ++i) {
                     auto child = childAtIndex(i);
-                    if (child->isLeaf())
-                        nodes[i].leaf = child->leaf.writeTo(enc);
-                    else
+                    if (!child->isLeaf())
                         nodes[i].interior = child->interior.writeTo(enc);
                 }
+                for (unsigned i = 0; i < n; ++i) {
+                    auto child = childAtIndex(i);
+                    if (child->isLeaf())
+                        nodes[i].leaf._valueOffset = child->leaf.writeTo(enc, false);
+                }
+                for (unsigned i = 0; i < n; ++i) {
+                    auto child = childAtIndex(i);
+                    if (child->isLeaf())
+                        nodes[i].leaf._keyOffset = child->leaf.writeTo(enc, true);
+                }
+
                 const uint32_t childrenPos = (uint32_t)enc.nextWritePos();
                 auto curPos = childrenPos;
                 for (unsigned i = 0; i < n; ++i) {

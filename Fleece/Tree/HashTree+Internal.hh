@@ -91,14 +91,15 @@ namespace fleece { namespace hashtree {
             return Leaf(pos - _keyOffset, pos - (_valueOffset & ~1));
         }
 
-        Leaf writeTo(Encoder&) const;
-
+        uint32_t writeTo(Encoder&, bool writeKey) const;
 
     private:
         endian _keyOffset;
         endian _valueOffset;
 
         friend union Node;
+        friend class MInterior;
+        friend class Interior;
     };
 
 
