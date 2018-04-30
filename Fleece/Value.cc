@@ -142,9 +142,9 @@ namespace fleece {
         slice s(&_byte[1], tinyValue());
         if (_usuallyFalse(s.size == 0x0F)) {
             // This means the actual length follows as a varint:
-            uint32_t realLength;
-            ReadUVarInt32(&s, &realLength);
-            s.setSize(realLength);
+            uint32_t length;
+            size_t lengthBytes = GetUVarInt32(s, &length);
+            return slice(&s[lengthBytes], length);
         }
         return s;
     }
