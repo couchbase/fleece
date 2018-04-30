@@ -49,6 +49,11 @@
 		276D15491E008E7A00543B1B /* JSON5Tests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 276D15481E008E7A00543B1B /* JSON5Tests.cc */; };
 		2770153C1D59645A008BADD7 /* cdecode.c in Sources */ = {isa = PBXBuildFile; fileRef = 277015351D596436008BADD7 /* cdecode.c */; };
 		2770153D1D59645A008BADD7 /* cencode.c in Sources */ = {isa = PBXBuildFile; fileRef = 277015371D596436008BADD7 /* cencode.c */; };
+		2776AA742093C7A3004ACE85 /* DB.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2776AA722093C7A3004ACE85 /* DB.cc */; };
+		2776AA752093C7A3004ACE85 /* DB.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2776AA732093C7A3004ACE85 /* DB.hh */; };
+		2776AA782093C982004ACE85 /* sliceIO.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2776AA762093C982004ACE85 /* sliceIO.cc */; };
+		2776AA792093C982004ACE85 /* sliceIO.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2776AA772093C982004ACE85 /* sliceIO.hh */; };
+		2776AA7B2097B1DC004ACE85 /* DBTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2776AA7A2097B1DC004ACE85 /* DBTests.cc */; };
 		277F45B0208E871000A0D159 /* HashTree.hh in Headers */ = {isa = PBXBuildFile; fileRef = 277F45AE208E871000A0D159 /* HashTree.hh */; };
 		277F45B1208E871000A0D159 /* HashTree.cc in Sources */ = {isa = PBXBuildFile; fileRef = 277F45AF208E871000A0D159 /* HashTree.cc */; };
 		277F45B4208FDA1800A0D159 /* HashTreeTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27C8DF09208521B600A99BFC /* HashTreeTests.cc */; };
@@ -236,6 +241,11 @@
 		277015401D5A63B9008BADD7 /* CHANGELOG */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CHANGELOG; sourceTree = "<group>"; };
 		277015411D5A64B4008BADD7 /* AUTHORS */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = AUTHORS; sourceTree = "<group>"; };
 		2776AA702090EF05004ACE85 /* HashTree+Internal.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "HashTree+Internal.hh"; sourceTree = "<group>"; };
+		2776AA722093C7A3004ACE85 /* DB.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DB.cc; sourceTree = "<group>"; };
+		2776AA732093C7A3004ACE85 /* DB.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DB.hh; sourceTree = "<group>"; };
+		2776AA762093C982004ACE85 /* sliceIO.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = sliceIO.cc; sourceTree = "<group>"; };
+		2776AA772093C982004ACE85 /* sliceIO.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = sliceIO.hh; sourceTree = "<group>"; };
+		2776AA7A2097B1DC004ACE85 /* DBTests.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DBTests.cc; sourceTree = "<group>"; };
 		277F45AE208E871000A0D159 /* HashTree.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HashTree.hh; sourceTree = "<group>"; };
 		277F45AF208E871000A0D159 /* HashTree.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = HashTree.cc; sourceTree = "<group>"; };
 		277F45B3208E9A9100A0D159 /* Bitmap.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Bitmap.hh; sourceTree = "<group>"; };
@@ -352,6 +362,7 @@
 		270FA25E1BF53CAD005DCB13 /* Fleece */ = {
 			isa = PBXGroup;
 			children = (
+				2776AA712093C77F004ACE85 /* DB */,
 				2734B8941F8583FF00BE5249 /* Mutable */,
 				27E3DD2A1DB1C17900F2872D /* ObjC */,
 				278163B71CE6A07A00B94E32 /* Fleece.hh */,
@@ -404,6 +415,8 @@
 				276D15441E007D3000543B1B /* JSON5.cc */,
 				276D15451E007D3000543B1B /* JSON5.hh */,
 				277F45B3208E9A9100A0D159 /* Bitmap.hh */,
+				2776AA762093C982004ACE85 /* sliceIO.cc */,
+				2776AA772093C982004ACE85 /* sliceIO.hh */,
 				273483F71DDA59B900B27A8C /* Fleece.pch */,
 			);
 			name = Utilities;
@@ -432,6 +445,7 @@
 			isa = PBXGroup;
 			children = (
 				27393C931FEC30E300FBFE59 /* FleeceTestsMain.cc */,
+				2776AA7A2097B1DC004ACE85 /* DBTests.cc */,
 				27C8DF09208521B600A99BFC /* HashTreeTests.cc */,
 				272E5A451BF7FD8F00848580 /* FleeceTests.cc */,
 				272E5A5A1BF8004100848580 /* FleeceTests.hh */,
@@ -489,6 +503,15 @@
 				277015411D5A64B4008BADD7 /* AUTHORS */,
 			);
 			path = libb64;
+			sourceTree = "<group>";
+		};
+		2776AA712093C77F004ACE85 /* DB */ = {
+			isa = PBXGroup;
+			children = (
+				2776AA722093C7A3004ACE85 /* DB.cc */,
+				2776AA732093C7A3004ACE85 /* DB.hh */,
+			);
+			path = DB;
 			sourceTree = "<group>";
 		};
 		277F45B2208E9A6700A0D159 /* Tree */ = {
@@ -581,6 +604,7 @@
 				27E3DD4D1DB6C32400F2872D /* CatchHelper.hh in Headers */,
 				2734B8A51F8583FF00BE5249 /* MDict.hh in Headers */,
 				2734B8AD1F859AEC00BE5249 /* FleeceDocument.h in Headers */,
+				2776AA792093C982004ACE85 /* sliceIO.hh in Headers */,
 				278163BD1CE7A72300B94E32 /* KeyTree.hh in Headers */,
 				27C4ACAD1CE5146500938365 /* Array.hh in Headers */,
 				2734B89E1F8583FF00BE5249 /* MArray.hh in Headers */,
@@ -601,6 +625,7 @@
 				27E3DD4C1DB6C32400F2872D /* CaseListReporter.hh in Headers */,
 				270FA2801BF53CEA005DCB13 /* Writer.hh in Headers */,
 				270FA27D1BF53CEA005DCB13 /* Encoder.hh in Headers */,
+				2776AA752093C7A3004ACE85 /* DB.hh in Headers */,
 				27C8DF072084102900A99BFC /* MHashTree.hh in Headers */,
 				27A924D01D9C32E800086206 /* Path.hh in Headers */,
 				278163B61CE69CA800B94E32 /* Fleece.h in Headers */,
@@ -770,6 +795,8 @@
 				270FA27B1BF53CEA005DCB13 /* Value+ObjC.mm in Sources */,
 				27C4ACAC1CE5146500938365 /* Array.cc in Sources */,
 				270FA2841BF53CEA005DCB13 /* varint.cc in Sources */,
+				2776AA782093C982004ACE85 /* sliceIO.cc in Sources */,
+				2776AA742093C7A3004ACE85 /* DB.cc in Sources */,
 				276D15461E007D3000543B1B /* JSON5.cc in Sources */,
 				27A924CF1D9C32E800086206 /* Path.cc in Sources */,
 				2734B8B11F870FB400BE5249 /* MContext.cc in Sources */,
@@ -805,6 +832,7 @@
 				27E3DD531DB7DB1C00F2872D /* SharedKeysTests.cc in Sources */,
 				27393C941FEC30E300FBFE59 /* FleeceTestsMain.cc in Sources */,
 				276D15491E008E7A00543B1B /* JSON5Tests.cc in Sources */,
+				2776AA7B2097B1DC004ACE85 /* DBTests.cc in Sources */,
 				272E5A5F1BF91DBE00848580 /* ObjCTests.mm in Sources */,
 				2734B8A71F85842300BE5249 /* MutableTests.mm in Sources */,
 				279AC52B1C07776A002C80DB /* ValueTests.cc in Sources */,

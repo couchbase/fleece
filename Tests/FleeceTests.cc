@@ -30,7 +30,6 @@
 #include <io.h>
 #include <windows.h>
 #define ssize_t int
-#define MAP_FAILED nullptr
 #endif
 
 
@@ -82,73 +81,6 @@ namespace fleece_test {
                 return o << sliceToHex(s) << "]";
         }
         return o << "\"" << std::string((char*)s.buf, s.size) << "\"]";
-    }
-
-
-    mmap_slice::mmap_slice(const char *path)
-    #ifdef _MSC_VER
-        :
-    #else
-    :_fd(-1),
-    #endif
-    _mapped(MAP_FAILED)
-    {
-    #ifndef _MSC_VER
-         _fd = ::open(path, O_RDONLY);
-        assert(_fd != -1);
-        struct stat stat;
-        ::fstat(_fd, &stat);
-        setSize(stat.st_size);
-        _mapped = ::mmap(nullptr, size, PROT_READ, MAP_PRIVATE, _fd, 0);
-    #else
-        _fileHandle = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-        LARGE_INTEGER size;
-        const BOOL gotSize = GetFileSizeEx(_fileHandle, &size);
-        if(gotSize == 0) {
-            return;
-        }
-
-        setSize(size.QuadPart);
-        _mapHandle = CreateFileMappingA(_fileHandle, nullptr, PAGE_READONLY, size.HighPart, size.LowPart, "FileMappingObject");
-        _mapped = MapViewOfFile(_mapHandle, FILE_MAP_READ, 0, 0, size.QuadPart);
-    #endif
-        assert(_mapped != MAP_FAILED);
-        setBuf(_mapped);
-    }
-
-    mmap_slice::~mmap_slice() {
-        if (_mapped != MAP_FAILED) {
-    #ifdef _MSC_VER
-            UnmapViewOfFile(_mapped);
-            CloseHandle(_fileHandle);
-            CloseHandle(_mapHandle);
-    #else
-            munmap((void*)buf, size);
-            if (_fd != -1)
-                close(_fd);
-    #endif
-        }
-    }
-
-
-    alloc_slice readFile(const char *path) {
-        int fd = ::open(path, O_RDONLY | O_BINARY);
-        assert(fd != -1);
-        struct stat stat;
-        fstat(fd, &stat);
-        alloc_slice data(stat.st_size);
-        ssize_t bytesRead = ::read(fd, (void*)data.buf, data.size);
-        REQUIRE(bytesRead == (ssize_t)data.size);
-        ::close(fd);
-        return data;
-    }
-
-    void writeToFile(slice s, const char *path) {
-        int fd = ::open(path, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0600);
-        assert(fd != -1);
-        ssize_t written = ::write(fd, s.buf, s.size);
-        REQUIRE(written == (ssize_t)s.size);
-        ::close(fd);
     }
 
 }
