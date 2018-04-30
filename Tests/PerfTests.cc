@@ -19,6 +19,7 @@
 #include "FleeceTests.hh"
 #include "Fleece.hh"
 #include "JSONConverter.hh"
+#include "MHashTree.hh"
 #include "varint.hh"
 #include <assert.h>
 #include <chrono>
@@ -223,3 +224,100 @@ static void testLoadPeople(bool multiKeyGet) {
 
 TEST_CASE("Perf LoadPeople", "[.Perf]") {testLoadPeople(false);}
 TEST_CASE("Perf LoadPeopleFast", "[.Perf]") {testLoadPeople(true);}
+
+
+TEST_CASE("Perf DictSearch", "[.Perf]") {
+    static const int kSamples = 500000;
+
+    // Convert JSON array into a dictionary keyed by _id:
+    alloc_slice input = readFile(kTestFilesDir "1000people.fleece");
+    if (!input)
+        abort();
+    std::vector<alloc_slice> names;
+    unsigned nPeople = 0;
+    Encoder enc;
+    enc.beginDictionary();
+    for (Array::iterator i(Value::fromTrustedData(input)->asArray()); i; ++i) {
+        auto person = i.value()->asDict();
+        auto key = person->get("guid"_sl)->asString();
+        enc.writeKey(key);
+        enc.writeValue(person);
+        names.emplace_back(key);
+        if (++nPeople >= 1000)
+            break;
+    }
+    enc.endDictionary();
+    alloc_slice dictData = enc.extractOutput();
+    auto people = Value::fromTrustedData(dictData)->asDict();
+
+    Benchmark bench;
+
+    for (int i = 0; i < kSamples; i++) {
+        slice keys[100];
+        for (int k = 0; k < 100; k++)
+            keys[k] = names[ random() % names.size() ];
+        bench.start();
+        {
+            for (int k = 0; k < 100; k++) {
+                const Value *person = people->get(keys[k]);
+                if (!person)
+                    abort();
+            }
+        }
+        bench.stop();
+
+        //std::this_thread::sleep_for(std::chrono::microseconds(100));
+    }
+    bench.printReport();
+}
+
+
+TEST_CASE("Perf TreeSearch", "[.Perf]") {
+    static const int kSamples = 500000;
+
+    // Convert JSON array into a dictionary keyed by _id:
+    alloc_slice input = readFile(kTestFilesDir "1000people.fleece");
+    if (!input)
+        abort();
+    std::vector<alloc_slice> names;
+    auto people = Value::fromTrustedData(input)->asArray();
+
+    MHashTree tree;
+
+    unsigned nPeople = 0;
+    for (Array::iterator i(people); i; ++i) {
+        auto person = i.value()->asDict();
+        auto key = person->get("guid"_sl)->asString();
+        names.emplace_back(key);
+        tree.insert(key, person);
+        if (++nPeople >= 1000)
+            break;
+    }
+
+    Encoder enc;
+    enc.suppressTrailer();
+    tree.writeTo(enc);
+    alloc_slice treeData = enc.extractOutput();
+    const HashTree *imTree = HashTree::fromData(treeData);
+
+    Benchmark bench;
+
+    for (int i = 0; i < kSamples; i++) {
+        slice keys[100];
+        for (int k = 0; k < 100; k++)
+            keys[k] = names[ random() % names.size() ];
+        bench.start();
+        {
+            for (int k = 0; k < 100; k++) {
+                //const Value *person = imTree->get(keys[k]);
+                const Value *person = tree.get(keys[k]);
+                if (!person)
+                    abort();
+            }
+        }
+        bench.stop();
+
+        //std::this_thread::sleep_for(std::chrono::microseconds(100));
+    }
+    bench.printReport();
+}

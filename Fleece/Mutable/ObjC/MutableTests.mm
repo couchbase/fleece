@@ -132,7 +132,9 @@ TEST_CASE("MDict", "[Mutable]") {
         alloc_slice dump(FLData_Dump(combinedData));
         std::cerr << dump.asString();
     }
+#if DEBUG
     CHECK(MContext::gInstanceCount == 0);
+#endif
 }
 
 
@@ -159,7 +161,9 @@ TEST_CASE("MArray", "[Mutable]") {
         CHECK(fleece2JSON(encode(array)) == "[[3.14,2.17],[\"boo\",true],\"NEW\",42]");
         CHECK(fleece2JSON(encode(root))   == "[[3.14,2.17],[\"boo\",true],\"NEW\",42]");
     }
+#if DEBUG
     CHECK(MContext::gInstanceCount == 0);
+#endif
 }
 
 
@@ -179,7 +183,9 @@ TEST_CASE("MArray iteration", "[Mutable]") {
             ++i;
         }
     }
+#if DEBUG
     CHECK(MContext::gInstanceCount == 0);
+#endif
 }
 
 
@@ -222,7 +228,9 @@ TEST_CASE("MDict no root", "[Mutable]") {
 
     CHECK(fleece2JSON(encode(dict)) == "{array:[\"boo\",false],dict:{boil:212,freeze:[32,\"Fahrenheit\"]},greeting:\"hi\"}");
     }
+#if DEBUG
     CHECK(MContext::gInstanceCount == 0);
+#endif
 }
 
 
@@ -240,5 +248,7 @@ TEST_CASE("Adding mutable collections", "[Mutable]") {
     [array addObject: @YES];
     CHECK(fleece2JSON(encode(root)) == "{array:[\"boo\",false,true],dict:{boil:212,melt:32},greeting:\"hi\",new:[\"boo\",false,true]}");
     }
+#if DEBUG
     CHECK(MContext::gInstanceCount == 0);
+#endif
 }
