@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <chrono>
 #include <math.h>
+#include <stdio.h>
 #include <string>
 
 namespace fleece {

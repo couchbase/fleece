@@ -15,6 +15,9 @@
 
 using namespace std;
 
+extern void DontDeadStripSupportTests();
+void DontDeadStripSupportTests() { }
+
 
 // TESTS:
 
@@ -26,7 +29,7 @@ static void stackEm(size_t n, bool expectedOnHeap) {
     TempArray(myArray, T, n);
     int64_t after = -1;
 
-    CHECK(sizeof(myArray[0]) == sizeof(T));
+    CHECK((sizeof(myArray[0]) == sizeof(T)));
     CHECK(myArray._onHeap == expectedOnHeap);
     for (size_t i = 0; i < n; i++)
         myArray[i] = 0;
@@ -42,10 +45,16 @@ TEST_CASE("TempArray") {
     stackEm<uint8_t>(1023, false);
     stackEm<uint8_t>(1024, true);
 
+#if FL_EMBEDDED
+    static constexpr size_t kBigSize = 10000;
+#else
+    static constexpr size_t kBigSize = 10000000;
+#endif
+
     // A range of sizes:
-    for (size_t n = 1; n < 10000000; n *= 7)
+    for (size_t n = 1; n < kBigSize; n *= 7)
         stackEm<uint8_t>(n, n >= 1024);
-    for (size_t n = 1; n < 10000000; n *= 7)
+    for (size_t n = 1; n < kBigSize; n *= 7)
         stackEm<uint64_t>(n, n >= 1024/8);
 }
 

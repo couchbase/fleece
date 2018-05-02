@@ -74,7 +74,7 @@ TEST_CASE("Perf Convert1000People", "[.Perf]") {
     static const int kSamples = 500;
 
     std::vector<double> elapsedTimes;
-    alloc_slice input = readFile(kTestFilesDir "1000people.json");
+    alloc_slice input = readFile(kBigJSONTestFilePath);
 
     Benchmark bench;
 

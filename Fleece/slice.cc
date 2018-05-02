@@ -25,6 +25,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <atomic>
+#include <string.h>
 #ifdef _MSC_VER
 #include "memmem.h"
 #endif
@@ -267,7 +268,7 @@ namespace fleece {
     }
 
 
-    slice::slice(FLSlice s)                 :slice(s.buf, s.size) { }
+    slice::slice(const FLSlice &s)          :slice(s.buf, s.size) { }
     slice::operator FLSlice () const        {return {buf, size};}
 
     slice::operator FLSliceResult () const {
@@ -282,7 +283,12 @@ namespace fleece {
         std::atomic<uint32_t> _refCount {1};
         uint8_t _buf[4];
 
-#define assertHeapBlock(P) assert(((size_t)(P) & 0x07) == 0)  // sanity check that block is aligned
+        // sanity check that block is aligned:
+#if FL_EMBEDDED
+#define assertHeapBlock(P) assert(((size_t)(P) & 0x03) == 0)
+#else
+#define assertHeapBlock(P) assert(((size_t)(P) & 0x07) == 0)
+#endif
 
         inline sharedBuffer* retain() noexcept {
             assertHeapBlock(this);

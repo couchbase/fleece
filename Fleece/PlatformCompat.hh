@@ -55,7 +55,12 @@
     #define _usuallyTrue(VAL)               __builtin_expect(VAL, true)
     #define _usuallyFalse(VAL)              __builtin_expect(VAL, false)
     #define NOINLINE                        __attribute((noinline))
-    #define NONNULL                         __attribute__((nonnull))
+    
+    #ifdef __clang__
+        #define NONNULL                     __attribute__((nonnull))
+    #else
+        #define NONNULL
+    #endif
 
     #ifndef __printflike
     #define __printflike(fmtarg, firstvararg) __attribute__((__format__ (__printf__, fmtarg, firstvararg)))

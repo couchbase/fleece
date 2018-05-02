@@ -28,6 +28,9 @@
 
 #undef NOMINMAX
 
+extern void DontDeadStripValueTests();
+void DontDeadStripValueTests() { }
+
 namespace fleece {
     using namespace std;
     using namespace internal;
@@ -132,7 +135,9 @@ namespace fleece {
                 s << i.jsonPointer() << ": " << i.value()->toString().asString() << "\n";
             }
             //cerr << s.str();
+#if FL_HAVE_TEST_FILES
             CHECK(s.str() == readFile(kTestFilesDir "1person-deepIterOutput.txt").asString());
+#endif
         }
 
         {
@@ -144,8 +149,9 @@ namespace fleece {
                 i.skipChildren();
             }
             //cerr << s.str();
+#if FL_HAVE_TEST_FILES
             CHECK(s.str() == readFile(kTestFilesDir "1person-shallowIterOutput.txt").asString());
+#endif
         }
     }
-
 }
