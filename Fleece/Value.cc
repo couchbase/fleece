@@ -49,6 +49,9 @@ namespace fleece {
     const Value Value::kNullInstance = Value{kSpecialTag, kSpecialValueNull};
     const Value* const Value::kNullValue = &kNullInstance;
 
+    const Value Value::kUndefinedInstance = Value{kSpecialTag, kSpecialValueUndefined};
+    const Value* const Value::kUndefinedValue = &kUndefinedInstance;
+
 
 #pragma mark - TYPE CHECK / CONVERSION:
 
@@ -60,6 +63,7 @@ namespace fleece {
                 case kSpecialValueTrue:
                     return kBoolean;
                 case kSpecialValueNull:
+                case kSpecialValueUndefined:
                 default:
                     return kNull;
             }
@@ -165,6 +169,9 @@ namespace fleece {
                 switch (tinyValue()) {
                     case kSpecialValueNull:
                         str = (char*)"null";
+                        break;
+                    case kSpecialValueUndefined:
+                        str = (char*)"undefined";
                         break;
                     case kSpecialValueFalse:
                         str = (char*)"false";

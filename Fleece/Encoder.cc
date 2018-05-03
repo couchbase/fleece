@@ -46,6 +46,14 @@ namespace fleece {
         push(kSpecialTag, 1);                   // Top-level 'array' is just a single item
     }
 
+    Encoder::Encoder(FILE *outputFile)
+    :_out(outputFile),
+     _stack(kInitialStackSize),
+     _strings(10)
+    {
+        push(kSpecialTag, 1);                   // Top-level 'array' is just a single item
+    }
+
     void Encoder::end() {
         if (!_items)
             return;

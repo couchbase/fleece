@@ -67,9 +67,10 @@ namespace fleece {
 
         // Interpretation of ss-- in a special value:
         enum {
-            kSpecialValueNull = 0x00,       // 0000
-            kSpecialValueFalse= 0x04,       // 0100
-            kSpecialValueTrue = 0x08,       // 1000
+            kSpecialValueNull       = 0x00,       // 0000
+            kSpecialValueUndefined  = 0x0C,       // 1100
+            kSpecialValueFalse      = 0x04,       // 0100
+            kSpecialValueTrue       = 0x08,       // 1000
         };
 
         // Min/max length of string that will be considered for sharing
@@ -79,6 +80,8 @@ namespace fleece {
 
         // Minimum array count that has to be stored outside the header
         static const uint32_t kLongArrayCount = 0x07FF;
+
+        class MutableValue;
 
 #ifndef NDEBUG
         extern std::atomic<unsigned> gTotalComparisons;

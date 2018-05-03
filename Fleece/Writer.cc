@@ -27,8 +27,8 @@
 namespace fleece {
 
     Writer::Writer(size_t initialCapacity)
-    :_chunkSize(initialCapacity),
-     _length(0)
+    :_chunkSize(initialCapacity)
+    ,_outputFile(nullptr)
     {
         if (initialCapacity <= kDefaultInitialCapacity)
             _chunks.emplace_back(_initialBuf, sizeof(_initialBuf));
@@ -36,8 +36,20 @@ namespace fleece {
             addChunk(initialCapacity);
     }
 
+    Writer::Writer(FILE *outputFile)
+    :_chunkSize(0)
+    ,_outputFile(outputFile)
+    {
+        assert(outputFile);
+        // Add an empty chunk. This will cause every write() call to take the slow path
+        // through writeToNewChunk, which will detect _outputFile and call fwrite().
+        // That way we don't slow down the normal in-memory control flow of write().
+        _chunks.emplace_back(nullptr, 0);
+    }
+
     Writer::Writer(Writer&& w) noexcept
     :_chunks(std::move(w._chunks))
+    ,_outputFile(std::move(w._outputFile))
     {
         w._chunks.clear();
     }
@@ -49,11 +61,14 @@ namespace fleece {
 
     Writer& Writer::operator= (Writer&& w) noexcept {
         _chunks = std::move(w._chunks);
-        w._chunks.clear();
+        _outputFile = std::move(w._outputFile);
         return *this;
     }
 
-    void Writer::reset() {
+    void Writer::_reset() {
+        if (_outputFile)
+            return;
+
         size_t size = _chunks.size();
         if (size == 0) {
             addChunk(_chunkSize);
@@ -65,21 +80,16 @@ namespace fleece {
             }
             _chunks[0].reset();
         }
-        _length = 0;
+    }
+
+
+    void Writer::reset() {
+        _reset();
+        _baseOffset = _length = 0;
     }
 
     const void* Writer::curPos() const {
         return _chunks.back().available().buf;
-    }
-
-    size_t Writer::posToOffset(const void *pos) const {
-        size_t offset = 0;
-        for (auto &chunk : _chunks) {
-            if (chunk.contains(pos))
-                return offset + chunk.offsetOf(pos);
-            offset += chunk.length();
-        }
-        throw std::out_of_range("invalid pos for Writer::posToOffset");
     }
 
     const void* Writer::write(const void* data, size_t length) {
@@ -91,7 +101,7 @@ namespace fleece {
     }
 
     void Writer::padToEvenLength() {
-        if (_length & 1) {
+        if (length() & 1) {
             if (_usuallyFalse(!_chunks.back().pad()))
                 writeToNewChunk("\0", 1);
             ++_length;
@@ -99,17 +109,18 @@ namespace fleece {
     }
 
     const void* Writer::writeToNewChunk(const void* data, size_t length) {
-        if (_usuallyTrue(_chunkSize <= 64*1024))
-            _chunkSize *= 2;
-        addChunk(std::max(length, _chunkSize));
-        const void *result = _chunks.back().write(data, length);
-        assert(result);
-        return result;
-    }
-
-    void Writer::rewrite(const void *pos, slice data) {
-        assert(pos); //FIX: Check that it's actually inside a chunk
-        ::memcpy((void*)pos, data.buf, data.size);
+        if (_outputFile) {
+            if (data)
+                fwrite(data, length, 1, _outputFile);
+            return nullptr;
+        } else {
+            if (_usuallyTrue(_chunkSize <= 64*1024))
+                _chunkSize *= 2;
+            addChunk(std::max(length, _chunkSize));
+            const void *result = _chunks.back().write(data, length);
+            assert(result);
+            return result;
+        }
     }
 
     void Writer::addChunk(size_t capacity) {
@@ -122,6 +133,7 @@ namespace fleece {
     }
 
     std::vector<slice> Writer::output() const {
+        assert(!_outputFile);
         std::vector<slice> result;
         result.reserve(_chunks.size());
         for (const Chunk &chunk : _chunks)
@@ -130,6 +142,7 @@ namespace fleece {
     }
 
     alloc_slice Writer::extractOutput() {
+        assert(!_outputFile);
         alloc_slice output;
 #if 0 //TODO: Restore this optimization
         if (_chunks.size() == 1 && _chunks[0].start() != &_initialBuf) {
@@ -151,6 +164,18 @@ namespace fleece {
         }
         return output;
     }
+
+
+    bool Writer::writeOutputToFile(FILE *f) {
+        for (auto &chunk : _chunks) {
+            slice contents = chunk.contents();
+            if (fwrite(contents.buf, contents.size, 1, f) < contents.size)
+                return false;
+        }
+        _reset();       // don't reset _baseOffset or _length, so offsets remain consistent after
+        return true;
+    }
+
 
 
 #pragma mark - CHUNK:
@@ -219,11 +244,19 @@ namespace fleece {
 
     void Writer::writeBase64(slice data) {
         size_t base64size = ((data.size + 2) / 3) * 4;
-        auto dst = (char*)reserveSpace(base64size);
+        char *dst;
+        if (_outputFile)
+            dst = (char*)slice::newBytes(base64size);
+        else
+            dst = (char*)reserveSpace(base64size);
         base64::encoder enc;
         enc.set_chars_per_line(0);
         size_t written = enc.encode(data.buf, data.size, dst);
         written += enc.encode_end(dst + written);
+        if (_outputFile) {
+            write(dst, written);
+            free(dst);
+        }
         assert((size_t)written == base64size);
         (void)written;      // suppresses 'unused value' warning in release builds
     }

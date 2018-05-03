@@ -25,6 +25,7 @@
 #include "mn_wordlist.h"
 #include <iostream>
 #include <float.h>
+#include <unistd.h>
 
 
 namespace fleece {
@@ -670,6 +671,25 @@ public:
         fprintf(stderr, "Narrow count: %u, Wide count: %u (total %u)\n", enc._narrowCount, enc._wideCount, enc._narrowCount+enc._wideCount);
         fprintf(stderr, "Used %u pointers to shared strings\n", enc._numSavedStrings);
 #endif
+    }
+
+    TEST_CASE_METHOD(EncoderTests, "Encode To File", "[Encoder]") {
+        mmap_slice doc(kTestFilesDir "1000people.fleece");
+        auto root = Value::fromTrustedData(doc)->asArray();
+
+        {
+            FILE *out = fopen(kTestFilesDir"fleecetemp.fleece", "w");
+            Encoder fenc(out);
+            fenc.writeValue(root);
+            fenc.end();
+            fclose(out);
+        }
+
+        alloc_slice newDoc = readFile(kTestFilesDir"fleecetemp.fleece");
+        REQUIRE(newDoc);
+        auto newRoot = Value::fromData(newDoc)->asArray();
+        REQUIRE(newRoot);
+        CHECK(newRoot->count() == root->count());
     }
 
     TEST_CASE_METHOD(EncoderTests, "FindPersonByIndexUnsorted", "[Encoder]") {

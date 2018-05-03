@@ -19,6 +19,7 @@
 #pragma once
 
 #include "slice.hh"
+#include <stdio.h>
 #include <vector>
 
 namespace fleece {
@@ -30,6 +31,7 @@ namespace fleece {
         static const size_t kDefaultInitialCapacity = 256;
 
         Writer(size_t initialCapacity =kDefaultInitialCapacity);
+        Writer(FILE * NONNULL outputFile);
         ~Writer();
 
         Writer(Writer&&) noexcept;
@@ -37,9 +39,8 @@ namespace fleece {
 
         void reset();
 
-        size_t length() const                   {return _length;}
+        size_t length() const                   {return _baseOffset + _length;}
         const void* curPos() const;
-        size_t posToOffset(const void *pos NONNULL) const;
 
         /** Returns the data written, in pieces. Does not change the state of the Writer. */
         std::vector<slice> output() const;
@@ -65,10 +66,7 @@ namespace fleece {
             the output. */
         const void* reserveSpace(size_t length)      {return write(nullptr, length);}
 
-        /** Overwrites already-written data.
-            @param pos  The position in the output at which to start overwriting
-            @param newData  The data that replaces the old */
-        void rewrite(const void *pos NONNULL, slice newData);
+        bool writeOutputToFile(FILE *);
 
     private:
         class Chunk {
@@ -95,6 +93,7 @@ namespace fleece {
             slice _available;
         };
 
+        void _reset();
         const void* writeToNewChunk(const void* data, size_t length);
         void addChunk(size_t capacity);
         void freeChunk(Chunk &chunk);
@@ -104,8 +103,10 @@ namespace fleece {
 
         std::vector<Chunk> _chunks;
         size_t _chunkSize;
-        size_t _length;
+        size_t _baseOffset {0};
+        size_t _length {0};
         uint8_t _initialBuf[kDefaultInitialCapacity];
+        FILE* _outputFile;
     };
 
 }

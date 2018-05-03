@@ -51,7 +51,7 @@ namespace fleece {
     class Null {
     };
 
-    constexpr Null nullValue();
+    constexpr Null nullValue;
 
 
     /* An encoded data value */
@@ -100,6 +100,10 @@ namespace fleece {
         /** Is this a 64-bit floating-point value? */
         bool isDouble() const noexcept      {return tag() == internal::kFloatTag && (_byte[0] & 0x8);}
 
+        /** "undefined" is a special subtype of kNull */
+        bool isUndefined() const noexcept   {return tag() == internal::kSpecialTag
+                                             && tinyValue() == internal::kSpecialValueUndefined;}
+
         //////// Non-scalars:
 
         /** Returns the exact contents of a string. Other types return a null slice. */
@@ -142,6 +146,9 @@ namespace fleece {
             (This is not a null pointer, rather a pointer to a Value whose type is kNull.) */
         static const Value* const kNullValue;
 
+        /** A static 'undefined' Value, as a convenience. */
+        static const Value* const kUndefinedValue;
+
 
 #ifdef __OBJC__
         //////// Convenience methods for Objective-C (Cocoa):
@@ -164,7 +171,7 @@ namespace fleece {
                 0, 0}
         { }
 
-        static const Value kNullInstance;
+        static const Value kNullInstance, kUndefinedInstance;
 
         static const Value* findRoot(slice) noexcept;
         bool validate(const void* dataStart, const void *dataEnd) const noexcept;
@@ -246,8 +253,10 @@ namespace fleece {
 
         uint8_t _byte[internal::kWide];
 
+        friend class internal::MutableValue;
         friend class Array;
         friend class Dict;
+        friend class MutableDict;
         friend class Encoder;
         friend class ValueTests;
         friend class EncoderTests;

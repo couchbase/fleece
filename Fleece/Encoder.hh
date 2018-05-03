@@ -34,6 +34,7 @@ namespace fleece {
     public:
         /** Constructs an encoder. */
         Encoder(size_t reserveOutputSize =256);
+        Encoder(FILE* NONNULL);
 
         /** Sets the uniqueStrings property. If true (the default), the encoder tries to write
             each unique string only once. This saves space but makes the encoder slightly slower. */
