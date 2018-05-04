@@ -44,11 +44,12 @@ namespace fleece {
         template <typename T>
         void set(uint32_t index, T t)               {_items[index].set(t); _changed = true;}
 
-        // Warning: Changing the size of a MutableArray invalidates all Array::iterators on it!
+        // Warning: Changing the size of a MutableArray invalidates pointers to items that are
+        // small scalar values, and also invalidates iterators.
 
         /** Appends a new Value. */
-        template <typename T>
-        void append(T t)                            {_appendMutableValue().set(t);}
+        template <typename T>  void append(T t)     {_appendMutableValue().set(t);}
+
 
         void resize(uint32_t newSize);              ///< Appends nulls, or removes items from end
         void insert(uint32_t where, uint32_t n);    ///< Inserts `n` nulls at index `where`
@@ -87,19 +88,20 @@ namespace fleece {
 
     protected:
         friend class Array;
-        const internal::MutableValue* first();
+        const internal::MutableValue* first();          // Called by Array::impl
 
     private:
         void populate(unsigned fromIndex);
         MutableCollection* makeMutable(uint32_t index, internal::tags ifType);
+        internal::MutableValue& _appendMutableValue();
 
-        internal::MutableValue& _appendMutableValue() {
-            _changed = true;
-            _items.emplace_back();
-            return _items.back();
-        }
+        // _items stores each array item as a MutableValue. If an item's type is 'undefined',
+        // that means the item is unchanged and its value can be found at the same index in _source.
+        std::vector<internal::MutableValue> _items;
 
-        std::vector<internal::MutableValue> _items; // Undefined items shadow _source
+
+
+        // The original Array that this is a mutable copy of.
         const Array* _source {nullptr};
     };
 }

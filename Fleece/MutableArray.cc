@@ -110,6 +110,13 @@ namespace fleece {
     }
 
 
+    internal::MutableValue& MutableArray::_appendMutableValue() {
+        _changed = true;
+        _items.emplace_back();
+        return _items.back();
+    }
+
+
     const MutableValue* MutableArray::first() {
         populate(0);
         return &_items.front();

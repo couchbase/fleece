@@ -28,7 +28,7 @@ namespace fleece {
 
         const Dict* source() const                          {return _source;}
 
-        uint32_t count() const noexcept                     {return _count;}
+        uint32_t count() const                              {return _count;}
         bool empty() const                                  {return _count == 0;}
         
         const Value* get(slice keyToFind) const noexcept;
@@ -36,9 +36,7 @@ namespace fleece {
         // Warning: Modifying a MutableDict invalidates all Dict::iterators on it!
 
         template <typename T>
-        void set(slice key, T value) {
-            _mutableValueToSetFor(key).set(value);
-        }
+        void set(slice key, T value)                        {_mutableValueToSetFor(key).set(value);}
 
         void remove(slice key);
         void removeAll();
