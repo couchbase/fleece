@@ -23,14 +23,8 @@ namespace fleece { namespace internal {
         // Coercing Value --> MutableCollection:
 
         static bool isMutable(const Value *v)           {return ((size_t)v & 1) != 0;}
-
-        static MutableCollection* asMutable(const Value *v) {
-            if (!isMutable(v))
-                return nullptr;
-            auto coll = (MutableCollection*)(size_t(v) & ~1);
-            assert(coll->_header[0] = 0xFF);
-            return coll;
-        }
+        static MutableCollection* asMutable(const Value *v);
+        static MutableCollection* mutableCopy(const Value *v, tags ifType);
 
         // Coercing MutableCollection -> Value:
 
@@ -38,10 +32,7 @@ namespace fleece { namespace internal {
 
         // MutableCollection API:
 
-        static MutableCollection* mutableCopy(const Value *v, tags ifType);
-
         tags tag() const                                {return tags(_header[1] >> 4);}
-
         bool isChanged() const                          {return _changed;}
 
     protected:
@@ -50,7 +41,10 @@ namespace fleece { namespace internal {
         ,_changed(false)
         { }
 
-        uint8_t _header[2];
+        void setChanged(bool c)                         {_changed = c;}
+
+    private:
+        uint8_t _header[2];             // *2nd* byte is a Value header byte
         bool _changed {false};
     };
 
@@ -63,29 +57,29 @@ namespace fleece { namespace internal {
         MutableValue(Null);
         ~MutableValue();
 
-        MutableValue(const MutableValue&) noexcept =default;
-        MutableValue& operator= (const MutableValue&) noexcept =default;
+        MutableValue(const MutableValue&) noexcept;
+        MutableValue& operator= (const MutableValue&) noexcept;
 
         MutableValue(MutableValue &&other) noexcept {
             memcpy(this, &other, sizeof(other));
-            other._malloced = false;
+            other._isMalloced = false;
         }
 
         MutableValue& operator= (MutableValue &&other) noexcept {
             reset();
             memcpy(this, &other, sizeof(other));
-            other._malloced = false;
+            other._isMalloced = false;
             return *this;
         }
 
-        explicit operator bool() const                  {return _inline || _asValue != nullptr;}
+        explicit operator bool() const                  {return _isInline || _asValue != nullptr;}
 
         const Value* asValue() const;
         MutableCollection* asMutableCollection() const;
 
         void set(MutableCollection *c) {
             reset();
-            _inline = false;
+            _isInline = false;
             _asValue = c->asValue();
         }
 
@@ -114,11 +108,14 @@ namespace fleece { namespace internal {
         uint8_t* allocateValue(size_t);
 
         union {
-            uint8_t             _asInline[sizeof(void*)];
+            uint8_t             _inlineData[sizeof(void*)];
             const Value*        _asValue {nullptr};
         };
-        bool _inline {false};
-        bool _malloced {false};
+        uint8_t _moreInlineData[sizeof(void*) - 2];
+        bool _isInline {false};
+        bool _isMalloced {false};
+
+        static constexpr size_t kInlineCapacity = sizeof(_inlineData) + sizeof(_moreInlineData);
     };
 
 } }

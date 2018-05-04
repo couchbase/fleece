@@ -59,7 +59,7 @@ namespace fleece {
         if (newSize == count())
             return;
         _items.resize(newSize, MutableValue(Null()));
-        _changed = true;
+        setChanged(true);
     }
 
 
@@ -69,7 +69,7 @@ namespace fleece {
             return;
         populate(where);
         _items.insert(_items.begin() + where,  n, MutableValue(Null()));
-        _changed = true;
+        setChanged(true);
     }
 
 
@@ -80,7 +80,7 @@ namespace fleece {
         populate(where + n);
         auto at = _items.begin() + where;
         _items.erase(at, at + n);
-        _changed = true;
+        setChanged(true);
     }
 
 
@@ -88,7 +88,7 @@ namespace fleece {
         if (empty())
             return;
         _items.clear();
-        _changed = true;
+        setChanged(true);
     }
 
 
@@ -105,13 +105,13 @@ namespace fleece {
                 _items[index].set(result);
         }
         if (result)
-            _changed = true;
+            setChanged(true);
         return result;
     }
 
 
     internal::MutableValue& MutableArray::_appendMutableValue() {
-        _changed = true;
+        setChanged(true);
         _items.emplace_back();
         return _items.back();
     }

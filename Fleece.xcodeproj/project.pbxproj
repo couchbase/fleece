@@ -38,7 +38,7 @@
 		2734B8A21F8583FF00BE5249 /* MutableDict+ObjC.h in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8991F8583FF00BE5249 /* MutableDict+ObjC.h */; };
 		2734B8A41F8583FF00BE5249 /* MCollection.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2734B89B1F8583FF00BE5249 /* MCollection.hh */; };
 		2734B8A51F8583FF00BE5249 /* MDict.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2734B89C1F8583FF00BE5249 /* MDict.hh */; };
-		2734B8A71F85842300BE5249 /* MutableTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2734B89A1F8583FF00BE5249 /* MutableTests.mm */; };
+		2734B8A71F85842300BE5249 /* MTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2734B89A1F8583FF00BE5249 /* MTests.mm */; };
 		2734B8AD1F859AEC00BE5249 /* FleeceDocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8AB1F859AEC00BE5249 /* FleeceDocument.h */; };
 		2734B8B11F870FB400BE5249 /* MContext.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2734B8B01F870FB400BE5249 /* MContext.cc */; };
 		27393C941FEC30E300FBFE59 /* FleeceTestsMain.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27393C931FEC30E300FBFE59 /* FleeceTestsMain.cc */; };
@@ -218,7 +218,7 @@
 		2734B8971F8583FF00BE5249 /* MutableArray+ObjC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MutableArray+ObjC.h"; sourceTree = "<group>"; };
 		2734B8981F8583FF00BE5249 /* MutableArray+ObjC.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "MutableArray+ObjC.mm"; sourceTree = "<group>"; };
 		2734B8991F8583FF00BE5249 /* MutableDict+ObjC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MutableDict+ObjC.h"; sourceTree = "<group>"; };
-		2734B89A1F8583FF00BE5249 /* MutableTests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = MutableTests.mm; sourceTree = "<group>"; };
+		2734B89A1F8583FF00BE5249 /* MTests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = MTests.mm; sourceTree = "<group>"; };
 		2734B89B1F8583FF00BE5249 /* MCollection.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = MCollection.hh; sourceTree = "<group>"; };
 		2734B89C1F8583FF00BE5249 /* MDict.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = MDict.hh; sourceTree = "<group>"; };
 		2734B89D1F8583FF00BE5249 /* MutableDict+ObjC.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "MutableDict+ObjC.mm"; sourceTree = "<group>"; };
@@ -580,7 +580,7 @@
 				2734B89D1F8583FF00BE5249 /* MutableDict+ObjC.mm */,
 				2734B8AB1F859AEC00BE5249 /* FleeceDocument.h */,
 				2734B8AC1F859AEC00BE5249 /* FleeceDocument.mm */,
-				2734B89A1F8583FF00BE5249 /* MutableTests.mm */,
+				2734B89A1F8583FF00BE5249 /* MTests.mm */,
 			);
 			path = ObjC;
 			sourceTree = "<group>";
@@ -861,7 +861,7 @@
 				276D15491E008E7A00543B1B /* JSON5Tests.cc in Sources */,
 				2776AA7B2097B1DC004ACE85 /* DBTests.cc in Sources */,
 				272E5A5F1BF91DBE00848580 /* ObjCTests.mm in Sources */,
-				2734B8A71F85842300BE5249 /* MutableTests.mm in Sources */,
+				2734B8A71F85842300BE5249 /* MTests.mm in Sources */,
 				279AC52B1C07776A002C80DB /* ValueTests.cc in Sources */,
 				274D824F209A8D01008BB39F /* MutableTests.cc in Sources */,
 				278163B91CE6BB8C00B94E32 /* C_Test.c in Sources */,

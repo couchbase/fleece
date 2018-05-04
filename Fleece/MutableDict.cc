@@ -32,7 +32,7 @@ namespace fleece {
 
 
     void MutableDict::markChanged() {
-        _changed = true;
+        setChanged(true);
         _iterable.reset();
     }
 
