@@ -19,7 +19,7 @@
 #include "FleeceTests.hh"
 #include "Fleece.hh"
 #include "JSONConverter.hh"
-#include "MHashTree.hh"
+#include "MutableHashTree.hh"
 #include "varint.hh"
 #include <assert.h>
 #include <chrono>
@@ -282,7 +282,7 @@ TEST_CASE("Perf TreeSearch", "[.Perf]") {
     std::vector<alloc_slice> names;
     auto people = Value::fromTrustedData(input)->asArray();
 
-    MHashTree tree;
+    MutableHashTree tree;
 
     unsigned nPeople = 0;
     for (Array::iterator i(people); i; ++i) {

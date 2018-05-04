@@ -2,10 +2,10 @@
 //  MHashTree.cc
 //  Fleece
 //
-//  Copyright © 2018 Couchbase. All rights reserved.
+// Copyright © 2018 Couchbase. All rights reserved.
 //
 
-#include "MHashTree.hh"
+#include "MutableHashTree.hh"
 #include "HashTree.hh"
 #include "HashTree+Internal.hh"
 #include "Bitmap.hh"
@@ -19,7 +19,7 @@ using namespace std;
 namespace fleece {
 
     namespace hashtree {
-        class MNode;
+        class MutableNode;
 
 
         using offset_t = int32_t;
@@ -27,7 +27,7 @@ namespace fleece {
 
         // Specifies an insertion/deletion
         struct Target {
-            explicit Target(slice k, MHashTree::InsertCallback *callback =nullptr)
+            explicit Target(slice k, MutableHashTree::InsertCallback *callback =nullptr)
             :key(k), hash(k.hash()), insertCallback(callback)
             { }
 
@@ -37,7 +37,7 @@ namespace fleece {
 
             slice const key;
             hash_t const hash;
-            MHashTree::InsertCallback *insertCallback {nullptr};
+            MutableHashTree::InsertCallback *insertCallback {nullptr};
         };
 
 
@@ -45,7 +45,7 @@ namespace fleece {
         class NodeRef {
         public:
             NodeRef()                               :_addr(0) { }
-            NodeRef(MNode* n)                       :_addr(size_t(n) | 1) {assert(n);}
+            NodeRef(MutableNode* n)                       :_addr(size_t(n) | 1) {assert(n);}
             NodeRef(const Node* n)                  :_addr(size_t(n)) {}
             NodeRef(const Leaf* n)                  :_addr(size_t(n)) {}
             NodeRef(const Interior* n)              :_addr(size_t(n)) {}
@@ -56,7 +56,7 @@ namespace fleece {
 
             bool isMutable() const                  {return (_addr & 1) != 0;}
 
-            MNode* asMutable() const {
+            MutableNode* asMutable() const {
                 return isMutable() ? _asMutable() : nullptr;
             }
 
@@ -77,7 +77,7 @@ namespace fleece {
             void dump(ostream&, unsigned indent) const;
 
         private:
-            MNode* _asMutable() const               {return (MNode*)(_addr & ~1);}
+            MutableNode* _asMutable() const               {return (MutableNode*)(_addr & ~1);}
             const Node* _asImmutable() const        {return (const Node*)_addr;}
 
             size_t _addr;
@@ -85,9 +85,9 @@ namespace fleece {
 
 
         // Base class of nodes within a MHashTree.
-        class MNode {
+        class MutableNode {
         public:
-            MNode(unsigned capacity)
+            MutableNode(unsigned capacity)
             :_capacity(int8_t(capacity))
             {
                 assert(capacity <= kMaxChildren);
@@ -111,10 +111,10 @@ namespace fleece {
 
 
         // A leaf node that holds a single key and value.
-        class MLeaf : public MNode {
+        class MutableLeaf : public MutableNode {
         public:
-            MLeaf(const Target &t, const Value *v)
-            :MNode(0)
+            MutableLeaf(const Target &t, const Value *v)
+            :MutableNode(0)
             ,_hash(t.hash)
             ,_key(t.key)
             ,_value(v)
@@ -147,10 +147,10 @@ namespace fleece {
 
 
         // An interior node holds a small compact hash table mapping to Nodes.
-        class MInterior : public MNode {
+        class MutableInterior : public MutableNode {
         public:
 
-            static MInterior* newRoot(const HashTree *imTree) {
+            static MutableInterior* newRoot(const HashTree *imTree) {
                 if (imTree)
                     return mutableCopy(imTree->rootNode());
                 else
@@ -175,9 +175,9 @@ namespace fleece {
                     auto child = _children[i].asMutable();
                     if (child) {
                         if (child->isLeaf())
-                            delete (MLeaf*)child;
+                            delete (MutableLeaf*)child;
                         else
-                            ((MInterior*)child)->deleteTree();
+                            ((MutableInterior*)child)->deleteTree();
                     }
                 }
                 delete this;
@@ -193,7 +193,7 @@ namespace fleece {
                         if (child.asMutable()->isLeaf())
                             count += 1;
                         else
-                            count += ((MInterior*)child.asMutable())->leafCount();
+                            count += ((MutableInterior*)child.asMutable())->leafCount();
                     } else {
                         if (child.asImmutable()->isLeaf())
                             count += 1;
@@ -214,7 +214,7 @@ namespace fleece {
                     return child;
                 } else if (child.isMutable()) {
                     auto mchild = child.asMutable();
-                    return ((MInterior*)mchild)->findNearest(hash >> kBitShift);  // recurse...
+                    return ((MutableInterior*)mchild)->findNearest(hash >> kBitShift);  // recurse...
                 } else {
                     auto ichild = child.asImmutable();
                     return ichild->interior.findNearest(hash >> kBitShift);
@@ -224,7 +224,7 @@ namespace fleece {
 
             // Recursive insertion method. On success returns either 'this', or a new node that
             // replaces 'this'. On failure (i.e. callback returned nullptr) returns nullptr.
-            MInterior* insert(const Target &target, unsigned shift) {
+            MutableInterior* insert(const Target &target, unsigned shift) {
                 assert(shift + kBitShift < 8*sizeof(hash_t));//FIX: //TODO: Handle hash collisions
                 unsigned bitNo = childBitNumber(target.hash, shift);
                 if (!hasChild(bitNo)) {
@@ -232,7 +232,7 @@ namespace fleece {
                     const Value *val = (*target.insertCallback)(nullptr);
                     if (!val)
                         return nullptr;
-                    return addChild(bitNo, new MLeaf(target, val));
+                    return addChild(bitNo, new MutableLeaf(target, val));
                 }
                 NodeRef &childRef = childForBitNumber(bitNo);
                 if (childRef.isLeaf()) {
@@ -242,13 +242,13 @@ namespace fleece {
                         if (!val)
                             return nullptr;
                         if (childRef.isMutable())
-                            ((MLeaf*)childRef.asMutable())->_value = val;
+                            ((MutableLeaf*)childRef.asMutable())->_value = val;
                         else
-                            childRef = new MLeaf(target, val);
+                            childRef = new MutableLeaf(target, val);
                         return this;
                     } else {
                         // Nope, need to promote the leaf to an interior node & add new key:
-                        MInterior *node = promoteLeaf(childRef, shift);
+                        MutableInterior *node = promoteLeaf(childRef, shift);
                         auto insertedNode = node->insert(target, shift+kBitShift);
                         if (!insertedNode) {
                             delete node;
@@ -259,7 +259,7 @@ namespace fleece {
                     }
                 } else {
                     // Progress down to interior node...
-                    auto child = (MInterior*)childRef.asMutable();
+                    auto child = (MutableInterior*)childRef.asMutable();
                     if (!child)
                         child = mutableCopy(&childRef.asImmutable()->interior, 1);
                     child = child->insert(target, shift+kBitShift);
@@ -282,14 +282,14 @@ namespace fleece {
                     // Child is a leaf -- is it the right key?
                     if (childRef.matches(target)) {
                         removeChild(bitNo, childIndex);
-                        delete (MLeaf*)childRef.asMutable();
+                        delete (MutableLeaf*)childRef.asMutable();
                         return true;
                     } else {
                         return false;
                     }
                 } else {
                     // Recurse into child node...
-                    auto child = (MInterior*)childRef.asMutable();
+                    auto child = (MutableInterior*)childRef.asMutable();
                     if (child) {
                         if (!child->remove(target, shift+kBitShift))
                             return false;
@@ -379,11 +379,11 @@ namespace fleece {
 
 
         private:
-            static MInterior* newNode(unsigned capacity, MInterior *orig =nullptr) {
-                return new (capacity) MInterior(capacity, orig);
+            static MutableInterior* newNode(unsigned capacity, MutableInterior *orig =nullptr) {
+                return new (capacity) MutableInterior(capacity, orig);
             }
 
-            static MInterior* mutableCopy(const Interior *iNode, unsigned extraCapacity =0) {
+            static MutableInterior* mutableCopy(const Interior *iNode, unsigned extraCapacity =0) {
                 auto childCount = iNode->childCount();
                 auto node = newNode(childCount + extraCapacity);
                 node->_bitmap = asBitmap(iNode->bitmap());
@@ -392,9 +392,9 @@ namespace fleece {
                 return node;
             }
 
-            static MInterior* promoteLeaf(NodeRef& childLeaf, unsigned shift) {
+            static MutableInterior* promoteLeaf(NodeRef& childLeaf, unsigned shift) {
                 unsigned level = shift / kBitShift;
-                MInterior* node = newNode(2 + (level<1) + (level<3));
+                MutableInterior* node = newNode(2 + (level<1) + (level<3));
                 unsigned childBitNo = childBitNumber(childLeaf.hash(), shift+kBitShift);
                 node = node->addChild(childBitNo, childLeaf);
                 return node;
@@ -404,8 +404,8 @@ namespace fleece {
                 return ::operator new(size + capacity*sizeof(NodeRef));
             }
 
-            MInterior(unsigned cap, MInterior* orig =nullptr)
-            :MNode(cap)
+            MutableInterior(unsigned cap, MutableInterior* orig =nullptr)
+            :MutableNode(cap)
             ,_bitmap(orig ? orig->_bitmap : Bitmap<bitmap_t>{})
             {
                 if (orig)
@@ -415,10 +415,10 @@ namespace fleece {
             }
 
 
-            MInterior* grow() {
+            MutableInterior* grow() {
                 assert(capacity() < kMaxChildren);
-                auto replacement = (MInterior*)realloc(this,
-                                        sizeof(MInterior) + (capacity()+1)*sizeof(NodeRef));
+                auto replacement = (MutableInterior*)realloc(this,
+                                        sizeof(MutableInterior) + (capacity()+1)*sizeof(NodeRef));
                 if (!replacement)
                     throw std::bad_alloc();
                 replacement->_capacity++;
@@ -449,20 +449,20 @@ namespace fleece {
 
 
             NodeRef const& childForBitNumber(unsigned bitNo) const {
-                return const_cast<MInterior*>(this)->childForBitNumber(bitNo);
+                return const_cast<MutableInterior*>(this)->childForBitNumber(bitNo);
             }
 
 
-            MInterior* addChild(unsigned bitNo, NodeRef child) {
+            MutableInterior* addChild(unsigned bitNo, NodeRef child) {
                 return addChild(bitNo, childIndexForBitNumber(bitNo), child);
             }
 
-            MInterior* addChild(unsigned bitNo, unsigned childIndex, NodeRef child) {
-                MInterior* node = (childCount() < capacity()) ? this : grow();
+            MutableInterior* addChild(unsigned bitNo, unsigned childIndex, NodeRef child) {
+                MutableInterior* node = (childCount() < capacity()) ? this : grow();
                 return node->_addChild(bitNo, childIndex, child);
             }
 
-            MInterior* _addChild(unsigned bitNo, unsigned childIndex, NodeRef child) {
+            MutableInterior* _addChild(unsigned bitNo, unsigned childIndex, NodeRef child) {
                 assert(child);
                 memmove(&_children[childIndex+1], &_children[childIndex],
                         (capacity() - childIndex - 1)*sizeof(NodeRef));
@@ -492,29 +492,29 @@ namespace fleece {
 
         hash_t NodeRef::hash() const {
             assert(isLeaf());
-            return isMutable() ? ((MLeaf*)_asMutable())->_hash : _asImmutable()->leaf.hash();
+            return isMutable() ? ((MutableLeaf*)_asMutable())->_hash : _asImmutable()->leaf.hash();
         }
 
         const Value* NodeRef::value() const {
             assert(isLeaf());
-            return isMutable() ? ((MLeaf*)_asMutable())->_value : _asImmutable()->leaf.value();
+            return isMutable() ? ((MutableLeaf*)_asMutable())->_value : _asImmutable()->leaf.value();
         }
 
         bool NodeRef::matches(Target target) const {
             assert(isLeaf());
-            return isMutable() ? ((MLeaf*)_asMutable())->matches(target)
+            return isMutable() ? ((MutableLeaf*)_asMutable())->matches(target)
                                : _asImmutable()->leaf.matches(target.key);
         }
 
         unsigned NodeRef::childCount() const {
             assert(!isLeaf());
-            return isMutable() ? ((MInterior*)_asMutable())->childCount()
+            return isMutable() ? ((MutableInterior*)_asMutable())->childCount()
                                : _asImmutable()->interior.childCount();
         }
 
         NodeRef NodeRef::childAtIndex(unsigned index) const {
             assert(!isLeaf());
-            return isMutable() ? ((MInterior*)_asMutable())->childAtIndex(index)
+            return isMutable() ? ((MutableInterior*)_asMutable())->childAtIndex(index)
                                : _asImmutable()->interior.childAtIndex(index);
         }
 
@@ -523,7 +523,7 @@ namespace fleece {
             assert(!isLeaf());
             Node node;
             if (isMutable())
-                node.interior = ((MInterior*)asMutable())->writeTo(enc);
+                node.interior = ((MutableInterior*)asMutable())->writeTo(enc);
             else
                 node.interior = asImmutable()->interior.writeTo(enc);
             return node;
@@ -532,15 +532,15 @@ namespace fleece {
         uint32_t NodeRef::writeTo(Encoder &enc, bool writeKey) {
             assert(isLeaf());
             if (isMutable())
-                return ((MLeaf*)asMutable())->writeTo(enc, writeKey);
+                return ((MutableLeaf*)asMutable())->writeTo(enc, writeKey);
             else
                 return asImmutable()->leaf.writeTo(enc, writeKey);
         }
 
         void NodeRef::dump(ostream &out, unsigned indent) const {
             if (isMutable())
-                isLeaf() ? ((MLeaf*)_asMutable())->dump(out, indent)
-                         : ((MInterior*)_asMutable())->dump(out, indent);
+                isLeaf() ? ((MutableLeaf*)_asMutable())->dump(out, indent)
+                         : ((MutableInterior*)_asMutable())->dump(out, indent);
             else
                 isLeaf() ? _asImmutable()->leaf.dump(out, indent)
                          : _asImmutable()->interior.dump(out, indent);
@@ -555,19 +555,19 @@ namespace fleece {
 
     using namespace hashtree;
 
-    MHashTree::MHashTree()
+    MutableHashTree::MutableHashTree()
     { }
 
-    MHashTree::MHashTree(const HashTree *tree)
+    MutableHashTree::MutableHashTree(const HashTree *tree)
     :_imRoot(tree)
     { }
 
-    MHashTree::~MHashTree() {
+    MutableHashTree::~MutableHashTree() {
         if (_root)
             _root->deleteTree();
     }
 
-    MHashTree& MHashTree::operator= (MHashTree &&other) {
+    MutableHashTree& MutableHashTree::operator= (MutableHashTree &&other) {
         _imRoot = other._imRoot;
         if (_root)
             _root->deleteTree();
@@ -577,7 +577,7 @@ namespace fleece {
         return *this;
     }
 
-    MHashTree& MHashTree::operator= (const HashTree *imTree) {
+    MutableHashTree& MutableHashTree::operator= (const HashTree *imTree) {
         _imRoot = imTree;
         if (_root)
             _root->deleteTree();
@@ -585,7 +585,7 @@ namespace fleece {
         return *this;
     }
 
-    unsigned MHashTree::count() const {
+    unsigned MutableHashTree::count() const {
         if (_root)
             return _root->leafCount();
         else if (_imRoot)
@@ -594,7 +594,7 @@ namespace fleece {
             return 0;
     }
 
-    NodeRef MHashTree::rootNode() const {
+    NodeRef MutableHashTree::rootNode() const {
         if (_root)
             return _root;
         else if (_imRoot)
@@ -603,13 +603,13 @@ namespace fleece {
             return {};
     }
 
-    const Value* MHashTree::get(slice key) const {
+    const Value* MutableHashTree::get(slice key) const {
         if (_root) {
             Target target(key);
             NodeRef leaf = _root->findNearest(target.hash);
             if (leaf) {
                 if (leaf.isMutable()) {
-                    auto mleaf = (MLeaf*)leaf.asMutable();
+                    auto mleaf = (MutableLeaf*)leaf.asMutable();
                     if (mleaf->matches(target))
                         return mleaf->_value;
                 } else {
@@ -623,9 +623,9 @@ namespace fleece {
         return nullptr;
     }
 
-    bool MHashTree::insert(slice key, InsertCallback callback) {
+    bool MutableHashTree::insert(slice key, InsertCallback callback) {
         if (!_root)
-            _root = MInterior::newRoot(_imRoot);
+            _root = MutableInterior::newRoot(_imRoot);
         auto result = _root->insert(Target(key, &callback), 0);
         if (!result)
             return false;
@@ -633,31 +633,31 @@ namespace fleece {
         return true;
     }
 
-    void MHashTree::insert(slice key, const Value* val) {
+    void MutableHashTree::insert(slice key, const Value* val) {
         insert(key, [=](const Value*){ return val; });
     }
 
-    bool MHashTree::remove(slice key) {
+    bool MutableHashTree::remove(slice key) {
         if (!_root) {
             if (!_imRoot)
                 return false;
-            _root = MInterior::newRoot(_imRoot);
+            _root = MutableInterior::newRoot(_imRoot);
         }
         return _root->remove(Target(key), 0);
     }
 
-    uint32_t MHashTree::writeTo(Encoder &enc) {
+    uint32_t MutableHashTree::writeTo(Encoder &enc) {
         if (_root) {
             return _root->writeRootTo(enc);
         } else if (_imRoot) {
-            unique_ptr<MInterior> tempRoot( MInterior::newRoot(_imRoot) );
+            unique_ptr<MutableInterior> tempRoot( MutableInterior::newRoot(_imRoot) );
             return tempRoot->writeRootTo(enc);
         } else {
             return 0;
         }
     }
 
-    void MHashTree::dump(std::ostream &out) {
+    void MutableHashTree::dump(std::ostream &out) {
         if (_imRoot && !_root) {
             _imRoot->dump(out);
         } else {
@@ -718,7 +718,7 @@ namespace fleece {
 
                 // Return the current leaf's key/value:
                 if (node.isMutable()) {
-                    auto leaf = ((MLeaf*)node.asMutable());
+                    auto leaf = ((MutableLeaf*)node.asMutable());
                     return {leaf->_key, leaf->_value};
                 } else {
                     auto &leaf = node.asImmutable()->leaf;
@@ -731,7 +731,7 @@ namespace fleece {
 
 
 
-    HashTree::iterator::iterator(const MHashTree &tree)
+    HashTree::iterator::iterator(const MutableHashTree &tree)
     :iterator(tree.rootNode())
     { }
 
@@ -751,7 +751,7 @@ namespace fleece {
 
     HashTree::iterator::~iterator() =default;
 
-    HashTree::iterator& MHashTree::iterator::operator++() {
+    HashTree::iterator& MutableHashTree::iterator::operator++() {
         tie(_key, _value) = _impl->next();
         return *this;
     }

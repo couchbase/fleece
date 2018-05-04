@@ -2,12 +2,12 @@
 //  MHashTreeTests.cc
 //  Fleece
 //
-//  Copyright © 2018 Couchbase. All rights reserved.
+// Copyright © 2018 Couchbase. All rights reserved.
 //
 
 #include "FleeceTests.hh"
 #include "Fleece.hh"
-#include "MHashTree.hh"
+#include "MutableHashTree.hh"
 #include "Encoder.hh"
 
 using namespace std;
@@ -19,7 +19,7 @@ static const char* kDigits[10] = {"zero", "one", "two", "three", "four", "five",
 
 class HashTreeTests {
 public:
-    MHashTree tree;
+    MutableHashTree tree;
     vector<alloc_slice> keys;
     const Array* values;
     alloc_slice _valueBuf;
@@ -74,7 +74,7 @@ public:
 
     void checkIterator(size_t N) {
         set<slice> keysSeen;
-        for (MHashTree::iterator i(tree); i; ++i) {
+        for (MutableHashTree::iterator i(tree); i; ++i) {
             //cerr << "--> " << i.key().asString() << "\n";
             CHECK(keysSeen.insert(i.key()).second); // insert, and make sure it's unique
             REQUIRE(i.value() != nullptr);

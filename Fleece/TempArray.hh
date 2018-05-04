@@ -3,7 +3,7 @@
 //  blip_cpp
 //
 //  Created by Jens Alfke on 1/23/18.
-//  Copyright © 2018 Couchbase. All rights reserved.
+// Copyright © 2018 Couchbase. All rights reserved.
 //
 
 #pragma once

@@ -79,8 +79,8 @@
 		27A924D01D9C32E800086206 /* Path.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27A924CE1D9C32E800086206 /* Path.hh */; };
 		27C4ACAC1CE5146500938365 /* Array.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27C4ACAA1CE5146500938365 /* Array.cc */; };
 		27C4ACAD1CE5146500938365 /* Array.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C4ACAB1CE5146500938365 /* Array.hh */; };
-		27C8DF072084102900A99BFC /* MHashTree.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C8DF052084102900A99BFC /* MHashTree.hh */; };
-		27C8DF082084102900A99BFC /* MHashTree.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27C8DF062084102900A99BFC /* MHashTree.cc */; };
+		27C8DF072084102900A99BFC /* MutableHashTree.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C8DF052084102900A99BFC /* MutableHashTree.hh */; };
+		27C8DF082084102900A99BFC /* MutableHashTree.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27C8DF062084102900A99BFC /* MutableHashTree.cc */; };
 		27CA08421F6B0E9400FF8C71 /* Dict.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27CA08401F6B0E9400FF8C71 /* Dict.hh */; };
 		27CA08431F6B0E9400FF8C71 /* Dict.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27CA08411F6B0E9400FF8C71 /* Dict.cc */; };
 		27D7215E1F8E8EEA00AA4458 /* MutableDict+ObjC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2734B89D1F8583FF00BE5249 /* MutableDict+ObjC.mm */; };
@@ -282,8 +282,8 @@
 		27C4AC961CDFFDA100938365 /* Performance.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = Performance.md; sourceTree = "<group>"; };
 		27C4ACAA1CE5146500938365 /* Array.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Array.cc; sourceTree = "<group>"; };
 		27C4ACAB1CE5146500938365 /* Array.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Array.hh; sourceTree = "<group>"; };
-		27C8DF052084102900A99BFC /* MHashTree.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MHashTree.hh; sourceTree = "<group>"; };
-		27C8DF062084102900A99BFC /* MHashTree.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MHashTree.cc; sourceTree = "<group>"; };
+		27C8DF052084102900A99BFC /* MutableHashTree.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MutableHashTree.hh; sourceTree = "<group>"; };
+		27C8DF062084102900A99BFC /* MutableHashTree.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MutableHashTree.cc; sourceTree = "<group>"; };
 		27C8DF09208521B600A99BFC /* HashTreeTests.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = HashTreeTests.cc; sourceTree = "<group>"; };
 		27CA08401F6B0E9400FF8C71 /* Dict.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Dict.hh; sourceTree = "<group>"; };
 		27CA08411F6B0E9400FF8C71 /* Dict.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Dict.cc; sourceTree = "<group>"; };
@@ -538,11 +538,11 @@
 		277F45B2208E9A6700A0D159 /* Tree */ = {
 			isa = PBXGroup;
 			children = (
-				277F45AE208E871000A0D159 /* HashTree.hh */,
 				277F45AF208E871000A0D159 /* HashTree.cc */,
+				277F45AE208E871000A0D159 /* HashTree.hh */,
+				27C8DF062084102900A99BFC /* MutableHashTree.cc */,
+				27C8DF052084102900A99BFC /* MutableHashTree.hh */,
 				2776AA702090EF05004ACE85 /* HashTree+Internal.hh */,
-				27C8DF052084102900A99BFC /* MHashTree.hh */,
-				27C8DF062084102900A99BFC /* MHashTree.cc */,
 			);
 			path = Tree;
 			sourceTree = "<group>";
@@ -649,7 +649,7 @@
 				270FA2801BF53CEA005DCB13 /* Writer.hh in Headers */,
 				270FA27D1BF53CEA005DCB13 /* Encoder.hh in Headers */,
 				2776AA752093C7A3004ACE85 /* DB.hh in Headers */,
-				27C8DF072084102900A99BFC /* MHashTree.hh in Headers */,
+				27C8DF072084102900A99BFC /* MutableHashTree.hh in Headers */,
 				27A924D01D9C32E800086206 /* Path.hh in Headers */,
 				278163B61CE69CA800B94E32 /* Fleece.h in Headers */,
 				274D8245209A3A77008BB39F /* MutableDict.hh in Headers */,
@@ -814,7 +814,7 @@
 			files = (
 				270FA27E1BF53CEA005DCB13 /* Encoder+ObjC.mm in Sources */,
 				2770153C1D59645A008BADD7 /* cdecode.c in Sources */,
-				27C8DF082084102900A99BFC /* MHashTree.cc in Sources */,
+				27C8DF082084102900A99BFC /* MutableHashTree.cc in Sources */,
 				277F45B1208E871000A0D159 /* HashTree.cc in Sources */,
 				270FA27B1BF53CEA005DCB13 /* Value+ObjC.mm in Sources */,
 				27C4ACAC1CE5146500938365 /* Array.cc in Sources */,

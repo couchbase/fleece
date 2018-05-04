@@ -1,9 +1,19 @@
 //
 //  HashTree+Internal.hh
-//  Fleece
 //
-//  Created by Jens Alfke on 4/25/18.
-//  Copyright © 2018 Couchbase. All rights reserved.
+// Copyright © 2018 Couchbase. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 //
 
 #pragma once
@@ -31,6 +41,10 @@ namespace fleece { namespace hashtree {
      */
 
 
+    union Node;
+    class MutableInterior;
+
+
     // Types for the hash-array map:
     using hash_t = uint32_t;
     using bitmap_t = uint32_t;
@@ -55,10 +69,6 @@ namespace fleece { namespace hashtree {
     private:
         uint8_t bytes[sizeof(uint32_t)];
     };
-
-
-    union Node;
-    class MInterior;
 
 
     // Internal class representing a leaf node
@@ -98,8 +108,8 @@ namespace fleece { namespace hashtree {
         endian _valueOffset;
 
         friend union Node;
-        friend class MInterior;
         friend class Interior;
+        friend class MutableInterior;
     };
 
 

@@ -1,7 +1,7 @@
 //
 //  MHashTree.hh
 //  Fleece
-//  Copyright © 2018 Couchbase. All rights reserved.
+// Copyright © 2018 Couchbase. All rights reserved.
 //
 
 #pragma once
@@ -13,19 +13,19 @@
 namespace fleece {
     class Encoder;
     namespace hashtree {
-        class MInterior;
+        class MutableInterior;
         class NodeRef;
     }
 
 
-    class MHashTree {
+    class MutableHashTree {
     public:
-        MHashTree();
-        MHashTree(const HashTree*);
-        ~MHashTree();
+        MutableHashTree();
+        MutableHashTree(const HashTree*);
+        ~MutableHashTree();
 
-        MHashTree& operator= (MHashTree&&);
-        MHashTree& operator= (const HashTree*);
+        MutableHashTree& operator= (MutableHashTree&&);
+        MutableHashTree& operator= (const HashTree*);
 
         using InsertCallback = std::function<const Value*(const Value*)>;
 
@@ -49,7 +49,7 @@ namespace fleece {
         hashtree::NodeRef rootNode() const;
 
         const HashTree* _imRoot {nullptr};
-        hashtree::MInterior* _root {nullptr};
+        hashtree::MutableInterior* _root {nullptr};
 
         friend class HashTree::iterator;
     };
