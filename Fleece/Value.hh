@@ -121,6 +121,9 @@ namespace fleece {
         /** Converts any _non-collection_ type to string form. */
         alloc_slice toString() const;
 
+        /** Returns true if this value is a mutable array or dict. */
+        bool isMutable() const              {return ((size_t)this & 1) != 0;}
+
         //////// Conversion:
 
         /** Writes a JSON representation to a Writer.
@@ -242,6 +245,10 @@ namespace fleece {
         template <bool WIDE>
         const Value* next() const noexcept       {return next(WIDE);}
 
+        internal::MutableCollection* asMutableCollection() const {
+            return isMutable() ? (internal::MutableCollection*)(size_t(this) & ~1) : nullptr;
+        }
+
         // dump:
         size_t dataSize() const noexcept;
         typedef std::map<size_t, const Value*> mapByAddress;
@@ -254,6 +261,7 @@ namespace fleece {
         uint8_t _byte[internal::kWide];
 
         friend class internal::MutableValue;
+        friend class internal::MutableCollection;
         friend class Array;
         friend class Dict;
         friend class MutableDict;

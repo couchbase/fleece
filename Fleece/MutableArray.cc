@@ -49,7 +49,7 @@ namespace fleece {
             return nullptr;
         auto &item = _items[index];
         if (item)
-            return item.asValuePointer();
+            return item.asValue();
         assert(_source);
         return _source->get(index);
     }
@@ -92,6 +92,31 @@ namespace fleece {
     }
 
 
+    MutableCollection* MutableArray::makeMutable(uint32_t index, tags ifType) {
+        if (index >= count())
+            return nullptr;
+        MutableCollection *result = nullptr;
+        auto &mval = _items[index];
+        if (mval) {
+            result = mval.makeMutable(ifType);
+        } else if (_source) {
+            result = MutableCollection::mutableCopy(_source->get(index), ifType);
+            if (result)
+                _items[index].set(result);
+        }
+        if (result)
+            _changed = true;
+        return result;
+    }
+
+
+    const MutableValue* MutableArray::first() {
+        populate(0);
+        return &_items.front();
+    }
+
+
+
     MutableArray::iterator::iterator(const MutableArray *ma) noexcept
     :_iter(ma->_items.begin())
     ,_iterEnd(ma->_items.end())
@@ -104,11 +129,11 @@ namespace fleece {
         if (_iter == _iterEnd) {
             _value = nullptr;
         } else {
-            _value = _iter->asValuePointer();
+            _value = _iter->asValue();
             if (!_value)
-                _value = _sourceIter.value();
+                _value = _sourceIter[_index];
             ++_iter;
-            ++_sourceIter;
+            ++_index;
         }
         return *this;
     }

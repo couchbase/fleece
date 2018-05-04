@@ -23,19 +23,23 @@
 namespace fleece {
 
     class Dict;
+    class MutableArray;
 
     /** A Value that's an array. */
     class Array : public Value {
         struct impl {
             const Value* _first;
             uint32_t _count;
-            bool _wide;
+            uint8_t _width;
 
             impl(const Value*) noexcept;
-            const Value* second() const noexcept      {return _first->next(_wide);}
+            const Value* second() const noexcept      {return offsetby(_first, _width);}
             const Value* firstValue() const noexcept;
+            const Value* deref(const Value*) const noexcept;
             const Value* operator[] (unsigned index) const noexcept;
             size_t indexOf(const Value *v) const noexcept;
+            void offset(uint32_t n);
+            bool isMutableArray() const                 {return _width > 4;}
         };
 
     public:
@@ -49,6 +53,9 @@ namespace fleece {
             If you're accessing a lot of items of the same array, it's faster to make an
             iterator and use its sequential or random-access accessors. */
         const Value* get(uint32_t index) const noexcept;
+
+        /** If this array is mutable, returns the equivalent MutableArray*, else returns nullptr. */
+        MutableArray* asMutable() const              {return (MutableArray*)asMutableCollection();}
 
         /** An empty Array. */
         static const Array* const kEmpty;

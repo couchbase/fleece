@@ -21,6 +21,7 @@
 
 namespace fleece {
 
+    class MutableDict;
     class SharedKeys;
 
     /** A Value that's a dictionary/map */
@@ -45,6 +46,9 @@ namespace fleece {
             This is slower than get(), but works even if the Fleece data was generated without
             sorted keys. */
         const Value* get_unsorted(slice key) const noexcept;
+
+        /** If this array is mutable, returns the equivalent MutableArray*, else returns nullptr. */
+        MutableDict* asMutable() const              {return (MutableDict*)asMutableCollection();}
 
 #ifdef __OBJC__
         /** Looks up the Value for a key given as an NSString object. */

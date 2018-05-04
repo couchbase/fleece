@@ -25,12 +25,12 @@ namespace fleece {
 
     TEST_CASE("MutableArray attributes", "[Mutable]") {
         MutableArray ma;
-        const Value *v = ma.asValuePointer();
+        const Value *v = ma.asArray();
 
-        CHECK(MutableArray::isMutableCollection(v));
-        CHECK(MutableArray::asMutableArray(v) == &ma);
+        CHECK(ma.asValue() == v);
+        CHECK(MutableArray::isMutable(v));
+        CHECK(MutableArray::asMutable((Array*)v) == &ma);
 
-#if 0
         CHECK(v->type() == kArray);
 
         CHECK(v->asBool() == true);
@@ -47,10 +47,7 @@ namespace fleece {
         CHECK(v->asData() == nullslice);
         CHECK(v->toString() == nullslice);
         CHECK(v->asDict() == nullptr);
-        CHECK(v->asArray() == &ma);
-        CHECK(v->asMutableDict() == nullptr);
-        CHECK(v->asMutableArray() == &ma);
-#endif
+        CHECK(v->asArray() == v);
     }
 
 
@@ -111,7 +108,7 @@ namespace fleece {
             CHECK(!i);
         }
 
-//        CHECK(ma.toJSON() == "[null,false,true,0,-123,2017,123456789,-123456789,\"Hot dog\"]"_sl);
+        CHECK(ma.asArray()->toJSON() == "[null,false,true,0,-123,2017,123456789,-123456789,\"Hot dog\"]"_sl);
 
         ma.remove(3, 5);
         CHECK(ma.count() == 4);
@@ -139,7 +136,7 @@ namespace fleece {
         mb.append(&ma);
         CHECK(mb.isChanged());
 
-        CHECK(mb.get(0) == ma.asValuePointer());
+        CHECK(mb.get(0) == ma.asValue());
         CHECK(mb.makeArrayMutable(0) == &ma);
 
         Encoder enc;
@@ -150,30 +147,34 @@ namespace fleece {
         alloc_slice data = enc.extractOutput();
         const Array* fleeceArray = Value::fromData(data)->asArray();
 
-//        CHECK(fleeceArray->asMutableArray() == nullptr);
+        CHECK(fleeceArray->asMutable() == nullptr);
 
         mb.append(fleeceArray);
         CHECK(mb.get(1) == fleeceArray);
         auto mc = mb.makeArrayMutable(1);
         CHECK(mc != nullptr);
-        CHECK(mc->asValuePointer() == mb.get(1));
+        CHECK(mc->asValue() == mb.get(1));
         CHECK(mb.get(1)->type() == kArray);
 
         CHECK(mc->count() == 2);
-        CHECK(((const Array*)mc)->count() == 2);
+        CHECK(mc->asArray()->count() == 2);
         CHECK(mc->get(0)->asString() == "totoro"_sl);
         CHECK(mc->get(1)->asString() == "catbus"_sl);
     }
 
 
+#pragma mark - MUTABLE DICT:
+
+
     TEST_CASE("MutableDict attributes", "[Mutable]") {
         MutableDict md;
-        const Value *v = md.asValuePointer();
+        const Value *v = md.asDict();
+        CHECK(v->type() == kDict);
+        CHECK(md.asValue() == v);
 
-        CHECK(MutableDict::isMutableCollection(v));
-        CHECK(MutableDict::asMutableDict(v) == &md);
+        CHECK(MutableDict::isMutable(v));
+        CHECK(MutableDict::asMutable((const Dict*)v) == &md);
 
-#if 0
         CHECK(v->type() == kDict);
 
         CHECK(v->asBool() == true);
@@ -190,16 +191,13 @@ namespace fleece {
         CHECK(v->asData() == nullslice);
         CHECK(v->toString() == nullslice);
         CHECK(v->asArray() == nullptr);
-        CHECK(v->asDict() == &md);
-        CHECK(v->asMutableArray() == nullptr);
-        CHECK(v->asMutableDict() == &md);
-#endif
+        CHECK(v->asDict() == v);
     }
 
 
     TEST_CASE("MutableDict set values", "[Mutable]") {
         MutableDict md;
-        const Dict *d = (const Dict*)md.asValuePointer();
+        const Dict *d = (const Dict*)md.asValue();
 
         REQUIRE(md.count() == 0);
         REQUIRE(d->count() == 0);
@@ -214,6 +212,7 @@ namespace fleece {
             Dict::iterator i(d);
             CHECK(!i);
         }
+
         CHECK(!md.isChanged());
 
         md.set("null"_sl, nullValue);
@@ -386,11 +385,10 @@ namespace fleece {
             CHECK(!i);
         }
 
-#if 0
         Encoder enc2;
         enc2.setBase(data);
         enc2.reuseBaseStrings();
-        enc2.writeValue(&update);
+        enc2.writeValue(update.asValue());
         alloc_slice data2 = enc2.extractOutput();
         REQUIRE(data2.size == 28);      // may change slightly with changes to implementation
 
@@ -400,7 +398,6 @@ namespace fleece {
         std::cerr << "\nContents:      " << newDict->toJSON().asString() << "\n";
         std::cerr << "Delta:         " << data2 << "\n\n";
         Value::dump(combinedData, std::cerr);
-#endif
 
         // Check that removeAll works when there's a base Dict:
         update.removeAll();
@@ -423,14 +420,15 @@ namespace fleece {
         MutableDict mp(person);
         mp.set("age"_sl, 31);
         MutableArray *friends = mp.makeArrayMutable("friends"_sl);
+        REQUIRE(friends);
         auto frend = friends->makeDictMutable(1);
+        REQUIRE(frend);
         frend->set("name"_sl, "Reddy Kill-a-Watt"_sl);
 
-#if 0
         Encoder enc;
         enc.setBase(data);
         enc.reuseBaseStrings();
-        enc.writeValue(&mp);
+        enc.writeValue(mp.asValue());
         alloc_slice data2 = enc.extractOutput();
 
         alloc_slice combined(data);
@@ -439,7 +437,6 @@ namespace fleece {
         std::cerr << "\n\nContents:      " << newDict->toJSON().asString() << "\n";
         std::cerr << "Delta:         " << data2 << "\n\n";
         Value::dump(combined, std::cerr);
-#endif
     }
 
 }

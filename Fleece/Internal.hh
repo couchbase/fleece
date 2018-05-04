@@ -82,6 +82,7 @@ namespace fleece {
         static const uint32_t kLongArrayCount = 0x07FF;
 
         class MutableValue;
+        class MutableCollection;
 
 #ifndef NDEBUG
         extern std::atomic<unsigned> gTotalComparisons;

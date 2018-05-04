@@ -282,16 +282,16 @@ namespace fleece {
                 if (_usuallyTrue(t == kDictTag))
                     itemCount *= 2;
                 // Check that size fits:
-                auto itemsSize = itemCount * width(array._wide);
+                auto itemsSize = itemCount * array._width;
                 if (_usuallyFalse(offsetby(array._first, itemsSize) > dataEnd))
                     return false;
 
                 // Check each Array/Dict element:
                 auto item = array._first;
                 while (itemCount-- > 0) {
-                    auto nextItem = item->next(array._wide);
+                    auto nextItem = offsetby(item, array._width);
                     if (item->isPointer()) {
-                        item = item->carefulDeref(array._wide, dataStart, this);
+                        item = item->carefulDeref(array._width > kNarrow, dataStart, this);
                         if (_usuallyFalse(item == nullptr))
                             return false;
                         if (_usuallyFalse(!item->validate(dataStart, this)))

@@ -17,6 +17,7 @@
 //
 
 #include "Dict.hh"
+#include "MutableDict.hh"
 #include "SharedKeys.hh"
 #include "Internal.hh"
 #include "PlatformCompat.hh"
@@ -272,10 +273,14 @@ namespace fleece {
 
 
     uint32_t Dict::count() const noexcept {
+        if (_usuallyFalse(isMutable()))
+            return asMutable()->count();
         return Array::impl(this)._count;
     }
 
     const Value* Dict::get_unsorted(slice keyToFind) const noexcept {
+        if (_usuallyFalse(isMutable()))
+            return asMutable()->get(keyToFind);
         if (isWideArray())
             return dictImpl<true>(this).get_unsorted(keyToFind);
         else
@@ -283,6 +288,8 @@ namespace fleece {
     }
 
     const Value* Dict::get(slice keyToFind) const noexcept {
+        if (_usuallyFalse(isMutable()))
+            return asMutable()->get(keyToFind);
         if (isWideArray())
             return dictImpl<true>(this).get(keyToFind);
             else
@@ -360,7 +367,7 @@ namespace fleece {
     Dict::iterator& Dict::iterator::operator++() {
         throwIf(_a._count == 0, OutOfRange, "iterating past end of dict");
         --_a._count;
-        _a._first = offsetby(_a._first, 2*width(_a._wide));
+        _a._first = offsetby(_a._first, 2*_a._width);
         readKV();
         return *this;
     }
@@ -368,15 +375,15 @@ namespace fleece {
     Dict::iterator& Dict::iterator::operator += (uint32_t n) {
         throwIf(n > _a._count, OutOfRange, "iterating past end of dict");
         _a._count -= n;
-        _a._first = offsetby(_a._first, 2*width(_a._wide)*n);
+        _a._first = offsetby(_a._first, 2*_a._width*n);
         readKV();
         return *this;
     }
 
     void Dict::iterator::readKV() noexcept {
         if (_usuallyTrue(_a._count)) {
-            _key   = deref(_a._first,                _a._wide);
-            _value = deref(_a._first->next(_a._wide), _a._wide);
+            _key   = _a.deref(_a._first);
+            _value = _a.deref(_a.second());
         } else {
             _key = _value = nullptr;
         }

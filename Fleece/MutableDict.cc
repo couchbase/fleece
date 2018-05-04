@@ -17,6 +17,7 @@
 //
 
 #include "MutableDict.hh"
+#include "MutableArray.hh"
 #include "MutableValue.hh"
 
 namespace fleece {
@@ -28,6 +29,12 @@ namespace fleece {
     ,_source(d)
     ,_count(d ? d->count() : 0)
     { }
+
+
+    void MutableDict::markChanged() {
+        _changed = true;
+        _iterable.reset();
+    }
 
 
     MutableValue* MutableDict::_findValueFor(slice key) const noexcept {
@@ -54,31 +61,33 @@ namespace fleece {
         auto &val = _makeValueFor(key);
         if (!val && !(_source && _source->get(key)))
             ++_count;
-        _changed = true;
+        markChanged();
         return val;
     }
 
 
     const Value* MutableDict::get(slice key) const noexcept {
-        auto val = _findValueFor(key);
+        MutableValue* val = _findValueFor(key);
         if (val)
-            return val->asValuePointer();
+            return val->asValue();
         else
             return _source ? _source->get(key) : nullptr;
     }
 
 
-    const Value* MutableDict::makeMutable(slice key, tags ifType) {
-        auto val = get(key);
-        if (!val)
-            return nullptr;
-        auto md = MutableCollection::asMutableCollection(val, ifType);
-        if (md)
-            return val;
-        if (val->tag() != ifType)
-            return nullptr;
-        _changed = true;
-        return _mutableValueToSetFor(key).makeMutable(ifType);
+    MutableCollection* MutableDict::makeMutable(slice key, tags ifType) {
+        MutableCollection *result = nullptr;
+        MutableValue* mval = _findValueFor(key);
+        if (mval) {
+            result = mval->makeMutable(ifType);
+        } else if (_source) {
+            result = MutableCollection::mutableCopy(_source->get(key), ifType);
+            if (result)
+                _map.emplace(key, result);
+        }
+        if (result)
+            markChanged();
+        return result;
     }
 
 
@@ -93,7 +102,7 @@ namespace fleece {
                 return;
         }
         --_count;
-        _changed = true;
+        markChanged();
     }
 
 
@@ -107,7 +116,21 @@ namespace fleece {
                 _makeValueFor(i.keyString());    // override source with empty values
         }
         _count = 0;
-        _changed = true;
+        markChanged();
+    }
+
+
+    MutableArray* MutableDict::kvArray() {
+        if (!_iterable) {
+            _iterable.reset(new MutableArray(2*count()));
+            uint32_t n = 0;
+            for (iterator i(this); i; ++i) {
+                _iterable->set(n++, i.keyString());
+                _iterable->set(n++, i.value());
+            }
+            assert(n == 2*_count);
+        }
+        return _iterable.get();
     }
 
 
@@ -153,7 +176,7 @@ namespace fleece {
                 if (_usuallyTrue(exists)) {
                     // Key from _map is lower or equal, and its value exists, so add its pair:
                     _key = _newIter->first;
-                    _value = _newIter->second.asValuePointer();
+                    _value = _newIter->second.asValue();
                 }
                 if (_sourceActive && _sourceKey == _newIter->first) {
                     ++_sourceIter;

@@ -27,6 +27,19 @@ namespace fleece { namespace internal {
     using namespace internal;
 
 
+    MutableCollection* MutableCollection::mutableCopy(const Value *v, tags ifType) {
+        if (!v || v->tag() != ifType)
+            return nullptr;
+        if (v->isMutable())
+            return asMutable(v);
+        switch (ifType) {
+            case kArrayTag: return new MutableArray((const Array*)v);
+            case kDictTag:  return new MutableDict((const Dict*)v);
+            default:        return nullptr;
+        }
+    }
+
+
     MutableValue::~MutableValue() {
         if (_usuallyFalse(_malloced))
             free(const_cast<Value*>(_asValue));
@@ -41,30 +54,26 @@ namespace fleece { namespace internal {
     }
 
 
-    const Value* MutableValue::asValuePointer() const {
+    const Value* MutableValue::asValue() const {
         switch (_which) {
             case IsInline:                  return (const Value*)&_asInline;
             case IsValuePointer:            return _asValue;
-            case IsMutableCollection:       return _asCollection->asValuePointer();
         }
     }
 
 
     MutableValue& MutableValue::operator= (const Value *v) {
         reset();
-        if (!v || MutableCollection::isMutableCollection(v)) {
-            _which = IsMutableCollection;
-            _asCollection = (MutableCollection*)v;
-        } else {
+        if (v) {
             auto size = v->dataSize();
             if (size <= sizeof(_asInline)) {
                 _which = IsInline;
                 memcpy(&_asInline, v, size);
-            } else {
-                _which = IsValuePointer;
-                _asValue = v;
+                return *this;
             }
         }
+        _which = IsValuePointer;
+        _asValue = v;
         return *this;
     }
 
@@ -90,9 +99,9 @@ namespace fleece { namespace internal {
             setInline(kShortIntTag, (i >> 8) & 0x0F, i & 0xFF);
         } else {
             uint8_t buf[8];
-            auto size = PutIntOfLength(buf, i, isUnsigned) - 1;
+            auto size = PutIntOfLength(buf, i, isUnsigned);
             setValue(kIntTag,
-                     (int)size | (isUnsigned ? 0x08 : 0),
+                     (int)(size-1) | (isUnsigned ? 0x08 : 0),
                      {buf, size});
         }
     }
@@ -111,13 +120,8 @@ namespace fleece { namespace internal {
 
     void MutableValue::set(const Value *v) {
         reset();
-        if (MutableCollection::isMutableCollection(v)) {
-            _which = IsMutableCollection;
-            _asCollection = MutableCollection::asMutableCollection(v);
-        } else {
-            _which = IsValuePointer;
-            _asValue = v;
-        }
+        _which = IsValuePointer;
+        _asValue = v;
     }
 
 
@@ -161,25 +165,15 @@ namespace fleece { namespace internal {
     }
 
 
-    const Value* MutableValue::makeMutable(tags ifType) {
+    MutableCollection* MutableValue::makeMutable(tags ifType) {
         switch (_which) {
             case IsInline:
                 return nullptr;
             case IsValuePointer: {
-                if (!_asValue || _asValue->tag() != ifType)
-                    return nullptr;
-                MutableCollection *newMutableResult;
-                if (ifType == kArrayTag)
-                    newMutableResult = new MutableArray((const Array*)_asValue);
-                else
-                    newMutableResult = new MutableDict((const Dict*)_asValue);
-                set(newMutableResult);
-                return newMutableResult->asValuePointer();
-            }
-            case IsMutableCollection: {
-                if (!_asCollection || _asCollection->tag() != ifType)
-                    return nullptr;
-                return _asCollection->asValuePointer();
+                auto mval = MutableCollection::mutableCopy(_asValue, ifType);
+                if (mval)
+                    set(mval);
+                return mval;
             }
         }
     }

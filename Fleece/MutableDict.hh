@@ -17,8 +17,14 @@ namespace fleece {
     class MutableDict : public internal::MutableCollection {
     public:
 
+        static MutableDict* asMutable(const Dict *dict) {
+            return (MutableDict*)MutableCollection::asMutable(dict);
+        }
+
         /** Constructs a mutable copy of the given Dict. */
         MutableDict(const Dict* =nullptr);
+
+        const Dict* asDict() const                          {return (const Dict*)asValue();}
 
         const Dict* source() const                          {return _source;}
 
@@ -74,17 +80,23 @@ namespace fleece {
             uint32_t _count;
         };
 
+    protected:
+        friend class Array;
+
+        MutableArray* kvArray();
 
     private:
+        void markChanged();
         internal::MutableValue* _findValueFor(slice keyToFind) const noexcept;
         internal::MutableValue& _makeValueFor(slice key);
         internal::MutableValue& _mutableValueToSetFor(slice key);
 
-        const Value* makeMutable(slice key, internal::tags ifType);
+        MutableCollection* makeMutable(slice key, internal::tags ifType);
 
         uint32_t _count {0};
         const Dict* _source {nullptr};
         std::map<slice, internal::MutableValue> _map;
         std::deque<alloc_slice> _backingSlices;
+        std::unique_ptr<MutableArray> _iterable;
     };
 }
