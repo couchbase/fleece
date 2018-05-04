@@ -57,12 +57,13 @@ namespace fleece {
 
         /** Promotes an Array item to a MutableArray (in place) and returns it.
             Or if the item is already a MutableArray, just returns it. Else returns null. */
-        MutableArray* makeArrayMutable(uint32_t i)  {return (MutableArray*)makeMutable(i, internal::kArrayTag);}
+        MutableArray* makeArrayMutable(uint32_t i)  {return (MutableArray*)makeMutable(i,
+                                                                            internal::kArrayTag);}
 
         /** Promotes a Dict item to a MutableDict (in place) and returns it.
             Or if the item is already a MutableDict, just returns it. Else returns null. */
-        MutableDict* makeDictMutable(uint32_t i)    {return (MutableDict*)makeMutable(i, internal::kDictTag);}
-
+        MutableDict* makeDictMutable(uint32_t i)    {return (MutableDict*)makeMutable(i,
+                                                                            internal::kDictTag);}
 
         class iterator {
         public:

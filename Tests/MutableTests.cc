@@ -23,7 +23,7 @@
 
 namespace fleece {
 
-    TEST_CASE("MutableArray attributes", "[Mutable]") {
+    TEST_CASE("MutableArray type checking", "[Mutable]") {
         MutableArray ma;
         const Value *v = ma.asArray();
 
@@ -125,6 +125,33 @@ namespace fleece {
     }
 
 
+    TEST_CASE("MutableArray as Array", "[Mutable]") {
+        MutableArray ma;
+        const Array *a = ma.asArray();
+        CHECK(a->type() == kArray);
+        CHECK(a->count() == 0);
+        CHECK(a->empty());
+
+        ma.resize(2);
+        ma.set(0, 123);
+        ma.set(1, 456);
+
+        CHECK(a->count() == 2);
+        CHECK(!a->empty());
+        CHECK(a->get(0)->asInt() == 123);
+        CHECK(a->get(1)->asInt() == 456);
+
+        Array::iterator i(a);
+        CHECK(i);
+        CHECK(i.value()->asInt() == 123);
+        ++i;
+        CHECK(i);
+        CHECK(i.value()->asInt() == 456);
+        ++i;
+        CHECK(!i);
+    }
+
+
     TEST_CASE("MutableArray pointers", "[Mutable]") {
         MutableArray ma;
         ma.resize(2);
@@ -166,7 +193,7 @@ namespace fleece {
 #pragma mark - MUTABLE DICT:
 
 
-    TEST_CASE("MutableDict attributes", "[Mutable]") {
+    TEST_CASE("MutableDict type checking", "[Mutable]") {
         MutableDict md;
         const Value *v = md.asDict();
         CHECK(v->type() == kDict);
@@ -197,19 +224,11 @@ namespace fleece {
 
     TEST_CASE("MutableDict set values", "[Mutable]") {
         MutableDict md;
-        const Dict *d = (const Dict*)md.asValue();
-
         REQUIRE(md.count() == 0);
-        REQUIRE(d->count() == 0);
-        //REQUIRE(d->empty());  //FIX!
-        CHECK(d->get("foo"_sl) == nullptr);
+        CHECK(md.get("foo"_sl) == nullptr);
 
         {
             MutableDict::iterator i(&md);
-            CHECK(!i);
-        }
-        {
-            Dict::iterator i(d);
             CHECK(!i);
         }
 
@@ -230,17 +249,78 @@ namespace fleece {
         static const valueType kExpectedTypes[9] = {
             kNumber, kNumber, kBoolean, kNumber, kNumber, kNull, kString, kBoolean, kNumber};
         for (int i = 0; i < 9; i++)
-            REQUIRE(d->get(kExpectedKeys[i])->type() == kExpectedTypes[i]);
+            REQUIRE(md.get(kExpectedKeys[i])->type() == kExpectedTypes[i]);
 
-        CHECK(d->get("f"_sl)->asBool() == false);
-        CHECK(d->get("t"_sl)->asBool() == true);
-        CHECK(d->get("z"_sl)->asInt() == 0);
-        CHECK(d->get("-"_sl)->asInt() == -123);
-        CHECK(d->get("+"_sl)->asInt() == 2017);
-        CHECK(d->get("hi"_sl)->asInt() == 123456789);
-        CHECK(d->get("lo"_sl)->asInt() == -123456789);
-        CHECK(d->get("str"_sl)->asString() == "Hot dog"_sl);
+        CHECK(md.get("f"_sl)->asBool() == false);
+        CHECK(md.get("t"_sl)->asBool() == true);
+        CHECK(md.get("z"_sl)->asInt() == 0);
+        CHECK(md.get("-"_sl)->asInt() == -123);
+        CHECK(md.get("+"_sl)->asInt() == 2017);
+        CHECK(md.get("hi"_sl)->asInt() == 123456789);
+        CHECK(md.get("lo"_sl)->asInt() == -123456789);
+        CHECK(md.get("str"_sl)->asString() == "Hot dog"_sl);
+        CHECK(md.get("foo"_sl) == nullptr);
+
+        {
+            bool found[9] = { };
+            MutableDict::iterator i(&md);
+            for (int n = 0; n < 9; ++n) {
+                std::cerr << "Item " << n << ": " << i.keyString() << " = " << (void*)i.value() << "\n";
+                CHECK(i);
+                slice key = i.keyString();
+                auto j = std::find(&kExpectedKeys[0], &kExpectedKeys[9], key) - &kExpectedKeys[0];
+                REQUIRE(j < 9);
+                REQUIRE(found[j] == false);
+                found[j] = true;
+                CHECK(i.value() != nullptr);
+                CHECK(i.value()->type() == kExpectedTypes[j]);
+                ++i;
+            }
+            CHECK(!i);
+        }
+
+        md.remove("lo"_sl);
+        CHECK(md.get("lo"_sl) == nullptr);
+
+//        CHECK(md.toJSON() == "{\"+\":2017,\"-\":-123,\"f\":false,\"hi\":123456789,\"null\":null,\"str\":\"Hot dog\",\"t\":true,\"z\":0}"_sl);
+
+        md.removeAll();
+        CHECK(md.count() == 0);
+        {
+            MutableDict::iterator i(&md);
+            CHECK(!i);
+        }
+    }
+
+
+    TEST_CASE("MutableDict as Dict", "[Mutable]") {
+        MutableDict md;
+        const Dict *d = (const Dict*)md.asValue();
+        CHECK(d->type() == kDict);
+        CHECK(d->count() == 0);
+        CHECK(d->empty());
         CHECK(d->get("foo"_sl) == nullptr);
+        {
+            Dict::iterator i(d);
+            CHECK(!i);
+        }
+
+        md.set("null"_sl, nullValue);
+        md.set("f"_sl, false);
+        md.set("t"_sl, true);
+        md.set("z"_sl, 0);
+        md.set("-"_sl, -123);
+        md.set("+"_sl, 2017);
+        md.set("hi"_sl, 123456789);
+        md.set("lo"_sl, -123456789);
+        md.set("str"_sl, "Hot dog"_sl);
+
+        static const slice kExpectedKeys[9] = {
+            "+"_sl, "-"_sl, "f"_sl, "hi"_sl, "lo"_sl, "null"_sl, "str"_sl, "t"_sl, "z"_sl};
+        static const valueType kExpectedTypes[9] = {
+            kNumber, kNumber, kBoolean, kNumber, kNumber, kNull, kString, kBoolean, kNumber};
+        for (int i = 0; i < 9; i++)
+            REQUIRE(d->get(kExpectedKeys[i])->type() == kExpectedTypes[i]);
 
         {
             bool found[9] = { };
@@ -260,29 +340,18 @@ namespace fleece {
             CHECK(!i);
         }
 
-        {
-            Dict::iterator i(d);
-            for (int n = 0; n < 9; ++n) {
-                std::cerr << "Item " << n << ": " << i.keyString() << " = " << (void*)i.value() << "\n";
-                CHECK(i);
-                CHECK(i.keyString() == kExpectedKeys[n]);
-                CHECK(i.value()->type() == kExpectedTypes[n]);
-                ++i;
-            }
-            CHECK(!i);
-        }
-
         md.remove("lo"_sl);
         CHECK(d->get("lo"_sl) == nullptr);
 
         CHECK(d->toJSON() == "{\"+\":2017,\"-\":-123,\"f\":false,\"hi\":123456789,\"null\":null,\"str\":\"Hot dog\",\"t\":true,\"z\":0}"_sl);
 
         md.removeAll();
-        CHECK(md.count() == 0);
+        CHECK(d->count() == 0);
         {
-            MutableDict::iterator i(&md);
+            Dict::iterator i(d);
             CHECK(!i);
         }
+
     }
 
 

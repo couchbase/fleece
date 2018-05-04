@@ -58,7 +58,7 @@ namespace fleece {
     void MutableArray::resize(uint32_t newSize) {
         if (newSize == count())
             return;
-        _items.resize(newSize, MutableValue(Value::kNullValue));
+        _items.resize(newSize, MutableValue(Null()));
         _changed = true;
     }
 
@@ -68,7 +68,7 @@ namespace fleece {
         if (n == 0)
             return;
         populate(where);
-        _items.insert(_items.begin() + where,  n, MutableValue(Value::kNullValue));
+        _items.insert(_items.begin() + where,  n, MutableValue(Null()));
         _changed = true;
     }
 

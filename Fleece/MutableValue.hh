@@ -59,18 +59,17 @@ namespace fleece { namespace internal {
     class MutableValue {
     public:
         MutableValue() { }
-        explicit MutableValue(MutableCollection *md) :_which(IsValuePointer), _asValue(md->asValue()) { }
-        explicit MutableValue(const Value *v)   {*this = v;}  // operator= does the work
+        explicit MutableValue(MutableCollection *md)    :_asValue(md->asValue()) { }
+        MutableValue(Null);
         ~MutableValue();
 
         MutableValue(const MutableValue&) noexcept =default;
+        MutableValue& operator= (const MutableValue&) noexcept =default;
 
         MutableValue(MutableValue &&other) noexcept {
             memcpy(this, &other, sizeof(other));
             other._malloced = false;
         }
-
-        MutableValue& operator= (const MutableValue&) noexcept =default;
 
         MutableValue& operator= (MutableValue &&other) noexcept {
             reset();
@@ -79,16 +78,14 @@ namespace fleece { namespace internal {
             return *this;
         }
 
-        explicit operator bool() const  {return _which == IsInline || _asValue != nullptr;}
+        explicit operator bool() const                  {return _inline || _asValue != nullptr;}
 
         const Value* asValue() const;
         MutableCollection* asMutableCollection() const;
 
-        MutableValue& operator= (const Value *v);
-
         void set(MutableCollection *c) {
             reset();
-            _which = IsValuePointer;
+            _inline = false;
             _asValue = c->asValue();
         }
 
@@ -110,34 +107,17 @@ namespace fleece { namespace internal {
 
     private:
         void reset();
-
-        void setInline(internal::tags valueTag, int tiny) {
-            reset();
-            _which = IsInline;
-            _asInline[0] = uint8_t((valueTag << 4) | tiny);
-        }
-
-        void setInline(internal::tags valueTag, int tiny, int byte1) {
-            setInline(valueTag, tiny);
-            _asInline[1] = (uint8_t)byte1;
-        }
-
+        void setInline(internal::tags valueTag, int tiny);
         void setValue(internal::tags valueTag, int tiny, slice bytes);
-
-        template <class INT>
-        void setInt(INT, bool isUnsigned);
+        template <class INT> void setInt(INT, bool isUnsigned);
         void _setStringOrData(internal::tags valueTag, slice);
         uint8_t* allocateValue(size_t);
-
-        enum Which : uint8_t {
-            IsInline, IsValuePointer
-        };
 
         union {
             uint8_t             _asInline[sizeof(void*)];
             const Value*        _asValue {nullptr};
         };
-        Which _which {IsValuePointer};
+        bool _inline {false};
         bool _malloced {false};
     };
 
