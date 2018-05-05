@@ -167,6 +167,9 @@ namespace fleece {
         static NSMapTable* createSharedStringsTable() noexcept;
 #endif
 
+        void _retain();
+        void _release();
+
     protected:
         constexpr Value(internal::tags tag, int tiny, int byte1 = 0)
         :_byte {(uint8_t)((tag<<4) | tiny),
@@ -245,10 +248,6 @@ namespace fleece {
         template <bool WIDE>
         const Value* next() const noexcept       {return next(WIDE);}
 
-        internal::MutableCollection* asMutableCollection() const {
-            return isMutable() ? (internal::MutableCollection*)(size_t(this) & ~1) : nullptr;
-        }
-
         // dump:
         size_t dataSize() const noexcept;
         typedef std::map<size_t, const Value*> mapByAddress;
@@ -262,9 +261,9 @@ namespace fleece {
 
         friend class internal::MutableValue;
         friend class internal::MutableCollection;
+        friend class internal::HeapValue;
         friend class Array;
         friend class Dict;
-        friend class MutableDict;
         friend class Encoder;
         friend class ValueTests;
         friend class EncoderTests;

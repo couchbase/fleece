@@ -289,7 +289,7 @@ TEST_CASE("Perf TreeSearch", "[.Perf]") {
         auto person = i.value()->asDict();
         auto key = person->get("guid"_sl)->asString();
         names.emplace_back(key);
-        tree.insert(key, person);
+        tree.set(key, person);
         if (++nPeople >= 1000)
             break;
     }

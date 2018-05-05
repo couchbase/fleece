@@ -31,7 +31,6 @@ namespace fleece {
     }
 
     void DB::load() {
-        _unsavedValues.clear();
         _data = mmap_slice(_filePath.c_str());
         if (_data)
             _tree = HashTree::fromData(_data);
@@ -59,8 +58,14 @@ namespace fleece {
     }
 
 
-    const Value* DB::get(slice key) {
-        return _tree.get(key);
+    const Dict* DB::get(slice key) {
+        auto value = _tree.get(key);
+        return value ? value->asDict() : nullptr;
+    }
+
+
+    MutableDict* DB::getMutable(slice key) {
+        return _tree.getMutableDict(key);
     }
 
 
@@ -70,28 +75,27 @@ namespace fleece {
 
 
     bool DB::put(slice key, PutMode mode, PutCallback callback) {
-        if (!_enc)
-            _enc.reset(new Encoder);
         return _tree.insert(key, [&](const Value *curVal) -> const Value* {
             if ((mode == Insert && curVal) || (mode == Update && !curVal))
                 return nullptr;
-            if (!callback(curVal, *_enc)) {
-                _enc->reset();
-                return nullptr;
-            }
-            auto valueData = _enc->extractOutput();
-            _unsavedValues.push_back(valueData);
-            return Value::fromTrustedData(valueData);
+            auto dict = curVal ? curVal->asDict() : nullptr;
+            return callback(dict);
         });
     }
 
     
-    bool DB::put(slice key, PutMode mode, const Value *value) {
-        return _tree.insert(key, [&](const Value *curVal) -> const Value* {
-            if ((mode == Insert && curVal) || (mode == Update && !curVal))
-                return nullptr;
-            return value;
-        });
+    bool DB::put(slice key, PutMode mode, const Dict *value) {
+        if (value) {
+            return _tree.insert(key, [&](const Value *curVal) -> const Value* {
+                if ((mode == Insert && curVal) || (mode == Update && !curVal))
+                    return nullptr;
+                return value;
+            });
+        } else if (mode != Insert) {
+            return _tree.remove(key);
+        } else {
+            return false;
+        }
     }
 
 }

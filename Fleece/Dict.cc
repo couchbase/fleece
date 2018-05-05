@@ -335,6 +335,10 @@ namespace fleece {
     }
 
 
+    MutableDict* Dict::asMutable() const {
+        return (MutableDict*)HeapValue::asHeapValue(this);
+    }
+
     static constexpr Dict kEmptyDictInstance;
     const Dict* const Dict::kEmpty = &kEmptyDictInstance;
 

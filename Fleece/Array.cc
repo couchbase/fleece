@@ -50,9 +50,9 @@ namespace fleece {
             }
         } else {
             // Mutable Array or Dict:
-            MutableCollection* mcoll = v->asMutableCollection();
+            auto mcoll = (MutableCollection*)HeapValue::asHeapValue(v);
             MutableArray *mutArray;
-            if (mcoll->tag() == kArrayTag) {
+            if (v->tag() == kArrayTag) {
                 mutArray = (MutableArray*)mcoll;
                 _count = mutArray->count();
             } else {
@@ -109,6 +109,10 @@ namespace fleece {
         if (_usuallyFalse(isMutable()))
             return asMutable()->get(index);
         return impl(this)[index];
+    }
+
+    MutableArray* Array::asMutable() const {
+        return (MutableArray*)HeapValue::asHeapValue(this);
     }
 
     static constexpr Array kEmptyArrayInstance;

@@ -5,7 +5,7 @@
 //
 
 #pragma once
-#include "Value.hh"
+#include "HeapValue.hh"
 
 namespace fleece {
     class MutableArray;
@@ -17,34 +17,28 @@ namespace fleece { namespace internal {
 
 
     /** Abstract base class of Mutable{Array,Dict}. */
-    class MutableCollection {
+    class MutableCollection : public HeapValue {
     public:
 
         // Coercing Value --> MutableCollection:
 
-        static bool isMutable(const Value *v)           {return ((size_t)v & 1) != 0;}
-        static MutableCollection* asMutable(const Value *v);
+        static bool isMutable(const Value *v)           {return isHeapValue(v);}
         static MutableCollection* mutableCopy(const Value *v, tags ifType);
-
-        // Coercing MutableCollection -> Value:
-
-        const Value* asValue() const                    {return (const Value*)&_header[1];}
 
         // MutableCollection API:
 
-        tags tag() const                                {return tags(_header[1] >> 4);}
         bool isChanged() const                          {return _changed;}
 
     protected:
         MutableCollection(internal::tags tag)
-        :_header{0xFF, uint8_t(tag << 4)}
+        :HeapValue(tag, 0)
         ,_changed(false)
         { }
+        ~MutableCollection() =default;
 
         void setChanged(bool c)                         {_changed = c;}
 
     private:
-        uint8_t _header[2];             // *2nd* byte is a Value header byte
         bool _changed {false};
     };
 
@@ -53,24 +47,14 @@ namespace fleece { namespace internal {
     class MutableValue {
     public:
         MutableValue() { }
-        explicit MutableValue(MutableCollection *md)    :_asValue(md->asValue()) { }
+        explicit MutableValue(MutableCollection *md);
         MutableValue(Null);
         ~MutableValue();
 
         MutableValue(const MutableValue&) noexcept;
         MutableValue& operator= (const MutableValue&) noexcept;
-
-        MutableValue(MutableValue &&other) noexcept {
-            memcpy(this, &other, sizeof(other));
-            other._isMalloced = false;
-        }
-
-        MutableValue& operator= (MutableValue &&other) noexcept {
-            reset();
-            memcpy(this, &other, sizeof(other));
-            other._isMalloced = false;
-            return *this;
-        }
+        MutableValue(MutableValue &&other) noexcept;
+        MutableValue& operator= (MutableValue &&other) noexcept;
 
         explicit operator bool() const                  {return _isInline || _asValue != nullptr;}
 
@@ -78,9 +62,14 @@ namespace fleece { namespace internal {
         MutableCollection* asMutableCollection() const;
 
         void set(MutableCollection *c) {
-            reset();
-            _isInline = false;
-            _asValue = c->asValue();
+            auto newValue = c->asValue();
+            if (!_isInline) {
+                if (newValue == _asValue)
+                    return;
+                releaseValue();
+                _isInline = false;
+            }
+            _asValue = retain(c->asValue());
         }
 
         // Setters for the various Value types:
@@ -100,20 +89,18 @@ namespace fleece { namespace internal {
         MutableCollection* makeMutable(tags ifType);
 
     private:
-        void reset();
+        void releaseValue();
         void setInline(internal::tags valueTag, int tiny);
         void setValue(internal::tags valueTag, int tiny, slice bytes);
         template <class INT> void setInt(INT, bool isUnsigned);
         void _setStringOrData(internal::tags valueTag, slice);
-        uint8_t* allocateValue(size_t);
 
         union {
             uint8_t             _inlineData[sizeof(void*)];
             const Value*        _asValue {nullptr};
         };
-        uint8_t _moreInlineData[sizeof(void*) - 2];
+        uint8_t _moreInlineData[sizeof(void*) - 1];
         bool _isInline {false};
-        bool _isMalloced {false};
 
         static constexpr size_t kInlineCapacity = sizeof(_inlineData) + sizeof(_moreInlineData);
     };

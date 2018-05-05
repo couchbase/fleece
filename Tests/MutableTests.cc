@@ -24,12 +24,12 @@
 namespace fleece {
 
     TEST_CASE("MutableArray type checking", "[Mutable]") {
-        MutableArray ma;
-        const Value *v = ma.asArray();
+        Retained<MutableArray> ma = new MutableArray;
+        const Value *v = ma->asArray();
 
-        CHECK(ma.asValue() == v);
+        CHECK(ma->asValue() == v);
         CHECK(MutableArray::isMutable(v));
-        CHECK(MutableArray::asMutable((Array*)v) == &ma);
+        CHECK(MutableArray::asMutable((Array*)v) == ma);
 
         CHECK(v->type() == kArray);
 
@@ -52,52 +52,52 @@ namespace fleece {
 
 
     TEST_CASE("MutableArray set values", "[Mutable]") {
-        MutableArray ma;
+        Retained<MutableArray> ma = new MutableArray;
 
-        REQUIRE(ma.count() == 0);
-        //REQUIRE(ma.empty());  //FIX!
-        REQUIRE(ma.get(0) == nullptr);
+        REQUIRE(ma->count() == 0);
+        REQUIRE(ma->empty());
+        REQUIRE(ma->get(0) == nullptr);
 
         {
-            MutableArray::iterator i(&ma);
+            MutableArray::iterator i(ma);
             CHECK(!i);
         }
 
-        CHECK(!ma.isChanged());
-        ma.resize(9);
-        CHECK(ma.isChanged());
-        REQUIRE(ma.count() == 9);
-        REQUIRE(ma.count() == 9);
-        REQUIRE(!ma.empty());
+        CHECK(!ma->isChanged());
+        ma->resize(9);
+        CHECK(ma->isChanged());
+        REQUIRE(ma->count() == 9);
+        REQUIRE(ma->count() == 9);
+        REQUIRE(!ma->empty());
 
         for (int i = 0; i < 9; i++)
-            REQUIRE(ma.get(i)->type() == kNull);
+            REQUIRE(ma->get(i)->type() == kNull);
 
-        ma.set(0, nullValue);
-        ma.set(1, false);
-        ma.set(2, true);
-        ma.set(3, 0);
-        ma.set(4, -123);
-        ma.set(5, 2017);
-        ma.set(6, 123456789);
-        ma.set(7, -123456789);
-        ma.set(8, "Hot dog"_sl);
+        ma->set(0, nullValue);
+        ma->set(1, false);
+        ma->set(2, true);
+        ma->set(3, 0);
+        ma->set(4, -123);
+        ma->set(5, 2017);
+        ma->set(6, 123456789);
+        ma->set(7, -123456789);
+        ma->set(8, "Hot dog"_sl);
 
         static const valueType kExpectedTypes[9] = {
             kNull, kBoolean, kBoolean, kNumber, kNumber, kNumber, kNumber, kNumber, kString};
         for (int i = 0; i < 9; i++)
-            CHECK(ma.get(i)->type() == kExpectedTypes[i]);
-        CHECK(ma.get(1)->asBool() == false);
-        CHECK(ma.get(2)->asBool() == true);
-        CHECK(ma.get(3)->asInt() == 0);
-        CHECK(ma.get(4)->asInt() == -123);
-        CHECK(ma.get(5)->asInt() == 2017);
-        CHECK(ma.get(6)->asInt() == 123456789);
-        CHECK(ma.get(7)->asInt() == -123456789);
-        CHECK(ma.get(8)->asString() == "Hot dog"_sl);
+            CHECK(ma->get(i)->type() == kExpectedTypes[i]);
+        CHECK(ma->get(1)->asBool() == false);
+        CHECK(ma->get(2)->asBool() == true);
+        CHECK(ma->get(3)->asInt() == 0);
+        CHECK(ma->get(4)->asInt() == -123);
+        CHECK(ma->get(5)->asInt() == 2017);
+        CHECK(ma->get(6)->asInt() == 123456789);
+        CHECK(ma->get(7)->asInt() == -123456789);
+        CHECK(ma->get(8)->asString() == "Hot dog"_sl);
 
         {
-            MutableArray::iterator i(&ma);
+            MutableArray::iterator i(ma);
             for (int n = 0; n < 9; ++n) {
                 std::cerr << "Item " << n << ": " << (void*)i.value() << "\n";
                 CHECK(i);
@@ -108,33 +108,33 @@ namespace fleece {
             CHECK(!i);
         }
 
-        CHECK(ma.asArray()->toJSON() == "[null,false,true,0,-123,2017,123456789,-123456789,\"Hot dog\"]"_sl);
+        CHECK(ma->asArray()->toJSON() == "[null,false,true,0,-123,2017,123456789,-123456789,\"Hot dog\"]"_sl);
 
-        ma.remove(3, 5);
-        CHECK(ma.count() == 4);
-        CHECK(ma.get(2)->type() == kBoolean);
-        CHECK(ma.get(2)->asBool() == true);
-        CHECK(ma.get(3)->type() == kString);
+        ma->remove(3, 5);
+        CHECK(ma->count() == 4);
+        CHECK(ma->get(2)->type() == kBoolean);
+        CHECK(ma->get(2)->asBool() == true);
+        CHECK(ma->get(3)->type() == kString);
 
-        ma.insert(1, 2);
-        CHECK(ma.count() == 6);
-        REQUIRE(ma.get(1)->type() == kNull);
-        REQUIRE(ma.get(2)->type() == kNull);
-        CHECK(ma.get(3)->type() == kBoolean);
-        CHECK(ma.get(3)->asBool() == false);
+        ma->insert(1, 2);
+        CHECK(ma->count() == 6);
+        REQUIRE(ma->get(1)->type() == kNull);
+        REQUIRE(ma->get(2)->type() == kNull);
+        CHECK(ma->get(3)->type() == kBoolean);
+        CHECK(ma->get(3)->asBool() == false);
     }
 
 
     TEST_CASE("MutableArray as Array", "[Mutable]") {
-        MutableArray ma;
-        const Array *a = ma.asArray();
+        Retained<MutableArray> ma = new MutableArray;
+        const Array *a = ma->asArray();
         CHECK(a->type() == kArray);
         CHECK(a->count() == 0);
         CHECK(a->empty());
 
-        ma.resize(2);
-        ma.set(0, 123);
-        ma.set(1, 456);
+        ma->resize(2);
+        ma->set(0, 123);
+        ma->set(1, 456);
 
         CHECK(a->count() == 2);
         CHECK(!a->empty());
@@ -153,18 +153,18 @@ namespace fleece {
 
 
     TEST_CASE("MutableArray pointers", "[Mutable]") {
-        MutableArray ma;
-        ma.resize(2);
-        ma.set(0, 123);
-        ma.set(1, 456);
+        Retained<MutableArray> ma = new MutableArray;
+        ma->resize(2);
+        ma->set(0, 123);
+        ma->set(1, 456);
 
-        MutableArray mb;
-        CHECK(!mb.isChanged());
-        mb.append(&ma);
-        CHECK(mb.isChanged());
+        Retained<MutableArray> mb = new MutableArray;
+        CHECK(!mb->isChanged());
+        mb->append(ma);
+        CHECK(mb->isChanged());
 
-        CHECK(mb.get(0) == ma.asValue());
-        CHECK(mb.makeArrayMutable(0) == &ma);
+        CHECK(mb->get(0) == ma->asValue());
+        CHECK(mb->getMutableArray(0) == ma);
 
         Encoder enc;
         enc.beginArray();
@@ -176,12 +176,12 @@ namespace fleece {
 
         CHECK(fleeceArray->asMutable() == nullptr);
 
-        mb.append(fleeceArray);
-        CHECK(mb.get(1) == fleeceArray);
-        auto mc = mb.makeArrayMutable(1);
+        mb->append(fleeceArray);
+        CHECK(mb->get(1) == fleeceArray);
+        auto mc = mb->getMutableArray(1);
         CHECK(mc != nullptr);
-        CHECK(mc->asValue() == mb.get(1));
-        CHECK(mb.get(1)->type() == kArray);
+        CHECK(mc->asValue() == mb->get(1));
+        CHECK(mb->get(1)->type() == kArray);
 
         CHECK(mc->count() == 2);
         CHECK(mc->asArray()->count() == 2);
@@ -194,13 +194,13 @@ namespace fleece {
 
 
     TEST_CASE("MutableDict type checking", "[Mutable]") {
-        MutableDict md;
-        const Value *v = md.asDict();
+        Retained<MutableDict> md = new MutableDict;
+        const Value *v = md->asDict();
         CHECK(v->type() == kDict);
-        CHECK(md.asValue() == v);
+        CHECK(md->asValue() == v);
 
         CHECK(MutableDict::isMutable(v));
-        CHECK(MutableDict::asMutable((const Dict*)v) == &md);
+        CHECK(MutableDict::asMutable((const Dict*)v) == md);
 
         CHECK(v->type() == kDict);
 
@@ -223,47 +223,47 @@ namespace fleece {
 
 
     TEST_CASE("MutableDict set values", "[Mutable]") {
-        MutableDict md;
-        REQUIRE(md.count() == 0);
-        CHECK(md.get("foo"_sl) == nullptr);
+        Retained<MutableDict> md = new MutableDict;
+        REQUIRE(md->count() == 0);
+        CHECK(md->get("foo"_sl) == nullptr);
 
         {
-            MutableDict::iterator i(&md);
+            MutableDict::iterator i(md);
             CHECK(!i);
         }
 
-        CHECK(!md.isChanged());
+        CHECK(!md->isChanged());
 
-        md.set("null"_sl, nullValue);
-        md.set("f"_sl, false);
-        md.set("t"_sl, true);
-        md.set("z"_sl, 0);
-        md.set("-"_sl, -123);
-        md.set("+"_sl, 2017);
-        md.set("hi"_sl, 123456789);
-        md.set("lo"_sl, -123456789);
-        md.set("str"_sl, "Hot dog"_sl);
+        md->set("null"_sl, nullValue);
+        md->set("f"_sl, false);
+        md->set("t"_sl, true);
+        md->set("z"_sl, 0);
+        md->set("-"_sl, -123);
+        md->set("+"_sl, 2017);
+        md->set("hi"_sl, 123456789);
+        md->set("lo"_sl, -123456789);
+        md->set("str"_sl, "Hot dog"_sl);
 
         static const slice kExpectedKeys[9] = {
             "+"_sl, "-"_sl, "f"_sl, "hi"_sl, "lo"_sl, "null"_sl, "str"_sl, "t"_sl, "z"_sl};
         static const valueType kExpectedTypes[9] = {
             kNumber, kNumber, kBoolean, kNumber, kNumber, kNull, kString, kBoolean, kNumber};
         for (int i = 0; i < 9; i++)
-            REQUIRE(md.get(kExpectedKeys[i])->type() == kExpectedTypes[i]);
+            REQUIRE(md->get(kExpectedKeys[i])->type() == kExpectedTypes[i]);
 
-        CHECK(md.get("f"_sl)->asBool() == false);
-        CHECK(md.get("t"_sl)->asBool() == true);
-        CHECK(md.get("z"_sl)->asInt() == 0);
-        CHECK(md.get("-"_sl)->asInt() == -123);
-        CHECK(md.get("+"_sl)->asInt() == 2017);
-        CHECK(md.get("hi"_sl)->asInt() == 123456789);
-        CHECK(md.get("lo"_sl)->asInt() == -123456789);
-        CHECK(md.get("str"_sl)->asString() == "Hot dog"_sl);
-        CHECK(md.get("foo"_sl) == nullptr);
+        CHECK(md->get("f"_sl)->asBool() == false);
+        CHECK(md->get("t"_sl)->asBool() == true);
+        CHECK(md->get("z"_sl)->asInt() == 0);
+        CHECK(md->get("-"_sl)->asInt() == -123);
+        CHECK(md->get("+"_sl)->asInt() == 2017);
+        CHECK(md->get("hi"_sl)->asInt() == 123456789);
+        CHECK(md->get("lo"_sl)->asInt() == -123456789);
+        CHECK(md->get("str"_sl)->asString() == "Hot dog"_sl);
+        CHECK(md->get("foo"_sl) == nullptr);
 
         {
             bool found[9] = { };
-            MutableDict::iterator i(&md);
+            MutableDict::iterator i(md);
             for (int n = 0; n < 9; ++n) {
                 std::cerr << "Item " << n << ": " << i.keyString() << " = " << (void*)i.value() << "\n";
                 CHECK(i);
@@ -279,23 +279,23 @@ namespace fleece {
             CHECK(!i);
         }
 
-        md.remove("lo"_sl);
-        CHECK(md.get("lo"_sl) == nullptr);
+        md->remove("lo"_sl);
+        CHECK(md->get("lo"_sl) == nullptr);
 
-//        CHECK(md.toJSON() == "{\"+\":2017,\"-\":-123,\"f\":false,\"hi\":123456789,\"null\":null,\"str\":\"Hot dog\",\"t\":true,\"z\":0}"_sl);
+//        CHECK(md->toJSON() == "{\"+\":2017,\"-\":-123,\"f\":false,\"hi\":123456789,\"null\":null,\"str\":\"Hot dog\",\"t\":true,\"z\":0}"_sl);
 
-        md.removeAll();
-        CHECK(md.count() == 0);
+        md->removeAll();
+        CHECK(md->count() == 0);
         {
-            MutableDict::iterator i(&md);
+            MutableDict::iterator i(md);
             CHECK(!i);
         }
     }
 
 
     TEST_CASE("MutableDict as Dict", "[Mutable]") {
-        MutableDict md;
-        const Dict *d = (const Dict*)md.asValue();
+        Retained<MutableDict> md = new MutableDict;
+        const Dict *d = (const Dict*)md->asValue();
         CHECK(d->type() == kDict);
         CHECK(d->count() == 0);
         CHECK(d->empty());
@@ -305,15 +305,15 @@ namespace fleece {
             CHECK(!i);
         }
 
-        md.set("null"_sl, nullValue);
-        md.set("f"_sl, false);
-        md.set("t"_sl, true);
-        md.set("z"_sl, 0);
-        md.set("-"_sl, -123);
-        md.set("+"_sl, 2017);
-        md.set("hi"_sl, 123456789);
-        md.set("lo"_sl, -123456789);
-        md.set("str"_sl, "Hot dog"_sl);
+        md->set("null"_sl, nullValue);
+        md->set("f"_sl, false);
+        md->set("t"_sl, true);
+        md->set("z"_sl, 0);
+        md->set("-"_sl, -123);
+        md->set("+"_sl, 2017);
+        md->set("hi"_sl, 123456789);
+        md->set("lo"_sl, -123456789);
+        md->set("str"_sl, "Hot dog"_sl);
 
         static const slice kExpectedKeys[9] = {
             "+"_sl, "-"_sl, "f"_sl, "hi"_sl, "lo"_sl, "null"_sl, "str"_sl, "t"_sl, "z"_sl};
@@ -340,12 +340,12 @@ namespace fleece {
             CHECK(!i);
         }
 
-        md.remove("lo"_sl);
+        md->remove("lo"_sl);
         CHECK(d->get("lo"_sl) == nullptr);
 
         CHECK(d->toJSON() == "{\"+\":2017,\"-\":-123,\"f\":false,\"hi\":123456789,\"null\":null,\"str\":\"Hot dog\",\"t\":true,\"z\":0}"_sl);
 
-        md.removeAll();
+        md->removeAll();
         CHECK(d->count() == 0);
         {
             Dict::iterator i(d);
@@ -357,11 +357,11 @@ namespace fleece {
 
     TEST_CASE("Mutable long strings", "[Mutable]") {
         const char *chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        MutableArray ma(50);
+        Retained<MutableArray> ma = new MutableArray(50);
         for (int len = 0; len < 50; ++len)
-            ma.set(len, slice(chars, len));
+            ma->set(len, slice(chars, len));
         for (int len = 0; len < 50; ++len)
-            CHECK(ma.get(len)->asString() == slice(chars, len));
+            CHECK(ma->get(len)->asString() == slice(chars, len));
     }
 
 
@@ -412,15 +412,15 @@ namespace fleece {
         std::cerr << "Original data: " << data << "\n\n";
         Value::dump(data, std::cerr);
 
-        MutableDict update(originalDict);
-        CHECK(update.count() == 2);
-        update.set("Friend"_sl, "catbus"_sl);
-        CHECK(update.count() == 3);
-        update.set("Vehicle"_sl, "top"_sl);
-        CHECK(update.count() == 3);
+        Retained<MutableDict> update = new MutableDict(originalDict);
+        CHECK(update->count() == 2);
+        update->set("Friend"_sl, "catbus"_sl);
+        CHECK(update->count() == 3);
+        update->set("Vehicle"_sl, "top"_sl);
+        CHECK(update->count() == 3);
 
         {
-            MutableDict::iterator i(&update);
+            MutableDict::iterator i(update);
             CHECK(i);
             CHECK(i.keyString() == "Friend"_sl);
             CHECK(i.value()->asString() == "catbus"_sl);
@@ -437,7 +437,7 @@ namespace fleece {
         }
 
         {
-            MutableDict::iterator i(&update);
+            MutableDict::iterator i(update);
             CHECK(i.count() == 3);
             CHECK(i);
             CHECK(i.keyString() == "Friend"_sl);
@@ -457,7 +457,7 @@ namespace fleece {
         Encoder enc2;
         enc2.setBase(data);
         enc2.reuseBaseStrings();
-        enc2.writeValue(update.asValue());
+        enc2.writeValue(update->asValue());
         alloc_slice data2 = enc2.extractOutput();
         REQUIRE(data2.size == 28);      // may change slightly with changes to implementation
 
@@ -469,10 +469,10 @@ namespace fleece {
         Value::dump(combinedData, std::cerr);
 
         // Check that removeAll works when there's a base Dict:
-        update.removeAll();
-        CHECK(update.count() == 0);
+        update->removeAll();
+        CHECK(update->count() == 0);
         {
-            MutableDict::iterator i(&update);
+            MutableDict::iterator i(update);
             CHECK(!i);
         }
     }
@@ -486,18 +486,18 @@ namespace fleece {
         std::cerr << "Contents:      " << person->toJSON().asString() << "\n";
         Value::dump(data, std::cerr);
 
-        MutableDict mp(person);
-        mp.set("age"_sl, 31);
-        MutableArray *friends = mp.makeArrayMutable("friends"_sl);
+        Retained<MutableDict> mp = new MutableDict(person);
+        mp->set("age"_sl, 31);
+        MutableArray *friends = mp->getMutableArray("friends"_sl);
         REQUIRE(friends);
-        auto frend = friends->makeDictMutable(1);
+        auto frend = friends->getMutableDict(1);
         REQUIRE(frend);
         frend->set("name"_sl, "Reddy Kill-a-Watt"_sl);
 
         Encoder enc;
         enc.setBase(data);
         enc.reuseBaseStrings();
-        enc.writeValue(mp.asValue());
+        enc.writeValue(mp->asValue());
         alloc_slice data2 = enc.extractOutput();
 
         alloc_slice combined(data);

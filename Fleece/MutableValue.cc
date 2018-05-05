@@ -27,15 +27,6 @@ namespace fleece { namespace internal {
     using namespace internal;
 
 
-    MutableCollection* MutableCollection::asMutable(const Value *v) {
-        if (!isMutable(v))
-            return nullptr;
-        auto coll = (MutableCollection*)(size_t(v) & ~1);
-        assert(coll->_header[0] = 0xFF);
-        return coll;
-    }
-
-
     MutableValue::MutableValue(Null)
     :_isInline(true)
     ,_inlineData{(kSpecialTag << 4) | kSpecialValueNull}
@@ -46,32 +37,55 @@ namespace fleece { namespace internal {
     }
 
 
+    MutableValue::MutableValue(MutableCollection *md)
+    :_asValue( retain(md)->asValue() )
+    { }
+
+
+
     MutableValue::MutableValue(const MutableValue &other) noexcept {
         *this = other; // invoke operator=, below
     }
 
 
     MutableValue& MutableValue::operator= (const MutableValue &other) noexcept {
-        reset();
-        if (other._isInline) {
-            _isInline = true;
+        releaseValue();
+        _isInline = other._isInline;
+        if (_isInline)
             memcpy(&_inlineData, &other._inlineData, kInlineCapacity);
-        } else if (_usuallyFalse(other._isMalloced)) {
-            _isInline = false;
-            // Copy the malloced value:
-            size_t size = other._asValue->dataSize();
-            memcpy(allocateValue(size), other._asValue, size);
+        else
+            _asValue = retain(other._asValue);
+        return *this;
+    }
+
+
+    MutableValue::MutableValue(MutableValue &&other) noexcept {
+        _isInline = other._isInline;
+        if (_isInline) {
+            memcpy(&_inlineData, &other._inlineData, kInlineCapacity);
         } else {
-            _isInline = false;
             _asValue = other._asValue;
+            other._asValue = nullptr;
+        }
+    }
+
+    MutableValue& MutableValue::operator= (MutableValue &&other) noexcept {
+        releaseValue();
+        _isInline = other._isInline;
+        if (_isInline) {
+            memcpy(&_inlineData, &other._inlineData, kInlineCapacity);
+        } else {
+            _asValue = other._asValue;
+            other._asValue = nullptr;
         }
         return *this;
     }
 
 
+
     MutableValue::~MutableValue() {
-        if (_usuallyFalse(_isMalloced))
-            free(const_cast<Value*>(_asValue));
+        if (!_isInline)
+            release(_asValue);
     }
 
 
@@ -79,7 +93,7 @@ namespace fleece { namespace internal {
         if (!v || v->tag() != ifType)
             return nullptr;
         if (v->isMutable())
-            return asMutable(v);
+            return (MutableCollection*)asHeapValue(v);
         switch (ifType) {
             case kArrayTag: return new MutableArray((const Array*)v);
             case kDictTag:  return new MutableDict((const Dict*)v);
@@ -88,10 +102,10 @@ namespace fleece { namespace internal {
     }
 
 
-    void MutableValue::reset() {
-        if (_usuallyFalse(_isMalloced)) {
-            free(const_cast<Value*>(_asValue));
-            _isMalloced = false;
+    void MutableValue::releaseValue() {
+        if (!_isInline) {
+            release(_asValue);
+            _asValue = nullptr;
         }
     }
 
@@ -102,7 +116,7 @@ namespace fleece { namespace internal {
 
 
     void MutableValue::setInline(internal::tags valueTag, int tiny) {
-        reset();
+        releaseValue();
         _isInline = true;
         _inlineData[0] = uint8_t((valueTag << 4) | tiny);
     }
@@ -144,45 +158,41 @@ namespace fleece { namespace internal {
 
     void MutableValue::set(double d) {
         littleEndianDouble ld(d);
-        setValue(kFloatTag, 0, {&ld, sizeof(ld)});
+        setValue(kFloatTag, 8, {&ld, sizeof(ld)});
     }
 
 
     void MutableValue::set(const Value *v) {
-        reset();
+        if (!_isInline) {
+            if (v == _asValue)
+                return;
+            release(_asValue);
+        }
         if (v && v->tag() < kArrayTag) {
             auto size = v->dataSize();
             if (size <= kInlineCapacity) {
+                // Copy value inline if it's small enough
                 _isInline = true;
                 memcpy(&_inlineData, v, size);
                 return;
             }
         }
+        // else point to it
         _isInline = false;
-        _asValue = v;
-    }
-
-
-    uint8_t* MutableValue::allocateValue(size_t size) {
-        reset();
-        _asValue = (const Value*)slice::newBytes(size);
-        _isInline = false;
-        _isMalloced = true;
-        return (uint8_t*)_asValue;
+        _asValue = retain(v);
     }
 
 
     void MutableValue::setValue(tags valueTag, int tiny, slice bytes) {
-        uint8_t* dst;
+        releaseValue();
         if (1 + bytes.size <= kInlineCapacity) {
-            reset();
-            dst = &_inlineData[0];
+            _inlineData[0] = uint8_t((valueTag << 4) | tiny);
+            memcpy(&_inlineData[1], bytes.buf, bytes.size);
             _isInline = true;
         } else {
-            dst = allocateValue(1 + bytes.size);
+            _asValue = retain(HeapValue::create(valueTag, tiny, bytes)->asValue());
+            _isInline = false;
         }
-        dst[0] = uint8_t((valueTag << 4) | tiny);
-        memcpy(&dst[1], bytes.buf, bytes.size);
     }
 
 
@@ -192,13 +202,9 @@ namespace fleece { namespace internal {
             setInline(valueTag, (int)s.size);
             memcpy(&_inlineData[1], s.buf, s.size);
         } else {
-            // Allocate a string Value on the heap. (Adapted from Encoder::writeData)
-            auto buf = allocateValue(2 + kMaxVarintLen32 + s.size);
-            (void) new (buf) Value (kStringTag, (uint8_t)min(s.size, (size_t)0xF));
-            size_t sizeByteCount = 1;
-            if (s.size >= 0x0F)
-                sizeByteCount += PutUVarInt(&buf[1], s.size);
-            memcpy(&buf[sizeByteCount], s.buf, s.size);
+            releaseValue();
+            _asValue = retain(HeapValue::createStr(valueTag, s)->asValue());
+            _isInline = false;
         }
     }
 
@@ -206,7 +212,7 @@ namespace fleece { namespace internal {
     MutableCollection* MutableValue::makeMutable(tags ifType) {
         if (_isInline)
             return nullptr;
-        auto mval = MutableCollection::mutableCopy(_asValue, ifType);
+        Retained<MutableCollection> mval = MutableCollection::mutableCopy(_asValue, ifType);
         if (mval)
             set(mval);
         return mval;

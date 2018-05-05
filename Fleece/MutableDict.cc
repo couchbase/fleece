@@ -33,7 +33,7 @@ namespace fleece {
 
     void MutableDict::markChanged() {
         setChanged(true);
-        _iterable.reset();
+        _iterable = nullptr;
     }
 
 
@@ -75,8 +75,8 @@ namespace fleece {
     }
 
 
-    MutableCollection* MutableDict::makeMutable(slice key, tags ifType) {
-        MutableCollection *result = nullptr;
+    MutableCollection* MutableDict::getMutable(slice key, tags ifType) {
+        Retained<MutableCollection> result;
         MutableValue* mval = _findValueFor(key);
         if (mval) {
             result = mval->makeMutable(ifType);
@@ -122,7 +122,7 @@ namespace fleece {
 
     MutableArray* MutableDict::kvArray() {
         if (!_iterable) {
-            _iterable.reset(new MutableArray(2*count()));
+            _iterable = new MutableArray(2*count());
             uint32_t n = 0;
             for (iterator i(this); i; ++i) {
                 _iterable->set(n++, i.keyString());

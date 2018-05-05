@@ -12,6 +12,8 @@
 
 namespace fleece {
     class Encoder;
+    class MutableArray;
+    class MutableDict;
     namespace hashtree {
         class MutableInterior;
         class NodeRef;
@@ -27,17 +29,20 @@ namespace fleece {
         MutableHashTree& operator= (MutableHashTree&&);
         MutableHashTree& operator= (const HashTree*);
 
-        using InsertCallback = std::function<const Value*(const Value*)>;
-
-        void insert(slice key, const Value*);
-        bool insert(slice key, InsertCallback);
-        bool remove(slice key);
-
         const Value* get(slice key) const;
+
+        MutableArray* getMutableArray(slice key);
+        MutableDict* getMutableDict(slice key);
 
         unsigned count() const;
 
         bool isChanged() const                  {return _root != nullptr;}
+
+        using InsertCallback = std::function<const Value*(const Value*)>;
+
+        void set(slice key, const Value*);
+        bool insert(slice key, InsertCallback);
+        bool remove(slice key);
 
         uint32_t writeTo(Encoder&);
 
@@ -47,6 +52,7 @@ namespace fleece {
         
     private:
         hashtree::NodeRef rootNode() const;
+        internal::MutableCollection* getMutable(slice key, internal::tags ifType);
 
         const HashTree* _imRoot {nullptr};
         hashtree::MutableInterior* _root {nullptr};

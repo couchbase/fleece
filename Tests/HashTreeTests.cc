@@ -51,7 +51,7 @@ public:
             if (verbose)
                 cerr << "\n##### Inserting #" << (i)
                           << ", " << hex << keys[i].hash() << "\n";
-            tree.insert(keys[i], values->get(uint32_t(i)));
+            tree.set(keys[i], values->get(uint32_t(i)));
             if (verbose)
                 tree.dump(cerr);
             if (check) {
@@ -108,7 +108,7 @@ TEST_CASE_METHOD(HashTreeTests, "Tiny MHashTree Insert", "[HashTree]") {
     createItems(1);
     auto key = keys[0];
     auto val = values->get(0);
-    tree.insert(key, val);
+    tree.set(key, val);
 
     CHECK(tree.get(key) == val);
     CHECK(tree.count() == 1);
@@ -136,7 +136,7 @@ TEST_CASE_METHOD(HashTreeTests, "Tiny MHashTree Remove", "[HashTree]") {
     auto key = keys[0];
     auto val = values->get(0);
 
-    tree.insert(key, val);
+    tree.set(key, val);
     CHECK(tree.remove(key));
     CHECK(tree.get(key) == 0);
     CHECK(tree.count() == 0);
@@ -183,7 +183,7 @@ TEST_CASE_METHOD(HashTreeTests, "Tiny MHashTree Write", "[HashTree]") {
     createItems(10);
     auto key = keys[8];
     auto val = values->get(8);
-    tree.insert(key, val);
+    tree.set(key, val);
 
     alloc_slice data = encodeTree();
     REQUIRE(data.size == 30); // could change if encoding changes
@@ -215,7 +215,7 @@ TEST_CASE_METHOD(HashTreeTests, "Bigger MHashTree Write", "[HashTree]") {
 
 TEST_CASE_METHOD(HashTreeTests, "Tiny HashTree Mutate", "[HashTree]") {
     createItems(10);
-    tree.insert(keys[9], values->get(9));
+    tree.set(keys[9], values->get(9));
 
     alloc_slice data = encodeTree();
     const HashTree *itree = HashTree::fromData(data);
@@ -232,7 +232,7 @@ TEST_CASE_METHOD(HashTreeTests, "Tiny HashTree Mutate", "[HashTree]") {
     CHECK(value->asInt() == 9);
 
     // Modify the value for the key:
-    tree.insert(keys[9], values->get(3));
+    tree.set(keys[9], values->get(3));
 
     tree.dump(cerr);
     CHECK(tree.count() == 1);
@@ -260,7 +260,7 @@ TEST_CASE_METHOD(HashTreeTests, "Bigger HashTree Mutate by replacing", "[HashTre
         // Modify the value for the key:
         int old = i*i, nuu = 99-old;
         //cerr << "\n#### Set key " << old << " to " << nuu << ":\n";
-        tree.insert(keys[old], values->get(nuu));
+        tree.set(keys[old], values->get(nuu));
 
         //tree.dump(cerr);
         CHECK(tree.count() == 100);
@@ -285,7 +285,7 @@ TEST_CASE_METHOD(HashTreeTests, "Bigger HashTree Mutate by inserting", "[HashTre
 
     for (int i = 10; i < 20; i++) {
         //cerr << "\n#### Add " << i << ":\n";
-        tree.insert(keys[i], values->get(uint32_t(i)));
+        tree.set(keys[i], values->get(uint32_t(i)));
 //        tree.dump(cerr);
         checkTree(i+1);
     }
@@ -310,7 +310,7 @@ TEST_CASE_METHOD(HashTreeTests, "HashTree Re-Encode Delta", "[HashTree]") {
     tree = itree;
 
     for (unsigned i = N; i < N + 10; i++)
-        tree.insert(keys[i], values->get(uint32_t(i)));
+        tree.set(keys[i], values->get(uint32_t(i)));
     for (unsigned i = 2; i < N + 5; i += 3)
         CHECK(tree.remove(keys[i]));
 

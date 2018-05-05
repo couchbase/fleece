@@ -18,6 +18,7 @@
 
 #include "FleeceTests.hh"
 #include "Fleece.hh"
+#include "MutableDict.hh"
 #include "DB.hh"
 #include <unistd.h>
 
@@ -71,9 +72,29 @@ TEST_CASE_METHOD(DBTests, "Small Update DB", "[DB]") {
     populate();
     db->saveChanges();
     db.reset( new DB(kDBPath) );
-    cerr << "Database is " << db->dataSize() << " bytes\n";
+    auto dbSize = db->dataSize();
+    cerr << "Database is " << dbSize << " bytes\n";
 
     db->remove(names[123]);
+
+    {
+        MutableDict *eleven = db->getMutable(names[11]);
+        REQUIRE(eleven);
+        cerr << "Eleven was: " << eleven->asValue()->toJSONString() << "\n";
+        eleven->set("name"_sl, "Eleven"_sl);
+        eleven->set("age"_sl, 12);
+        eleven->set("about"_sl, "REDACTED"_sl);
+        cerr << "Eleven is now: " << eleven->asValue()->toJSONString() << "\n";
+    }
     db->saveChanges();
-    cerr << "Database is " << db->dataSize() << " bytes after save\n";
+    auto newSize = db->dataSize();
+    cerr << "Database is " << newSize << " bytes after save; grew by " << (newSize - dbSize) << " bytes.\n";
+
+    db.reset( new DB(kDBPath) );
+    {
+        const Dict *eleven = db->get(names[11]);
+        REQUIRE(eleven);
+        CHECK(eleven->get("name"_sl)->asString() == "Eleven"_sl);
+        CHECK(eleven->get("age"_sl)->asInt() == 12);
+    }
 }

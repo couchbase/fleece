@@ -17,7 +17,7 @@ namespace fleece {
     class MutableArray : public internal::MutableCollection {
     public:
         static MutableArray* asMutable(const Array *array) {
-            return (MutableArray*)MutableCollection::asMutable(array);
+            return (MutableArray*)asHeapValue(array);
         }
 
         MutableArray()
@@ -58,13 +58,11 @@ namespace fleece {
 
         /** Promotes an Array item to a MutableArray (in place) and returns it.
             Or if the item is already a MutableArray, just returns it. Else returns null. */
-        MutableArray* makeArrayMutable(uint32_t i)  {return (MutableArray*)makeMutable(i,
-                                                                            internal::kArrayTag);}
+        MutableArray* getMutableArray(uint32_t i);
 
         /** Promotes a Dict item to a MutableDict (in place) and returns it.
             Or if the item is already a MutableDict, just returns it. Else returns null. */
-        MutableDict* makeDictMutable(uint32_t i)    {return (MutableDict*)makeMutable(i,
-                                                                            internal::kDictTag);}
+        MutableDict* getMutableDict(uint32_t i);
 
         class iterator {
         public:
@@ -87,12 +85,13 @@ namespace fleece {
 
 
     protected:
+        ~MutableArray() =default;
         friend class Array;
         const internal::MutableValue* first();          // Called by Array::impl
 
     private:
         void populate(unsigned fromIndex);
-        MutableCollection* makeMutable(uint32_t index, internal::tags ifType);
+        MutableCollection* getMutable(uint32_t index, internal::tags ifType);
         internal::MutableValue& _appendMutableValue();
 
         // _items stores each array item as a MutableValue. If an item's type is 'undefined',

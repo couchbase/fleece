@@ -10,6 +10,8 @@
 #include "HashTree+Internal.hh"
 #include "Bitmap.hh"
 #include "Encoder.hh"
+#include "MutableArray.hh"
+#include "MutableDict.hh"
 #include <algorithm>
 #include <ostream>
 #include <string>
@@ -17,6 +19,7 @@
 using namespace std;
 
 namespace fleece {
+    using namespace internal;
 
     namespace hashtree {
         class MutableNode;
@@ -142,7 +145,7 @@ namespace fleece {
 
             alloc_slice const _key;
             hash_t const _hash;
-            const Value* _value;
+            RetainedConst<Value> _value;
         };
 
 
@@ -383,6 +386,10 @@ namespace fleece {
                 return new (capacity) MutableInterior(capacity, orig);
             }
 
+            static void* operator new(size_t size, unsigned capacity) {
+                return ::operator new(size + capacity*sizeof(NodeRef));
+            }
+
             static MutableInterior* mutableCopy(const Interior *iNode, unsigned extraCapacity =0) {
                 auto childCount = iNode->childCount();
                 auto node = newNode(childCount + extraCapacity);
@@ -398,10 +405,6 @@ namespace fleece {
                 unsigned childBitNo = childBitNumber(childLeaf.hash(), shift+kBitShift);
                 node = node->addChild(childBitNo, childLeaf);
                 return node;
-            }
-
-            static void* operator new(size_t size, unsigned capacity) {
-                return ::operator new(size + capacity*sizeof(NodeRef));
             }
 
             MutableInterior(unsigned cap, MutableInterior* orig =nullptr)
@@ -497,7 +500,7 @@ namespace fleece {
 
         const Value* NodeRef::value() const {
             assert(isLeaf());
-            return isMutable() ? ((MutableLeaf*)_asMutable())->_value : _asImmutable()->leaf.value();
+            return isMutable() ? ((MutableLeaf*)_asMutable())->_value.get() : _asImmutable()->leaf.value();
         }
 
         bool NodeRef::matches(Target target) const {
@@ -633,8 +636,11 @@ namespace fleece {
         return true;
     }
 
-    void MutableHashTree::insert(slice key, const Value* val) {
-        insert(key, [=](const Value*){ return val; });
+    void MutableHashTree::set(slice key, const Value* val) {
+        if (val)
+            insert(key, [=](const Value*){ return val; });
+        else
+            remove(key);
     }
 
     bool MutableHashTree::remove(slice key) {
@@ -645,6 +651,25 @@ namespace fleece {
         }
         return _root->remove(Target(key), 0);
     }
+
+
+    MutableArray* MutableHashTree::getMutableArray(slice key) {
+        return (MutableArray*)getMutable(key, kArrayTag);
+    }
+
+    MutableDict* MutableHashTree::getMutableDict(slice key) {
+        return (MutableDict*)getMutable(key, kDictTag);
+    }
+
+    MutableCollection* MutableHashTree::getMutable(slice key, tags ifType) {
+        MutableCollection *result = nullptr;
+        insert(key, [&](const Value *value) {
+            result = MutableCollection::mutableCopy(value, ifType);
+            return result ? result->asValue() : nullptr;
+        });
+        return result;
+    }
+
 
     uint32_t MutableHashTree::writeTo(Encoder &enc) {
         if (_root) {

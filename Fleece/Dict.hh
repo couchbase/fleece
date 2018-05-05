@@ -48,7 +48,7 @@ namespace fleece {
         const Value* get_unsorted(slice key) const noexcept;
 
         /** If this array is mutable, returns the equivalent MutableArray*, else returns nullptr. */
-        MutableDict* asMutable() const              {return (MutableDict*)asMutableCollection();}
+        MutableDict* asMutable() const;
 
 #ifdef __OBJC__
         /** Looks up the Value for a key given as an NSString object. */

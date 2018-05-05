@@ -17,6 +17,7 @@
 //
 
 #include "MutableArray.hh"
+#include "MutableDict.hh"
 #include "varint.hh"
 
 namespace fleece {
@@ -92,10 +93,10 @@ namespace fleece {
     }
 
 
-    MutableCollection* MutableArray::makeMutable(uint32_t index, tags ifType) {
+    MutableCollection* MutableArray::getMutable(uint32_t index, tags ifType) {
         if (index >= count())
             return nullptr;
-        MutableCollection *result = nullptr;
+        Retained<MutableCollection> result = nullptr;
         auto &mval = _items[index];
         if (mval) {
             result = mval.makeMutable(ifType);
@@ -108,6 +109,17 @@ namespace fleece {
             setChanged(true);
         return result;
     }
+
+    MutableArray* MutableArray::getMutableArray(uint32_t i)  {
+        return (MutableArray*)getMutable(i, internal::kArrayTag);
+    }
+
+    /** Promotes a Dict item to a MutableDict (in place) and returns it.
+     Or if the item is already a MutableDict, just returns it. Else returns null. */
+    MutableDict* MutableArray::getMutableDict(uint32_t i) {
+        return (MutableDict*)getMutable(i,internal::kDictTag);
+    }
+
 
 
     internal::MutableValue& MutableArray::_appendMutableValue() {

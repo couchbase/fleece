@@ -55,7 +55,7 @@ namespace fleece {
         const Value* get(uint32_t index) const noexcept;
 
         /** If this array is mutable, returns the equivalent MutableArray*, else returns nullptr. */
-        MutableArray* asMutable() const              {return (MutableArray*)asMutableCollection();}
+        MutableArray* asMutable() const;
 
         /** An empty Array. */
         static const Array* const kEmpty;

@@ -19,6 +19,7 @@
 #include "Value.hh"
 #include "Array.hh"
 #include "Internal.hh"
+#include "HeapValue.hh"
 #include "Endian.hh"
 #include "FleeceException.hh"
 #include "varint.hh"
@@ -367,5 +368,8 @@ namespace fleece {
     template const Value* Value::deref<false>(const Value *v);
     template const Value* Value::deref<true>(const Value *v);
 
+
+    void Value::_retain()   {HeapValue::retain(this);}
+    void Value::_release()  {HeapValue::release(this);}
 
 }

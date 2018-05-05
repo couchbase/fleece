@@ -33,24 +33,32 @@ namespace fleece {
     public:
         DB(std::string filePath);
 
-        const Value* get(slice key);
+        const Dict* get(slice key);
+        const Dict* get(const char* NONNULL key)                    {return get(slice(key));}
+
+        MutableDict* getMutable(slice key);
+        MutableDict* getMutable(const char* NONNULL key)            {return getMutable(slice(key));}
 
         enum PutMode {
             Insert,
             Upsert,
             Update,
         };
-        using PutCallback = std::function<bool(const Value*, Encoder&)>;
 
-        bool put(slice key, PutMode, const Value*);
+        using PutCallback = std::function<const Dict*(const Dict*)>;
+
+        bool put(slice key, PutMode, const Dict*);
+        bool put(const char* NONNULL key, PutMode m, const Dict* d) {return put(slice(key),m,d);}
         bool put(slice key, PutMode, PutCallback);
+        bool put(const char* NONNULL key, PutMode m, PutCallback c) {return put(slice(key),m,c);}
 
         bool remove(slice key);
+        bool remove(const char* NONNULL key)                        {return remove(slice(key));}
 
         void saveChanges();
         void writeTo(std::string path);
 
-        size_t dataSize() const                         {return _data.size;}
+        size_t dataSize() const                                     {return _data.size;}
         
     private:
         void load();
@@ -58,8 +66,6 @@ namespace fleece {
         std::string _filePath;
         mmap_slice _data;
         MutableHashTree _tree;
-        std::unique_ptr<Encoder> _enc;
-        std::vector<alloc_slice> _unsavedValues;
     };
 
 }

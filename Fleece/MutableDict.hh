@@ -18,7 +18,7 @@ namespace fleece {
     public:
 
         static MutableDict* asMutable(const Dict *dict) {
-            return (MutableDict*)MutableCollection::asMutable(dict);
+            return (MutableDict*)asHeapValue(dict);
         }
 
         /** Constructs a mutable copy of the given Dict. */
@@ -43,11 +43,11 @@ namespace fleece {
 
         /** Promotes an Array value to a MutableArray (in place) and returns it.
             Or if the value is already a MutableArray, just returns it. Else returns null. */
-        MutableArray* makeArrayMutable(slice key)  {return (MutableArray*)makeMutable(key, internal::kArrayTag);}
+        MutableArray* getMutableArray(slice key)  {return (MutableArray*)getMutable(key, internal::kArrayTag);}
 
         /** Promotes a Dict value to a MutableDict (in place) and returns it.
             Or if the value is already a MutableDict, just returns it. Else returns null. */
-        MutableDict* makeDictMutable(slice key)    {return (MutableDict*)makeMutable(key, internal::kDictTag);}
+        MutableDict* getMutableDict(slice key)    {return (MutableDict*)getMutable(key, internal::kDictTag);}
 
 
         class iterator {
@@ -81,6 +81,7 @@ namespace fleece {
     protected:
         friend class Array;
 
+        ~MutableDict() =default;
         MutableArray* kvArray();
 
     private:
@@ -89,12 +90,12 @@ namespace fleece {
         internal::MutableValue& _makeValueFor(slice key);
         internal::MutableValue& _mutableValueToSetFor(slice key);
 
-        MutableCollection* makeMutable(slice key, internal::tags ifType);
+        MutableCollection* getMutable(slice key, internal::tags ifType);
 
         uint32_t _count {0};
         const Dict* _source {nullptr};
         std::map<slice, internal::MutableValue> _map;
         std::deque<alloc_slice> _backingSlices;
-        std::unique_ptr<MutableArray> _iterable;
+        Retained<MutableArray> _iterable;
     };
 }

@@ -81,6 +81,7 @@ namespace fleece {
         // Minimum array count that has to be stored outside the header
         static const uint32_t kLongArrayCount = 0x07FF;
 
+        class HeapValue;
         class MutableValue;
         class MutableCollection;
 
