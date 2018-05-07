@@ -1,5 +1,5 @@
 //
-// MutableDict+ObjC.h
+// MArray+ObjC.h
 //
 // Copyright (c) 2017 Couchbase, Inc All rights reserved.
 //
@@ -20,10 +20,9 @@
 #include <Foundation/Foundation.h>
 
 
-@interface FleeceDict : NSMutableDictionary
-
-- (BOOL)containsObjectForKey:(NSString *)key;
+@interface FleeceArray : NSMutableArray
 
 @property (readonly, nonatomic) bool isMutated;
 
 @end
+

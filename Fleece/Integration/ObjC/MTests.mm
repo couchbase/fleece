@@ -18,8 +18,8 @@
 
 #include <Foundation/Foundation.h>
 #include "FleeceTests.hh"
-#include "MutableArray+ObjC.h"
-#include "MutableDict+ObjC.h"
+#include "MArray+ObjC.h"
+#include "MDict+ObjC.h"
 #include "MRoot.hh"
 #include "FleeceDocument.h"
 

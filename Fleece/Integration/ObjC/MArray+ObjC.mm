@@ -1,5 +1,5 @@
 //
-// MutableArray+ObjC.mm
+// MArray+ObjC.mm
 //
 // Copyright (c) 2017 Couchbase, Inc All rights reserved.
 //
@@ -16,7 +16,7 @@
 // limitations under the License.
 //
 
-#import "MutableArray+ObjC.h"
+#import "MArray+ObjC.h"
 #import "MValue+ObjC.hh"
 #import "MArray.hh"
 #import "PlatformCompat.hh"

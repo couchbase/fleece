@@ -18,8 +18,8 @@
 
 #pragma once
 #import <Foundation/Foundation.h>
-#import "MutableArray+ObjC.h"
-#import "MutableDict+ObjC.h"
+#import "MArray+ObjC.h"
+#import "MDict+ObjC.h"
 #include "MCollection.hh"
 
 

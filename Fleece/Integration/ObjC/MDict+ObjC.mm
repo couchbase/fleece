@@ -1,5 +1,5 @@
 //
-// MutableDict+ObjC.mm
+// MDict+ObjC.mm
 //
 // Copyright (c) 2017 Couchbase, Inc All rights reserved.
 //
@@ -16,7 +16,7 @@
 // limitations under the License.
 //
 
-#include "MutableDict+ObjC.h"
+#include "MDict+ObjC.h"
 #import "MValue+ObjC.hh"
 #import "MDict.hh"
 #import "MDictIterator.hh"

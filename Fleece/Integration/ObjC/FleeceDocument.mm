@@ -17,8 +17,8 @@
 //
 
 #import "FleeceDocument.h"
-#import "MutableArray+ObjC.h"
-#import "MutableDict+ObjC.h"
+#import "MArray+ObjC.h"
+#import "MDict+ObjC.h"
 #import "MRoot.hh"
 
 using namespace fleeceapi;
