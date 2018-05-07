@@ -21,8 +21,9 @@ namespace fleece {
             return (MutableDict*)asHeapValue(dict);
         }
 
-        /** Constructs a mutable copy of the given Dict. */
-        MutableDict(const Dict* =nullptr);
+        static Retained<MutableDict> newDict(const Dict *d =nullptr) {
+            return new MutableDict(d);
+        }
 
         const Dict* asDict() const                          {return (const Dict*)asValue();}
 
@@ -81,6 +82,7 @@ namespace fleece {
     protected:
         friend class Array;
 
+        MutableDict(const Dict* =nullptr);
         ~MutableDict() =default;
         MutableArray* kvArray();
 

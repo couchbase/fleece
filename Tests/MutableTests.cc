@@ -24,7 +24,7 @@
 namespace fleece {
 
     TEST_CASE("MutableArray type checking", "[Mutable]") {
-        Retained<MutableArray> ma = new MutableArray;
+        Retained<MutableArray> ma = MutableArray::newArray();
         const Value *v = ma->asArray();
 
         CHECK(ma->asValue() == v);
@@ -52,7 +52,7 @@ namespace fleece {
 
 
     TEST_CASE("MutableArray set values", "[Mutable]") {
-        Retained<MutableArray> ma = new MutableArray;
+        Retained<MutableArray> ma = MutableArray::newArray();
 
         REQUIRE(ma->count() == 0);
         REQUIRE(ma->empty());
@@ -126,7 +126,7 @@ namespace fleece {
 
 
     TEST_CASE("MutableArray as Array", "[Mutable]") {
-        Retained<MutableArray> ma = new MutableArray;
+        Retained<MutableArray> ma = MutableArray::newArray();
         const Array *a = ma->asArray();
         CHECK(a->type() == kArray);
         CHECK(a->count() == 0);
@@ -153,12 +153,12 @@ namespace fleece {
 
 
     TEST_CASE("MutableArray pointers", "[Mutable]") {
-        Retained<MutableArray> ma = new MutableArray;
+        Retained<MutableArray> ma = MutableArray::newArray();
         ma->resize(2);
         ma->set(0, 123);
         ma->set(1, 456);
 
-        Retained<MutableArray> mb = new MutableArray;
+        Retained<MutableArray> mb = MutableArray::newArray();
         CHECK(!mb->isChanged());
         mb->append(ma);
         CHECK(mb->isChanged());
@@ -194,7 +194,7 @@ namespace fleece {
 
 
     TEST_CASE("MutableDict type checking", "[Mutable]") {
-        Retained<MutableDict> md = new MutableDict;
+        Retained<MutableDict> md = MutableDict::newDict();
         const Value *v = md->asDict();
         CHECK(v->type() == kDict);
         CHECK(md->asValue() == v);
@@ -223,7 +223,7 @@ namespace fleece {
 
 
     TEST_CASE("MutableDict set values", "[Mutable]") {
-        Retained<MutableDict> md = new MutableDict;
+        Retained<MutableDict> md = MutableDict::newDict();
         REQUIRE(md->count() == 0);
         CHECK(md->get("foo"_sl) == nullptr);
 
@@ -294,7 +294,7 @@ namespace fleece {
 
 
     TEST_CASE("MutableDict as Dict", "[Mutable]") {
-        Retained<MutableDict> md = new MutableDict;
+        Retained<MutableDict> md = MutableDict::newDict();
         const Dict *d = (const Dict*)md->asValue();
         CHECK(d->type() == kDict);
         CHECK(d->count() == 0);
@@ -357,7 +357,7 @@ namespace fleece {
 
     TEST_CASE("Mutable long strings", "[Mutable]") {
         const char *chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        Retained<MutableArray> ma = new MutableArray(50);
+        Retained<MutableArray> ma = MutableArray::newArray(50);
         for (int len = 0; len < 50; ++len)
             ma->set(len, slice(chars, len));
         for (int len = 0; len < 50; ++len)
@@ -412,7 +412,7 @@ namespace fleece {
         std::cerr << "Original data: " << data << "\n\n";
         Value::dump(data, std::cerr);
 
-        Retained<MutableDict> update = new MutableDict(originalDict);
+        Retained<MutableDict> update = MutableDict::newDict(originalDict);
         CHECK(update->count() == 2);
         update->set("Friend"_sl, "catbus"_sl);
         CHECK(update->count() == 3);
@@ -486,7 +486,7 @@ namespace fleece {
         std::cerr << "Contents:      " << person->toJSON().asString() << "\n";
         Value::dump(data, std::cerr);
 
-        Retained<MutableDict> mp = new MutableDict(person);
+        Retained<MutableDict> mp = MutableDict::newDict(person);
         mp->set("age"_sl, 31);
         MutableArray *friends = mp->getMutableArray("friends"_sl);
         REQUIRE(friends);

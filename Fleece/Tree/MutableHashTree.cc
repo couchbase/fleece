@@ -662,7 +662,7 @@ namespace fleece {
     }
 
     MutableCollection* MutableHashTree::getMutable(slice key, tags ifType) {
-        MutableCollection *result = nullptr;
+        Retained<MutableCollection> result = nullptr;
         insert(key, [&](const Value *value) {
             result = MutableCollection::mutableCopy(value, ifType);
             return result ? result->asValue() : nullptr;

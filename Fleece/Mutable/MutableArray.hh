@@ -20,17 +20,13 @@ namespace fleece {
             return (MutableArray*)asHeapValue(array);
         }
 
-        MutableArray()
-        :MutableCollection(internal::kArrayTag)
-        { }
-
-        MutableArray(uint32_t initialCount)
-        :MutableCollection(internal::kArrayTag)
-        ,_items(initialCount)
-        { }
-
-        /** Constructs a mutable copy of the given Array. */
-        MutableArray(const Array* NONNULL);
+        static Retained<MutableArray> newArray(uint32_t initialCount =0) {
+            return new MutableArray(initialCount);
+        }
+        
+        static Retained<MutableArray> newArray(const Array *a NONNULL) {
+            return new MutableArray(a);
+        }
 
         const Array* asArray() const                {return (const Array*)asValue();}
 
@@ -48,7 +44,7 @@ namespace fleece {
         // small scalar values, and also invalidates iterators.
 
         /** Appends a new Value. */
-        template <typename T>  void append(T t)     {_appendMutableValue().set(t);}
+        template <typename T>  void append(const T &t)     {_appendMutableValue().set(t);}
 
 
         void resize(uint32_t newSize);              ///< Appends nulls, or removes items from end
@@ -85,6 +81,17 @@ namespace fleece {
 
 
     protected:
+        MutableArray()
+        :MutableCollection(internal::kArrayTag)
+        { }
+
+        MutableArray(uint32_t initialCount)
+        :MutableCollection(internal::kArrayTag)
+        ,_items(initialCount)
+        { }
+
+        MutableArray(const Array* NONNULL);
+
         ~MutableArray() =default;
         friend class Array;
         const internal::MutableValue* first();          // Called by Array::impl
@@ -97,8 +104,6 @@ namespace fleece {
         // _items stores each array item as a MutableValue. If an item's type is 'undefined',
         // that means the item is unchanged and its value can be found at the same index in _source.
         std::vector<internal::MutableValue> _items;
-
-
 
         // The original Array that this is a mutable copy of.
         const Array* _source {nullptr};

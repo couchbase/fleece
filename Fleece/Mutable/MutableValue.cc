@@ -89,14 +89,14 @@ namespace fleece { namespace internal {
     }
 
 
-    MutableCollection* MutableCollection::mutableCopy(const Value *v, tags ifType) {
+    Retained<MutableCollection> MutableCollection::mutableCopy(const Value *v, tags ifType) {
         if (!v || v->tag() != ifType)
             return nullptr;
         if (v->isMutable())
             return (MutableCollection*)asHeapValue(v);
         switch (ifType) {
-            case kArrayTag: return new MutableArray((const Array*)v);
-            case kDictTag:  return new MutableDict((const Dict*)v);
+            case kArrayTag: return MutableArray::newArray((const Array*)v);
+            case kDictTag:  return MutableDict::newDict((const Dict*)v);
             default:        return nullptr;
         }
     }

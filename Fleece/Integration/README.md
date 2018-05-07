@@ -1,4 +1,4 @@
-# The Fleece Mutability Library
+# The Fleece Platform Integration Library
 
 ## Introduction
 This is an optional component of Fleece that addresses two concerns with integrating Fleece into an application or framework:
@@ -8,7 +8,7 @@ This is an optional component of Fleece that addresses two concerns with integra
 * **Integration with native object classes:** If Fleece is being used as part of a framework (like Couchbase Lite), then the values it stores should be exposed as objects in the framework being used by the developer.  This isn’t hard on its own, though it’s annoying boilerplate. But it gets quite difficult when combined with mutability, as we’ve discovered while implementing Couchbase Lite 2.
 
 ## Architecture
-There are three core classes in the mutability library: `MValue`, `MArray`, `MDict`. These are actually C++ templates, parameterized by a type `Native` that represents a pointer to a native (framework) object, like an Objective-C id or JNI jobject, etc.
+There are three core classes in the integration library: `MValue`, `MArray`, `MDict`. These are actually C++ templates, parameterized by a type `Native` that represents a pointer to a native (framework) object, like an Objective-C id or JNI jobject, etc.
 
 * An `MValue` is a mutable “slot” that holds a Fleece Value, a `Native` object, or both. (In the “both” state, the `Native` object is a cached representation of the Value. If the slot is mutated, the Value is cleared, leaving only the current `Native` object.)
 * An `MArray` is a mutable array of `MValue`s. It usually shadows a Fleece `Array`.
@@ -20,7 +20,7 @@ There’s also an MRoot class, which acts as a special top-level container for t
 
 ## Implementing the native side
 
-Adapting the mutability library to a new framework is fairly straightforward; here are the steps:
+Adapting the integration library to a new framework is fairly straightforward; here are the steps:
 
 ### 1. Create an appropriate `Native` type
 The `Native` type declared by the templates needs to be a ‘smart pointer’ that holds a strong reference to a native object; that is, the reference keeps the object in memory. In most cases this means you’ll need to implement a pointer-sized class with the right constructors and destructor and `operator=` overloads to manage the strong reference.

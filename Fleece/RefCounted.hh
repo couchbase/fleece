@@ -74,8 +74,13 @@ namespace fleece {
     public:
         Retained() noexcept                      :_ref(nullptr) { }
         Retained(T *t) noexcept                  :_ref(retain(t)) { }
-        Retained(const Retained &r) noexcept     :_ref(retain(r._ref)) { }
-        Retained(Retained &&r) noexcept          :_ref(r._ref) {r._ref = nullptr;}
+
+        template <typename U>
+        Retained(const Retained<U> &r) noexcept  :_ref(retain(r._ref)) { }
+
+        template <typename U>
+        Retained(Retained<U> &&r) noexcept       :_ref(r._ref) {r._ref = nullptr;}
+
         ~Retained()                              {release(_ref);}
 
         operator T* () const noexcept            {return _ref;}
@@ -102,6 +107,8 @@ namespace fleece {
         }
 
     private:
+        template <class U> friend class Retained;
+
         T *_ref;
     };
 

@@ -23,7 +23,7 @@ namespace fleece { namespace internal {
         // Coercing Value --> MutableCollection:
 
         static bool isMutable(const Value *v)           {return isHeapValue(v);}
-        static MutableCollection* mutableCopy(const Value *v, tags ifType);
+        static Retained<MutableCollection> mutableCopy(const Value *v, tags ifType);
 
         // MutableCollection API:
 

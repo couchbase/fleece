@@ -122,7 +122,7 @@ namespace fleece {
 
     MutableArray* MutableDict::kvArray() {
         if (!_iterable) {
-            _iterable = new MutableArray(2*count());
+            _iterable = MutableArray::newArray(2*count());
             uint32_t n = 0;
             for (iterator i(this); i; ++i) {
                 _iterable->set(n++, i.keyString());
