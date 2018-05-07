@@ -18,7 +18,7 @@
 
 #include "Array.hh"
 #include "MutableArray.hh"
-#include "MutableDict.hh"
+#include "HeapDict.hh"
 #include "Internal.hh"
 #include "PlatformCompat.hh"
 #include "varint.hh"
@@ -50,23 +50,23 @@ namespace fleece {
             }
         } else {
             // Mutable Array or Dict:
-            auto mcoll = (MutableCollection*)HeapValue::asHeapValue(v);
-            MutableArray *mutArray;
+            auto mcoll = (HeapCollection*)HeapValue::asHeapValue(v);
+            HeapArray *mutArray;
             if (v->tag() == kArrayTag) {
-                mutArray = (MutableArray*)mcoll;
+                mutArray = (HeapArray*)mcoll;
                 _count = mutArray->count();
             } else {
-                mutArray = ((MutableDict*)mcoll)->kvArray();
+                mutArray = ((HeapDict*)mcoll)->kvArray();
                 _count = mutArray->count() / 2;
             }
             _first = _count ? (const Value*)mutArray->first() : nullptr;
-            _width = sizeof(MutableValue);
+            _width = sizeof(ValueSlot);
         }
     }
 
     const Value* Array::impl::deref(const Value *v) const noexcept {
         if (_usuallyFalse(isMutableArray()))
-            return ((MutableValue*)v)->asValue();
+            return ((ValueSlot*)v)->asValue();
         return Value::deref(v, _width == kWide);
     }
 
@@ -78,7 +78,7 @@ namespace fleece {
         else if (_usuallyTrue(_width == kWide))
             return Value::deref<true> (offsetby(_first, kWide   * index));
         else
-            return ((MutableValue*)_first + index)->asValue();
+            return ((ValueSlot*)_first + index)->asValue();
     }
 
     const Value* Array::impl::firstValue() const noexcept {
@@ -101,18 +101,22 @@ namespace fleece {
 
     uint32_t Array::count() const noexcept {
         if (_usuallyFalse(isMutable()))
-            return asMutable()->count();
+            return heapArray()->count();
         return impl(this)._count;
     }
 
     const Value* Array::get(uint32_t index) const noexcept {
         if (_usuallyFalse(isMutable()))
-            return asMutable()->get(index);
+            return heapArray()->get(index);
         return impl(this)[index];
     }
 
+    HeapArray* Array::heapArray() const {
+        return (HeapArray*)internal::HeapCollection::asHeapValue(this);
+    }
+
     MutableArray* Array::asMutable() const {
-        return (MutableArray*)HeapValue::asHeapValue(this);
+        return isMutable() ? (MutableArray*)this : nullptr;
     }
 
     static constexpr Array kEmptyArrayInstance;

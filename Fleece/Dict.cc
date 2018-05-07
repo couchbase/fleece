@@ -274,13 +274,13 @@ namespace fleece {
 
     uint32_t Dict::count() const noexcept {
         if (_usuallyFalse(isMutable()))
-            return asMutable()->count();
+            return heapDict()->count();
         return Array::impl(this)._count;
     }
 
     const Value* Dict::get_unsorted(slice keyToFind) const noexcept {
         if (_usuallyFalse(isMutable()))
-            return asMutable()->get(keyToFind);
+            return heapDict()->get(keyToFind);
         if (isWideArray())
             return dictImpl<true>(this).get_unsorted(keyToFind);
         else
@@ -289,7 +289,7 @@ namespace fleece {
 
     const Value* Dict::get(slice keyToFind) const noexcept {
         if (_usuallyFalse(isMutable()))
-            return asMutable()->get(keyToFind);
+            return heapDict()->get(keyToFind);
         if (isWideArray())
             return dictImpl<true>(this).get(keyToFind);
             else
@@ -336,8 +336,13 @@ namespace fleece {
 
 
     MutableDict* Dict::asMutable() const {
-        return (MutableDict*)HeapValue::asHeapValue(this);
+        return isMutable() ? (MutableDict*)this : nullptr;
     }
+
+    HeapDict* Dict::heapDict() const {
+        return (HeapDict*)internal::HeapCollection::asHeapValue(this);
+    }
+
 
     static constexpr Dict kEmptyDictInstance;
     const Dict* const Dict::kEmpty = &kEmptyDictInstance;

@@ -33,6 +33,7 @@ namespace fleece {
             static HeapValue* createData(slice s)       {return createStr(internal::kBinaryTag, s);}
             static HeapValue* create(const Value*);
 
+            static const Value* asValue(HeapValue *v)   {return v ? v->asValue() : nullptr;}
             const Value* asValue() const                {return (const Value*)&_header;}
 
             static bool isHeapValue(const Value *v)     {return ((size_t)v & 1) != 0;}
@@ -49,14 +50,38 @@ namespace fleece {
             HeapValue(tags tag, int tiny);
             tags tag() const                            {return tags(_header >> 4);}
         private:
-            friend class MutableValue;
+            friend class ValueSlot;
 
             static void* operator new(size_t size, size_t extraSize);
             HeapValue() { }
             static HeapValue* createStr(internal::tags, slice s);
             template <class INT> static HeapValue* createInt(INT, bool isUnsigned);
         };
-    }
+
+
+
+        /** Abstract base class of Heap{Array,Dict}. */
+        class HeapCollection : public HeapValue {
+        public:
+            static Retained<HeapCollection> mutableCopy(const Value *v, tags ifType);
+
+            bool isChanged() const                          {return _changed;}
+
+        protected:
+            HeapCollection(internal::tags tag)
+            :HeapValue(tag, 0)
+            ,_changed(false)
+            { }
+
+            ~HeapCollection() =default;
+
+            void setChanged(bool c)                         {_changed = c;}
+
+        private:
+            bool _changed {false};
+        };
+
+    } // end internal namespace
 
     
     static inline const Value* retain(const Value *v) {

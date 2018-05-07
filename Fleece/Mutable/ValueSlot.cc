@@ -1,5 +1,5 @@
 //
-// MutableValue.cc
+// ValueSlot.cc
 //
 // Copyright © 2018 Couchbase. All rights reserved.
 //
@@ -16,9 +16,9 @@
 // limitations under the License.
 //
 
-#include "MutableValue.hh"
-#include "MutableArray.hh"
-#include "MutableDict.hh"
+#include "ValueSlot.hh"
+#include "HeapArray.hh"
+#include "HeapDict.hh"
 #include "varint.hh"
 #include <algorithm>
 
@@ -27,28 +27,28 @@ namespace fleece { namespace internal {
     using namespace internal;
 
 
-    MutableValue::MutableValue(Null)
+    ValueSlot::ValueSlot(Null)
     :_isInline(true)
     ,_inlineData{(kSpecialTag << 4) | kSpecialValueNull}
     {
-        static_assert(sizeof(MutableValue) == 2*sizeof(void*), "MutableValue is wrong size");
-        static_assert(offsetof(MutableValue, _inlineData) + MutableValue::kInlineCapacity
-                        == offsetof(MutableValue, _isInline), "kInlineCapacity is wrong");
+        static_assert(sizeof(ValueSlot) == 2*sizeof(void*), "ValueSlot is wrong size");
+        static_assert(offsetof(ValueSlot, _inlineData) + ValueSlot::kInlineCapacity
+                        == offsetof(ValueSlot, _isInline), "kInlineCapacity is wrong");
     }
 
 
-    MutableValue::MutableValue(MutableCollection *md)
+    ValueSlot::ValueSlot(HeapCollection *md)
     :_asValue( retain(md)->asValue() )
     { }
 
 
 
-    MutableValue::MutableValue(const MutableValue &other) noexcept {
+    ValueSlot::ValueSlot(const ValueSlot &other) noexcept {
         *this = other; // invoke operator=, below
     }
 
 
-    MutableValue& MutableValue::operator= (const MutableValue &other) noexcept {
+    ValueSlot& ValueSlot::operator= (const ValueSlot &other) noexcept {
         releaseValue();
         _isInline = other._isInline;
         if (_isInline)
@@ -59,7 +59,7 @@ namespace fleece { namespace internal {
     }
 
 
-    MutableValue::MutableValue(MutableValue &&other) noexcept {
+    ValueSlot::ValueSlot(ValueSlot &&other) noexcept {
         _isInline = other._isInline;
         if (_isInline) {
             memcpy(&_inlineData, &other._inlineData, kInlineCapacity);
@@ -69,7 +69,7 @@ namespace fleece { namespace internal {
         }
     }
 
-    MutableValue& MutableValue::operator= (MutableValue &&other) noexcept {
+    ValueSlot& ValueSlot::operator= (ValueSlot &&other) noexcept {
         releaseValue();
         _isInline = other._isInline;
         if (_isInline) {
@@ -83,26 +83,26 @@ namespace fleece { namespace internal {
 
 
 
-    MutableValue::~MutableValue() {
+    ValueSlot::~ValueSlot() {
         if (!_isInline)
             release(_asValue);
     }
 
 
-    Retained<MutableCollection> MutableCollection::mutableCopy(const Value *v, tags ifType) {
+    Retained<HeapCollection> HeapCollection::mutableCopy(const Value *v, tags ifType) {
         if (!v || v->tag() != ifType)
             return nullptr;
         if (v->isMutable())
-            return (MutableCollection*)asHeapValue(v);
+            return (HeapCollection*)asHeapValue(v);
         switch (ifType) {
-            case kArrayTag: return MutableArray::newArray((const Array*)v);
-            case kDictTag:  return MutableDict::newDict((const Dict*)v);
+            case kArrayTag: return new HeapArray((const Array*)v);
+            case kDictTag:  return new HeapDict((const Dict*)v);
             default:        return nullptr;
         }
     }
 
 
-    void MutableValue::releaseValue() {
+    void ValueSlot::releaseValue() {
         if (!_isInline) {
             release(_asValue);
             _asValue = nullptr;
@@ -110,34 +110,34 @@ namespace fleece { namespace internal {
     }
 
 
-    const Value* MutableValue::asValue() const {
+    const Value* ValueSlot::asValue() const {
         return _isInline ? (const Value*)&_inlineData : _asValue;
     }
 
 
-    void MutableValue::setInline(internal::tags valueTag, int tiny) {
+    void ValueSlot::setInline(internal::tags valueTag, int tiny) {
         releaseValue();
         _isInline = true;
         _inlineData[0] = uint8_t((valueTag << 4) | tiny);
     }
 
-    void MutableValue::set(Null) {
+    void ValueSlot::set(Null) {
         setInline(kSpecialTag, kSpecialValueNull);
     }
 
 
-    void MutableValue::set(bool b) {
+    void ValueSlot::set(bool b) {
         setInline(kSpecialTag, b ? kSpecialValueTrue : kSpecialValueFalse);
     }
 
 
-    void MutableValue::set(int i)       {setInt(i, false);}
-    void MutableValue::set(unsigned i)  {setInt(i, true);}
-    void MutableValue::set(int64_t i)   {setInt(i, false);}
-    void MutableValue::set(uint64_t i)  {setInt(i, true);}
+    void ValueSlot::set(int i)       {setInt(i, false);}
+    void ValueSlot::set(unsigned i)  {setInt(i, true);}
+    void ValueSlot::set(int64_t i)   {setInt(i, false);}
+    void ValueSlot::set(uint64_t i)  {setInt(i, true);}
 
     template <class INT>
-    void MutableValue::setInt(INT i, bool isUnsigned) {
+    void ValueSlot::setInt(INT i, bool isUnsigned) {
         if (i < 2048 && (isUnsigned || -i < 2048)) {
             setInline(kShortIntTag, (i >> 8) & 0x0F);
             _inlineData[1] = (uint8_t)(i & 0xFF);
@@ -151,18 +151,18 @@ namespace fleece { namespace internal {
     }
 
 
-    void MutableValue::set(float f) {
+    void ValueSlot::set(float f) {
         littleEndianFloat lf(f);
         setValue(kFloatTag, 0, {&lf, sizeof(lf)});
     }
 
-    void MutableValue::set(double d) {
+    void ValueSlot::set(double d) {
         littleEndianDouble ld(d);
         setValue(kFloatTag, 8, {&ld, sizeof(ld)});
     }
 
 
-    void MutableValue::set(const Value *v) {
+    void ValueSlot::setValue(const Value *v) {
         if (!_isInline) {
             if (v == _asValue)
                 return;
@@ -183,7 +183,7 @@ namespace fleece { namespace internal {
     }
 
 
-    void MutableValue::setValue(tags valueTag, int tiny, slice bytes) {
+    void ValueSlot::setValue(tags valueTag, int tiny, slice bytes) {
         releaseValue();
         if (1 + bytes.size <= kInlineCapacity) {
             _inlineData[0] = uint8_t((valueTag << 4) | tiny);
@@ -196,7 +196,7 @@ namespace fleece { namespace internal {
     }
 
 
-    void MutableValue::_setStringOrData(tags valueTag, slice s) {
+    void ValueSlot::_setStringOrData(tags valueTag, slice s) {
         if (s.size + 1 <= kInlineCapacity) {
             // Short strings can go inline:
             setInline(valueTag, (int)s.size);
@@ -209,12 +209,12 @@ namespace fleece { namespace internal {
     }
 
 
-    MutableCollection* MutableValue::makeMutable(tags ifType) {
+    HeapCollection* ValueSlot::makeMutable(tags ifType) {
         if (_isInline)
             return nullptr;
-        Retained<MutableCollection> mval = MutableCollection::mutableCopy(_asValue, ifType);
+        Retained<HeapCollection> mval = HeapCollection::mutableCopy(_asValue, ifType);
         if (mval)
-            set(mval);
+            set(mval->asValue());
         return mval;
     }
 

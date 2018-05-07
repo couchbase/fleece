@@ -101,6 +101,9 @@ namespace fleece {
 
         constexpr Array()  :Value(internal::kArrayTag, 0, 0) { }
 
+    protected:
+        internal::HeapArray* heapArray() const;
+
     private:
         friend class Value;
         friend class Dict;

@@ -1,5 +1,5 @@
 //
-// MutableArray.cc
+// HeapArray.cc
 //
 // Copyright © 2018 Couchbase. All rights reserved.
 //
@@ -16,23 +16,24 @@
 // limitations under the License.
 //
 
+#include "HeapArray.hh"
+#include "HeapDict.hh"
 #include "MutableArray.hh"
-#include "MutableDict.hh"
 #include "varint.hh"
 
-namespace fleece {
+namespace fleece { namespace internal {
 
     using namespace internal;
 
 
-    MutableArray::MutableArray(const Array *a)
-    :MutableCollection(kArrayTag)
+    HeapArray::HeapArray(const Array *a)
+    :HeapCollection(kArrayTag)
     ,_items(a->count())
     ,_source(a)
     { }
 
 
-    void MutableArray::populate(unsigned fromIndex) {
+    void HeapArray::populate(unsigned fromIndex) {
         if (!_source)
             return;
         auto dst = _items.begin() + fromIndex;
@@ -45,7 +46,7 @@ namespace fleece {
     }
 
 
-    const Value* MutableArray::get(uint32_t index) {
+    const Value* HeapArray::get(uint32_t index) {
         if (index >= count())
             return nullptr;
         auto &item = _items[index];
@@ -56,25 +57,25 @@ namespace fleece {
     }
 
 
-    void MutableArray::resize(uint32_t newSize) {
+    void HeapArray::resize(uint32_t newSize) {
         if (newSize == count())
             return;
-        _items.resize(newSize, MutableValue(Null()));
+        _items.resize(newSize, ValueSlot(Null()));
         setChanged(true);
     }
 
 
-    void MutableArray::insert(uint32_t where, uint32_t n) {
+    void HeapArray::insert(uint32_t where, uint32_t n) {
         throwIf(where > count(), OutOfRange, "insert position is past end of array");
         if (n == 0)
             return;
         populate(where);
-        _items.insert(_items.begin() + where,  n, MutableValue(Null()));
+        _items.insert(_items.begin() + where,  n, ValueSlot(Null()));
         setChanged(true);
     }
 
 
-    void MutableArray::remove(uint32_t where, uint32_t n) {
+    void HeapArray::remove(uint32_t where, uint32_t n) {
         throwIf(where + n > count(), OutOfRange, "remove range is past end of array");
         if (n == 0)
             return;
@@ -85,7 +86,7 @@ namespace fleece {
     }
 
 
-    void MutableArray::removeAll() {
+    void HeapArray::removeAll() {
         if (empty())
             return;
         _items.clear();
@@ -93,50 +94,50 @@ namespace fleece {
     }
 
 
-    MutableCollection* MutableArray::getMutable(uint32_t index, tags ifType) {
+    HeapCollection* HeapArray::getMutable(uint32_t index, tags ifType) {
         if (index >= count())
             return nullptr;
-        Retained<MutableCollection> result = nullptr;
+        Retained<HeapCollection> result = nullptr;
         auto &mval = _items[index];
         if (mval) {
             result = mval.makeMutable(ifType);
         } else if (_source) {
-            result = MutableCollection::mutableCopy(_source->get(index), ifType);
+            result = HeapCollection::mutableCopy(_source->get(index), ifType);
             if (result)
-                _items[index].set(result);
+                _items[index].set(result->asValue());
         }
         if (result)
             setChanged(true);
         return result;
     }
 
-    MutableArray* MutableArray::getMutableArray(uint32_t i)  {
-        return (MutableArray*)getMutable(i, internal::kArrayTag);
+    MutableArray* HeapArray::getMutableArray(uint32_t i)  {
+        return (MutableArray*)asValue(getMutable(i, internal::kArrayTag));
     }
 
-    /** Promotes a Dict item to a MutableDict (in place) and returns it.
-     Or if the item is already a MutableDict, just returns it. Else returns null. */
-    MutableDict* MutableArray::getMutableDict(uint32_t i) {
-        return (MutableDict*)getMutable(i,internal::kDictTag);
+    /** Promotes a Dict item to a HeapDict (in place) and returns it.
+     Or if the item is already a HeapDict, just returns it. Else returns null. */
+    MutableDict* HeapArray::getMutableDict(uint32_t i) {
+        return (MutableDict*)asValue(getMutable(i,internal::kDictTag));
     }
 
 
 
-    internal::MutableValue& MutableArray::_appendMutableValue() {
+    internal::ValueSlot& HeapArray::_appendMutableValue() {
         setChanged(true);
         _items.emplace_back();
         return _items.back();
     }
 
 
-    const MutableValue* MutableArray::first() {
+    const ValueSlot* HeapArray::first() {
         populate(0);
         return &_items.front();
     }
 
 
 
-    MutableArray::iterator::iterator(const MutableArray *ma) noexcept
+    HeapArray::iterator::iterator(const HeapArray *ma) noexcept
     :_iter(ma->_items.begin())
     ,_iterEnd(ma->_items.end())
     ,_sourceIter(ma->_source)
@@ -144,7 +145,11 @@ namespace fleece {
         ++(*this);
     }
 
-    MutableArray::iterator& MutableArray::iterator::operator ++() {
+    HeapArray::iterator::iterator(const MutableArray *ma) noexcept
+    :iterator((HeapArray*)HeapCollection::asHeapValue(ma))
+    { }
+
+    HeapArray::iterator& HeapArray::iterator::operator ++() {
         if (_iter == _iterEnd) {
             _value = nullptr;
         } else {
@@ -158,4 +163,4 @@ namespace fleece {
     }
 
 
-}
+} }

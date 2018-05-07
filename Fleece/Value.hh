@@ -259,8 +259,8 @@ namespace fleece {
 
         uint8_t _byte[internal::kWide];
 
-        friend class internal::MutableValue;
-        friend class internal::MutableCollection;
+        friend class internal::ValueSlot;
+        friend class internal::HeapCollection;
         friend class internal::HeapValue;
         friend class Array;
         friend class Dict;

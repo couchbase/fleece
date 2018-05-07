@@ -11,9 +11,9 @@
 #include <memory>
 
 namespace fleece {
-    class Encoder;
     class MutableArray;
     class MutableDict;
+    class Encoder;
     namespace hashtree {
         class MutableInterior;
         class NodeRef;
@@ -52,7 +52,7 @@ namespace fleece {
         
     private:
         hashtree::NodeRef rootNode() const;
-        internal::MutableCollection* getMutable(slice key, internal::tags ifType);
+        Value* getMutable(slice key, internal::tags ifType);
 
         const HashTree* _imRoot {nullptr};
         hashtree::MutableInterior* _root {nullptr};

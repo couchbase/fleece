@@ -678,14 +678,14 @@ public:
         auto root = Value::fromTrustedData(doc)->asArray();
 
         {
-            FILE *out = fopen(kTestFilesDir"fleecetemp.fleece", "w");
+            FILE *out = fopen(kTempDir"fleecetemp.fleece", "w");
             Encoder fenc(out);
             fenc.writeValue(root);
             fenc.end();
             fclose(out);
         }
 
-        alloc_slice newDoc = readFile(kTestFilesDir"fleecetemp.fleece");
+        alloc_slice newDoc = readFile(kTempDir"fleecetemp.fleece");
         REQUIRE(newDoc);
         auto newRoot = Value::fromData(newDoc)->asArray();
         REQUIRE(newRoot);

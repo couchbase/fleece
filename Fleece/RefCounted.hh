@@ -87,6 +87,8 @@ namespace fleece {
         T* operator-> () const noexcept          {return _ref;}
         T* get() const noexcept                  {return _ref;}
 
+        explicit operator bool () const          {return (_ref != nullptr);}
+
         Retained& operator=(T *t) noexcept {
             auto oldRef = _ref;
             _ref = retain(t);

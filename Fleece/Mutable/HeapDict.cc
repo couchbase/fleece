@@ -1,5 +1,5 @@
 //
-// MutableDict.cc
+// HeapDict.cc
 //
 // Copyright © 2018 Couchbase. All rights reserved.
 //
@@ -16,36 +16,35 @@
 // limitations under the License.
 //
 
+#include "HeapDict.hh"
+#include "HeapArray.hh"
+#include "ValueSlot.hh"
 #include "MutableDict.hh"
-#include "MutableArray.hh"
-#include "MutableValue.hh"
 
-namespace fleece {
-    using namespace internal;
+namespace fleece { namespace internal {
 
-
-    MutableDict::MutableDict(const Dict *d)
-    :MutableCollection(kDictTag)
+    HeapDict::HeapDict(const Dict *d)
+    :HeapCollection(kDictTag)
     ,_source(d)
     ,_count(d ? d->count() : 0)
     { }
 
 
-    void MutableDict::markChanged() {
+    void HeapDict::markChanged() {
         setChanged(true);
         _iterable = nullptr;
     }
 
 
-    MutableValue* MutableDict::_findValueFor(slice key) const noexcept {
+    ValueSlot* HeapDict::_findValueFor(slice key) const noexcept {
         auto it = _map.find(key);
         if (it == _map.end())
             return nullptr;
-        return const_cast<MutableValue*>(&it->second);
+        return const_cast<ValueSlot*>(&it->second);
     }
 
 
-    MutableValue& MutableDict::_makeValueFor(slice key) {
+    ValueSlot& HeapDict::_makeValueFor(slice key) {
         // Look in my map first:
         auto it = _map.find(key);
         if (it != _map.end())
@@ -57,7 +56,7 @@ namespace fleece {
     }
 
 
-    MutableValue& MutableDict::_mutableValueToSetFor(slice key) {
+    ValueSlot& HeapDict::_mutableValueToSetFor(slice key) {
         auto &val = _makeValueFor(key);
         if (!val && !(_source && _source->get(key)))
             ++_count;
@@ -66,8 +65,8 @@ namespace fleece {
     }
 
 
-    const Value* MutableDict::get(slice key) const noexcept {
-        MutableValue* val = _findValueFor(key);
+    const Value* HeapDict::get(slice key) const noexcept {
+        ValueSlot* val = _findValueFor(key);
         if (val)
             return val->asValue();
         else
@@ -75,13 +74,13 @@ namespace fleece {
     }
 
 
-    MutableCollection* MutableDict::getMutable(slice key, tags ifType) {
-        Retained<MutableCollection> result;
-        MutableValue* mval = _findValueFor(key);
+    HeapCollection* HeapDict::getMutable(slice key, tags ifType) {
+        Retained<HeapCollection> result;
+        ValueSlot* mval = _findValueFor(key);
         if (mval) {
             result = mval->makeMutable(ifType);
         } else if (_source) {
-            result = MutableCollection::mutableCopy(_source->get(key), ifType);
+            result = HeapCollection::mutableCopy(_source->get(key), ifType);
             if (result)
                 _map.emplace(key, result);
         }
@@ -91,12 +90,12 @@ namespace fleece {
     }
 
 
-    void MutableDict::remove(slice key) {
+    void HeapDict::remove(slice key) {
         if (_source && _source->get(key)) {
             auto &val = _makeValueFor(key);
             if (_usuallyFalse(!val))
                 return;                             // already removed
-            val = MutableValue();
+            val = ValueSlot();
         } else {
             if (_usuallyFalse(!_map.erase(key)))    //OPT: Should remove it from _backingSlices too
                 return;
@@ -106,7 +105,7 @@ namespace fleece {
     }
 
 
-    void MutableDict::removeAll() {
+    void HeapDict::removeAll() {
         if (_count == 0)
             return;
         _map.clear();
@@ -120,9 +119,9 @@ namespace fleece {
     }
 
 
-    MutableArray* MutableDict::kvArray() {
+    HeapArray* HeapDict::kvArray() {
         if (!_iterable) {
-            _iterable = MutableArray::newArray(2*count());
+            _iterable = new HeapArray(2*count());
             uint32_t n = 0;
             for (iterator i(this); i; ++i) {
                 _iterable->set(n++, i.keyString());
@@ -137,7 +136,7 @@ namespace fleece {
 #pragma mark - ITERATOR:
 
 
-    MutableDict::iterator::iterator(const MutableDict *dict) noexcept
+    HeapDict::iterator::iterator(const HeapDict *dict) noexcept
     :_sourceIter(dict->_source)
     ,_newIter(dict->_map.begin())
     ,_newEnd(dict->_map.end())
@@ -148,18 +147,22 @@ namespace fleece {
         ++(*this);
     }
 
-    void MutableDict::iterator::getSource() {
+    HeapDict::iterator::iterator(const MutableDict *dict) noexcept
+    :iterator((HeapDict*)HeapCollection::asHeapValue(dict))
+    { }
+
+    void HeapDict::iterator::getSource() {
         _sourceActive = (bool)_sourceIter;
         if (_usuallyTrue(_sourceActive))
             _sourceKey = _sourceIter.keyString();
     }
 
-    void MutableDict::iterator::getNew() {
+    void HeapDict::iterator::getNew() {
         _newActive = _newIter != _newEnd;
     }
 
 
-    MutableDict::iterator& MutableDict::iterator::operator++() {
+    HeapDict::iterator& HeapDict::iterator::operator++() {
         // Since _source and _map are both sorted, this is basically just an array merge.
         // Special cases: both items might be equal, or the item from _map might be a tombstone.
         --_count;
@@ -194,4 +197,4 @@ namespace fleece {
         return *this;
     }
 
-}
+} }

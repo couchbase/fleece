@@ -6,98 +6,40 @@
 
 #pragma once
 #include "Dict.hh"
-#include "MutableValue.hh"
-#include <deque>
-#include <unordered_map>
-#include <memory>
+#include "HeapDict.hh"
 
 namespace fleece {
     class MutableArray;
 
-    class MutableDict : public internal::MutableCollection {
+
+    class MutableDict : public Dict {
     public:
 
-        static MutableDict* asMutable(const Dict *dict) {
-            return (MutableDict*)asHeapValue(dict);
+        static Retained<MutableDict> newDict(const Dict *a =nullptr) {
+            return (new internal::HeapDict(a))->asMutableDict();
         }
 
-        static Retained<MutableDict> newDict(const Dict *d =nullptr) {
-            return new MutableDict(d);
-        }
+        const Dict* source() const                          {return heapDict()->_source;}
+        bool isChanged() const                              {return heapDict()->isChanged();}
 
-        const Dict* asDict() const                          {return (const Dict*)asValue();}
-
-        const Dict* source() const                          {return _source;}
-
-        uint32_t count() const                              {return _count;}
-        bool empty() const                                  {return _count == 0;}
-        
-        const Value* get(slice keyToFind) const noexcept;
+        const Value* get(slice keyToFind) const noexcept    {return heapDict()->get(keyToFind);}
 
         // Warning: Modifying a MutableDict invalidates all Dict::iterators on it!
 
         template <typename T>
-        void set(slice key, T value)                        {_mutableValueToSetFor(key).set(value);}
+        void set(slice key, T value)                        {heapDict()->set(key, value);}
 
-        void remove(slice key);
-        void removeAll();
+        void remove(slice key)                              {heapDict()->remove(key);}
+        void removeAll()                                    {heapDict()->removeAll();}
 
         /** Promotes an Array value to a MutableArray (in place) and returns it.
             Or if the value is already a MutableArray, just returns it. Else returns null. */
-        MutableArray* getMutableArray(slice key)  {return (MutableArray*)getMutable(key, internal::kArrayTag);}
+        MutableArray* getMutableArray(slice key)        {return heapDict()->getMutableArray(key);}
 
         /** Promotes a Dict value to a MutableDict (in place) and returns it.
             Or if the value is already a MutableDict, just returns it. Else returns null. */
-        MutableDict* getMutableDict(slice key)    {return (MutableDict*)getMutable(key, internal::kDictTag);}
+        MutableDict* getMutableDict(slice key)          {return heapDict()->getMutableDict(key);}
 
-
-        class iterator {
-        public:
-            iterator(const MutableDict* NONNULL) noexcept;
-
-            uint32_t count() const noexcept                 {return _count;}
-            
-            slice keyString() const noexcept                {return _key;}
-            const Value* value() const noexcept             {return _value;}
-
-            /** Returns false when the iterator reaches the end. */
-            explicit operator bool() const noexcept          {return _value != nullptr;}
-
-            /** Steps to the next item. (Throws if there are no more items.) */
-            iterator& operator ++();
-
-        private:
-            void getSource();
-            void getNew();
-
-            slice _key;
-            const Value* _value;
-            Dict::iterator _sourceIter;
-            std::map<slice, internal::MutableValue>::const_iterator _newIter, _newEnd;
-            bool _sourceActive, _newActive;
-            slice _sourceKey;
-            uint32_t _count;
-        };
-
-    protected:
-        friend class Array;
-
-        MutableDict(const Dict* =nullptr);
-        ~MutableDict() =default;
-        MutableArray* kvArray();
-
-    private:
-        void markChanged();
-        internal::MutableValue* _findValueFor(slice keyToFind) const noexcept;
-        internal::MutableValue& _makeValueFor(slice key);
-        internal::MutableValue& _mutableValueToSetFor(slice key);
-
-        MutableCollection* getMutable(slice key, internal::tags ifType);
-
-        uint32_t _count {0};
-        const Dict* _source {nullptr};
-        std::map<slice, internal::MutableValue> _map;
-        std::deque<alloc_slice> _backingSlices;
-        Retained<MutableArray> _iterable;
+        using iterator = internal::HeapDict::iterator;
     };
 }

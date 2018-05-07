@@ -32,8 +32,10 @@ using namespace fleece;
 // Directory containing test files:
 #ifdef _MSC_VER
 #define kTestFilesDir "..\\Tests\\"
+#define kTempDir "C:\\tmp"
 #else
 #define kTestFilesDir "Tests/"
+#define kTempDir "/tmp/"
 #endif
 
 namespace fleece_test {

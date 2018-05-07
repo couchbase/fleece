@@ -25,29 +25,28 @@ namespace fleece {
 
     TEST_CASE("MutableArray type checking", "[Mutable]") {
         Retained<MutableArray> ma = MutableArray::newArray();
-        const Value *v = ma->asArray();
 
-        CHECK(ma->asValue() == v);
-        CHECK(MutableArray::isMutable(v));
-        CHECK(MutableArray::asMutable((Array*)v) == ma);
+        CHECK(ma->asArray() == ma);
+        CHECK(ma->isMutable());
+        CHECK(ma->asMutable() == ma);
 
-        CHECK(v->type() == kArray);
+        CHECK(ma->type() == kArray);
 
-        CHECK(v->asBool() == true);
-        CHECK(v->asInt() == 0);
-        CHECK(v->asUnsigned() == 0);
-        CHECK(v->asFloat() == 0.0);
-        CHECK(v->asDouble() == 0.0);
+        CHECK(ma->asBool() == true);
+        CHECK(ma->asInt() == 0);
+        CHECK(ma->asUnsigned() == 0);
+        CHECK(ma->asFloat() == 0.0);
+        CHECK(ma->asDouble() == 0.0);
 
-        CHECK(!v->isInteger());
-        CHECK(!v->isUnsigned());
-        CHECK(!v->isDouble());
+        CHECK(!ma->isInteger());
+        CHECK(!ma->isUnsigned());
+        CHECK(!ma->isDouble());
 
-        CHECK(v->asString() == nullslice);
-        CHECK(v->asData() == nullslice);
-        CHECK(v->toString() == nullslice);
-        CHECK(v->asDict() == nullptr);
-        CHECK(v->asArray() == v);
+        CHECK(ma->asString() == nullslice);
+        CHECK(ma->asData() == nullslice);
+        CHECK(ma->toString() == nullslice);
+        CHECK(ma->asDict() == nullptr);
+        CHECK(ma->asArray() == ma);
     }
 
 
@@ -163,7 +162,7 @@ namespace fleece {
         mb->append(ma);
         CHECK(mb->isChanged());
 
-        CHECK(mb->get(0) == ma->asValue());
+        CHECK(mb->get(0) == ma);
         CHECK(mb->getMutableArray(0) == ma);
 
         Encoder enc;
@@ -180,7 +179,7 @@ namespace fleece {
         CHECK(mb->get(1) == fleeceArray);
         auto mc = mb->getMutableArray(1);
         CHECK(mc != nullptr);
-        CHECK(mc->asValue() == mb->get(1));
+        CHECK(mc == mb->get(1));
         CHECK(mb->get(1)->type() == kArray);
 
         CHECK(mc->count() == 2);
@@ -195,30 +194,29 @@ namespace fleece {
 
     TEST_CASE("MutableDict type checking", "[Mutable]") {
         Retained<MutableDict> md = MutableDict::newDict();
-        const Value *v = md->asDict();
-        CHECK(v->type() == kDict);
-        CHECK(md->asValue() == v);
+        const Dict *d = md;
+        CHECK(d->type() == kDict);
 
-        CHECK(MutableDict::isMutable(v));
-        CHECK(MutableDict::asMutable((const Dict*)v) == md);
+        CHECK(d->isMutable());
+        CHECK(d->asMutable() == md);
 
-        CHECK(v->type() == kDict);
+        CHECK(d->type() == kDict);
 
-        CHECK(v->asBool() == true);
-        CHECK(v->asInt() == 0);
-        CHECK(v->asUnsigned() == 0);
-        CHECK(v->asFloat() == 0.0);
-        CHECK(v->asDouble() == 0.0);
+        CHECK(d->asBool() == true);
+        CHECK(d->asInt() == 0);
+        CHECK(d->asUnsigned() == 0);
+        CHECK(d->asFloat() == 0.0);
+        CHECK(d->asDouble() == 0.0);
 
-        CHECK(!v->isInteger());
-        CHECK(!v->isUnsigned());
-        CHECK(!v->isDouble());
+        CHECK(!d->isInteger());
+        CHECK(!d->isUnsigned());
+        CHECK(!d->isDouble());
 
-        CHECK(v->asString() == nullslice);
-        CHECK(v->asData() == nullslice);
-        CHECK(v->toString() == nullslice);
-        CHECK(v->asArray() == nullptr);
-        CHECK(v->asDict() == v);
+        CHECK(d->asString() == nullslice);
+        CHECK(d->asData() == nullslice);
+        CHECK(d->toString() == nullslice);
+        CHECK(d->asArray() == nullptr);
+        CHECK(d->asDict() == d);
     }
 
 
@@ -295,7 +293,7 @@ namespace fleece {
 
     TEST_CASE("MutableDict as Dict", "[Mutable]") {
         Retained<MutableDict> md = MutableDict::newDict();
-        const Dict *d = (const Dict*)md->asValue();
+        const Dict *d = md;
         CHECK(d->type() == kDict);
         CHECK(d->count() == 0);
         CHECK(d->empty());
@@ -457,7 +455,7 @@ namespace fleece {
         Encoder enc2;
         enc2.setBase(data);
         enc2.reuseBaseStrings();
-        enc2.writeValue(update->asValue());
+        enc2.writeValue(update);
         alloc_slice data2 = enc2.extractOutput();
         REQUIRE(data2.size == 28);      // may change slightly with changes to implementation
 
@@ -490,14 +488,14 @@ namespace fleece {
         mp->set("age"_sl, 31);
         MutableArray *friends = mp->getMutableArray("friends"_sl);
         REQUIRE(friends);
-        auto frend = friends->getMutableDict(1);
-        REQUIRE(frend);
-        frend->set("name"_sl, "Reddy Kill-a-Watt"_sl);
+//        auto frend = friends->getMutableDict(1);
+//        REQUIRE(frend);
+//        frend->set("name"_sl, "Reddy Kill-a-Watt"_sl);
 
         Encoder enc;
         enc.setBase(data);
         enc.reuseBaseStrings();
-        enc.writeValue(mp->asValue());
+        enc.writeValue(mp);
         alloc_slice data2 = enc.extractOutput();
 
         alloc_slice combined(data);

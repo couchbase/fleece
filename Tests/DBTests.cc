@@ -80,11 +80,11 @@ TEST_CASE_METHOD(DBTests, "Small Update DB", "[DB]") {
     {
         MutableDict *eleven = db->getMutable(names[11]);
         REQUIRE(eleven);
-        cerr << "Eleven was: " << eleven->asValue()->toJSONString() << "\n";
+        cerr << "Eleven was: " << eleven->toJSONString() << "\n";
         eleven->set("name"_sl, "Eleven"_sl);
         eleven->set("age"_sl, 12);
         eleven->set("about"_sl, "REDACTED"_sl);
-        cerr << "Eleven is now: " << eleven->asValue()->toJSONString() << "\n";
+        cerr << "Eleven is now: " << eleven->toJSONString() << "\n";
     }
     db->saveChanges();
     auto newSize = db->dataSize();

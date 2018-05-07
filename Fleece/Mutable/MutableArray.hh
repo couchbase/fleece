@@ -1,111 +1,55 @@
 //
-// MutableArray.hh
+//  MutableArray.hh
+//  Fleece
 //
-// Copyright © 2018 Couchbase. All rights reserved.
+//  Created by Jens Alfke on 5/7/18.
+//  Copyright © 2018 Couchbase. All rights reserved.
 //
 
 #pragma once
 #include "Array.hh"
-#include "MutableValue.hh"
-#include <vector>
+#include "HeapArray.hh"
 
 namespace fleece {
     class MutableDict;
 
 
-    /** A mutable subclass of Array. */
-    class MutableArray : public internal::MutableCollection {
+    class MutableArray : public Array {
     public:
-        static MutableArray* asMutable(const Array *array) {
-            return (MutableArray*)asHeapValue(array);
-        }
 
         static Retained<MutableArray> newArray(uint32_t initialCount =0) {
-            return new MutableArray(initialCount);
+            return (new internal::HeapArray(initialCount))->asMutableArray();
         }
-        
+
         static Retained<MutableArray> newArray(const Array *a NONNULL) {
-            return new MutableArray(a);
+            return (new internal::HeapArray(a))->asMutableArray();
         }
 
-        const Array* asArray() const                {return (const Array*)asValue();}
-
-        uint32_t count() const                      {return (uint32_t)_items.size();}
-        bool empty() const                          {return _items.empty();}
-
-        const Array* source() const                 {return _source;}
-
-        const Value* get(uint32_t index);
+        const Array* source() const                 {return heapArray()->_source;}
+        bool isChanged() const                      {return heapArray()->isChanged();}
 
         template <typename T>
-        void set(uint32_t index, T t)               {_items[index].set(t); setChanged(true);}
+        void set(uint32_t index, T t)               {heapArray()->set(index, t);}
 
         // Warning: Changing the size of a MutableArray invalidates pointers to items that are
         // small scalar values, and also invalidates iterators.
 
         /** Appends a new Value. */
-        template <typename T>  void append(const T &t)     {_appendMutableValue().set(t);}
+        template <typename T>  void append(const T &t)     {heapArray()->append(t);}
 
-
-        void resize(uint32_t newSize);              ///< Appends nulls, or removes items from end
-        void insert(uint32_t where, uint32_t n);    ///< Inserts `n` nulls at index `where`
-        void remove(uint32_t where, uint32_t n);    ///< Removes items starting at index `where`
-        void removeAll();
+        void resize(uint32_t newSize)               {heapArray()->resize(newSize);}
+        void insert(uint32_t where, uint32_t n)     {heapArray()->insert(where, n);}
+        void remove(uint32_t where, uint32_t n)     {heapArray()->remove(where, n);}
+        void removeAll()                            {heapArray()->removeAll();}
 
         /** Promotes an Array item to a MutableArray (in place) and returns it.
             Or if the item is already a MutableArray, just returns it. Else returns null. */
-        MutableArray* getMutableArray(uint32_t i);
+        MutableArray* getMutableArray(uint32_t i)   {return heapArray()->getMutableArray(i);}
 
         /** Promotes a Dict item to a MutableDict (in place) and returns it.
-            Or if the item is already a MutableDict, just returns it. Else returns null. */
-        MutableDict* getMutableDict(uint32_t i);
+            Or if the item is already a HeapDict, just returns it. Else returns null. */
+        MutableDict* getMutableDict(uint32_t i)     {return heapArray()->getMutableDict(i);}
 
-        class iterator {
-        public:
-            iterator(const MutableArray* NONNULL) noexcept;
-
-            const Value* value() const noexcept             {return _value;}
-
-            /** Returns false when the iterator reaches the end. */
-            explicit operator bool() const noexcept          {return _value != nullptr;}
-
-            /** Steps to the next item. (Throws if there are no more items.) */
-            iterator& operator ++();
-
-        private:
-            const Value* _value;
-            std::vector<internal::MutableValue>::const_iterator _iter, _iterEnd;
-            Array::iterator _sourceIter;
-            uint32_t _index {0};
-        };
-
-
-    protected:
-        MutableArray()
-        :MutableCollection(internal::kArrayTag)
-        { }
-
-        MutableArray(uint32_t initialCount)
-        :MutableCollection(internal::kArrayTag)
-        ,_items(initialCount)
-        { }
-
-        MutableArray(const Array* NONNULL);
-
-        ~MutableArray() =default;
-        friend class Array;
-        const internal::MutableValue* first();          // Called by Array::impl
-
-    private:
-        void populate(unsigned fromIndex);
-        MutableCollection* getMutable(uint32_t index, internal::tags ifType);
-        internal::MutableValue& _appendMutableValue();
-
-        // _items stores each array item as a MutableValue. If an item's type is 'undefined',
-        // that means the item is unchanged and its value can be found at the same index in _source.
-        std::vector<internal::MutableValue> _items;
-
-        // The original Array that this is a mutable copy of.
-        const Array* _source {nullptr};
+        using iterator = internal::HeapArray::iterator;
     };
 }

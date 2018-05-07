@@ -27,6 +27,7 @@
 
 namespace fleece {
     class Encoder;
+    class MutableDict;
     class mmap_slice;
 
     class DB {

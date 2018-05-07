@@ -10,8 +10,8 @@
 #include "HashTree+Internal.hh"
 #include "Bitmap.hh"
 #include "Encoder.hh"
-#include "MutableArray.hh"
-#include "MutableDict.hh"
+#include "HeapArray.hh"
+#include "HeapDict.hh"
 #include <algorithm>
 #include <ostream>
 #include <string>
@@ -661,13 +661,13 @@ namespace fleece {
         return (MutableDict*)getMutable(key, kDictTag);
     }
 
-    MutableCollection* MutableHashTree::getMutable(slice key, tags ifType) {
-        Retained<MutableCollection> result = nullptr;
+    Value* MutableHashTree::getMutable(slice key, tags ifType) {
+        Retained<HeapCollection> result = nullptr;
         insert(key, [&](const Value *value) {
-            result = MutableCollection::mutableCopy(value, ifType);
+            result = HeapCollection::mutableCopy(value, ifType);
             return result ? result->asValue() : nullptr;
         });
-        return result;
+        return (Value*)HeapCollection::asValue(result);
     }
 
 

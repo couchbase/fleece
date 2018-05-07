@@ -156,6 +156,9 @@ namespace fleece {
 
         constexpr Dict()  :Value(internal::kDictTag, 0, 0) { }
 
+    protected:
+        internal::HeapDict* heapDict() const;
+
     private:
         friend class Value;
     };
