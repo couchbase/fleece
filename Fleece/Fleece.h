@@ -45,6 +45,8 @@ extern "C" {
     typedef const struct _FLValue* FLValue;         ///< A reference to a value of any type.
     typedef const struct _FLArray* FLArray;         ///< A reference to an array value.
     typedef const struct _FLDict*  FLDict;          ///< A reference to a dictionary (map) value.
+    typedef struct _FLArray* FLMutableArray;        ///< A reference to a mutable array.
+    typedef struct _FLDict*  FLMutableDict;         ///< A reference to a mutable dictionary.
     typedef struct _FLEncoder*     FLEncoder;       ///< A reference to an encoder
     typedef struct _FLSharedKeys*  FLSharedKeys;    ///< A reference to a shared-keys mapping
     typedef struct _FLKeyPath*     FLKeyPath;       ///< A reference to a key path
@@ -249,6 +251,7 @@ extern "C" {
     /** Converts valid JSON5 to JSON. */
     FLStringResult FLJSON5_ToJSON(FLString json5, FLError *error);
 
+
     //////// ARRAY
 
 
@@ -261,6 +264,8 @@ extern "C" {
 
     /** Returns true if an array is empty. Slightly faster than `FLArray_Count(a) == 0` */
     bool FLArray_IsEmpty(FLArray);
+
+    FLMutableArray FLArray_AsMutable(FLArray);
 
     /** Returns an value at an array index, or nullptr if the index is out of range. */
     FLValue FLArray_Get(FLArray, uint32_t index);
@@ -292,6 +297,46 @@ extern "C" {
     bool FLArrayIterator_Next(FLArrayIterator*);
 
 
+    //////// MUTABLE ARRAY
+
+    FLMutableArray FLArray_MutableCopy(FLArray);
+
+    FLMutableArray FLMutableArray_New(void);
+
+    FLMutableArray FLMutableArray_Retain(FLMutableArray);
+    void FLMutableArray_Release(FLMutableArray);
+
+    FLArray FLMutableArray_GetSource(FLMutableArray);
+
+    bool FLMutableArray_IsChanged(FLMutableArray);
+
+    void FLMutableArray_AppendNull(FLMutableArray);
+    void FLMutableArray_AppendBool(FLMutableArray, bool);
+    void FLMutableArray_AppendInt(FLMutableArray, int64_t);
+    void FLMutableArray_AppendUInt(FLMutableArray, uint64_t);
+    void FLMutableArray_AppendFloat(FLMutableArray, float);
+    void FLMutableArray_AppendDouble(FLMutableArray, double);
+    void FLMutableArray_AppendString(FLMutableArray, FLString);
+    void FLMutableArray_AppendData(FLMutableArray, FLSlice);
+    void FLMutableArray_AppendValue(FLMutableArray, FLValue);
+
+    void FLMutableArray_SetNull(FLMutableArray, uint32_t index);
+    void FLMutableArray_SetBool(FLMutableArray, uint32_t index, bool);
+    void FLMutableArray_SetInt(FLMutableArray, uint32_t index, int64_t);
+    void FLMutableArray_SetUInt(FLMutableArray, uint32_t index, uint64_t);
+    void FLMutableArray_SetFloat(FLMutableArray, uint32_t index, float);
+    void FLMutableArray_SetDouble(FLMutableArray, uint32_t index, double);
+    void FLMutableArray_SetString(FLMutableArray, uint32_t index, FLString);
+    void FLMutableArray_SetData(FLMutableArray, uint32_t index, FLSlice);
+    void FLMutableArray_SetValue(FLMutableArray, uint32_t index, FLValue);
+
+    void FLMutableArray_Remove(FLMutableArray, uint32_t firstIndex, uint32_t count);
+    void FLMutableArray_Resize(FLMutableArray, uint32_t size);
+
+    FLMutableArray FLMutableArray_GetMutableArray(FLMutableArray, uint32_t index);
+    FLMutableDict FLMutableArray_GetMutableDict(FLMutableArray, uint32_t index);
+    
+
     //////// DICT
 
 
@@ -304,6 +349,8 @@ extern "C" {
 
     /** Returns true if a dictionary is empty. Slightly faster than `FLDict_Count(a) == 0` */
     bool FLDict_IsEmpty(FLDict);
+
+    FLMutableDict FLDict_AsMutable(FLDict);
 
     /** Looks up a key in a _sorted_ dictionary, returning its value.
         Returns nullptr if the value is not found or if the dictionary is nullptr. */
@@ -385,6 +432,36 @@ extern "C" {
     /** Looks up a key in a dictionary using an FLDictKey. If the key is found, "hint" data will
         be stored inside the FLDictKey that will speed up subsequent lookups. */
     FLValue FLDict_GetWithKey(FLDict, FLDictKey*);
+
+
+    //////// MUTABLE DICT
+
+    FLMutableDict FLDict_MutableCopy(FLDict);
+
+    FLMutableDict FLMutableDict_New(void);
+
+    FLMutableDict FLMutableDict_Retain(FLMutableDict);
+    void FLMutableDict_Release(FLMutableDict);
+
+    FLDict FLMutableDict_GetSource(FLMutableDict);
+
+    bool FLMutableDict_IsChanged(FLMutableDict);
+
+    void FLMutableDict_SetNull(FLMutableDict, FLString key);
+    void FLMutableDict_SetBool(FLMutableDict, FLString key, bool);
+    void FLMutableDict_SetInt(FLMutableDict, FLString key, int64_t);
+    void FLMutableDict_SetUInt(FLMutableDict, FLString key, uint64_t);
+    void FLMutableDict_SetFloat(FLMutableDict, FLString key, float);
+    void FLMutableDict_SetDouble(FLMutableDict, FLString key, double);
+    void FLMutableDict_SetString(FLMutableDict, FLString key, FLString);
+    void FLMutableDict_SetData(FLMutableDict, FLString key, FLSlice);
+    void FLMutableDict_SetValue(FLMutableDict, FLString key, FLValue);
+
+    void FLMutableDict_Remove(FLMutableDict, FLString key);
+    void FLMutableDict_RemoveAll(FLMutableDict);
+
+    FLMutableArray FLMutableDict_GetMutableArray(FLMutableDict, FLString key);
+    FLMutableDict FLMutableDict_GetMutableDict(FLMutableDict, FLString key);
 
 
     //////// PATH

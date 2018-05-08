@@ -31,6 +31,8 @@ namespace fleece {
 typedef const Value* FLValue;
 typedef const Array* FLArray;
 typedef const Dict* FLDict;
+typedef MutableArray* FLMutableArray;
+typedef MutableDict* FLMutableDict;
 typedef FLEncoderImpl* FLEncoder;
 typedef SharedKeys* FLSharedKeys;
 typedef Path*       FLKeyPath;

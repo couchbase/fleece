@@ -40,7 +40,6 @@ namespace fleece {
         void resize(uint32_t newSize)               {heapArray()->resize(newSize);}
         void insert(uint32_t where, uint32_t n)     {heapArray()->insert(where, n);}
         void remove(uint32_t where, uint32_t n)     {heapArray()->remove(where, n);}
-        void removeAll()                            {heapArray()->removeAll();}
 
         /** Promotes an Array item to a MutableArray (in place) and returns it.
             Or if the item is already a MutableArray, just returns it. Else returns null. */

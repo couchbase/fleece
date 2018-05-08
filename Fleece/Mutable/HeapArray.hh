@@ -52,7 +52,6 @@ namespace fleece { namespace internal {
         void resize(uint32_t newSize);              ///< Appends nulls, or removes items from end
         void insert(uint32_t where, uint32_t n);    ///< Inserts `n` nulls at index `where`
         void remove(uint32_t where, uint32_t n);    ///< Removes items starting at index `where`
-        void removeAll();
 
         /** Promotes an Array item to a MutableArray (in place) and returns it.
             Or if the item is already a MutableArray, just returns it. Else returns null. */

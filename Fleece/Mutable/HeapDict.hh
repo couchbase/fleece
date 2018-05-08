@@ -93,8 +93,8 @@ namespace fleece { namespace internal {
         ValueSlot* _findValueFor(slice keyToFind) const noexcept;
         ValueSlot& _makeValueFor(slice key);
         ValueSlot& _mutableValueToSetFor(slice key);
-
         HeapCollection* getMutable(slice key, tags ifType);
+        bool tooManyAncestors() const;
 
         uint32_t _count {0};
         const Dict* _source {nullptr};

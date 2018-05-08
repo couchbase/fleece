@@ -147,6 +147,7 @@ namespace fleece {
     protected:
         internal::HeapDict* heapDict() const;
         uint32_t rawCount() const noexcept;
+        const Dict* getParent() const;
 
         static bool isMagicParentKey(const Value *v);
         static constexpr int kMagicParentKey = -2048;
@@ -154,6 +155,7 @@ namespace fleece {
         template <bool WIDE> friend struct dictImpl;
         friend class Value;
         friend class Encoder;
+        friend class internal::HeapDict;
     };
 
 }

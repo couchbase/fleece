@@ -138,8 +138,14 @@ namespace fleece { namespace internal {
     }
 
 
+    bool HeapDict::tooManyAncestors() const {
+        auto grampaw = _source->getParent();
+        return grampaw && grampaw->getParent();
+    }
+
+
     void HeapDict::writeTo(Encoder &enc, const SharedKeys *sk) {
-        if (_source && _map.size() + 1 < count()) {
+        if (_source && _map.size() + 1 < count() && !tooManyAncestors()) {
             // Write just the changed keys, with _source as parent:
             enc.beginDictionary(_source, _map.size());
             for (auto &i : _map) {

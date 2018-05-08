@@ -17,6 +17,8 @@
 //
 
 #include "Fleece_C_impl.hh"
+#include "MutableArray.hh"
+#include "MutableDict.hh"
 #include "Fleece.h"
 #include "JSON5.hh"
 
@@ -155,6 +157,55 @@ bool FLArrayIterator_Next(FLArrayIterator* i) {
 }
 
 
+static FLMutableArray _newMutableArray(FLArray a) noexcept {
+    try {
+        return (MutableArray*)retain(MutableArray::newArray(a));
+    } catchError(nullptr)
+    return nullptr;
+}
+
+FLMutableArray FLArray_MutableCopy(FLArray a)       {return a ? _newMutableArray(a) : nullptr;}
+FLMutableArray FLMutableArray_New(void)             {return FLArray_MutableCopy(nullptr);}
+FLMutableArray FLArray_AsMutable(FLArray a)         {return a ? a->asMutable() : nullptr;}
+FLMutableArray FLMutableArray_Retain(FLMutableArray a) {return retain(a);}
+void FLMutableArray_Release(FLMutableArray a)       {release(a);}
+FLArray FLMutableArray_GetSource(FLMutableArray a)  {return a ? a->source() : nullptr;}
+bool FLMutableArray_IsChanged(FLMutableArray a)     {return a && a->isChanged();}
+void FLMutableArray_Resize(FLMutableArray a, uint32_t size)     {a->resize(size);}
+
+void FLMutableArray_AppendNull(FLMutableArray a)                {if(a) a->append(nullValue);}
+void FLMutableArray_AppendBool(FLMutableArray a, bool v)        {if(a) a->append(v);}
+void FLMutableArray_AppendInt(FLMutableArray a, int64_t v)      {if(a) a->append(v);}
+void FLMutableArray_AppendUInt(FLMutableArray a, uint64_t v)    {if(a) a->append(v);}
+void FLMutableArray_AppendFloat(FLMutableArray a, float v)      {if(a) a->append(v);}
+void FLMutableArray_AppendDouble(FLMutableArray a, double v)    {if(a) a->append(v);}
+void FLMutableArray_AppendString(FLMutableArray a, FLString v)  {if(a) a->append(v);}
+void FLMutableArray_AppendData(FLMutableArray a, FLSlice v)     {if(a) a->append(v);}
+void FLMutableArray_AppendValue(FLMutableArray a, FLValue v)    {if(a) a->append(v);}
+
+void FLMutableArray_SetNull(FLMutableArray a, uint32_t i)               {if(a) a->set(i, nullValue);}
+void FLMutableArray_SetBool(FLMutableArray a, uint32_t i, bool v)       {if(a) a->set(i, v);}
+void FLMutableArray_SetInt(FLMutableArray a, uint32_t i, int64_t v)     {if(a) a->set(i, v);}
+void FLMutableArray_SetUInt(FLMutableArray a, uint32_t i, uint64_t v)   {if(a) a->set(i, v);}
+void FLMutableArray_SetFloat(FLMutableArray a, uint32_t i, float v)     {if(a) a->set(i, v);}
+void FLMutableArray_SetDouble(FLMutableArray a, uint32_t i, double v)   {if(a) a->set(i, v);}
+void FLMutableArray_SetString(FLMutableArray a, uint32_t i, FLString v) {if(a) a->set(i, v);}
+void FLMutableArray_SetData(FLMutableArray a, uint32_t i, FLSlice v)    {if(a) a->set(i, v);}
+void FLMutableArray_SetValue(FLMutableArray a, uint32_t i, FLValue v)   {if(a) a->set(i, v);}
+
+void FLMutableArray_Remove(FLMutableArray a, uint32_t firstIndex, uint32_t count) {
+    if(a) a->remove(firstIndex, count);
+}
+
+FLMutableArray FLMutableArray_GetMutableArray(FLMutableArray a, uint32_t index) {
+    return a ? a->getMutableArray(index) : nullptr;
+}
+
+FLMutableDict FLMutableArray_GetMutableDict(FLMutableArray a, uint32_t index) {
+    return a ? a->getMutableDict(index) : nullptr;
+}
+
+
 #pragma mark - DICTIONARIES:
 
 
@@ -247,6 +298,42 @@ FLValue FLDict_GetWithKey(FLDict d, FLDictKey *k) {
         return nullptr;
     auto key = *(Dict::key*)k;
     return d->get(key);
+}
+
+
+static FLMutableDict _newMutableDict(FLDict d) noexcept {
+    try {
+        return (MutableDict*)retain(MutableDict::newDict(d));
+    } catchError(nullptr)
+    return nullptr;
+}
+
+FLMutableDict FLDict_MutableCopy(FLDict d)          {return d ? _newMutableDict(d) : nullptr;}
+FLMutableDict FLMutableDict_New(void)               {return FLDict_MutableCopy(nullptr);}
+FLMutableDict FLDict_AsMutable(FLDict d)            {return d ? d->asMutable() : nullptr;}
+FLMutableDict FLMutableDict_Retain(FLMutableDict d) {return retain(d);}
+void FLMutableDict_Release(FLMutableDict d)         {release(d);}
+FLDict FLMutableDict_GetSource(FLMutableDict d)     {return d ? d->source() : nullptr;}
+bool FLMutableDict_IsChanged(FLMutableDict d)       {return d && d->isChanged();}
+
+void FLMutableDict_SetNull(FLMutableDict d, FLString k)               {if(d) d->set(k, nullValue);}
+void FLMutableDict_SetBool(FLMutableDict d, FLString k, bool v)         {if(d) d->set(k, v);}
+void FLMutableDict_SetInt(FLMutableDict d, FLString k, int64_t v)       {if(d) d->set(k, v);}
+void FLMutableDict_SetUInt(FLMutableDict d, FLString k, uint64_t v)     {if(d) d->set(k, v);}
+void FLMutableDict_SetFloat(FLMutableDict d, FLString k, float v)       {if(d) d->set(k, v);}
+void FLMutableDict_SetDouble(FLMutableDict d, FLString k, double v)     {if(d) d->set(k, v);}
+void FLMutableDict_SetString(FLMutableDict d, FLString k, FLString v)   {if(d) d->set(k, v);}
+void FLMutableDict_SetData(FLMutableDict d, FLString k, FLSlice v)      {if(d) d->set(k, v);}
+void FLMutableDict_SetValue(FLMutableDict d, FLString k, FLValue v)     {if(d) d->set(k, v);}
+
+void FLMutableDict_Remove(FLMutableDict d, FLString key)                {if(d) d->remove(key);}
+
+FLMutableArray FLMutableDict_GetMutableArray(FLMutableDict d, FLString key) {
+    return d ? d->getMutableArray(key) : nullptr;
+}
+
+FLMutableDict FLMutableDict_GetMutableDict(FLMutableDict d, FLString key) {
+    return d ? d->getMutableDict(key) : nullptr;
 }
 
 

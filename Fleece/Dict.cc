@@ -349,6 +349,15 @@ namespace fleece {
         return (HeapDict*)internal::HeapCollection::asHeapValue(this);
     }
 
+    const Dict* Dict::getParent() const {
+        if (isMutable())
+            return heapDict()->source();
+        else if (isWideArray())
+            return dictImpl<true>(this).getParent();
+        else
+            return dictImpl<false>(this).getParent();
+    }
+
 
     static constexpr Dict kEmptyDictInstance;
     const Dict* const Dict::kEmpty = &kEmptyDictInstance;

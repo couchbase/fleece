@@ -464,8 +464,8 @@ namespace fleece {
         enc2.setBase(data);
         enc2.reuseBaseStrings();
         enc2.writeValue(update);
-        alloc_slice data2 = enc2.extractOutput();
-        REQUIRE(data2.size == 32);      // may change slightly with changes to implementation
+        alloc_slice delta = enc2.extractOutput();
+        REQUIRE(delta.size == 32);      // may change slightly with changes to implementation
 
         // Check that removeAll works when there's a base Dict:
         update->removeAll();
@@ -476,9 +476,9 @@ namespace fleece {
         }
 
         alloc_slice combinedData(data);
-        combinedData.append(data2);
+        combinedData.append(delta);
         const Dict* newDict = Value::fromData(combinedData)->asDict();
-        std::cerr << "Delta:         " << data2 << "\n\n";
+        std::cerr << "Delta:         " << delta << "\n\n";
         Value::dump(combinedData, std::cerr);
 
         CHECK(newDict->get("Name"_sl)->asString() == "totoro"_sl);

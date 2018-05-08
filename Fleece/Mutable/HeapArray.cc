@@ -86,14 +86,6 @@ namespace fleece { namespace internal {
     }
 
 
-    void HeapArray::removeAll() {
-        if (empty())
-            return;
-        _items.clear();
-        setChanged(true);
-    }
-
-
     HeapCollection* HeapArray::getMutable(uint32_t index, tags ifType) {
         if (index >= count())
             return nullptr;
