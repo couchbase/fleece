@@ -107,6 +107,9 @@ namespace fleece {
                             effect on the output but can speed up encoding slightly. */
         void beginDictionary(size_t reserve =0);
 
+        /** Begins creating a dictionary which inherits from an existing dictionary. */
+        void beginDictionary(const Dict *parent NONNULL, size_t reserve =0);
+
         /** Ends creating a dictionary. The dict is written to the output and added as a value to
             the next outermost collection (or made the root if there is no collection active.) */
         void endDictionary();

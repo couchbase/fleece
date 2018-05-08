@@ -325,7 +325,8 @@ extern "C" {
         void* _private1;
         uint32_t _private2;
         bool _private3;
-        void* _private4[3];
+        void* _private4[4];
+        int _private5;
     } FLDictIterator;
 
     /** Initializes a FLDictIterator struct to iterate over a dictionary.
@@ -350,6 +351,10 @@ extern "C" {
 
     /** Advances the iterator to the next value, or returns false if at the end. */
     bool FLDictIterator_Next(FLDictIterator*);
+
+    /** Cleans up after an iterator. Only needed if (a) the dictionary is a delta, and
+        (b) you stop iterating before the end (i.e. before FLDictIterator_Next returns false.) */
+    void FLDictIterator_End(FLDictIterator*);
 
 
     /** Opaque key for a dictionary. You are responsible for creating space for these; they can

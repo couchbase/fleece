@@ -47,7 +47,7 @@ namespace fleece {
                 break;
             }
             case kDictTag: {
-                out << "Dict[" << asDict()->count() << "]";
+                out << "Dict[" << asDict()->rawCount() << "]";
                 break;
             }
             default: { // Pointer:
@@ -95,7 +95,7 @@ namespace fleece {
             }
             case kDictTag: {
                 out << ":\n";
-                for (auto i = asDict()->begin(); i; ++i) {
+                for (Dict::iterator i(asDict(), true); i; ++i) {
                     size += i.rawKey()  ->dump(out, isWideArray(), 1, base);
                     size += i.rawValue()->dump(out, isWideArray(), 2, base);
                 }
@@ -120,7 +120,7 @@ namespace fleece {
                 }
                 break;
             case kDict:
-                for (auto iter = asDict()->begin(); iter; ++iter) {
+                for (Dict::iterator iter(asDict(), true); iter; ++iter) {
                     if (iter.rawKey()->isPointer())
                         iter.key()->mapAddresses(byAddress);
                     if (iter.rawValue()->isPointer())

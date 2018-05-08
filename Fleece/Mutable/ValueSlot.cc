@@ -114,6 +114,15 @@ namespace fleece { namespace internal {
         return _isInline ? (const Value*)&_inlineData : _asValue;
     }
 
+    const Value* ValueSlot::asValueOrUndefined() const {
+        if (_isInline)
+            return (const Value*)&_inlineData;
+        else if (_asValue)
+            return _asValue;
+        else
+            return Value::kUndefinedValue;
+    }
+
 
     void ValueSlot::setInline(internal::tags valueTag, int tiny) {
         releaseValue();

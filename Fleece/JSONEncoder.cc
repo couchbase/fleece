@@ -128,7 +128,12 @@ namespace fleece {
 
         switch (v->type()) {
             case kNull:
-                writeNull();
+                if (v->isUndefined()) {
+                    comma();
+                    _out << slice("undefined");
+                } else {
+                    writeNull();
+                }
                 break;
             case kBoolean:
                 writeBool(v->asBool());

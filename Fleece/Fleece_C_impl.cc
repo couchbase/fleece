@@ -211,9 +211,15 @@ bool FLDictIterator_Next(FLDictIterator* i) {
     try {
         auto& iter = *(Dict::iterator*)i;
         ++iter;                 // throws if iterating past end
-        return (bool)iter;
+        if (iter)
+            return true;
+        iter.~iterator();
     } catchError(nullptr)
     return false;
+}
+
+void FLDictIterator_End(FLDictIterator* i) {
+    ((Dict::iterator*)i)->~iterator();
 }
 
 

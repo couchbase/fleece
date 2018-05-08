@@ -20,6 +20,7 @@
 #include "HeapArray.hh"
 #include "ValueSlot.hh"
 #include "MutableDict.hh"
+#include "Encoder.hh"
 
 namespace fleece { namespace internal {
 
@@ -92,12 +93,16 @@ namespace fleece { namespace internal {
 
     void HeapDict::remove(slice key) {
         if (_source && _source->get(key)) {
-            auto &val = _makeValueFor(key);
-            if (_usuallyFalse(!val))
-                return;                             // already removed
-            val = ValueSlot();
+            auto it = _map.find(key);
+            if (it != _map.end()) {
+                if (_usuallyFalse(!it->second))
+                    return;                             // already removed
+                it->second = ValueSlot();
+            } else {
+                _makeValueFor(key);
+            }
         } else {
-            if (_usuallyFalse(!_map.erase(key)))    //OPT: Should remove it from _backingSlices too
+            if (_usuallyFalse(!_map.erase(key)))        //OPT: key remains in _backingSlices
                 return;
         }
         --_count;
@@ -130,6 +135,27 @@ namespace fleece { namespace internal {
             assert(n == 2*_count);
         }
         return _iterable.get();
+    }
+
+
+    void HeapDict::writeTo(Encoder &enc, const SharedKeys *sk) {
+        if (_source && _map.size() + 1 < count()) {
+            // Write just the changed keys, with _source as parent:
+            enc.beginDictionary(_source, _map.size());
+            for (auto &i : _map) {
+                enc.writeKey(i.first);
+                enc.writeValue(i.second.asValueOrUndefined());
+            }
+            enc.endDictionary();
+        } else {
+            iterator iter(this);
+            enc.beginDictionary(iter.count());
+            for (; iter; ++iter) {
+                enc.writeKey(iter.keyString());
+                enc.writeValue(iter.value(), sk);
+            }
+            enc.endDictionary();
+        }
     }
 
 

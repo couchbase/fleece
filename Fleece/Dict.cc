@@ -40,6 +40,11 @@ namespace fleece {
     static const bool gDisableNecessarySharedKeysCheck = false;
 #endif
 
+    bool Dict::isMagicParentKey(const Value *v) {
+        return v->_byte[0] == uint8_t((kShortIntTag<<4) | 0x08)
+            && v->_byte[1] == 0;
+    }
+
 
 #pragma mark - DICTIMPL CLASS:
 
@@ -51,41 +56,43 @@ namespace fleece {
         { }
 
         bool givenNecessarySharedKeys(SharedKeys *sk) const {
-            return sk || (_count == 0 || deref(_first)->tag() == kStringTag)
+            return sk || _count == 0 || deref(_first)->tag() == kStringTag
+                || (Dict::isMagicParentKey(deref(_first))
+                        && (_count == 1 || deref(_first+2)->tag() == kStringTag))
                 || gDisableNecessarySharedKeysCheck;
         }
 
-        inline const Value* getUnshared(slice keyToFind) const noexcept {
-            auto key = search(&keyToFind, [](const slice *target, const Value *val) {
-                return keyCmp(target, val);
-            });
-            if (!key)
-                return nullptr;
-            return deref(next(key));
+        template <class KEY>
+        const Value* finishGet(const Value *keyFound, KEY keyToFind) const noexcept {
+            if (keyFound) {
+                auto value = deref(next(keyFound));
+                if (_usuallyFalse(value->isUndefined()))
+                    value = nullptr;
+                return value;
+            } else {
+                const Dict *parent = getParent();
+                return parent ? parent->get(keyToFind) : nullptr;
+            }
         }
 
-        inline const Value* get(slice keyToFind) const noexcept {
-            assert(givenNecessarySharedKeys(nullptr));
-            return getUnshared(keyToFind);
+        inline const Value* getUnshared(slice keyToFind) const noexcept {
+            auto key = search(keyToFind, [](slice target, const Value *val) {
+                countComparison();
+                return compareKeys(target, val);
+            });
+            return finishGet(key, keyToFind);
         }
 
         inline const Value* get(int keyToFind) const noexcept {
             assert(keyToFind >= 0);
             auto key = search(keyToFind, [](int target, const Value *key) {
                 countComparison();
-                if (_usuallyTrue(key->tag() == kShortIntTag))
-                    return (int)(target - key->shortValue());
-                else if (_usuallyFalse(key->tag() == kIntTag))
-                    return (int)(target - key->asInt());
-                else
-                    return -1;
+                return compareKeys(target, key);
             });
-            if (!key)
-                return nullptr;
-            return deref(next(key));
+            return finishGet(key, keyToFind);
         }
 
-        inline const Value* get(slice keyToFind, SharedKeys *sharedKeys) const noexcept {
+        inline const Value* get(slice keyToFind, SharedKeys *sharedKeys =nullptr) const noexcept {
             assert(givenNecessarySharedKeys(sharedKeys));
             int encoded;
             if (sharedKeys && lookupSharedKey(keyToFind, sharedKeys, encoded))
@@ -116,15 +123,39 @@ namespace fleece {
                 if (!findKeyByPointer(keyToFind, _first, end, &key))
                     key = findKeyBySearch(keyToFind);
             }
-            return key ? deref(next(key)) : nullptr;
+            return finishGet(key, keyToFind);
         }
 
         bool hasParent() const {
-            return _count > 0 && deref(_first)->asInt() == -1;
+            return _usuallyTrue(_count > 0) && _usuallyFalse(Dict::isMagicParentKey(deref(_first)));
         }
 
         const Dict* getParent() const {
             return hasParent() ? (const Dict*)deref(second()) : nullptr;
+        }
+
+
+        static int compareKeys(slice keyToFind, const Value *key) {
+            if (_usuallyTrue(key->isInteger()))
+                return 1;
+            else
+                return keyToFind.compare(keyBytes(key));
+        }
+
+        static int compareKeys(int keyToFind, const Value *key) {
+            if (_usuallyTrue(key->tag() == kShortIntTag))
+                return (int)(keyToFind - key->shortValue());
+            else if (_usuallyFalse(key->tag() == kIntTag))
+                return (int)(keyToFind - key->asInt());
+            else
+                return -1;
+        }
+
+        static int compareKeys(const Value *keyToFind, const Value *key) {
+            if (keyToFind->tag() == kStringTag)
+                return compareKeys(keyBytes(keyToFind), key);
+            else
+                return compareKeys((int)keyToFind->asInt(), key);
         }
 
 
@@ -155,7 +186,7 @@ namespace fleece {
             if (keyToFind._hint < _count) {
                 const Value *key  = offsetby(_first, keyToFind._hint * 2 * kWidth);
                 if ((keyToFind._keyValue && key->isPointer() && deref(key) == keyToFind._keyValue)
-                        || (keyCmp(&keyToFind._rawString, key) == 0)) {
+                        || (compareKeys(keyToFind._rawString, key) == 0)) {
                     return key;
                 }
             }
@@ -198,8 +229,8 @@ namespace fleece {
 
         // Finds a key in a dictionary via binary search of the UTF-8 key strings.
         const Value* findKeyBySearch(Dict::key &keyToFind) const {
-            auto key = search(&keyToFind._rawString, [](const slice *target, const Value *val) {
-                return keyCmp(target, val);
+            auto key = search(keyToFind._rawString, [](slice target, const Value *val) {
+                return compareKeys(target, val);
             });
             if (!key)
                 return nullptr;
@@ -243,26 +274,41 @@ namespace fleece {
             return Value::deref<WIDE>(v);
         }
 
-        static int keyCmp(const slice *keyToFind, const Value *key) {
-            countComparison();
-            if (key->isInteger())
-                return 1;
-            else
-                return keyToFind->compare(keyBytes(key));
-        }
-
         static constexpr size_t kWidth = (WIDE ? 4 : 2);
         static constexpr uint32_t kPtrMask = (WIDE ? 0x80000000 : 0x8000);
     };
 
 
+    static int compareKeys(const Value *keyToFind, const Value *key, bool wide) {
+        if (wide)
+            return dictImpl<true>::compareKeys(keyToFind, key);
+        else
+            return dictImpl<true>::compareKeys(keyToFind, key);
+    }
+
+
 #pragma mark - DICT IMPLEMENTATION:
 
+
+    uint32_t Dict::rawCount() const noexcept {
+        if (_usuallyFalse(isMutable()))
+            return heapDict()->count();
+        return Array::impl(this)._count;
+    }
 
     uint32_t Dict::count() const noexcept {
         if (_usuallyFalse(isMutable()))
             return heapDict()->count();
-        return Array::impl(this)._count;
+        Array::impl imp(this);
+        if (_usuallyFalse(imp._count > 1 && isMagicParentKey(imp._first))) {
+            // Dict has a parent; this makes counting much more expensive!
+            uint32_t c = 0;
+            for (iterator i(this); i; ++i)
+                ++c;
+            return c;
+        } else {
+            return imp._count;
+        }
     }
 
     const Value* Dict::get(slice keyToFind) const noexcept {
@@ -270,9 +316,9 @@ namespace fleece {
             return heapDict()->get(keyToFind);
         if (isWideArray())
             return dictImpl<true>(this).get(keyToFind);
-            else
-                return dictImpl<false>(this).get(keyToFind);
-                }
+        else
+            return dictImpl<false>(this).get(keyToFind);
+    }
 
     const Value* Dict::get(slice keyToFind, SharedKeys *sk) const noexcept {
         if (isWideArray())
@@ -312,15 +358,24 @@ namespace fleece {
 
 
     Dict::iterator::iterator(const Dict* d) noexcept
-    :_a(d)
-    {
-        readKV();
-    }
+    :iterator(d, nullptr)
+    { }
 
     Dict::iterator::iterator(const Dict* d, const SharedKeys *sk) noexcept
     :_a(d), _sharedKeys(sk)
     {
         readKV();
+        if (_usuallyFalse(_key && Dict::isMagicParentKey(_key))) {
+            _parent.reset( new iterator(_value->asDict()) );
+            ++(*this);
+        }
+    }
+
+    Dict::iterator::iterator(const Dict* d, bool) noexcept
+    :_a(d)
+    {
+        readKV();
+        // skips the parent check, so it will iterate the raw contents
     }
 
     slice Dict::iterator::keyString() const noexcept {
@@ -334,10 +389,16 @@ namespace fleece {
     }
 
     Dict::iterator& Dict::iterator::operator++() {
-        throwIf(_a._count == 0, OutOfRange, "iterating past end of dict");
-        --_a._count;
-        _a._first = offsetby(_a._first, 2*_a._width);
-        readKV();
+        do {
+            if (_keyCmp >= 0)
+                ++(*_parent);
+            if (_keyCmp <= 0) {
+                throwIf(_a._count == 0, OutOfRange, "iterating past end of dict");
+                --_a._count;
+                _a._first = offsetby(_a._first, 2*_a._width);
+            }
+            readKV();
+        } while (_usuallyFalse(_parent && _value && _value->isUndefined()));      // skip deletion tombstones
         return *this;
     }
 
@@ -355,6 +416,20 @@ namespace fleece {
             _value = _a.deref(_a.second());
         } else {
             _key = _value = nullptr;
+        }
+
+        if (_usuallyFalse(_parent != nullptr)) {
+            auto parentKey = _parent->key();
+            if (_usuallyFalse(!_key))
+                _keyCmp = parentKey ? 1 : 0;
+            else if (_usuallyFalse(!parentKey))
+                _keyCmp = _key ? -1 : 0;
+            else
+                _keyCmp = compareKeys(_key, parentKey, (_a._width > kNarrow));
+            if (_keyCmp > 0) {
+                _key = parentKey;
+                _value = _parent->value();
+            }
         }
     }
 

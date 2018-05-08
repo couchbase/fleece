@@ -11,6 +11,11 @@
 #include <unordered_map>
 #include <memory>
 
+namespace fleece {
+    class Encoder;
+    class SharedKeys;
+}
+
 namespace fleece { namespace internal {
     class HeapArray;
 
@@ -73,6 +78,8 @@ namespace fleece { namespace internal {
             slice _sourceKey;
             uint32_t _count;
         };
+
+        void writeTo(Encoder&, const SharedKeys*);
 
     protected:
         friend class fleece::Array;

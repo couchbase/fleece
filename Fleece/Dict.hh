@@ -73,7 +73,7 @@ namespace fleece {
             const Value* value() const noexcept              {return _value;}
 
             /** Returns false when the iterator reaches the end. */
-            explicit operator bool() const noexcept          {return _a._count > 0;}
+            explicit operator bool() const noexcept          {return _key != nullptr;}
 
             /** Steps to the next item. (Throws if there are no more items.) */
             iterator& operator ++();
@@ -86,6 +86,7 @@ namespace fleece {
 #endif
 
         private:
+            iterator(const Dict* d, bool) noexcept;     // for Value::dump() only
             void readKV() noexcept;
             const Value* rawKey() noexcept             {return _a._first;}
             const Value* rawValue() noexcept           {return _a.second();}
@@ -93,6 +94,8 @@ namespace fleece {
             Array::impl _a;
             const Value *_key, *_value;
             const SharedKeys *_sharedKeys {nullptr};
+            std::unique_ptr<iterator> _parent;
+            int _keyCmp {-1};
 
             friend class Value;
         };
@@ -143,9 +146,14 @@ namespace fleece {
 
     protected:
         internal::HeapDict* heapDict() const;
+        uint32_t rawCount() const noexcept;
 
-    private:
+        static bool isMagicParentKey(const Value *v);
+        static constexpr int kMagicParentKey = -2048;
+
+        template <bool WIDE> friend struct dictImpl;
         friend class Value;
+        friend class Encoder;
     };
 
 }

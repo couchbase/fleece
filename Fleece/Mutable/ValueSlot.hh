@@ -28,6 +28,7 @@ namespace fleece { namespace internal {
         explicit operator bool() const                  {return _isInline || _asValue != nullptr;}
 
         const Value* asValue() const;
+        const Value* asValueOrUndefined() const;
         HeapCollection* asMutableCollection() const;
 
         // Setters for the various Value types:

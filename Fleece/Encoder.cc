@@ -19,6 +19,7 @@
 #include "Encoder.hh"
 #include "Fleece.hh"
 #include "SharedKeys.hh"
+#include "MutableDict.hh"
 #include "Endian.hh"
 #include "varint.hh"
 #include "FleeceException.hh"
@@ -367,22 +368,27 @@ namespace fleece {
                 break;
             }
             case kDictTag: {
-                auto iter = value->asDict()->begin();
-                beginDictionary(iter.count());
-                for (; iter; ++iter) {
-                    if (iter.key()->isInteger()) {
-                        int intKey = (int)iter.key()->asInt();
-                        if (sk && sk != _sharedKeys) {
-                            writeKey(sk->decode(intKey));
+                auto dict = (const Dict*)value;
+                if (dict->isMutable()) {
+                    dict->heapDict()->writeTo(*this, sk);
+                } else {
+                    auto iter = dict->begin();
+                    beginDictionary(iter.count());
+                    for (; iter; ++iter) {
+                        if (iter.key()->isInteger()) {
+                            int intKey = (int)iter.key()->asInt();
+                            if (sk && sk != _sharedKeys) {
+                                writeKey(sk->decode(intKey));
+                            } else {
+                                writeKey(intKey);
+                            }
                         } else {
-                            writeKey(intKey);
+                            writeKey(iter.key()->asString());
                         }
-                    } else {
-                        writeKey(iter.key()->asString());
+                        writeValue(iter.value(), sk);
                     }
-                    writeValue(iter.value(), sk);
+                    endDictionary();
                 }
-                endDictionary();
                 break;
             }
             default:
@@ -514,6 +520,12 @@ namespace fleece {
     void Encoder::beginDictionary(size_t reserve) {
         push(kDictTag, 2*reserve);
         _writingKey = _blockedOnKey = true;
+    }
+
+    void Encoder::beginDictionary(const Dict *parent, size_t reserve) {
+        beginDictionary(1 + reserve);
+        writeKey(Dict::kMagicParentKey);
+        writeValue(parent);
     }
 
     void Encoder::endArray() {

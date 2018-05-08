@@ -222,7 +222,7 @@ namespace fleece {
 
     TEST_CASE("MutableDict set values", "[Mutable]") {
         Retained<MutableDict> md = MutableDict::newDict();
-        REQUIRE(md->count() == 0);
+        CHECK(md->count() == 0);
         CHECK(md->get("foo"_sl) == nullptr);
 
         {
@@ -241,6 +241,7 @@ namespace fleece {
         md->set("hi"_sl, 123456789);
         md->set("lo"_sl, -123456789);
         md->set("str"_sl, "Hot dog"_sl);
+        CHECK(md->count() == 9);
 
         static const slice kExpectedKeys[9] = {
             "+"_sl, "-"_sl, "f"_sl, "hi"_sl, "lo"_sl, "null"_sl, "str"_sl, "t"_sl, "z"_sl};
@@ -279,6 +280,7 @@ namespace fleece {
 
         md->remove("lo"_sl);
         CHECK(md->get("lo"_sl) == nullptr);
+        CHECK(md->count() == 8);
 
 //        CHECK(md->toJSON() == "{\"+\":2017,\"-\":-123,\"f\":false,\"hi\":123456789,\"null\":null,\"str\":\"Hot dog\",\"t\":true,\"z\":0}"_sl);
 
@@ -393,6 +395,15 @@ namespace fleece {
     }
 
 
+    template <class ITER>
+    static void CHECKiter(ITER &i, const char *key, const char *value) {
+        CHECK(i);
+        CHECK(i.keyString() == slice(key));
+        CHECK(i.value()->asString() == slice(value));
+        ++i;
+    }
+
+
     TEST_CASE("Encoding mutable dict", "[Mutable]") {
         alloc_slice data;
         {
@@ -402,6 +413,12 @@ namespace fleece {
             enc << "totoro";
             enc.writeKey("Vehicle");
             enc << "catbus";
+            enc.writeKey("Mood");
+            enc << "happy";
+            enc.writeKey("Asleep");
+            enc << "true";
+            enc.writeKey("Size");
+            enc << "XXXL";
             enc.endDictionary();
             data = enc.extractOutput();
         }
@@ -411,44 +428,35 @@ namespace fleece {
         Value::dump(data, std::cerr);
 
         Retained<MutableDict> update = MutableDict::newDict(originalDict);
-        CHECK(update->count() == 2);
+        CHECK(update->count() == 5);
         update->set("Friend"_sl, "catbus"_sl);
-        CHECK(update->count() == 3);
+        CHECK(update->count() == 6);
         update->set("Vehicle"_sl, "top"_sl);
-        CHECK(update->count() == 3);
+        CHECK(update->count() == 6);
+        update->remove("Asleep"_sl);
+        CHECK(update->count() == 5);
+        update->remove("Asleep"_sl);
+        CHECK(update->count() == 5);
+        update->remove("Q"_sl);
+        CHECK(update->count() == 5);
 
         {
             MutableDict::iterator i(update);
-            CHECK(i);
-            CHECK(i.keyString() == "Friend"_sl);
-            CHECK(i.value()->asString() == "catbus"_sl);
-            ++i;
-            CHECK(i);
-            CHECK(i.keyString() == "Name"_sl);
-            CHECK(i.value()->asString() == "totoro"_sl);
-            ++i;
-            CHECK(i);
-            CHECK(i.keyString() == "Vehicle"_sl);
-            CHECK(i.value()->asString() == "top"_sl);
-            ++i;
+            CHECKiter(i, "Friend", "catbus");
+            CHECKiter(i, "Mood", "happy");
+            CHECKiter(i, "Name", "totoro");
+            CHECKiter(i, "Size", "XXXL");
+            CHECKiter(i, "Vehicle", "top");
             CHECK(!i);
         }
 
-        {
-            MutableDict::iterator i(update);
-            CHECK(i.count() == 3);
-            CHECK(i);
-            CHECK(i.keyString() == "Friend"_sl);
-            CHECK(i.value()->asString() == "catbus"_sl);
-            ++i;
-            CHECK(i);
-            CHECK(i.keyString() == "Name"_sl);
-            CHECK(i.value()->asString() == "totoro"_sl);
-            ++i;
-            CHECK(i);
-            CHECK(i.keyString() == "Vehicle"_sl);
-            CHECK(i.value()->asString() == "top"_sl);
-            ++i;
+        { // Try the same thing but with a Dict iterator:
+            Dict::iterator i(update);
+            CHECKiter(i, "Friend", "catbus");
+            CHECKiter(i, "Mood", "happy");
+            CHECKiter(i, "Name", "totoro");
+            CHECKiter(i, "Size", "XXXL");
+            CHECKiter(i, "Vehicle", "top");
             CHECK(!i);
         }
 
@@ -457,14 +465,7 @@ namespace fleece {
         enc2.reuseBaseStrings();
         enc2.writeValue(update);
         alloc_slice data2 = enc2.extractOutput();
-        REQUIRE(data2.size == 28);      // may change slightly with changes to implementation
-
-        alloc_slice combinedData(data);
-        combinedData.append(data2);
-        const Dict* newDict = Value::fromData(combinedData)->asDict();
-        std::cerr << "\nContents:      " << newDict->toJSON().asString() << "\n";
-        std::cerr << "Delta:         " << data2 << "\n\n";
-        Value::dump(combinedData, std::cerr);
+        REQUIRE(data2.size == 32);      // may change slightly with changes to implementation
 
         // Check that removeAll works when there's a base Dict:
         update->removeAll();
@@ -473,6 +474,34 @@ namespace fleece {
             MutableDict::iterator i(update);
             CHECK(!i);
         }
+
+        alloc_slice combinedData(data);
+        combinedData.append(data2);
+        const Dict* newDict = Value::fromData(combinedData)->asDict();
+        std::cerr << "Delta:         " << data2 << "\n\n";
+        Value::dump(combinedData, std::cerr);
+
+        CHECK(newDict->get("Name"_sl)->asString() == "totoro"_sl);
+        CHECK(newDict->get("Friend"_sl)->asString() == "catbus"_sl);
+        CHECK(newDict->get("Mood"_sl)->asString() == "happy"_sl);
+        CHECK(newDict->get("Size"_sl)->asString() == "XXXL"_sl);
+        CHECK(newDict->get("Vehicle"_sl)->asString() == "top"_sl);
+        CHECK(newDict->get("Asleep"_sl) == nullptr);
+        CHECK(newDict->get("Q"_sl) == nullptr);
+
+        {
+            Dict::iterator i(newDict);
+            CHECKiter(i, "Friend", "catbus");
+            CHECKiter(i, "Mood", "happy");
+            CHECKiter(i, "Name", "totoro");
+            CHECKiter(i, "Size", "XXXL");
+            CHECKiter(i, "Vehicle", "top");
+            CHECK(!i);
+        }
+        //CHECK(newDict->rawCount() == 4);
+        CHECK(newDict->count() == 5);
+
+        std::cerr << "\nContents:      " << newDict->toJSON().asString() << "\n";
     }
 
 
