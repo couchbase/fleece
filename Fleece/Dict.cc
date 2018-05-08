@@ -55,17 +55,6 @@ namespace fleece {
                 || gDisableNecessarySharedKeysCheck;
         }
 
-        const Value* get_unsorted(slice keyToFind) const noexcept {
-            const Value *key = _first;
-            for (uint32_t i = 0; i < _count; i++) {
-                const Value *val = next(key);
-                if (_usuallyFalse(keyToFind.compare(keyBytes(key)) == 0))
-                    return deref(val);
-                key = next(val);
-            }
-            return nullptr;
-        }
-
         inline const Value* getUnshared(slice keyToFind) const noexcept {
             auto key = search(&keyToFind, [](const slice *target, const Value *val) {
                 return keyCmp(target, val);
@@ -81,6 +70,7 @@ namespace fleece {
         }
 
         inline const Value* get(int keyToFind) const noexcept {
+            assert(keyToFind >= 0);
             auto key = search(keyToFind, [](int target, const Value *key) {
                 countComparison();
                 if (_usuallyTrue(key->tag() == kShortIntTag))
@@ -129,15 +119,12 @@ namespace fleece {
             return key ? deref(next(key)) : nullptr;
         }
 
-        size_t get(Dict::key keysToFind[], const Value* values[], size_t nKeys) noexcept {
-            size_t nFound = 0;
-            for (size_t i = 0; i < nKeys; ++i) {
-                auto value = get(keysToFind[i]);
-                values[i] = value;
-                if (value)
-                    ++nFound;
-            }
-            return nFound;
+        bool hasParent() const {
+            return _count > 0 && deref(_first)->asInt() == -1;
+        }
+
+        const Dict* getParent() const {
+            return hasParent() ? (const Dict*)deref(second()) : nullptr;
         }
 
 
@@ -278,15 +265,6 @@ namespace fleece {
         return Array::impl(this)._count;
     }
 
-    const Value* Dict::get_unsorted(slice keyToFind) const noexcept {
-        if (_usuallyFalse(isMutable()))
-            return heapDict()->get(keyToFind);
-        if (isWideArray())
-            return dictImpl<true>(this).get_unsorted(keyToFind);
-        else
-            return dictImpl<false>(this).get_unsorted(keyToFind);
-    }
-
     const Value* Dict::get(slice keyToFind) const noexcept {
         if (_usuallyFalse(isMutable()))
             return heapDict()->get(keyToFind);
@@ -316,24 +294,6 @@ namespace fleece {
         else
             return dictImpl<false>(this).get(keyToFind);
     }
-
-    size_t Dict::get(key keys[], const Value* values[], size_t count) const noexcept {
-        if (isWideArray())
-            return dictImpl<true>(this).get(keys, values, count);
-        else
-            return dictImpl<false>(this).get(keys, values, count);
-    }
-
-    static int sortKeysCmp(const void *a, const void *b) {
-        auto k1 = (Dict::key*)a, k2 = (Dict::key*)b;
-        return k1->compare(*k2);
-
-    }
-
-    void Dict::sortKeys(key keys[], size_t count) noexcept {
-        qsort(keys, count, sizeof(key), sortKeysCmp);
-    }
-
 
     MutableDict* Dict::asMutable() const {
         return isMutable() ? (MutableDict*)this : nullptr;

@@ -161,7 +161,6 @@ bool FLArrayIterator_Next(FLArrayIterator* i) {
 uint32_t FLDict_Count(FLDict d)                          {return d ? d->count() : 0;}
 bool FLDict_IsEmpty(FLDict d)                            {return d ? d->empty() : true;}
 FLValue FLDict_Get(FLDict d, FLSlice keyString)          {return d ? d->get(keyString) : nullptr;}
-FLValue FLDict_GetUnsorted(FLDict d, FLSlice keyString)  {return d ? d->get_unsorted(keyString) : nullptr;}
 
 FLValue FLDict_GetSharedKey(FLDict d, FLSlice keyString, FLSharedKeys sk) {
     return d ? d->get(keyString, sk) : nullptr;
@@ -242,10 +241,6 @@ FLValue FLDict_GetWithKey(FLDict d, FLDictKey *k) {
         return nullptr;
     auto key = *(Dict::key*)k;
     return d->get(key);
-}
-
-size_t FLDict_GetWithKeys(FLDict d, FLDictKey keys[], FLValue values[], size_t count) {
-    return d->get((Dict::key*)keys, values, count);
 }
 
 

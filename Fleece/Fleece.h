@@ -318,9 +318,6 @@ extern "C" {
         (for use when FLDictIterator_GetKey returns a value of type 'Number' */
     FLString FLSharedKey_GetKeyString(FLSharedKeys sk, int keyCode, FLError* outError);
 
-    /** Looks up a key in an unsorted (or sorted) dictionary. Slower than FLDict_Get. */
-    FLValue FLDict_GetUnsorted(FLDict, FLSlice keyString);
-
 
     /** Opaque dictionary iterator. Put one on the stack and pass its address to
         FLDictIterator_Begin. */
@@ -383,14 +380,6 @@ extern "C" {
     /** Looks up a key in a dictionary using an FLDictKey. If the key is found, "hint" data will
         be stored inside the FLDictKey that will speed up subsequent lookups. */
     FLValue FLDict_GetWithKey(FLDict, FLDictKey*);
-
-    /** Looks up multiple dictionary keys in parallel, which can be much faster than individual lookups.
-        @param dict  The dictionary to search
-        @param keys  Array of keys; MUST be sorted as per FLSliceCompare.
-        @param values  The found values will be written here, or NULLs for missing keys.
-        @param count  The number of keys in keys[] and the capacity of values[].
-        @return  The number of keys that were found. */
-    size_t FLDict_GetWithKeys(FLDict dict, FLDictKey keys[], FLValue values[], size_t count);
 
 
     //////// PATH

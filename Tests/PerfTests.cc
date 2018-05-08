@@ -155,7 +155,6 @@ static void testFindPersonByIndex(int sort) {
             auto person = root->get(123)->asDict();
             const Value *name;
             switch (sort) {
-                case 0: name = person->get_unsorted(slice("name")); break;
                 case 1: name = person->get(slice("name")); break;
                 case 2: name = person->get(nameKey); break;
                 default: return;
@@ -171,11 +170,10 @@ static void testFindPersonByIndex(int sort) {
     bench.printReport(1.0/kIterations);
 }
 
-TEST_CASE("Perf FindPersonByIndexUnsorted", "[.Perf]")    {testFindPersonByIndex(0);}
 TEST_CASE("Perf FindPersonByIndexSorted", "[.Perf]")      {if (kSortKeys) testFindPersonByIndex(1);}
 TEST_CASE("Perf FindPersonByIndexKeyed", "[.Perf]")       {testFindPersonByIndex(2);}
 
-static void testLoadPeople(bool multiKeyGet) {
+TEST_CASE("Perf LoadPeople", "[.Perf]") {
     int kSamples = 50;
     int kIterations = 1000;
     Benchmark bench;
@@ -194,9 +192,8 @@ static void testLoadPeople(bool multiKeyGet) {
         Dict::key(slice("registered")),
         Dict::key(slice("tags")),
     };
-    Dict::sortKeys(keys, 10);
 
-    fprintf(stderr, "Looking up 1000 people, multi-key get=%d...\n", multiKeyGet);
+    fprintf(stderr, "Looking up 1000 people...\n");
     for (int i = 0; i < kSamples; i++) {
         bench.start();
 
@@ -205,14 +202,9 @@ static void testLoadPeople(bool multiKeyGet) {
             for (Array::iterator iter(root); iter; ++iter) {
                 const Dict *person = iter->asDict();
                 size_t n = 0;
-                if (multiKeyGet) {
-                    const Value* values[10];
-                    n = person->get(keys, values, 10);
-                } else {
-                    for (int k = 0; k < 10; k++)
-                        if (person->get(keys[k]) != nullptr)
-                            n++;
-                }
+                for (int k = 0; k < 10; k++)
+                    if (person->get(keys[k]) != nullptr)
+                        n++;
                 REQUIRE(n == 10);
             }
         }
@@ -221,9 +213,6 @@ static void testLoadPeople(bool multiKeyGet) {
     }
     bench.printReport(1.0/kIterations, "person");
 }
-
-TEST_CASE("Perf LoadPeople", "[.Perf]") {testLoadPeople(false);}
-TEST_CASE("Perf LoadPeopleFast", "[.Perf]") {testLoadPeople(true);}
 
 
 TEST_CASE("Perf DictSearch", "[.Perf]") {

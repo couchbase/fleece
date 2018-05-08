@@ -42,11 +42,6 @@ namespace fleece {
             (as they are by default.) */
         const Value* get(int numericKeyToFind) const noexcept;
 
-        /** Looks up the Value for a string key, without assuming the keys are sorted.
-            This is slower than get(), but works even if the Fleece data was generated without
-            sorted keys. */
-        const Value* get_unsorted(slice key) const noexcept;
-
         /** If this array is mutable, returns the equivalent MutableArray*, else returns nullptr. */
         MutableDict* asMutable() const;
 
@@ -143,16 +138,6 @@ namespace fleece {
         /** Looks up the Value for a key, in a form that can cache the key's Fleece object.
             Using the Fleece object is significantly faster than a normal get. */
         const Value* get(key&) const noexcept;
-
-        /** Looks up multiple keys at once; this can be a lot faster than multiple gets.
-            @param keys  Array of key objects. MUST be sorted lexicographically in increasing order.
-            @param values  The corresponding values (or NULLs) will be written here.
-            @param count  The number of keys and values.
-            @return  The number of keys that were found. */
-        size_t get(key keys[], const Value* values[], size_t count) const noexcept;
-
-        /** Sorts an array of keys, a prerequisite of the multi-key get() method. */
-        static void sortKeys(key keys[], size_t count) noexcept;
 
         constexpr Dict()  :Value(internal::kDictTag, 0, 0) { }
 

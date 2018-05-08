@@ -193,26 +193,6 @@ public:
         REQUIRE(nameStr == expectedName);
     }
 
-    void lookupNamesWithKeys(const Dict* person, const char *expectedName, int expectedX) {
-        Dict::key nameKey(slice("name"));
-        Dict::key xKey(slice("x"));
-        Dict::key keys[2] = {nameKey, xKey};
-        const Value* values[2];
-        auto found = person->get(keys, values, 2);
-        size_t expectedFound = (expectedName != nullptr) + (expectedX >= false);
-        REQUIRE(found == expectedFound);
-        if (expectedName)
-            REQUIRE(values[0]->asString() == slice(expectedName));
-        else
-            REQUIRE(values[0] == nullptr);
-        if (expectedX >= false) {
-            REQUIRE(values[1]->type() == kBoolean);
-            REQUIRE(values[1]->asBool() == (bool)expectedX);
-        } else {
-            REQUIRE(values[1] == nullptr);
-        }
-    }
-
 };
 
 #pragma mark - TESTS
@@ -692,15 +672,6 @@ public:
         CHECK(newRoot->count() == root->count());
     }
 
-    TEST_CASE_METHOD(EncoderTests, "FindPersonByIndexUnsorted", "[Encoder]") {
-        mmap_slice doc(kTestFilesDir "1000people.fleece");
-        auto root = Value::fromTrustedData(doc)->asArray();
-        auto person = root->get(123)->asDict();
-        const Value *name = person->get_unsorted(slice("name"));
-        std::string nameStr = (std::string)name->asString();
-        REQUIRE(nameStr == std::string("Concepcion Burns"));
-    }
-
     TEST_CASE_METHOD(EncoderTests, "FindPersonByIndexSorted", "[Encoder]") {
         mmap_slice doc(kTestFilesDir "1000people.fleece");
         auto root = Value::fromTrustedData(doc)->asArray();
@@ -743,10 +714,6 @@ public:
             lookupNameWithKey(smol->get(0)->asDict(), nameKey, "Concepcion Burns");
             lookupNameWithKey(smol->get(1)->asDict(), nameKey, "Carmen Miranda");
             REQUIRE(smol->get(2)->asDict()->get(nameKey) == nullptr);
-
-            lookupNamesWithKeys(smol->get(0)->asDict(), "Concepcion Burns", false);
-            lookupNamesWithKeys(smol->get(1)->asDict(), "Carmen Miranda", false);
-            lookupNamesWithKeys(smol->get(2)->asDict(), nullptr, false);
         }
         {
             // Now try a wide Dict:
@@ -756,65 +723,10 @@ public:
             auto root = Value::fromTrustedData(doc)->asArray();
             auto person = root->get(123)->asDict();
             lookupNameWithKey(person, nameKey, "Concepcion Burns");
-            lookupNamesWithKeys(person, "Concepcion Burns", -1);
 
             person = root->get(3)->asDict();
             lookupNameWithKey(person, nameKey, "Isabella Compton");
-            lookupNamesWithKeys(person, "Isabella Compton", -1);
         }
-    }
-
-    TEST_CASE_METHOD(EncoderTests, "LookupManyKeys", "[Encoder]") {
-        mmap_slice doc(kTestFilesDir "1person.fleece");
-        auto person = Value::fromTrustedData(doc)->asDict();
-
-        Dict::key keys[] = {
-            Dict::key(slice("about")),
-            Dict::key(slice("age")),
-            Dict::key(slice("balance")),
-            Dict::key(slice("guid")),
-            Dict::key(slice("isActive")),
-            Dict::key(slice("latitude")),
-            Dict::key(slice("longitude")),
-            Dict::key(slice("name")),
-            Dict::key(slice("registered")),
-            Dict::key(slice("tags")),
-
-//            Dict::key(slice("jUNK")),
-//            Dict::key(slice("abut")),
-//            Dict::key(slice("crud")),
-//            Dict::key(slice("lowrider")),
-//            Dict::key(slice("ocarina")),
-//            Dict::key(slice("time")),
-//            Dict::key(slice("tangle")),
-//            Dict::key(slice("b")),
-//            Dict::key(slice("f")),
-//            Dict::key(slice("g")),
-//            Dict::key(slice("m")),
-//            Dict::key(slice("n")),
-//            Dict::key(slice("z")),
-        };
-        const unsigned nKeys = sizeof(keys) / sizeof(keys[0]);
-        Dict::sortKeys(keys, nKeys);
-
-#ifndef NDEBUG
-        internal::gTotalComparisons = 0;
-#endif
-        const Value* values[nKeys];
-        REQUIRE(person->get(keys, values, nKeys) == 10ul);
-#ifndef NDEBUG
-        fprintf(stderr, "... that took %u comparisons, or %.1f/key\n",
-                internal::gTotalComparisons.load(), internal::gTotalComparisons/(float)nKeys);
-        internal::gTotalComparisons = 0;
-#endif
-        for (unsigned i = 0; i < nKeys; ++i)
-            REQUIRE(values[i] == person->get(keys[i]));
-
-        REQUIRE(person->get(keys, values, nKeys) == 10ul);
-#ifndef NDEBUG
-        fprintf(stderr, "... second pass took %u comparisons, or %.1f/key\n",
-                internal::gTotalComparisons.load(), internal::gTotalComparisons/(float)nKeys);
-#endif
     }
 
     TEST_CASE_METHOD(EncoderTests, "Paths", "[Encoder]") {
