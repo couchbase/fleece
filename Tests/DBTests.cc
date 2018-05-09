@@ -55,22 +55,41 @@ public:
 
 TEST_CASE_METHOD(DBTests, "Create DB", "[DB]") {
     populate();
-    db->saveChanges();
+    db->commitChanges();
 
     db.reset( new DB(kDBPath) );
 
     for (auto name : names) {
-        auto value = db->get(name)->asDict();
-        auto guid = value->get("guid"_sl);
+        auto value = db->get(name);
+        REQUIRE(value);
+        REQUIRE(value->asDict());
+        auto guid = value->asDict()->get("guid"_sl);
         REQUIRE(guid);
         CHECK(guid->asString() == name);
     }
 }
 
 
+TEST_CASE_METHOD(DBTests, "Iterate DB", "[DB]") {
+    populate();
+    db->commitChanges();
+
+    set<alloc_slice> keys;
+    for (DB::iterator i(db.get()); i; ++i) {
+        CHECK(keys.insert(alloc_slice(i.key())).second == true);
+        
+        REQUIRE(i.value());
+        auto guid = i.value()->get("guid"_sl);
+        REQUIRE(guid);
+        CHECK(guid->asString() == i.key());
+    }
+    CHECK(keys == set<alloc_slice>(names.begin(), names.end()));
+}
+
+
 TEST_CASE_METHOD(DBTests, "Small Update DB", "[DB]") {
     populate();
-    db->saveChanges();
+    db->commitChanges();
     db.reset( new DB(kDBPath) );
     auto dbSize = db->dataSize();
     cerr << "Database is " << dbSize << " bytes\n";
@@ -86,7 +105,7 @@ TEST_CASE_METHOD(DBTests, "Small Update DB", "[DB]") {
         eleven->set("about"_sl, "REDACTED"_sl);
         cerr << "Eleven is now: " << eleven->toJSONString() << "\n";
     }
-    db->saveChanges();
+    db->commitChanges();
     auto newSize = db->dataSize();
     cerr << "Database is " << newSize << " bytes after save; grew by " << (newSize - dbSize) << " bytes.\n";
 

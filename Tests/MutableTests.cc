@@ -506,7 +506,7 @@ namespace fleece {
 
 
     TEST_CASE("Larger mutable dict", "[Mutable]") {
-        mmap_slice data(kTestFilesDir "1person.fleece");
+        alloc_slice data = readFile(kTestFilesDir "1person.fleece");
         auto person = Value::fromTrustedData(data)->asDict();
 
         std::cerr << "Original data: " << data << "\n";

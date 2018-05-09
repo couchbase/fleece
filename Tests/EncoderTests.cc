@@ -654,7 +654,7 @@ public:
     }
 
     TEST_CASE_METHOD(EncoderTests, "Encode To File", "[Encoder]") {
-        mmap_slice doc(kTestFilesDir "1000people.fleece");
+        auto doc = readFile(kTestFilesDir "1000people.fleece");
         auto root = Value::fromTrustedData(doc)->asArray();
 
         {
@@ -673,7 +673,7 @@ public:
     }
 
     TEST_CASE_METHOD(EncoderTests, "FindPersonByIndexSorted", "[Encoder]") {
-        mmap_slice doc(kTestFilesDir "1000people.fleece");
+        auto doc = readFile(kTestFilesDir "1000people.fleece");
         auto root = Value::fromTrustedData(doc)->asArray();
         auto person = root->get(123)->asDict();
         const Value *name = person->get(slice("name"));
@@ -719,7 +719,7 @@ public:
             // Now try a wide Dict:
             Dict::key nameKey(slice("name"), nullptr, true);
 
-            mmap_slice doc(kTestFilesDir "1000people.fleece");
+            auto doc = readFile(kTestFilesDir "1000people.fleece");
             auto root = Value::fromTrustedData(doc)->asArray();
             auto person = root->get(123)->asDict();
             lookupNameWithKey(person, nameKey, "Concepcion Burns");

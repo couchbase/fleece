@@ -48,6 +48,7 @@ namespace fleece {
         public:
             iterator(const MutableHashTree&);
             iterator(const HashTree*);
+            iterator(iterator&&);
             ~iterator();
             slice key() const noexcept                      {return _key;}
             const Value* value() const noexcept             {return _value;}

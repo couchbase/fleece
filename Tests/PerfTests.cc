@@ -142,7 +142,7 @@ static void testFindPersonByIndex(int sort) {
     int kIterations = 10000;
     Benchmark bench;
 
-    mmap_slice doc(kTestFilesDir "1000people.fleece");
+    alloc_slice doc = readFile(kTestFilesDir "1000people.fleece");
 
     Dict::key nameKey(slice("name"));
 
@@ -178,7 +178,7 @@ TEST_CASE("Perf LoadPeople", "[.Perf]") {
     int kIterations = 1000;
     Benchmark bench;
 
-    mmap_slice doc(kTestFilesDir "1000people.fleece");
+    alloc_slice doc = readFile(kTestFilesDir "1000people.fleece");
 
     Dict::key keys[10] = {
         Dict::key(slice("about")),

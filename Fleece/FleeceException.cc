@@ -17,6 +17,7 @@
 //
 
 #include "FleeceException.hh"
+#include <errno.h>
 #include <memory>
 #include <string>
 
@@ -35,13 +36,20 @@ namespace fleece {
         "internal Fleece library error",
         "key not found",
         "incorrect use of persistent shared keys",
+        "POSIX error"
     };
 
     void FleeceException::_throw(ErrorCode code, const char *what) {
         std::string message = kErrorNames[code];
         if (what)
             message += std::string(": ") + what;
-        throw FleeceException(code, message);
+        throw FleeceException(code, 0, message);
+    }
+
+
+    void FleeceException::_throwErrno(const char *what) {
+        auto message = std::string(what) + ": " + strerror(errno);
+        throw FleeceException(POSIXError, errno, message);
     }
 
 

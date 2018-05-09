@@ -41,6 +41,7 @@ namespace fleece {
 
         size_t length() const                   {return _baseOffset + _length;}
         const void* curPos() const;
+        FILE* outputFile() const                {return _outputFile;}
 
         /** Returns the data written, in pieces. Does not change the state of the Writer. */
         std::vector<slice> output() const;

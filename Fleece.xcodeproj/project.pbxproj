@@ -124,6 +124,8 @@
 		27E3DD4C1DB6C32400F2872D /* CaseListReporter.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27E3DD4A1DB6C32400F2872D /* CaseListReporter.hh */; };
 		27E3DD4D1DB6C32400F2872D /* CatchHelper.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27E3DD4B1DB6C32400F2872D /* CatchHelper.hh */; };
 		27E3DD531DB7DB1C00F2872D /* SharedKeysTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27E3DD521DB7DB1C00F2872D /* SharedKeysTests.cc */; };
+		27F25A7520A36B4100E181FA /* MappedFile.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27F25A7320A36B4100E181FA /* MappedFile.cc */; };
+		27F25A7620A36B4100E181FA /* MappedFile.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27F25A7420A36B4100E181FA /* MappedFile.hh */; };
 		27F666442017E26700A8ED31 /* SupportTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27F666432017E26700A8ED31 /* SupportTests.cc */; };
 		27F666472017FE7C00A8ED31 /* TempArray.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27F666462017FE7C00A8ED31 /* TempArray.hh */; };
 		27FE87F31E53E43200C5CF3F /* JSONEncoder.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27FE87F11E53E43200C5CF3F /* JSONEncoder.cc */; };
@@ -311,6 +313,8 @@
 		27EC8D5B1CEBA72E00199FE6 /* mn_wordlist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mn_wordlist.h; sourceTree = "<group>"; };
 		27F25A7020A0C2AF00E181FA /* MutableArray.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MutableArray.hh; sourceTree = "<group>"; };
 		27F25A7220A0CE1400E181FA /* MutableDict.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MutableDict.hh; sourceTree = "<group>"; };
+		27F25A7320A36B4100E181FA /* MappedFile.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MappedFile.cc; sourceTree = "<group>"; };
+		27F25A7420A36B4100E181FA /* MappedFile.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MappedFile.hh; sourceTree = "<group>"; };
 		27F666432017E26700A8ED31 /* SupportTests.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SupportTests.cc; sourceTree = "<group>"; };
 		27F666462017FE7C00A8ED31 /* TempArray.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = TempArray.hh; sourceTree = "<group>"; };
 		27FE87F11E53E43200C5CF3F /* JSONEncoder.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSONEncoder.cc; sourceTree = "<group>"; };
@@ -429,6 +433,8 @@
 				27FE87F21E53E43200C5CF3F /* JSONEncoder.hh */,
 				278163BA1CE7A72300B94E32 /* KeyTree.cc */,
 				278163BB1CE7A72300B94E32 /* KeyTree.hh */,
+				27F25A7320A36B4100E181FA /* MappedFile.cc */,
+				27F25A7420A36B4100E181FA /* MappedFile.hh */,
 				2715BA1D1D820C690061D92E /* PlatformCompat.hh */,
 				274D8254209D1764008BB39F /* RefCounted.cc */,
 				274D8255209D1764008BB39F /* RefCounted.hh */,
@@ -670,6 +676,7 @@
 				2734B8A21F8583FF00BE5249 /* MDict+ObjC.h in Headers */,
 				274D8249209A5906008BB39F /* ValueSlot.hh in Headers */,
 				2734B8A41F8583FF00BE5249 /* MCollection.hh in Headers */,
+				27F25A7620A36B4100E181FA /* MappedFile.hh in Headers */,
 				27E3DD4C1DB6C32400F2872D /* CaseListReporter.hh in Headers */,
 				270FA2801BF53CEA005DCB13 /* Writer.hh in Headers */,
 				270FA27D1BF53CEA005DCB13 /* Encoder.hh in Headers */,
@@ -851,6 +858,7 @@
 				276D15461E007D3000543B1B /* JSON5.cc in Sources */,
 				27A924CF1D9C32E800086206 /* Path.cc in Sources */,
 				274D8256209D1764008BB39F /* RefCounted.cc in Sources */,
+				27F25A7520A36B4100E181FA /* MappedFile.cc in Sources */,
 				274D824C209A7577008BB39F /* HeapArray.cc in Sources */,
 				2734B8B11F870FB400BE5249 /* MContext.cc in Sources */,
 				275CED521D3EF7BE001DE46C /* FleeceException.cc in Sources */,

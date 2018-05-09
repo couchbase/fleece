@@ -17,44 +17,56 @@
 //
 
 #include "DB.hh"
-#include "sliceIO.hh"
 #include "Fleece.hh"
 
 using namespace std;
 
 namespace fleece {
 
-    DB::DB(string filePath)
-    :_filePath(filePath)
+    DB::DB(const char *filePath, size_t maxSize)
+    :_file(filePath, "rw+", maxSize)
     {
         load();
     }
 
     void DB::load() {
-        _data = mmap_slice(_filePath.c_str());
-        if (_data)
+        _data = _file.contents();
+        if (_data.size > 0)
             _tree = HashTree::fromData(_data);
         else
             _tree = MutableHashTree();
     }
 
-    void DB::saveChanges() {
-        if (_tree.isChanged()) {
-            Encoder enc;
+    void DB::writeToFile(FILE *f, bool delta) {
+        Encoder enc(f);
+        if (delta) {
+            if (fseeko(f, _data.size, SEEK_SET) < 0)
+                FleeceException::_throwErrno("Can't append to file");
             enc.setBase(_data);
-            _tree.writeTo(enc);
-            alloc_slice data = enc.extractOutput();
-            appendToFile(data, _filePath.c_str());
-
-            load();
         }
+        _tree.writeTo(enc);
+        enc.end();
+        fflush(f);
+    }
+
+    void DB::commitChanges() {
+        if (!_tree.isChanged())
+            return;
+        writeToFile(_file.fileHandle(), true);
+        _file.resizeToEOF();
+        load();
+    }
+
+    void DB::revertChanges() {
+        load();
     }
 
     void DB::writeTo(string path) {
-        Encoder enc;
-        _tree.writeTo(enc);
-        alloc_slice data = enc.extractOutput();
-        writeToFile(data, path.c_str());
+        FILE *f = fopen(path.c_str(), "w");
+        if (!f)
+            return;
+        writeToFile(f, false);
+        fclose(f);
     }
 
 

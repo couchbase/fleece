@@ -35,22 +35,26 @@ namespace fleece {
         InternalError,      // This shouldn't happen
         NotFound,           // Key not found
         SharedKeysStateError, // Incorrect use of persistent shared keys (not in transaction, etc.)
+        POSIXError,         // Error from C/POSIX call; see .errno for details
     } ErrorCode;
 
 
     class FleeceException : public std::runtime_error {
     public:
 
-        FleeceException(ErrorCode code_, const std::string &what)
+        FleeceException(ErrorCode code_, int errno_, const std::string &what)
         :std::runtime_error(what)
         ,code(code_)
+        ,err_no(errno_)
         { }
 
         [[noreturn]] static void _throw(ErrorCode code, const char *what);
+        [[noreturn]] static void _throwErrno(const char *what);
 
         static ErrorCode getCode(const std::exception&) noexcept;
 
         const ErrorCode code;
+        const int err_no {0};
     };
 
 
