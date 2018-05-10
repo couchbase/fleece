@@ -63,6 +63,10 @@ This structure lends itself to append-only updating, because any change only aff
 
 HashTree deltas aren't quite as space-efficient as ones based on Dicts, but they're more scaleable. I haven't done performance testing yet, so I don't know where the crossover is, but I imagine that Dicts will bog down with hundreds of thousands of keys, while HashTree will be just fine.
 
+### TBD
+
+* The hash tree doesn't yet handle hash collisions, where two keys have identical 32-bit hashes. These are uncommon but will of course occur in real life. Doing this will involve turning the afflicted leaf node into a simple Dict of key/value pairs.
+
 ## The DB Class
 
 `DB` is a fairly simple class on its own; what it does is bring together all of the above to create a persistent key-value store where the values are JSON-equivalent documents. It does most of what a Couchbase Lite database does ... with the notable exceptions of queries, eventing, and replication.
@@ -91,6 +95,7 @@ Here's the above example, instead using a DB:
 ### TBD:
 
 * In its current form, `DB` uses memory-mapped files. This is extremely efficient, but it's not available on embedded systems, since their CPUs don't have fancy MMUs. (For that matter, many of them have rudimentary OSs that don't even have filesystems!) I will be exploring ways to implement DB functionality under those constraints.
+* DB doesn't yet have any protection against file corruption from app crashes or power failures. This will mostly involve writing a special trailer to the file, and scanning back to the last valid trailer when the file opens. It's not rocket science and I can steal the design from CouchStore or ForestDB ;-)
 * There's no compaction yet; the file grows with every commit. It can be compacted by saving to a new file (which writes everything from scratch) and then replacing the old file with the new one; but this involves a lot of I/O and storage space. I have some ideas of how to do this incrementally and more efficiently.
 * This data format doesn't take any care to minimize disk sector reads. It's not trying to align things to 4KB boundaries, and with delta encoding of the individual documents (Dicts), a single document may be spread out across multiple storage blocks. On the plus side, this makes the data a lot more compact. I think that for small embedded use cases, that's more important.
 
