@@ -101,7 +101,7 @@ namespace fleece {
 
     private:
         void load();
-        void writeToFile(FILE*, bool deltapages);
+        void writeToFile(FILE*, bool deltapages, bool flush);
         
         MappedFile _file;
         slice _data;

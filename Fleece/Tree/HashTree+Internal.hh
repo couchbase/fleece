@@ -21,6 +21,7 @@
 #include "Value.hh"
 #include "Bitmap.hh"
 #include "Encoder.hh"
+#include "Endian.hh"
 #include <memory>
 
 namespace fleece { namespace hashtree {
@@ -44,31 +45,12 @@ namespace fleece { namespace hashtree {
     union Node;
     class MutableInterior;
 
-
     // Types for the hash-array map:
     using hash_t = uint32_t;
     using bitmap_t = uint32_t;
     static constexpr int kBitShift = 5;                      // must be log2(8*sizeof(bitmap_t))
     static constexpr int kMaxChildren = 1 << kBitShift;
     static_assert(sizeof(bitmap_t) == kMaxChildren / 8, "Wrong constants");
-
-
-    // Little-endian 32-bit integer
-    class endian {
-    public:
-        endian(uint32_t o) {
-            o = _encLittle32(o);
-            memcpy(bytes, &o, sizeof(bytes));
-        }
-
-        operator uint32_t () const {
-            uint32_t o;
-            memcpy(&o, bytes, sizeof(o));
-            return _decLittle32(o);
-        }
-    private:
-        uint8_t bytes[sizeof(uint32_t)];
-    };
 
 
     // Internal class representing a leaf node
@@ -104,8 +86,8 @@ namespace fleece { namespace hashtree {
         uint32_t writeTo(Encoder&, bool writeKey) const;
 
     private:
-        endian _keyOffset;
-        endian _valueOffset;
+        uint32_le _keyOffset;
+        uint32_le _valueOffset;
 
         friend union Node;
         friend class Interior;
@@ -146,8 +128,8 @@ namespace fleece { namespace hashtree {
         Interior writeTo(Encoder&) const;
 
     private:
-        endian _bitmap;
-        endian _childrenOffset;
+        uint32_le _bitmap;
+        uint32_le _childrenOffset;
     };
 
 

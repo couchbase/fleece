@@ -18,16 +18,28 @@
 
 #include "DB.hh"
 #include "Fleece.hh"
+#include <unistd.h>
 
 using namespace std;
 
 namespace fleece {
+
+    static const unsigned kPageSize = 4096;
+
+
+    // Written at the end of the last page of a file.
+    struct FileTrailer {
+        uint64_le prevTrailerPos;
+        uint32_le magic;
+    };
+
 
     DB::DB(const char *filePath, size_t maxSize)
     :_file(filePath, "rw+", maxSize)
     {
         load();
     }
+
 
     void DB::load() {
         _data = _file.contents();
@@ -37,7 +49,32 @@ namespace fleece {
             _tree = MutableHashTree();
     }
 
-    void DB::writeToFile(FILE *f, bool delta) {
+
+    void DB::revertChanges() {
+        load();
+    }
+
+
+    void DB::commitChanges() {
+        if (!_tree.isChanged())
+            return;
+        writeToFile(_file.fileHandle(), true, true);
+        _file.resizeToEOF();
+        load();
+    }
+
+
+    void DB::writeTo(string path) {
+        FILE *f = fopen(path.c_str(), "w");
+        if (!f)
+            return;
+        writeToFile(f, false, false);
+        fclose(f);
+    }
+
+
+    void DB::writeToFile(FILE *f, bool delta, bool flush) {
+        // Write the delta (or complete file):
         Encoder enc(f);
         if (delta) {
             if (fseeko(f, _data.size, SEEK_SET) < 0)
@@ -46,28 +83,27 @@ namespace fleece {
         }
         _tree.writeTo(enc);
         enc.end();
-        fflush(f);
+
+        // Write the file trailer:
+        unsigned pageFree = kPageSize - (ftello(f) % kPageSize);
+        if (pageFree < sizeof(FileTrailer))
+            pageFree += kPageSize;
+        while (pageFree-- > sizeof(FileTrailer))    // pad to fill up a page
+            fputc(0, f);
+
+        FileTrailer trailer;
+        fwrite(&trailer, sizeof(trailer), 1, f);
+
+        // Flush bits to disk:
+        if (flush) {
+            fflush(f);
+            fsync(fileno(f));
+        }
+        //TODO: "full" fsync on Apple platforms w/ioctl
     }
 
-    void DB::commitChanges() {
-        if (!_tree.isChanged())
-            return;
-        writeToFile(_file.fileHandle(), true);
-        _file.resizeToEOF();
-        load();
-    }
 
-    void DB::revertChanges() {
-        load();
-    }
-
-    void DB::writeTo(string path) {
-        FILE *f = fopen(path.c_str(), "w");
-        if (!f)
-            return;
-        writeToFile(f, false);
-        fclose(f);
-    }
+#pragma mark - DOCUMENT ACCESSORS
 
 
     const Dict* DB::get(slice key) {
@@ -111,3 +147,4 @@ namespace fleece {
     }
 
 }
+

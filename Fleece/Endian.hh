@@ -41,6 +41,41 @@ namespace fleece {
     #define _decLittle16(v) (v)
 #endif
 
+
+    // Little-endian 32-bit integer
+    class uint32_le {
+    public:
+        uint32_le(uint32_t o) {
+            o = _encLittle32(o);
+            memcpy(bytes, &o, sizeof(bytes));
+        }
+        operator uint32_t () const {
+            uint32_t o;
+            memcpy(&o, bytes, sizeof(o));
+            return _decLittle32(o);
+        }
+    private:
+        uint8_t bytes[sizeof(uint32_t)];
+    };
+
+
+    // Little-endian 64-bit integer
+    class uint64_le {
+    public:
+        uint64_le(uint64_t o) {
+            o = _encLittle64(o);
+            memcpy(bytes, &o, sizeof(bytes));
+        }
+        operator uint64_t () const {
+            uint64_t o;
+            memcpy(&o, bytes, sizeof(o));
+            return _decLittle64(o);
+        }
+    private:
+        uint8_t bytes[sizeof(uint64_t)];
+    };
+
+
     namespace internal {
         inline void _swapLittle(uint32_t &n) {n = _encLittle32(n);}
         inline void _swapBig(uint32_t &n)    {n = _enc32(n);}
