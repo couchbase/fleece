@@ -68,10 +68,11 @@ public:
         const char* kTimeScales[] = {"sec", "ms", "us", "ns"};
         double avg = average();
         for (unsigned i = 0; i < sizeof(kTimeScales)/sizeof(char*); ++i) {
+            if (i > 0)
+                scale *= 1000;
             scaleName = kTimeScales[i];
             if (avg*scale >= 1.0)
                 break;
-            scale *= 1000;
         }
 
         if (items)
