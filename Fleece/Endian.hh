@@ -42,54 +42,55 @@ namespace fleece {
 #endif
 
 
-    // Little-endian 32-bit integer
-    class uint32_le {
-    public:
-        uint32_le(uint32_t o) {
-            o = _encLittle32(o);
-            memcpy(bytes, &o, sizeof(bytes));
-        }
-        operator uint32_t () const {
-            uint32_t o;
-            memcpy(&o, bytes, sizeof(o));
-            return _decLittle32(o);
-        }
-    private:
-        uint8_t bytes[sizeof(uint32_t)];
-    };
-
-
-    // Little-endian 64-bit integer
-    class uint64_le {
-    public:
-        uint64_le(uint64_t o) {
-            o = _encLittle64(o);
-            memcpy(bytes, &o, sizeof(bytes));
-        }
-        operator uint64_t () const {
-            uint64_t o;
-            memcpy(&o, bytes, sizeof(o));
-            return _decLittle64(o);
-        }
-    private:
-        uint8_t bytes[sizeof(uint64_t)];
-    };
-
-
     namespace internal {
-        inline void _swapLittle(uint32_t &n) {n = _encLittle32(n);}
-        inline void _swapBig(uint32_t &n)    {n = _enc32(n);}
-        inline void _swapLittle(uint64_t &n) {n = _encLittle64(n);}
-        inline void _swapBig(uint64_t &n)    {n = _enc64(n);}
+        inline uint32_t swapLittle(uint32_t n)  {return _encLittle32(n);}
+        inline uint32_t swapBig(uint32_t n)     {return _enc32(n);}
+        inline uint64_t swapLittle(uint64_t n)  {return _encLittle64(n);}
+        inline uint64_t swapBig(uint64_t n)     {return _enc64(n);}
+
+        template <class INT, INT SWAP(INT)>
+        class endian {
+        public:
+            endian()                :endian(0) { }
+            endian(INT o)           :_swapped(SWAP(o)) { }
+            operator INT () const   {return SWAP(_swapped);}
+        private:
+            INT _swapped;
+        };
+
+
+        template <class INT, INT SWAP(INT)>
+        class endian_unaligned {
+        public:
+            endian_unaligned()
+            :endian_unaligned(0)
+            { }
+            endian_unaligned(INT o) {
+                o = SWAP(o);
+                memcpy(_bytes, &o, sizeof(o));
+            }
+            operator INT () const {
+                INT o;
+                memcpy(&o, _bytes, sizeof(o));
+                return SWAP(o);
+            }
+        private:
+            uint8_t _bytes[sizeof(INT)];
+        };
+
+        inline void swapLittle(uint32_t &n) {n = _encLittle32(n);}
+        inline void swapBig(uint32_t &n)    {n = _enc32(n);}
+        inline void swapLittle(uint64_t &n) {n = _encLittle64(n);}
+        inline void swapBig(uint64_t &n)    {n = _enc64(n);}
 
 
         // Template for opaque endian floating-point value.
         template <typename FLT, typename RAW, void SWAP(RAW&)>
-        struct endian {
-            endian() {}
-            endian(FLT f)           {*this = f;}
-            endian(RAW raw)         {_swapped.asRaw = raw;}
-            endian& operator= (FLT f) {
+        struct endianFP {
+            endianFP() {}
+            endianFP(FLT f)           {*this = f;}
+            endianFP(RAW raw)         {_swapped.asRaw = raw;}
+            endianFP& operator= (FLT f) {
                 _swapped.asNumber = f;
                 SWAP(_swapped.asRaw);
                 return *this;
@@ -109,12 +110,16 @@ namespace fleece {
         };
     }
 
+    using uint32_le = internal::endian<uint32_t, internal::swapLittle>;
+    using uint64_le = internal::endian<uint64_t, internal::swapLittle>;
+    using uint32_le_unaligned = internal::endian_unaligned<uint32_t, internal::swapLittle>;
+
     // Floating-point types whose storage is reliably big- or little-endian,
     // but which can be read and written as native numbers.
 
-    typedef internal::endian<float,  uint32_t, internal::_swapLittle> littleEndianFloat;
-    typedef internal::endian<float,  uint32_t, internal::_swapBig>    bigEndianFloat;
-    typedef internal::endian<double, uint64_t, internal::_swapLittle> littleEndianDouble;
-    typedef internal::endian<double, uint64_t, internal::_swapBig>    bigEndianDouble;
+    typedef internal::endianFP<float,  uint32_t, internal::swapLittle> littleEndianFloat;
+    typedef internal::endianFP<float,  uint32_t, internal::swapBig>    bigEndianFloat;
+    typedef internal::endianFP<double, uint64_t, internal::swapLittle> littleEndianDouble;
+    typedef internal::endianFP<double, uint64_t, internal::swapBig>    bigEndianDouble;
 
 }

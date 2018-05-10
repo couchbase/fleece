@@ -38,6 +38,9 @@ namespace fleece {
             The base address (`buf`) does not change. */
         void resizeToEOF()                                      {resizeTo(getFileSize());}
 
+        /** Changes the size of `contents`. Use with caution. */
+        void resizeTo(off_t size);
+
         /** Closes the file, if you need it to close before the MappedFile is destructed. */
         void close();
 
@@ -47,7 +50,6 @@ namespace fleece {
     private:
         MappedFile(const MappedFile&) =delete;
         off_t getFileSize();
-        void resizeTo(off_t size);
 
         std::string const _path, _mode;
         size_t _maxSize;

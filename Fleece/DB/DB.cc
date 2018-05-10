@@ -29,8 +29,12 @@ namespace fleece {
 
     // Written at the end of the last page of a file.
     struct FileTrailer {
+        static const uint64_t kMagic = 0x332FFAB5BC644D0C;
+
+        uint32_le padding;
+        uint32_le treeOffset;
         uint64_le prevTrailerPos;
-        uint32_le magic;
+        uint64_le magic;
     };
 
 
@@ -43,10 +47,41 @@ namespace fleece {
 
     void DB::load() {
         _data = _file.contents();
-        if (_data.size > 0)
-            _tree = HashTree::fromData(_data);
-        else
+        if (_data.size == 0) {
             _tree = MutableHashTree();
+        } else {
+            _damaged = false;
+            size_t size = _data.size;
+            if (size % kPageSize != 0) {
+                _damaged = true;
+                size -= size % kPageSize;
+            }
+            while (!validateDB(size)) {
+                _damaged = true;
+                size -= kPageSize;
+                if (size == 0)
+                    FleeceException::_throw(InvalidData, "DB file is corrupted (or not a DB at all)");
+            }
+        }
+    }
+
+
+    bool DB::validateDB(size_t size) {
+        if (size < kPageSize || size % kPageSize != 0)
+            return false;
+        auto trailer = (const FileTrailer*)&_data[size - sizeof(FileTrailer)];
+        if (trailer->magic != FileTrailer::kMagic)
+            return false;
+        if (trailer->prevTrailerPos >= size || trailer->prevTrailerPos % kPageSize != 0)
+            return false;
+
+        ssize_t treePos = size - sizeof(FileTrailer) - trailer->treeOffset;
+        if (treePos < 0 || (size_t)treePos < trailer->prevTrailerPos)
+            return false;
+
+        _data.setSize(size);
+        _tree = HashTree::fromData(slice(_data.buf, treePos));
+        return true;
     }
 
 
@@ -58,8 +93,8 @@ namespace fleece {
     void DB::commitChanges() {
         if (!_tree.isChanged())
             return;
-        writeToFile(_file.fileHandle(), true, true);
-        _file.resizeToEOF();
+        off_t newFileSize = writeToFile(_file.fileHandle(), true, true);
+        _file.resizeTo(newFileSize);
         load();
     }
 
@@ -73,33 +108,51 @@ namespace fleece {
     }
 
 
-    void DB::writeToFile(FILE *f, bool delta, bool flush) {
+    off_t DB::writeToFile(FILE *f, bool delta, bool flush) {
         // Write the delta (or complete file):
+        off_t filePos;
         Encoder enc(f);
+        enc.suppressTrailer();
         if (delta) {
+            filePos = _data.size;
             if (fseeko(f, _data.size, SEEK_SET) < 0)
                 FleeceException::_throwErrno("Can't append to file");
             enc.setBase(_data);
+        } else {
+            filePos = ftello(f);
         }
         _tree.writeTo(enc);
         enc.end();
+        filePos += enc.bytesWritten();
 
-        // Write the file trailer:
-        unsigned pageFree = kPageSize - (ftello(f) % kPageSize);
-        if (pageFree < sizeof(FileTrailer))
-            pageFree += kPageSize;
-        while (pageFree-- > sizeof(FileTrailer))    // pad to fill up a page
-            fputc(0, f);
+        // For some reason, on macOS 10.13.5, calling ftello() at this point will cause problems;
+        // that's why I get the position before writing the data. What goes wrong is that the
+        // mapped memory is all zeroed out starting from this point (the padding), so of course
+        // the trailer is invalid. --jpa
 
+        // Write padding, to position the trailer at the end of a file page:
+        int paddingSize = kPageSize - (filePos % kPageSize) - sizeof(FileTrailer);
+        if (paddingSize < 0)
+            paddingSize += kPageSize;
+        for (int i = paddingSize; i > 0; --i)
+            fputc(0x55, f);
+
+        // Write the trailer:
         FileTrailer trailer;
+        trailer.padding = 0;
+        trailer.treeOffset = paddingSize;
+        trailer.prevTrailerPos = _data.size;
+        trailer.magic = FileTrailer::kMagic;
         fwrite(&trailer, sizeof(trailer), 1, f);
 
         // Flush bits to disk:
         if (flush) {
             fflush(f);
             fsync(fileno(f));
+            //TODO: "full" fsync on Apple platforms, via ioctl
         }
-        //TODO: "full" fsync on Apple platforms w/ioctl
+
+        return filePos + paddingSize + sizeof(trailer);
     }
 
 

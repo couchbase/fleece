@@ -86,8 +86,8 @@ namespace fleece { namespace hashtree {
         uint32_t writeTo(Encoder&, bool writeKey) const;
 
     private:
-        uint32_le _keyOffset;
-        uint32_le _valueOffset;
+        uint32_le_unaligned _keyOffset;
+        uint32_le_unaligned _valueOffset;
 
         friend union Node;
         friend class Interior;
@@ -128,8 +128,8 @@ namespace fleece { namespace hashtree {
         Interior writeTo(Encoder&) const;
 
     private:
-        uint32_le _bitmap;
-        uint32_le _childrenOffset;
+        uint32_le_unaligned _bitmap;
+        uint32_le_unaligned _childrenOffset;
     };
 
 

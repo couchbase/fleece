@@ -86,6 +86,8 @@ namespace fleece {
         /** Returns the total size of the DB on disk. */
         size_t dataSize() const                                 {return _file.contents().size;}
 
+        bool isDamaged()                                        {return _damaged;}
+
 
         /** Iterator over the keys and values. The order of iteration is arbitrary, since the
             keys are stored in a hash tree. */
@@ -101,11 +103,13 @@ namespace fleece {
 
     private:
         void load();
-        void writeToFile(FILE*, bool deltapages, bool flush);
+        bool validateDB(size_t);
+        off_t writeToFile(FILE*, bool deltapages, bool flush);
         
         MappedFile _file;
         slice _data;
         MutableHashTree _tree;
+        bool _damaged {false};
     };
 
 }
