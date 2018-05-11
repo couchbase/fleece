@@ -56,7 +56,7 @@ namespace fleece {
 
         off_t fileSize = getFileSize();
         if (_maxSize == 0)
-            _maxSize = fileSize;
+            _maxSize = (size_t)min(fileSize, (off_t)SIZE_MAX);
         _mapping = mmap_slice(_fd, _maxSize);
         resizeTo(fileSize);
     }

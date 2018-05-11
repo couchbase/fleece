@@ -100,7 +100,9 @@ namespace fleece {
     }
 
     void DB::loadCheckpoint(checkpoint_t checkpoint) {
-        _data.setSize(checkpoint);
+        if (checkpoint > SIZE_MAX)
+            throw std::logic_error("Checkpoint too large for address space");
+        _data.setSize((size_t)checkpoint);
         if (checkpoint == 0) {
             _damaged = false;
             _tree = MutableHashTree();

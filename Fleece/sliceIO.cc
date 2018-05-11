@@ -40,7 +40,9 @@ namespace fleece {
             FleeceException::_throwErrno("Can't open file");
         struct stat stat;
         fstat(fd, &stat);
-        alloc_slice data(stat.st_size);
+        if (stat.st_size > SIZE_MAX)
+            throw std::logic_error("File too big for address space");
+        alloc_slice data((size_t)stat.st_size);
         __unused ssize_t bytesRead = ::read(fd, (void*)data.buf, data.size);
         if (bytesRead < (ssize_t)data.size)
             FleeceException::_throwErrno("Can't read file");
