@@ -20,16 +20,23 @@
 #include "slice.hh"
 #include <fcntl.h>
 
-#ifndef _MSC_VER
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#define O_BINARY 0
+#if !FL_HAVE_TEST_FILES
+#include "50peopleJSON.h"
+#include "1personFleece.h"
+#endif
+
+#ifdef _MSC_VER
+    #include <io.h>
+    #include <windows.h>
+    #define ssize_t int
+    #define MAP_FAILED nullptr
 #else
-#include <io.h>
-#include <windows.h>
-#define ssize_t int
-#define MAP_FAILED nullptr
+    #define O_BINARY 0
+    #if !FL_EMBEDDED
+        #include <sys/mman.h>
+        #include <sys/stat.h>
+        #include <unistd.h>
+    #endif
 #endif
 
 
@@ -84,6 +91,20 @@ namespace fleece_test {
     }
 
 
+#if FL_EMBEDDED
+
+    mmap_slice::mmap_slice(const char *path)
+    :_data( readFile(path))
+    {
+        setBuf(_data.buf);
+        setSize(_data.size);
+    }
+
+    mmap_slice::~mmap_slice() {
+    }
+
+#else
+
     mmap_slice::mmap_slice(const char *path)
     #ifdef _MSC_VER
         :
@@ -128,9 +149,11 @@ namespace fleece_test {
     #endif
         }
     }
+#endif
 
 
     alloc_slice readFile(const char *path) {
+#if FL_HAVE_TEST_FILES
         int fd = ::open(path, O_RDONLY | O_BINARY);
         REQUIRE(fd != -1);
         struct stat stat;
@@ -140,6 +163,18 @@ namespace fleece_test {
         REQUIRE(bytesRead == (ssize_t)data.size);
         ::close(fd);
         return data;
+#else
+        if (0 == strcmp(path, "50people.json")) {
+            return alloc_slice(k50PeopleJSON);
+        } else if (0 == strcmp(path, "1person.fleece")) {
+            return alloc_slice(k1PersonFleece, sizeof(k1PersonFleece));
+        } else {
+            FAIL("Unsupported test fixture \"" << path << "\"");
+            return {};
+        }
+        //TODO: On ESP this can be done more elegantly by embedding the files in the binary:
+        // https://esp-idf.readthedocs.io/en/latest/api-guides/build-system.html#embedding-binary-data
+#endif
     }
 
     void writeToFile(slice s, const char *path) {

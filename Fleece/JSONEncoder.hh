@@ -21,6 +21,7 @@
 #include "Writer.hh"
 #include "Value.hh"
 #include "FleeceException.hh"
+#include <stdio.h>
 
 
 namespace fleece {

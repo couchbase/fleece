@@ -28,11 +28,22 @@
 
 using namespace fleece;
 
+// True if we have access to test files like "1000people.json". Predefine as 0 for embedded OS.
+#ifndef FL_HAVE_TEST_FILES
+#define FL_HAVE_TEST_FILES 1
+#endif
+
 // Directory containing test files:
-#ifdef _MSC_VER
-#define kTestFilesDir "..\\Tests\\"
+#if FL_HAVE_TEST_FILES
+    #ifdef _MSC_VER
+        #define kTestFilesDir "..\\Tests\\"
+    #else
+        #define kTestFilesDir "Tests/"
+    #endif
+    static const char* kBigJSONTestFilePath = kTestFilesDir "1000people.json";
 #else
-#define kTestFilesDir "Tests/"
+    #define kTestFilesDir ""
+    static const char* kBigJSONTestFilePath = "50people.json";
 #endif
 
 namespace fleece_test {
@@ -51,6 +62,9 @@ namespace fleece_test {
         operator slice()    {return {buf, size};}
 
     private:
+    #if FL_EMBEDDED
+        alloc_slice _data;
+    #else
         void* _mapped;
     #ifdef _MSC_VER
         HANDLE _fileHandle{INVALID_HANDLE_VALUE};
@@ -58,6 +72,7 @@ namespace fleece_test {
     #else
         int _fd;
     #endif
+    #endif // FL_EMBEDDED
         mmap_slice(const mmap_slice&);
     };
 

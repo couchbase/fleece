@@ -20,8 +20,13 @@
 #include "Fleece.hh"
 #include "Path.hh"
 #include <iostream>
+#include <limits.h>
 
 using namespace std;
+
+
+extern void DontDeadStripSharedKeysTests();
+void DontDeadStripSharedKeysTests() { }
 
 
 TEST_CASE("basic") {
@@ -432,7 +437,7 @@ TEST_CASE("big JSON encoding") {
     SharedKeys sk;
     Encoder enc;
     enc.setSharedKeys(&sk);
-    alloc_slice input = readFile(kTestFilesDir "1000people.json");
+    alloc_slice input = readFile(kBigJSONTestFilePath);
     JSONConverter jr(enc);
     jr.encodeJSON(input);
     enc.end();
@@ -444,8 +449,8 @@ TEST_CASE("big JSON encoding") {
     REQUIRE(sk.encode("name"_sl, nameKey));
 
     auto root = Value::fromTrustedData(encoded)->asArray();
-    auto person = root->get(123)->asDict();
+    auto person = root->get(33)->asDict();
     const Value *name = person->get(nameKey);
     std::string nameStr = (std::string)name->asString();
-    REQUIRE(nameStr == std::string("Concepcion Burns"));
+    REQUIRE(nameStr == std::string("Janet Ayala"));
 }
