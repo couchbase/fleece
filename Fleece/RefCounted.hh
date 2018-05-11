@@ -75,6 +75,9 @@ namespace fleece {
         Retained() noexcept                      :_ref(nullptr) { }
         Retained(T *t) noexcept                  :_ref(retain(t)) { }
 
+        Retained(const Retained &r) noexcept     :_ref(retain(r._ref)) { }
+        Retained(Retained &&r) noexcept          :_ref(r._ref) {r._ref = nullptr;}
+
         template <typename U>
         Retained(const Retained<U> &r) noexcept  :_ref(retain(r._ref)) { }
 

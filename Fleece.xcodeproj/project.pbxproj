@@ -478,7 +478,6 @@
 			isa = PBXGroup;
 			children = (
 				27393C931FEC30E300FBFE59 /* FleeceTestsMain.cc */,
-				2776AA7A2097B1DC004ACE85 /* DBTests.cc */,
 				27C8DF09208521B600A99BFC /* HashTreeTests.cc */,
 				272E5A451BF7FD8F00848580 /* FleeceTests.cc */,
 				272E5A5A1BF8004100848580 /* FleeceTests.hh */,
@@ -487,6 +486,7 @@
 				27E3DD521DB7DB1C00F2872D /* SharedKeysTests.cc */,
 				27F666432017E26700A8ED31 /* SupportTests.cc */,
 				274D824E209A8D01008BB39F /* MutableTests.cc */,
+				2776AA7A2097B1DC004ACE85 /* DBTests.cc */,
 				27298E771C01A461000CFBA8 /* PerfTests.cc */,
 				272E5A5E1BF91DBE00848580 /* ObjCTests.mm */,
 				276D15481E008E7A00543B1B /* JSON5Tests.cc */,

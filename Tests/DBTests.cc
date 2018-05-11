@@ -34,14 +34,15 @@ public:
     vector<alloc_slice> names;
 
     static constexpr const char* kDBPath = "/tmp/DB_test.fleecedb";
+    static constexpr const char* kAltDBPath = "/tmp/DB_test_alt.fleecedb";
 
     DBTests() {
         unlink(kDBPath);
-        reopen();
+        reopen(DB::kCreateAndWrite);
     }
 
-    void reopen() {
-        db.reset( new DB(kDBPath) );
+    void reopen(DB::OpenMode mode =DB::kWrite) {
+        db.reset( new DB(kDBPath, mode) );
     }
 
     void populate() {
@@ -57,13 +58,27 @@ public:
         db->commitChanges();
     }
 
+    void iterateAndCheck() {
+        set<alloc_slice> keys;
+        for (DB::iterator i(db.get()); i; ++i) {
+            CHECK(keys.insert(alloc_slice(i.key())).second == true);
+
+            REQUIRE(i.value());
+            auto guid = i.value()->get("guid"_sl);
+            REQUIRE(guid);
+            CHECK(guid->asString() == i.key());
+        }
+        CHECK(keys == set<alloc_slice>(names.begin(), names.end()));
+    }
+
     void update(bool verbose =false) {
         reopen();
-        auto dbSize = db->dataSize();
+        auto dbSize = db->checkpoint();
         if (verbose)
             cerr << "Database is " << dbSize << " bytes\n";
 
         db->remove(names[123]);
+        names.erase(names.begin() + 123);
 
         MutableDict *eleven = db->getMutable(names[11]);
         REQUIRE(eleven);
@@ -106,23 +121,39 @@ TEST_CASE_METHOD(DBTests, "Create DB", "[DB]") {
 
 TEST_CASE_METHOD(DBTests, "Iterate DB", "[DB]") {
     populate();
-
-    set<alloc_slice> keys;
-    for (DB::iterator i(db.get()); i; ++i) {
-        CHECK(keys.insert(alloc_slice(i.key())).second == true);
-        
-        REQUIRE(i.value());
-        auto guid = i.value()->get("guid"_sl);
-        REQUIRE(guid);
-        CHECK(guid->asString() == i.key());
-    }
-    CHECK(keys == set<alloc_slice>(names.begin(), names.end()));
+    iterateAndCheck();
 }
 
 
 TEST_CASE_METHOD(DBTests, "Small Update DB", "[DB]") {
     populate();
+    auto checkpoint1 = db->checkpoint();
     update(true);
+    iterateAndCheck();
+
+    auto checkpoint2 = db->checkpoint();
+    CHECK(checkpoint2 > checkpoint1);
+    CHECK(db->previousCheckpoint() == checkpoint1);
+
+    DB olderdb(*db, db->previousCheckpoint());
+    CHECK(olderdb.checkpoint() == checkpoint1);
+    CHECK(olderdb.previousCheckpoint() == 0);
+    const Dict *eleven = olderdb.get(names[11]);
+    REQUIRE(eleven);
+    CHECK(eleven->get("name"_sl)->asString() == "Dollie Reyes"_sl);
+}
+
+
+TEST_CASE_METHOD(DBTests, "Export DB to new file", "[DB]") {
+    populate();
+    cerr << "Original database is " << db->checkpoint() << " bytes\n";
+    update();
+    cerr << "Updated database is " << db->checkpoint() << " bytes\n";
+    db->writeTo(kAltDBPath);
+    db.reset();
+    db.reset( new DB(kAltDBPath, DB::kReadOnly) );
+    cerr << "Exported database is " << db->checkpoint() << " bytes\n";
+    iterateAndCheck();
 }
 
 
@@ -152,7 +183,7 @@ TEST_CASE_METHOD(DBTests, "Corrupt DB all trailers", "[DB]") {
 TEST_CASE_METHOD(DBTests, "Corrupt DB by appending", "[DB]") {
     populate();
     update(false);
-    CHECK(db->dataSize() == 0x10e000);
+    CHECK(db->checkpoint() == 0x10e000);
 
     modifyFile([](FILE *f) {
         fseeko(f, 0, SEEK_END);
@@ -161,7 +192,7 @@ TEST_CASE_METHOD(DBTests, "Corrupt DB by appending", "[DB]") {
 
     reopen();
     CHECK(db->isDamaged());
-    CHECK(db->dataSize() == 0x10e000);
+    CHECK(db->checkpoint() == 0x10e000);
 
     MutableDict *eleven = db->getMutable(names[11]);
     REQUIRE(eleven);
@@ -171,9 +202,9 @@ TEST_CASE_METHOD(DBTests, "Corrupt DB by appending", "[DB]") {
 
 TEST_CASE_METHOD(DBTests, "Corrupt DB by overwriting trailer", "[DB]") {
     populate();
-    auto checkpoint1 = db->dataSize();
+    auto checkpoint1 = db->checkpoint();
     update(false);
-    auto checkpoint2 = db->dataSize();
+    auto checkpoint2 = db->checkpoint();
     CHECK(checkpoint2 > checkpoint1);
 
     modifyFile([](FILE *f) {
@@ -184,7 +215,7 @@ TEST_CASE_METHOD(DBTests, "Corrupt DB by overwriting trailer", "[DB]") {
     // Verify file reopens to previous (first) checkpoint:
     reopen();
     CHECK(db->isDamaged());
-    CHECK(db->dataSize() == checkpoint1);
+    CHECK(db->checkpoint() == checkpoint1);
 
     // The changes should be gone since that checkpoint was damaged:
     MutableDict *eleven = db->getMutable(names[11]);

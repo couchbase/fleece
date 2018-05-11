@@ -32,17 +32,67 @@ namespace fleece {
     /** A persistent key-value store using Fleece. */
     class DB {
     public:
+        /** A checkpoint is a kind of timestamp of a database's contents as of some commit.
+            It's basically the same as the EOF of the file just after the commit.
+            (A new, empty database has a checkpoint of zero.)  */
+        using checkpoint_t = uint64_t;
+
+        enum OpenMode {
+            kReadOnly  = 0,
+            kWrite,
+            kCreateAndWrite,
+        };
+
+        /** The default amount of address space (NOT memory!) reserved by a DB's memory map.
+            Multiple DBs on the same file share address space. */
         static constexpr size_t kDefaultMaxSize = 100*1024*1024;
 
         /** Initializes and opens a DB. Its file will be created if it doesn't exist.
-            @param filePath  The path to the database file.
+            @param filePath  The filesystem path to the database file.
+            @param mode  Determines whether the DB can create and/or write to the file.
             @param maxSize  The amount of address space reserved for the memory-mapped file.
                             The file must not grow larger than this size. */
-        DB(const char * NONNULL filePath, size_t maxSize =kDefaultMaxSize);
+        DB(const char * NONNULL filePath,
+           OpenMode mode =kCreateAndWrite,
+           size_t maxSize =kDefaultMaxSize);
+
+        /** Initializes and opens a DB, from any checkpoint.
+            The value of `checkpoint` can be the other DB's `previousCheckpoint()`, or any
+            checkpoint previous to that.
+            Since this is historical data, this DB is always opened read-only.
+            Changes to the original DB will not affect this one, even if committed.
+            (This is an extremely cheap operation, since this DB shares the memory-map with the
+            original one. There is no I/O or heap allocation, and only two pages of (mapped)
+            memory are read.) */
+        DB(const DB&, off_t checkpoint);
+
+        /** Initializes and opens a DB, from the original instance's current checkpoint.
+            This instance will be writeable if the original is and if the OpenMode is not
+            `kReadOnly`. */
+        DB(const DB&, OpenMode =kWrite);
+
+        /** Returns true if the database is writeable, false if it's read-only. */
+        bool isWriteable() const                                {return _writeable;}
+
+        /** Returns true if the database is damaged and had to be recovered from an earlier
+            checkpoint. The most recent commit(s) might be lost. */
+        bool isDamaged() const                                  {return _damaged;}
+
+        /** Returns the database's current checkpoint.
+            At any point in the future, if the file has not been compacted, you can open a DB
+            at this checkpoint and it will have the exact same contents as that commit. */
+        checkpoint_t checkpoint() const                         {return _data.size;}
+
+        /** Returns the database's previous checkpoint, before the last commit. Opening a new DB
+            at this checkpoint will make the previous contents accessible.
+            If the DB has only been committed once, the previous checkpoint is zero (empty). */
+        checkpoint_t previousCheckpoint() const                 {return _prevCheckpoint;}
+
+#pragma mark - DOCUMENT ACCESS
 
         /** Returns the value of a key, or nullptr. */
-        const Dict* get(slice key);
-        const Dict* get(const char* NONNULL key)                    {return get(slice(key));}
+        const Dict* get(slice key) const;
+        const Dict* get(const char* NONNULL key) const                    {return get(slice(key));}
 
         /** Returns the value of a key as a MutableDict, so you can modify it. Any changes will
             be saved on the next commit. */
@@ -74,23 +124,10 @@ namespace fleece {
         bool remove(slice key);
         bool remove(const char* NONNULL key)                        {return remove(slice(key));}
 
-        /** Saves changes to the file. */
-        void commitChanges();
-
-        /** Backs out all changes that have been made since the DB was last committed or opened. */
-        void revertChanges();
-
-        /** Writes a copy of the DB to a new file. */
-        void writeTo(std::string path);
-
-        /** Returns the total size of the database. */
-        size_t dataSize() const                                 {return _data.size;}
-
-        bool isDamaged()                                        {return _damaged;}
-
+#pragma mark - ITERATOR
 
         /** Iterator over the keys and values. The order of iteration is arbitrary, since the
-            keys are stored in a hash tree. */
+         keys are stored in a hash tree. */
         class iterator : MutableHashTree::iterator {
         public:
             using super = MutableHashTree::iterator;
@@ -101,16 +138,31 @@ namespace fleece {
             iterator& operator ++()                         {super::operator++(); return *this;}
         };
 
+#pragma mark - COMMIT/REVERT
+
+        /** Saves changes to the file. */
+        void commitChanges();
+
+        /** Backs out all changes that have been made since the DB was last committed or opened. */
+        void revertChanges();
+
+        /** Writes a copy of the DB to a new file. */
+        void writeTo(std::string path);
+
+
     private:
-        void load();
+        void loadCheckpoint(checkpoint_t);
+        void loadLatest();
         bool validateHeader();
-        bool validateDB(size_t);
+        bool validateTrailer(size_t);
         off_t writeToFile(FILE*, bool deltapages, bool flush);
         void flushFile(FILE*, bool fullSync =false);
         
-        MappedFile _file;
+        Retained<MappedFile> _file;
         slice _data;
+        checkpoint_t _prevCheckpoint {0};
         MutableHashTree _tree;
+        bool _writeable {true};
         bool _damaged {false};
     };
 

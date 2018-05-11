@@ -61,27 +61,58 @@ namespace fleece {
     };
 
 
-    DB::DB(const char *filePath, size_t maxSize)
-    :_file(filePath, "rw+", maxSize)
+    static const char* kModeStrings[3] = {"r", "r+", "rw+"};
+
+
+    DB::DB(const char *filePath, OpenMode mode, size_t maxSize)
+    :_file( new MappedFile(filePath,
+                           kModeStrings[mode],
+                           maxSize) )
+    ,_data(_file->contents())
+    ,_writeable(mode > kReadOnly)
     {
-        load();
+        loadLatest();
     }
 
 
-    void DB::load() {
-        _data = _file.contents();
-        if (_data.size == 0) {
+    DB::DB(const DB &other, OpenMode mode)
+    :_file(other._file)
+    ,_data(other._data)
+    ,_writeable(other._writeable && mode > kReadOnly)
+    {
+        loadCheckpoint(other.checkpoint());
+    }
+
+
+
+    DB::DB(const DB &other, off_t checkpoint)
+    :_file(other._file)
+    ,_data(other._data)
+    ,_writeable(false)
+    {
+        assert(checkpoint <= (off_t)_data.size);
+        loadCheckpoint(checkpoint);
+    }
+
+
+    void DB::loadLatest() {
+        loadCheckpoint(_file->contents().size);
+    }
+
+    void DB::loadCheckpoint(checkpoint_t checkpoint) {
+        _data.setSize(checkpoint);
+        if (checkpoint == 0) {
             _damaged = false;
             _tree = MutableHashTree();
         } else {
             _damaged = true;
             size_t size = _data.size;
             if (size < kPageSize) {
-                Warn("Not a DB file (too small): %s", _file.path());
+                Warn("Not a DB file (too small): %s", _file->path());
                 FleeceException::_throw(InvalidData, "Not a DB file (too small)");
             }
             if (!validateHeader()) {
-                Warn("Not a DB file; or else header is corrupted: %s", _file.path());
+                Warn("Not a DB file; or else header is corrupted: %s", _file->path());
                 FleeceException::_throw(InvalidData, "Not a DB file; or else header is corrupted");
             }
             bool damagedSize = false, damagedTrailer = false;
@@ -90,13 +121,13 @@ namespace fleece {
                 size -= size % kPageSize;
                 damagedSize = true;
             }
-            while (!validateDB(size)) {
+            while (!validateTrailer(size)) {
                 if (!damagedTrailer) {
                     Warn("Trailer at 0x%zx is invalid; scanning backwards for a valid one...", size);
                     damagedTrailer = true;
                 }
                 if (size <= kPageSize) {
-                    Warn("...no valid trailer found; DB is fatally damaged: %s", _file.path());
+                    Warn("...no valid trailer found; DB is fatally damaged: %s", _file->path());
                     FleeceException::_throw(InvalidData, "DB file is fatally damaged: no valid trailer found");
                 }
                 size -= kPageSize;
@@ -113,17 +144,19 @@ namespace fleece {
         const FileHeader *header = (const FileHeader*)_data.buf;
         return memcmp(header->magicText, FileHeader::kMagicText, sizeof(header->magicText)) == 0
             && header->magic2 == FileHeader::kMagic2
-            && header->size < 4096;
+            && header->size < kPageSize;
     }
 
 
-    bool DB::validateDB(size_t size) {
+    bool DB::validateTrailer(size_t size) {
         if (size < kPageSize || size % kPageSize != 0)
             return false;
         auto trailer = (const FileTrailer*)&_data[size - sizeof(FileTrailer)];
         if (trailer->magic1 != FileTrailer::kMagic1 || trailer->magic2 != FileTrailer::kMagic2)
             return false;
-        if (trailer->prevTrailerPos > size - 4096 || trailer->prevTrailerPos % kPageSize != 0)
+
+        checkpoint_t prevTrailerPos = trailer->prevTrailerPos;
+        if (prevTrailerPos > size - kPageSize || prevTrailerPos % kPageSize != 0)
             return false;
 
         ssize_t treePos = size - sizeof(FileTrailer) - trailer->treeOffset;
@@ -131,22 +164,24 @@ namespace fleece {
             return false;
 
         _data.setSize(size);
+        _prevCheckpoint = prevTrailerPos;
         _tree = HashTree::fromData(slice(_data.buf, treePos));
         return true;
     }
 
 
     void DB::revertChanges() {
-        load();
+        loadCheckpoint(checkpoint());
     }
 
 
     void DB::commitChanges() {
         if (!_tree.isChanged())
             return;
-        off_t newFileSize = writeToFile(_file.fileHandle(), true, true);
-        _file.resizeTo(newFileSize);
-        load();
+        assert(_writeable);
+        off_t newFileSize = writeToFile(_file->fileHandle(), true, true);
+        _file->resizeTo(newFileSize);
+        loadCheckpoint(newFileSize);
     }
 
 
@@ -208,8 +243,8 @@ namespace fleece {
 
         // Write the trailer:
         FileTrailer trailer(uint32_t(finalPos - sizeof(FileTrailer) - filePos),
-                            _data.size);
-        fseeko(f, -sizeof(FileTrailer), SEEK_END);
+                            (delta ? _data.size : 0));
+        check(fseeko(f, -sizeof(FileTrailer), SEEK_END), "seek");
         check_fwrite(f, &trailer, sizeof(trailer));
 
         // Flush again to make sure the header is durably saved:
@@ -236,23 +271,26 @@ namespace fleece {
 #pragma mark - DOCUMENT ACCESSORS
 
 
-    const Dict* DB::get(slice key) {
+    const Dict* DB::get(slice key) const {
         auto value = _tree.get(key);
         return value ? value->asDict() : nullptr;
     }
 
 
     MutableDict* DB::getMutable(slice key) {
+        assert(_writeable);
         return _tree.getMutableDict(key);
     }
 
 
     bool DB::remove(slice key) {
+        assert(_writeable);
         return _tree.remove(key);
     }
 
 
     bool DB::put(slice key, PutMode mode, PutCallback callback) {
+        assert(_writeable);
         return _tree.insert(key, [&](const Value *curVal) -> const Value* {
             if ((mode == Insert && curVal) || (mode == Update && !curVal))
                 return nullptr;
@@ -263,6 +301,7 @@ namespace fleece {
 
     
     bool DB::put(slice key, PutMode mode, const Dict *value) {
+        assert(_writeable);
         if (value) {
             return _tree.insert(key, [&](const Value *curVal) -> const Value* {
                 if ((mode == Insert && curVal) || (mode == Update && !curVal))

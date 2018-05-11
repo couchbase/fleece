@@ -5,6 +5,7 @@
 //
 
 #pragma once
+#include "RefCounted.hh"
 #include "sliceIO.hh"
 #include <string>
 #include <stdio.h>
@@ -12,7 +13,7 @@
 namespace fleece {
 
     /** Memory-maps a file and exposes its contents as a slice */
-    class MappedFile {
+    class MappedFile : public RefCounted {
     public:
         /** Constructs a MappedFile.
             @param path  The path to the file.
@@ -23,8 +24,6 @@ namespace fleece {
                         the size the file will become while open. If zero, the file's current
                         size will be used instead. */
         explicit MappedFile(const char *path, const char *mode = "r", size_t maxSize =0);
-
-        ~MappedFile();
 
         const char *path() const                                {return _path.c_str();}
         
@@ -49,6 +48,8 @@ namespace fleece {
         /** Reopens the file after it's been closed. Otherwise it's a no-op. */
         void open();
 
+    protected:
+        ~MappedFile();
     private:
         MappedFile(const MappedFile&) =delete;
         off_t getFileSize();
