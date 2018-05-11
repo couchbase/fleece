@@ -80,7 +80,9 @@ namespace fleece {
         if (mapping == nullptr)
             FleeceException::_throwErrno("Can't memory-map file");
 #else
-        mapping = ::mmap(nullptr, size, PROT_READ, MAP_PRIVATE, fileno(f), 0);
+        // Note: essential to use MAP_SHARED instead of MAP_PRIVATE; otherwise if the file is
+        // written to thru `f`, changes in the file may not be reflected in the mapped memory!
+        mapping = ::mmap(nullptr, size, PROT_READ, MAP_SHARED, fileno(f), 0);
         if (mapping == MAP_FAILED)
             FleeceException::_throwErrno("Can't memory-map file");
 #endif

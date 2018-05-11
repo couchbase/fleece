@@ -43,6 +43,8 @@ namespace fleece {
 
 
     namespace internal {
+        inline uint16_t swapLittle(uint16_t n)  {return (uint16_t)_encLittle16(n);}
+        inline uint16_t swapBig(uint16_t n)     {return (uint16_t)_enc16(n);}
         inline uint32_t swapLittle(uint32_t n)  {return _encLittle32(n);}
         inline uint32_t swapBig(uint32_t n)     {return _enc32(n);}
         inline uint64_t swapLittle(uint64_t n)  {return _encLittle64(n);}
@@ -78,6 +80,8 @@ namespace fleece {
             uint8_t _bytes[sizeof(INT)];
         };
 
+        inline void swapLittle(uint16_t &n) {n = _encLittle16(n);}
+        inline void swapBig(uint16_t &n)    {n = (uint16_t)_enc16(n);}
         inline void swapLittle(uint32_t &n) {n = _encLittle32(n);}
         inline void swapBig(uint32_t &n)    {n = _enc32(n);}
         inline void swapLittle(uint64_t &n) {n = _encLittle64(n);}
@@ -110,6 +114,7 @@ namespace fleece {
         };
     }
 
+    using uint16_le = internal::endian<uint16_t, internal::swapLittle>;
     using uint32_le = internal::endian<uint32_t, internal::swapLittle>;
     using uint64_le = internal::endian<uint64_t, internal::swapLittle>;
     using uint32_le_unaligned = internal::endian_unaligned<uint32_t, internal::swapLittle>;

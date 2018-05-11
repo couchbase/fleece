@@ -83,8 +83,8 @@ namespace fleece {
         /** Writes a copy of the DB to a new file. */
         void writeTo(std::string path);
 
-        /** Returns the total size of the DB on disk. */
-        size_t dataSize() const                                 {return _file.contents().size;}
+        /** Returns the total size of the database. */
+        size_t dataSize() const                                 {return _data.size;}
 
         bool isDamaged()                                        {return _damaged;}
 
@@ -103,8 +103,10 @@ namespace fleece {
 
     private:
         void load();
+        bool validateHeader();
         bool validateDB(size_t);
         off_t writeToFile(FILE*, bool deltapages, bool flush);
+        void flushFile(FILE*, bool fullSync =false);
         
         MappedFile _file;
         slice _data;

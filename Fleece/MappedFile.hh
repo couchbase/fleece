@@ -26,6 +26,8 @@ namespace fleece {
 
         ~MappedFile();
 
+        const char *path() const                                {return _path.c_str();}
+        
         /** The current file contents. This will update if existing data in the file is overwritten,
             but it will not grow (or shrink) if the file's EOF changes. For that you need to call
             `resizeToEOF`. */
