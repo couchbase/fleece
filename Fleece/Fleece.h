@@ -50,6 +50,7 @@ extern "C" {
     typedef struct _FLEncoder*     FLEncoder;       ///< A reference to an encoder
     typedef struct _FLSharedKeys*  FLSharedKeys;    ///< A reference to a shared-keys mapping
     typedef struct _FLKeyPath*     FLKeyPath;       ///< A reference to a key path
+    typedef struct _FLDeepIterator* FLDeepIterator; ///< A reference to a deep iterator
 #endif
 
     /** A simple reference to a block of memory. Does not imply ownership. */
@@ -463,6 +464,45 @@ extern "C" {
     FLMutableArray FLMutableDict_GetMutableArray(FLMutableDict, FLString key);
     FLMutableDict FLMutableDict_GetMutableDict(FLMutableDict, FLString key);
 
+
+    //////// DEEP ITERATOR
+
+
+    /** Creates a FLDeepIterator to iterate over a dictionary.
+        Call FLDeepIterator_GetKey and FLDeepIterator_GetValue to get the first item,
+        then FLDeepIterator_Next. */
+    FLDeepIterator FLDeepIterator_New(FLValue, FLSharedKeys);
+
+    void FLDeepIterator_Free(FLDeepIterator);
+
+    /** Returns the current value being iterated over. or NULL at the end of iteration. */
+    FLValue FLDeepIterator_GetValue(FLDeepIterator);
+
+    /** Returns the key of the current value, or an empty slice if not in a dictionary. */
+    FLSlice FLDeepIterator_GetKey(FLDeepIterator);
+
+    /** Returns the array index of the current value, or 0 if not in an array. */
+    uint32_t FLDeepIterator_GetIndex(FLDeepIterator);
+
+    /** Returns the current depth in the hierarchy, starting at 1 for the top-level children. */
+    size_t FLDeepIterator_GetDepth(FLDeepIterator);
+
+    /** Tells the iterator to skip the children of the current value. */
+    void FLDeepIterator_SkipChildren(FLDeepIterator);
+
+    /** Advances the iterator to the next value, or returns false if at the end. */
+    bool FLDeepIterator_Next(FLDeepIterator);
+
+    typedef struct {
+        FLSlice key;        ///< Dict key, or kFLSliceNull if none
+        uint32_t index;     ///< Array index, only if there's no key
+    } FLPathComponent;
+
+    /** Returns the path as an array of FLPathComponents. */
+    void FLDeepIterator_GetPath(FLDeepIterator, FLPathComponent* *outPath, size_t *outDepth);
+
+    /** Returns the current path in JSONPointer format (RFC 6901). */
+    FLSliceResult FLDeepIterator_GetJSONPointer(FLDeepIterator);
 
     //////// PATH
 

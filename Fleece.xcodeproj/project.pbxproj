@@ -22,7 +22,7 @@
 		270FA2851BF53CEA005DCB13 /* varint.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2771BF53CEA005DCB13 /* varint.hh */; };
 		270FA2871BF53D32005DCB13 /* forestdb_endian.h in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2861BF53D32005DCB13 /* forestdb_endian.h */; };
 		27298E3C1C00F812000CFBA8 /* JSONConverter.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27298E3A1C00F812000CFBA8 /* JSONConverter.cc */; };
-		27298E651C00F8A9000CFBA8 /* jsonsl.c in Sources */ = {isa = PBXBuildFile; fileRef = 27298E491C00F8A9000CFBA8 /* jsonsl.c */; };
+		27298E651C00F8A9000CFBA8 /* jsonsl.c in Sources */ = {isa = PBXBuildFile; fileRef = 27298E491C00F8A9000CFBA8 /* jsonsl.c */; settings = {COMPILER_FLAGS = "-Wno-unreachable-code-break"; }; };
 		27298E661C00F8A9000CFBA8 /* jsonsl.h in Headers */ = {isa = PBXBuildFile; fileRef = 27298E4A1C00F8A9000CFBA8 /* jsonsl.h */; };
 		27298E781C01A461000CFBA8 /* PerfTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27298E771C01A461000CFBA8 /* PerfTests.cc */; };
 		27298E801C04E665000CFBA8 /* Encoder.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27298E7F1C04E665000CFBA8 /* Encoder.cc */; };
@@ -60,6 +60,8 @@
 		276D15491E008E7A00543B1B /* JSON5Tests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 276D15481E008E7A00543B1B /* JSON5Tests.cc */; };
 		2770153C1D59645A008BADD7 /* cdecode.c in Sources */ = {isa = PBXBuildFile; fileRef = 277015351D596436008BADD7 /* cdecode.c */; };
 		2770153D1D59645A008BADD7 /* cencode.c in Sources */ = {isa = PBXBuildFile; fileRef = 277015371D596436008BADD7 /* cencode.c */; };
+		2776AA21208678AA004ACE85 /* DeepIterator.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2776AA1F208678AA004ACE85 /* DeepIterator.cc */; };
+		2776AA22208678AA004ACE85 /* DeepIterator.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2776AA20208678AA004ACE85 /* DeepIterator.hh */; };
 		2776AA742093C7A3004ACE85 /* DB.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2776AA722093C7A3004ACE85 /* DB.cc */; };
 		2776AA752093C7A3004ACE85 /* DB.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2776AA732093C7A3004ACE85 /* DB.hh */; };
 		2776AA782093C982004ACE85 /* sliceIO.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2776AA762093C982004ACE85 /* sliceIO.cc */; };
@@ -126,6 +128,7 @@
 		27E3DD531DB7DB1C00F2872D /* SharedKeysTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27E3DD521DB7DB1C00F2872D /* SharedKeysTests.cc */; };
 		27F25A7520A36B4100E181FA /* MappedFile.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27F25A7320A36B4100E181FA /* MappedFile.cc */; };
 		27F25A7620A36B4100E181FA /* MappedFile.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27F25A7420A36B4100E181FA /* MappedFile.hh */; };
+		27F25A8120A652F300E181FA /* LibC++Debug.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27F25A8020A652F300E181FA /* LibC++Debug.cc */; };
 		27F666442017E26700A8ED31 /* SupportTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27F666432017E26700A8ED31 /* SupportTests.cc */; };
 		27F666472017FE7C00A8ED31 /* TempArray.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27F666462017FE7C00A8ED31 /* TempArray.hh */; };
 		27FE87F31E53E43200C5CF3F /* JSONEncoder.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27FE87F11E53E43200C5CF3F /* JSONEncoder.cc */; };
@@ -154,7 +157,7 @@
 			remoteGlobalIDString = 270FA25B1BF53CAD005DCB13;
 			remoteInfo = Fleece;
 		};
-		27D721931F8E8FEB00AA4458 /* PBXContainerItemProxy */ = {
+		27F25A7A20A6523E00E181FA /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 270FA2541BF53CAD005DCB13 /* Project object */;
 			proxyType = 1;
@@ -212,7 +215,6 @@
 		272E5A451BF7FD8F00848580 /* FleeceTests.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FleeceTests.cc; sourceTree = "<group>"; };
 		272E5A4B1BF7FE5600848580 /* Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Test; sourceTree = BUILT_PRODUCTS_DIR; };
 		272E5A561BF7FEB200848580 /* libstdc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libstdc++.tbd"; path = "usr/lib/libstdc++.tbd"; sourceTree = SDKROOT; };
-		272E5A581BF7FED600848580 /* libcppunit-1.13.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libcppunit-1.13.0.dylib"; path = "/usr/local/Cellar/cppunit/1.13.2/lib/libcppunit-1.13.0.dylib"; sourceTree = "<absolute>"; };
 		272E5A5A1BF8004100848580 /* FleeceTests.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FleeceTests.hh; sourceTree = "<group>"; };
 		272E5A5B1BF800A100848580 /* EncoderTests.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EncoderTests.cc; sourceTree = "<group>"; };
 		272E5A5E1BF91DBE00848580 /* ObjCTests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ObjCTests.mm; sourceTree = "<group>"; };
@@ -264,6 +266,17 @@
 		2770153F1D5A3B2C008BADD7 /* encode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = encode.h; sourceTree = "<group>"; };
 		277015401D5A63B9008BADD7 /* CHANGELOG */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CHANGELOG; sourceTree = "<group>"; };
 		277015411D5A64B4008BADD7 /* AUTHORS */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = AUTHORS; sourceTree = "<group>"; };
+		2776AA1F208678AA004ACE85 /* DeepIterator.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DeepIterator.cc; sourceTree = "<group>"; };
+		2776AA20208678AA004ACE85 /* DeepIterator.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DeepIterator.hh; sourceTree = "<group>"; };
+		2776AA232086C94B004ACE85 /* 1person-deepIterOutput.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "1person-deepIterOutput.txt"; sourceTree = "<group>"; };
+		2776AA242086CC1F004ACE85 /* 1person-shallowIterOutput.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "1person-shallowIterOutput.txt"; sourceTree = "<group>"; };
+		2776AA2F2088FEC3004ACE85 /* function_ref.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = function_ref.hh; sourceTree = "<group>"; };
+		2776AA44208A6C5A004ACE85 /* Project.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Project.xcconfig; sourceTree = "<group>"; };
+		2776AA45208A6C5A004ACE85 /* Project_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Project_Debug.xcconfig; sourceTree = "<group>"; };
+		2776AA46208A6C5A004ACE85 /* Project_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Project_Release.xcconfig; sourceTree = "<group>"; };
+		2776AA47208A6C5A004ACE85 /* XcodeWarnings.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = XcodeWarnings.xcconfig; sourceTree = "<group>"; };
+		2776AA48208A6CED004ACE85 /* FleeceStaticLib.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FleeceStaticLib.xcconfig; sourceTree = "<group>"; };
+		2776AA49208A6E01004ACE85 /* FleeceTest.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FleeceTest.xcconfig; sourceTree = "<group>"; };
 		2776AA702090EF05004ACE85 /* HashTree+Internal.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "HashTree+Internal.hh"; sourceTree = "<group>"; };
 		2776AA722093C7A3004ACE85 /* DB.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DB.cc; sourceTree = "<group>"; };
 		2776AA732093C7A3004ACE85 /* DB.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DB.hh; sourceTree = "<group>"; };
@@ -315,6 +328,8 @@
 		27F25A7220A0CE1400E181FA /* MutableDict.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MutableDict.hh; sourceTree = "<group>"; };
 		27F25A7320A36B4100E181FA /* MappedFile.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MappedFile.cc; sourceTree = "<group>"; };
 		27F25A7420A36B4100E181FA /* MappedFile.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MappedFile.hh; sourceTree = "<group>"; };
+		27F25A7C20A6528100E181FA /* FleeceMutableObjC.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FleeceMutableObjC.xcconfig; sourceTree = "<group>"; };
+		27F25A8020A652F300E181FA /* LibC++Debug.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "LibC++Debug.cc"; sourceTree = "<group>"; };
 		27F666432017E26700A8ED31 /* SupportTests.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SupportTests.cc; sourceTree = "<group>"; };
 		27F666462017FE7C00A8ED31 /* TempArray.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = TempArray.hh; sourceTree = "<group>"; };
 		27FE87F11E53E43200C5CF3F /* JSONEncoder.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSONEncoder.cc; sourceTree = "<group>"; };
@@ -368,6 +383,7 @@
 				278163B21CE69C7300B94E32 /* C */,
 				279AC5321C096872002C80DB /* Tool */,
 				272E5A441BF7FD1700848580 /* Tests */,
+				2776AA43208A6C5A004ACE85 /* xcconfigs */,
 				27298E3E1C00F8A9000CFBA8 /* vendor */,
 				272E5A651BFA4B5300848580 /* Libraries */,
 				270FA25D1BF53CAD005DCB13 /* Products */,
@@ -399,6 +415,8 @@
 				27CA08411F6B0E9400FF8C71 /* Dict.cc */,
 				27CA08401F6B0E9400FF8C71 /* Dict.hh */,
 				279AC53B1C097941002C80DB /* Value+Dump.cc */,
+				2776AA1F208678AA004ACE85 /* DeepIterator.cc */,
+				2776AA20208678AA004ACE85 /* DeepIterator.hh */,
 				27A924CD1D9C32E800086206 /* Path.cc */,
 				27A924CE1D9C32E800086206 /* Path.hh */,
 				27298E7F1C04E665000CFBA8 /* Encoder.cc */,
@@ -423,7 +441,6 @@
 				2746DD3B1D931BE9000517BC /* Benchmark.hh */,
 				277F45B3208E9A9100A0D159 /* Bitmap.hh */,
 				270FA2731BF53CEA005DCB13 /* Endian.hh */,
-				273483F71DDA59B900B27A8C /* Fleece.pch */,
 				275CED501D3EF7BE001DE46C /* FleeceException.cc */,
 				275CED511D3EF7BE001DE46C /* FleeceException.hh */,
 				270FA2861BF53D32005DCB13 /* forestdb_endian.h */,
@@ -433,6 +450,7 @@
 				27FE87F21E53E43200C5CF3F /* JSONEncoder.hh */,
 				278163BA1CE7A72300B94E32 /* KeyTree.cc */,
 				278163BB1CE7A72300B94E32 /* KeyTree.hh */,
+				27F25A8020A652F300E181FA /* LibC++Debug.cc */,
 				27F25A7320A36B4100E181FA /* MappedFile.cc */,
 				27F25A7420A36B4100E181FA /* MappedFile.hh */,
 				2715BA1D1D820C690061D92E /* PlatformCompat.hh */,
@@ -451,6 +469,8 @@
 				270FA2771BF53CEA005DCB13 /* varint.hh */,
 				270FA2711BF53CEA005DCB13 /* Writer.cc */,
 				270FA2721BF53CEA005DCB13 /* Writer.hh */,
+				2776AA2F2088FEC3004ACE85 /* function_ref.hh */,
+				273483F71DDA59B900B27A8C /* Fleece.pch */,
 			);
 			name = Utilities;
 			sourceTree = "<group>";
@@ -493,6 +513,8 @@
 				278163B81CE6BB8C00B94E32 /* C_Test.c */,
 				27EC8D5B1CEBA72E00199FE6 /* mn_wordlist.h */,
 				2747D9841CFB9BC300C48211 /* 1person.json */,
+				2776AA232086C94B004ACE85 /* 1person-deepIterOutput.txt */,
+				2776AA242086CC1F004ACE85 /* 1person-shallowIterOutput.txt */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -500,7 +522,6 @@
 		272E5A651BFA4B5300848580 /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
-				272E5A581BF7FED600848580 /* libcppunit-1.13.0.dylib */,
 				272E5A561BF7FEB200848580 /* libstdc++.tbd */,
 			);
 			name = Libraries;
@@ -537,6 +558,21 @@
 				277015411D5A64B4008BADD7 /* AUTHORS */,
 			);
 			path = libb64;
+			sourceTree = "<group>";
+		};
+		2776AA43208A6C5A004ACE85 /* xcconfigs */ = {
+			isa = PBXGroup;
+			children = (
+				2776AA44208A6C5A004ACE85 /* Project.xcconfig */,
+				2776AA45208A6C5A004ACE85 /* Project_Debug.xcconfig */,
+				2776AA46208A6C5A004ACE85 /* Project_Release.xcconfig */,
+				2776AA48208A6CED004ACE85 /* FleeceStaticLib.xcconfig */,
+				2776AA49208A6E01004ACE85 /* FleeceTest.xcconfig */,
+				27F25A7C20A6528100E181FA /* FleeceMutableObjC.xcconfig */,
+				2776AA47208A6C5A004ACE85 /* XcodeWarnings.xcconfig */,
+			);
+			name = xcconfigs;
+			path = Xcode/xcconfigs;
 			sourceTree = "<group>";
 		};
 		2776AA712093C77F004ACE85 /* DB */ = {
@@ -659,6 +695,7 @@
 				2776AA792093C982004ACE85 /* sliceIO.hh in Headers */,
 				278163BD1CE7A72300B94E32 /* KeyTree.hh in Headers */,
 				27C4ACAD1CE5146500938365 /* Array.hh in Headers */,
+				2776AA22208678AA004ACE85 /* DeepIterator.hh in Headers */,
 				2734B89E1F8583FF00BE5249 /* MArray.hh in Headers */,
 				27CA08421F6B0E9400FF8C71 /* Dict.hh in Headers */,
 				2797BCAD1C0FBFDE00E5C991 /* StringTable.hh in Headers */,
@@ -757,7 +794,7 @@
 			);
 			dependencies = (
 				272E5A541BF7FE8200848580 /* PBXTargetDependency */,
-				27D721941F8E8FEB00AA4458 /* PBXTargetDependency */,
+				27F25A7B20A6523E00E181FA /* PBXTargetDependency */,
 			);
 			name = Test;
 			productName = Test;
@@ -878,6 +915,7 @@
 				2797BCAC1C0FBFDE00E5C991 /* StringTable.cc in Sources */,
 				274D8248209A5906008BB39F /* ValueSlot.cc in Sources */,
 				274D8252209CF9B3008BB39F /* HeapValue.cc in Sources */,
+				2776AA21208678AA004ACE85 /* DeepIterator.cc in Sources */,
 				27298E651C00F8A9000CFBA8 /* jsonsl.c in Sources */,
 				270FA27F1BF53CEA005DCB13 /* Writer.cc in Sources */,
 			);
@@ -894,6 +932,7 @@
 				279AC52B1C07776A002C80DB /* ValueTests.cc in Sources */,
 				272E5A5D1BF800A100848580 /* EncoderTests.cc in Sources */,
 				27E3DD531DB7DB1C00F2872D /* SharedKeysTests.cc in Sources */,
+				27F25A8120A652F300E181FA /* LibC++Debug.cc in Sources */,
 				276D15491E008E7A00543B1B /* JSON5Tests.cc in Sources */,
 				272E5A5F1BF91DBE00848580 /* ObjCTests.mm in Sources */,
 				2734B8A71F85842300BE5249 /* MTests.mm in Sources */,
@@ -941,174 +980,53 @@
 			target = 270FA25B1BF53CAD005DCB13 /* Fleece */;
 			targetProxy = 27D721911F8E8FE500AA4458 /* PBXContainerItemProxy */;
 		};
-		27D721941F8E8FEB00AA4458 /* PBXTargetDependency */ = {
+		27F25A7B20A6523E00E181FA /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 27D721511F8E8EEA00AA4458 /* FleeceMutableObjC */;
-			targetProxy = 27D721931F8E8FEB00AA4458 /* PBXContainerItemProxy */;
+			targetProxy = 27F25A7A20A6523E00E181FA /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		270FA2651BF53CAD005DCB13 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2776AA45208A6C5A004ACE85 /* Project_Debug.xcconfig */;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ADDRESS_SANITIZER_CONTAINER_OVERFLOW = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "-";
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_TESTABILITY = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_CPP_EXCEPTIONS = YES;
-				GCC_ENABLE_CPP_RTTI = YES;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = Fleece/Fleece.pch;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
-				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
-				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
-				GCC_WARN_SHADOW = YES;
-				GCC_WARN_SIGN_COMPARE = YES;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
-				LLVM_LTO = NO;
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
-				MTL_ENABLE_DEBUG_INFO = YES;
-				ONLY_ACTIVE_ARCH = NO;
-				RUN_CLANG_STATIC_ANALYZER = YES;
-				SDKROOT = macosx;
-				TVOS_DEPLOYMENT_TARGET = 9.0;
-				WATCHOS_DEPLOYMENT_TARGET = 2.0;
 			};
 			name = Debug;
 		};
 		270FA2661BF53CAD005DCB13 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2776AA46208A6C5A004ACE85 /* Project_Release.xcconfig */;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ADDRESS_SANITIZER_CONTAINER_OVERFLOW = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "-";
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_NS_ASSERTIONS = NO;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_ENABLE_CPP_EXCEPTIONS = YES;
-				GCC_ENABLE_CPP_RTTI = YES;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_OPTIMIZATION_LEVEL = fast;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = Fleece/Fleece.pch;
-				GCC_PREPROCESSOR_DEFINITIONS = "NDEBUG=1";
-				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
-				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
-				GCC_WARN_SHADOW = YES;
-				GCC_WARN_SIGN_COMPARE = YES;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
-				LLVM_LTO = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
-				MTL_ENABLE_DEBUG_INFO = NO;
-				RUN_CLANG_STATIC_ANALYZER = YES;
-				SDKROOT = macosx;
-				TVOS_DEPLOYMENT_TARGET = 9.0;
-				WATCHOS_DEPLOYMENT_TARGET = 2.0;
 			};
 			name = Release;
 		};
 		270FA2681BF53CAD005DCB13 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2776AA48208A6CED004ACE85 /* FleeceStaticLib.xcconfig */;
 			buildSettings = {
-				EXECUTABLE_PREFIX = lib;
-				HEADER_SEARCH_PATHS = /usr/local/include/;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SUPPORTED_PLATFORMS = "macosx iphoneos iphonesimulator appletvos appletvsimulator";
 			};
 			name = Debug;
 		};
 		270FA2691BF53CAD005DCB13 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2776AA48208A6CED004ACE85 /* FleeceStaticLib.xcconfig */;
 			buildSettings = {
-				EXECUTABLE_PREFIX = lib;
-				HEADER_SEARCH_PATHS = /usr/local/include/;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SUPPORTED_PLATFORMS = "macosx iphoneos iphonesimulator appletvos appletvsimulator";
 			};
 			name = Release;
 		};
 		272E5A501BF7FE5600848580 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2776AA49208A6E01004ACE85 /* FleeceTest.xcconfig */;
 			buildSettings = {
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				RUN_CLANG_STATIC_ANALYZER = NO;
 			};
 			name = Debug;
 		};
 		272E5A511BF7FE5600848580 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2776AA49208A6E01004ACE85 /* FleeceTest.xcconfig */;
 			buildSettings = {
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				RUN_CLANG_STATIC_ANALYZER = NO;
 			};
 			name = Release;
 		};
@@ -1128,6 +1046,7 @@
 		};
 		27D7218E1F8E8EEA00AA4458 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 27F25A7C20A6528100E181FA /* FleeceMutableObjC.xcconfig */;
 			buildSettings = {
 				EXECUTABLE_PREFIX = lib;
 				HEADER_SEARCH_PATHS = /usr/local/include/;
@@ -1138,6 +1057,7 @@
 		};
 		27D7218F1F8E8EEA00AA4458 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 27F25A7C20A6528100E181FA /* FleeceMutableObjC.xcconfig */;
 			buildSettings = {
 				EXECUTABLE_PREFIX = lib;
 				HEADER_SEARCH_PATHS = /usr/local/include/;

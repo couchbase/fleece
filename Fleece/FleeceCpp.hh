@@ -271,6 +271,7 @@ namespace fleeceapi {
         { }
 
         const alloc_slice& data() const                 {return *this;}
+        explicit operator bool () const                 {return Dict::operator bool();}
     };
 
 

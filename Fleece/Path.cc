@@ -26,7 +26,7 @@ using namespace std;
 namespace fleece {
 
     // Parses a path expression, calling the callback for each property or array index.
-    void Path::forEachComponent(slice in, function<bool(char, slice, int32_t)> callback) {
+    void Path::forEachComponent(slice in, function_ref<bool(char, slice, int32_t)> callback) {
         throwIf(in.size == 0, PathSyntaxError, "Empty path");
         uint8_t token = in.peekByte();
         if (token == '$') {
@@ -92,6 +92,43 @@ namespace fleece {
         }
     }
 
+
+    /*static*/ const Value* Path::evalJSONPointer(slice specifier, SharedKeys *sk,
+                                                  const Value *root)
+    {
+        auto current = root;
+        throwIf(specifier.readByte() != '/', PathSyntaxError, "JSONPointer does not start with '/'");
+        while (specifier.size > 0) {
+            if (!current)
+                return nullptr;
+
+            auto slash = specifier.findByteOrEnd('/');
+            slice param(specifier.buf, slash);
+
+            switch(current->type()) {
+                case kArray: {
+                    auto i = param.readDecimal();
+                    if (_usuallyFalse(param.size > 0 || i > INT32_MAX))
+                        FleeceException::_throw(PathSyntaxError, "Invalid array index in JSONPointer");
+                    current = ((const Array*)current)->get((uint32_t)i);
+                    break;
+                }
+                case kDict: {
+                    string key = param.asString();
+                    current = ((const Dict*)current)->get(key, sk);
+                    break;
+                }
+                default:
+                    current = nullptr;
+                    break;
+            }
+
+            if (slash == specifier.end())
+                break;
+            specifier.setStart(slash+1);
+        }
+        return current;
+    }
 
     /*static*/ const Value* Path::eval(slice specifier, SharedKeys *sk, const Value *root) {
         const Value *item = root;

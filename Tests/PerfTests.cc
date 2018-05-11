@@ -21,7 +21,6 @@
 #include "JSONConverter.hh"
 #include "MutableHashTree.hh"
 #include "varint.hh"
-#include <assert.h>
 #include <chrono>
 #include <thread>
 #ifndef _MSC_VER
@@ -51,7 +50,8 @@ TEST_CASE("GetUVarint performance", "[.Perf]") {
     Benchmark bench;
     uint8_t buf[100];
     fprintf(stderr, "buf = %p\n", &buf);
-    for (double d = 1.0; d <= UINT64_MAX; d *= 1.5) {
+    double d = 1.0;
+    while (d <= UINT64_MAX) {
         auto n = (uint64_t)d;
         size_t nBytes = PutUVarInt(buf, n);
         uint64_t result = 0;
@@ -66,6 +66,7 @@ TEST_CASE("GetUVarint performance", "[.Perf]") {
         fprintf(stderr, "n = %16llx; %2zd bytes; time = %.3f ns\n",
                 n, nBytes,
                 bench.elapsed() / kNRounds * 1.0e9);
+         d *= 1.5;
     }
     bench.printReport(1.0/kNRounds);
 }

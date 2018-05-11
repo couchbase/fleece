@@ -20,6 +20,7 @@
 #include "Fleece.hh"
 #include "JSONEncoder.hh"
 #include "Path.hh"
+#include "DeepIterator.hh"
 #include "FleeceException.hh"
 using namespace fleece;
 
@@ -36,7 +37,7 @@ typedef MutableDict* FLMutableDict;
 typedef FLEncoderImpl* FLEncoder;
 typedef SharedKeys* FLSharedKeys;
 typedef Path*       FLKeyPath;
-
+typedef DeepIterator* FLDeepIterator;
 
 #include "Fleece.h" /* the C header */
 

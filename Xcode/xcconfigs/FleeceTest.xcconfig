@@ -1,0 +1,11 @@
+//
+//  FleeceTest.xcconfig
+//  Fleece
+//
+//  Created by Jens Alfke on 4/20/18.
+//  Copyright © 2018 Couchbase. All rights reserved.
+//
+
+CLANG_WARN__EXIT_TIME_DESTRUCTORS = NO
+GCC_PREPROCESSOR_DEFINITIONS = $(inherited) DEBUG=1 _LIBCPP_DEBUG=0
+RUN_CLANG_STATIC_ANALYZER    = NO

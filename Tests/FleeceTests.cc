@@ -18,7 +18,6 @@
 
 #include "FleeceTests.hh"
 #include "slice.hh"
-#include <assert.h>
 #include <fcntl.h>
 
 #ifndef _MSC_VER
