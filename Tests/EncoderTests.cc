@@ -833,7 +833,11 @@ public:
         name = p2.eval(root);
         REQUIRE(name);
         REQUIRE(name->type() == kString);
+#if FL_HAVE_TEST_FILES
+        REQUIRE(name->asString() == slice("Marva Morse"));
+#else  // embedded test uses only 50 people, not 1000, so [-1] resolves differently
         REQUIRE(name->asString() == slice("Tara Wall"));
+#endif
     }
 
 #pragma mark - KEY TREE:
