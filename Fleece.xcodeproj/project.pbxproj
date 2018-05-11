@@ -105,6 +105,7 @@
 		27E3DD4C1DB6C32400F2872D /* CaseListReporter.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27E3DD4A1DB6C32400F2872D /* CaseListReporter.hh */; };
 		27E3DD4D1DB6C32400F2872D /* CatchHelper.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27E3DD4B1DB6C32400F2872D /* CatchHelper.hh */; };
 		27E3DD531DB7DB1C00F2872D /* SharedKeysTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27E3DD521DB7DB1C00F2872D /* SharedKeysTests.cc */; };
+		27F25A8420A6560A00E181FA /* LibC++Debug.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27F25A8320A6560900E181FA /* LibC++Debug.cc */; };
 		27F666442017E26700A8ED31 /* SupportTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27F666432017E26700A8ED31 /* SupportTests.cc */; };
 		27F666472017FE7C00A8ED31 /* TempArray.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27F666462017FE7C00A8ED31 /* TempArray.hh */; };
 		27FE87F31E53E43200C5CF3F /* JSONEncoder.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27FE87F11E53E43200C5CF3F /* JSONEncoder.cc */; };
@@ -278,6 +279,8 @@
 		27E3DD4B1DB6C32400F2872D /* CatchHelper.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = CatchHelper.hh; sourceTree = "<group>"; };
 		27E3DD521DB7DB1C00F2872D /* SharedKeysTests.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SharedKeysTests.cc; sourceTree = "<group>"; };
 		27EC8D5B1CEBA72E00199FE6 /* mn_wordlist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mn_wordlist.h; sourceTree = "<group>"; };
+		27F25A8220A6559800E181FA /* FleeceMutableObjC.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = FleeceMutableObjC.xcconfig; sourceTree = "<group>"; };
+		27F25A8320A6560900E181FA /* LibC++Debug.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "LibC++Debug.cc"; sourceTree = "<group>"; };
 		27F666432017E26700A8ED31 /* SupportTests.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SupportTests.cc; sourceTree = "<group>"; };
 		27F666462017FE7C00A8ED31 /* TempArray.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = TempArray.hh; sourceTree = "<group>"; };
 		27FE87F11E53E43200C5CF3F /* JSONEncoder.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSONEncoder.cc; sourceTree = "<group>"; };
@@ -407,6 +410,7 @@
 				276D15441E007D3000543B1B /* JSON5.cc */,
 				276D15451E007D3000543B1B /* JSON5.hh */,
 				2776AA2F2088FEC3004ACE85 /* function_ref.hh */,
+				27F25A8320A6560900E181FA /* LibC++Debug.cc */,
 				273483F71DDA59B900B27A8C /* Fleece.pch */,
 			);
 			name = Utilities;
@@ -501,6 +505,7 @@
 				2776AA44208A6C5A004ACE85 /* Project.xcconfig */,
 				2776AA45208A6C5A004ACE85 /* Project_Debug.xcconfig */,
 				2776AA46208A6C5A004ACE85 /* Project_Release.xcconfig */,
+				27F25A8220A6559800E181FA /* FleeceMutableObjC.xcconfig */,
 				2776AA48208A6CED004ACE85 /* FleeceStaticLib.xcconfig */,
 				2776AA49208A6E01004ACE85 /* FleeceTest.xcconfig */,
 				2776AA47208A6C5A004ACE85 /* XcodeWarnings.xcconfig */,
@@ -802,6 +807,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				272E5A5D1BF800A100848580 /* EncoderTests.cc in Sources */,
+				27F25A8420A6560A00E181FA /* LibC++Debug.cc in Sources */,
 				272E5A521BF7FE7100848580 /* FleeceTests.cc in Sources */,
 				27F666442017E26700A8ED31 /* SupportTests.cc in Sources */,
 				27298E781C01A461000CFBA8 /* PerfTests.cc in Sources */,
@@ -890,12 +896,14 @@
 		};
 		272E5A501BF7FE5600848580 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2776AA49208A6E01004ACE85 /* FleeceTest.xcconfig */;
 			buildSettings = {
 			};
 			name = Debug;
 		};
 		272E5A511BF7FE5600848580 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2776AA49208A6E01004ACE85 /* FleeceTest.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;
@@ -916,6 +924,7 @@
 		};
 		27D7218E1F8E8EEA00AA4458 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 27F25A8220A6559800E181FA /* FleeceMutableObjC.xcconfig */;
 			buildSettings = {
 				EXECUTABLE_PREFIX = lib;
 				HEADER_SEARCH_PATHS = /usr/local/include/;
@@ -926,6 +935,7 @@
 		};
 		27D7218F1F8E8EEA00AA4458 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 27F25A8220A6559800E181FA /* FleeceMutableObjC.xcconfig */;
 			buildSettings = {
 				EXECUTABLE_PREFIX = lib;
 				HEADER_SEARCH_PATHS = /usr/local/include/;
