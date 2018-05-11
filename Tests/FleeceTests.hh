@@ -29,13 +29,25 @@
 
 using namespace fleece;
 
+// True if we have access to test files like "1000people.json". Predefine as 0 for embedded OS.
+#ifndef FL_HAVE_TEST_FILES
+#define FL_HAVE_TEST_FILES 1
+#endif
+
 // Directory containing test files:
-#ifdef _MSC_VER
-#define kTestFilesDir "..\\Tests\\"
-#define kTempDir "C:\\tmp"
+#if FL_HAVE_TEST_FILES
+    #ifdef _MSC_VER
+        #define kTestFilesDir "..\\Tests\\"
+        #define kTempDir "C:\\tmp"
+    #else
+        #define kTestFilesDir "Tests/"
+        #define kTempDir "/tmp/"
+    #endif
+    static const char* kBigJSONTestFilePath = kTestFilesDir "1000people.json";
 #else
-#define kTestFilesDir "Tests/"
-#define kTempDir "/tmp/"
+    #define kTestFilesDir ""
+    #define kTempDir ""
+    static const char* kBigJSONTestFilePath = "50people.json";
 #endif
 
 namespace fleece_test {

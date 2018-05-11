@@ -22,6 +22,7 @@
 #include "Internal.hh"
 #include "PlatformCompat.hh"
 #include "varint.hh"
+#include <vector>
 
 
 namespace fleece {

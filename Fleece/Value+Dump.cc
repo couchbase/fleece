@@ -21,6 +21,7 @@
 #include <iomanip>
 #include <map>
 #include <sstream>
+#include <stdio.h>
 
 namespace fleece {
     using namespace internal;

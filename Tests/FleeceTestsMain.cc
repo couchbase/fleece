@@ -21,3 +21,33 @@
 
 #include "CaseListReporter.hh"
 #include "FleeceTests.hh"
+
+#if FL_EMBEDDED
+    #include <signal.h>
+
+    extern void DontDeadStripValueTests();
+    extern void DontDeadStripEncoderTests();
+    extern void DontDeadStripSharedKeysTests();
+    extern void DontDeadStripSupportTests();
+    extern void DontDeadStripJSON5Tests();
+
+    extern "C"
+    void app_main() {
+        // Workaround for ESP32 build chain dead-stripping the tests' .o files:
+        DontDeadStripValueTests();
+        DontDeadStripEncoderTests();
+        DontDeadStripSharedKeysTests();
+        DontDeadStripSupportTests();
+        DontDeadStripJSON5Tests();
+
+        const char* args[3] = {"FleeceTests", "-r", "list"};
+        main(3, (char**)args);
+    }
+
+    // ESP32 lib has no signal() function, so fix the link error:
+    extern "C"
+    _sig_func_ptr signal(int, _sig_func_ptr) {
+        //printf("*** signal() called\n");
+        return nullptr;
+    }
+#endif

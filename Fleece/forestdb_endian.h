@@ -70,6 +70,26 @@
         #error "not supported endian"
     #endif
 
+#else
+
+    // I _think_ this will work on any platform where we build with GCC...
+    #include <sys/param.h>
+    #if defined(BYTE_ORDER) && defined(LITTLE_ENDIAN)
+        #if BYTE_ORDER == LITTLE_ENDIAN
+            #ifndef _LITTLE_ENDIAN
+            #define _LITTLE_ENDIAN
+            #endif
+        #elif BYTE_ORDER == BIG_ENDIAN
+            #ifndef _BIG_ENDIAN
+            #define _BIG_ENDIAN
+            #endif
+        #else
+            #error "unknown BYTE_ORDER"
+        #endif
+    #else
+        #error "unknown endianness"
+    #endif
+
 #endif
 
 #ifndef bitswap64

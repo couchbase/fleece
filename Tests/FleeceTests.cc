@@ -20,15 +20,23 @@
 #include "slice.hh"
 #include <fcntl.h>
 
-#ifndef _MSC_VER
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#define O_BINARY 0
+#if !FL_HAVE_TEST_FILES
+#include "50peopleJSON.h"
+#include "1personFleece.h"
+#endif
+
+#ifdef _MSC_VER
+    #include <io.h>
+    #include <windows.h>
+    #define ssize_t int
+    #define MAP_FAILED nullptr
 #else
-#include <io.h>
-#include <windows.h>
-#define ssize_t int
+    #define O_BINARY 0
+    #if !FL_EMBEDDED
+        #include <sys/mman.h>
+        #include <sys/stat.h>
+        #include <unistd.h>
+    #endif
 #endif
 
 

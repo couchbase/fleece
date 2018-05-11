@@ -167,7 +167,7 @@ namespace fleece {
         constexpr slice(const void* b, size_t s)    :pure_slice(b, s) {}
         slice(const void* start NONNULL, const void* end NONNULL)
                                                     :slice(start, (uint8_t*)end-(uint8_t*)start){}
-
+        inline slice(const alloc_slice&);
         slice(const std::string& str)               :slice(&str[0], str.length()) {}
         explicit slice(const char* str)             :slice(str, str ? strlen(str) : 0) {}
 
@@ -199,7 +199,7 @@ namespace fleece {
 
         void free() noexcept;
 
-        slice(FLSlice s);
+        slice(const FLSlice&);
         operator FLSlice () const;
         explicit operator FLSliceResult () const;
 
@@ -231,7 +231,7 @@ namespace fleece {
             :alloc_slice(slice(start, end)) {}
         explicit alloc_slice(const std::string &str)
             :alloc_slice(slice(str)) {}
-        alloc_slice(FLSlice);
+        explicit alloc_slice(FLSlice);
         alloc_slice(FLSliceResult&&);
 
         ~alloc_slice()                                      {if (buf) release();}
@@ -250,8 +250,6 @@ namespace fleece {
         }
 
         alloc_slice& operator= (pure_slice s);
-
-        operator slice() const  {return {buf, size};}
 
         explicit operator bool() const                      {return buf != nullptr;}
 
@@ -319,6 +317,8 @@ namespace fleece {
     inline slice pure_slice::upTo(size_t off)                      {return slice(buf, off);}
     inline slice pure_slice::from(size_t off)                      {return slice(offset(off), end());}
     inline slice pure_slice::operator()(size_t i, size_t n) const  {return slice(offset(i), n);}
+
+    inline slice::slice(const alloc_slice &s)  :pure_slice(s) { }
 
 }
 
