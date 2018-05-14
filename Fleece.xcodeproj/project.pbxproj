@@ -450,9 +450,6 @@
 				27FE87F21E53E43200C5CF3F /* JSONEncoder.hh */,
 				278163BA1CE7A72300B94E32 /* KeyTree.cc */,
 				278163BB1CE7A72300B94E32 /* KeyTree.hh */,
-				27F25A8020A652F300E181FA /* LibC++Debug.cc */,
-				27F25A7320A36B4100E181FA /* MappedFile.cc */,
-				27F25A7420A36B4100E181FA /* MappedFile.hh */,
 				2715BA1D1D820C690061D92E /* PlatformCompat.hh */,
 				274D8254209D1764008BB39F /* RefCounted.cc */,
 				274D8255209D1764008BB39F /* RefCounted.hh */,
@@ -570,7 +567,6 @@
 				27F25A8220A6559800E181FA /* FleeceMutableObjC.xcconfig */,
 				2776AA48208A6CED004ACE85 /* FleeceStaticLib.xcconfig */,
 				2776AA49208A6E01004ACE85 /* FleeceTest.xcconfig */,
-				27F25A7C20A6528100E181FA /* FleeceMutableObjC.xcconfig */,
 				2776AA47208A6C5A004ACE85 /* XcodeWarnings.xcconfig */,
 			);
 			name = xcconfigs;
@@ -582,6 +578,8 @@
 			children = (
 				2776AA722093C7A3004ACE85 /* DB.cc */,
 				2776AA732093C7A3004ACE85 /* DB.hh */,
+				27F25A7320A36B4100E181FA /* MappedFile.cc */,
+				27F25A7420A36B4100E181FA /* MappedFile.hh */,
 			);
 			path = DB;
 			sourceTree = "<group>";

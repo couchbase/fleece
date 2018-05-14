@@ -28,8 +28,8 @@ namespace fleece { namespace internal {
 
 
     ValueSlot::ValueSlot(Null)
-    :_isInline(true)
-    ,_inlineData{(kSpecialTag << 4) | kSpecialValueNull}
+    :_inlineData{(kSpecialTag << 4) | kSpecialValueNull}
+    ,_isInline(true)
     {
         static_assert(sizeof(ValueSlot) == 2*sizeof(void*), "ValueSlot is wrong size");
         static_assert(offsetof(ValueSlot, _inlineData) + ValueSlot::kInlineCapacity

@@ -16,6 +16,8 @@
 // limitations under the License.
 //
 
+#if !FL_EMBEDDED
+
 #include "FleeceTests.hh"
 #include "Fleece.hh"
 #include "MutableDict.hh"
@@ -222,3 +224,5 @@ TEST_CASE_METHOD(DBTests, "Corrupt DB by overwriting trailer", "[DB]") {
     REQUIRE(eleven);
     CHECK(eleven->get("name"_sl)->asString() == "Dollie Reyes"_sl);
 }
+
+#endif // !FL_EMBEDDED

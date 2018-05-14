@@ -754,7 +754,7 @@ public:
         enc.end();
         alloc_slice fleeceData = enc.extractOutput();
         const Value *root = Value::fromData(fleeceData);
-        CHECK(root->asArray()->count() == 1000);
+        CHECK(root->asArray()->count() == kBigJSONTestCount);
 
         Path p1{"$[32].name"};
         const Value *name = p1.eval(root);

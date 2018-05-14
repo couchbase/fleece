@@ -44,10 +44,12 @@ using namespace fleece;
         #define kTempDir "/tmp/"
     #endif
     static const char* kBigJSONTestFileName = "1000people.json";
+    static const size_t kBigJSONTestCount = 1000;
 #else
     #define kTestFilesDir ""
     #define kTempDir ""
     static const char* kBigJSONTestFileName = "50people.json";
+    static const size_t kBigJSONTestCount = 50;
 #endif
 
 namespace fleece_test {

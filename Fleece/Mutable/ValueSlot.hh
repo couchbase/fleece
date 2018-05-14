@@ -16,7 +16,7 @@ namespace fleece { namespace internal {
     class ValueSlot {
     public:
         ValueSlot() { }
-        explicit ValueSlot(HeapCollection *md);
+        ValueSlot(HeapCollection *md);
         ValueSlot(Null);
         ~ValueSlot();
 

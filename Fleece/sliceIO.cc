@@ -1,5 +1,5 @@
 //
-//  mmap_slice.cc
+// sliceIO.cc
 //
 // Copyright © 2018 Couchbase. All rights reserved.
 //
@@ -17,6 +17,9 @@
 //
 
 #include "sliceIO.hh"
+
+#if !FL_EMBEDDED
+
 #include "FleeceException.hh"
 #include "PlatformCompat.hh"
 #include <fcntl.h>
@@ -126,3 +129,5 @@ namespace fleece {
 
 
 }
+
+#endif // !FL_EMBEDDED

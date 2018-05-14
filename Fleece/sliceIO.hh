@@ -29,6 +29,7 @@ namespace fleece {
     void writeToFile(slice s, const char *path);
     void appendToFile(slice s, const char *path);
 
+#if !FL_EMBEDDED
 
     /** Memory-maps an open file and exposes its contents as a slice.
         The address space will be as large as the size given, even if that's larger than the file;
@@ -52,5 +53,7 @@ namespace fleece {
         HANDLE _mapHandle {INVALID_HANDLE_VALUE};
 #endif
     };
+
+#endif
 
 }

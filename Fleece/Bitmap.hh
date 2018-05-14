@@ -17,8 +17,10 @@
 //
 
 #pragma once
-#include <algorithm>    // for __pop_count
-#include <vector>
+#ifdef __clang__
+#include <algorithm>    // for std::__pop_count
+#endif
+
 
 namespace fleece {
 
@@ -41,7 +43,14 @@ namespace fleece {
         void removeBit(unsigned bitNo)          {_bits &= ~mask(bitNo);}
 
     private:
-        static unsigned popcount(Rep bits)      {return std::__pop_count(bits);}
+        static unsigned popcount(Rep bits) {
+#ifdef __clang__
+            return std::__pop_count(bits);
+#else
+            return __builtin_popcountl(bits);
+#endif
+        }
+
         static Rep mask(unsigned bitNo)         {return Rep(1) << bitNo;}
 
         Rep _bits;

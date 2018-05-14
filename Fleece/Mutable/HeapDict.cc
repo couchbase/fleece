@@ -26,8 +26,8 @@ namespace fleece { namespace internal {
 
     HeapDict::HeapDict(const Dict *d)
     :HeapCollection(kDictTag)
-    ,_source(d)
     ,_count(d ? d->count() : 0)
+    ,_source(d)
     { }
 
 
@@ -83,7 +83,7 @@ namespace fleece { namespace internal {
         } else if (_source) {
             result = HeapCollection::mutableCopy(_source->get(key), ifType);
             if (result)
-                _map.emplace(key, result);
+                _map.emplace(key, result.get());
         }
         if (result)
             markChanged();

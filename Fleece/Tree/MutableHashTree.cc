@@ -118,8 +118,8 @@ namespace fleece {
         public:
             MutableLeaf(const Target &t, const Value *v)
             :MutableNode(0)
-            ,_hash(t.hash)
             ,_key(t.key)
+            ,_hash(t.hash)
             ,_value(v)
             { }
 

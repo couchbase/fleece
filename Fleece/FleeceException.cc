@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <memory>
 #include <string>
+#include <string.h>
 
 
 namespace fleece {

@@ -17,7 +17,8 @@
 //
 
 #include "RefCounted.hh"
-#include <exception>
+#include <stdexcept>
+#include <stdio.h>
 #include <stdlib.h>
 
 namespace fleece {
