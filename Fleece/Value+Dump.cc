@@ -17,6 +17,7 @@
 //
 
 #include "Fleece.hh"
+#include "Pointer.hh"
 #include <ostream>
 #include <iomanip>
 #include <map>
@@ -52,8 +53,9 @@ namespace fleece {
                 break;
             }
             default: { // Pointer:
-                deref(this, wide)->writeDumpBrief(out, base, true);
-                auto offset = - (int64_t)(wide ? pointerValue<true>() : pointerValue<false>());
+                auto ptr = _asPointer();
+                ptr->deref(wide)->writeDumpBrief(out, base, true);
+                auto offset = - (int64_t)(wide ? ptr->offset<true>() : ptr->offset<false>());
                 char buf[32];
                 if (base)
                     sprintf(buf, " (@%04llx)", (long long)(((uint8_t*)_byte + offset) - (uint8_t*)base)); // absolute

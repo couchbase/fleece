@@ -17,6 +17,7 @@
 //
 
 #include "FleeceTests.hh"
+#include "Pointer.hh"
 #include "JSONConverter.hh"
 #include "KeyTree.hh"
 #include "Path.hh"
@@ -53,8 +54,8 @@ public:
     }
 
     template <bool WIDE>
-    uint32_t pointerValue(const Value *v) const noexcept {
-        return v->pointerValue<WIDE>();
+    uint32_t pointerOffset(const Value *v) const noexcept {
+        return v->_asPointer()->offset<WIDE>();
     }
 
     void checkOutput(const char *expected) {
@@ -218,7 +219,7 @@ public:
     TEST_CASE_METHOD(EncoderTests, "Pointer", "[Encoder]") {
         const uint8_t data[2] = {0x80, 0x02};
         auto v = (const Value*)data;
-        REQUIRE(pointerValue<false>(v) == 4u);
+        REQUIRE(pointerOffset<false>(v) == 4u);
     }
 
     TEST_CASE_METHOD(EncoderTests, "Special", "[Encoder]") {

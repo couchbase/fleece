@@ -184,8 +184,6 @@ namespace fleece {
 
         static const Value* findRoot(slice) noexcept;
         bool validate(const void* dataStart, const void *dataEnd) const noexcept;
-        const Value* carefulDeref(bool wide,
-                                  const void *dataStart, const void *dataEnd) const noexcept;
 
         internal::tags tag() const noexcept   {return (internal::tags)(_byte[0] >> 4);}
         unsigned tinyValue() const noexcept   {return _byte[0] & 0x0F;}
@@ -204,47 +202,13 @@ namespace fleece {
 
         // pointers:
 
-        Value(size_t offset, int width) {
-            offset >>= 1;
-            if (width < internal::kWide) {
-                throwIf(offset >= 0x8000, InternalError, "offset too large");
-                int16_t n = (uint16_t)_enc16(offset | 0x8000); // big-endian, high bit set
-                memcpy(_byte, &n, sizeof(n));
-            } else {
-                if (offset >= 0x80000000)
-                    FleeceException::_throw(OutOfRange, "data too large");
-                uint32_t n = (uint32_t)_enc32(offset | 0x80000000);
-                memcpy(_byte, &n, sizeof(n));
-            }
-        }
+        bool isPointer() const noexcept             {return (_byte[0] & 0x80) != 0;}
+        const internal::Pointer* _asPointer() const {return (const internal::Pointer*)this;}
 
-        void shrinkPointer() noexcept {  // shrinks a wide pointer down to a narrow one
-            _byte[0] = _byte[2] | 0x80;
-            _byte[1] = _byte[3];
-        }
-
-        bool isPointer() const noexcept       {return (_byte[0] >= (internal::kPointerTagFirst << 4));}
+        const Value* deref(bool wide) const;
 
         template <bool WIDE>
-        uint32_t pointerValue() const noexcept {
-            if (WIDE)
-                return (_dec32(*(uint32_t*)_byte) & ~0x80000000) << 1;
-            else
-                return (_dec16(*(uint16_t*)_byte) & ~0x8000) << 1;
-        }
-
-        template <bool WIDE>
-        static const Value* derefPointer(const Value *v NONNULL) {
-            assert(v->pointerValue<WIDE>() > 0);
-            return offsetby(v, -(ptrdiff_t)v->pointerValue<WIDE>());
-        }
-        static const Value* derefPointer(const Value *v NONNULL, bool wide) {
-            return wide ? derefPointer<true>(v) : derefPointer<false>(v);
-        }
-        static const Value* deref(const Value *v NONNULL, bool wide);
-
-        template <bool WIDE>
-        static const Value* deref(const Value *v NONNULL);
+        const Value* deref() const;
 
         const Value* next(bool wide) const noexcept
                                 {return offsetby(this, wide ? internal::kWide : internal::kNarrow);}
@@ -262,6 +226,7 @@ namespace fleece {
 
         uint8_t _byte[internal::kWide];
 
+        friend class internal::Pointer;
         friend class internal::ValueSlot;
         friend class internal::HeapCollection;
         friend class internal::HeapValue;

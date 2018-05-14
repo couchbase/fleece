@@ -18,6 +18,7 @@
 
 #include "Encoder.hh"
 #include "Fleece.hh"
+#include "Pointer.hh"
 #include "SharedKeys.hh"
 #include "MutableDict.hh"
 #include "Endian.hh"
@@ -69,7 +70,7 @@ namespace fleece {
                 _out.write(&root, kWide);
                 // Top level Value is 4 bytes, so append a 2-byte pointer to it, because the trailer
                 // needs to be a 2-byte Value:
-                Value ptr(4, kNarrow);
+                Pointer ptr(4, kNarrow);
                 _out.write(&ptr, kNarrow);
             } else {
                 _out.write(&root, kNarrow);
@@ -87,7 +88,7 @@ namespace fleece {
         size_t itemPos;
         const Value *item = &(*_items)[0];
         if (item->isPointer()) {
-            itemPos = item->pointerValue<true>() - _base.size;
+            itemPos = item->_asPointer()->offset<true>() - _base.size;
         } else {
             itemPos = nextWritePos();
             _out.write(item, (_items->wide ? kWide : kNarrow));
@@ -419,37 +420,36 @@ namespace fleece {
 
     // Parameter p is an offset into the current stream, not taking into account the base.
     void Encoder::writePointer(ssize_t p)   {
-        addItem(Value(_base.size + p, kWide));
+        addItem(Pointer(_base.size + p, kWide));
     }
 
     // Check whether any pointers in _items can't fit in a narrow Value:
-    void Encoder::checkPointerWidths(valueArray *items, size_t base) {
+    void Encoder::checkPointerWidths(valueArray *items, size_t pointerOrigin) {
         if (!items->wide) {
             for (auto v = items->begin(); v != items->end(); ++v) {
                 if (v->isPointer()) {
-                    ssize_t pos = v->pointerValue<true>() - _base.size;
-                    if (base - pos >= 0x10000) {
+                    ssize_t pos = v->_asPointer()->offset<true>() - _base.size;
+                    if (pointerOrigin - pos > Pointer::kMaxNarrowOffset) {
                         items->wide = true;
                         break;
                     }
                 }
-                base += kNarrow;
+                pointerOrigin += kNarrow;
             }
         }
     }
 
     // Convert absolute offsets to relative in _items:
     void Encoder::fixPointers(valueArray *items) {
-        size_t base = nextWritePos();
+        size_t pointerOrigin = nextWritePos();
         int width = items->wide ? kWide : kNarrow;
         for (auto v = items->begin(); v != items->end(); ++v) {
             if (v->isPointer()) {
-                ssize_t pos = v->pointerValue<true>() - _base.size;
-                assert(pos < (ssize_t)base);
-                pos = base - pos;
-                *v = Value(pos, width);
+                ssize_t pos = v->_asPointer()->offset<true>() - _base.size;
+                assert(pos < (ssize_t)pointerOrigin);
+                *v = Pointer(pointerOrigin - pos, width);
             }
-            base += width;
+            pointerOrigin += width;
         }
     }
 

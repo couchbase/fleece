@@ -129,6 +129,8 @@
 		27F25A7520A36B4100E181FA /* MappedFile.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27F25A7320A36B4100E181FA /* MappedFile.cc */; };
 		27F25A7620A36B4100E181FA /* MappedFile.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27F25A7420A36B4100E181FA /* MappedFile.hh */; };
 		27F25A8420A6560A00E181FA /* LibC++Debug.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27F25A8320A6560900E181FA /* LibC++Debug.cc */; };
+		27F25A8E20AA053D00E181FA /* Pointer.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27F25A8C20AA053D00E181FA /* Pointer.cc */; };
+		27F25A8F20AA053D00E181FA /* Pointer.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27F25A8D20AA053D00E181FA /* Pointer.hh */; };
 		27F666442017E26700A8ED31 /* SupportTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27F666432017E26700A8ED31 /* SupportTests.cc */; };
 		27F666472017FE7C00A8ED31 /* TempArray.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27F666462017FE7C00A8ED31 /* TempArray.hh */; };
 		27FE87F31E53E43200C5CF3F /* JSONEncoder.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27FE87F11E53E43200C5CF3F /* JSONEncoder.cc */; };
@@ -330,6 +332,8 @@
 		27F25A7420A36B4100E181FA /* MappedFile.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MappedFile.hh; sourceTree = "<group>"; };
 		27F25A8220A6559800E181FA /* FleeceMutableObjC.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = FleeceMutableObjC.xcconfig; sourceTree = "<group>"; };
 		27F25A8320A6560900E181FA /* LibC++Debug.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "LibC++Debug.cc"; sourceTree = "<group>"; };
+		27F25A8C20AA053D00E181FA /* Pointer.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Pointer.cc; sourceTree = "<group>"; };
+		27F25A8D20AA053D00E181FA /* Pointer.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Pointer.hh; sourceTree = "<group>"; };
 		27F666432017E26700A8ED31 /* SupportTests.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SupportTests.cc; sourceTree = "<group>"; };
 		27F666462017FE7C00A8ED31 /* TempArray.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = TempArray.hh; sourceTree = "<group>"; };
 		27FE87F11E53E43200C5CF3F /* JSONEncoder.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSONEncoder.cc; sourceTree = "<group>"; };
@@ -410,6 +414,8 @@
 				272E5A671BFA7C3100848580 /* Internal.hh */,
 				270FA26A1BF53CEA005DCB13 /* Value.cc */,
 				270FA26B1BF53CEA005DCB13 /* Value.hh */,
+				27F25A8C20AA053D00E181FA /* Pointer.cc */,
+				27F25A8D20AA053D00E181FA /* Pointer.hh */,
 				27C4ACAA1CE5146500938365 /* Array.cc */,
 				27C4ACAB1CE5146500938365 /* Array.hh */,
 				27CA08411F6B0E9400FF8C71 /* Dict.cc */,
@@ -711,6 +717,7 @@
 				274D824D209A7577008BB39F /* HeapArray.hh in Headers */,
 				270FA2871BF53D32005DCB13 /* forestdb_endian.h in Headers */,
 				2734B8A21F8583FF00BE5249 /* MDict+ObjC.h in Headers */,
+				27F25A8F20AA053D00E181FA /* Pointer.hh in Headers */,
 				274D8249209A5906008BB39F /* ValueSlot.hh in Headers */,
 				2734B8A41F8583FF00BE5249 /* MCollection.hh in Headers */,
 				27F25A7620A36B4100E181FA /* MappedFile.hh in Headers */,
@@ -916,6 +923,7 @@
 				274D8248209A5906008BB39F /* ValueSlot.cc in Sources */,
 				274D8252209CF9B3008BB39F /* HeapValue.cc in Sources */,
 				2776AA21208678AA004ACE85 /* DeepIterator.cc in Sources */,
+				27F25A8E20AA053D00E181FA /* Pointer.cc in Sources */,
 				27298E651C00F8A9000CFBA8 /* jsonsl.c in Sources */,
 				270FA27F1BF53CEA005DCB13 /* Writer.cc in Sources */,
 			);

@@ -22,6 +22,7 @@
 
 #include "FleeceTests.hh"
 #include "Value.hh"
+#include "Pointer.hh"
 #include "varint.hh"
 #include "DeepIterator.hh"
 #include <sstream>
@@ -39,17 +40,17 @@ namespace fleece {
     public:
 
         static void testPointers() {
-            Value v(4, kNarrow);
-            REQUIRE(v.pointerValue<false>() == 4u);
-            Value w(4, kWide);
-            REQUIRE(w.pointerValue<true>() == 4u);
+            Pointer v(4, kNarrow);
+            REQUIRE(v.offset<false>() == 4u);
+            Pointer w(4, kWide);
+            REQUIRE(w.offset<true>() == 4u);
         }
 
         static void testDeref() {
             uint8_t data[6] = {0x01, 0x02, 0x03, 0x04, 0x80, 0x02};
-            auto start = (const Value*)&data[4];
-            REQUIRE(start->pointerValue<false>() == 4u);
-            auto dst = Value::derefPointer<false>(start);
+            auto start = (const Pointer*)&data[4];
+            REQUIRE(start->offset<false>() == 4u);
+            auto dst = start->deref<false>();
             REQUIRE((ptrdiff_t)dst - (ptrdiff_t)&data[0] == 0L);
         }
 

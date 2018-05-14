@@ -271,7 +271,7 @@ namespace fleece {
         }
 
         static inline const Value* deref(const Value *v) {
-            return Value::deref<WIDE>(v);
+            return v->deref<WIDE>();
         }
 
         static constexpr size_t kWidth = (WIDE ? 4 : 2);

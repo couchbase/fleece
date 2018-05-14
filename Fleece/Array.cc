@@ -68,16 +68,16 @@ namespace fleece {
     const Value* Array::impl::deref(const Value *v) const noexcept {
         if (_usuallyFalse(isMutableArray()))
             return ((ValueSlot*)v)->asValue();
-        return Value::deref(v, _width == kWide);
+        return v->deref(_width == kWide);
     }
 
     const Value* Array::impl::operator[] (unsigned index) const noexcept {
         if (_usuallyFalse(index >= _count))
             return nullptr;
         if (_width == kNarrow)
-            return Value::deref<false>(offsetby(_first, kNarrow * index));
+            return offsetby(_first, kNarrow * index)->deref<false>();
         else if (_usuallyTrue(_width == kWide))
-            return Value::deref<true> (offsetby(_first, kWide   * index));
+            return offsetby(_first, kWide   * index)->deref<true>();
         else
             return ((ValueSlot*)_first + index)->asValue();
     }

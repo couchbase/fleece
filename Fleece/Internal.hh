@@ -30,14 +30,15 @@
  0000iiii iiiiiiii       small integer (12-bit, signed, range ±2048)
  0001uccc iiiiiiii...    long integer (u = unsigned?; ccc = byte count - 1) LE integer follows
  0010s--- --------...    floating point (s = 0:float, 1:double). LE float data follows.
- 0011ss-- --------       special (s = 0:null, 1:false, 2:true)
+ 0011ss-- --------       special (s = 0:null, 1:false, 2:true, 3:undefined)
  0100cccc ssssssss...    string (cccc is byte count, or if it’s 15 then count follows as varint)
  0101cccc dddddddd...    binary data (same as string)
  0110wccc cccccccc...    array (c = 11-bit item count, if 2047 then count follows as varint;
                                 w = wide, if 1 then following values are 4 bytes wide, not 2)
- 0111wccc cccccccc...    dictionary (same as array)
- 1ooooooo oooooooo       pointer (o = BE unsigned offset in units of 2 bytes back; up to -64kbytes)
-                                NOTE: In a wide collection, offset field is 31 bits wide
+ 0111wccc cccccccc...    dictionary (same as array, but count refers to key/value pairs)
+ 1xoooooo oooooooo       pointer (x = external?, denotes ptr outside data to prev written data;
+                                o = BE unsigned offset in units of 2 bytes back, up to -32KB)
+                                NOTE: In a wide collection, offset field is 30 bits wide
 
  Bits marked "-" are reserved and should be set to zero.
 */
@@ -81,6 +82,7 @@ namespace fleece {
         // Minimum array count that has to be stored outside the header
         static const uint32_t kLongArrayCount = 0x07FF;
 
+        class Pointer;
         class HeapValue;
         class ValueSlot;
         class HeapCollection;
