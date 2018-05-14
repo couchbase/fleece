@@ -31,7 +31,6 @@
     #define ssize_t int
     #define MAP_FAILED nullptr
 #else
-    #define O_BINARY 0
     #if !FL_EMBEDDED
         #include <sys/mman.h>
         #include <sys/stat.h>
@@ -78,6 +77,7 @@ namespace fleece_test {
         return hex;
     }
 
+
     std::ostream& dumpSlice(std::ostream& o, slice s) {
         o << "slice[";
         if (s.buf == nullptr)
@@ -89,5 +89,25 @@ namespace fleece_test {
         }
         return o << "\"" << std::string((char*)s.buf, s.size) << "\"]";
     }
+
+
+    alloc_slice readTestFile(const char *path) {
+#if FL_HAVE_TEST_FILES
+        std::string fullPath = std::string(kTestFilesDir) + path;
+        return readFile(fullPath.c_str());
+#else
+        if (0 == strcmp(path, "50people.json")) {
+            return alloc_slice(k50PeopleJSON);
+        } else if (0 == strcmp(path, "1person.fleece")) {
+            return alloc_slice(k1PersonFleece, sizeof(k1PersonFleece));
+        } else {
+            FAIL("Unsupported test fixture \"" << path << "\"");
+            return {};
+        }
+        //TODO: On ESP this can be done more elegantly by embedding the files in the binary:
+        // https://esp-idf.readthedocs.io/en/latest/api-guides/build-system.html#embedding-binary-data
+#endif
+    }
+
 
 }

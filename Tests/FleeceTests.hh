@@ -43,17 +43,19 @@ using namespace fleece;
         #define kTestFilesDir "Tests/"
         #define kTempDir "/tmp/"
     #endif
-    static const char* kBigJSONTestFilePath = kTestFilesDir "1000people.json";
+    static const char* kBigJSONTestFileName = "1000people.json";
 #else
     #define kTestFilesDir ""
     #define kTempDir ""
-    static const char* kBigJSONTestFilePath = "50people.json";
+    static const char* kBigJSONTestFileName = "50people.json";
 #endif
 
 namespace fleece_test {
     std::string sliceToHex(slice);
     std::string sliceToHexDump(slice, size_t width = 16);
     std::ostream& dumpSlice(std::ostream&, slice);
+
+    alloc_slice readTestFile(const char *path);
 
     // Converts JSON5 to JSON; helps make JSON test input more readable!
     static inline std::string json5(const std::string &s)      {return fleece::ConvertJSON5(s);}

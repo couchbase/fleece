@@ -610,7 +610,7 @@ public:
     }
 
     TEST_CASE_METHOD(EncoderTests, "ConvertPeople", "[Encoder]") {
-        alloc_slice input = readFile(kBigJSONTestFilePath);
+        alloc_slice input = readTestFile(kBigJSONTestFileName);
 
         enc.uniqueStrings(true);
 
@@ -667,7 +667,7 @@ public:
 
 #if FL_HAVE_TEST_FILES
     TEST_CASE_METHOD(EncoderTests, "Encode To File", "[Encoder]") {
-        auto doc = readFile(kTestFilesDir "1000people.fleece");
+        auto doc = readTestFile("1000people.fleece");
         auto root = Value::fromTrustedData(doc)->asArray();
 
         {
@@ -688,7 +688,7 @@ public:
 
 #if FL_HAVE_TEST_FILES
     TEST_CASE_METHOD(EncoderTests, "FindPersonByIndexSorted", "[Encoder]") {
-        auto doc = readFile(kTestFilesDir "1000people.fleece");
+        auto doc = readTestFile("1000people.fleece");
         auto root = Value::fromTrustedData(doc)->asArray();
         auto person = root->get(123)->asDict();
         const Value *name = person->get(slice("name"));
@@ -736,7 +736,7 @@ public:
             // Now try a wide Dict:
             Dict::key nameKey(slice("name"), nullptr, true);
 
-            auto doc = readFile(kTestFilesDir "1000people.fleece");
+            auto doc = readTestFile("1000people.fleece");
             auto root = Value::fromTrustedData(doc)->asArray();
             auto person = root->get(123)->asDict();
             lookupNameWithKey(person, nameKey, "Concepcion Burns");
@@ -748,7 +748,7 @@ public:
     }
 
     TEST_CASE_METHOD(EncoderTests, "Paths", "[Encoder]") {
-        alloc_slice input = readFile(kBigJSONTestFilePath);
+        alloc_slice input = readTestFile(kBigJSONTestFileName);
         JSONConverter jr(enc);
         jr.encodeJSON(input);
         enc.end();
@@ -767,9 +767,9 @@ public:
         REQUIRE(name);
         REQUIRE(name->type() == kString);
 #if FL_HAVE_TEST_FILES  // embedded test data has fewer people, so [-1] resolves differently
-        REQUIRE(name->asString() == slice("Tara Wall"));
-#else
         REQUIRE(name->asString() == slice("Marva Morse"));
+#else
+        REQUIRE(name->asString() == slice("Tara Wall"));
 #endif
     }
 

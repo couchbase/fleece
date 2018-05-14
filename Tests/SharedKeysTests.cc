@@ -437,7 +437,7 @@ TEST_CASE("big JSON encoding") {
     SharedKeys sk;
     Encoder enc;
     enc.setSharedKeys(&sk);
-    alloc_slice input = readFile(kBigJSONTestFilePath);
+    alloc_slice input = readTestFile(kBigJSONTestFileName);
     JSONConverter jr(enc);
     jr.encodeJSON(input);
     enc.end();
