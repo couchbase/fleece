@@ -81,22 +81,26 @@ public:
 
     void checkRead(int64_t i) {
         auto v = Value::fromData(result);
-        REQUIRE(v != nullptr);
-        REQUIRE(v->type() == kNumber);
-        REQUIRE(v->isInteger());
-        REQUIRE(!v->isUnsigned());
-        REQUIRE(v->asInt() == i);
-        REQUIRE(v->asDouble() == (double)i);
+        if (!v || v->type() != kNumber || !v->isInteger() || v->isUnsigned() || v->asInt() != i || v->asDouble() != (double)i) {
+            REQUIRE(v != nullptr);
+            REQUIRE(v->type() == kNumber);
+            REQUIRE(v->isInteger());
+            REQUIRE(!v->isUnsigned());
+            REQUIRE(v->asInt() == i);
+            REQUIRE(v->asDouble() == (double)i);
+        }
     }
 
     void checkReadU(uint64_t i) {
         auto v = Value::fromData(result);
-        REQUIRE(v->type() == kNumber);
-        REQUIRE(v->isInteger());
+        if (!v || v->type() != kNumber || !v->isInteger() || v->asUnsigned() != i || v->asDouble() != (double)i) {
+            REQUIRE(v->type() == kNumber);
+            REQUIRE(v->isInteger());
+            REQUIRE(v->asUnsigned() == i);
+            REQUIRE(v->asDouble() == (double)i);
+        }
         if (i >= (UINT64_MAX >> 1))
             REQUIRE(v->isUnsigned());
-        REQUIRE(v->asUnsigned() == i);
-        REQUIRE(v->asDouble() == (double)i);
     }
 
     void checkReadFloat(float f) {
@@ -156,9 +160,11 @@ public:
         auto a = checkArray(length);
         for (unsigned i = 0; i < length; ++i) {
             auto v = a->get(i);
-            REQUIRE(v);
-            REQUIRE(v->type() == kNumber);
-            REQUIRE(v->asUnsigned() == (uint64_t)i);
+            if (!v || v->type() != kNumber || v->asUnsigned() != (uint64_t)i) {
+                REQUIRE(v);
+                REQUIRE(v->type() == kNumber);
+                REQUIRE(v->asUnsigned() == (uint64_t)i);
+            }
         }
     }
 
