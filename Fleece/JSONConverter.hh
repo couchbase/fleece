@@ -65,7 +65,7 @@ namespace fleece {
         void push(struct jsonsl_state_st *state NONNULL);
         void pop(struct jsonsl_state_st *state NONNULL);
         int gotError(int err, size_t pos) noexcept;
-        int gotError(int err, const char *errat NONNULL) noexcept;
+        int gotError(int err, const char *errat) noexcept;
         void gotException(ErrorCode code, const char *what NONNULL, size_t pos) noexcept;
 
     private:

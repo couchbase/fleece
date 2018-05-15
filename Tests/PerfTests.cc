@@ -47,7 +47,6 @@
 
 using namespace fleece;
 
-static const bool kSortKeys = true;
 
 TEST_CASE("GetUVarint performance", "[.Perf]") {
     static constexpr int kNRounds = 10000000;
@@ -90,7 +89,6 @@ TEST_CASE("Perf Convert1000People", "[.Perf]") {
         {
             Encoder e(input.size);
             e.uniqueStrings(true);
-            e.sortKeys(kSortKeys);
             JSONConverter jr(e);
 
             jr.encodeJSON(input);
@@ -175,7 +173,7 @@ static void testFindPersonByIndex(int sort) {
     bench.printReport(1.0/kIterations);
 }
 
-TEST_CASE("Perf FindPersonByIndexSorted", "[.Perf]")      {if (kSortKeys) testFindPersonByIndex(1);}
+TEST_CASE("Perf FindPersonByIndexSorted", "[.Perf]")      {testFindPersonByIndex(1);}
 TEST_CASE("Perf FindPersonByIndexKeyed", "[.Perf]")       {testFindPersonByIndex(2);}
 
 TEST_CASE("Perf LoadPeople", "[.Perf]") {

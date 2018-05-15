@@ -41,15 +41,20 @@ namespace fleece {
             each unique string only once. This saves space but makes the encoder slightly slower. */
         void uniqueStrings(bool b)      {_uniqueStrings = b;}
 
-        /** Sets the sortKeys property. If true (the default), dictionary keys will be written in
-            sorted order. This makes dict::get faster but makes the encoder slightly slower. */
-        void sortKeys(bool b)           {_sortKeys = b;}
-
-        /** Sets the base Fleece data that the encoded data will be appended to.
+        /** Sets the base Fleece data that the encoded data will be (logically) appended to.
             Any writeValue() calls whose Value points into the base data will be written as
-            pointers. */
-        void setBase(slice base)        {_base = base;}
+            pointers.
+            @param base  The base Fleece document that's being appended to.
+            @param markExternPointers  If true, pointers into the base document (i.e. out of the
+                        encoded data) will be marked with the `extern` flag. This allows the use
+                        of an ExternResolver, so the new document can be used without having to
+                        append it onto the base. */
+        void setBase(slice base, bool markExternPointers =false)
+                                        {_base = base; _markExternPtrs = markExternPointers;}
 
+        /** Scans the base document for strings and adds them to the encoder's string table.
+            If equivalent strings are written to the encoder they will then be encoded as pointers
+            to the existing strings. */
         void reuseBaseStrings();
 
         bool isEmpty() const            {return _out.length() == 0 && _stackDepth == 1 && _items->empty();}
@@ -211,10 +216,10 @@ namespace fleece {
         bool _uniqueStrings {true};  // Should strings be uniqued before writing?
         SharedKeys *_sharedKeys {nullptr};  // Client-provided key-to-int mapping
         slice _base;                 // Base Fleece data being appended to (if any)
-        bool _sortKeys      {true};  // Should dictionary keys be sorted?
         bool _writingKey    {false}; // True if Value being written is a key
         bool _blockedOnKey  {false}; // True if writes should be refused
         bool _trailer       {true};  // Write standard trailer at end?
+        bool _markExternPtrs{false}; // Mark pointers outside encoded data as 'extern'
 
         friend class EncoderTests;
 #ifndef NDEBUG

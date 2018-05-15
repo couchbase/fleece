@@ -404,7 +404,7 @@ FLEncoder FLEncoder_New(void) {
 FLEncoder FLEncoder_NewWithOptions(FLEncoderFormat format,
                                    size_t reserveSize, bool uniqueStrings, bool sortKeys)
 {
-    return new FLEncoderImpl(format, reserveSize, uniqueStrings, sortKeys);
+    return new FLEncoderImpl(format, reserveSize, uniqueStrings);
 }
 
 void FLEncoder_Reset(FLEncoder e) {

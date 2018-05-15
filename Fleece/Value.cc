@@ -265,7 +265,8 @@ namespace fleece {
         auto root = (const Value*)offsetby(s.buf, s.size - internal::kNarrow);
         if (_usuallyTrue(root->isPointer())) {
             // If the root is a pointer, sanity-check the destination, then deref:
-            return root->_asPointer()->carefulDeref(false, s.buf, root);
+            const void *dataStart = s.buf, *dataEnd = root;
+            return root->_asPointer()->carefulDeref(false, dataStart, dataEnd);
         } else {
             // If the root is a direct value there better not be any data before it:
             if (_usuallyFalse(s.size != kNarrow))
@@ -293,10 +294,7 @@ namespace fleece {
                 while (itemCount-- > 0) {
                     auto nextItem = offsetby(item, array._width);
                     if (item->isPointer()) {
-                        item = item->_asPointer()->carefulDeref(array._width > kNarrow, dataStart, this);
-                        if (_usuallyFalse(item == nullptr))
-                            return false;
-                        if (_usuallyFalse(!item->validate(dataStart, this)))
+                        if (_usuallyFalse(!item->_asPointer()->validate(array._width == kWide, dataStart)))
                             return false;
                     } else {
                         if (_usuallyFalse(!item->validate(dataStart, nextItem)))

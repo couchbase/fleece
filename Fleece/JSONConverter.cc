@@ -178,7 +178,7 @@ namespace fleece {
     }
 
     int JSONConverter::gotError(int err, const char *errat) noexcept {
-        return gotError(err, errat - (char*)_input.buf);
+        return gotError(err, errat ? (errat - (char*)_input.buf) : 0);
     }
 
     void JSONConverter::gotException(ErrorCode code, const char *what, size_t pos) noexcept {

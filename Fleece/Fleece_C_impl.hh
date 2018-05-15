@@ -61,14 +61,13 @@ namespace fleece {
         void* extraInfo {nullptr};
 
         FLEncoderImpl(FLEncoderFormat format,
-                      size_t reserveSize =0, bool uniqueStrings =true, bool sortKeys =true)
+                      size_t reserveSize =0, bool uniqueStrings =true)
         {
             if (reserveSize == 0)
                 reserveSize = 256;
             if (format == kFLEncodeFleece) {
                 fleeceEncoder.reset(new Encoder(reserveSize));
                 fleeceEncoder->uniqueStrings(uniqueStrings);
-                fleeceEncoder->sortKeys(sortKeys);
             } else {
                 jsonEncoder.reset(new JSONEncoder(reserveSize));
                 jsonEncoder->setJSON5(format == kFLEncodeJSON5);

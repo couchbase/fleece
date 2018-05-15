@@ -20,6 +20,7 @@
 #include "Fleece.hh"
 #include "MutableArray.hh"
 #include "MutableDict.hh"
+#include "ExternResolver.hh"
 
 namespace fleece {
 
@@ -517,9 +518,9 @@ namespace fleece {
         mp->set("age"_sl, 31);
         MutableArray *friends = mp->getMutableArray("friends"_sl);
         REQUIRE(friends);
-//        auto frend = friends->getMutableDict(1);
-//        REQUIRE(frend);
-//        frend->set("name"_sl, "Reddy Kill-a-Watt"_sl);
+        auto frend = friends->getMutableDict(1);
+        REQUIRE(frend);
+        frend->set("name"_sl, "Reddy Kill-a-Watt"_sl);
 
         Encoder enc;
         enc.setBase(data);
@@ -533,6 +534,27 @@ namespace fleece {
         std::cerr << "\n\nContents:      " << newDict->toJSON().asString() << "\n";
         std::cerr << "Delta:         " << data2 << "\n\n";
         Value::dump(combined, std::cerr);
+    }
+
+
+    TEST_CASE("ExternResolver", "[Mutable]") {
+        alloc_slice data = readTestFile("1person.fleece");
+        auto person = Value::fromTrustedData(data)->asDict();
+
+        Retained<MutableDict> mp = MutableDict::newDict(person);
+        mp->set("age"_sl, 666);
+
+        Encoder enc;
+        enc.setBase(data, true);
+        enc.reuseBaseStrings();
+        enc.writeValue(mp);
+        alloc_slice data2 = enc.extractOutput();
+
+        ExternResolver xr(data2, data);
+        const Dict* newDict = Value::fromData(data2)->asDict();
+        std::cerr << "Contents:      " << newDict->toJSON().asString() << "\n";
+
+        CHECK(newDict->get("age"_sl)->asInt() == 666);
     }
 
 }

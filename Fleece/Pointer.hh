@@ -6,6 +6,7 @@
 
 #pragma once
 #include "Value.hh"
+#include "ExternResolver.hh"
 
 namespace fleece { namespace internal {
 
@@ -13,26 +14,9 @@ namespace fleece { namespace internal {
     public:
         static constexpr size_t kMaxNarrowOffset = 0x7FFE;
 
-        Pointer(size_t offset, int width, bool external =false)
-        :Value(kPointerTagFirst, 0)
-        {
-            assert((offset & 1) == 0);
-            offset >>= 1;
-            if (width < internal::kWide) {
-                throwIf(offset >= 0x4000, InternalError, "offset too large");
-                if (external)
-                    offset |= 0x4000;
-                setNarrowBytes((uint16_t)_enc16(offset | 0x8000)); // big-endian, high bit set
-            } else {
-                if (offset >= 0x40000000)
-                    FleeceException::_throw(OutOfRange, "data too large");
-                if (external)
-                    offset |= 0x40000000;
-                setWideBytes((uint32_t)_enc32(offset | 0x80000000));
-            }
-        }
+        Pointer(size_t offset, int width, bool external =false);
 
-        bool isExternal() const                 {return (_byte[0] & 0x4000) != 0;}
+        bool isExternal() const                 {return (_byte[0] & 0x40) != 0;}
 
 
         // Returns the byte offset
@@ -44,15 +28,9 @@ namespace fleece { namespace internal {
                 return (_dec16(narrowBytes()) & ~0xC000) << 1;
         }
 
-
         template <bool WIDE>
-        const Value* deref() const {
-            assert(offset<WIDE>() > 0);
-            assert(!isExternal());
-            return offsetby(this, -(ptrdiff_t)offset<WIDE>());
-        }
-
-        const Value* derefWide() const  {return deref<true>();}       // just a compiler workaround
+        const Value* deref() const              {return _deref(offset<WIDE>());}
+        const Value* derefWide() const          {return deref<true>();}       // just a workaround
 
 
         const Value* deref(bool wide) const {
@@ -62,21 +40,15 @@ namespace fleece { namespace internal {
 
         // assumes data is untrusted, and double-checks offsets for validity.
         const Value* carefulDeref(bool wide,
-                                  const void *dataStart, const void *dataEnd) const noexcept
-        {
-            auto target = deref(wide);
-            if (_usuallyFalse(target < dataStart) || _usuallyFalse(target >= dataEnd))
-                return nullptr;
-            while (_usuallyFalse(target->isPointer())) {
-                auto target2 = target->_asPointer()->deref<true>();
-                if (_usuallyFalse(target2 < dataStart) || _usuallyFalse(target2 >= target))
-                    return nullptr;
-                target = target2;
-            }
-            return target;
-        }
+                                  const void* &dataStart,
+                                  const void* &dataEnd) const noexcept;
+
+
+        bool validate(bool wide, const void *dataStart) const noexcept;
 
     private:
+        const Value* _deref(uint32_t offset) const;
+
         void setNarrowBytes(uint16_t b)             {*(uint16_t*)_byte = b;}
         void setWideBytes(uint32_t b)               {*(uint32_t*)_byte = b;}
         uint16_t narrowBytes() const                {return *(uint16_t*)_byte;}

@@ -447,7 +447,8 @@ namespace fleece {
             if (v->isPointer()) {
                 ssize_t pos = v->_asPointer()->offset<true>() - _base.size;
                 assert(pos < (ssize_t)pointerOrigin);
-                *v = Pointer(pointerOrigin - pos, width);
+                bool isExternal = (pos < 0);
+                *v = Pointer(pointerOrigin - pos, width, isExternal && _markExternPtrs);
             }
             pointerOrigin += width;
         }
@@ -514,8 +515,7 @@ namespace fleece {
     }
 
     void Encoder::addedKey(slice str) {
-        if (_usuallyTrue(_sortKeys))
-            _items->keys.push_back(str);
+        _items->keys.push_back(str);
     }
 
     void Encoder::push(tags tag, size_t reserve) {
@@ -572,7 +572,7 @@ namespace fleece {
         _items = &_stack[_stackDepth - 1];
         _writingKey = _blockedOnKey = false;
 
-        if (_sortKeys && tag == kDictTag)
+        if (tag == kDictTag)
             sortDict(*items);
 
         auto nValues = items->size();    // includes keys if this is a dict!

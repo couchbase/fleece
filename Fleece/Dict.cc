@@ -58,7 +58,7 @@ namespace fleece {
         bool givenNecessarySharedKeys(SharedKeys *sk) const {
             return sk || _count == 0 || deref(_first)->tag() == kStringTag
                 || (Dict::isMagicParentKey(deref(_first))
-                        && (_count == 1 || deref(_first+2)->tag() == kStringTag))
+                        && (_count == 1 || deref(offsetby(_first, 2*_width))->tag() == kStringTag))
                 || gDisableNecessarySharedKeysCheck;
         }
 

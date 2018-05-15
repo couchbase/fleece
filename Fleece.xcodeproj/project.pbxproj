@@ -131,6 +131,8 @@
 		27F25A8420A6560A00E181FA /* LibC++Debug.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27F25A8320A6560900E181FA /* LibC++Debug.cc */; };
 		27F25A8E20AA053D00E181FA /* Pointer.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27F25A8C20AA053D00E181FA /* Pointer.cc */; };
 		27F25A8F20AA053D00E181FA /* Pointer.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27F25A8D20AA053D00E181FA /* Pointer.hh */; };
+		27F25A9220AA1E7100E181FA /* ExternResolver.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27F25A9020AA1E7100E181FA /* ExternResolver.cc */; };
+		27F25A9320AA1E7100E181FA /* ExternResolver.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27F25A9120AA1E7100E181FA /* ExternResolver.hh */; };
 		27F666442017E26700A8ED31 /* SupportTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27F666432017E26700A8ED31 /* SupportTests.cc */; };
 		27F666472017FE7C00A8ED31 /* TempArray.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27F666462017FE7C00A8ED31 /* TempArray.hh */; };
 		27FE87F31E53E43200C5CF3F /* JSONEncoder.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27FE87F11E53E43200C5CF3F /* JSONEncoder.cc */; };
@@ -334,6 +336,8 @@
 		27F25A8320A6560900E181FA /* LibC++Debug.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "LibC++Debug.cc"; sourceTree = "<group>"; };
 		27F25A8C20AA053D00E181FA /* Pointer.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Pointer.cc; sourceTree = "<group>"; };
 		27F25A8D20AA053D00E181FA /* Pointer.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Pointer.hh; sourceTree = "<group>"; };
+		27F25A9020AA1E7100E181FA /* ExternResolver.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ExternResolver.cc; sourceTree = "<group>"; };
+		27F25A9120AA1E7100E181FA /* ExternResolver.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ExternResolver.hh; sourceTree = "<group>"; };
 		27F666432017E26700A8ED31 /* SupportTests.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SupportTests.cc; sourceTree = "<group>"; };
 		27F666462017FE7C00A8ED31 /* TempArray.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = TempArray.hh; sourceTree = "<group>"; };
 		27FE87F11E53E43200C5CF3F /* JSONEncoder.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSONEncoder.cc; sourceTree = "<group>"; };
@@ -416,6 +420,8 @@
 				270FA26B1BF53CEA005DCB13 /* Value.hh */,
 				27F25A8C20AA053D00E181FA /* Pointer.cc */,
 				27F25A8D20AA053D00E181FA /* Pointer.hh */,
+				27F25A9020AA1E7100E181FA /* ExternResolver.cc */,
+				27F25A9120AA1E7100E181FA /* ExternResolver.hh */,
 				27C4ACAA1CE5146500938365 /* Array.cc */,
 				27C4ACAB1CE5146500938365 /* Array.hh */,
 				27CA08411F6B0E9400FF8C71 /* Dict.cc */,
@@ -695,6 +701,7 @@
 				276D15471E007D3000543B1B /* JSON5.hh in Headers */,
 				274D8257209D1764008BB39F /* RefCounted.hh in Headers */,
 				27298E661C00F8A9000CFBA8 /* jsonsl.h in Headers */,
+				27F25A9320AA1E7100E181FA /* ExternResolver.hh in Headers */,
 				27E3DD4D1DB6C32400F2872D /* CatchHelper.hh in Headers */,
 				2734B8A51F8583FF00BE5249 /* MDict.hh in Headers */,
 				2734B8AD1F859AEC00BE5249 /* FleeceDocument.h in Headers */,
@@ -906,6 +913,7 @@
 				274D824C209A7577008BB39F /* HeapArray.cc in Sources */,
 				2734B8B11F870FB400BE5249 /* MContext.cc in Sources */,
 				275CED521D3EF7BE001DE46C /* FleeceException.cc in Sources */,
+				27F25A9220AA1E7100E181FA /* ExternResolver.cc in Sources */,
 				278163B51CE69CA800B94E32 /* Fleece_C_impl.cc in Sources */,
 				270515571D905C1D00D62D05 /* Fleece+CoreFoundation.mm in Sources */,
 				272E5A611BF91F6C00848580 /* slice+CoreFoundation.cc in Sources */,
