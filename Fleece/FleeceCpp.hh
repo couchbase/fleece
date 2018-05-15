@@ -393,9 +393,8 @@ namespace fleeceapi {
 
         explicit Encoder(FLEncoderFormat format,
                          size_t reserveSize =0,
-                         bool uniqueStrings =true,
-                         bool sortKeys =true)
-        :_enc(FLEncoder_NewWithOptions(format, reserveSize, uniqueStrings, sortKeys))
+                         bool uniqueStrings =true)
+        :_enc(FLEncoder_NewWithOptions(format, reserveSize, uniqueStrings))
         { }
 
         void release()                                  {_enc = nullptr;}
@@ -404,7 +403,7 @@ namespace fleeceapi {
 
         void setSharedKeys(FLSharedKeys sk)             {FLEncoder_SetSharedKeys(_enc, sk);}
 
-        inline void makeDelta(FLSlice base, bool reuseStrings =true);
+        inline void makeDelta(FLSlice base, bool reuseStrings =true, bool externPointers =false);
 
         static FLSliceResult convertJSON(FLSlice json, FLError *error) {
             return FLData_ConvertJSON(json, error);
@@ -491,6 +490,28 @@ namespace fleeceapi {
     };
 
 
+    class ExternResolver {
+    public:
+        /** Constructs a resolver for a Fleece document in memory. Extern pointers in it will be
+            mapped into the `destination` as though the `destination` preceded the `document` in
+            memory. */
+        ExternResolver(FLSlice document, FLSlice destination)
+        :_document(document)
+        {
+            FLResolver_Begin(document, destination);
+        }
+
+        ~ExternResolver() {
+            FLResolver_End(_document);
+        }
+
+    private:
+        ExternResolver(const ExternResolver&) =delete;
+        ExternResolver& operator= (const ExternResolver&) =delete;
+
+        const FLSlice _document;
+    };
+
 
     //////// IMPLEMENTATION GUNK:
 
@@ -562,8 +583,9 @@ namespace fleeceapi {
     inline MutableDict MutableDict::getMutableDict(FLString key)
                                                 {return FLMutableDict_GetMutableDict(*this, key);}
 
-    inline void Encoder::makeDelta(FLSlice base, bool reuseStrings)
-                                                {FLEncoder_MakeDelta(_enc, base, reuseStrings);}
+    inline void Encoder::makeDelta(FLSlice base, bool reuseStrings, bool externPointers)
+                                                {FLEncoder_MakeDelta(_enc, base,
+                                                                     reuseStrings, externPointers);}
     inline bool Encoder::writeNull()            {return FLEncoder_WriteNull(_enc);}
     inline bool Encoder::writeBool(bool b)      {return FLEncoder_WriteBool(_enc, b);}
     inline bool Encoder::writeInt(int64_t n)    {return FLEncoder_WriteInt(_enc, n);}

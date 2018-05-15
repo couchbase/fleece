@@ -19,6 +19,7 @@
 #include "Fleece_C_impl.hh"
 #include "MutableArray.hh"
 #include "MutableDict.hh"
+#include "ExternResolver.hh"
 #include "Fleece.h"
 #include "JSON5.hh"
 
@@ -398,11 +399,11 @@ FLValue FLKeyPath_EvalOnce(FLSlice specifier, FLSharedKeys sharedKeys, FLValue r
 
 
 FLEncoder FLEncoder_New(void) {
-    return FLEncoder_NewWithOptions(kFLEncodeFleece, 0, true, true);
+    return FLEncoder_NewWithOptions(kFLEncodeFleece, 0, true);
 }
 
 FLEncoder FLEncoder_NewWithOptions(FLEncoderFormat format,
-                                   size_t reserveSize, bool uniqueStrings, bool sortKeys)
+                                   size_t reserveSize, bool uniqueStrings)
 {
     return new FLEncoderImpl(format, reserveSize, uniqueStrings);
 }
@@ -419,9 +420,9 @@ void FLEncoder_SetSharedKeys(FLEncoder e, FLSharedKeys sk) {
     ENCODER_DO(e, setSharedKeys(sk));
 }
 
-void FLEncoder_MakeDelta(FLEncoder e, FLSlice base, bool reuseStrings) {
+void FLEncoder_MakeDelta(FLEncoder e, FLSlice base, bool reuseStrings, bool externPointers) {
     if (e->isFleece()) {
-        e->fleeceEncoder->setBase(base);
+        e->fleeceEncoder->setBase(base, externPointers);
         if(reuseStrings)
             e->fleeceEncoder->reuseBaseStrings();
     }
@@ -510,4 +511,20 @@ FLSliceResult FLEncoder_Finish(FLEncoder e, FLError *outError) {
     if (outError)
         *outError = e->errorCode;
     return {nullptr, 0};
+}
+
+
+#pragma mark - RESOLVER
+
+
+void FLResolver_Begin(FLSlice document, FLSlice destination) {
+    (void)new ExternResolver(document, destination);
+}
+
+void FLResolver_End(FLSlice document) {
+    auto resolver = ExternResolver::resolverForPointerFrom(document.buf);
+    if (resolver) {
+        assert(resolver->source() == slice(document));
+        delete resolver;
+    }
 }

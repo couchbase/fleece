@@ -539,16 +539,10 @@ extern "C" {
             as a single shared value. This saves space but makes encoding slightly slower.
             You should only turn this off if you know you're going to be writing large numbers
             of non-repeated strings. Note also that the `cachePointers` option of FLDictKey
-            will not work if `uniqueStrings` is off. (Default is true)
-        @param sortKeys  (Fleece only) If true, dictionary keys are written in sorted order. This speeds up
-            lookup, especially with large dictionaries, but slightly slows down encoding.
-            You should only turn this off if you care about encoding speed but not access time,
-            and will be writing large dictionaries with lots of keys. Note that if you turn
-            this off, you can only look up keys with FLDictGetUnsorted(). (Default is true) */
+            will not work if `uniqueStrings` is off. (Default is true) */
     FLEncoder FLEncoder_NewWithOptions(FLEncoderFormat format,
                                        size_t reserveSize,
-                                       bool uniqueStrings,
-                                       bool sortKeys);
+                                       bool uniqueStrings);
 
     /** Frees the space used by an encoder. */
     void FLEncoder_Free(FLEncoder);
@@ -565,11 +559,19 @@ extern "C" {
 
     /** Tells the encoder to create a delta from the given Fleece document, instead of a standalone
         document. Any calls to FLEncoder_WriteValue() where the value points inside the base data
-        will write a pointer back to the original value. If `reuseStrings` is true, then writing a
-        string that already exists in the base will just create a pointer back to the original.
+        will write a pointer back to the original value.
         The resulting data returned by FLEncoder_Finish() will *NOT* be standalone; it can only
-        be used by first appending it to the base data. */
-    void FLEncoder_MakeDelta(FLEncoder e, FLSlice base, bool reuseStrings);
+        be used by first appending it to the base data.
+        @param e  The FLEncoder affected.
+        @param base  The base document to create a delta from.
+        @param reuseStrings  If true, then writing a string that already exists in the base will
+                    just create a pointer back to the original. But the encoder has to scan the
+                    base for strings first.
+        @param externPointers  If true, pointers into the base will be marked with the `extern`
+                    flag. This allows them to be resolved using the `FLResolver_Begin` function,
+                    so that when the delta is used the base document can be anywhere in memory,
+                    not just immediately preceding the delta document. */
+    void FLEncoder_MakeDelta(FLEncoder e, FLSlice base, bool reuseStrings, bool externPointers);
 
     /** Resets the state of an encoder without freeing it. It can then be reused to encode
         another value. */
@@ -680,6 +682,23 @@ extern "C" {
 
     /** Returns the error message of an encoder, or nullptr if there's no error. */
     const char* FLEncoder_GetErrorMessage(FLEncoder e);
+
+
+    //////// RESOLVER
+
+
+    /** @} */
+    /** \name Extern Resolver
+     @{ */
+
+    /** Indicates that external pointers in `document` (that is, pointers that point outside the
+        document) should be resolved to point into `destination`. This mapping remains in effect
+        until `FLResolver_End` is called on the same `document`. */
+    void FLResolver_Begin(FLSlice document, FLSlice destination);
+
+    /** Ends external pointer resolution from the memory range of `document`. This must be called
+        before that memory is invalidated (freed or overwritten.) */
+    void FLResolver_End(FLSlice document);
 
     
     /** @} */
