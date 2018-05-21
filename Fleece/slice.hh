@@ -69,10 +69,10 @@ namespace fleece {
         size_t offsetOf(const void* ptr NONNULL) const {return (uint8_t*)ptr - (uint8_t*)buf;}
         const void* end() const                     {return offset(size);}
 
-        inline slice upTo(const void* pos NONNULL);
-        inline slice from(const void* pos NONNULL);
-        inline slice upTo(size_t offset);
-        inline slice from(size_t offset);
+        inline slice upTo(const void* pos NONNULL) const;
+        inline slice from(const void* pos NONNULL) const;
+        inline slice upTo(size_t offset) const;
+        inline slice from(size_t offset) const;
 
         const uint8_t& operator[](size_t i) const   {return ((const uint8_t*)buf)[i];}
         inline slice operator()(size_t i, size_t n) const;
@@ -102,6 +102,10 @@ namespace fleece {
         std::string asString() const                {return (std::string)*this;}
         std::string hexString() const;
         std::string base64String() const;
+
+        /** Copies into a C string buffer of the given size. Result is always NUL-terminated and
+            will not overflow the buffer. Returns false if the slice was truncated. */
+        bool toCString(char *buf, size_t bufSize);
 
         /** Decodes Base64 data from receiver into output. On success returns subrange of output
             where the decoded data is. If output is too small to hold all the decoded data, returns
@@ -312,10 +316,10 @@ namespace fleece {
 
 
     // Inlines that couldn't be implemented inside the class declaration due to forward references:
-    inline slice pure_slice::upTo(const void* pos)                 {return slice(buf, pos);}
-    inline slice pure_slice::from(const void* pos)                 {return slice(pos, end());}
-    inline slice pure_slice::upTo(size_t off)                      {return slice(buf, off);}
-    inline slice pure_slice::from(size_t off)                      {return slice(offset(off), end());}
+    inline slice pure_slice::upTo(const void* pos) const           {return slice(buf, pos);}
+    inline slice pure_slice::from(const void* pos) const           {return slice(pos, end());}
+    inline slice pure_slice::upTo(size_t off) const                {return slice(buf, off);}
+    inline slice pure_slice::from(size_t off) const                {return slice(offset(off), end());}
     inline slice pure_slice::operator()(size_t i, size_t n) const  {return slice(offset(i), n);}
 
     inline slice::slice(const alloc_slice &s)  :pure_slice(s) { }

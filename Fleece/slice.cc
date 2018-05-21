@@ -246,6 +246,14 @@ namespace fleece {
     }
 
 
+    bool pure_slice::toCString(char *str, size_t bufSize) {
+        size_t n = std::min(size, bufSize-1);
+        memcpy(str, buf, n);
+        str[n] = 0;
+        return n == size;
+    }
+
+
     std::string pure_slice::base64String() const {
         std::string str;
         size_t strLen = ((size + 2) / 3) * 4;
