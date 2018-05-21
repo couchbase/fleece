@@ -47,6 +47,12 @@ namespace fleece {
             Multiple DBs on the same file share address space. */
         static constexpr size_t kDefaultMaxSize = 100*1024*1024;
 
+        // Page size; file size will always be rounded to a multiple of this.
+        static constexpr size_t kDefaultPageSize = 4*1024;
+
+        // Page size value to use if you don't want pages
+        static constexpr size_t kNoPagesSize = 1;
+
         /** Initializes and opens a DB. Its file will be created if it doesn't exist.
             @param filePath  The filesystem path to the database file.
             @param mode  Determines whether the DB can create and/or write to the file.
@@ -54,7 +60,8 @@ namespace fleece {
                             The file must not grow larger than this size. */
         DB(const char * NONNULL filePath,
            OpenMode mode =kCreateAndWrite,
-           size_t maxSize =kDefaultMaxSize);
+           size_t maxSize =kDefaultMaxSize,
+           size_t pageSize = kDefaultPageSize);
 
         /** Initializes and opens a DB, from any checkpoint.
             The value of `checkpoint` can be the other DB's `previousCheckpoint()`, or any
@@ -149,6 +156,14 @@ namespace fleece {
         /** Writes a copy of the DB to a new file. */
         void writeTo(std::string path);
 
+        using CommitObserver = std::function<void(DB*, checkpoint_t)>;
+        void setCommitObserver(CommitObserver co)           {_commitObserver = co;}
+
+#pragma mark - DATA ACCESS:
+
+        slice dataUpToCheckpoint(checkpoint_t) const;
+        slice dataSinceCheckpoint(checkpoint_t) const;
+
 
     private:
         void loadCheckpoint(checkpoint_t);
@@ -157,11 +172,14 @@ namespace fleece {
         bool validateTrailer(size_t);
         off_t writeToFile(FILE*, bool deltapages, bool flush);
         void flushFile(FILE*, bool fullSync =false);
-        
+        bool isLegalCheckpoint(checkpoint_t checkpoint) const;
+
         Retained<MappedFile> _file;
+        size_t _pageSize;
         slice _data;
         checkpoint_t _prevCheckpoint {0};
         MutableHashTree _tree;
+        CommitObserver _commitObserver;
         bool _writeable {true};
         bool _damaged {false};
     };

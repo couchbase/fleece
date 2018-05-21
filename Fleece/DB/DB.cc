@@ -28,9 +28,6 @@ namespace fleece {
 
     #define Warn(FMT, ...) fprintf(stderr, "WARNING: " FMT "\n", ##__VA_ARGS__)
 
-    // Page size; file size will always be rounded to a multiple of this.
-    static const unsigned kPageSize = 4096;
-
 
     // Written at the beginning of a file.
     struct FileHeader {
@@ -64,13 +61,15 @@ namespace fleece {
     static const char* kModeStrings[3] = {"r", "r+", "rw+"};
 
 
-    DB::DB(const char *filePath, OpenMode mode, size_t maxSize)
+    DB::DB(const char *filePath, OpenMode mode, size_t maxSize, size_t pageSize)
     :_file( new MappedFile(filePath,
                            kModeStrings[mode],
                            maxSize) )
+    ,_pageSize(pageSize)
     ,_data(_file->contents())
     ,_writeable(mode > kReadOnly)
     {
+        assert(pageSize > 0);
         loadLatest();
     }
 
@@ -109,7 +108,7 @@ namespace fleece {
         } else {
             _damaged = true;
             size_t size = _data.size;
-            if (size < kPageSize) {
+            if (size < _pageSize) {
                 Warn("Not a DB file (too small): %s", _file->path());
                 FleeceException::_throw(InvalidData, "Not a DB file (too small)");
             }
@@ -118,21 +117,21 @@ namespace fleece {
                 FleeceException::_throw(InvalidData, "Not a DB file; or else header is corrupted");
             }
             bool damagedSize = false, damagedTrailer = false;
-            if (size % kPageSize != 0) {
+            if (size % _pageSize != 0) {
                 Warn("File size 0x%zx is invalid; skipping back to last full page...", size);
-                size -= size % kPageSize;
+                size -= size % _pageSize;
                 damagedSize = true;
             }
             while (!validateTrailer(size)) {
-                if (!damagedTrailer) {
+                if (!damagedTrailer && _pageSize > 1) {
                     Warn("Trailer at 0x%zx is invalid; scanning backwards for a valid one...", size);
                     damagedTrailer = true;
                 }
-                if (size <= kPageSize) {
+                if (size <= _pageSize || _pageSize == 1) {
                     Warn("...no valid trailer found; DB is fatally damaged: %s", _file->path());
                     FleeceException::_throw(InvalidData, "DB file is fatally damaged: no valid trailer found");
                 }
-                size -= kPageSize;
+                size -= _pageSize;
             }
             if (damagedTrailer || damagedSize)
                 Warn("...valid trailer found at 0x%zx; using it", size);
@@ -146,19 +145,19 @@ namespace fleece {
         const FileHeader *header = (const FileHeader*)_data.buf;
         return memcmp(header->magicText, FileHeader::kMagicText, sizeof(header->magicText)) == 0
             && header->magic2 == FileHeader::kMagic2
-            && header->size < kPageSize;
+            && header->size < max(_pageSize, 4096lu);
     }
 
 
     bool DB::validateTrailer(size_t size) {
-        if (size < kPageSize || size % kPageSize != 0)
+        if (size < _pageSize || size % _pageSize != 0)
             return false;
         auto trailer = (const FileTrailer*)&_data[size - sizeof(FileTrailer)];
         if (trailer->magic1 != FileTrailer::kMagic1 || trailer->magic2 != FileTrailer::kMagic2)
             return false;
 
         checkpoint_t prevTrailerPos = trailer->prevTrailerPos;
-        if (prevTrailerPos > size - kPageSize || prevTrailerPos % kPageSize != 0)
+        if (prevTrailerPos > size - _pageSize || prevTrailerPos % _pageSize != 0)
             return false;
 
         ssize_t treePos = size - sizeof(FileTrailer) - trailer->treeOffset;
@@ -184,6 +183,9 @@ namespace fleece {
         off_t newFileSize = writeToFile(_file->fileHandle(), true, true);
         _file->resizeTo(newFileSize);
         loadCheckpoint(newFileSize);
+
+        if (_commitObserver)
+            _commitObserver(this, newFileSize);
     }
 
 
@@ -237,7 +239,8 @@ namespace fleece {
         // to disk. This ensures the tree data is 100% durable, before we attempt to write the
         // trailer that marks it as valid.
         off_t finalPos = filePos + sizeof(FileTrailer);
-        finalPos += kPageSize - (finalPos % kPageSize);
+        if (finalPos % _pageSize != 0)
+            finalPos += _pageSize - (finalPos % _pageSize);
         check(ftruncate(fileno(f), finalPos), "Can't grow the file");
 
         if (flush)
@@ -316,6 +319,29 @@ namespace fleece {
             return false;
         }
     }
+
+
+#pragma mark - DATA ACCESS
+
+
+    bool DB::isLegalCheckpoint(checkpoint_t checkpoint) const {
+        return checkpoint <= _data.size && checkpoint % _pageSize == 0;
+    }
+
+
+    slice DB::dataUpToCheckpoint(checkpoint_t checkpoint) const {
+        if (!isLegalCheckpoint(checkpoint))
+            return nullslice;
+        return _data.upTo(checkpoint);
+    }
+
+
+    slice DB::dataSinceCheckpoint(checkpoint_t checkpoint) const {
+        if (!isLegalCheckpoint(checkpoint))
+            return nullslice;
+        return _data.from(checkpoint);
+    }
+
 
 }
 
