@@ -67,6 +67,8 @@
 		2776AA782093C982004ACE85 /* sliceIO.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2776AA762093C982004ACE85 /* sliceIO.cc */; };
 		2776AA792093C982004ACE85 /* sliceIO.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2776AA772093C982004ACE85 /* sliceIO.hh */; };
 		2776AA7B2097B1DC004ACE85 /* DBTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2776AA7A2097B1DC004ACE85 /* DBTests.cc */; };
+		277A06B320B36D1A00970354 /* FileUtils.cc in Sources */ = {isa = PBXBuildFile; fileRef = 277A06B120B36D1A00970354 /* FileUtils.cc */; };
+		277A06B420B36D1A00970354 /* FileUtils.hh in Headers */ = {isa = PBXBuildFile; fileRef = 277A06B220B36D1A00970354 /* FileUtils.hh */; };
 		277F45B0208E871000A0D159 /* HashTree.hh in Headers */ = {isa = PBXBuildFile; fileRef = 277F45AE208E871000A0D159 /* HashTree.hh */; };
 		277F45B1208E871000A0D159 /* HashTree.cc in Sources */ = {isa = PBXBuildFile; fileRef = 277F45AF208E871000A0D159 /* HashTree.cc */; };
 		277F45B4208FDA1800A0D159 /* HashTreeTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27C8DF09208521B600A99BFC /* HashTreeTests.cc */; };
@@ -287,6 +289,8 @@
 		2776AA762093C982004ACE85 /* sliceIO.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = sliceIO.cc; sourceTree = "<group>"; };
 		2776AA772093C982004ACE85 /* sliceIO.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = sliceIO.hh; sourceTree = "<group>"; };
 		2776AA7A2097B1DC004ACE85 /* DBTests.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DBTests.cc; sourceTree = "<group>"; };
+		277A06B120B36D1A00970354 /* FileUtils.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FileUtils.cc; sourceTree = "<group>"; };
+		277A06B220B36D1A00970354 /* FileUtils.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FileUtils.hh; sourceTree = "<group>"; };
 		277F45AE208E871000A0D159 /* HashTree.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HashTree.hh; sourceTree = "<group>"; };
 		277F45AF208E871000A0D159 /* HashTree.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = HashTree.cc; sourceTree = "<group>"; };
 		277F45B3208E9A9100A0D159 /* Bitmap.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Bitmap.hh; sourceTree = "<group>"; };
@@ -453,6 +457,8 @@
 				2746DD3B1D931BE9000517BC /* Benchmark.hh */,
 				277F45B3208E9A9100A0D159 /* Bitmap.hh */,
 				270FA2731BF53CEA005DCB13 /* Endian.hh */,
+				277A06B120B36D1A00970354 /* FileUtils.cc */,
+				277A06B220B36D1A00970354 /* FileUtils.hh */,
 				275CED501D3EF7BE001DE46C /* FleeceException.cc */,
 				275CED511D3EF7BE001DE46C /* FleeceException.hh */,
 				270FA2861BF53D32005DCB13 /* forestdb_endian.h */,
@@ -701,6 +707,7 @@
 				276D15471E007D3000543B1B /* JSON5.hh in Headers */,
 				274D8257209D1764008BB39F /* RefCounted.hh in Headers */,
 				27298E661C00F8A9000CFBA8 /* jsonsl.h in Headers */,
+				277A06B420B36D1A00970354 /* FileUtils.hh in Headers */,
 				27F25A9320AA1E7100E181FA /* ExternResolver.hh in Headers */,
 				27E3DD4D1DB6C32400F2872D /* CatchHelper.hh in Headers */,
 				2734B8A51F8583FF00BE5249 /* MDict.hh in Headers */,
@@ -902,6 +909,7 @@
 				277F45B1208E871000A0D159 /* HashTree.cc in Sources */,
 				270FA27B1BF53CEA005DCB13 /* Value+ObjC.mm in Sources */,
 				27C4ACAC1CE5146500938365 /* Array.cc in Sources */,
+				277A06B320B36D1A00970354 /* FileUtils.cc in Sources */,
 				274D8244209A3A77008BB39F /* HeapDict.cc in Sources */,
 				270FA2841BF53CEA005DCB13 /* varint.cc in Sources */,
 				2776AA782093C982004ACE85 /* sliceIO.cc in Sources */,
