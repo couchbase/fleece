@@ -41,6 +41,7 @@ namespace fleece {
             kReadOnly  = 0,
             kWrite,
             kCreateAndWrite,
+            kEraseAndWrite,
         };
 
         /** The default amount of address space (NOT memory!) reserved by a DB's memory map.
@@ -164,6 +165,8 @@ namespace fleece {
         slice dataUpToCheckpoint(checkpoint_t) const;
         slice dataSinceCheckpoint(checkpoint_t) const;
 
+        /** Appends data to the file; used to import external changes. */
+        bool appendData(off_t offset, slice, bool complete);
 
     private:
         void loadCheckpoint(checkpoint_t);
@@ -172,6 +175,7 @@ namespace fleece {
         bool validateTrailer(size_t);
         off_t writeToFile(FILE*, bool deltapages, bool flush);
         void flushFile(FILE*, bool fullSync =false);
+        void postCommit(off_t newFileSize);
         bool isLegalCheckpoint(checkpoint_t checkpoint) const;
 
         Retained<MappedFile> _file;

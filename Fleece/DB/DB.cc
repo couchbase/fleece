@@ -18,6 +18,7 @@
 
 #include "DB.hh"
 #include "Fleece.hh"
+#include "FileUtils.hh"
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -58,7 +59,7 @@ namespace fleece {
     };
 
 
-    static const char* kModeStrings[3] = {"r", "r+", "rw+"};
+    static const char* kModeStrings[4] = {"r", "r+", "rw+", "w+"};
 
 
     DB::DB(const char *filePath, OpenMode mode, size_t maxSize, size_t pageSize)
@@ -181,6 +182,11 @@ namespace fleece {
             return;
         assert(_writeable);
         off_t newFileSize = writeToFile(_file->fileHandle(), true, true);
+        postCommit(newFileSize);
+    }
+
+
+    void DB::postCommit(off_t newFileSize) {
         _file->resizeTo(newFileSize);
         loadCheckpoint(newFileSize);
 
@@ -198,22 +204,10 @@ namespace fleece {
     }
 
 
-    static void check(int result, const char *msg) {
-        if (result < 0)
-            FleeceException::_throwErrno(msg);
-    }
-
-    static void check_fwrite(FILE *f, const void *data, size_t size) {
-        auto written = fwrite(data, size, 1, f);
-        if (written < 1)
-            FleeceException::_throwErrno("Can't write to file");
-    }
-
-
     off_t DB::writeToFile(FILE *f, bool delta, bool flush) {
         off_t filePos;
         if (delta) {
-            check(fseeko(f, _data.size, SEEK_SET), "Can't append to file");
+            checkErrno(fseeko(f, _data.size, SEEK_SET), "Can't append to file");
             filePos = _data.size;
         } else {
             filePos = ftello(f);
@@ -241,7 +235,7 @@ namespace fleece {
         off_t finalPos = filePos + sizeof(FileTrailer);
         if (finalPos % _pageSize != 0)
             finalPos += _pageSize - (finalPos % _pageSize);
-        check(ftruncate(fileno(f), finalPos), "Can't grow the file");
+        checkErrno(ftruncate(fileno(f), finalPos), "Can't grow the file");
 
         if (flush)
             flushFile(f, true);
@@ -249,7 +243,7 @@ namespace fleece {
         // Write the trailer:
         FileTrailer trailer(uint32_t(finalPos - sizeof(FileTrailer) - filePos),
                             (delta ? _data.size : 0));
-        check(fseeko(f, -sizeof(FileTrailer), SEEK_END), "seek");
+        checkErrno(fseeko(f, -sizeof(FileTrailer), SEEK_END), "seek");
         check_fwrite(f, &trailer, sizeof(trailer));
 
         // Flush again to make sure the header is durably saved:
@@ -262,7 +256,7 @@ namespace fleece {
 
     void DB::flushFile(FILE *f, bool fullSync) {
         // Adapted from SQLite source code
-        check(fflush(f), "Can't flush file");
+        checkErrno(fflush(f), "Can't flush file");
 #ifdef F_FULLFSYNC
         if( fullSync && fcntl(fileno(f), F_FULLFSYNC, 0) == 0)
             return;
@@ -342,6 +336,18 @@ namespace fleece {
         return _data.from(checkpoint);
     }
 
+
+    bool DB::appendData(off_t offset, slice data, bool complete) {
+        FILE *f = _file->fileHandle();
+        if (check_getEOF(f) != offset)
+            return false;
+        check_fwrite(f, data.buf, data.size);
+        if (complete) {
+            fflush(f);
+            postCommit(offset + data.size);
+        }
+        return true;
+    }
 
 }
 
