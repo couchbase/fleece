@@ -248,6 +248,7 @@ namespace fleece {
         }
 
         alloc_slice& operator= (pure_slice s);
+        alloc_slice& operator= (FLSlice);
 
         explicit operator bool() const                      {return buf != nullptr;}
 

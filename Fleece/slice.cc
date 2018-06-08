@@ -396,6 +396,10 @@ namespace fleece {
         return *this;
     }
 
+    alloc_slice& alloc_slice::operator=(FLSlice s) {
+        return operator=(slice(s.buf, s.size));
+    }
+
 
     void alloc_slice::resize(size_t newSize) {
         if (newSize == size) {
