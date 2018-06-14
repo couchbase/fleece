@@ -158,7 +158,7 @@ public:
     }
 
     void checkJSONStr(std::string json,
-                      const char *expectedStr,
+                      slice expectedStr,
                       int expectedErr = JSONSL_ERROR_SUCCESS)
     {
         json = std::string("[\"") + json + std::string("\"]");
@@ -174,6 +174,13 @@ public:
         auto a = checkArray(1);
         auto output = a->get(0)->asString();
         REQUIRE(output == slice(expectedStr));
+    }
+
+    void checkJSONStr(std::string json,
+                      const char *expectedStr,
+                      int expectedErr = JSONSL_ERROR_SUCCESS)
+    {
+        checkJSONStr(json, (slice)expectedStr, expectedErr);
     }
 
     void lookupNameWithKey(const Dict* person, Dict::key &nameKey, std::string expectedName) {
@@ -543,12 +550,12 @@ public:
         checkJSONStr("Price \\u20ac250", "Price €250");
         checkJSONStr("Price \\uffff?", "Price \uffff?");
         checkJSONStr("Price \\u20ac", "Price €");
+        checkJSONStr("!\\u0000!", "!\0!"_sl);
         checkJSONStr("Price \\u20a", nullptr, JSONSL_ERROR_UESCAPE_TOOSHORT);
         checkJSONStr("Price \\u20", nullptr, JSONSL_ERROR_UESCAPE_TOOSHORT);
         checkJSONStr("Price \\u2", nullptr, JSONSL_ERROR_UESCAPE_TOOSHORT);
         checkJSONStr("Price \\u", nullptr, JSONSL_ERROR_UESCAPE_TOOSHORT);
         checkJSONStr("\\uzoop!", nullptr, JSONSL_ERROR_PERCENT_BADHEX);
-        checkJSONStr("!\\u0000!", nullptr, JSONSL_ERROR_INVALID_CODEPOINT);
 
         // UTF-16 surrogate pair decoding:
         checkJSONStr("lmao\\uD83D\\uDE1C!", "lmao😜!");
