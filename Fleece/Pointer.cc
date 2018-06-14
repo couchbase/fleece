@@ -17,6 +17,7 @@
 //
 
 #include "Pointer.hh"
+#include <stdio.h>
 
 namespace fleece { namespace internal {
 

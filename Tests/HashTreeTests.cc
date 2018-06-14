@@ -144,7 +144,11 @@ TEST_CASE_METHOD(HashTreeTests, "Tiny MHashTree Remove", "[HashTree]") {
 
 
 TEST_CASE_METHOD(HashTreeTests, "Bigger MHashTree Remove", "[HashTree]") {
+#if FL_EMBEDDED
+    static constexpr int N = 1000;
+#else
     static constexpr int N = 10000;
+#endif
     createItems(N);
     insertItems();
 

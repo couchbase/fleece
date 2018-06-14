@@ -48,6 +48,9 @@
 using namespace fleece;
 
 
+#if !FL_EMBEDDED
+
+
 TEST_CASE("GetUVarint performance", "[.Perf]") {
     static constexpr int kNRounds = 10000000;
     Benchmark bench;
@@ -313,3 +316,5 @@ TEST_CASE("Perf TreeSearch", "[.Perf]") {
     }
     bench.printReport();
 }
+
+#endif // !FL_EMBEDDED

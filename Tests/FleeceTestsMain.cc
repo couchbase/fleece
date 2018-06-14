@@ -25,20 +25,20 @@
 #if FL_EMBEDDED
     #include <signal.h>
 
-    extern void DontDeadStripValueTests();
-    extern void DontDeadStripEncoderTests();
-    extern void DontDeadStripSharedKeysTests();
-    extern void DontDeadStripSupportTests();
-    extern void DontDeadStripJSON5Tests();
+//    extern void DontDeadStripValueTests();
+//    extern void DontDeadStripEncoderTests();
+//    extern void DontDeadStripSharedKeysTests();
+//    extern void DontDeadStripSupportTests();
+//    extern void DontDeadStripJSON5Tests();
 
     extern "C"
     void app_main() {
-        // Workaround for ESP32 build chain dead-stripping the tests' .o files:
-        DontDeadStripValueTests();
-        DontDeadStripEncoderTests();
-        DontDeadStripSharedKeysTests();
-        DontDeadStripSupportTests();
-        DontDeadStripJSON5Tests();
+//        // Workaround for ESP32 build chain dead-stripping the tests' .o files:
+//        DontDeadStripValueTests();
+//        DontDeadStripEncoderTests();
+//        DontDeadStripSharedKeysTests();
+//        DontDeadStripSupportTests();
+//        DontDeadStripJSON5Tests();
 
         const char* args[3] = {"FleeceTests", "-r", "list"};
         main(3, (char**)args);
