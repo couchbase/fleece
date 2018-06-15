@@ -28,9 +28,6 @@
 #include <float.h>
 #include <unistd.h>
 
-extern void DontDeadStripEncoderTests();
-void DontDeadStripEncoderTests() { }
-
 
 namespace fleece {
 

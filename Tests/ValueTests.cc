@@ -29,8 +29,6 @@
 
 #undef NOMINMAX
 
-extern void DontDeadStripValueTests();
-void DontDeadStripValueTests() { }
 
 namespace fleece {
     using namespace std;

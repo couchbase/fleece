@@ -21,9 +21,6 @@
 
 using namespace fleece;
 
-extern void DontDeadStripJSON5Tests();
-void DontDeadStripJSON5Tests() { }
-
 
 TEST_CASE("JSON5 Constants") {
     CHECK(ConvertJSON5("null") == "null");

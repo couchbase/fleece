@@ -25,9 +25,6 @@
 
 using namespace std;
 
-extern void DontDeadStripSupportTests();
-void DontDeadStripSupportTests() { }
-
 
 // TESTS:
 

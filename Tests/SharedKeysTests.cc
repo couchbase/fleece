@@ -25,10 +25,6 @@
 using namespace std;
 
 
-extern void DontDeadStripSharedKeysTests();
-void DontDeadStripSharedKeysTests() { }
-
-
 TEST_CASE("basic") {
     SharedKeys sk;
     CHECK(sk.count() == 0);
