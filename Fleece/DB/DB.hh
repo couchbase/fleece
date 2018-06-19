@@ -179,7 +179,7 @@ namespace fleece {
         bool isLegalCheckpoint(checkpoint_t checkpoint) const;
 
         Retained<MappedFile> _file;
-        size_t _pageSize;
+        size_t _pageSize {kDefaultPageSize};
         slice _data;
         checkpoint_t _prevCheckpoint {0};
         MutableHashTree _tree;
