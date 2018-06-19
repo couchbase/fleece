@@ -151,7 +151,7 @@ namespace fleece {
         size_t pos = (size_t)data.buf;
         for (auto &i : byAddress) {
             if (i.first != pos)
-                out << "  {skip " << std::hex << (i.first - pos) << "}\n";
+                out << "  {skip " << std::hex << (i.first - pos) << std::dec << "}\n";
             pos = i.first + i.second->dump(out, false, 0, data.buf);
         }
         return true;

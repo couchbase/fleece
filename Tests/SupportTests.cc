@@ -16,17 +16,18 @@
 // limitations under the License.
 //
 
-#ifndef _MSC_VER
-
 #include "FleeceTests.hh"
 #include "Fleece.hh"
 #include "TempArray.hh"
+#include "sliceIO.hh"
 #include <iostream>
 
 using namespace std;
 
 
 // TESTS:
+
+#ifndef _MSC_VER
 
 template <class T>
 static void stackEm(size_t n, bool expectedOnHeap) {
@@ -67,3 +68,28 @@ TEST_CASE("TempArray") {
 
 #endif
 
+
+#if FL_HAVE_FILESYSTEM
+TEST_CASE("Slice I/O") {
+    const char *filePath = kTempDir "slicefile";
+    slice data = "This is some data to write to a file."_sl;
+    writeToFile(data, filePath);
+    alloc_slice readBack = readFile(filePath);
+    CHECK(readBack == data);
+
+#if FL_HAVE_MMAP
+    FILE *f = fopen(filePath, "r");
+    mmap_slice mappedData(f, 300);
+    CHECK(slice(mappedData.buf, data.size) == data);
+#endif
+
+    appendToFile(" More data appended."_sl, filePath);
+    readBack = readFile(filePath);
+    CHECK(readBack == "This is some data to write to a file. More data appended."_sl);
+
+#if FL_HAVE_MMAP
+    CHECK(slice(mappedData.buf, readBack.size) == readBack);
+    fclose(f);
+#endif
+}
+#endif

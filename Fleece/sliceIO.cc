@@ -18,20 +18,23 @@
 
 #include "sliceIO.hh"
 
-#if !FL_EMBEDDED
+#if FL_HAVE_FILESYSTEM
 
 #include "FleeceException.hh"
 #include "PlatformCompat.hh"
 #include <fcntl.h>
 #include <errno.h>
+
 #ifndef _MSC_VER
-    #include <sys/mman.h>
     #include <sys/stat.h>
     #include <unistd.h>
-    #define O_BINARY 0
 #else
     #include <io.h>
     #include <windows.h>
+#endif
+
+#ifndef _MSC_VER
+#define O_BINARY 0
 #endif
 
 
@@ -72,62 +75,6 @@ namespace fleece {
         writeToFile(s, path, O_CREAT | O_APPEND);
     }
 
-
-    mmap_slice::mmap_slice(FILE *f, size_t size) {
-        const void *mapping;
-#ifdef _MSC_VER
-        HANDLE fileHandle = ???;
-        LARGE_INTEGER sz;
-        sz.QuadPart = size;
-        _mapHandle = CreateFileMappingA(_fileHandle, nullptr, PAGE_READONLY,
-                                        sz.HighPart, sz.LowPart, "FileMappingObject");
-        mapping = MapViewOfFile(_mapHandle, FILE_MAP_READ, 0, 0, sz.QuadPart) );
-        if (mapping == nullptr)
-            FleeceException::_throwErrno("Can't memory-map file");
-#else
-        // Note: essential to use MAP_SHARED instead of MAP_PRIVATE; otherwise if the file is
-        // written to thru `f`, changes in the file may not be reflected in the mapped memory!
-        mapping = ::mmap(nullptr, size, PROT_READ, MAP_SHARED, fileno(f), 0);
-        if (mapping == MAP_FAILED)
-            FleeceException::_throwErrno("Can't memory-map file");
-#endif
-        set(mapping, size);
-    }
-
-    mmap_slice::~mmap_slice() {
-        try {
-            unmap();
-        } catch (...) { }
-    }
-
-    mmap_slice& mmap_slice::operator= (mmap_slice&& other) noexcept {
-        set(other.buf, other.size);
-        other.set(nullptr, 0);
-#ifdef _MSC_VER
-        _mapHandle = other._mapHandle;
-        other._mapHandle = nullptr;
-#endif
-        return *this;
-    }
-
-    void mmap_slice::unmap() {
-#ifdef _MSC_VER
-        if (buf)
-            UnmapViewOfFile(buf);
-        if (_mapHandle) {
-            CloseHandle(_mapHandle);
-            _mapHandle = nullptr;
-        }
-#else
-        if (buf) {
-            if (munmap((void*)buf, size) != 0)
-                FleeceException::_throwErrno("Can't unmap memory");
-        }
-#endif
-        set(nullptr, 0);
-    }
-
-
 }
 
-#endif // !FL_EMBEDDED
+#endif // FL_HAVE_FILESYSTEM

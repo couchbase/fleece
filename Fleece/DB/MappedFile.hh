@@ -6,7 +6,7 @@
 
 #pragma once
 #include "RefCounted.hh"
-#include "sliceIO.hh"
+#include "mmap_slice.hh"
 #include <string>
 #include <stdio.h>
 

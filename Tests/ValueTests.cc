@@ -59,7 +59,7 @@ namespace fleece {
         uint64_t result;
         for (double d = 0.0; d <= UINT64_MAX; d = std::max(d, 1.0) * 1.5) {
             auto n = (uint64_t)d;
-            std::cerr << std::hex << n << ", ";
+            std::cerr << std::hex << n << std::dec << ", ";
             size_t nBytes = PutUVarInt(buf, n);
             CHECK(GetUVarInt(slice(buf, sizeof(buf)), &result) == nBytes);
             CHECK(result == n);
@@ -78,7 +78,7 @@ namespace fleece {
         uint8_t buf[100];
         for (double d = 0.0; d <= UINT64_MAX; d = std::max(d, 1.0) * 1.5) {
             auto n = (uint64_t)d;
-            std::cerr << std::hex << n << ", ";
+            std::cerr << std::hex << n << std::dec << ", ";
             size_t nBytes = PutUVarInt(buf, n);
             uint32_t result;
             if (n <= UINT32_MAX) {

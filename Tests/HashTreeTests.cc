@@ -50,7 +50,7 @@ public:
         for (size_t i = 0; i < N; i++) {
             if (verbose)
                 cerr << "\n##### Inserting #" << (i)
-                          << ", " << hex << keys[i].hash() << "\n";
+                          << ", " << hex << keys[i].hash() << dec << "\n";
             tree.set(keys[i], values->get(uint32_t(i)));
             if (verbose)
                 tree.dump(cerr);

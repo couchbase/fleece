@@ -29,28 +29,35 @@
 
 using namespace fleece;
 
+#if FL_HAVE_FILESYSTEM
+    #ifdef _MSC_VER
+        #define kTempDir "C:\\tmp"
+    #else
+        #define kTempDir "/tmp/"
+    #endif
+#endif
+
+
 // True if we have access to test files like "1000people.json". Predefine as 0 for embedded OS.
 #ifndef FL_HAVE_TEST_FILES
-#define FL_HAVE_TEST_FILES 1
+#define FL_HAVE_TEST_FILES FL_HAVE_FILESYSTEM
 #endif
 
 // Directory containing test files:
 #if FL_HAVE_TEST_FILES
     #ifdef _MSC_VER
         #define kTestFilesDir "..\\Tests\\"
-        #define kTempDir "C:\\tmp"
     #else
         #define kTestFilesDir "Tests/"
-        #define kTempDir "/tmp/"
     #endif
     static const char* kBigJSONTestFileName = "1000people.json";
     static const size_t kBigJSONTestCount = 1000;
 #else
     #define kTestFilesDir ""
-    #define kTempDir ""
     static const char* kBigJSONTestFileName = "50people.json";
     static const size_t kBigJSONTestCount = 50;
 #endif
+
 
 namespace fleece_test {
     std::string sliceToHex(slice);
