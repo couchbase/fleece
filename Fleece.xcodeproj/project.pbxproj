@@ -312,6 +312,8 @@
 		27A924CD1D9C32E800086206 /* Path.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Path.cc; sourceTree = "<group>"; };
 		27A924CE1D9C32E800086206 /* Path.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Path.hh; sourceTree = "<group>"; };
 		27BCA79120D9815E00DB56E7 /* ESP32Tests.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ESP32Tests.cc; sourceTree = "<group>"; };
+		27BCA79520D9BAE600DB56E7 /* ESPMappedSlice.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ESPMappedSlice.cc; sourceTree = "<group>"; };
+		27BCA79620D9BAE600DB56E7 /* ESPMappedSlice.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ESPMappedSlice.hh; sourceTree = "<group>"; };
 		27C4AC941CDE843F00938365 /* Example.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = Example.md; sourceTree = "<group>"; };
 		27C4AC961CDFFDA100938365 /* Performance.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = Performance.md; sourceTree = "<group>"; };
 		27C4ACAA1CE5146500938365 /* Array.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Array.cc; sourceTree = "<group>"; };
@@ -475,6 +477,8 @@
 				278163BB1CE7A72300B94E32 /* KeyTree.hh */,
 				27CDD38A20D968A600F31112 /* mmap_slice.cc */,
 				27CDD38B20D968A600F31112 /* mmap_slice.hh */,
+				27BCA79520D9BAE600DB56E7 /* ESPMappedSlice.cc */,
+				27BCA79620D9BAE600DB56E7 /* ESPMappedSlice.hh */,
 				2715BA1D1D820C690061D92E /* PlatformCompat.hh */,
 				274D8254209D1764008BB39F /* RefCounted.cc */,
 				274D8255209D1764008BB39F /* RefCounted.hh */,

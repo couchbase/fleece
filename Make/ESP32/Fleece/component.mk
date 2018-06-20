@@ -2,8 +2,9 @@
 
 
 COMPONENT_SRCDIRS 			:= ../../../Fleece/  ../../../Fleece/Mutable  ../../../Fleece/Tree \
-	  						   ../../../vendor/jsonsl  ../../../vendor/libb64
-COMPONENT_ADD_INCLUDEDIRS 	:= ../../../Fleece/  ../../../Fleece/Mutable  ../../../Fleece/Tree
+	  						   ../../../Fleece/DB  ../../../vendor/jsonsl  ../../../vendor/libb64
+COMPONENT_ADD_INCLUDEDIRS 	:= ../../../Fleece/  ../../../Fleece/Mutable  ../../../Fleece/Tree \
+							   ../../../Fleece/DB
 
 COMPONENT_PRIV_INCLUDEDIRS 	:= ../../../vendor/jsonsl  ../../../vendor/libb64
 

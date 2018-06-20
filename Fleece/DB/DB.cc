@@ -35,9 +35,13 @@ namespace fleece {
         static constexpr const char* kMagicText = "FleeceDB\n\0\0\0\0\0\0\0";
         static const uint64_t kMagic2 = 0xBAD724227CA1955F;
 
-        char      magicText[14] {"FleeceDB\n\0\0\0\0"};
+        char      magicText[14];
         uint16_le size          {sizeof(FileHeader)};
         uint64_le magic2        {kMagic2};
+
+        FileHeader() {
+            memcpy(magicText, "FleeceDB\n\0\0\0\0", sizeof(magicText));
+        }
     };
 
 
@@ -146,7 +150,7 @@ namespace fleece {
         const FileHeader *header = (const FileHeader*)_data.buf;
         return memcmp(header->magicText, FileHeader::kMagicText, sizeof(header->magicText)) == 0
             && header->magic2 == FileHeader::kMagic2
-            && header->size < max(_pageSize, 4096lu);
+            && header->size < max(_pageSize, (size_t)4096);
     }
 
 
@@ -235,7 +239,12 @@ namespace fleece {
         off_t finalPos = filePos + sizeof(FileTrailer);
         if (finalPos % _pageSize != 0)
             finalPos += _pageSize - (finalPos % _pageSize);
+#ifdef FL_ESP32
+        fseek(f, finalPos - 1, SEEK_SET);
+        fputc(0, f);
+#else
         checkErrno(ftruncate(fileno(f), finalPos), "Can't grow the file");
+#endif
 
         if (flush)
             flushFile(f, true);

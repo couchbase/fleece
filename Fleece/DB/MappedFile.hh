@@ -6,9 +6,15 @@
 
 #pragma once
 #include "RefCounted.hh"
-#include "mmap_slice.hh"
 #include <string>
 #include <stdio.h>
+
+#ifdef FL_ESP32
+#include "ESPMappedSlice.hh"
+#else
+#include "mmap_slice.hh"
+#endif
+
 
 namespace fleece {
 
@@ -57,8 +63,12 @@ namespace fleece {
         std::string const _path, _mode;
         size_t _maxSize;
         FILE* _fd {nullptr};
-        mmap_slice _mapping;
         slice _contents;
+#ifdef FL_ESP32
+        esp_mapped_slice _mapping;
+#else
+        mmap_slice _mapping;
+#endif
     };
 
 

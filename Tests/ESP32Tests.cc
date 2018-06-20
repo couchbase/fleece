@@ -19,12 +19,10 @@
 #include "FleeceTests.hh"
 #include "Fleece.hh"
 #include "sliceIO.hh"
+#include "ESPMappedSlice.hh"
 #include <iostream>
 
 #include "esp_system.h"
-#include "esp_spi_flash.h"
-#include "esp_partition.h"
-
 using namespace std;
 
 
@@ -52,8 +50,8 @@ static void dump(const void *start, size_t size) {
         cerr << "\n";
     }
     cerr << dec;
-
 }
+
 
 TEST_CASE("ESP32 mmap") {
     // http://esp-idf.readthedocs.io/en/latest/api-reference/storage/spi_flash.html#_CPPv218esp_partition_mmapPK15esp_partition_t8uint32_t8uint32_t23spi_flash_mmap_memory_tPPKvP23spi_flash_mmap_handle_t
@@ -63,7 +61,7 @@ TEST_CASE("ESP32 mmap") {
 
     auto ip = esp_partition_find(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_ANY, "mmap");
     REQUIRE(ip);
-    auto partition = esp_partition_get(ip);
+    const esp_partition_t* partition = esp_partition_get(ip);
     cerr << "Partition offset = 0x" << hex << partition->address << dec
          << ", size = " << partition->size << "\n";
 
@@ -91,6 +89,37 @@ TEST_CASE("ESP32 mmap") {
     cerr << "Writing some data: \"" << buf << "\"\n";
     CHECK(esp_partition_write(partition, 0, buf, len) == 0);
     dump(mapped, 128);
+}
 
-    CHECK(slice(mapped, len) == slice(buf, len));
+
+TEST_CASE("esp_mapped_slice") {
+    esp_mapped_slice mapped("mmap");
+    cerr << "Initial partition data:\n";
+    dump(mapped.buf, 128);
+
+    cerr << "Opening FILE...\n";
+    FILE* pf = mapped.open("w+");
+    REQUIRE(pf != nullptr);
+
+    CHECK(fwrite("Testing", 1, 7, pf) == 7);
+    CHECK(fwrite(" 123", 1, 4, pf) == 4);
+    fflush(pf);
+    CHECK(fwrite(" and checking 456", 1, 17, pf) == 17);
+    fclose(pf);
+
+    cerr << "Partition data:\n";
+    dump(mapped.buf, 32);
+    CHECK(slice(mapped.buf, 28) == "Testing 123 and checking 456"_sl);
+
+    cerr << "Reopening FILE...\n";
+    pf = mapped.open("r+");
+    REQUIRE(pf != nullptr);
+
+    CHECK(fseek(pf, 28, SEEK_SET) >= 0);
+    CHECK(fwrite(" again!", 1, 7, pf) == 7);
+    fclose(pf);
+
+    cerr << "Partition data:\n";
+    dump(mapped.buf, 48);
+    CHECK(slice(mapped.buf, 35) == "Testing 123 and checking 456 again!"_sl);
 }

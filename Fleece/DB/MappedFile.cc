@@ -43,6 +43,10 @@ namespace fleece {
         if (_fd)
             return;
 
+#ifdef FL_ESP32
+        _mapping = esp_mapped_slice(_path.c_str());
+        _fd = _mapping.open(_mode.c_str());
+#else
         if (_mode == "rw+") {
             // "rw+" means to open read/write, create the file if necessary, but not truncate it:
             _fd = fopen(_path.c_str(), "r+");
@@ -51,13 +55,20 @@ namespace fleece {
         } else {
             _fd = fopen(_path.c_str(), _mode.c_str());
         }
+#endif
+
         if (!_fd)
             FleeceException::_throwErrno("Can't open file");
 
         off_t fileSize = getFileSize();
+#ifdef FL_ESP32
+        _maxSize = _mapping.size;
+#else
         if (_maxSize == 0)
             _maxSize = (size_t)min(fileSize, (off_t)SIZE_MAX);
         _mapping = mmap_slice(_fd, _maxSize);
+#endif
+
         resizeTo(fileSize);
     }
 
