@@ -18,6 +18,7 @@
 
 #include "Writer.hh"
 #include "PlatformCompat.hh"
+#include "FleeceException.hh"
 #include "decode.h"
 #include "encode.h"
 #include <assert.h>
@@ -110,8 +111,10 @@ namespace fleece {
 
     const void* Writer::writeToNewChunk(const void* data, size_t length) {
         if (_outputFile) {
-            if (data)
-                fwrite(data, length, 1, _outputFile);
+            if (data) {
+                if (fwrite(data, 1, length, _outputFile) < length)
+                    FleeceException::_throwErrno("Writer can't write to file");
+            }
             return nullptr;
         } else {
             if (_usuallyTrue(_chunkSize <= 64*1024))

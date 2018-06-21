@@ -85,6 +85,7 @@
 		279AC53C1C097941002C80DB /* Value+Dump.cc in Sources */ = {isa = PBXBuildFile; fileRef = 279AC53B1C097941002C80DB /* Value+Dump.cc */; };
 		27A924CF1D9C32E800086206 /* Path.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27A924CD1D9C32E800086206 /* Path.cc */; };
 		27A924D01D9C32E800086206 /* Path.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27A924CE1D9C32E800086206 /* Path.hh */; };
+		27B802CE20DC537E00599DF0 /* ESPPartitionFile.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27B802CC20DC537E00599DF0 /* ESPPartitionFile.hh */; };
 		27C4ACAC1CE5146500938365 /* Array.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27C4ACAA1CE5146500938365 /* Array.cc */; };
 		27C4ACAD1CE5146500938365 /* Array.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C4ACAB1CE5146500938365 /* Array.hh */; };
 		27C8DF072084102900A99BFC /* MutableHashTree.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C8DF052084102900A99BFC /* MutableHashTree.hh */; };
@@ -311,6 +312,8 @@
 		27A8B4E91EC4D0B700BB4C07 /* Stopwatch.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Stopwatch.hh; sourceTree = "<group>"; };
 		27A924CD1D9C32E800086206 /* Path.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Path.cc; sourceTree = "<group>"; };
 		27A924CE1D9C32E800086206 /* Path.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Path.hh; sourceTree = "<group>"; };
+		27B802CB20DC537E00599DF0 /* ESPPartitionFile.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ESPPartitionFile.cc; sourceTree = "<group>"; };
+		27B802CC20DC537E00599DF0 /* ESPPartitionFile.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ESPPartitionFile.hh; sourceTree = "<group>"; };
 		27BCA79120D9815E00DB56E7 /* ESP32Tests.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ESP32Tests.cc; sourceTree = "<group>"; };
 		27BCA79520D9BAE600DB56E7 /* ESPMappedSlice.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ESPMappedSlice.cc; sourceTree = "<group>"; };
 		27BCA79620D9BAE600DB56E7 /* ESPMappedSlice.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ESPMappedSlice.hh; sourceTree = "<group>"; };
@@ -477,6 +480,8 @@
 				278163BB1CE7A72300B94E32 /* KeyTree.hh */,
 				27CDD38A20D968A600F31112 /* mmap_slice.cc */,
 				27CDD38B20D968A600F31112 /* mmap_slice.hh */,
+				27B802CB20DC537E00599DF0 /* ESPPartitionFile.cc */,
+				27B802CC20DC537E00599DF0 /* ESPPartitionFile.hh */,
 				27BCA79520D9BAE600DB56E7 /* ESPMappedSlice.cc */,
 				27BCA79620D9BAE600DB56E7 /* ESPMappedSlice.hh */,
 				2715BA1D1D820C690061D92E /* PlatformCompat.hh */,
@@ -759,6 +764,7 @@
 				274D8253209CF9B3008BB39F /* HeapValue.hh in Headers */,
 				275CED531D3EF7BE001DE46C /* FleeceException.hh in Headers */,
 				27E3DD431DB6A14200F2872D /* SharedKeys.hh in Headers */,
+				27B802CE20DC537E00599DF0 /* ESPPartitionFile.hh in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

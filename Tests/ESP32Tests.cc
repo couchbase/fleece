@@ -84,7 +84,7 @@ TEST_CASE("ESP32 mmap") {
         wrongByteCount += (byte[i] != 0xFF);
     CHECK(wrongByteCount == 0);
 
-    char buf[128];
+    char buf[100];
     auto len = sprintf(buf, "Memory mapping is cool! %d", esp_random()) + 1;
     cerr << "Writing some data: \"" << buf << "\"\n";
     CHECK(esp_partition_write(partition, 0, buf, len) == 0);
@@ -95,6 +95,8 @@ TEST_CASE("ESP32 mmap") {
 TEST_CASE("esp_mapped_slice") {
     esp_mapped_slice mapped("mmap");
     cerr << "Initial partition data:\n";
+    CHECK(mapped.size >= 100000);
+    CHECK(mapped.size % SPI_FLASH_MMU_PAGE_SIZE == 0);
     dump(mapped.buf, 128);
 
     cerr << "Opening FILE...\n";

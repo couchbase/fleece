@@ -275,7 +275,7 @@ namespace fleece {
 
 
             bool remove(Target target, unsigned shift) {
-                assert(shift + kBitShift < 8*sizeof(hash_t));//TEMP
+                assert(shift + kBitShift < 8*sizeof(hash_t));
                 unsigned bitNo = childBitNumber(target.hash, shift);
                 if (!hasChild(bitNo))
                     return false;

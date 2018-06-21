@@ -148,6 +148,8 @@ namespace fleece {
         /** Returns a full dump of the values in the data, including offsets and hex. */
         static std::string dump(slice data);
 
+        void dump(std::ostream&) const;
+
         /** A static 'null' Value, as a convenience.
             (This is not a null pointer, rather a pointer to a Value whose type is kNull.) */
         static const Value* const kNullValue;

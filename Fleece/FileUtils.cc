@@ -22,8 +22,8 @@ namespace fleece {
 
 
     void check_fwrite(FILE *f, const void *data, size_t size) {
-        auto written = fwrite(data, size, 1, f);
-        if (written < 1)
+        auto written = fwrite(data, 1, size, f);
+        if (written < size)
             FleeceException::_throwErrno("Can't write to file");
     }
 

@@ -240,8 +240,8 @@ namespace fleece {
         if (finalPos % _pageSize != 0)
             finalPos += _pageSize - (finalPos % _pageSize);
 #ifdef FL_ESP32
-        fseek(f, finalPos - 1, SEEK_SET);
-        fputc(0, f);
+        for (auto i = filePos; i < finalPos - sizeof(FileTrailer); ++i)
+            fputc(0, f);
 #else
         checkErrno(ftruncate(fileno(f), finalPos), "Can't grow the file");
 #endif
@@ -252,7 +252,9 @@ namespace fleece {
         // Write the trailer:
         FileTrailer trailer(uint32_t(finalPos - sizeof(FileTrailer) - filePos),
                             (delta ? _data.size : 0));
+#ifndef FL_ESP32
         checkErrno(fseeko(f, -sizeof(FileTrailer), SEEK_END), "seek");
+#endif
         check_fwrite(f, &trailer, sizeof(trailer));
 
         // Flush again to make sure the header is durably saved:
@@ -266,6 +268,7 @@ namespace fleece {
     void DB::flushFile(FILE *f, bool fullSync) {
         // Adapted from SQLite source code
         checkErrno(fflush(f), "Can't flush file");
+#ifndef FL_ESP32
 #ifdef F_FULLFSYNC
         if( fullSync && fcntl(fileno(f), F_FULLFSYNC, 0) == 0)
             return;
@@ -273,6 +276,7 @@ namespace fleece {
         // If the FULLFSYNC failed, or isn't supported, fall back to fsync().
         if (fsync(fileno(f)) < 0)
             Warn("DB failed to flush file to disk (errno=%d)", errno);
+#endif
     }
 
 

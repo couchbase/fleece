@@ -363,6 +363,7 @@ namespace fleece {
                 writeData(value->asData());
                 break;
             case kArrayTag: {
+                ++_copyingCollection;
                 auto iter = value->asArray()->begin();
                 beginArray(iter.count());
                 for (; iter; ++iter) {
@@ -370,9 +371,11 @@ namespace fleece {
                         writeValue(iter.value(), sk, writeNestedValue);
                 }
                 endArray();
+                --_copyingCollection;
                 break;
             }
             case kDictTag: {
+                ++_copyingCollection;
                 auto dict = (const Dict*)value;
                 if (dict->isMutable()) {
                     dict->heapDict()->writeTo(*this, sk/*, writeNestedValue*/);
@@ -381,21 +384,13 @@ namespace fleece {
                     beginDictionary(iter.count());
                     for (; iter; ++iter) {
                         if (!writeNestedValue || !(*writeNestedValue)(iter.key(), iter.value())) {
-                            if (iter.key()->isInteger()) {
-                                int intKey = (int)iter.key()->asInt();
-                                if (sk && sk != _sharedKeys) {
-                                    writeKey(sk->decode(intKey));
-                                } else {
-                                    writeKey(intKey);
-                                }
-                            } else {
-                                writeKey(iter.key()->asString());
-                            }
+                            writeKey(iter.key(), sk);
                             writeValue(iter.value(), sk, writeNestedValue);
                         }
                     }
                     endDictionary();
                 }
+                --_copyingCollection;
                 break;
             }
             default:
@@ -477,7 +472,10 @@ namespace fleece {
             return;
         }
         addingKey();
-        addedKey(_writeString(s));
+        slice writtenKey = _writeString(s);
+        if (!writtenKey.buf && _copyingCollection)
+            writtenKey = s;         // Workaround for written strings not being kept in memory by the Writer if it's writing to a file
+        addedKey(writtenKey);
     }
 
     void Encoder::writeKey(int n) {
@@ -499,7 +497,7 @@ namespace fleece {
         }
     }
 
-    void Encoder::writeKey(const Value *key, SharedKeys *sk) {
+    void Encoder::writeKey(const Value *key, const SharedKeys *sk) {
         if (key->isInteger()) {
             int intKey = (int)key->asInt();
             if (sk && sk != _sharedKeys) {
@@ -510,11 +508,12 @@ namespace fleece {
                 writeKey(intKey);
             }
         } else {
-            writeKey(key->asString());
+            writeKey(key);
         }
     }
 
     void Encoder::addedKey(slice str) {
+        // Note: str will be nullslice iff the key is numeric
         _items->keys.push_back(str);
     }
 
@@ -653,10 +652,12 @@ namespace fleece {
         for (unsigned i = 0; i < n; i++) {
             if (keys[i].buf == nullptr) {
                 const Value *item = &items[2*i];
-                if (item->tag() == kStringTag)
+                if (item->tag() == kStringTag) {
                     keys[i].setBuf(offsetby(item, 1));                      // inline string
-                else
+                } else {
+                    assert(item->tag() == kShortIntTag);
                     keys[i] = slice(nullptr, (size_t)item->asUnsigned());   // integer
+                }
             }
         }
 

@@ -38,10 +38,10 @@ namespace fleece {
         using checkpoint_t = uint64_t;
 
         enum OpenMode {
-            kReadOnly  = 0,
-            kWrite,
-            kCreateAndWrite,
-            kEraseAndWrite,
+            kReadOnly  = 0,     // Read-only; file must exist
+            kWrite,             // Writeable; file must exist
+            kCreateAndWrite,    // Writeable; will create file if it doesn't exist
+            kEraseAndWrite,     // Writeable; will erase if file doesn't exist, else create it
         };
 
         /** The default amount of address space (NOT memory!) reserved by a DB's memory map.

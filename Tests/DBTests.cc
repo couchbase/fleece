@@ -16,42 +16,60 @@
 // limitations under the License.
 //
 
-#if !FL_EMBEDDED
-
 #include "FleeceTests.hh"
 #include "Fleece.hh"
 #include "MutableDict.hh"
 #include "DB.hh"
 #include <functional>
-#include <unistd.h>
 
 using namespace std;
 using namespace fleece;
 
 
+#ifdef FL_ESP32
+extern const uint8_t k1000PeopleStart[] asm("_binary_1000people_fleece_start");
+extern const uint8_t k1000PeopleEnd[]   asm("_binary_1000people_fleece_end");
+#endif
+
+
 class DBTests {
 public:
     unique_ptr<DB> db;
+#ifndef FL_ESP32
     alloc_slice populatedFrom;
+#endif
     vector<alloc_slice> names;
 
+#ifdef FL_ESP32
+    static constexpr const char* kDBPath = "mmap";
+#else
     static constexpr const char* kDBPath = "/tmp/DB_test.fleecedb";
     static constexpr const char* kAltDBPath = "/tmp/DB_test_alt.fleecedb";
+#endif
 
     DBTests() {
-        unlink(kDBPath);
-        reopen(DB::kCreateAndWrite);
+        reopen(DB::kEraseAndWrite);
     }
 
     void reopen(DB::OpenMode mode =DB::kWrite) {
+        db.reset();
         db.reset( new DB(kDBPath, mode) );
     }
 
     void populate() {
-        populatedFrom = readFile(kTestFilesDir "1000people.fleece");
+#ifdef FL_ESP32
+        slice populatedFrom(k1000PeopleStart, k1000PeopleEnd);
+#else
+        populatedFrom = readTestFile("1000people.fleece");
+#endif
         auto people = Value::fromTrustedData(populatedFrom)->asArray();
 
+        int n = 0;
         for (Array::iterator i(people); i; ++i) {
+#if FL_EMBEDDED
+            if (++n > 200)
+                break;
+#endif
             auto person = i.value()->asDict();
             auto key = person->get("guid"_sl)->asString();
             names.emplace_back(key);
@@ -59,6 +77,12 @@ public:
         }
         db->commitChanges();
     }
+
+#if FL_EMBEDDED
+    static constexpr size_t kPopulatedCheckpoint = 0x37000; // because only 200 people added
+#else
+    static constexpr size_t kPopulatedCheckpoint = 0x10e000;
+#endif
 
     void iterateAndCheck() {
         set<alloc_slice> keys;
@@ -86,6 +110,9 @@ public:
         REQUIRE(eleven);
         if (verbose)
             cerr << "Eleven was: " << eleven->toJSONString() << "\n";
+        REQUIRE(eleven->get("name"_sl) != nullptr);
+        CHECK(eleven->get("name"_sl)->asString() == "Dollie Reyes"_sl);
+
         eleven->set("name"_sl, "Eleven"_sl);
         eleven->set("age"_sl, 12);
         eleven->set("about"_sl, "REDACTED"_sl);
@@ -97,7 +124,12 @@ public:
     void modifyFile(function<void(FILE*)> callback) {
         db.reset(); // close DB
 
+#ifdef FL_ESP32
+        esp_mapped_slice map(kDBPath);
+        FILE *f = map.open("r+*");
+#else
         FILE *f = fopen(kDBPath, "r+");
+#endif
         REQUIRE(f);
         callback(f);
         fclose(f);
@@ -105,10 +137,13 @@ public:
 };
 
 
+constexpr size_t DBTests::kPopulatedCheckpoint;
+
+
 TEST_CASE_METHOD(DBTests, "Create DB", "[DB]") {
     populate();
 
-    db.reset( new DB(kDBPath) );
+    reopen();
 
     for (auto name : names) {
         auto value = db->get(name);
@@ -137,15 +172,20 @@ TEST_CASE_METHOD(DBTests, "Small Update DB", "[DB]") {
     CHECK(checkpoint2 > checkpoint1);
     CHECK(db->previousCheckpoint() == checkpoint1);
 
+    cerr << "Looking at previous checkpoint\n";
     DB olderdb(*db, db->previousCheckpoint());
     CHECK(olderdb.checkpoint() == checkpoint1);
     CHECK(olderdb.previousCheckpoint() == 0);
     const Dict *eleven = olderdb.get(names[11]);
     REQUIRE(eleven);
-    CHECK(eleven->get("name"_sl)->asString() == "Dollie Reyes"_sl);
+    cerr << "\nEleven was: " << eleven->toJSONString() << "\n";
+    auto name = eleven->get("name"_sl);
+    REQUIRE(name);
+    CHECK(name->asString() == "Dollie Reyes"_sl);
 }
 
 
+#ifndef FL_ESP32
 TEST_CASE_METHOD(DBTests, "Export DB to new file", "[DB]") {
     populate();
     cerr << "Original database is " << db->checkpoint() << " bytes\n";
@@ -157,6 +197,7 @@ TEST_CASE_METHOD(DBTests, "Export DB to new file", "[DB]") {
     cerr << "Exported database is " << db->checkpoint() << " bytes\n";
     iterateAndCheck();
 }
+#endif
 
 
 TEST_CASE_METHOD(DBTests, "Corrupt DB header", "[DB]") {
@@ -165,7 +206,7 @@ TEST_CASE_METHOD(DBTests, "Corrupt DB header", "[DB]") {
 
     modifyFile([](FILE *f) {
         fseeko(f, 0, SEEK_SET);
-        fputc(0xFF, f);
+        fputc(0x00, f);
     });
 
     CHECK_THROWS_AS(reopen(), FleeceException);
@@ -176,7 +217,7 @@ TEST_CASE_METHOD(DBTests, "Corrupt DB all trailers", "[DB]") {
 
     modifyFile([](FILE *f) {
         fseeko(f, -1, SEEK_END);
-        fputc(0xFF, f);
+        fputc(0x00, f);
     });
 
     CHECK_THROWS_AS(reopen(), FleeceException);
@@ -185,7 +226,7 @@ TEST_CASE_METHOD(DBTests, "Corrupt DB all trailers", "[DB]") {
 TEST_CASE_METHOD(DBTests, "Corrupt DB by appending", "[DB]") {
     populate();
     update(false);
-    CHECK(db->checkpoint() == 0x10e000);
+    CHECK(db->checkpoint() == kPopulatedCheckpoint);
 
     modifyFile([](FILE *f) {
         fseeko(f, 0, SEEK_END);
@@ -194,7 +235,7 @@ TEST_CASE_METHOD(DBTests, "Corrupt DB by appending", "[DB]") {
 
     reopen();
     CHECK(db->isDamaged());
-    CHECK(db->checkpoint() == 0x10e000);
+    CHECK(db->checkpoint() == kPopulatedCheckpoint);
 
     MutableDict *eleven = db->getMutable(names[11]);
     REQUIRE(eleven);
@@ -211,7 +252,7 @@ TEST_CASE_METHOD(DBTests, "Corrupt DB by overwriting trailer", "[DB]") {
 
     modifyFile([](FILE *f) {
         fseeko(f, -1, SEEK_END);
-        fputc(0xFF, f);
+        fputc(0x00, f);
     });
 
     // Verify file reopens to previous (first) checkpoint:
@@ -224,5 +265,3 @@ TEST_CASE_METHOD(DBTests, "Corrupt DB by overwriting trailer", "[DB]") {
     REQUIRE(eleven);
     CHECK(eleven->get("name"_sl)->asString() == "Dollie Reyes"_sl);
 }
-
-#endif // !FL_EMBEDDED

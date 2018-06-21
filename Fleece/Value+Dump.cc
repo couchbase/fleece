@@ -55,12 +55,14 @@ namespace fleece {
             default: { // Pointer:
                 auto ptr = _asPointer();
                 ptr->deref(wide)->writeDumpBrief(out, base, true);
-                auto offset = - (int64_t)(wide ? ptr->offset<true>() : ptr->offset<false>());
+                long long offset = - (long long)(wide ? ptr->offset<true>() : ptr->offset<false>());
                 char buf[32];
                 if (base)
-                    sprintf(buf, " (@%04llx)", (long long)(((uint8_t*)_byte + offset) - (uint8_t*)base)); // absolute
+                    offset = (((uint8_t*)_byte + offset) - (uint8_t*)base); // absolute
+                if (offset >= 0)
+                    sprintf(buf, " (@%04llx)", offset);
                 else
-                    sprintf(buf, " (@-%04llx)", (long long)-offset);
+                    sprintf(buf, " (@-%04llx)", -offset);
                 out << buf;
                 break;
             }
@@ -111,6 +113,9 @@ namespace fleece {
         return size + (size & 1);
     }
 
+    void Value::dump(std::ostream &out) const {
+        dump(out, false, 0, this);
+    }
 
     // Recursively adds addresses of v and its children to byAddress map
     void Value::mapAddresses(mapByAddress &byAddress) const {

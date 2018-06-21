@@ -140,7 +140,7 @@ namespace fleece {
 
         /** Writes a string Value as a key to the current dictionary. */
         void writeKey(const Value* NONNULL);
-        void writeKey(const Value* NONNULL, SharedKeys*);
+        void writeKey(const Value* NONNULL, const SharedKeys*);
 
         /** Associates a SharedKeys object with this Encoder. The writeKey() methods that take
             strings will consult this object to possibly map the key to an integer. */
@@ -216,6 +216,7 @@ namespace fleece {
         bool _uniqueStrings {true};  // Should strings be uniqued before writing?
         SharedKeys *_sharedKeys {nullptr};  // Client-provided key-to-int mapping
         slice _base;                 // Base Fleece data being appended to (if any)
+        int _copyingCollection {0};    // Nonzero inside writeValue when writing array/dict
         bool _writingKey    {false}; // True if Value being written is a key
         bool _blockedOnKey  {false}; // True if writes should be refused
         bool _trailer       {true};  // Write standard trailer at end?

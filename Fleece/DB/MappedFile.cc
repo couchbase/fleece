@@ -45,7 +45,7 @@ namespace fleece {
 
 #ifdef FL_ESP32
         _mapping = esp_mapped_slice(_path.c_str());
-        _fd = _mapping.open(_mode.c_str());
+        _fd = _mapping.open(_mode.c_str(), 32768);
 #else
         if (_mode == "rw+") {
             // "rw+" means to open read/write, create the file if necessary, but not truncate it:

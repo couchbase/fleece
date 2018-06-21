@@ -50,7 +50,10 @@ namespace fleece {
             the caller and will be freed when no more alloc_slices refer to it. */
         alloc_slice extractOutput();
 
+        /** Writes data. If the output is going to memory (the default), returns a pointer to where
+            the data got written to. If the output is being written to a file, returns nullptr. */
         const void* write(const void* data, size_t length);
+
         const void* write(slice s)              {return write(s.buf, s.size);}
 
         Writer& operator<< (uint8_t byte)       {return operator<<(slice(&byte,1));}
