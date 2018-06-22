@@ -261,27 +261,37 @@ namespace fleece {
         if (_usuallyTrue(_uniqueStrings && s.size >= kNarrow && s.size <= kMaxSharedStringSize)) {
             auto &entry = _strings.find(s);
             if (entry.first.buf != nullptr) {
-//                fprintf(stderr, "Found `%.*s` --> %u\n", (int)s.size, s.buf, entry.second);
-                writePointer(entry.second.offset - _base.size);
-#ifndef NDEBUG
-                _numSavedStrings++;
-#endif
-                return entry.first;
-            } else {
-                auto offset = _base.size + nextWritePos();
-                throwIf(offset > 1u<<31, MemoryError, "encoded data too large");
-                s = writeData(kStringTag, s);
-                if (s.buf) {
+                // Write pointer to existing string, as long as the offset's not too large
+                ssize_t offset = entry.second.offset - _base.size;
+                if (_items->wide || nextWritePos() - offset <= Pointer::kMaxNarrowOffset - 32) {
+                    writePointer(offset);
+    #ifndef NDEBUG
+                    _numSavedStrings++;
+    #endif
+                    return entry.first;
+                }
+            }
+
+            auto offset = _base.size + nextWritePos();
+            throwIf(offset > 1u<<31, MemoryError, "encoded data too large");
+            s = writeData(kStringTag, s);
+            if (s.buf) {
 #if 0
-                    if (_strings.count() == 0)
-                        fprintf(stderr, "---- new encoder ----\n");
-                    fprintf(stderr, "Caching `%.*s` --> %u\n", (int)s.size, s.buf, offset);
+                if (_strings.count() == 0)
+                    fprintf(stderr, "---- new encoder ----\n");
+                fprintf(stderr, "Caching `%.*s` --> %u\n", (int)s.size, s.buf, offset);
 #endif
+                if (entry.first.buf == nullptr) {
+                    // insert string
                     StringTable::info i = {(uint32_t)offset};
                     _strings.addAt(entry, s, i);
+                } else {
+                    // replace string
+                    entry.second.offset = (uint32_t)offset;
                 }
-                return s;
             }
+            return s;
+
         } else {
             return writeData(kStringTag, s);
         }
