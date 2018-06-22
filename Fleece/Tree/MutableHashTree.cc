@@ -1,5 +1,5 @@
 //
-//  MHashTree.cc
+//  MutableHashTree.cc
 //  Fleece
 //
 // Copyright © 2018 Couchbase. All rights reserved.
@@ -87,7 +87,7 @@ namespace fleece {
         };
 
 
-        // Base class of nodes within a MHashTree.
+        // Base class of nodes within a MutableHashTree.
         class MutableNode {
         public:
             MutableNode(unsigned capacity)
@@ -553,7 +553,7 @@ namespace fleece {
     } // end namespace
 
 
-#pragma mark - MHashTree ITSELF
+#pragma mark - MutableHashTree ITSELF
 
 
     using namespace hashtree;
@@ -686,7 +686,7 @@ namespace fleece {
         if (_imRoot && !_root) {
             _imRoot->dump(out);
         } else {
-            out << "MHashTree {";
+            out << "MutableHashTree {";
             if (_root) {
                 out << "\n";
                 _root->dump(out);

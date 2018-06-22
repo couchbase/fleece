@@ -1,5 +1,5 @@
 //
-//  MHashTreeTests.cc
+//  MutableHashTreeTests.cc
 //  Fleece
 //
 // Copyright © 2018 Couchbase. All rights reserved.
@@ -97,14 +97,14 @@ public:
 
 
 
-TEST_CASE_METHOD(HashTreeTests, "Empty MHashTree", "[HashTree]") {
+TEST_CASE_METHOD(HashTreeTests, "Empty MutableHashTree", "[HashTree]") {
     CHECK(tree.count() == 0);
     CHECK(tree.get(alloc_slice("foo")) == 0);
     CHECK(!tree.remove(alloc_slice("foo")));
 }
 
 
-TEST_CASE_METHOD(HashTreeTests, "Tiny MHashTree Insert", "[HashTree]") {
+TEST_CASE_METHOD(HashTreeTests, "Tiny MutableHashTree Insert", "[HashTree]") {
     createItems(1);
     auto key = keys[0];
     auto val = values->get(0);
@@ -122,7 +122,7 @@ TEST_CASE_METHOD(HashTreeTests, "Tiny MHashTree Insert", "[HashTree]") {
 }
 
 
-TEST_CASE_METHOD(HashTreeTests, "Bigger MHashTree Insert", "[HashTree]") {
+TEST_CASE_METHOD(HashTreeTests, "Bigger MutableHashTree Insert", "[HashTree]") {
     static constexpr int N = 1000;
     createItems(N);
     insertItems();
@@ -131,7 +131,7 @@ TEST_CASE_METHOD(HashTreeTests, "Bigger MHashTree Insert", "[HashTree]") {
 }
 
 
-TEST_CASE_METHOD(HashTreeTests, "Tiny MHashTree Remove", "[HashTree]") {
+TEST_CASE_METHOD(HashTreeTests, "Tiny MutableHashTree Remove", "[HashTree]") {
     createItems(1);
     auto key = keys[0];
     auto val = values->get(0);
@@ -143,7 +143,7 @@ TEST_CASE_METHOD(HashTreeTests, "Tiny MHashTree Remove", "[HashTree]") {
 }
 
 
-TEST_CASE_METHOD(HashTreeTests, "Bigger MHashTree Remove", "[HashTree]") {
+TEST_CASE_METHOD(HashTreeTests, "Bigger MutableHashTree Remove", "[HashTree]") {
 #if FL_EMBEDDED
     static constexpr int N = 1000;
 #else
@@ -162,7 +162,7 @@ TEST_CASE_METHOD(HashTreeTests, "Bigger MHashTree Remove", "[HashTree]") {
 }
 
 
-TEST_CASE_METHOD(HashTreeTests, "MHashTree Iterate", "[HashTree]") {
+TEST_CASE_METHOD(HashTreeTests, "MutableHashTree Iterate", "[HashTree]") {
     static constexpr int N = 1000;
     createItems(N);
 
@@ -183,7 +183,7 @@ TEST_CASE_METHOD(HashTreeTests, "MHashTree Iterate", "[HashTree]") {
 }
 
 
-TEST_CASE_METHOD(HashTreeTests, "Tiny MHashTree Write", "[HashTree]") {
+TEST_CASE_METHOD(HashTreeTests, "Tiny MutableHashTree Write", "[HashTree]") {
     createItems(10);
     auto key = keys[8];
     auto val = values->get(8);
@@ -203,7 +203,7 @@ TEST_CASE_METHOD(HashTreeTests, "Tiny MHashTree Write", "[HashTree]") {
 }
 
 
-TEST_CASE_METHOD(HashTreeTests, "Bigger MHashTree Write", "[HashTree]") {
+TEST_CASE_METHOD(HashTreeTests, "Bigger MutableHashTree Write", "[HashTree]") {
     static constexpr int N = 100;
     createItems(N);
     insertItems();
@@ -225,7 +225,7 @@ TEST_CASE_METHOD(HashTreeTests, "Tiny HashTree Mutate", "[HashTree]") {
     const HashTree *itree = HashTree::fromData(data);
     itree->dump(cerr);
 
-    // Wrap in a MHashTree and get the key:
+    // Wrap in a MutableHashTree and get the key:
     tree = itree;
     
     tree.dump(cerr);
@@ -254,7 +254,7 @@ TEST_CASE_METHOD(HashTreeTests, "Bigger HashTree Mutate by replacing", "[HashTre
     const HashTree *itree = HashTree::fromData(data);
 //    itree->dump(cerr);
 
-    // Wrap in a MHashTree and get the key:
+    // Wrap in a MutableHashTree and get the key:
     tree = itree;
 
 //    tree.dump(cerr);

@@ -1,7 +1,7 @@
 //
-//  MHashTree.hh
+//  MutableHashTree.hh
 //  Fleece
-// Copyright © 2018 Couchbase. All rights reserved.
+//  Copyright © 2018 Couchbase. All rights reserved.
 //
 
 #pragma once

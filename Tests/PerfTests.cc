@@ -304,8 +304,8 @@ TEST_CASE("Perf TreeSearch", "[.Perf]") {
         bench.start();
         {
             for (int k = 0; k < 100; k++) {
-                //const Value *person = imTree->get(keys[k]);
-                const Value *person = tree.get(keys[k]);
+                const Value *person = imTree->get(keys[k]);
+                //const Value *person = tree.get(keys[k]);
                 if (!person)
                     abort();
             }

@@ -91,6 +91,7 @@ public:
     void checkReadU(uint64_t i) {
         auto v = Value::fromData(result);
         if (!v || v->type() != kNumber || !v->isInteger() || v->asUnsigned() != i || v->asDouble() != (double)i) {
+            REQUIRE(v != nullptr);
             REQUIRE(v->type() == kNumber);
             REQUIRE(v->isInteger());
             REQUIRE(v->asUnsigned() == i);
