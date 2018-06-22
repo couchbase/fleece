@@ -168,6 +168,16 @@ TEST_CASE_METHOD(DBTests, "Small Update DB", "[DB]") {
     update(true);
     iterateAndCheck();
 
+    cerr << "Reopening DB...\n";
+    reopen();
+    iterateAndCheck();
+
+    {
+        const Dict *eleven = db->get(names[11]);
+        REQUIRE(eleven);
+        eleven->dump(cerr);
+    }
+
     auto checkpoint2 = db->checkpoint();
     CHECK(checkpoint2 > checkpoint1);
     CHECK(db->previousCheckpoint() == checkpoint1);

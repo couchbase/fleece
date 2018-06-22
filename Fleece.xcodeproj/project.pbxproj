@@ -86,6 +86,8 @@
 		27A924CF1D9C32E800086206 /* Path.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27A924CD1D9C32E800086206 /* Path.cc */; };
 		27A924D01D9C32E800086206 /* Path.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27A924CE1D9C32E800086206 /* Path.hh */; };
 		27B802CE20DC537E00599DF0 /* ESPPartitionFile.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27B802CC20DC537E00599DF0 /* ESPPartitionFile.hh */; };
+		27B802D720DD750E00599DF0 /* NodeRef.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27B802D520DD750E00599DF0 /* NodeRef.cc */; };
+		27B802D820DD750E00599DF0 /* NodeRef.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27B802D620DD750E00599DF0 /* NodeRef.hh */; };
 		27C4ACAC1CE5146500938365 /* Array.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27C4ACAA1CE5146500938365 /* Array.cc */; };
 		27C4ACAD1CE5146500938365 /* Array.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C4ACAB1CE5146500938365 /* Array.hh */; };
 		27C8DF072084102900A99BFC /* MutableHashTree.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C8DF052084102900A99BFC /* MutableHashTree.hh */; };
@@ -314,6 +316,9 @@
 		27A924CE1D9C32E800086206 /* Path.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Path.hh; sourceTree = "<group>"; };
 		27B802CB20DC537E00599DF0 /* ESPPartitionFile.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ESPPartitionFile.cc; sourceTree = "<group>"; };
 		27B802CC20DC537E00599DF0 /* ESPPartitionFile.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ESPPartitionFile.hh; sourceTree = "<group>"; };
+		27B802D520DD750E00599DF0 /* NodeRef.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = NodeRef.cc; sourceTree = "<group>"; };
+		27B802D620DD750E00599DF0 /* NodeRef.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = NodeRef.hh; sourceTree = "<group>"; };
+		27B802D920DD762A00599DF0 /* MutableNode.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MutableNode.hh; sourceTree = "<group>"; };
 		27BCA79120D9815E00DB56E7 /* ESP32Tests.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ESP32Tests.cc; sourceTree = "<group>"; };
 		27BCA79520D9BAE600DB56E7 /* ESPMappedSlice.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ESPMappedSlice.cc; sourceTree = "<group>"; };
 		27BCA79620D9BAE600DB56E7 /* ESPMappedSlice.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ESPMappedSlice.hh; sourceTree = "<group>"; };
@@ -624,9 +629,12 @@
 			children = (
 				277F45AF208E871000A0D159 /* HashTree.cc */,
 				277F45AE208E871000A0D159 /* HashTree.hh */,
+				2776AA702090EF05004ACE85 /* HashTree+Internal.hh */,
 				27C8DF062084102900A99BFC /* MutableHashTree.cc */,
 				27C8DF052084102900A99BFC /* MutableHashTree.hh */,
-				2776AA702090EF05004ACE85 /* HashTree+Internal.hh */,
+				27B802D520DD750E00599DF0 /* NodeRef.cc */,
+				27B802D620DD750E00599DF0 /* NodeRef.hh */,
+				27B802D920DD762A00599DF0 /* MutableNode.hh */,
 			);
 			path = Tree;
 			sourceTree = "<group>";
@@ -737,6 +745,7 @@
 				27CA08421F6B0E9400FF8C71 /* Dict.hh in Headers */,
 				2797BCAD1C0FBFDE00E5C991 /* StringTable.hh in Headers */,
 				27FE87F41E53E43200C5CF3F /* JSONEncoder.hh in Headers */,
+				27B802D820DD750E00599DF0 /* NodeRef.hh in Headers */,
 				27F666472017FE7C00A8ED31 /* TempArray.hh in Headers */,
 				270FA2831BF53CEA005DCB13 /* slice.hh in Headers */,
 				2734B8A01F8583FF00BE5249 /* MArray+ObjC.h in Headers */,
@@ -955,6 +964,7 @@
 				27298E3C1C00F812000CFBA8 /* JSONConverter.cc in Sources */,
 				279AC53C1C097941002C80DB /* Value+Dump.cc in Sources */,
 				27FE87F31E53E43200C5CF3F /* JSONEncoder.cc in Sources */,
+				27B802D720DD750E00599DF0 /* NodeRef.cc in Sources */,
 				2797BCAC1C0FBFDE00E5C991 /* StringTable.cc in Sources */,
 				274D8248209A5906008BB39F /* ValueSlot.cc in Sources */,
 				274D8252209CF9B3008BB39F /* HeapValue.cc in Sources */,

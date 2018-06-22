@@ -120,9 +120,12 @@ namespace fleece {
         /** Stores a new value under a key.
             @param key  The key.
             @param mode  Determines whether this is an insert, upsert, or update operation.
-            @param dict  The value, or nullptr to delete the key/value pair.
+            @param dict  The value, or nullptr to delete the key/value pair. If it's an immutable
+                        Value, the memory backing it must remain valid until the DB is closed
+                        or a different Value is stored.
             @return  True if the value was stored, false if not (according to the `mode`.) */
         bool put(slice key, PutMode mode, const Dict *dict);
+
         bool put(const char* NONNULL key, PutMode m, const Dict* d) {return put(slice(key),m,d);}
         bool put(slice key, PutMode, PutCallback);
         bool put(const char* NONNULL key, PutMode m, PutCallback c) {return put(slice(key),m,c);}
