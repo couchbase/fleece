@@ -33,13 +33,16 @@ namespace fleece {
     // Written at the beginning of a file.
     struct FileHeader {
         static constexpr const char* kMagicText = "FleeceDB\n\0\0\0\0\0\0\0";
-        static const uint64_t kMagic2 = 0xBAD724227CA1955F;
+        static const uint64_t kMagic2 = 0xBBD724227CA1955F;
 
         char      magicText[14];
         uint16_le size          {sizeof(FileHeader)};
         uint64_le magic2        {kMagic2};
+        uint32_le pageSize      {DB::kDefaultPageSize};
 
-        FileHeader() {
+        FileHeader(uint32_t pageSize_)
+        :pageSize(pageSize_)
+        {
             memcpy(magicText, "FleeceDB\n\0\0\0\0", sizeof(magicText));
         }
     };
@@ -71,7 +74,7 @@ namespace fleece {
                            kModeStrings[mode],
                            maxSize) )
     ,_pageSize(pageSize)
-    ,_data(_file->contents())
+    ,_treeData(_file->contents())
     ,_writeable(mode > kReadOnly)
     {
         assert(pageSize > 0);
@@ -81,7 +84,7 @@ namespace fleece {
 
     DB::DB(const DB &other, OpenMode mode)
     :_file(other._file)
-    ,_data(other._data)
+    ,_treeData(other._treeData)
     ,_writeable(other._writeable && mode > kReadOnly)
     {
         loadCheckpoint(other.checkpoint());
@@ -91,10 +94,10 @@ namespace fleece {
 
     DB::DB(const DB &other, off_t checkpoint)
     :_file(other._file)
-    ,_data(other._data)
+    ,_treeData(other._treeData)
     ,_writeable(false)
     {
-        assert(checkpoint <= (off_t)_data.size);
+        assert(checkpoint <= (off_t)_treeData.size);
         loadCheckpoint(checkpoint);
     }
 
@@ -106,28 +109,28 @@ namespace fleece {
     void DB::loadCheckpoint(checkpoint_t checkpoint) {
         if (checkpoint > SIZE_MAX)
             throw std::logic_error("Checkpoint too large for address space");
-        _data.setSize((size_t)checkpoint);
+        _treeData.setSize((size_t)checkpoint);
         if (checkpoint == 0) {
             _damaged = false;
             _tree = MutableHashTree();
         } else {
+            // Validate the file header:
             _damaged = true;
-            size_t size = _data.size;
-            if (size < _pageSize) {
-                Warn("Not a DB file (too small): %s", _file->path());
-                FleeceException::_throw(InvalidData, "Not a DB file (too small)");
-            }
+            size_t size = _treeData.size;
             if (!validateHeader()) {
                 Warn("Not a DB file; or else header is corrupted: %s", _file->path());
                 FleeceException::_throw(InvalidData, "Not a DB file; or else header is corrupted");
             }
+
+            // Look for the last valid trailer; usually at EOF unless the last save failed:
             bool damagedSize = false, damagedTrailer = false;
             if (size % _pageSize != 0) {
                 Warn("File size 0x%zx is invalid; skipping back to last full page...", size);
                 size -= size % _pageSize;
                 damagedSize = true;
             }
-            while (!validateTrailer(size)) {
+            ssize_t treePos;
+            while ((treePos = validateTrailer(size)) < 0) {
                 if (!damagedTrailer && _pageSize > 1) {
                     Warn("Trailer at 0x%zx is invalid; scanning backwards for a valid one...", size);
                     damagedTrailer = true;
@@ -138,41 +141,52 @@ namespace fleece {
                 }
                 size -= _pageSize;
             }
+
+            // OK, file can be used, so load tree:
             if (damagedTrailer || damagedSize)
                 Warn("...valid trailer found at 0x%zx; using it", size);
             else
                 _damaged = false;
+            _treeData.setSize(size);
+            _tree = HashTree::fromData(slice(_treeData.buf, treePos));
         }
     }
 
 
     bool DB::validateHeader() {
-        const FileHeader *header = (const FileHeader*)_data.buf;
-        return memcmp(header->magicText, FileHeader::kMagicText, sizeof(header->magicText)) == 0
-            && header->magic2 == FileHeader::kMagic2
-            && header->size < max(_pageSize, (size_t)4096);
+        const FileHeader *header = (const FileHeader*)_treeData.buf;
+        if ( _treeData.size >= sizeof(FileHeader)
+                 && memcmp(header->magicText, FileHeader::kMagicText, sizeof(header->magicText)) == 0
+                 && header->magic2 == FileHeader::kMagic2
+                 && header->size >= sizeof(FileHeader)
+                 && header->size < max((uint32_t)header->pageSize, (uint32_t)4096)
+                 && header->pageSize <= kMaxPageSize
+                 && header->pageSize <= _treeData.size) {
+            _pageSize = header->pageSize;
+            return true;
+        } else {
+            return false;
+        }
     }
 
 
-    bool DB::validateTrailer(size_t size) {
+    ssize_t DB::validateTrailer(size_t size) {
         if (size < _pageSize || size % _pageSize != 0)
-            return false;
-        auto trailer = (const FileTrailer*)&_data[size - sizeof(FileTrailer)];
+            return -1;
+        auto trailer = (const FileTrailer*)&_treeData[size - sizeof(FileTrailer)];
         if (trailer->magic1 != FileTrailer::kMagic1 || trailer->magic2 != FileTrailer::kMagic2)
-            return false;
+            return -1;
 
         checkpoint_t prevTrailerPos = trailer->prevTrailerPos;
         if (prevTrailerPos > size - _pageSize || prevTrailerPos % _pageSize != 0)
-            return false;
+            return -1;
 
         ssize_t treePos = size - sizeof(FileTrailer) - trailer->treeOffset;
         if (treePos < 0 || (size_t)treePos < trailer->prevTrailerPos || (treePos % 2))
-            return false;
+            return -1;
 
-        _data.setSize(size);
         _prevCheckpoint = prevTrailerPos;
-        _tree = HashTree::fromData(slice(_data.buf, treePos));
-        return true;
+        return treePos;
     }
 
 
@@ -211,15 +225,15 @@ namespace fleece {
     off_t DB::writeToFile(FILE *f, bool delta, bool flush) {
         off_t filePos;
         if (delta) {
-            checkErrno(fseeko(f, _data.size, SEEK_SET), "Can't append to file");
-            filePos = _data.size;
+            checkErrno(fseeko(f, _treeData.size, SEEK_SET), "Can't append to file");
+            filePos = _treeData.size;
         } else {
             filePos = ftello(f);
         }
 
         // Write file header:
-        if (!delta || _data.size == 0) {
-            FileHeader header;
+        if (!delta || _treeData.size == 0) {
+            FileHeader header((uint32_t)_pageSize);
             check_fwrite(f, &header, sizeof(header));
             filePos += sizeof(header);
         }
@@ -228,7 +242,7 @@ namespace fleece {
         Encoder enc(f);
         enc.suppressTrailer();
         if (delta)
-            enc.setBase(_data);
+            enc.setBase(_treeData);
         _tree.writeTo(enc);
         enc.end();
         filePos += enc.bytesWritten();
@@ -251,7 +265,7 @@ namespace fleece {
 
         // Write the trailer:
         FileTrailer trailer(uint32_t(finalPos - sizeof(FileTrailer) - filePos),
-                            (delta ? _data.size : 0));
+                            (delta ? _treeData.size : 0));
 #ifndef FL_ESP32
         checkErrno(fseeko(f, -sizeof(FileTrailer), SEEK_END), "seek");
 #endif
@@ -332,21 +346,21 @@ namespace fleece {
 
 
     bool DB::isLegalCheckpoint(checkpoint_t checkpoint) const {
-        return checkpoint <= _data.size && checkpoint % _pageSize == 0;
+        return checkpoint <= _treeData.size && checkpoint % _pageSize == 0;
     }
 
 
     slice DB::dataUpToCheckpoint(checkpoint_t checkpoint) const {
         if (!isLegalCheckpoint(checkpoint))
             return nullslice;
-        return _data.upTo(checkpoint);
+        return _treeData.upTo(checkpoint);
     }
 
 
     slice DB::dataSinceCheckpoint(checkpoint_t checkpoint) const {
         if (!isLegalCheckpoint(checkpoint))
             return nullslice;
-        return _data.from(checkpoint);
+        return _treeData.from(checkpoint);
     }
 
 

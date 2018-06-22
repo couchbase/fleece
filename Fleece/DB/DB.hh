@@ -25,7 +25,6 @@
 #include <vector>
 
 namespace fleece {
-    class Encoder;
     class MutableDict;
     class MappedFile;
 
@@ -49,8 +48,8 @@ namespace fleece {
         static constexpr size_t kDefaultMaxSize = 100*1024*1024;
 
         // Page size; file size will always be rounded to a multiple of this.
-        static constexpr size_t kDefaultPageSize = 4*1024;
-
+        static constexpr size_t kDefaultPageSize =  4*1024;
+        static constexpr size_t kMaxPageSize     = 64*1024;
         // Page size value to use if you don't want pages
         static constexpr size_t kNoPagesSize = 1;
 
@@ -58,11 +57,13 @@ namespace fleece {
             @param filePath  The filesystem path to the database file.
             @param mode  Determines whether the DB can create and/or write to the file.
             @param maxSize  The amount of address space reserved for the memory-mapped file.
-                            The file must not grow larger than this size. */
+                            The file must not grow larger than this size.
+            @param pageSize  The page size to use in a new file; ignored if opening an existing
+                            file (the saved page size will be used.) */
         DB(const char * NONNULL filePath,
            OpenMode mode =kCreateAndWrite,
            size_t maxSize =kDefaultMaxSize,
-           size_t pageSize = kDefaultPageSize);
+           size_t pageSize =kDefaultPageSize);
 
         /** Initializes and opens a DB, from any checkpoint.
             The value of `checkpoint` can be the other DB's `previousCheckpoint()`, or any
@@ -89,7 +90,7 @@ namespace fleece {
         /** Returns the database's current checkpoint.
             At any point in the future, if the file has not been compacted, you can open a DB
             at this checkpoint and it will have the exact same contents as that commit. */
-        checkpoint_t checkpoint() const                         {return _data.size;}
+        checkpoint_t checkpoint() const                         {return _treeData.size;}
 
         /** Returns the database's previous checkpoint, before the last commit. Opening a new DB
             at this checkpoint will make the previous contents accessible.
@@ -172,20 +173,20 @@ namespace fleece {
         void loadCheckpoint(checkpoint_t);
         void loadLatest();
         bool validateHeader();
-        bool validateTrailer(size_t);
+        ssize_t validateTrailer(size_t);
         off_t writeToFile(FILE*, bool deltapages, bool flush);
         void flushFile(FILE*, bool fullSync =false);
         void postCommit(off_t newFileSize);
         bool isLegalCheckpoint(checkpoint_t checkpoint) const;
 
-        Retained<MappedFile> _file;
-        size_t _pageSize {kDefaultPageSize};
-        slice _data;
-        checkpoint_t _prevCheckpoint {0};
-        MutableHashTree _tree;
-        CommitObserver _commitObserver;
-        bool _writeable {true};
-        bool _damaged {false};
+        Retained<MappedFile> _file;                 // Memory mapped file
+        size_t _pageSize {kDefaultPageSize};        // Page size used (default to 4KB)
+        checkpoint_t _prevCheckpoint {0};           // Location of checkpoint before current one
+        slice _treeData;                            // The mapped data of the tree in use
+        MutableHashTree _tree;                      // The top-level HashTree
+        CommitObserver _commitObserver;             // Post commit notifications here
+        bool _writeable {true};                     // Is DB writeable?
+        bool _damaged {false};                      // Is DB in a damaged state?
     };
 
 }
