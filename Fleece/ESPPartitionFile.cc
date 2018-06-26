@@ -99,7 +99,7 @@ namespace fleece { namespace ESP32 {
         esp_partition_write(_partition, stateOffset(), &_state, sizeof(_state));
         if (err) {
             std::cerr << "Warning: PartitionFile: can't save state: ESP err " << err << "\n";
-            FleeceException::_throw(InternalError, "Couldn't save file metadata");
+            FleeceException::_throw(InternalError, "Couldn't save file metadata: ESP err %d", err);
         }
     }
 

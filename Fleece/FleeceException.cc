@@ -19,6 +19,8 @@
 #include "FleeceException.hh"
 #include <errno.h>
 #include <memory>
+#include <stdarg.h>
+#include <stdio.h>
 #include <string>
 #include <string.h>
 
@@ -40,10 +42,17 @@ namespace fleece {
         "POSIX error"
     };
 
-    void FleeceException::_throw(ErrorCode code, const char *what) {
+    void FleeceException::_throw(ErrorCode code, const char *what, ...) {
         std::string message = kErrorNames[code];
-        if (what)
-            message += std::string(": ") + what;
+        if (what) {
+            va_list args;
+            va_start(args, what);
+            char *msg;
+            vasprintf(&msg, what, args);
+            va_end(args);
+            message += std::string(": ") + msg;
+            free(msg);
+        }
         throw FleeceException(code, 0, message);
     }
 

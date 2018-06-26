@@ -48,7 +48,7 @@ namespace fleece {
         ,err_no(errno_)
         { }
 
-        [[noreturn]] static void _throw(ErrorCode code, const char *what);
+        [[noreturn]] static void _throw(ErrorCode code, const char *what, ...);
         [[noreturn]] static void _throwErrno(const char *what);
 
         static ErrorCode getCode(const std::exception&) noexcept;

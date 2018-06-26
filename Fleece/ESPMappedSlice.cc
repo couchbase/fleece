@@ -35,14 +35,15 @@ namespace fleece {
         auto err = esp_partition_mmap(partition, 0, partition->size, SPI_FLASH_MMAP_DATA,
                                       &mapping, &_mapHandle);
         if (err)
-            FleeceException::_throw(InternalError, "Couldn't memory-map partition");
+            FleeceException::_throw(InternalError, "Couldn't memory-map partition: ESP err %d", err);
         set(mapping, partition->size);
     }
 
     static const esp_partition_t* partitionNamed(const char *name NONNULL) {
         auto i = esp_partition_find(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_ANY, name);
         if (!i)
-            FleeceException::_throw(InternalError, "esp_mapped_slice: no such partition");
+            FleeceException::_throw(InternalError, "esp_mapped_slice: no such partition '%s'",
+                                    name);
         return esp_partition_get(i);
     }
 

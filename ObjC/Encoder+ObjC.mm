@@ -54,7 +54,7 @@ using namespace fleece;
     // Default implementation -- object doesn't implement Fleece encoding at all.
     NSString* msg = [NSString stringWithFormat: @"Objects of class %@ cannot be encoded",
                      [self class]];
-    FleeceException::_throw(EncodeError, msg.UTF8String);
+    FleeceException::_throw(EncodeError, "%s", msg.UTF8String);
 }
 @end
 
