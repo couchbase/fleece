@@ -17,12 +17,13 @@ namespace fleece { namespace ESP32 {
     class PartitionFile {
     public:
         static FILE* open(const esp_partition_t *partition NONNULL,
+                          const void *mappedMemory,
                           const char *mode,
                           size_t bufferSize =0);
 
     private:
 
-        PartitionFile(const esp_partition_t *p);
+        PartitionFile(const esp_partition_t *p, const void *mappedMemory);
 
         inline uint32_t stateOffset() const {
             return _partition->size - SPI_FLASH_SEC_SIZE;
@@ -54,6 +55,7 @@ namespace fleece { namespace ESP32 {
 
         PersistentState         _state;
         const esp_partition_t*  _partition;
+        const void*             _mappedMemory;
         uint32_t                _pos;
         bool                    _append;
         bool                    _overwrite;

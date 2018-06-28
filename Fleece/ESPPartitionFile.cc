@@ -22,9 +22,14 @@
 #include <errno.h>
 #include <iostream>
 
+#include <esp_log.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+
 #ifdef FL_ESP32
 
 #define VERBOSE 1
+#define VERIFY_MAPPED_WRITES 1
 
 
 // http://esp-idf.readthedocs.io/en/latest/api-reference/storage/spi_flash.html
@@ -32,11 +37,12 @@
 namespace fleece { namespace ESP32 {
 
     FILE* PartitionFile::open(const esp_partition_t *partition NONNULL,
+                              const void *mappedMemory,
                               const char *mode,
                               size_t bufferSize) {
         assert(partition != nullptr);
         if (VERBOSE) std::cerr << "open(0x" << (void*)partition << ", '" << mode << "')\n";
-        auto pf = new PartitionFile(partition);
+        auto pf = new PartitionFile(partition, mappedMemory);
         FILE *f = pf->open(mode);
         if (!f)
             delete pf;
@@ -46,8 +52,9 @@ namespace fleece { namespace ESP32 {
     }
 
 
-    PartitionFile::PartitionFile(const esp_partition_t *p)
+    PartitionFile::PartitionFile(const esp_partition_t *p, const void *mappedMemory)
     :_partition(p)
+    ,_mappedMemory(mappedMemory)
     { }
 
 
@@ -125,12 +132,19 @@ namespace fleece { namespace ESP32 {
 
 
     int PartitionFile::write_callback(void *cookie, const char *buf, int nbytes) noexcept {
-        if (VERBOSE) std::cerr << "write(" << nbytes << ")\n";
         return ((PartitionFile*)cookie)->write(buf, nbytes);
     }
 
 
     int PartitionFile::write(const char *buf, int nbytes) noexcept {
+        if (VERBOSE) {
+            std::cerr << "write(" << nbytes << ") at " << _pos;
+            if (_mappedMemory)
+                std::cerr << " / " << (void*)((const char*)_mappedMemory + _pos);
+            std::cerr << "\n";
+            std::cerr.flush();
+        }
+
         if (_append) {
             _pos = _state.end;
         } else if (_pos < _state.end && !_overwrite) {
@@ -166,6 +180,26 @@ namespace fleece { namespace ESP32 {
             errno = EIO;
             return -1;
         }
+
+#if VERIFY_MAPPED_WRITES
+        if (_mappedMemory) {
+            std::cerr << "Checking memory...\n";
+            std::cerr.flush();
+            int retry = 0;
+            while(0 != memcmp((const char*)_mappedMemory + _pos, buf, nbytes)) {
+                if (++retry > 10) {
+                    std::cerr << "Warning: ESPPartitionFile: file/memory mismatch\n";
+                    std::cerr.flush();
+                    errno = EIO;
+                    return -1;
+                }
+                std::cerr << "   (waiting for write to show up in mapped memory)\n";
+                std::cerr.flush();
+                vTaskDelay(100 / portTICK_PERIOD_MS);
+            }
+        }
+#endif
+
         _pos += nbytes;
         if (_pos > _state.end) {
             _state.end = _pos;

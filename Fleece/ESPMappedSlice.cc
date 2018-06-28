@@ -74,7 +74,7 @@ namespace fleece {
     }
 
     FILE* esp_mapped_slice::open(const char *mode NONNULL, size_t bufferSize) {
-        return ESP32::PartitionFile::open(_partition, mode, bufferSize);
+        return ESP32::PartitionFile::open(_partition, buf, mode, bufferSize);
     }
 
 }
