@@ -20,16 +20,25 @@
 #include "FleeceException.hh"
 #include <algorithm>
 #include <errno.h>
-#include <iostream>
 
 #include <esp_log.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <rom/cache.h>
 
 #ifdef FL_ESP32
 
-#define VERBOSE 1
+#define VERBOSE 0
 #define VERIFY_MAPPED_WRITES 1
+
+#define TAG "partitionfile"
+#if VERBOSE
+    #define LOG(FMT, ...)    ESP_LOGI(TAG, FMT, ##__VA_ARGS__)
+#else
+    #define LOG(FMT, ...)    ESP_LOGD(TAG, FMT, ##__VA_ARGS__)
+#endif
+#define WARN(FMT, ...)   ESP_LOGW(TAG, FMT, ##__VA_ARGS__)
+#define ERROR(FMT, ...)  ESP_LOGE(TAG, FMT, ##__VA_ARGS__)
 
 
 // http://esp-idf.readthedocs.io/en/latest/api-reference/storage/spi_flash.html
@@ -41,7 +50,7 @@ namespace fleece { namespace ESP32 {
                               const char *mode,
                               size_t bufferSize) {
         assert(partition != nullptr);
-        if (VERBOSE) std::cerr << "open(0x" << (void*)partition << ", '" << mode << "')\n";
+        LOG("open(0x%p, \"%s\")", partition, mode);
         auto pf = new PartitionFile(partition, mappedMemory);
         FILE *f = pf->open(mode);
         if (!f)
@@ -67,7 +76,7 @@ namespace fleece { namespace ESP32 {
             auto err = esp_partition_read(_partition, stateOffset(),
                                           &_state, sizeof(_state));
             if (err) {
-                std::cerr << "Warning: PartitionFile: esp_partition_read failed with err " << err << "\n";
+                ERROR("esp_partition_read failed with ESP err %d", err);
                 errno = EIO;
                 return nullptr;
             } else if (!_state.isInitialized()) {
@@ -81,9 +90,12 @@ namespace fleece { namespace ESP32 {
                 }
             } else if (!_state.isValid() || _state.end > stateOffset()) {
                 // Hm, metadata is corrupt
-                std::cerr << "Warning: PartitionFile: file metadata is corrupt\n";
+                ERROR("file metadata is corrupt");
                 errno = EIO;
                 return nullptr;
+            } else {
+                LOG("    (read state: start=%x, erased=%x, end=%x)",
+                         _state.start, _state.erased, _state.end);
             }
         }
         _overwrite = (strchr(mode, '*') != nullptr);
@@ -99,20 +111,21 @@ namespace fleece { namespace ESP32 {
 
 
     void PartitionFile::saveState() noexcept {
-        if (VERBOSE) std::cerr << "  (saveState: start=" << std::hex << _state.start
-            << ", erased=" << _state.erased << ", end=" << _state.end << ")\n" << std::dec;
+        //FIX: Shouldn't keep erasing the same page. Find a way to store state in varying places.
+        LOG("    (saveState: start=%x, erased=%x, end=%x)",
+                 _state.start, _state.erased, _state.end);
         auto err = esp_partition_erase_range(_partition, stateOffset(), 4096);
         if (!err)
         esp_partition_write(_partition, stateOffset(), &_state, sizeof(_state));
         if (err) {
-            std::cerr << "Warning: PartitionFile: can't save state: ESP err " << err << "\n";
+            ERROR("can't save state: ESP err %d", err);
             FleeceException::_throw(InternalError, "Couldn't save file metadata: ESP err %d", err);
         }
     }
 
 
     int PartitionFile::read_callback(void *cookie, char *buf, int nbytes) noexcept {
-        if (VERBOSE) std::cerr << "read(" << nbytes << ")\n";
+        LOG("read(%d)", nbytes);
         return ((PartitionFile*)cookie)->read(buf, nbytes);
     }
 
@@ -137,20 +150,16 @@ namespace fleece { namespace ESP32 {
 
 
     int PartitionFile::write(const char *buf, int nbytes) noexcept {
-        if (VERBOSE) {
-            std::cerr << "write(" << nbytes << ") at " << _pos;
-            if (_mappedMemory)
-                std::cerr << " / " << (void*)((const char*)_mappedMemory + _pos);
-            std::cerr << "\n";
-            std::cerr.flush();
-        }
+        if (_mappedMemory)
+            LOG("write(%d) at %d [%p]", nbytes, _pos, (char*)_mappedMemory + _pos);
+        else
+            LOG("write(%d) at %d", nbytes, _pos);
 
         if (_append) {
             _pos = _state.end;
         } else if (_pos < _state.end && !_overwrite) {
             // I don't support overwriting data
-            std::cerr << "Warning: PartitionFile: Can't overwrite data (pos="
-                      << _pos << ", EOF=" << _state.end << ")\n";
+            ERROR("Can't overwrite data (pos=%d, EOF=%d)", _pos, _state.end);
             errno = ENXIO;
             return -1;
         }
@@ -166,6 +175,7 @@ namespace fleece { namespace ESP32 {
             auto count = endPos - _state.erased;
             if (count % SPI_FLASH_SEC_SIZE > 0)
                 count += SPI_FLASH_SEC_SIZE - (count % SPI_FLASH_SEC_SIZE);
+            LOG("    erase [%d ... %d]", _state.erased, (_state.erased + count - 1));
             auto err = esp_partition_erase_range(_partition, _state.erased, count);
             if (err != ESP_OK) {
                 errno = EIO;
@@ -181,24 +191,16 @@ namespace fleece { namespace ESP32 {
             return -1;
         }
 
-#if VERIFY_MAPPED_WRITES
         if (_mappedMemory) {
-            std::cerr << "Checking memory...\n";
-            std::cerr.flush();
-            int retry = 0;
-            while(0 != memcmp((const char*)_mappedMemory + _pos, buf, nbytes)) {
-                if (++retry > 10) {
-                    std::cerr << "Warning: ESPPartitionFile: file/memory mismatch\n";
-                    std::cerr.flush();
-                    errno = EIO;
-                    return -1;
-                }
-                std::cerr << "   (waiting for write to show up in mapped memory)\n";
-                std::cerr.flush();
-                vTaskDelay(100 / portTICK_PERIOD_MS);
-            }
-        }
+            // It appears to be necessary to flush CPU caches after a write,
+            // to prevent reading stale bytes from the mapped memory.
+            Cache_Flush(0);
+            Cache_Flush(1);
+
+#if VERIFY_MAPPED_WRITES
+            assert(memcmp((char*)_mappedMemory + _pos, buf, nbytes) == 0);
 #endif
+        }
 
         _pos += nbytes;
         if (_pos > _state.end) {
@@ -214,7 +216,7 @@ namespace fleece { namespace ESP32 {
 
 
     fpos_t PartitionFile::lseek_callback(void *cookie, fpos_t offset, int whence) noexcept {
-        if (VERBOSE) std::cerr << "seek(" << offset << ',' << whence << ")\n";
+        LOG("seek(%ld, %d)", offset, whence);
         return ((PartitionFile*)cookie)->lseek(offset, whence);
     }
 
@@ -235,7 +237,7 @@ namespace fleece { namespace ESP32 {
     }
 
     int PartitionFile::close_callback(void *cookie) noexcept {
-        if (VERBOSE) std::cerr << "close()\n";
+        LOG("close()");
         delete (PartitionFile*)cookie;
         return 0;
     }

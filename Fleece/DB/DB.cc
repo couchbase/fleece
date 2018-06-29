@@ -131,11 +131,15 @@ namespace fleece {
             }
             ssize_t treePos;
             while ((treePos = validateTrailer(size)) < 0) {
-                if (!damagedTrailer && _pageSize > 1) {
+                if (_pageSize == 1) {
+                    Warn("...no valid trailer found at EOF (%zd); DB is fatally damaged: %s", size, _file->path());
+                    FleeceException::_throw(InvalidData, "DB file is fatally damaged: no valid trailer found");
+                }
+                if (!damagedTrailer) {
                     Warn("Trailer at 0x%zx is invalid; scanning backwards for a valid one...", size);
                     damagedTrailer = true;
                 }
-                if (size <= _pageSize || _pageSize == 1) {
+                if (size <= _pageSize) {
                     Warn("...no valid trailer found; DB is fatally damaged: %s", _file->path());
                     FleeceException::_throw(InvalidData, "DB file is fatally damaged: no valid trailer found");
                 }
