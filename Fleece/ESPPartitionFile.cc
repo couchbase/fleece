@@ -22,8 +22,7 @@
 #include <errno.h>
 
 #include <esp_log.h>
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
+#include <nvs.h>
 #include <rom/cache.h>
 
 #ifdef FL_ESP32
@@ -67,19 +66,30 @@ namespace fleece { namespace ESP32 {
     { }
 
 
+    PartitionFile::~PartitionFile() {
+        if (_nvsHandle)
+            nvs_close(_nvsHandle);
+    }
+
+
     FILE* PartitionFile::open(const char *mode) {
+        auto err = nvs_open("PartitionFile", NVS_READWRITE, &_nvsHandle);
+        if (err) {
+            ERROR("can't open NVS store: %d", err);
+            FleeceException::_throw(InternalError, "Couldn't open ESP NVS: err %d", err);
+        }
+
         if (mode[0] == 'w') {
-            // "w" mode resets the file to empty.
+            // "w" mode resets the file to empty. Don't load any state, just init to empty;
+            // new state will be saved the first time the file is written.
             _state.initialize();
             saveState();
         } else {
-            auto err = esp_partition_read(_partition, stateOffset(),
-                                          &_state, sizeof(_state));
-            if (err) {
-                ERROR("esp_partition_read failed with ESP err %d", err);
-                errno = EIO;
-                return nullptr;
-            } else if (!_state.isInitialized()) {
+            size_t size = sizeof(_state);
+            auto err = nvs_get_blob(_nvsHandle, _partition->label, &_state, &size);
+            if (!err && size != sizeof(_state))
+                err = ESP_ERR_NVS_INVALID_LENGTH;
+            if (err == ESP_ERR_NVS_NOT_FOUND) {
                 // Partition doesn't have a file in it
                 if (mode[0] == 'r' && mode[1] != 'w') {
                     errno = ENOENT;
@@ -88,7 +98,11 @@ namespace fleece { namespace ESP32 {
                     _state.initialize();
                     saveState();
                 }
-            } else if (!_state.isValid() || _state.end > stateOffset()) {
+            } else if (err) {
+                ERROR("nvs_get_blob failed with ESP err %d", err);
+                errno = EIO;
+                return nullptr;
+            } else if (!_state.isValid() || _state.end > _partition->size) {
                 // Hm, metadata is corrupt
                 ERROR("file metadata is corrupt");
                 errno = EIO;
@@ -111,12 +125,11 @@ namespace fleece { namespace ESP32 {
 
 
     void PartitionFile::saveState() noexcept {
-        //FIX: Shouldn't keep erasing the same page. Find a way to store state in varying places.
         LOG("    (saveState: start=%x, erased=%x, end=%x)",
                  _state.start, _state.erased, _state.end);
-        auto err = esp_partition_erase_range(_partition, stateOffset(), 4096);
+        auto err = nvs_set_blob(_nvsHandle, _partition->label, &_state, sizeof(_state));
         if (!err)
-        esp_partition_write(_partition, stateOffset(), &_state, sizeof(_state));
+            err = nvs_commit(_nvsHandle);
         if (err) {
             ERROR("can't save state: ESP err %d", err);
             FleeceException::_throw(InternalError, "Couldn't save file metadata: ESP err %d", err);
@@ -165,7 +178,7 @@ namespace fleece { namespace ESP32 {
         }
 
         auto endPos = _pos + nbytes;
-        if (endPos > stateOffset() || endPos < _pos) {
+        if (endPos > _partition->size || endPos < _pos) {
             errno = ENOSPC;
             return -1;
         }

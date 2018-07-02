@@ -23,6 +23,7 @@
 #include <iostream>
 
 #include "esp_system.h"
+#include "rom/cache.h"
 using namespace std;
 
 
@@ -77,6 +78,8 @@ TEST_CASE("ESP32 mmap") {
 
     cerr << "Erasing 4KB...\n";
     CHECK(esp_partition_erase_range(partition, 0, 4096) == 0);
+    Cache_Flush(0);
+    Cache_Flush(1);
     dump(mapped, 128);
 
     int wrongByteCount = 0;
@@ -88,6 +91,8 @@ TEST_CASE("ESP32 mmap") {
     auto len = sprintf(buf, "Memory mapping is cool! %d", esp_random()) + 1;
     cerr << "Writing some data: \"" << buf << "\"\n";
     CHECK(esp_partition_write(partition, 0, buf, len) == 0);
+    Cache_Flush(0);
+    Cache_Flush(1);
     dump(mapped, 128);
 }
 
