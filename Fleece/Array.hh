@@ -70,7 +70,7 @@ namespace fleece {
             uint32_t count() const noexcept                  {return _count;}
 
             const Value* value() const noexcept              {return _value;}
-            explicit operator const Value* const () noexcept {return _value;}
+            explicit operator const Value* () const noexcept {return _value;}
             const Value* operator-> () const noexcept        {return _value;}
 
             /** Returns the current item and advances to the next. */

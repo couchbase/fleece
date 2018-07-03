@@ -86,6 +86,18 @@
         #else
             #error "unknown BYTE_ORDER"
         #endif
+    #elif defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__)
+        #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+            #ifndef _LITTLE_ENDIAN
+            #define _LITTLE_ENDIAN
+            #endif
+        #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+            #ifndef _BIG_ENDIAN
+            #define _BIG_ENDIAN
+            #endif
+        #else
+            #error "unknown __BYTE_ORDER__"
+        #endif
     #else
         #error "unknown endianness"
     #endif

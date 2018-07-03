@@ -242,7 +242,7 @@ namespace fleece {
             return key;
         }
 
-        const bool lookupSharedKey(slice keyToFind, SharedKeys *sharedKeys, int &encoded) const noexcept {
+        bool lookupSharedKey(slice keyToFind, SharedKeys *sharedKeys, int &encoded) const noexcept {
             if (sharedKeys->encode(keyToFind, encoded))
                 return true;
             // Key is not known to my SharedKeys; see if dict contains any unknown keys:
