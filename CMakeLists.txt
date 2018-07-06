@@ -42,7 +42,9 @@ endif()
 add_library(Fleece        SHARED  ${FLEECE_SRC})
 add_library(FleeceStatic  STATIC  ${FLEECE_SRC})
 
-add_executable(fleece Tool/fleece_tool.cc ${FLEECE_SRC})
+# Command-Line Tool
+add_executable(fleeceTool Tool/fleece_tool.cc)
+target_link_libraries(fleeceTool FleeceStatic)
 
 # Fleece Tests
 aux_source_directory(Tests FLEECE_TEST_SRC)
@@ -57,6 +59,8 @@ file(COPY Tests/1person.fleece DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Tests)
 file(COPY Tests/1person.json DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Tests)
 
 if (APPLE)
+    set_target_properties(Fleece PROPERTIES LINK_FLAGS
+                          "-exported_symbols_list ${PROJECT_SOURCE_DIR}/Fleece/Fleece.exp")
     target_link_libraries(Fleece
                            "-framework CoreFoundation"
                            "-framework Foundation")
