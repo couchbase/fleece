@@ -69,3 +69,14 @@
     #define WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) 0
 
 #endif
+
+#ifdef ESP_PLATFORM
+    #include "sdkconfig.h"
+    #define FL_EMBEDDED 1
+    #if CONFIG_OPTIMIZATION_LEVEL_DEBUG
+        #ifndef DEBUG
+            #define DEBUG 1
+            #undef NDEBUG
+        #endif
+    #endif
+#endif
