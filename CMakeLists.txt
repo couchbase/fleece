@@ -11,10 +11,16 @@ if(CMAKE_BUILD_TYPE STREQUAL Debug)
     add_definitions(-DDEBUG)
 endif()
 
-aux_source_directory(Fleece  FLEECE_SRC)
-set(FLEECE_SRC ${FLEECE_SRC} vendor/jsonsl/jsonsl.c
-                             vendor/libb64/cdecode.c
-                             vendor/libb64/cencode.c)
+aux_source_directory(Fleece/Core/        FLEECE_CORE_SRC)
+aux_source_directory(Fleece/Integration/ FLEECE_INTEGRATION_SRC)
+aux_source_directory(Fleece/Mutable/     FLEECE_MUTABLE_SRC)
+aux_source_directory(Fleece/Support/     FLEECE_SUPPORT_SRC)
+aux_source_directory(Fleece/Tree/        FLEECE_TREE_SRC)
+set(FLEECE_SRC ${FLEECE_CORE_SRC} ${FLEECE_INTEGRATION_SRC} ${FLEECE_MUTABLE_SRC}
+               ${FLEECE_SUPPORT_SRC} ${FLEECE_TREE_SRC}
+               vendor/jsonsl/jsonsl.c
+               vendor/libb64/cdecode.c
+               vendor/libb64/cencode.c)
 
 if (APPLE AND NOT ANDROID)
     include_directories(ObjC/)
@@ -25,24 +31,27 @@ if (APPLE AND NOT ANDROID)
 elseif(WIN32)
     include_directories("MSVC")
     set(FLEECE_SRC ${FLEECE_SRC} MSVC/memmem.cc)
-elseif(ANDROID)
-    include_directories(Fleece/Mutable)
-    aux_source_directory(Fleece/Mutable  MUTABLE_SRC)
-    set(FLEECE_SRC ${FLEECE_SRC} ${MUTABLE_SRC})
 endif()
 
-include_directories("Fleece"
+include_directories("API"
+                    Fleece/Core
+                    Fleece/Integration
+                    Fleece/Mutable
+                    Fleece/Support
+                    Fleece/Tree
                     "vendor/libb64"
                     "vendor/jsonsl" )
 
 if(!MSVC)
-	set_source_files_properties(Fleece/Fleece_C_impl.cc  PROPERTIES)
+	set_source_files_properties(Fleece/Core/Fleece_C_impl.cc  PROPERTIES)
 endif()
 
 add_library(Fleece        SHARED  ${FLEECE_SRC})
 add_library(FleeceStatic  STATIC  ${FLEECE_SRC})
 
-add_executable(fleece Tool/fleece_tool.cc ${FLEECE_SRC})
+# Command-Line Tool
+add_executable(fleeceTool Tool/fleece_tool.cc)
+target_link_libraries(fleeceTool FleeceStatic)
 
 # Fleece Tests
 aux_source_directory(Tests FLEECE_TEST_SRC)
@@ -57,6 +66,8 @@ file(COPY Tests/1person.fleece DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Tests)
 file(COPY Tests/1person.json DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Tests)
 
 if (APPLE)
+    set_target_properties(Fleece PROPERTIES LINK_FLAGS
+                          "-exported_symbols_list ${PROJECT_SOURCE_DIR}/Fleece/Support/Fleece.exp")
     target_link_libraries(Fleece
                            "-framework CoreFoundation"
                            "-framework Foundation")
