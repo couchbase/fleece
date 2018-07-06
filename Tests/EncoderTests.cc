@@ -615,7 +615,7 @@ public:
     }
 
     TEST_CASE_METHOD(EncoderTests, "ConvertPeople", "[Encoder]") {
-        alloc_slice input = readTestFile(kBigJSONTestFileName);
+        auto input = readTestFile(kBigJSONTestFileName);
 
         enc.uniqueStrings(true);
 
@@ -753,7 +753,7 @@ public:
     }
 
     TEST_CASE_METHOD(EncoderTests, "Paths", "[Encoder]") {
-        alloc_slice input = readTestFile(kBigJSONTestFileName);
+        auto input = readTestFile(kBigJSONTestFileName);
         JSONConverter jr(enc);
         jr.encodeJSON(input);
         enc.end();

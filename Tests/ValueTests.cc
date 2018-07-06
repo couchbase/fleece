@@ -103,7 +103,7 @@ namespace fleece {
     }
 
     TEST_CASE("DeepIterator") {
-        alloc_slice input = readTestFile("1person.fleece");
+        auto input = readTestFile("1person.fleece");
         auto person = Value::fromData(input);
 
         {

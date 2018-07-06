@@ -64,7 +64,11 @@ namespace fleece_test {
     std::string sliceToHexDump(slice, size_t width = 16);
     std::ostream& dumpSlice(std::ostream&, slice);
 
+#if FL_HAVE_TEST_FILES
     alloc_slice readTestFile(const char *path);
+#else
+    slice readTestFile(const char *path);
+#endif
 
     // Converts JSON5 to JSON; helps make JSON test input more readable!
     static inline std::string json5(const std::string &s)      {return fleece::ConvertJSON5(s);}

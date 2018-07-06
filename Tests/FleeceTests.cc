@@ -91,23 +91,25 @@ namespace fleece_test {
     }
 
 
-    alloc_slice readTestFile(const char *path) {
 #if FL_HAVE_TEST_FILES
+    alloc_slice readTestFile(const char *path) {
         std::string fullPath = std::string(kTestFilesDir) + path;
         return readFile(fullPath.c_str());
+    }
 #else
+    slice readTestFile(const char *path) {
         if (0 == strcmp(path, "50people.json")) {
-            return alloc_slice(k50PeopleJSON);
+            return slice(k50PeopleJSON);
         } else if (0 == strcmp(path, "1person.fleece")) {
-            return alloc_slice(k1PersonFleece, sizeof(k1PersonFleece));
+            return slice(k1PersonFleece, sizeof(k1PersonFleece));
         } else {
             FAIL("Unsupported test fixture \"" << path << "\"");
             return {};
         }
         //TODO: On ESP this can be done more elegantly by embedding the files in the binary:
         // https://esp-idf.readthedocs.io/en/latest/api-guides/build-system.html#embedding-binary-data
-#endif
     }
+#endif
 
 
 }

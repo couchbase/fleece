@@ -81,7 +81,7 @@ TEST_CASE("Perf Convert1000People", "[.Perf]") {
     static const int kSamples = 500;
 
     std::vector<double> elapsedTimes;
-    alloc_slice input = readTestFile(kBigJSONTestFileName);
+    auto input = readTestFile(kBigJSONTestFileName);
 
     Benchmark bench;
 
@@ -113,7 +113,7 @@ TEST_CASE("Perf Convert1000People", "[.Perf]") {
 
 TEST_CASE("Perf LoadFleece", "[.Perf]") {
     static const int kIterations = 1000;
-    alloc_slice doc = readTestFile("1000people.fleece");
+    auto doc = readTestFile("1000people.fleece");
 
     {
         fprintf(stderr, "Scanning untrusted Fleece... ");
@@ -148,7 +148,7 @@ static void testFindPersonByIndex(int sort) {
     int kIterations = 10000;
     Benchmark bench;
 
-    alloc_slice doc = readTestFile("1000people.fleece");
+    auto doc = readTestFile("1000people.fleece");
 
     Dict::key nameKey(slice("name"));
 
@@ -184,7 +184,7 @@ TEST_CASE("Perf LoadPeople", "[.Perf]") {
     int kIterations = 1000;
     Benchmark bench;
 
-    alloc_slice doc = readTestFile("1000people.fleece");
+    auto doc = readTestFile("1000people.fleece");
 
     Dict::key keys[10] = {
         Dict::key(slice("about")),
@@ -271,7 +271,7 @@ TEST_CASE("Perf TreeSearch", "[.Perf]") {
     static const int kSamples = 500000;
 
     // Convert JSON array into a dictionary keyed by _id:
-    alloc_slice input = readTestFile("1000people.fleece");
+    auto input = readTestFile("1000people.fleece");
     if (!input)
         abort();
     std::vector<alloc_slice> names;

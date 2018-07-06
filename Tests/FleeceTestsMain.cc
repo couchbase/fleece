@@ -23,7 +23,7 @@
 #include "FleeceTests.hh"
 
 
-#ifdef FL_ESP32
+#ifdef ESP_PLATFORM
 // Below is for ESP32 development:
 
 #include <signal.h>
@@ -51,4 +51,4 @@ _sig_func_ptr signal(int, _sig_func_ptr) {
     return nullptr;
 }
 
-#endif // FL_ESP32
+#endif // ESP_PLATFORM
