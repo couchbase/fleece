@@ -29,7 +29,7 @@
 extern "C" {
 #endif
 
-    // This is the C API! For the C++ API, see Fleece.hh.
+    // This is the C API! For the C++ API, see FleeceCpp.hh.
 
 
     /** \defgroup Fleece Fleece

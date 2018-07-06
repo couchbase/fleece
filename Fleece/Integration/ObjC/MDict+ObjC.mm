@@ -153,7 +153,7 @@ using namespace fleeceapi;
 }
 
 
-- (void) enumerateKeysAndObjectsUsingBlock: (void (^)(UU id key, UU id obj, BOOL *stop))block {
+- (void) enumerateKeysAndObjectsUsingBlock: (void (NS_NOESCAPE ^)(UU id key, UU id obj, BOOL *stop))block {
     __block BOOL stop = NO;
     for (MDict<id>::iterator i(_dict); i; ++i) {
         block(i.key().asNSString(), i.nativeValue(), &stop);

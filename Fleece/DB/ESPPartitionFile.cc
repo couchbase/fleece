@@ -21,11 +21,11 @@
 #include <algorithm>
 #include <errno.h>
 
+#ifdef FL_ESP32
+
 #include <esp_log.h>
 #include <nvs.h>
 #include <rom/cache.h>
-
-#ifdef FL_ESP32
 
 #define VERBOSE 0
 #define VERIFY_MAPPED_WRITES 1

@@ -114,17 +114,21 @@ namespace fleece {
         };
     }
 
+    // Integer types whose storage is always little-endian,
+    // but which can be used like native ints:
     using uint16_le = internal::endian<uint16_t, internal::swapLittle>;
     using uint32_le = internal::endian<uint32_t, internal::swapLittle>;
     using uint64_le = internal::endian<uint64_t, internal::swapLittle>;
+
+    // Little-endian uint32 whose storage is byte-aligned (not to a 4-byte boundary.)
+    // This is somewhat slower to access but allows more compact structs.
     using uint32_le_unaligned = internal::endian_unaligned<uint32_t, internal::swapLittle>;
 
-    // Floating-point types whose storage is reliably big- or little-endian,
-    // but which can be read and written as native numbers.
-
-    typedef internal::endianFP<float,  uint32_t, internal::swapLittle> littleEndianFloat;
-    typedef internal::endianFP<float,  uint32_t, internal::swapBig>    bigEndianFloat;
-    typedef internal::endianFP<double, uint64_t, internal::swapLittle> littleEndianDouble;
-    typedef internal::endianFP<double, uint64_t, internal::swapBig>    bigEndianDouble;
+    // Floating-point types whose storage is always big- or little-endian,
+    // but which can be used like native types:
+    using littleEndianFloat  = internal::endianFP<float,  uint32_t, internal::swapLittle>;
+    using bigEndianFloat     = internal::endianFP<float,  uint32_t, internal::swapBig>;
+    using littleEndianDouble = internal::endianFP<double, uint64_t, internal::swapLittle>;
+    using bigEndianDouble    = internal::endianFP<double, uint64_t, internal::swapBig>;
 
 }
