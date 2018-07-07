@@ -49,7 +49,7 @@ namespace fleece {
         if (stat.st_size > SIZE_MAX)
             throw std::logic_error("File too big for address space");
         alloc_slice data((size_t)stat.st_size);
-        __unused ssize_t bytesRead = ::read(fd, (void*)data.buf, data.size);
+        ssize_t bytesRead = ::read(fd, (void*)data.buf, data.size);
         if (bytesRead < (ssize_t)data.size)
             FleeceException::_throwErrno("Can't read file");
         ::close(fd);
@@ -60,7 +60,7 @@ namespace fleece {
         int fd = ::open(path, mode | O_WRONLY | O_BINARY, 0600);
         if (fd < 0)
             FleeceException::_throwErrno("Can't open file");
-        __unused ssize_t written = ::write(fd, s.buf, s.size);
+        ssize_t written = ::write(fd, s.buf, s.size);
         if(written < (ssize_t)s.size)
             FleeceException::_throwErrno("Can't write file");
         ::close(fd);
