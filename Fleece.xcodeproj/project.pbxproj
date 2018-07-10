@@ -89,6 +89,11 @@
 		27CA08421F6B0E9400FF8C71 /* Dict.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27CA08401F6B0E9400FF8C71 /* Dict.hh */; };
 		27CA08431F6B0E9400FF8C71 /* Dict.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27CA08411F6B0E9400FF8C71 /* Dict.cc */; };
 		27CEE41A20EFE92E00089A85 /* KeyTree.cc in Sources */ = {isa = PBXBuildFile; fileRef = 278163BA1CE7A72300B94E32 /* KeyTree.cc */; };
+		27CEE45920F4094400089A85 /* BTree.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27CEE45720F4094400089A85 /* BTree.cc */; };
+		27CEE45A20F4094400089A85 /* BTree.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27CEE45820F4094400089A85 /* BTree.hh */; };
+		27CEE45D20F4203500089A85 /* MutableBTree.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27CEE45B20F4203500089A85 /* MutableBTree.cc */; };
+		27CEE45E20F4203500089A85 /* MutableBTree.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27CEE45C20F4203500089A85 /* MutableBTree.hh */; };
+		27CEE46020F444FC00089A85 /* BTreeTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27CEE45F20F444FC00089A85 /* BTreeTests.cc */; };
 		27D7215E1F8E8EEA00AA4458 /* MDict+ObjC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2734B89D1F8583FF00BE5249 /* MDict+ObjC.mm */; };
 		27D721651F8E8EEA00AA4458 /* MValue+ObjC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27D721201F8C04F100AA4458 /* MValue+ObjC.mm */; };
 		27D721661F8E8EEA00AA4458 /* FleeceDocument.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2734B8AC1F859AEC00BE5249 /* FleeceDocument.mm */; };
@@ -314,6 +319,11 @@
 		27CA08411F6B0E9400FF8C71 /* Dict.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Dict.cc; sourceTree = "<group>"; };
 		27CEE41920EFE79D00089A85 /* Stopwatch.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Stopwatch.hh; sourceTree = "<group>"; };
 		27CEE44F20F00B4E00089A85 /* Fleece.exp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.exports; path = Fleece.exp; sourceTree = "<group>"; };
+		27CEE45720F4094400089A85 /* BTree.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = BTree.cc; sourceTree = "<group>"; };
+		27CEE45820F4094400089A85 /* BTree.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = BTree.hh; sourceTree = "<group>"; };
+		27CEE45B20F4203500089A85 /* MutableBTree.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MutableBTree.cc; sourceTree = "<group>"; };
+		27CEE45C20F4203500089A85 /* MutableBTree.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MutableBTree.hh; sourceTree = "<group>"; };
+		27CEE45F20F444FC00089A85 /* BTreeTests.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = BTreeTests.cc; sourceTree = "<group>"; };
 		27D721201F8C04F100AA4458 /* MValue+ObjC.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = "MValue+ObjC.mm"; sourceTree = "<group>"; };
 		27D721221F8C053900AA4458 /* MValue+ObjC.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "MValue+ObjC.hh"; sourceTree = "<group>"; };
 		27D721241F8C4B7500AA4458 /* MDictIterator.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MDictIterator.hh; sourceTree = "<group>"; };
@@ -444,6 +454,7 @@
 			children = (
 				27393C931FEC30E300FBFE59 /* FleeceTestsMain.cc */,
 				27C8DF09208521B600A99BFC /* HashTreeTests.cc */,
+				27CEE45F20F444FC00089A85 /* BTreeTests.cc */,
 				272E5A451BF7FD8F00848580 /* FleeceTests.cc */,
 				272E5A5A1BF8004100848580 /* FleeceTests.hh */,
 				279AC52A1C07776A002C80DB /* ValueTests.cc */,
@@ -594,6 +605,10 @@
 			children = (
 				278163BA1CE7A72300B94E32 /* KeyTree.cc */,
 				278163BB1CE7A72300B94E32 /* KeyTree.hh */,
+				27CEE45720F4094400089A85 /* BTree.cc */,
+				27CEE45820F4094400089A85 /* BTree.hh */,
+				27CEE45B20F4203500089A85 /* MutableBTree.cc */,
+				27CEE45C20F4203500089A85 /* MutableBTree.hh */,
 			);
 			path = Experimental;
 			sourceTree = SOURCE_ROOT;
@@ -697,6 +712,7 @@
 				2776AA792093C982004ACE85 /* sliceIO.hh in Headers */,
 				278163BD1CE7A72300B94E32 /* KeyTree.hh in Headers */,
 				27C4ACAD1CE5146500938365 /* Array.hh in Headers */,
+				27CEE45E20F4203500089A85 /* MutableBTree.hh in Headers */,
 				2776AA22208678AA004ACE85 /* DeepIterator.hh in Headers */,
 				2734B89E1F8583FF00BE5249 /* MArray.hh in Headers */,
 				27CA08421F6B0E9400FF8C71 /* Dict.hh in Headers */,
@@ -716,6 +732,7 @@
 				2734B8A21F8583FF00BE5249 /* MDict+ObjC.h in Headers */,
 				27F25A8F20AA053D00E181FA /* Pointer.hh in Headers */,
 				274D8249209A5906008BB39F /* ValueSlot.hh in Headers */,
+				27CEE45A20F4094400089A85 /* BTree.hh in Headers */,
 				2734B8A41F8583FF00BE5249 /* MCollection.hh in Headers */,
 				27E3DD4C1DB6C32400F2872D /* CaseListReporter.hh in Headers */,
 				270FA2801BF53CEA005DCB13 /* Writer.hh in Headers */,
@@ -888,6 +905,7 @@
 				2770153C1D59645A008BADD7 /* cdecode.c in Sources */,
 				27C8DF082084102900A99BFC /* MutableHashTree.cc in Sources */,
 				277F45B1208E871000A0D159 /* HashTree.cc in Sources */,
+				27CEE45920F4094400089A85 /* BTree.cc in Sources */,
 				270FA27B1BF53CEA005DCB13 /* Value+ObjC.mm in Sources */,
 				27C4ACAC1CE5146500938365 /* Array.cc in Sources */,
 				277A06B320B36D1A00970354 /* FileUtils.cc in Sources */,
@@ -907,6 +925,7 @@
 				270FA2821BF53CEA005DCB13 /* slice.cc in Sources */,
 				270FA2781BF53CEA005DCB13 /* Value.cc in Sources */,
 				27E3DD421DB6A14200F2872D /* SharedKeys.cc in Sources */,
+				27CEE45D20F4203500089A85 /* MutableBTree.cc in Sources */,
 				2770153D1D59645A008BADD7 /* cencode.c in Sources */,
 				27CA08431F6B0E9400FF8C71 /* Dict.cc in Sources */,
 				27298E801C04E665000CFBA8 /* Encoder.cc in Sources */,
@@ -934,6 +953,7 @@
 				272E5A521BF7FE7100848580 /* FleeceTests.cc in Sources */,
 				278163B91CE6BB8C00B94E32 /* C_Test.c in Sources */,
 				27F666442017E26700A8ED31 /* SupportTests.cc in Sources */,
+				27CEE46020F444FC00089A85 /* BTreeTests.cc in Sources */,
 				279AC52B1C07776A002C80DB /* ValueTests.cc in Sources */,
 				27CEE41A20EFE92E00089A85 /* KeyTree.cc in Sources */,
 				27E3DD531DB7DB1C00F2872D /* SharedKeysTests.cc in Sources */,

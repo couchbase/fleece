@@ -40,7 +40,7 @@ namespace fleece { namespace internal {
         const Value* get(uint32_t index);
 
         template <typename T>
-        void set(uint32_t index, T t)               {_items[index].set(t); setChanged(true);}
+        void set(uint32_t index, T t)               {assert(index<_items.size()); _items[index].set(t); setChanged(true);}
 
         // Warning: Changing the size of a MutableArray invalidates pointers to items that are
         // small scalar values, and also invalidates iterators.

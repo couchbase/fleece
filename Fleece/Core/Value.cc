@@ -19,6 +19,7 @@
 #include "Value.hh"
 #include "Pointer.hh"
 #include "Array.hh"
+#include "Dict.hh"
 #include "Internal.hh"
 #include "HeapValue.hh"
 #include "Endian.hh"
@@ -240,6 +241,49 @@ namespace fleece {
 
     std::string Value::toJSONString() const {
         return toJSON().asString();
+    }
+
+
+    bool Value::isEqual(const Value *v) const {
+        if (_byte[0] != v->_byte[0])
+            return false;
+        switch (tag()) {
+            case kShortIntTag:
+            case kIntTag:
+                return asInt() == v->asInt();
+            case kFloatTag:
+                if (isDouble())
+                    return asDouble() == v->asDouble();
+                else
+                    return asFloat() == v->asFloat();
+            case kSpecialTag:
+                return _byte[1] == v->_byte[1];
+            case kStringTag:
+            case kBinaryTag:
+                return getStringBytes() == v->getStringBytes();
+            case kArrayTag: {
+                Array::iterator i((const Array*)this);
+                Array::iterator j((const Array*)v);
+                if (i.count() != j.count())
+                    return false;
+                for (; i; ++i, ++j)
+                    if (!i.value()->isEqual(j.value()))
+                        return false;
+                return true;
+            }
+            case kDictTag: {
+                Dict::iterator i((const Dict*)this);
+                Dict::iterator j((const Dict*)v);
+                if (i.count() != j.count())
+                    return false;
+                for (; i; ++i, ++j)
+                    if (i.keyString() != j.keyString() || !i.value()->isEqual(j.value()))
+                        return false;
+                return true;
+            }
+            default:
+                return false;
+        }
     }
 
 
