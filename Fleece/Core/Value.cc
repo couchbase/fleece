@@ -245,6 +245,8 @@ namespace fleece {
 
 
     bool Value::isEqual(const Value *v) const {
+        if (!v)
+            return false;
         if (_byte[0] != v->_byte[0])
             return false;
         switch (tag()) {

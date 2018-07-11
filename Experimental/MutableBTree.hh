@@ -14,6 +14,7 @@ namespace fleece {
     class MutableArray;
     class MutableDict;
     class Encoder;
+    struct StoreResult;
 
 
     class MutableBTree : public BTree {
@@ -39,6 +40,11 @@ namespace fleece {
 
     private:
         Value* getMutable(slice key, internal::tags ifType);
+        void splitRoot(const StoreResult &result);
+        bool updateChildInParent(const Value *node,
+                                 MutableArray *parent,
+                                 uint32_t indexInParent,
+                                 const StoreResult &result);
 
         friend class BTree::iterator;
     };

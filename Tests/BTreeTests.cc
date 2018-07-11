@@ -55,22 +55,32 @@ public:
         }
     }
 
+    void insertItem(size_t i, bool verbose, bool check) {
+        if (verbose)
+            cerr << "\n##### Inserting #" << (i)
+            << ", " << hex << keys[i].hash() << dec << "\n";
+        tree.set(keys[i], values->get(uint32_t(i)));
+        if (verbose)
+            tree.dump(cerr);
+        if (check) {
+            CHECK(tree.count() == i + 1);
+            for (ssize_t j = i; j >= 0; --j)
+                CHECK(tree.get(keys[j]) == values->get(uint32_t(i)));
+        }
+    }
+
     void insertItems(size_t N =0, bool verbose= false, bool check =false) {
         if (N == 0)
             N = keys.size();
-        for (size_t i = 0; i < N; i++) {
-            if (verbose)
-                cerr << "\n##### Inserting #" << (i)
-                          << ", " << hex << keys[i].hash() << dec << "\n";
-            tree.set(keys[i], values->get(uint32_t(i)));
-            if (verbose)
-                tree.dump(cerr);
-            if (check) {
-                CHECK(tree.count() == i + 1);
-                for (ssize_t j = i; j >= 0; --j)
-                    CHECK(tree.get(keys[j]) == values->get(uint32_t(i)));
-            }
-        }
+        for (size_t i = 0; i < N; i++)
+            insertItem(i, verbose, check);
+    }
+
+    void insertItemsReverse(size_t N =0, bool verbose= false, bool check =false) {
+        if (N == 0)
+            N = keys.size();
+        for (size_t i = N; i > 0; i--)
+            insertItem(i-1, verbose, check);
     }
 
     void checkTree(size_t N) {
@@ -139,6 +149,15 @@ TEST_CASE_METHOD(BTreeTests, "Bigger MutableBTree Insert", "[BTree]") {
     static constexpr int N = 1000;
     createItems(N);
     insertItems();
+    tree.dump(cerr);
+    checkTree(N);
+}
+
+
+TEST_CASE_METHOD(BTreeTests, "Bigger MutableBTree Insert Reverse Order", "[BTree]") {
+    static constexpr int N = 1000;
+    createItems(N);
+    insertItemsReverse();
     tree.dump(cerr);
     checkTree(N);
 }

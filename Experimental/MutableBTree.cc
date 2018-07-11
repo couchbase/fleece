@@ -26,22 +26,29 @@ using namespace std;
 
 namespace fleece {
 
-    static constexpr unsigned kMaxNodeSize = 20;
+    static constexpr unsigned kMaxLeafCount = 20;
+    static constexpr unsigned kMaxInteriorCount = 21;
 
 
     // Return value of store operations:
     struct StoreResult {
-        Retained<Value>         newChild;       // New child node (may be same as original)
+        Retained<Value>         curNode;        // New node (may be same as input)
         RetainedConst<Value>    splitKey;       // Key being split on, if there's a split
-        Retained<Value>         splitChild;     // New split node, if any
+        Retained<Value>         splitNode;      // New split node, if any
     };
 
 
-    static StoreResult split(MutableDict *leaf) {
+    static inline bool isLeaf(const Value *node) {
+        return node->type() == kDict;
+    }
+
+
+    static StoreResult splitLeaf(MutableDict *leaf) {
+        assert(leaf->count() >= kMaxLeafCount);
         Retained<MutableDict> newLeaf1 = MutableDict::newDict();
         Retained<MutableDict> newLeaf2 = MutableDict::newDict();
         MutableDict::iterator i(leaf);
-        for (unsigned n = 0; n < kMaxNodeSize/2; ++n, ++i)
+        for (unsigned n = 0; n < kMaxLeafCount/2; ++n, ++i)
             newLeaf1->set(i.keyString(), i.value());
         auto newLeafKey = i.keyString();
         for (; i; ++i)
@@ -70,29 +77,25 @@ namespace fleece {
             leaf = MutableDict::newDict(dict);
 
         if (value) {
-            // Insert:
             leaf->set(key, value);
-            if (leaf->count() > kMaxNodeSize)
-                return split(leaf);
+            if (leaf->count() > kMaxLeafCount)
+                return splitLeaf(leaf);
         } else {
-            // Delete:
-            leaf->remove(key);
-            // TODO: The leaf should be merged with a neighbor if it became too small.
+            leaf->remove(key); // TODO: The leaf should be merged with a neighbor if it became too small.
         }
-
+        assert(leaf->count() <= kMaxLeafCount);
         return {leaf};
     }
 
 
-    static StoreResult split(MutableArray *interior) {
-        // Interior node needs to split. Example with kMaxNodeSize = 4:
+    static StoreResult splitInterior(MutableArray *interior) {
+        assert(interior->count() == kMaxInteriorCount);
+        // Interior node needs to split. Example with kMaxInteriorCount = 9 (and split=3):
         // Old node:  [c1 k1 c2 k2 c3 k3 c4 k4 c5]
         // New nodes:  [c1 k1 c2]    [c3 k3 c4 k4 c5]   and k2 is the split key
-        // here split=3
-        auto count = interior->count();
-        constexpr uint32_t split = kMaxNodeSize/2 | 1;
-        Retained<MutableArray> interior2 = MutableArray::newArray(count - split - 1);
-        for (uint32_t src = split + 1, dst = 0; src < count; ++src, ++dst)
+        constexpr uint32_t split = kMaxInteriorCount/2 | 1;
+        Retained<MutableArray> interior2 = MutableArray::newArray(kMaxInteriorCount - split - 1);
+        for (uint32_t src = split + 1, dst = 0; src < kMaxInteriorCount; ++src, ++dst)
             interior2->set(dst, interior->get(src));
         RetainedConst<Value> splitKey = NewValue(interior->get(split)->asString());
         interior->resize(split);
@@ -102,42 +105,26 @@ namespace fleece {
     }
 
 
-    static StoreResult storeInInterior(const Array *array, slice key,
-                                       MutableBTree::InsertCallback callback)
-    {
-        uint32_t childIndex = btree::find(array, key);
-        const Value *child = array->get(childIndex);
-        StoreResult result;
-        // TODO: Reimplement without recursion
-        if (child->type() == kArray)
-            result = storeInInterior((const Array*)child, key, callback);
-        else
-            result = storeInLeaf((const Dict*)child, key, callback);
-
-        if (result.newChild == nullptr)
-            return result;
-
-        // Make the node mutable:
-        Retained<MutableArray> interior = array->asMutable();
+    static StoreResult maybeSplitInterior(const Array *node) {
+        Retained<MutableArray> interior = node->asMutable();
         if (!interior)
-            interior = MutableArray::newArray(array);
+            interior = MutableArray::newArray(node);
+        if (interior->count() < kMaxInteriorCount - 1)
+            return {interior};
+        else
+            return splitInterior(interior);
+    }
 
-        // update child if it was formerly immutable
-        if (result.newChild != child)
-            interior->set(childIndex, result.newChild);
 
-        if (result.splitChild) {
-            // Child node has split, so make room for it:
-            interior->insert(childIndex + 1, 2);
-            interior->set(childIndex + 1, result.splitKey);
-            interior->set(childIndex + 2, result.splitChild);
-
-            if (interior->count() > 2 * kMaxNodeSize)
-                return split(interior);
-        }
-
-        assert(interior->count() & 1);
-        return {interior};
+    static void insertSplitChild(MutableArray *interior,
+                                 uint32_t childIndex,
+                                 const StoreResult &result)
+    {
+        interior->insert(childIndex + 1, 2);
+        interior->set(childIndex + 0, result.curNode);
+        interior->set(childIndex + 1, result.splitKey);
+        interior->set(childIndex + 2, result.splitNode);
+        assert(interior->count() <= kMaxInteriorCount);
     }
 
 
@@ -151,29 +138,67 @@ namespace fleece {
     { }
 
     bool MutableBTree::insert(slice key, InsertCallback callback) {
-        StoreResult result;
-        if (_root->type() == kDict)
-            result = storeInLeaf((const Dict*)_root.get(), key, callback);
-        else
-            result = storeInInterior((const Array*)_root.get(), key, callback);
+        const Value *node = _root;
+        MutableArray *parent = nullptr;
+        uint32_t indexInParent = 0;
 
-        if (result.newChild == nullptr)
-            return false;
+        // Traverse interior nodes, stopping when we reach a leaf:
+        while (!isLeaf(node)) {
+            // Find the next child to traverse to:
+            auto interior = (const Array*)node;
+            uint32_t childIndex = btree::find(interior, key);
+            const Value *child = interior->get(childIndex);
 
-        if (result.splitChild) {
-            // The root split! Create new root:
-            Retained<MutableArray> newRoot = MutableArray::newArray(3);
-            newRoot->set(0, result.newChild);
-            newRoot->set(1, result.splitKey);
-            newRoot->set(2, result.splitChild);
-            assert(newRoot->count() & 1);
-            _root = newRoot;
+            // Split the current interior node if it's full:
+            StoreResult result = maybeSplitInterior(interior);
+            if (!updateChildInParent(node, parent, indexInParent, result))
+                return false;
+
+            // Go to the child:
+            parent = (MutableArray*)result.curNode.get();
+            if (result.splitKey && key >= result.splitKey->asString()) {
+                childIndex -= parent->count() + 1;
+                parent = (MutableArray*)result.splitNode.get();
+            }
+            indexInParent = childIndex;
+            node = child;
+            assert(parent->get(indexInParent) == node);
+        }
+
+        // Insert into the leaf (which may split):
+        StoreResult result = storeInLeaf((const Dict*)node, key, callback);
+        return updateChildInParent(node, parent, indexInParent, result);
+    }
+
+    bool MutableBTree::updateChildInParent(const Value *node,
+                                           MutableArray *parent,
+                                           uint32_t indexInParent,
+                                           const StoreResult &result)
+    {
+        if (result.splitNode) {
+            if (parent)
+                insertSplitChild(parent, indexInParent, result);
+            else
+                splitRoot(result);
+        } else if (result.curNode) {
+            if (result.curNode != node) {
+                if (parent)
+                    parent->set(indexInParent, result.curNode);
+                else
+                    _root = result.curNode;
+            }
         } else {
-            // Reassign _root if it went from immutable to mutable:
-            if (_root != result.newChild)
-                _root = result.newChild;
+            return false;
         }
         return true;
+    }
+
+    void MutableBTree::splitRoot(const StoreResult &result) {
+        Retained<MutableArray> newRoot = MutableArray::newArray(3);
+        newRoot->set(0, result.curNode);
+        newRoot->set(1, result.splitKey);
+        newRoot->set(2, result.splitNode);
+        _root = newRoot;
     }
 
     void MutableBTree::set(slice key, const Value *value) {
