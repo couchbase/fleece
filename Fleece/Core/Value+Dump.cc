@@ -71,9 +71,9 @@ namespace fleece {
 
     // writes an ASCII dump of this value and its contained values (NOT following pointers).
     size_t Value::dump(std::ostream &out, bool wide, int indent, const void *base) const {
-        size_t pos = _byte - (uint8_t*)base;
+        ssize_t pos = _byte - (uint8_t*)base;
         char buf[64];
-        sprintf(buf, "%04zx: %02x %02x", pos, _byte[0], _byte[1]);
+        sprintf(buf, "%s%04zx: %02x %02x", (pos < 0 ? "-" : ""), abs(pos), _byte[0], _byte[1]);
         out << buf;
         auto size = dataSize();
         if (wide && size < kWide)
@@ -114,7 +114,9 @@ namespace fleece {
     }
 
     void Value::dump(std::ostream &out) const {
-        dump(out, false, 0, this);
+        mapByAddress byAddress;
+        mapAddresses(byAddress);
+        writeByAddress(byAddress, slice(this, dataSize()), out);
     }
 
     // Recursively adds addresses of v and its children to byAddress map
@@ -152,14 +154,18 @@ namespace fleece {
         auto actualRoot = (const Value*)offsetby(data.buf, data.size - internal::kNarrow);
         if (actualRoot != root)
             actualRoot->mapAddresses(byAddress);
+        writeByAddress(byAddress, data, out);
+        return true;
+    }
+
+    void Value::writeByAddress(const mapByAddress &byAddress, slice data, std::ostream &out) {
         // Dump them ordered by address:
         size_t pos = (size_t)data.buf;
         for (auto &i : byAddress) {
-            if (i.first != pos)
+            if (i.first > pos)
                 out << "  {skip " << std::hex << (i.first - pos) << std::dec << "}\n";
             pos = i.first + i.second->dump(out, false, 0, data.buf);
         }
-        return true;
     }
 
     std::string Value::dump(slice data) {

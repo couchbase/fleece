@@ -98,6 +98,7 @@ namespace fleece {
             int _keyCmp {-1};
 
             friend class Value;
+            friend class Encoder;
         };
 
         iterator begin() const noexcept                      {return iterator(this);}

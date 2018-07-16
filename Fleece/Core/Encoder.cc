@@ -56,6 +56,17 @@ namespace fleece {
         push(kSpecialTag, 1);                   // Top-level 'array' is just a single item
     }
 
+    void Encoder::setBase(slice base, bool markExternPointers, size_t cutoff) {
+        _base = base;
+        _baseCutoff = nullptr;
+        if (base && cutoff > 0 && cutoff < base.size) {
+            assert(cutoff >= 8);
+            _baseCutoff = (char*)base.end() - cutoff;
+        }
+        _baseMinUsed = _base.end();
+        _markExternPtrs = markExternPointers;
+    }
+
     void Encoder::end() {
         if (!_items)
             return;
@@ -265,6 +276,11 @@ namespace fleece {
                 ssize_t offset = entry.second.offset - _base.size;
                 if (_items->wide || nextWritePos() - offset <= Pointer::kMaxNarrowOffset - 32) {
                     writePointer(offset);
+                    if (offset < 0) {
+                        const void *stringVal = &_base[_base.size + offset];
+                        if (stringVal < _baseMinUsed)
+                            _baseMinUsed = stringVal;
+                    }
     #ifndef NDEBUG
                     _numSavedStrings++;
     #endif
@@ -321,6 +337,8 @@ namespace fleece {
     }
 
     void Encoder::reuseBaseStrings(const Value *value) {
+        if (value < _baseCutoff)
+            return;
         switch (value->tag()) {
             case kStringTag:
                 cacheString(value->asString(), (size_t)value - (ssize_t)_base.buf);
@@ -352,13 +370,52 @@ namespace fleece {
     }
 
 
+    // Returns the minimum address used by the given Value (transitively).
+    // If that minimum address comes before _baseCutoff, immediately returns null.
+    const Value* Encoder::minUsed(const Value *value) {
+        if (value < _baseCutoff)
+            return nullptr;
+        switch (value->type()) {
+        case kArray: {
+            const Value *minVal = value;
+            for (Array::iterator i((const Array*)value); i; ++i) {
+                minVal = std::min(minVal, minUsed(i.value()));
+                if (minVal == nullptr)
+                    break;
+            }
+            return minVal;
+        }
+        case kDict: {
+            const Value *minVal = value;
+            for (Dict::iterator i((const Dict*)value, false); i; ++i) {
+                minVal = std::min(minVal, minUsed(i.key()));
+                minVal = std::min(minVal, minUsed(i.value()));
+                if (minVal == nullptr)
+                    break;
+            }
+            return minVal;
+        }
+        default:
+            return value;
+        }
+    }
+
+
     void Encoder::writeValue(const Value *value,
                              const SharedKeys *sk,
                              const WriteValueFunc *writeNestedValue)
     {
         if (valueIsInBase(value) && !isNarrowValue(value)) {
-            writePointer( (ssize_t)value - (ssize_t)_base.end() );
-        } else switch (value->tag()) {
+            auto minVal = minUsed(value);
+            if (minVal >= _baseCutoff) {
+                // Value is in the base data, and close enough; I can just emit a pointer to it:
+                writePointer( (ssize_t)value - (ssize_t)_base.end() );
+                if (minVal && minVal < _baseMinUsed)
+                    _baseMinUsed = minVal;
+                return;
+            }
+        }
+        switch (value->tag()) {
             case kShortIntTag:
             case kIntTag:
             case kFloatTag:

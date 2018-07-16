@@ -45,12 +45,14 @@ namespace fleece {
             Any writeValue() calls whose Value points into the base data will be written as
             pointers.
             @param base  The base Fleece document that's being appended to.
+            @param cutoff  If nonzero, this specifies the maximum number of bytes of the base
+                            (starting from the end) that should be used. Any base data before
+                            the cutoff will not be referenced in the encoder output.
             @param markExternPointers  If true, pointers into the base document (i.e. out of the
                         encoded data) will be marked with the `extern` flag. This allows the use
                         of an ExternResolver, so the new document can be used without having to
                         append it onto the base. */
-        void setBase(slice base, bool markExternPointers =false)
-                                        {_base = base; _markExternPtrs = markExternPointers;}
+        void setBase(slice base, bool markExternPointers =false, size_t cutoff =0);
 
         /** Scans the base document for strings and adds them to the encoder's string table.
             If equivalent strings are written to the encoder they will then be encoded as pointers
@@ -169,6 +171,7 @@ namespace fleece {
         size_t nextWritePos();
         size_t finishItem();
         slice base() const                      {return _base;}
+        slice baseUsed() const                  {return _baseMinUsed != 0 ? slice(_baseMinUsed, _base.end()) : nullslice;}
 
     private:
         // Stores the pending values to be written to an in-progress array/dict
@@ -201,7 +204,8 @@ namespace fleece {
         void fixPointers(valueArray *items NONNULL);
         void endCollection(internal::tags tag);
         void push(internal::tags tag, size_t reserve);
-        void writeValue(const Value* NONNULL, const SharedKeys*, const WriteValueFunc*);
+        void writeValue(const Value* NONNULL, const SharedKeys* const, const WriteValueFunc*);
+        const Value* minUsed(const Value *value);
 
         Encoder(const Encoder&) = delete;
         Encoder& operator=(const Encoder&) = delete;
@@ -216,7 +220,9 @@ namespace fleece {
         bool _uniqueStrings {true};  // Should strings be uniqued before writing?
         SharedKeys *_sharedKeys {nullptr};  // Client-provided key-to-int mapping
         slice _base;                 // Base Fleece data being appended to (if any)
-        int _copyingCollection {0};    // Nonzero inside writeValue when writing array/dict
+        const void* _baseCutoff {0}; // Lowest addr in _base that I can write a ptr to
+        const void* _baseMinUsed {0};// Lowest addr in _base I've written a ptr to
+        int _copyingCollection {0};  // Nonzero inside writeValue when writing array/dict
         bool _writingKey    {false}; // True if Value being written is a key
         bool _blockedOnKey  {false}; // True if writes should be refused
         bool _trailer       {true};  // Write standard trailer at end?

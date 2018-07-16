@@ -557,4 +557,120 @@ namespace fleece {
         CHECK(newDict->get("age"_sl)->asInt() == 666);
     }
 
+
+    TEST_CASE("Compaction", "[Mutable]") {
+        static constexpr size_t kMaxDataSize = 1000;
+        alloc_slice data;
+        size_t dataSize = 0;
+        Retained<MutableDict> md = MutableDict::newDict();
+        md->set("original"_sl, "This data is unchanged"_sl);
+        const Dict *dict = nullptr;
+
+        for (int i = 0; i < 1000; ++i) {
+            // Change a key:
+            md->set("fast"_sl, i);
+
+            // Encode changes as a delta:
+            Encoder enc;
+            if (data) {
+                enc.setBase(data, false, kMaxDataSize - 200);
+                enc.reuseBaseStrings();
+            }
+            enc.writeValue(md);
+            alloc_slice data2 = enc.extractOutput();
+            md = nullptr;
+
+            // Append live part of old data and the delta, to produce the new data:
+            slice dataUsed = enc.baseUsed();
+            data = alloc_slice(dataUsed);
+            data.append(data2);
+
+            // Look at how the data size changes:
+            if (data.size < dataSize)
+                std::cerr << i << ": data went from " << dataSize << " to " << data.size << " bytes\n";
+            dataSize = data.size;
+            CHECK(dataSize < kMaxDataSize);
+            //std::cerr << "Data: " << data << "\n";
+
+            // Verify the data is correct:
+            dict = Value::fromData(data)->asDict();
+            CHECK(dict->get("fast"_sl)->asInt() == i);
+            md = MutableDict::newDict(dict);
+        }
+
+        std::cerr << "data is now " << data.size << " bytes\n";
+        dict->dump(std::cerr);
+        std::cerr << "\n";
+    }
+
+
+    TEST_CASE("Compaction-complex", "[Mutable]") {
+        static constexpr size_t kMaxDataSize = 4000;
+        alloc_slice data;
+        size_t dataSize = 0, maxDataSize = 0;
+        Retained<MutableDict> md = MutableDict::newDict();
+        const Dict *dict = nullptr;
+
+        srandom(4); // make it repeatable
+
+        for (int i = 0; i < 1000; ++i) {
+            // Change a key:
+
+            Retained<MutableDict> prop = md;
+            do {
+                char c = (char)('A' + (random() % 4));
+                slice key(&c, 1);
+                Retained<MutableDict> p2 = prop->getMutableDict(key);
+                if (!p2) {
+                    p2 = MutableDict::newDict();
+                    prop->set(key, p2);
+                }
+                prop = p2;
+            } while (random() % 2 == 0);
+            prop->set("i"_sl, i);
+
+            //std::cerr << i << ": " << md->toJSONString() << "\n";
+
+            // Encode changes as a delta:
+            Encoder enc;
+            if (data) {
+                enc.setBase(data, false, kMaxDataSize - 200);
+                enc.reuseBaseStrings();
+            }
+            enc.writeValue(md);
+            alloc_slice data2 = enc.extractOutput();
+            md = nullptr;
+
+            // Append live part of old data and the delta, to produce the new data:
+            if (kMaxDataSize > 0) {
+                slice dataUsed = enc.baseUsed();
+                data = alloc_slice(dataUsed);
+            }
+            data.append(data2);
+
+            // Look at how the data size changes:
+//            if (data.size < dataSize)
+//                std::cerr << i << ": data went from " << dataSize << " to " << data.size << " bytes\n";
+            dataSize = data.size;
+            maxDataSize = std::max(maxDataSize, dataSize);
+            //CHECK(dataSize < kMaxDataSize);
+            //std::cerr << "Data: " << data << "\n";
+            //Value::dump(data, std::cerr);
+
+            // Verify the data is correct:
+            dict = Value::fromData(data)->asDict();
+            //CHECK(dict->get("fast"_sl)->asInt() == i);
+            md = MutableDict::newDict(dict);
+        }
+
+        std::cerr << "data is now " << data.size << " bytes; max was " << maxDataSize << "\n";
+        //dict->dump(std::cerr);
+        //std::cerr << "\n";
+
+        Encoder enc;
+        enc.writeValue(dict);
+        alloc_slice packedData = enc.extractOutput();
+        std::cerr << "(Packed data would be " << packedData.size << " bytes)\n";
+    }
+
 }

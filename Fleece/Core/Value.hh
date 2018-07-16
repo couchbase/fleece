@@ -221,6 +221,7 @@ namespace fleece {
         size_t dataSize() const noexcept;
         typedef std::map<size_t, const Value*> mapByAddress;
         void mapAddresses(mapByAddress&) const;
+        static void writeByAddress(const mapByAddress &byAddress, slice data, std::ostream &out);
         size_t dump(std::ostream &out, bool wide, int indent, const void *base) const;
         void writeDumpBrief(std::ostream &out, const void *base, bool wide =false) const;
 
