@@ -45,15 +45,20 @@ namespace fleece { namespace internal {
     }
 
 
+    alloc_slice HeapDict::_allocateKey(slice key) {
+        alloc_slice allocedKey(key);
+        _backingSlices.push_back(allocedKey);
+        return allocedKey;
+    }
+
+
     ValueSlot& HeapDict::_makeValueFor(slice key) {
         // Look in my map first:
         auto it = _map.find(key);
         if (it != _map.end())
             return it->second;
         // If not in map, add it as an empty value:
-        alloc_slice allocedKey(key);
-        _backingSlices.push_back(allocedKey);
-        return _map[allocedKey];                // creates a new value
+        return _map[_allocateKey(key)];                // creates a new value
     }
 
 
@@ -83,7 +88,7 @@ namespace fleece { namespace internal {
         } else if (_source) {
             result = HeapCollection::mutableCopy(_source->get(key), ifType);
             if (result)
-                _map.emplace(key, result.get());
+                _map.emplace(_allocateKey(key), result.get());
         }
         if (result)
             markChanged();

@@ -90,6 +90,7 @@ namespace fleece { namespace internal {
 
     private:
         void markChanged();
+        alloc_slice _allocateKey(slice key);
         ValueSlot* _findValueFor(slice keyToFind) const noexcept;
         ValueSlot& _makeValueFor(slice key);
         ValueSlot& _mutableValueToSetFor(slice key);
