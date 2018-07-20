@@ -16,6 +16,8 @@
 // limitations under the License.
 //
 
+// Useful reading: https://www.geeksforgeeks.org/b-tree-set-1-introduction-2/
+
 #include "MutableBTree.hh"
 #include "MutableDict.hh"
 #include "MutableArray.hh"
@@ -27,7 +29,9 @@ using namespace std;
 namespace fleece {
 
     static constexpr unsigned kMaxLeafCount = 20;
+    static constexpr unsigned kMinLeafCount = 10;
     static constexpr unsigned kMaxInteriorCount = 21;
+    static constexpr unsigned kMinInteriorCount = 10;
 
 
     // Return value of store operations:
@@ -41,6 +45,26 @@ namespace fleece {
     static inline bool isLeaf(const Value *node) {
         return node->type() == kDict;
     }
+
+
+    static Retained<MutableArray> makeMutable(const Array *a) {
+        Retained<MutableArray> m = a->asMutable();
+        return m ? m : MutableArray::newArray(a);
+    }
+
+
+#if 0
+    static StoreResult mutateLeaf(const Dict *leaf, MutableArray *parent, uint32_t index) {
+        StoreResult result;
+        result.curNode = leaf->asMutable();
+        if (!result.curNode) {
+            result.curNode = (Value*)MutableDict::newDict(leaf);
+            if (parent)
+                parent->set(index, result.curNode);
+        }
+        return result;
+    }
+#endif
 
 
     static StoreResult splitLeaf(MutableDict *leaf) {
@@ -57,18 +81,50 @@ namespace fleece {
     }
 
 
+    static bool mergeLeaf(const Dict *leaf, MutableArray *parent, uint32_t indexInParent) {
+        // Look for a neighbor leaf to merge into:
+        auto count = leaf->count();
+        assert(count < kMinLeafCount);
+        const Dict *candidate = nullptr;
+        uint32_t candidateIndex = 0;
+        if (indexInParent > 1) {
+            candidateIndex = indexInParent - 2;
+            candidate = parent->get(candidateIndex)->asDict();
+            if (candidate && candidate->count() + count >= kMaxLeafCount)
+                candidate = nullptr;
+        }
+        if (!candidate && indexInParent + 2 < parent->count()) {
+            candidateIndex = indexInParent + 2;
+            candidate = parent->get(candidateIndex)->asDict();
+            if (candidate && candidate->count() + count >= kMaxLeafCount)
+                candidate = nullptr;
+        }
+        if (!candidate)
+            return false;
+
+        // Now merge 'leaf' into 'candidate':
+        Retained<MutableDict> otherLeaf = candidate->asMutable();
+        if (!otherLeaf) {
+            otherLeaf = MutableDict::newDict(otherLeaf);
+            parent->set(candidateIndex, otherLeaf);
+        }
+        for (Dict::iterator i(leaf); i; ++i)
+            otherLeaf->set(i.keyString(), i.value());
+        if (candidateIndex < indexInParent)
+            parent->remove(indexInParent - 1, 2);
+        else
+            parent->remove(indexInParent, 2);
+        return true;
+    }
+
+
     static StoreResult storeInLeaf(const Dict* dict, slice key,
                                    MutableBTree::InsertCallback callback)
     {
         // Get the old and new value:
         const Value *oldValue = dict->get(key);
-        const Value *value = nullptr;
-        if (callback) {
-            value = callback(oldValue);
-            if (!value)
-                value = oldValue;
-        }
-        if (value == oldValue)
+        const Value *value = callback(oldValue);
+        if (value == oldValue || value == nullptr)
             return {};
 
         // Make the leaf mutable:
@@ -76,15 +132,12 @@ namespace fleece {
         if (!leaf)
             leaf = MutableDict::newDict(dict);
 
-        if (value) {
-            leaf->set(key, value);
-            if (leaf->count() > kMaxLeafCount)
-                return splitLeaf(leaf);
-        } else {
-            leaf->remove(key); // TODO: The leaf should be merged with a neighbor if it became too small.
-        }
-        assert(leaf->count() <= kMaxLeafCount);
-        return {leaf};
+        // Store the value:
+        leaf->set(key, value);
+        if (leaf->count() <= kMaxLeafCount)
+            return {leaf};
+        else
+            return splitLeaf(leaf);
     }
 
 
@@ -106,9 +159,7 @@ namespace fleece {
 
 
     static StoreResult maybeSplitInterior(const Array *node) {
-        Retained<MutableArray> interior = node->asMutable();
-        if (!interior)
-            interior = MutableArray::newArray(node);
+        Retained<MutableArray> interior = makeMutable(node);
         if (interior->count() < kMaxInteriorCount - 1)
             return {interior};
         else
@@ -125,6 +176,11 @@ namespace fleece {
         interior->set(childIndex + 1, result.splitKey);
         interior->set(childIndex + 2, result.splitNode);
         assert(interior->count() <= kMaxInteriorCount);
+    }
+
+
+    static bool mergeInterior(const Array *interior, MutableArray *parent, uint32_t indexInParent) {
+        abort();
     }
 
 
@@ -166,8 +222,11 @@ namespace fleece {
         }
 
         // Insert into the leaf (which may split):
-        StoreResult result = storeInLeaf((const Dict*)node, key, callback);
-        return updateChildInParent(node, parent, indexInParent, result);
+        RetainedConst<Dict> leaf = (const Dict*)node;
+        StoreResult result = storeInLeaf(leaf, key, callback);
+        if (!updateChildInParent(node, parent, indexInParent, result))
+            return false;
+        return true;
     }
 
     bool MutableBTree::updateChildInParent(const Value *node,
@@ -208,7 +267,49 @@ namespace fleece {
     }
 
     bool MutableBTree::remove(slice key) {
-        return insert(key, nullptr);
+        // Walk down to the leaf node, remembering the path:
+        vector<pair<const Array*, uint32_t>> path;
+        const Value *node = _root;
+        while (node->type() == kArray) {
+            auto interior = (const Array*)node;
+            auto i = btree::find(interior, key);
+            path.emplace_back(interior, i);
+            node = interior->get(i);
+        }
+
+        auto leaf = (const Dict*)node;
+        if (!leaf->get(key))
+            return false;
+
+        Retained<MutableDict> mleaf = leaf->asMutable();
+        if (!mleaf)
+            mleaf = MutableDict::newDict(leaf);
+        mleaf->remove(key);
+
+        bool childNeedsMerge = (mleaf->count() < kMinLeafCount);
+        if (mleaf != leaf || childNeedsMerge) {
+            // Walk back up the path, making parents mutable and merging nodes as needed:
+            RetainedConst<Value> child(mleaf);
+            for (auto i = path.rbegin(); i != path.rend(); ++i) {
+                const Array *parent = i->first;
+                uint32_t indexInParent = i->second;
+                auto mparent = makeMutable(parent);
+                mparent->set(indexInParent, child);
+                if (childNeedsMerge) {
+                    if (isLeaf(child))
+                        mergeLeaf(child->asDict(), mparent, indexInParent);
+                    else
+                        mergeInterior(child->asArray(), mparent, indexInParent);
+                }
+                childNeedsMerge = (mparent->count() < kMinInteriorCount);
+                if (parent == mparent && !childNeedsMerge)
+                    return true;        // No more changes to make -- done!
+                child = mparent;
+            }
+            // Finally update the root pointer:
+            _root = child;
+        }
+        return true;
     }
 
 

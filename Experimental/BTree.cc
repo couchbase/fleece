@@ -39,7 +39,9 @@ namespace fleece {
 
         uint32_t find(const Array *node, slice key) {
             Array::iterator i(node);
-            uint32_t begin = 0, end = i.count() - 1;
+            uint32_t begin = 0, end = i.count();
+            assert(end > 1);
+            --end;
             do {
                 assert((begin & 1) == 0 && (end & 1) == 0);
                 uint32_t mid = ((begin + end) >> 1) | 1;

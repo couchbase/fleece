@@ -186,6 +186,7 @@ TEST_CASE_METHOD(BTreeTests, "Bigger MutableBTree Remove", "[BTree]") {
 
     for (int i = 0; i < N; i += 3) {
         tree.remove(keys[i]);
+        CHECK(tree.count() == (N-1 - i/3));
     }
     for (int i = 0; i < N; i++) {
         auto value = tree.get(keys[i]);
@@ -195,6 +196,22 @@ TEST_CASE_METHOD(BTreeTests, "Bigger MutableBTree Remove", "[BTree]") {
             CHECK(value == nullptr);
     }
     CHECK(tree.count() == N - 1 - (N / 3));
+}
+
+
+TEST_CASE_METHOD(BTreeTests, "Bigger MutableBTree Remove All", "[BTree]") {
+#if FL_EMBEDDED
+    static constexpr int N = 1000;
+#else
+    static constexpr int N = 10000;
+#endif
+    createItems(N);
+    insertItems();
+
+    for (int i = 0; i < N; i += 1) {
+        tree.remove(keys[i]);
+    }
+    CHECK(tree.count() == 0);
 }
 
 

@@ -28,7 +28,9 @@ namespace fleece { namespace internal {
     :HeapCollection(kDictTag)
     ,_count(d ? d->count() : 0)
     ,_source(d)
-    { }
+    {
+        assert(!d || !d->isMutable());
+    }
 
 
     void HeapDict::markChanged() {
