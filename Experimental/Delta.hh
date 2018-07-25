@@ -12,11 +12,13 @@ namespace fleece {
     class JSONEncoder;
 
 
-    /** Returns JSON that describes the changes to turn the value `old` into `nuu`.
+    /** Returns JSON (in JsonDiffPatch format) that describes the changes to turn the value `old`
+        into `nuu`.
         If the values are equal, returns nullslice. */
     alloc_slice CreateDelta(const Value* old, const Value* nuu, bool json5 =false);
 
-    /** Writes JSON that describes the changes to turn the value `old` into `nuu`.
+    /** Writes JSON (in JsonDiffPatch format) that describes the changes to turn the value `old`
+        into `nuu`.
         If the values are equal, writes nothing and returns false. */
     bool CreateDelta(const Value* old, const Value* nuu, JSONEncoder&);
 
@@ -32,6 +34,7 @@ namespace fleece {
     void ApplyDelta(const Value *old, const Value* NONNULL delta, Encoder&);
 
 
-    // Set this to true to create deltas compatible with JsonDiffPatch
+    // Set this to true to create deltas compatible with JsonDiffPatch.
+    // (this is really just here for test purposes so we can use the JDP unit test dataset...)
     extern bool gCompatibleDeltas;
 }
