@@ -274,9 +274,10 @@ namespace fleece {
                 return true;
             }
             case kDictTag: {
-                Dict::iterator i((const Dict*)this);
-                Dict::iterator j((const Dict*)v);
-                if (i.count() != j.count())
+                auto dthis = (const Dict*)this, dv = (const Dict*)v;
+                Dict::iterator i(dthis);
+                Dict::iterator j(dv);
+                if (!dthis->getParent() && !dv->getParent() && i.count() != j.count())
                     return false;
                 for (; i; ++i, ++j)
                     if (i.keyString() != j.keyString() || !i.value()->isEqual(j.value()))
