@@ -23,6 +23,11 @@
 using namespace fleece;
 
 
+static std::string toJSONString(const Value *v) {
+    return v ? v->toJSONString() : "undefined";
+}
+
+
 static void checkDelta(const char *json1, const char *json2, const char *deltaExpected) {
     // Parse json1 and json2:
     const Value *v1 = nullptr, *v2 = nullptr;
@@ -52,6 +57,7 @@ static void checkDelta(const char *json1, const char *json2, const char *deltaEx
         // Now apply the delta to the old value to get the new one:
         alloc_slice f2_reconstituted = ApplyDelta(v1, jsonDelta, true);
         auto v2_reconstituted = Value::fromData(f2_reconstituted);
+        INFO("v2 reconstituted:  " << toJSONString(v2_reconstituted) << "   original:  " << toJSONString(v2));
         CHECK(v2_reconstituted->isEqual(v2));
     }
 }
@@ -95,8 +101,15 @@ TEST_CASE("Delta nested dicts", "[delta]") {
 }
 
 
-static std::string toJSONString(const Value *v) {
-    return v ? v->toJSONString() : "undefined";
+static void checkDelta(const Value *left, const Value *right, const Value *expectedDelta) {
+    alloc_slice jsonDelta = CreateDelta(left, right);
+    alloc_slice fleeceDelta = JSONConverter::convertJSON(jsonDelta);
+    const Value *delta = Value::fromData(fleeceDelta);
+    INFO("Delta of " << toJSONString(left) << "  -->  " << toJSONString(right) << "  ==  " << toJSONString(expectedDelta) << "  ...  got  " << toJSONString(delta));
+    if (expectedDelta)
+        CHECK(expectedDelta->isEqual(delta));
+    else
+        CHECK(delta == 0);
 }
 
 
@@ -132,15 +145,8 @@ TEST_CASE("JSONDiffPatch test suite", "[delta]") {
 
             // OK, run a test:
             auto left = test->get("left"_sl), right = test->get("right"_sl);
-            auto expectedDelta = test->get("delta"_sl);
-            alloc_slice jsonDelta = CreateDelta(left, right);
-            alloc_slice fleeceDelta = JSONConverter::convertJSON(jsonDelta);
-            const Value *delta = Value::fromData(fleeceDelta);
-            INFO("Delta of " << toJSONString(left) << "  -->  " << toJSONString(right) << "  ==  " << toJSONString(expectedDelta) << "  ...  got  " << toJSONString(delta));
-            if (expectedDelta)
-                CHECK(expectedDelta->isEqual(delta));
-            else
-                CHECK(delta == 0);
+            checkDelta(left,  right, test->get("delta"_sl));
+            checkDelta(right, left,  test->get("reverse"_sl));
         }
     }
 
