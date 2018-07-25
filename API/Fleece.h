@@ -25,6 +25,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef __clang__
+    #define FLNONNULL                     __attribute__((nonnull))
+#else
+    #define FLNONNULL
+#endif
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -699,6 +706,63 @@ extern "C" {
     /** Ends external pointer resolution from the memory range of `document`. This must be called
         before that memory is invalidated (freed or overwritten.) */
     void FLResolver_End(FLSlice document);
+
+
+    //////// JSON DELTA COMPRESSION
+
+
+    /** @} */
+    /** \name Delta Compression (JsonDiffPatch)
+     @{ */
+
+    /** Returns JSON that encodes the changes to turn the value `old` into `nuu`;
+        or if the values are equal, returns a null slice.
+        (The JSON basically adheres to the JsonDiffPatch format, with some changes to make it
+        more compact. But you should treat it as a black box.)
+        @param old  A value that's typically the old/original state of some data.
+        @param nuu  A value that's typically the new/changed state of the `old` data.
+        @return  JSON data representing the changes from `old` to `nuu`. */
+    FLSliceResult FLCreateDelta(FLValue old,
+                                FLValue nuu);
+
+    /** Writes JSON that describes the changes to turn the value `old` into `nuu`.
+        If the values are equal, writes nothing and returns false.
+        (The JSON basically adheres to the JsonDiffPatch format, with some changes to make it
+        more compact. But you should treat it as a black box.)
+        @param old  A value that's typically the old/original state of some data.
+        @param nuu  A value that's typically the new/changed state of the `old` data.
+        @param jsonEncoder  An encoder to write the JSON to. Must have been created using
+                `FLEncoder_NewWithOptions`, with JSON or JSON5 format.
+        @return  True if a delta was encoded, or false if the values are equal. */
+    bool FLEncodeDelta(FLValue old,
+                       FLValue nuu,
+                       FLEncoder FLNONNULL jsonEncoder);
+
+
+    /** Applies the JSON data created by `CreateDelta` to the value `old`, which must be equal
+        to the `old` value originally passed to `FLCreateDelta`, and returns a Fleece document
+        equal to the original `nuu` value.
+        @param old  A value that's typically the old/original state of some data. This must be
+                    equal to the `old` value used when creating the `jsonDelta`.
+        @param jsonDelta  A JSON-encoded delta created by `FLCreateDelta` or `FLEncodeDelta`.
+        @param error  On failure, error information will be stored where this points, if non-null.
+        @return  The corresponding `nuu` value, encoded as Fleece, or null if an error occurred. */
+    FLSliceResult FLApplyDelta(FLValue old,
+                               FLSlice jsonDelta,
+                               FLError *error);
+
+    /** Applies the (parsed) JSON data created by `CreateDelta` to the value `old`, which must be
+        equal to the `old` value originally passed to `FLCreateDelta`, and writes the corresponding
+        `nuu` value to the encoder.
+        @param old  A value that's typically the old/original state of some data. This must be
+                    equal to the `old` value used when creating the `jsonDelta`.
+        @param jsonDelta  A JSON-encoded delta created by `FLCreateDelta` or `FLEncodeDelta`.
+        @param encoder  A Fleece encoder to write the decoded `nuu` value to. (JSON encoding is not
+                    supported.)
+        @return  True on success, false on error; call `FLEncoder_GetError` for details. */
+    bool FLEncodeApplyingDelta(FLValue old,
+                               FLValue FLNONNULL jsonDelta,
+                               FLEncoder encoder);
 
     
     /** @} */

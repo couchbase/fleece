@@ -20,6 +20,7 @@
 #include "MutableArray.hh"
 #include "MutableDict.hh"
 #include "ExternResolver.hh"
+#include "Delta.hh"
 #include "Fleece.h"
 #include "JSON5.hh"
 
@@ -526,5 +527,40 @@ void FLResolver_End(FLSlice document) {
     if (resolver) {
         assert(resolver->source() == slice(document));
         delete resolver;
+    }
+}
+
+
+#pragma mark - DELTA COMPRESSION
+
+
+FLSliceResult FLCreateDelta(FLValue old, FLValue nuu) {
+    return toSliceResult(CreateDelta((const Value*)old, (const Value*)nuu));
+}
+
+bool FLEncodeDelta(FLValue old, FLValue nuu, FLEncoder jsonEncoder) {
+    JSONEncoder *enc = jsonEncoder->jsonEncoder.get();
+    assert(enc);  //TODO: Support encoding to Fleece
+    return CreateDelta((const Value*)old, (const Value*)nuu, *enc);
+}
+
+
+FLSliceResult FLApplyDelta(FLValue old, FLSlice jsonDelta, FLError *outError) {
+    try {
+        return toSliceResult(ApplyDelta((const Value*)old, jsonDelta));
+    } catchError(outError);
+    return {};
+}
+
+bool FLEncodeApplyingDelta(FLValue old, FLValue delta, FLEncoder encoder) {
+    try {
+        Encoder *enc = encoder->fleeceEncoder.get();
+        if (!enc)
+            FleeceException::_throw(EncodeError, "FLEncodeApplyingDelta cannot encode JSON");
+        ApplyDelta((const Value*)old, (const Value*)delta, *enc);
+        return true;
+    } catch (const std::exception &x) {
+        encoder->recordException(x);
+        return false;
     }
 }
