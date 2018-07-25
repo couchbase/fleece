@@ -71,6 +71,9 @@ namespace fleece {
         /** The overall type of a value (JSON types plus Data) */
         valueType type() const noexcept;
 
+        /** Compares two Values for equality. */
+        bool isEqual(const Value*) const;
+
         //////// Scalar types:
 
         /** Boolean value/conversion. Any value is considered true except false, null, 0. */
