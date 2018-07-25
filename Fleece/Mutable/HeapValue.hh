@@ -98,7 +98,7 @@ namespace fleece {
 
     template <class T>
     RetainedConst<Value> NewValue(T t) {
-        return internal::HeapValue::create(t);
+        return internal::HeapValue::create(t)->asValue();
     }
 
 }

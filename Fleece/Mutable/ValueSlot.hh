@@ -46,8 +46,9 @@ namespace fleece { namespace internal {
 
         // These methods allow set(Value*) to be called, without allowing any other pointer type
         // to be used; without them, set(Foo*) would incorrectly call set(bool).
-        template <class T> void set(const T* t)             {setValue(t);}
-        template <class T> void set(const Retained<T> &t)   {setValue(t);}
+        template <class T> void set(const T* t)                 {setValue(t);}
+        template <class T> void set(const Retained<T> &t)       {setValue(t);}
+        template <class T> void set(const RetainedConst<T> &t)  {setValue(t);}
 
         /** Promotes Array or Dict value to mutable equivalent and returns it. */
         HeapCollection* makeMutable(tags ifType);
