@@ -1,18 +1,17 @@
 # Fleece
 
-Jens Alfke — 12 May 2015
+Jens Alfke — 14 May 2018
 
 __Fleece__ is a new binary encoding for semi-structured data. Its data model is a superset of JSON, adding support for binary values. It is designed to be:
 
 * Very fast to read: No parsing is needed, and the data can be navigated and read without any heap allocation. Fleece objects are internal pointers into the raw data. Arrays and dictionaries can be random-accessed.
 * Compact: Simple values will be about the same size as JSON. Complex ones may be much smaller, since repeated values, especially strings, only need to be stored once.
 * Efficient to convert into native objects: Numbers are binary, strings are raw UTF-8 without quoting, binary data is not base64-encoded. Storing repeated values once means they only need to be converted into native objects once.
+* Amenable to delta compression, without needing complex algorithms like zdelta. It's very easy to encode a modified document as a delta from the original, and the delta merely needs to be appended to the original data to be read.
 
 ## Format
 
-Fleece data consists of **values**. The value at the _end_ of the data is the primary top-level object, usually a dictionary. (This is an oversimplification; see Finding The Root, below.)
-
-Values are always 2-byte aligned and occupy at least two bytes. The upper 4 bits of the first byte are a tag that identify the value's type.
+Fleece data consists of a sequence of **values**. Values are always 2-byte aligned, and occupy at least two bytes. The upper 4 bits of the first byte are a tag that identify the value's type. The value at the _end_ of the data is the primary top-level object, usually a dictionary. (This is an oversimplification; see Finding The Root, below.)
 
 Some common values fit into exactly two bytes:
 
@@ -31,15 +30,25 @@ An array consists of a two-byte header, an item count (which fits in the header 
 
 Dictionaries are like arrays, except that each item consists of two values: a key followed by the value it maps to. The items are sorted by increasing key, to allow lookup by binary search. (For JSON compatibility the keys must be strings, but the format allows other types.)
 
-Keys MAY take the form of small integers, if the "shared keys" optimization is being used. In this case, there is an external persistent mapping from integers to strings that's used to interpret the meanings of the integer keys. Using this optimization can significantly shrink the data size and speed up key lookups.
+Keys are sorted, to enable lookup by binary search. The key ordering is very simple: integers (q.v.) sort before strings, and strings are compared lexicographically as byte sequences, as if by memcmp, _not_ by any higher-level collation algorithms like Unicode.
+
+#### Shared (Integer) Keys
+
+Keys MAY take the form of non-negative small integers, if the "shared keys" optimization is being used. In this case, there is an external persistent mapping from integers to strings that's used to interpret the meanings of the integer keys. Using this optimization can significantly shrink the data size and speed up key lookups.
 
 >**Note:** The shared-keys optimization obviously requires that all creators and consumers of the encoded data agree on a shared consistent mapping. This is outside the scope of Fleece. The library provides support for managing such a mapping, and using it while encoding and decoding, but leaves the persistent shared storage of the map (as an array of strings) up to the client.
 
 >**Note:** If a given key string is part of the mapping, it MUST always be encoded as an integer, since readers will be expecting it to be an integer. (Otherwise readers would have to retry every failed integer lookup using the equivalent string, which would slow down access.)
 
-Keys are sorted by default; this allows binary search for lookups. An encoder MAY write unsorted dictionaries, but _only_ if all potential readers know about this and use linear search, since otherwise a binary search will fail. 
+#### Dictionary Inheritance
 
-The key ordering is very simple: integers sort before strings, and strings are compared lexicographically as byte sequences, as if by memcmp, _not_ by any higher-level collation algorithms like Unicode.
+A dictionary may inherit from another dictionary that appears earlier: any keys that don't appear in it have the values they had in the earlier dict. In other words, keys in the newer dict override values from the older dict. A deletion is represented internally by a key with the special value `undefined`.
+
+This inheritance is just an encoding shorthand, a form of delta compression, and is _not_ visible in the API. The dictionary acts like any other: the `get` method follows inheritance (and returns a null pointer for a deleted value, never `undefined`), and an iterator shows the effective contents including inherited values.
+
+Inheritance is represented by a key with value -2048, whose value is a pointer to the inherited dictionary. Since -2048 is the lowest possible short integer, this key/value pair will always appear first. This makes it very easy to find. Also, since this key is out of range of the normal key space, the regular binary-search key lookup algorithm will never see it and doesn't have to treat it as a special case.
+
+Multi-level inheritance is allowed, although more levels slow down lookups, so the encoder may want to use a heuristic to decide when to write the full dictionary.
 
 ### Pointers
 
@@ -73,7 +82,7 @@ The reason for the (rare) second pointer dereference is that the true root objec
  0000iiii iiiiiiii       small integer (12-bit, signed, range ±2048)
  0001uccc iiiiiiii...    long integer (u = unsigned?; ccc = byte count - 1) LE integer follows
  0010s--- --------...    floating point (s = 0:float, 1:double). LE float data follows.
- 0011ss-- --------       special (s = 0:null, 1:false, 2:true)
+ 0011ss-- --------       special (s = 0:null, 1:false, 2:true, 3:undefined)
  0100cccc ssssssss...    string (cccc is byte count, or if it’s 15 then count follows as varint)
  0101cccc dddddddd...    binary data (same as string)
  0110wccc cccccccc...    array (c = 11-bit item count, if 2047 then overflow follows as varint;
@@ -128,3 +137,13 @@ Behind the scenes, the data is written in bottom-up order: the values in a colle
 The encoder keeps a hash table of strings that remembers the offset where each string has been written. Subsequent uses of the same string are encoded as pointers to that offset.
 
 The encoder may optionally be given a SharedKeys object that manages a mapping of strings to integers. If so, it will consult that object before writing a dictionary key, and if it returns an integer, the encoder will write that instead. The SharedKeys class is adaptive, so when it's given a string not in the mapping, and the string is considered eligible for mapping, it will add it to the list and return the newly assigned integer. This allows the mapping to grow adaptively as data is encoded. Of course the client is responsible for persistent storage of the mapping, and making sure that readers have access to it as well.
+
+#### Delta Encoding
+
+A modified version of a document can be encoded as a _delta_: a shorter piece of data that, when appended to the original encoded document, forms a complete Fleece document containing the modified values. The reason the delta is shorter is that it encodes unchanged values as pointers back to where the values appear in the original data. The only values that have to be written explicitly to the delta are those that changed, plus their containers. The root value (usually a Dict) always has to be rewritten since it's the ultimate container of everything.
+
+Dictionary inheritance makes deltas even more space-efficient, since only those key/value pairs that changed have to be rewritten.
+
+A delta is generated by setting the `base` property of the Encoder to point to the original Fleece data (its address and length) before encoding begins. During encoding, the client should write the unchanged values as `Value` pointers (i.e. call `writeValue()`); the encoder will recognize a Value that points within the base document and write a pointer to it.
+
+Literally appending the delta onto the original base document may be impractical. In that case, you can use the `ExternResolver`  class to customize the resolution of pointers from a delta into its base. While an instance is in scope, it specifies the location of the base document for the region of memory occupied by the delta. This does require that the encoder mark the inter-document pointers with the `extern` flag; there's an optional parameter to `setBase` that enables this.

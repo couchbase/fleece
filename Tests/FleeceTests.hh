@@ -20,6 +20,7 @@
 
 #include "slice.hh"
 #include "JSON5.hh"
+#include "sliceIO.hh"
 #include "Benchmark.hh"
 #include <ostream>
 #ifdef _MSC_VER
@@ -28,9 +29,18 @@
 
 using namespace fleece;
 
+#if FL_HAVE_FILESYSTEM
+    #ifdef _MSC_VER
+        #define kTempDir "C:\\tmp"
+    #else
+        #define kTempDir "/tmp/"
+    #endif
+#endif
+
+
 // True if we have access to test files like "1000people.json". Predefine as 0 for embedded OS.
 #ifndef FL_HAVE_TEST_FILES
-#define FL_HAVE_TEST_FILES 1
+#define FL_HAVE_TEST_FILES FL_HAVE_FILESYSTEM
 #endif
 
 // Directory containing test files:
@@ -40,41 +50,25 @@ using namespace fleece;
     #else
         #define kTestFilesDir "Tests/"
     #endif
-    static const char* kBigJSONTestFilePath = kTestFilesDir "1000people.json";
+    static const char* kBigJSONTestFileName = "1000people.json";
+    static const size_t kBigJSONTestCount = 1000;
 #else
     #define kTestFilesDir ""
-    static const char* kBigJSONTestFilePath = "50people.json";
+    static const char* kBigJSONTestFileName = "50people.json";
+    static const size_t kBigJSONTestCount = 50;
 #endif
+
 
 namespace fleece_test {
     std::string sliceToHex(slice);
     std::string sliceToHexDump(slice, size_t width = 16);
     std::ostream& dumpSlice(std::ostream&, slice);
 
-    alloc_slice readFile(const char *path);
-    void writeToFile(slice s, const char *path);
-
-
-    struct mmap_slice : public pure_slice {
-        mmap_slice(const char *path);
-        ~mmap_slice();
-
-        operator slice()    {return {buf, size};}
-
-    private:
-    #if FL_EMBEDDED
-        alloc_slice _data;
-    #else
-        void* _mapped;
-    #ifdef _MSC_VER
-        HANDLE _fileHandle{INVALID_HANDLE_VALUE};
-        HANDLE _mapHandle{INVALID_HANDLE_VALUE};
-    #else
-        int _fd;
-    #endif
-    #endif // FL_EMBEDDED
-        mmap_slice(const mmap_slice&);
-    };
+#if FL_HAVE_TEST_FILES
+    alloc_slice readTestFile(const char *path);
+#else
+    slice readTestFile(const char *path);
+#endif
 
     // Converts JSON5 to JSON; helps make JSON test input more readable!
     static inline std::string json5(const std::string &s)      {return fleece::ConvertJSON5(s);}

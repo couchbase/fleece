@@ -31,7 +31,6 @@
     #define ssize_t int
     #define MAP_FAILED nullptr
 #else
-    #define O_BINARY 0
     #if !FL_EMBEDDED
         #include <sys/mman.h>
         #include <sys/stat.h>
@@ -78,6 +77,7 @@ namespace fleece_test {
         return hex;
     }
 
+
     std::ostream& dumpSlice(std::ostream& o, slice s) {
         o << "slice[";
         if (s.buf == nullptr)
@@ -91,98 +91,25 @@ namespace fleece_test {
     }
 
 
-#if FL_EMBEDDED
-
-    mmap_slice::mmap_slice(const char *path)
-    :_data( readFile(path))
-    {
-        setBuf(_data.buf);
-        setSize(_data.size);
-    }
-
-    mmap_slice::~mmap_slice() {
-    }
-
-#else
-
-    mmap_slice::mmap_slice(const char *path)
-    #ifdef _MSC_VER
-        :
-    #else
-    :_fd(-1),
-    #endif
-    _mapped(MAP_FAILED)
-    {
-    #ifndef _MSC_VER
-         _fd = ::open(path, O_RDONLY);
-        REQUIRE(_fd != -1);
-        struct stat stat;
-        ::fstat(_fd, &stat);
-        setSize(stat.st_size);
-        _mapped = ::mmap(nullptr, size, PROT_READ, MAP_PRIVATE, _fd, 0);
-    #else
-        _fileHandle = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-        LARGE_INTEGER size;
-        const BOOL gotSize = GetFileSizeEx(_fileHandle, &size);
-        if(gotSize == 0) {
-            return;
-        }
-
-        setSize(size.QuadPart);
-        _mapHandle = CreateFileMappingA(_fileHandle, nullptr, PAGE_READONLY, size.HighPart, size.LowPart, "FileMappingObject");
-        _mapped = MapViewOfFile(_mapHandle, FILE_MAP_READ, 0, 0, size.QuadPart);
-    #endif
-        REQUIRE(_mapped != MAP_FAILED);
-        setBuf(_mapped);
-    }
-
-    mmap_slice::~mmap_slice() {
-        if (_mapped != MAP_FAILED) {
-    #ifdef _MSC_VER
-            UnmapViewOfFile(_mapped);
-            CloseHandle(_fileHandle);
-            CloseHandle(_mapHandle);
-    #else
-            munmap((void*)buf, size);
-            if (_fd != -1)
-                close(_fd);
-    #endif
-        }
-    }
-#endif
-
-
-    alloc_slice readFile(const char *path) {
 #if FL_HAVE_TEST_FILES
-        int fd = ::open(path, O_RDONLY | O_BINARY);
-        REQUIRE(fd != -1);
-        struct stat stat;
-        fstat(fd, &stat);
-        alloc_slice data(stat.st_size);
-        ssize_t bytesRead = ::read(fd, (void*)data.buf, data.size);
-        REQUIRE(bytesRead == (ssize_t)data.size);
-        ::close(fd);
-        return data;
+    alloc_slice readTestFile(const char *path) {
+        std::string fullPath = std::string(kTestFilesDir) + path;
+        return readFile(fullPath.c_str());
+    }
 #else
+    slice readTestFile(const char *path) {
         if (0 == strcmp(path, "50people.json")) {
-            return alloc_slice(k50PeopleJSON);
+            return slice(k50PeopleJSON);
         } else if (0 == strcmp(path, "1person.fleece")) {
-            return alloc_slice(k1PersonFleece, sizeof(k1PersonFleece));
+            return slice(k1PersonFleece, sizeof(k1PersonFleece));
         } else {
             FAIL("Unsupported test fixture \"" << path << "\"");
             return {};
         }
         //TODO: On ESP this can be done more elegantly by embedding the files in the binary:
         // https://esp-idf.readthedocs.io/en/latest/api-guides/build-system.html#embedding-binary-data
+    }
 #endif
-    }
 
-    void writeToFile(slice s, const char *path) {
-        int fd = ::open(path, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0600);
-        REQUIRE(fd != -1);
-        ssize_t written = ::write(fd, s.buf, s.size);
-        REQUIRE(written == (ssize_t)s.size);
-        ::close(fd);
-    }
 
 }

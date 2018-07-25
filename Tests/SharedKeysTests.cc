@@ -25,10 +25,6 @@
 using namespace std;
 
 
-extern void DontDeadStripSharedKeysTests();
-void DontDeadStripSharedKeysTests() { }
-
-
 TEST_CASE("basic") {
     SharedKeys sk;
     CHECK(sk.count() == 0);
@@ -437,7 +433,7 @@ TEST_CASE("big JSON encoding") {
     SharedKeys sk;
     Encoder enc;
     enc.setSharedKeys(&sk);
-    alloc_slice input = readFile(kBigJSONTestFilePath);
+    auto input = readTestFile(kBigJSONTestFileName);
     JSONConverter jr(enc);
     jr.encodeJSON(input);
     enc.end();

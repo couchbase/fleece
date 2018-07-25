@@ -19,11 +19,16 @@
 #include "FleeceTests.hh"
 #include "Fleece.hh"
 #include "JSONConverter.hh"
+#include "MutableHashTree.hh"
 #include "varint.hh"
 #include <chrono>
+#include <stdlib.h>
 #include <thread>
 #ifndef _MSC_VER
 #include <unistd.h>
+#endif
+#if FL_EMBEDDED //FIX: This is really for GCC
+#define random rand
 #endif
 
 // Catch's REQUIRE is too slow for perf testing
@@ -42,7 +47,9 @@
 
 using namespace fleece;
 
-static const bool kSortKeys = true;
+
+#if !FL_EMBEDDED
+
 
 TEST_CASE("GetUVarint performance", "[.Perf]") {
     static constexpr int kNRounds = 10000000;
@@ -74,7 +81,7 @@ TEST_CASE("Perf Convert1000People", "[.Perf]") {
     static const int kSamples = 500;
 
     std::vector<double> elapsedTimes;
-    alloc_slice input = readFile(kBigJSONTestFilePath);
+    auto input = readTestFile(kBigJSONTestFileName);
 
     Benchmark bench;
 
@@ -85,7 +92,6 @@ TEST_CASE("Perf Convert1000People", "[.Perf]") {
         {
             Encoder e(input.size);
             e.uniqueStrings(true);
-            e.sortKeys(kSortKeys);
             JSONConverter jr(e);
 
             jr.encodeJSON(input);
@@ -107,7 +113,7 @@ TEST_CASE("Perf Convert1000People", "[.Perf]") {
 
 TEST_CASE("Perf LoadFleece", "[.Perf]") {
     static const int kIterations = 1000;
-    alloc_slice doc = readFile(kTestFilesDir "1000people.fleece");
+    auto doc = readTestFile("1000people.fleece");
 
     {
         fprintf(stderr, "Scanning untrusted Fleece... ");
@@ -142,7 +148,7 @@ static void testFindPersonByIndex(int sort) {
     int kIterations = 10000;
     Benchmark bench;
 
-    mmap_slice doc(kTestFilesDir "1000people.fleece");
+    auto doc = readTestFile("1000people.fleece");
 
     Dict::key nameKey(slice("name"));
 
@@ -155,7 +161,6 @@ static void testFindPersonByIndex(int sort) {
             auto person = root->get(123)->asDict();
             const Value *name;
             switch (sort) {
-                case 0: name = person->get_unsorted(slice("name")); break;
                 case 1: name = person->get(slice("name")); break;
                 case 2: name = person->get(nameKey); break;
                 default: return;
@@ -171,16 +176,15 @@ static void testFindPersonByIndex(int sort) {
     bench.printReport(1.0/kIterations);
 }
 
-TEST_CASE("Perf FindPersonByIndexUnsorted", "[.Perf]")    {testFindPersonByIndex(0);}
-TEST_CASE("Perf FindPersonByIndexSorted", "[.Perf]")      {if (kSortKeys) testFindPersonByIndex(1);}
+TEST_CASE("Perf FindPersonByIndexSorted", "[.Perf]")      {testFindPersonByIndex(1);}
 TEST_CASE("Perf FindPersonByIndexKeyed", "[.Perf]")       {testFindPersonByIndex(2);}
 
-static void testLoadPeople(bool multiKeyGet) {
+TEST_CASE("Perf LoadPeople", "[.Perf]") {
     int kSamples = 50;
     int kIterations = 1000;
     Benchmark bench;
 
-    mmap_slice doc(kTestFilesDir "1000people.fleece");
+    auto doc = readTestFile("1000people.fleece");
 
     Dict::key keys[10] = {
         Dict::key(slice("about")),
@@ -194,9 +198,8 @@ static void testLoadPeople(bool multiKeyGet) {
         Dict::key(slice("registered")),
         Dict::key(slice("tags")),
     };
-    Dict::sortKeys(keys, 10);
 
-    fprintf(stderr, "Looking up 1000 people, multi-key get=%d...\n", multiKeyGet);
+    fprintf(stderr, "Looking up 1000 people...\n");
     for (int i = 0; i < kSamples; i++) {
         bench.start();
 
@@ -205,14 +208,9 @@ static void testLoadPeople(bool multiKeyGet) {
             for (Array::iterator iter(root); iter; ++iter) {
                 const Dict *person = iter->asDict();
                 size_t n = 0;
-                if (multiKeyGet) {
-                    const Value* values[10];
-                    n = person->get(keys, values, 10);
-                } else {
-                    for (int k = 0; k < 10; k++)
-                        if (person->get(keys[k]) != nullptr)
-                            n++;
-                }
+                for (int k = 0; k < 10; k++)
+                    if (person->get(keys[k]) != nullptr)
+                        n++;
                 REQUIRE(n == 10);
             }
         }
@@ -222,5 +220,101 @@ static void testLoadPeople(bool multiKeyGet) {
     bench.printReport(1.0/kIterations, "person");
 }
 
-TEST_CASE("Perf LoadPeople", "[.Perf]") {testLoadPeople(false);}
-TEST_CASE("Perf LoadPeopleFast", "[.Perf]") {testLoadPeople(true);}
+
+TEST_CASE("Perf DictSearch", "[.Perf]") {
+    static const int kSamples = 500000;
+
+    // Convert JSON array into a dictionary keyed by _id:
+    alloc_slice input = readTestFile("1000people.fleece");
+    if (!input)
+        abort();
+    std::vector<alloc_slice> names;
+    unsigned nPeople = 0;
+    Encoder enc;
+    enc.beginDictionary();
+    for (Array::iterator i(Value::fromTrustedData(input)->asArray()); i; ++i) {
+        auto person = i.value()->asDict();
+        auto key = person->get("guid"_sl)->asString();
+        enc.writeKey(key);
+        enc.writeValue(person);
+        names.emplace_back(key);
+        if (++nPeople >= 1000)
+            break;
+    }
+    enc.endDictionary();
+    alloc_slice dictData = enc.extractOutput();
+    auto people = Value::fromTrustedData(dictData)->asDict();
+
+    Benchmark bench;
+
+    for (int i = 0; i < kSamples; i++) {
+        slice keys[100];
+        for (int k = 0; k < 100; k++)
+            keys[k] = names[ random() % names.size() ];
+        bench.start();
+        {
+            for (int k = 0; k < 100; k++) {
+                const Value *person = people->get(keys[k]);
+                if (!person)
+                    abort();
+            }
+        }
+        bench.stop();
+
+        //std::this_thread::sleep_for(std::chrono::microseconds(100));
+    }
+    bench.printReport();
+}
+
+
+TEST_CASE("Perf TreeSearch", "[.Perf]") {
+    static const int kSamples = 500000;
+
+    // Convert JSON array into a dictionary keyed by _id:
+    auto input = readTestFile("1000people.fleece");
+    if (!input)
+        abort();
+    std::vector<alloc_slice> names;
+    auto people = Value::fromTrustedData(input)->asArray();
+
+    MutableHashTree tree;
+
+    unsigned nPeople = 0;
+    for (Array::iterator i(people); i; ++i) {
+        auto person = i.value()->asDict();
+        auto key = person->get("guid"_sl)->asString();
+        names.emplace_back(key);
+        tree.set(key, person);
+        if (++nPeople >= 1000)
+            break;
+    }
+
+    Encoder enc;
+    enc.suppressTrailer();
+    tree.writeTo(enc);
+    alloc_slice treeData = enc.extractOutput();
+    const HashTree *imTree = HashTree::fromData(treeData);
+
+    Benchmark bench;
+
+    for (int i = 0; i < kSamples; i++) {
+        slice keys[100];
+        for (int k = 0; k < 100; k++)
+            keys[k] = names[ random() % names.size() ];
+        bench.start();
+        {
+            for (int k = 0; k < 100; k++) {
+                const Value *person = imTree->get(keys[k]);
+                //const Value *person = tree.get(keys[k]);
+                if (!person)
+                    abort();
+            }
+        }
+        bench.stop();
+
+        //std::this_thread::sleep_for(std::chrono::microseconds(100));
+    }
+    bench.printReport();
+}
+
+#endif // !FL_EMBEDDED

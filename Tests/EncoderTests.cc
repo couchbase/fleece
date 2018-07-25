@@ -17,6 +17,7 @@
 //
 
 #include "FleeceTests.hh"
+#include "Pointer.hh"
 #include "JSONConverter.hh"
 #include "KeyTree.hh"
 #include "Path.hh"
@@ -25,9 +26,7 @@
 #include "mn_wordlist.h"
 #include <iostream>
 #include <float.h>
-
-extern void DontDeadStripEncoderTests();
-void DontDeadStripEncoderTests() { }
+#include <unistd.h>
 
 
 namespace fleece {
@@ -52,8 +51,8 @@ public:
     }
 
     template <bool WIDE>
-    uint32_t pointerValue(const Value *v) const noexcept {
-        return v->pointerValue<WIDE>();
+    uint32_t pointerOffset(const Value *v) const noexcept {
+        return v->_asPointer()->offset<WIDE>();
     }
 
     void checkOutput(const char *expected) {
@@ -79,6 +78,7 @@ public:
 
     void checkRead(int64_t i) {
         auto v = Value::fromData(result);
+        if (!v || v->type() != kNumber || !v->isInteger() || v->isUnsigned() || v->asInt() != i || v->asDouble() != (double)i) {
         REQUIRE(v != nullptr);
         REQUIRE(v->type() == kNumber);
         REQUIRE(v->isInteger());
@@ -86,15 +86,19 @@ public:
         REQUIRE(v->asInt() == i);
         REQUIRE(v->asDouble() == (double)i);
     }
+    }
 
     void checkReadU(uint64_t i) {
         auto v = Value::fromData(result);
+        if (!v || v->type() != kNumber || !v->isInteger() || v->asUnsigned() != i || v->asDouble() != (double)i) {
+            REQUIRE(v != nullptr);
         REQUIRE(v->type() == kNumber);
         REQUIRE(v->isInteger());
+            REQUIRE(v->asUnsigned() == i);
+            REQUIRE(v->asDouble() == (double)i);
+        }
         if (i >= (UINT64_MAX >> 1))
             REQUIRE(v->isUnsigned());
-        REQUIRE(v->asUnsigned() == i);
-        REQUIRE(v->asDouble() == (double)i);
     }
 
     void checkReadFloat(float f) {
@@ -154,10 +158,12 @@ public:
         auto a = checkArray(length);
         for (unsigned i = 0; i < length; ++i) {
             auto v = a->get(i);
+            if (!v || v->type() != kNumber || v->asUnsigned() != (uint64_t)i) {
             REQUIRE(v);
             REQUIRE(v->type() == kNumber);
             REQUIRE(v->asUnsigned() == (uint64_t)i);
         }
+    }
     }
 
     void checkJSONStr(std::string json,
@@ -202,26 +208,6 @@ public:
         REQUIRE(nameStr == expectedName);
     }
 
-    void lookupNamesWithKeys(const Dict* person, const char *expectedName, int expectedX) {
-        Dict::key nameKey(slice("name"));
-        Dict::key xKey(slice("x"));
-        Dict::key keys[2] = {nameKey, xKey};
-        const Value* values[2];
-        auto found = person->get(keys, values, 2);
-        size_t expectedFound = (expectedName != nullptr) + (expectedX >= false);
-        REQUIRE(found == expectedFound);
-        if (expectedName)
-            REQUIRE(values[0]->asString() == slice(expectedName));
-        else
-            REQUIRE(values[0] == nullptr);
-        if (expectedX >= false) {
-            REQUIRE(values[1]->type() == kBoolean);
-            REQUIRE(values[1]->asBool() == (bool)expectedX);
-        } else {
-            REQUIRE(values[1] == nullptr);
-        }
-    }
-
 };
 
 #pragma mark - TESTS
@@ -244,7 +230,7 @@ public:
     TEST_CASE_METHOD(EncoderTests, "Pointer", "[Encoder]") {
         const uint8_t data[2] = {0x80, 0x02};
         auto v = (const Value*)data;
-        REQUIRE(pointerValue<false>(v) == 4u);
+        REQUIRE(pointerOffset<false>(v) == 4u);
     }
 
     TEST_CASE_METHOD(EncoderTests, "Special", "[Encoder]") {
@@ -636,7 +622,7 @@ public:
     }
 
     TEST_CASE_METHOD(EncoderTests, "ConvertPeople", "[Encoder]") {
-        alloc_slice input = readFile(kBigJSONTestFilePath);
+        auto input = readTestFile(kBigJSONTestFileName);
 
         enc.uniqueStrings(true);
 
@@ -692,19 +678,29 @@ public:
     }
 
 #if FL_HAVE_TEST_FILES
-    TEST_CASE_METHOD(EncoderTests, "FindPersonByIndexUnsorted", "[Encoder]") {
-        mmap_slice doc(kTestFilesDir "1000people.fleece");
+    TEST_CASE_METHOD(EncoderTests, "Encode To File", "[Encoder]") {
+        auto doc = readTestFile("1000people.fleece");
         auto root = Value::fromTrustedData(doc)->asArray();
-        auto person = root->get(123)->asDict();
-        const Value *name = person->get_unsorted(slice("name"));
-        std::string nameStr = (std::string)name->asString();
-        REQUIRE(nameStr == std::string("Concepcion Burns"));
+
+        {
+            FILE *out = fopen(kTempDir"fleecetemp.fleece", "w");
+            Encoder fenc(out);
+            fenc.writeValue(root);
+            fenc.end();
+            fclose(out);
+        }
+
+        alloc_slice newDoc = readFile(kTempDir"fleecetemp.fleece");
+        REQUIRE(newDoc);
+        auto newRoot = Value::fromData(newDoc)->asArray();
+        REQUIRE(newRoot);
+        CHECK(newRoot->count() == root->count());
     }
 #endif
 
 #if FL_HAVE_TEST_FILES
     TEST_CASE_METHOD(EncoderTests, "FindPersonByIndexSorted", "[Encoder]") {
-        mmap_slice doc(kTestFilesDir "1000people.fleece");
+        auto doc = readTestFile("1000people.fleece");
         auto root = Value::fromTrustedData(doc)->asArray();
         auto person = root->get(123)->asDict();
         const Value *name = person->get(slice("name"));
@@ -746,89 +742,31 @@ public:
             lookupNameWithKey(smol->get(0)->asDict(), nameKey, "Concepcion Burns");
             lookupNameWithKey(smol->get(1)->asDict(), nameKey, "Carmen Miranda");
             REQUIRE(smol->get(2)->asDict()->get(nameKey) == nullptr);
-
-            lookupNamesWithKeys(smol->get(0)->asDict(), "Concepcion Burns", false);
-            lookupNamesWithKeys(smol->get(1)->asDict(), "Carmen Miranda", false);
-            lookupNamesWithKeys(smol->get(2)->asDict(), nullptr, false);
         }
 #if FL_HAVE_TEST_FILES
         {
             // Now try a wide Dict:
             Dict::key nameKey(slice("name"), nullptr, true);
 
-            mmap_slice doc(kTestFilesDir "1000people.fleece");
+            auto doc = readTestFile("1000people.fleece");
             auto root = Value::fromTrustedData(doc)->asArray();
             auto person = root->get(123)->asDict();
             lookupNameWithKey(person, nameKey, "Concepcion Burns");
-            lookupNamesWithKeys(person, "Concepcion Burns", -1);
 
             person = root->get(3)->asDict();
             lookupNameWithKey(person, nameKey, "Isabella Compton");
-            lookupNamesWithKeys(person, "Isabella Compton", -1);
         }
 #endif
     }
 
-    TEST_CASE_METHOD(EncoderTests, "LookupManyKeys", "[Encoder]") {
-        mmap_slice doc(kTestFilesDir "1person.fleece");
-        auto person = Value::fromTrustedData(doc)->asDict();
-
-        Dict::key keys[] = {
-            Dict::key(slice("about")),
-            Dict::key(slice("age")),
-            Dict::key(slice("balance")),
-            Dict::key(slice("guid")),
-            Dict::key(slice("isActive")),
-            Dict::key(slice("latitude")),
-            Dict::key(slice("longitude")),
-            Dict::key(slice("name")),
-            Dict::key(slice("registered")),
-            Dict::key(slice("tags")),
-
-//            Dict::key(slice("jUNK")),
-//            Dict::key(slice("abut")),
-//            Dict::key(slice("crud")),
-//            Dict::key(slice("lowrider")),
-//            Dict::key(slice("ocarina")),
-//            Dict::key(slice("time")),
-//            Dict::key(slice("tangle")),
-//            Dict::key(slice("b")),
-//            Dict::key(slice("f")),
-//            Dict::key(slice("g")),
-//            Dict::key(slice("m")),
-//            Dict::key(slice("n")),
-//            Dict::key(slice("z")),
-        };
-        const unsigned nKeys = sizeof(keys) / sizeof(keys[0]);
-        Dict::sortKeys(keys, nKeys);
-
-#ifndef NDEBUG
-        internal::gTotalComparisons = 0;
-#endif
-        const Value* values[nKeys];
-        REQUIRE(person->get(keys, values, nKeys) == 10ul);
-#ifndef NDEBUG
-        fprintf(stderr, "... that took %u comparisons, or %.1f/key\n",
-                internal::gTotalComparisons.load(), internal::gTotalComparisons/(float)nKeys);
-        internal::gTotalComparisons = 0;
-#endif
-        for (unsigned i = 0; i < nKeys; ++i)
-            REQUIRE(values[i] == person->get(keys[i]));
-
-        REQUIRE(person->get(keys, values, nKeys) == 10ul);
-#ifndef NDEBUG
-        fprintf(stderr, "... second pass took %u comparisons, or %.1f/key\n",
-                internal::gTotalComparisons.load(), internal::gTotalComparisons/(float)nKeys);
-#endif
-    }
-
     TEST_CASE_METHOD(EncoderTests, "Paths", "[Encoder]") {
-        alloc_slice input = readFile(kBigJSONTestFilePath);
+        auto input = readTestFile(kBigJSONTestFileName);
         JSONConverter jr(enc);
         jr.encodeJSON(input);
         enc.end();
         alloc_slice fleeceData = enc.extractOutput();
         const Value *root = Value::fromData(fleeceData);
+        CHECK(root->asArray()->count() == kBigJSONTestCount);
 
         Path p1{"$[32].name"};
         const Value *name = p1.eval(root);
@@ -845,6 +783,75 @@ public:
 #else  // embedded test uses only 50 people, not 1000, so [-1] resolves differently
         REQUIRE(name->asString() == slice("Tara Wall"));
 #endif
+    }
+
+    TEST_CASE_METHOD(EncoderTests, "Multi-Item", "[Encoder]") {
+        enc.suppressTrailer();
+        size_t pos[10];
+        unsigned n = 0;
+
+        enc.beginDictionary();
+        enc.writeKey("foo");
+        enc.writeInt(17);
+        enc.endDictionary();
+        pos[n++] = enc.finishItem();
+
+        enc.beginDictionary();
+        enc.writeKey("bar");
+        enc.writeInt(123456789);
+        enc.endDictionary();
+        pos[n++] = enc.finishItem();
+
+        enc.beginArray();
+        enc.writeBool(false);
+        enc.writeBool(true);
+        enc.endArray();
+        pos[n++] = enc.finishItem();
+
+        enc.writeString("LOL BUTTS"_sl);
+        pos[n++] = enc.finishItem();
+
+        enc.writeString("X"_sl);
+        pos[n++] = enc.finishItem();
+
+        enc.writeInt(17);
+        pos[n++] = enc.finishItem();
+
+        endEncoding();
+        pos[n] = result.size;
+        for (unsigned i = 0; i < n; i++)
+            CHECK(pos[i] < pos[i+1]);
+        CHECK(result.size == pos[n-1] + 2);
+
+        auto dict = (const Dict*)&result[pos[0]];
+        REQUIRE(dict->type() == kDict);
+        CHECK(dict->count() == 1);
+        REQUIRE(dict->get("foo"_sl));
+        CHECK(dict->get("foo"_sl)->asInt() == 17);
+
+        dict = (const Dict*)&result[pos[1]];
+        REQUIRE(dict->type() == kDict);
+        CHECK(dict->count() == 1);
+        REQUIRE(dict->get("bar"_sl));
+        CHECK(dict->get("bar"_sl)->asInt() == 123456789);
+
+        auto array = (const Array*)&result[pos[2]];
+        REQUIRE(array->type() == kArray);
+        REQUIRE(array->count() == 2);
+        CHECK(array->get(0)->type() == kBoolean);
+        CHECK(array->get(1)->type() == kBoolean);
+
+        auto str = (const Value*)&result[pos[3]];
+        REQUIRE(str->type() == kString);
+        CHECK(str->asString() == "LOL BUTTS"_sl);
+
+        str = (const Value*)&result[pos[4]];
+        REQUIRE(str->type() == kString);
+        CHECK(str->asString() == "X"_sl);
+
+        auto num = (const Value*)&result[pos[5]];
+        REQUIRE(num->type() == kNumber);
+        CHECK(num->asInt() == 17);
     }
 
 #pragma mark - KEY TREE:
