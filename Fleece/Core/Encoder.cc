@@ -554,6 +554,11 @@ namespace fleece {
     void Encoder::writeKey(const Value *key) {
         slice str = key->asString();
         if (str) {
+            int encoded;
+            if (_sharedKeys && _sharedKeys->encodeAndAdd(str, encoded)) {
+                writeKey(encoded);
+                return;
+            }
             addingKey();
             writeValue(key, nullptr);
             addedKey(str);

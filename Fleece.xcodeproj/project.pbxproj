@@ -392,7 +392,6 @@
 				27C4AC941CDE843F00938365 /* Example.md */,
 				275C67DB1BFBA0F4008AA9E7 /* Fleece.md */,
 				27C4AC961CDFFDA100938365 /* Performance.md */,
-				27CEE43520EFEE6100089A85 /* API */,
 				270FA25E1BF53CAD005DCB13 /* Fleece */,
 				279AC5321C096872002C80DB /* Tool */,
 				272E5A441BF7FD1700848580 /* Tests */,
@@ -417,6 +416,11 @@
 		270FA25E1BF53CAD005DCB13 /* Fleece */ = {
 			isa = PBXGroup;
 			children = (
+				278163B41CE69CA800B94E32 /* Fleece.h */,
+				27D7F8791E5521CC0088FADF /* FleeceCpp.hh */,
+				270515521D9053BE00D62D05 /* Fleece+CoreFoundation.h */,
+				270FA2751BF53CEA005DCB13 /* slice.hh */,
+				2715BA1D1D820C690061D92E /* PlatformCompat.hh */,
 				27CEE41C20EFEBB600089A85 /* Core */,
 				2734B8941F8583FF00BE5249 /* Integration */,
 				27A89D7C209FC44500C3BEB2 /* Mutable */,
@@ -575,11 +579,9 @@
 				276D15451E007D3000543B1B /* JSON5.hh */,
 				27FE87F11E53E43200C5CF3F /* JSONEncoder.cc */,
 				27FE87F21E53E43200C5CF3F /* JSONEncoder.hh */,
-				2715BA1D1D820C690061D92E /* PlatformCompat.hh */,
 				274D8254209D1764008BB39F /* RefCounted.cc */,
 				274D8255209D1764008BB39F /* RefCounted.hh */,
 				270FA2741BF53CEA005DCB13 /* slice.cc */,
-				270FA2751BF53CEA005DCB13 /* slice.hh */,
 				2776AA762093C982004ACE85 /* sliceIO.cc */,
 				2776AA772093C982004ACE85 /* sliceIO.hh */,
 				2797BCAA1C0FBFDE00E5C991 /* StringTable.cc */,
@@ -602,8 +604,6 @@
 		27CEE41B20EFE97100089A85 /* Experimental */ = {
 			isa = PBXGroup;
 			children = (
-				27AEFAC021090FF400106ED8 /* Delta.cc */,
-				27AEFAC121090FF400106ED8 /* Delta.hh */,
 				278163BA1CE7A72300B94E32 /* KeyTree.cc */,
 				278163BB1CE7A72300B94E32 /* KeyTree.hh */,
 			);
@@ -638,18 +638,10 @@
 				27298E761C00FB48000CFBA8 /* JSONConverter.hh */,
 				27E3DD401DB6A14200F2872D /* SharedKeys.cc */,
 				27E3DD411DB6A14200F2872D /* SharedKeys.hh */,
+				27AEFAC021090FF400106ED8 /* Delta.cc */,
+				27AEFAC121090FF400106ED8 /* Delta.hh */,
 			);
 			path = Core;
-			sourceTree = "<group>";
-		};
-		27CEE43520EFEE6100089A85 /* API */ = {
-			isa = PBXGroup;
-			children = (
-				278163B41CE69CA800B94E32 /* Fleece.h */,
-				27D7F8791E5521CC0088FADF /* FleeceCpp.hh */,
-				270515521D9053BE00D62D05 /* Fleece+CoreFoundation.h */,
-			);
-			path = API;
 			sourceTree = "<group>";
 		};
 		27D721231F8C074600AA4458 /* ObjC */ = {

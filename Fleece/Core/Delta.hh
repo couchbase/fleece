@@ -5,6 +5,7 @@
 //
 
 #pragma once
+#include "slice.hh"
 
 namespace fleece {
     class Value;

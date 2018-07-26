@@ -33,12 +33,13 @@ elseif(WIN32)
     set(FLEECE_SRC ${FLEECE_SRC} MSVC/memmem.cc)
 endif()
 
-include_directories("API"
+include_directories(Fleece
                     Fleece/Core
                     Fleece/Integration
                     Fleece/Mutable
                     Fleece/Support
                     Fleece/Tree
+                    Experimental
                     "vendor/libb64"
                     "vendor/jsonsl" )
 

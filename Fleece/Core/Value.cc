@@ -304,8 +304,10 @@ namespace fleece {
     }
 
     const Value* Value::findRoot(slice s) noexcept {
+        assert(((size_t)s.buf & 1) == 0);  // Values must be 2-byte aligned
+
         // Root value is at the end of the data and is two bytes wide:
-        if (_usuallyFalse(s.size < kNarrow) || _usuallyFalse(s.size % kNarrow))
+        if (_usuallyFalse((size_t)s.buf & 1) || _usuallyFalse(s.size < kNarrow) || _usuallyFalse(s.size % kNarrow))
             return nullptr;
         auto root = (const Value*)offsetby(s.buf, s.size - internal::kNarrow);
         if (_usuallyTrue(root->isPointer())) {
