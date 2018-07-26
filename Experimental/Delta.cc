@@ -31,13 +31,27 @@
 #include "JSONConverter.hh"
 #include "JSON5.hh"
 #include "FleeceException.hh"
+#include "diff_match_patch.hh"
+#include <sstream>
 #include <unordered_set>
 
 
 namespace fleece {
+    using namespace std;
 
 
     bool gCompatibleDeltas = false;
+
+    static const size_t kMinStringDiffLength = 60;
+
+    static const float kTextDiffTimeout = 0.5;
+
+    // Codes that appear as the 3rd item of an array item in a diff
+    enum {
+        kDeletionCode = 0,
+        kTextDiffCode = 2,
+        kArraymoveCode = 3,
+    };
 
 
     struct pathItem {
@@ -45,6 +59,95 @@ namespace fleece {
         bool isOpen;
         slice key;
     };
+
+
+    static string createStringDelta(slice oldStr, slice nuuStr) {
+        if (nuuStr.size < kMinStringDiffLength
+                || (gCompatibleDeltas && oldStr.size > kMinStringDiffLength))
+            return "";
+        diff_match_patch<string> dmp;
+        dmp.Diff_Timeout = kTextDiffTimeout;
+        auto patches = dmp.patch_make(string(oldStr), string(nuuStr));
+
+        if (gCompatibleDeltas)
+            return dmp.patch_toText(patches);
+
+        long pos = 0, lastPos = 0, correction = 0;
+        stringstream str;
+        for (auto patch = patches.begin(); patch != patches.end(); ++patch) {
+            pos = patch->start1 + correction;
+            auto &diffs = patch->diffs;
+            for (auto cur_diff = diffs.begin(); cur_diff != diffs.end(); ++cur_diff) {
+                string &text = cur_diff->text;
+                auto length = text.length();
+                if (cur_diff->operation == diff_match_patch<string>::EQUAL) {
+                    pos += length;
+                } else {
+                    if (pos > lastPos) {
+                        str << (pos-lastPos) << '=';
+                    }
+                    if (cur_diff->operation == diff_match_patch<string>::DELETE) {
+                        str << length << '-';
+                        pos += length;
+                    } else {
+                        str << length << '+' << text << '|';
+                    }
+                    lastPos = pos;
+                }
+                if ((off_t)str.tellp() + 6 >= nuuStr.size)
+                    return "";          // Patch is too long; send new str instead
+            }
+            correction += patch->length1 - patch->length2;
+        }
+        if (oldStr.size > lastPos)
+            str << (oldStr.size-lastPos) << '=';
+        return str.str();
+    }
+
+
+    static string applyStringDelta(slice oldStr, slice diff) {
+        if (diff[0] == '@') {
+            diff_match_patch<string> dmp;
+            return dmp.patch_apply(dmp.patch_fromText(string(diff)), string(oldStr)).first;
+        } else {
+            stringstream in{string(diff)};
+            in.exceptions(stringstream::failbit | stringstream::badbit);
+            stringstream out;
+            unsigned pos = 0;
+            while (in.peek() >= 0) {
+                char op;
+                unsigned len;
+                in >> len;
+                in >> op;
+                switch (op) {
+                    case '=':
+                        if (pos + len > oldStr.size)
+                            FleeceException::_throw(InvalidData, "Invalid length in text delta");
+                        out.write((const char*)&oldStr[pos], len);
+                        pos += len;
+                        break;
+                    case '-':
+                        pos += len;
+                        break;
+                    case '+': {
+                        char insertion[len];
+                        in.read(insertion, len);
+                        out.write(insertion, len);
+                        in >> op;
+                        if (op != '|')
+                            FleeceException::_throw(InvalidData, "Missing insertion delimiter in text delta");
+                        break;
+                    }
+                    default:
+                        FleeceException::_throw(InvalidData, "Unknown op in text delta");
+                }
+            }
+            if (pos != oldStr.size)
+                FleeceException::_throw(InvalidData, "Length mismatch in text delta");
+
+            return out.str();
+        }
+    }
 
 
     static void writePath(pathItem *path, JSONEncoder &enc) {
@@ -72,6 +175,7 @@ namespace fleece {
             enc.beginArray();
             enc.writeValue(nuu);
             enc.endArray();
+            return true;
 
         } else if (!nuu) {
             // `old` was deleted:
@@ -80,53 +184,70 @@ namespace fleece {
             if (gCompatibleDeltas) {
                 enc.writeValue(old);
                 enc.writeInt(0);
-                enc.writeInt(0);
+                enc.writeInt(kDeletionCode);
             }
             enc.endArray();
+            return true;
+        }
 
-        } else if (old->type() == kDict && nuu->type() == kDict) {
-            // Possibly-modified dict:
-            auto oldDict = (const Dict*)old, nuuDict = (const Dict*)nuu;
-            pathItem curLevel = {path, false, nullslice};
-            unsigned oldKeysSeen = 0;
-            // Iterate all the new & maybe-changed keys:
-            for (Dict::iterator i_nuu(nuuDict); i_nuu; ++i_nuu) {
-                slice key = i_nuu.keyString();
-                auto oldValue = oldDict->get(key);
-                if (oldValue)
-                    ++oldKeysSeen;
-                curLevel.key = key;
-                writeDelta(oldValue, i_nuu.value(), enc, &curLevel);
-            }
-            // Iterate all the deleted keys:
-            if (oldKeysSeen < oldDict->count()) {
-                for (Dict::iterator i_old(oldDict); i_old; ++i_old) {
-                    slice key = i_old.keyString();
-                    if (nuuDict->get(key) == nullptr) {
-                        curLevel.key = key;
-                        writeDelta(i_old.value(), nullptr, enc, &curLevel);
+        auto oldType = old->type(), nuuType = nuu->type();
+        if (oldType == nuuType) {
+            if (oldType == kDict) {
+                // Possibly-modified dict:
+                auto oldDict = (const Dict*)old, nuuDict = (const Dict*)nuu;
+                pathItem curLevel = {path, false, nullslice};
+                unsigned oldKeysSeen = 0;
+                // Iterate all the new & maybe-changed keys:
+                for (Dict::iterator i_nuu(nuuDict); i_nuu; ++i_nuu) {
+                    slice key = i_nuu.keyString();
+                    auto oldValue = oldDict->get(key);
+                    if (oldValue)
+                        ++oldKeysSeen;
+                    curLevel.key = key;
+                    writeDelta(oldValue, i_nuu.value(), enc, &curLevel);
+                }
+                // Iterate all the deleted keys:
+                if (oldKeysSeen < oldDict->count()) {
+                    for (Dict::iterator i_old(oldDict); i_old; ++i_old) {
+                        slice key = i_old.keyString();
+                        if (nuuDict->get(key) == nullptr) {
+                            curLevel.key = key;
+                            writeDelta(i_old.value(), nullptr, enc, &curLevel);
+                        }
                     }
                 }
-            }
-            if (!curLevel.isOpen)
+                if (!curLevel.isOpen)
+                    return false;
+                enc.endDictionary();
+                return true;
+
+            } else if (old->isEqual(nuu)) {
+                // Equal objects: do nothing
                 return false;
-            enc.endDictionary();
 
-        } else if (old->isEqual(nuu)) {
-            // Equal objects: do nothing
-            return false;
-
-        } else {
-            // Generic modification:
-            writePath(path, enc);
-            enc.beginArray();
-            if (gCompatibleDeltas)
-                enc.writeValue(old);
-            else
-                enc.writeInt(0);    // deviating from the original, we don't write the old value
-            enc.writeValue(nuu);
-            enc.endArray();
+            } else if (oldType == kString && nuuType == kString) {
+                // Strings: Maybe use smart text diff
+                string strPatch = createStringDelta(old->asString(), nuu->asString());
+                if (!strPatch.empty()) {
+                    enc.beginArray();
+                    enc.writeString(strPatch);
+                    enc.writeInt(0);
+                    enc.writeInt(kTextDiffCode);
+                    enc.endArray();
+                    return true;
+                }
+            }
         }
+
+        // Generic modification:
+        writePath(path, enc);
+        enc.beginArray();
+        if (gCompatibleDeltas)
+            enc.writeValue(old);
+        else
+            enc.writeInt(0);    // deviating from the original, we don't write the old value
+        enc.writeValue(nuu);
+        enc.endArray();
         return true;
     }
 
@@ -152,7 +273,6 @@ namespace fleece {
                 auto a = (const Array*)delta;
                 switch (a->count()) {
                     case 0:
-                    case 3:
                         if (!old)
                             FleeceException::_throw(InvalidData, "Invalid deletion in delta");
                         // 'undefined' in the context of a dict value means a deletion of a key
@@ -169,6 +289,29 @@ namespace fleece {
                             FleeceException::_throw(InvalidData, "Invalid replace in delta");
                         enc.writeValue(a->get(1));
                         break;
+                    case 3: {
+                        switch(a->get(2)->asInt()) {
+                            case kDeletionCode:
+                                if (!old)
+                                    FleeceException::_throw(InvalidData, "Invalid deletion in delta");
+                                enc.writeValue(Value::kUndefinedValue);
+                                break;
+                            case kTextDiffCode: {
+                                slice oldStr = old->asString();
+                                if (!oldStr)
+                                    FleeceException::_throw(InvalidData, "Invalid text replace in delta");
+                                slice diff = a->get(0)->asString();
+                                if (diff.size == 0)
+                                    FleeceException::_throw(InvalidData, "Invalid text diff in delta");
+                                auto nuuStr = applyStringDelta(oldStr, diff);
+                                enc.writeString(nuuStr);
+                                break;
+                            }
+                            default:
+                                FleeceException::_throw(InvalidData, "Unknown mode in delta");
+                        }
+                        break;
+                    }
                     default:
                         FleeceException::_throw(InvalidData, "Bad array count in delta");
                 }
@@ -197,9 +340,9 @@ namespace fleece {
 
     alloc_slice ApplyDelta(const Value *old, slice jsonDelta, bool isJSON5) {
         assert(jsonDelta);
-        std::string json5;
+        string json5;
         if (isJSON5) {
-            json5 = ConvertJSON5(std::string(jsonDelta));
+            json5 = ConvertJSON5(string(jsonDelta));
             jsonDelta = slice(json5);
         }
         alloc_slice fleeceData = JSONConverter::convertJSON(jsonDelta);

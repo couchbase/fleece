@@ -83,6 +83,7 @@
 		27AEFAC221090FF400106ED8 /* Delta.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27AEFAC021090FF400106ED8 /* Delta.cc */; };
 		27AEFAC321090FF400106ED8 /* Delta.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27AEFAC121090FF400106ED8 /* Delta.hh */; };
 		27AEFAC5210913C500106ED8 /* DeltaTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27AEFAC4210913C500106ED8 /* DeltaTests.cc */; };
+		27AEFAC921091A8C00106ED8 /* diff_match_patch.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27AEFAC721091A8C00106ED8 /* diff_match_patch.hh */; };
 		27B802D720DD750E00599DF0 /* NodeRef.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27B802D520DD750E00599DF0 /* NodeRef.cc */; };
 		27B802D820DD750E00599DF0 /* NodeRef.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27B802D620DD750E00599DF0 /* NodeRef.hh */; };
 		27C4ACAC1CE5146500938365 /* Array.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27C4ACAA1CE5146500938365 /* Array.cc */; };
@@ -306,6 +307,7 @@
 		27AEFAC021090FF400106ED8 /* Delta.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Delta.cc; sourceTree = "<group>"; };
 		27AEFAC121090FF400106ED8 /* Delta.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Delta.hh; sourceTree = "<group>"; };
 		27AEFAC4210913C500106ED8 /* DeltaTests.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DeltaTests.cc; sourceTree = "<group>"; };
+		27AEFAC721091A8C00106ED8 /* diff_match_patch.hh */ = {isa = PBXFileReference; indentWidth = 2; lastKnownFileType = sourcecode.cpp.h; path = diff_match_patch.hh; sourceTree = "<group>"; };
 		27B802D520DD750E00599DF0 /* NodeRef.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = NodeRef.cc; sourceTree = "<group>"; };
 		27B802D620DD750E00599DF0 /* NodeRef.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = NodeRef.hh; sourceTree = "<group>"; };
 		27B802D920DD762A00599DF0 /* MutableNode.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MutableNode.hh; sourceTree = "<group>"; };
@@ -592,6 +594,7 @@
 				27F25A8320A6560900E181FA /* LibC++Debug.cc */,
 				273483F71DDA59B900B27A8C /* Fleece.pch */,
 				27CEE44F20F00B4E00089A85 /* Fleece.exp */,
+				27AEFAC721091A8C00106ED8 /* diff_match_patch.hh */,
 			);
 			path = Support;
 			sourceTree = "<group>";
@@ -702,6 +705,7 @@
 				277A06B420B36D1A00970354 /* FileUtils.hh in Headers */,
 				27F25A9320AA1E7100E181FA /* ExternResolver.hh in Headers */,
 				27E3DD4D1DB6C32400F2872D /* CatchHelper.hh in Headers */,
+				27AEFAC921091A8C00106ED8 /* diff_match_patch.hh in Headers */,
 				2734B8A51F8583FF00BE5249 /* MDict.hh in Headers */,
 				2734B8AD1F859AEC00BE5249 /* FleeceDocument.h in Headers */,
 				2776AA792093C982004ACE85 /* sliceIO.hh in Headers */,

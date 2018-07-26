@@ -73,6 +73,19 @@ TEST_CASE("Delta scalars", "[delta]") {
 }
 
 
+TEST_CASE("Delta strings", "[delta]") {
+    checkDelta("'hi'", "7", "[0,7]");
+    checkDelta("7", "'hi'", "[0,\"hi\"]");
+    checkDelta("'hi'", "'there'", "[0,\"there\"]");
+    checkDelta("'to wound the autumnal city. So howled out for the world to give him a name.  The in-dark answered with the wind.'",
+               "'To wound the eternal city. So he howled out for the world to give him its name. The in-dark answered with wind.'",
+               "[\"1-1+T|12=5-4+eter|13=3+he |37=1-3+its|6=1-27=4-5=\",0,2]");
+    checkDelta("'to wound the autumnal city. The in-dark answered with the wind.'",
+               "'to wound the autumnal city. So howled out for the world to give him a name. The in-dark answered with the wind.'",
+               "[\"27=48+ So howled out for the world to give him a name.|36=\",0,2]");
+}
+
+
 TEST_CASE("Delta simple dicts", "[delta]") {
     checkDelta("{}", "{}", nullptr);
     checkDelta("{foo: 1}", "{foo: 1}", nullptr);
