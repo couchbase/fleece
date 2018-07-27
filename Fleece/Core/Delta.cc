@@ -54,11 +54,7 @@ namespace fleece {
     };
 
 
-    struct pathItem {
-        pathItem *parent;
-        bool isOpen;
-        slice key;
-    };
+#pragma mark - STRING DELTAS:
 
 
     static string createStringDelta(slice oldStr, slice nuuStr) {
@@ -150,6 +146,16 @@ namespace fleece {
     }
 
 
+#pragma mark - CREATING DELTAS:
+
+
+    struct pathItem {
+        pathItem *parent;
+        bool isOpen;
+        slice key;
+    };
+
+
     static void writePath(pathItem *path, JSONEncoder &enc) {
         if (!path)
             return;
@@ -163,7 +169,8 @@ namespace fleece {
     }
 
 
-    static bool writeDelta(const Value *old, const Value *nuu,
+    static bool writeDelta(const Value *old, SharedKeys *oldSK,
+                           const Value *nuu, SharedKeys *nuuSK,
                            JSONEncoder &enc,
                            pathItem *path)
     {
@@ -198,21 +205,21 @@ namespace fleece {
                 pathItem curLevel = {path, false, nullslice};
                 unsigned oldKeysSeen = 0;
                 // Iterate all the new & maybe-changed keys:
-                for (Dict::iterator i_nuu(nuuDict); i_nuu; ++i_nuu) {
+                for (Dict::iterator i_nuu(nuuDict, nuuSK); i_nuu; ++i_nuu) {
                     slice key = i_nuu.keyString();
-                    auto oldValue = oldDict->get(key);
+                    auto oldValue = oldDict->get(key, oldSK);
                     if (oldValue)
                         ++oldKeysSeen;
                     curLevel.key = key;
-                    writeDelta(oldValue, i_nuu.value(), enc, &curLevel);
+                    writeDelta(oldValue, oldSK, i_nuu.value(), nuuSK, enc, &curLevel);
                 }
                 // Iterate all the deleted keys:
                 if (oldKeysSeen < oldDict->count()) {
-                    for (Dict::iterator i_old(oldDict); i_old; ++i_old) {
+                    for (Dict::iterator i_old(oldDict, oldSK); i_old; ++i_old) {
                         slice key = i_old.keyString();
-                        if (nuuDict->get(key) == nullptr) {
+                        if (nuuDict->get(key, nuuSK) == nullptr) {
                             curLevel.key = key;
-                            writeDelta(i_old.value(), nullptr, enc, &curLevel);
+                            writeDelta(i_old.value(), oldSK, nullptr, nuuSK, enc, &curLevel);
                         }
                     }
                 }
@@ -252,21 +259,41 @@ namespace fleece {
     }
 
 
-    bool CreateDelta(const Value *old, const Value *nuu, JSONEncoder &enc) {
-        return writeDelta(old, nuu, enc, nullptr);
+    bool CreateDelta(const Value *old, SharedKeys *oldSK,
+                     const Value *nuu, SharedKeys *nuuSK,
+                     JSONEncoder &enc)
+    {
+        return writeDelta(old, oldSK, nuu, nuuSK, enc, nullptr);
     }
 
-    alloc_slice CreateDelta(const Value* old, const Value* nuu, bool json5) {
+    alloc_slice CreateDelta(const Value *old, SharedKeys *oldSK,
+                            const Value *nuu, SharedKeys *nuuSK,
+                            bool json5) {
         JSONEncoder enc;
         enc.setJSON5(json5);
-        if (writeDelta(old, nuu, enc, nullptr))
+        if (writeDelta(old, oldSK, nuu, nuuSK, enc, nullptr))
             return enc.extractOutput();
         else
             return {};
     }
 
 
-    void ApplyDelta(const Value *old, const Value *delta, Encoder &enc) {
+#pragma mark - APPLYING DELTAS:
+
+
+    // Does this delta represent a deletion?
+    static bool isDeltaDeletion(const Value *delta) {
+        if (!delta)
+            return false;
+        auto array = delta->asArray();
+        if (!array)
+            return false;
+        auto count = array->count();
+        return count == 0 || (count == 3 && array->get(2)->asInt() == kDeletionCode);
+    }
+
+
+    void ApplyDelta(const Value *old, SharedKeys *sk, const Value *delta, Encoder &enc) {
         switch(delta->type()) {
             case kArray: {
                 // Array: Insertion / deletion / replacement
@@ -319,17 +346,50 @@ namespace fleece {
             }
             case kDict: {
                 // Dict: Incremental update
-                auto d = (const Dict*)delta;
-                auto oldDict = old->asDict();
+                auto deltaDict = (const Dict*)delta;
+                auto oldDict = old ? old->asDict() : nullptr;
                 if (!oldDict)
                     FleeceException::_throw(InvalidData, "Invalid {} in delta");
-                enc.beginDictionary(oldDict);   // inherit from oldDict
-                for (Dict::iterator i(d); i; ++i) {
-                    slice key = i.keyString();
-                    enc.writeKey(key);
-                    ApplyDelta(oldDict->get(key), i.value(), enc);  // recurse into dict item!
+                if (enc.valueIsInBase(oldDict)) {
+                    // If the old dict is in the base, we can create an inherited dict:
+                    enc.beginDictionary(oldDict);
+                    for (Dict::iterator i(deltaDict); i; ++i) {
+                        slice key = i.keyString();
+                        enc.writeKey(key);
+                        ApplyDelta(oldDict->get(key, sk), sk, i.value(), enc);  // recurse into dict item!
+                    }
+                    enc.endDictionary();
+                } else {
+                    // In the general case, have to write a new dict from scratch:
+                    enc.beginDictionary();
+                    // Process the unaffected, deleted, and modified keys:
+                    unsigned deltaKeysUsed = 0;
+                    for (Dict::iterator i(oldDict, sk); i; ++i) {
+                        slice key = i.keyString();
+                        const Value *valueDelta = deltaDict->get(key);
+                        if (valueDelta)
+                            ++deltaKeysUsed;
+                        if (!isDeltaDeletion(valueDelta)) {                 // skip deletions
+                            enc.writeKey(key);
+                            auto oldValue = i.value();
+                            if (valueDelta == nullptr)
+                                enc.writeValue(oldValue);                   // unaffected
+                            else
+                                ApplyDelta(oldValue, sk, valueDelta, enc);  // replaced/modified
+                        }
+                    }
+                    // Now add the inserted keys:
+                    if (deltaKeysUsed < deltaDict->count()) {
+                        for (Dict::iterator i(deltaDict); i; ++i) {
+                            slice key = i.keyString();
+                            if (oldDict->get(key, sk) == nullptr) {
+                                enc.writeKey(key);
+                                ApplyDelta(nullptr, sk, i.value(), enc);  // recurse into insertion
+                            }
+                        }
+                    }
+                    enc.endDictionary();
                 }
-                enc.endDictionary();
                 break;
             }
             default:
@@ -338,7 +398,7 @@ namespace fleece {
     }
 
 
-    alloc_slice ApplyDelta(const Value *old, slice jsonDelta, bool isJSON5) {
+    alloc_slice ApplyDelta(const Value *old, SharedKeys *sk, slice jsonDelta, bool isJSON5) {
         assert(jsonDelta);
         string json5;
         if (isJSON5) {
@@ -348,7 +408,7 @@ namespace fleece {
         alloc_slice fleeceData = JSONConverter::convertJSON(jsonDelta);
         const Value *fleeceDelta = Value::fromTrustedData(fleeceData);
         Encoder enc;
-        ApplyDelta(old, fleeceDelta, enc);
+        ApplyDelta(old, sk, fleeceDelta, enc);
         return enc.extractOutput();
     }
 

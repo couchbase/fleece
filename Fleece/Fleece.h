@@ -183,6 +183,11 @@ extern "C" {
     /** Produces a human-readable dump of the Value encoded in the data. */
     FLStringResult FLData_Dump(FLSlice data);
 
+    /** Debugging function that returns a C string of JSON. Does not free the string's memory! */
+    const char* FLDump(FLValue);
+    /** Debugging function that returns a C string of JSON. Does not free the string's memory! */
+    const char* FLDumpData(FLSlice data);
+
     /** @} */
     /** \name Value Accessors
         @{ */
@@ -725,8 +730,8 @@ extern "C" {
         @param old  A value that's typically the old/original state of some data.
         @param nuu  A value that's typically the new/changed state of the `old` data.
         @return  JSON data representing the changes from `old` to `nuu`. */
-    FLSliceResult FLCreateDelta(FLValue old,
-                                FLValue nuu);
+    FLSliceResult FLCreateDelta(FLValue old, FLSharedKeys oldSK,
+                                FLValue nuu, FLSharedKeys nuuSK);
 
     /** Writes JSON that describes the changes to turn the value `old` into `nuu`.
         If the values are equal, writes nothing and returns false.
@@ -737,8 +742,8 @@ extern "C" {
         @param jsonEncoder  An encoder to write the JSON to. Must have been created using
                 `FLEncoder_NewWithOptions`, with JSON or JSON5 format.
         @return  True if a delta was encoded, or false if the values are equal. */
-    bool FLEncodeDelta(FLValue old,
-                       FLValue nuu,
+    bool FLEncodeDelta(FLValue old, FLSharedKeys oldSK,
+                       FLValue nuu, FLSharedKeys nuuSK,
                        FLEncoder FLNONNULL jsonEncoder);
 
 
@@ -751,6 +756,7 @@ extern "C" {
         @param error  On failure, error information will be stored where this points, if non-null.
         @return  The corresponding `nuu` value, encoded as Fleece, or null if an error occurred. */
     FLSliceResult FLApplyDelta(FLValue old,
+                               FLSharedKeys sk,
                                FLSlice jsonDelta,
                                FLError *error);
 
@@ -764,6 +770,7 @@ extern "C" {
                     supported.)
         @return  True on success, false on error; call `FLEncoder_GetError` for details. */
     bool FLEncodeApplyingDelta(FLValue old,
+                               FLSharedKeys sk,
                                FLValue FLNONNULL jsonDelta,
                                FLEncoder encoder);
 

@@ -53,6 +53,20 @@ FLValue FLValue_FromData(FLSlice data)          {return Value::fromData(data);}
 FLValue FLValue_FromTrustedData(FLSlice data)   {return Value::fromTrustedData(data);}
 
 
+const char* FLDump(FLValue v) {
+    FLStringResult json = FLValue_ToJSON(v);
+    auto cstr = (char*)malloc(json.size + 1);
+    memcpy(cstr, json.buf, json.size);
+    cstr[json.size] = 0;
+    return cstr;
+}
+
+const char* FLDumpData(FLSlice data) {
+    return FLDump(FLValue_FromData(data));
+}
+
+
+
 FLValueType FLValue_GetType(FLValue v)          {return v ? (FLValueType)v->type() : kFLUndefined;}
 bool FLValue_IsInteger(FLValue v)               {return v && v->isInteger();}
 bool FLValue_IsUnsigned(FLValue v)              {return v && v->isUnsigned();}
@@ -534,30 +548,31 @@ void FLResolver_End(FLSlice document) {
 #pragma mark - DELTA COMPRESSION
 
 
-FLSliceResult FLCreateDelta(FLValue old, FLValue nuu) {
-    return toSliceResult(CreateDelta((const Value*)old, (const Value*)nuu));
+FLSliceResult FLCreateDelta(FLValue old, FLSharedKeys oldSK, FLValue nuu, FLSharedKeys nuuSK) {
+    return toSliceResult(CreateDelta(old, oldSK, nuu, nuuSK));
 }
 
-bool FLEncodeDelta(FLValue old, FLValue nuu, FLEncoder jsonEncoder) {
+bool FLEncodeDelta(FLValue old, FLSharedKeys oldSK, FLValue nuu, FLSharedKeys nuuSK,
+                   FLEncoder jsonEncoder) {
     JSONEncoder *enc = jsonEncoder->jsonEncoder.get();
     assert(enc);  //TODO: Support encoding to Fleece
-    return CreateDelta((const Value*)old, (const Value*)nuu, *enc);
+    return CreateDelta(old, oldSK, nuu, nuuSK, *enc);
 }
 
 
-FLSliceResult FLApplyDelta(FLValue old, FLSlice jsonDelta, FLError *outError) {
+FLSliceResult FLApplyDelta(FLValue old, FLSharedKeys sk, FLSlice jsonDelta, FLError *outError) {
     try {
-        return toSliceResult(ApplyDelta((const Value*)old, jsonDelta));
+        return toSliceResult(ApplyDelta(old, sk, jsonDelta));
     } catchError(outError);
     return {};
 }
 
-bool FLEncodeApplyingDelta(FLValue old, FLValue delta, FLEncoder encoder) {
+bool FLEncodeApplyingDelta(FLValue old, FLSharedKeys sk, FLValue delta, FLEncoder encoder) {
     try {
         Encoder *enc = encoder->fleeceEncoder.get();
         if (!enc)
             FleeceException::_throw(EncodeError, "FLEncodeApplyingDelta cannot encode JSON");
-        ApplyDelta((const Value*)old, (const Value*)delta, *enc);
+        ApplyDelta(old, sk, delta, *enc);
         return true;
     } catch (const std::exception &x) {
         encoder->recordException(x);

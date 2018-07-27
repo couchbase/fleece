@@ -59,6 +59,8 @@ namespace fleece {
             to the existing strings. */
         void reuseBaseStrings();
 
+        bool valueIsInBase(const Value *value NONNULL) const;
+
         bool isEmpty() const            {return _out.length() == 0 && _stackDepth == 1 && _items->empty();}
         size_t bytesWritten() const     {return _out.length();} // may be an underestimate
 
@@ -187,7 +189,6 @@ namespace fleece {
         void addItem(Value v);
         void writeRawValue(slice rawValue, bool canInline =true);
         void writeValue(internal::tags, uint8_t buf[], size_t size, bool canInline =true);
-        bool valueIsInBase(const Value *value NONNULL) const;
         void reuseBaseStrings(const Value* NONNULL);
         void cacheString(slice s, size_t offsetInBase);
         static bool isNarrowValue(const Value *value NONNULL);

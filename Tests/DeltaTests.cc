@@ -55,7 +55,7 @@ static void checkDelta(const char *json1, const char *json2, const char *deltaEx
 
     if (jsonDelta.size > 0) {
         // Now apply the delta to the old value to get the new one:
-        alloc_slice f2_reconstituted = ApplyDelta(v1, jsonDelta, true);
+        alloc_slice f2_reconstituted = ApplyDelta(v1, nullptr, jsonDelta, true);
         auto v2_reconstituted = Value::fromData(f2_reconstituted);
         INFO("v2 reconstituted:  " << toJSONString(v2_reconstituted) << "   original:  " << toJSONString(v2));
         CHECK(v2_reconstituted->isEqual(v2));
