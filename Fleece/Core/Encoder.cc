@@ -546,6 +546,11 @@ namespace fleece {
     }
 
     void Encoder::writeKey(int n) {
+        throwIf(!_sharedKeys && n != Dict::kMagicParentKey
+#ifndef NDEBUG
+                             && !gDisableNecessarySharedKeysCheck,
+#endif
+                EncodeError, "Can't add numeric key without SharedKeys");
         addingKey();
         writeInt(n);
         addedKey(nullslice);
@@ -571,8 +576,9 @@ namespace fleece {
 
     void Encoder::writeKey(const Value *key, const SharedKeys *sk) {
         if (key->isInteger()) {
+            throwIf(!sk, EncodeError, "Numeric key given without SharedKeys");
             int intKey = (int)key->asInt();
-            if (sk && sk != _sharedKeys) {
+            if (sk != _sharedKeys) {
                 slice keySlice = sk->decode(intKey);
                 throwIf(!keySlice, InvalidData, "Unrecognized integer key");
                 writeKey(keySlice);
@@ -615,6 +621,7 @@ namespace fleece {
     }
 
     void Encoder::beginDictionary(const Dict *parent, size_t reserve) {
+        throwIf(!valueIsInBase(parent), EncodeError, "parent is not in base");
         beginDictionary(1 + reserve);
         writeKey(Dict::kMagicParentKey);
         writeValue(parent);
