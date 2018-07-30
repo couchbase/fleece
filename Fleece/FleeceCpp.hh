@@ -421,7 +421,7 @@ namespace fleeceapi {
         inline bool writeString(const char *s)          {return writeString(FLStr(s));}
         inline bool writeString(std::string s)          {return writeString(FLStr(s));}
         inline bool writeData(FLSlice);
-        inline bool writeValue(Value);
+        inline bool writeValue(Value, FLSharedKeys =nullptr);
         inline bool convertJSON(FLSlice);
 
         inline bool beginArray(size_t reserveCount =0);
@@ -594,7 +594,8 @@ namespace fleeceapi {
     inline bool Encoder::writeDouble(double n)  {return FLEncoder_WriteDouble(_enc, n);}
     inline bool Encoder::writeString(FLString s){return FLEncoder_WriteString(_enc, s);}
     inline bool Encoder::writeData(FLSlice data){return FLEncoder_WriteData(_enc, data);}
-    inline bool Encoder::writeValue(Value v)    {return FLEncoder_WriteValue(_enc, v);}
+    inline bool Encoder::writeValue(Value v, FLSharedKeys sk)
+                                        {return FLEncoder_WriteValueWithSharedKeys(_enc, v, sk);}
     inline bool Encoder::convertJSON(FLSlice j) {return FLEncoder_ConvertJSON(_enc, j);}
     inline bool Encoder::beginArray(size_t rsv) {return FLEncoder_BeginArray(_enc, rsv);}
     inline bool Encoder::endArray()             {return FLEncoder_EndArray(_enc);}

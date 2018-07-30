@@ -373,7 +373,7 @@ namespace fleece {
                             enc.writeKey(key);
                             auto oldValue = i.value();
                             if (valueDelta == nullptr)
-                                enc.writeValue(oldValue);                   // unaffected
+                                enc.writeValue(oldValue, sk);               // unaffected
                             else
                                 ApplyDelta(oldValue, sk, valueDelta, enc);  // replaced/modified
                         }
