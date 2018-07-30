@@ -720,13 +720,12 @@ extern "C" {
 
 
     /** @} */
-    /** \name Delta Compression (JsonDiffPatch)
+    /** \name Delta Compression
      @{ */
 
     /** Returns JSON that encodes the changes to turn the value `old` into `nuu`;
         or if the values are equal, returns a null slice.
-        (The JSON basically adheres to the JsonDiffPatch format, with some changes to make it
-        more compact. But you should treat it as a black box.)
+        (The format is documented in Fleece.md, but you should treat it as a black box.)
         @param old  A value that's typically the old/original state of some data.
         @param nuu  A value that's typically the new/changed state of the `old` data.
         @return  JSON data representing the changes from `old` to `nuu`. */
@@ -735,8 +734,7 @@ extern "C" {
 
     /** Writes JSON that describes the changes to turn the value `old` into `nuu`.
         If the values are equal, writes nothing and returns false.
-        (The JSON basically adheres to the JsonDiffPatch format, with some changes to make it
-        more compact. But you should treat it as a black box.)
+        (The format is documented in Fleece.md, but you should treat it as a black box.)
         @param old  A value that's typically the old/original state of some data.
         @param nuu  A value that's typically the new/changed state of the `old` data.
         @param jsonEncoder  An encoder to write the JSON to. Must have been created using

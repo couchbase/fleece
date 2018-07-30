@@ -20,6 +20,10 @@
 #include "Fleece.hh"
 #include "Delta.hh"
 
+namespace fleece {
+    extern bool gCompatibleDeltas;
+}
+
 using namespace fleece;
 
 
@@ -67,16 +71,14 @@ TEST_CASE("Delta scalars", "[delta]") {
     checkDelta("null", "null", nullptr);
     checkDelta("''", "''", nullptr);
     checkDelta("5", "5", nullptr);
-    checkDelta("5", "6", "[0,6]");
-    checkDelta("false", "0", "[0,0]");
-    checkDelta("'hi'", "'Hi'", "[0,\"Hi\"]");
+    checkDelta("5", "6", "[6]");        // wrapped in array because "6" is not valid JSON document
+    checkDelta("false", "[]", "[[]]");
+    checkDelta("'hi'", "'Hi'", "[\"Hi\"]"); // ditto
 }
 
 
 TEST_CASE("Delta strings", "[delta]") {
-    checkDelta("'hi'", "7", "[0,7]");
-    checkDelta("7", "'hi'", "[0,\"hi\"]");
-    checkDelta("'hi'", "'there'", "[0,\"there\"]");
+    checkDelta("'hi'", "'there'", "[\"there\"]");
     checkDelta("'to wound the autumnal city. So howled out for the world to give him a name.  The in-dark answered with the wind.'",
                "'To wound the eternal city. So he howled out for the world to give him its name. The in-dark answered with wind.'",
                "[\"1-1+T|12=5-4+eter|13=3+he |37=1-3+its|6=1-27=4-5=\",0,2]");
@@ -91,26 +93,31 @@ TEST_CASE("Delta simple dicts", "[delta]") {
     checkDelta("{foo: 1}", "{foo: 1}", nullptr);
     checkDelta("{foo: 1, bar: 2, baz: 3}", "{foo: 1, bar: 2, baz: 3}", nullptr);
 
-    checkDelta("{}", "{bar: 2}", "{bar:[2]}");
+    checkDelta("{}", "{bar: 2}", "{bar:2}");
     checkDelta("{foo: 1}", "{}", "{foo:[]}");
-    checkDelta("{foo: 1}", "{bar: 2}", "{bar:[2],foo:[]}");
-    checkDelta("{foo: 1}", "{foo: 2}", "{foo:[0,2]}");
-    checkDelta("{foo: 1}", "{foo: 1, bar: 2}", "{bar:[2]}");
-    checkDelta("{foo: 1, bar: 2, baz: 3}", "{foo: 1, bar: 17, baz: 3}", "{bar:[0,17]}");
+    checkDelta("{foo: 1}", "{bar: 2}", "{bar:2,foo:[]}");
+    checkDelta("{foo: 1}", "{foo: 2}", "{foo:2}");
+    checkDelta("{foo: 1}", "{foo: 1, bar: 2}", "{bar:2}");
+    checkDelta("{foo: 1, bar: 2, baz: 3}", "{foo: 1, bar: 17, baz: 3}", "{bar:17}");
+
+    checkDelta("{foo: 1}", "[2]", "[[2]]");
+    checkDelta("[2]", "{foo: 1}", "[{foo:1}]");
+    checkDelta("{top: {foo: 1}}", "{top: [2]}", "{top:[[2]]}");
+    checkDelta("{top: [2]}", "{top: {foo: 1}}", "{top:[{foo:1}]}");
 }
 
 
 TEST_CASE("Delta arrays", "[delta]") {
     // There are no optimizations for array deltas yet; it just treats it as a value change
-    checkDelta("[1, 2]", "[1, 3]", "[0,[1,3]]");
+    checkDelta("[1, 2]", "[1, 3]", "[[1,3]]");
 }
 
 
 TEST_CASE("Delta nested dicts", "[delta]") {
     checkDelta("{foo: {bar: [1], baz:{goo:[3]},wow:0}}", "{foo: {bar: [1], baz:{goo:[3]},wow:0}}", nullptr);
-    checkDelta("{foo: {bar: [1]}, goo: 2}", "{foo: {bar: [1]}, goo: 3}", "{goo:[0,3]}");
-    checkDelta("{foo: {bar: [1]}, goo: 2}", "{foo: {bar: [2]}, goo: 2}", "{foo:{bar:[0,[2]]}}");
-    checkDelta("{foo: {bar: [1]}, goo: [2]}", "{foo: {bar: [2]}, goo: [3]}", "{foo:{bar:[0,[2]]},goo:[0,[3]]}");
+    checkDelta("{foo: {bar: [1]}, goo: 2}", "{foo: {bar: [1]}, goo: 3}", "{goo:3}");
+    checkDelta("{foo: {bar: [1]}, goo: 2}", "{foo: {bar: [2]}, goo: 2}", "{foo:{bar:[[2]]}}");
+    checkDelta("{foo: {bar: [1]}, goo: [2]}", "{foo: {bar: [2]}, goo: [3]}", "{foo:{bar:[[2]]},goo:[[3]]}");
 }
 
 

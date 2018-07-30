@@ -40,6 +40,8 @@ namespace fleece {
     using namespace std;
 
 
+    // Set this to true to create deltas compatible with JsonDiffPatch.
+    // (this is really just here for test purposes so we can use the JDP unit test dataset...)
     bool gCompatibleDeltas = false;
 
     static const size_t kMinStringDiffLength = 60;
@@ -174,87 +176,87 @@ namespace fleece {
                            JSONEncoder &enc,
                            pathItem *path)
     {
-        if (!old) {
-            // `nuu` was added:
-            if (!nuu)
-                return false;
-            writePath(path, enc);
-            enc.beginArray();
-            enc.writeValue(nuu);
-            enc.endArray();
-            return true;
-
-        } else if (!nuu) {
-            // `old` was deleted:
-            writePath(path, enc);
-            enc.beginArray();
-            if (gCompatibleDeltas) {
-                enc.writeValue(old);
-                enc.writeInt(0);
-                enc.writeInt(kDeletionCode);
-            }
-            enc.endArray();
-            return true;
-        }
-
-        auto oldType = old->type(), nuuType = nuu->type();
-        if (oldType == nuuType) {
-            if (oldType == kDict) {
-                // Possibly-modified dict:
-                auto oldDict = (const Dict*)old, nuuDict = (const Dict*)nuu;
-                pathItem curLevel = {path, false, nullslice};
-                unsigned oldKeysSeen = 0;
-                // Iterate all the new & maybe-changed keys:
-                for (Dict::iterator i_nuu(nuuDict, nuuSK); i_nuu; ++i_nuu) {
-                    slice key = i_nuu.keyString();
-                    auto oldValue = oldDict->get(key, oldSK);
-                    if (oldValue)
-                        ++oldKeysSeen;
-                    curLevel.key = key;
-                    writeDelta(oldValue, oldSK, i_nuu.value(), nuuSK, enc, &curLevel);
+        if (old) {
+            if (!nuu) {
+                // `old` was deleted: write []
+                writePath(path, enc);
+                enc.beginArray();
+                if (gCompatibleDeltas) {
+                    enc.writeValue(old);
+                    enc.writeInt(0);
+                    enc.writeInt(kDeletionCode);
                 }
-                // Iterate all the deleted keys:
-                if (oldKeysSeen < oldDict->count()) {
-                    for (Dict::iterator i_old(oldDict, oldSK); i_old; ++i_old) {
-                        slice key = i_old.keyString();
-                        if (nuuDict->get(key, nuuSK) == nullptr) {
-                            curLevel.key = key;
-                            writeDelta(i_old.value(), oldSK, nullptr, nuuSK, enc, &curLevel);
+                enc.endArray();
+                return true;
+            }
+
+            auto oldType = old->type(), nuuType = nuu->type();
+            if (oldType == nuuType) {
+                if (oldType == kDict) {
+                    // Possibly-modified dict: write a dict with the modified keys
+                    auto oldDict = (const Dict*)old, nuuDict = (const Dict*)nuu;
+                    pathItem curLevel = {path, false, nullslice};
+                    unsigned oldKeysSeen = 0;
+                    // Iterate all the new & maybe-changed keys:
+                    for (Dict::iterator i_nuu(nuuDict, nuuSK); i_nuu; ++i_nuu) {
+                        slice key = i_nuu.keyString();
+                        auto oldValue = oldDict->get(key, oldSK);
+                        if (oldValue)
+                            ++oldKeysSeen;
+                        curLevel.key = key;
+                        writeDelta(oldValue, oldSK, i_nuu.value(), nuuSK, enc, &curLevel);
+                    }
+                    // Iterate all the deleted keys:
+                    if (oldKeysSeen < oldDict->count()) {
+                        for (Dict::iterator i_old(oldDict, oldSK); i_old; ++i_old) {
+                            slice key = i_old.keyString();
+                            if (nuuDict->get(key, nuuSK) == nullptr) {
+                                curLevel.key = key;
+                                writeDelta(i_old.value(), oldSK, nullptr, nuuSK, enc, &curLevel);
+                            }
                         }
                     }
-                }
-                if (!curLevel.isOpen)
-                    return false;
-                enc.endDictionary();
-                return true;
-
-            } else if (old->isEqual(nuu)) {
-                // Equal objects: do nothing
-                return false;
-
-            } else if (oldType == kString && nuuType == kString) {
-                // Strings: Maybe use smart text diff
-                string strPatch = createStringDelta(old->asString(), nuu->asString());
-                if (!strPatch.empty()) {
-                    enc.beginArray();
-                    enc.writeString(strPatch);
-                    enc.writeInt(0);
-                    enc.writeInt(kTextDiffCode);
-                    enc.endArray();
+                    if (!curLevel.isOpen)
+                        return false;
+                    enc.endDictionary();
                     return true;
+
+                } else if (old->isEqual(nuu)) {
+                    // Equal objects: do nothing
+                    return false;
+
+                } else if (oldType == kString && nuuType == kString) {
+                    // Strings: Maybe use smart text diff
+                    string strPatch = createStringDelta(old->asString(), nuu->asString());
+                    if (!strPatch.empty()) {
+                        enc.beginArray();
+                        enc.writeString(strPatch);
+                        enc.writeInt(0);
+                        enc.writeInt(kTextDiffCode);
+                        enc.endArray();
+                        return true;
+                    }
+                    // if there's no smart diff, fall through to the generic case...
                 }
             }
+
+        } else {
+            // !old, so `nuu` was added
+            if (!nuu)
+                return false;
         }
 
-        // Generic modification:
+        // Generic modification/insertion:
         writePath(path, enc);
-        enc.beginArray();
-        if (gCompatibleDeltas)
-            enc.writeValue(old);
-        else
-            enc.writeInt(0);    // deviating from the original, we don't write the old value
-        enc.writeValue(nuu);
-        enc.endArray();
+        if (nuu->type() < kArray && path && !gCompatibleDeltas) {
+            enc.writeValue(nuu);
+        } else {
+            enc.beginArray();
+            if (gCompatibleDeltas && old)
+                enc.writeValue(old);
+            enc.writeValue(nuu);
+            enc.endArray();
+        }
         return true;
     }
 
@@ -307,8 +309,6 @@ namespace fleece {
                         enc.writeValue(Value::kUndefinedValue);
                         break;
                     case 1:
-                        if (old)
-                            FleeceException::_throw(InvalidData, "Invalid insertion in delta");
                         enc.writeValue(a->get(0));
                         break;
                     case 2:
@@ -393,7 +393,8 @@ namespace fleece {
                 break;
             }
             default:
-                FleeceException::_throw(InvalidData, "Invalid value type in delta");
+                enc.writeValue(delta);
+                break;
         }
     }
 

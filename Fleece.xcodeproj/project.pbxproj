@@ -259,6 +259,7 @@
 		275C67DC1BFBA128008AA9E7 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		275CED501D3EF7BE001DE46C /* FleeceException.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FleeceException.cc; sourceTree = "<group>"; };
 		275CED511D3EF7BE001DE46C /* FleeceException.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = FleeceException.hh; sourceTree = "<group>"; };
+		275F7F5C210FBFFC00861DE8 /* Deltas.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Deltas.md; sourceTree = "<group>"; };
 		276D15441E007D3000543B1B /* JSON5.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSON5.cc; sourceTree = "<group>"; };
 		276D15451E007D3000543B1B /* JSON5.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = JSON5.hh; sourceTree = "<group>"; };
 		276D15481E008E7A00543B1B /* JSON5Tests.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSON5Tests.cc; sourceTree = "<group>"; };
@@ -392,6 +393,7 @@
 				27C4AC941CDE843F00938365 /* Example.md */,
 				275C67DB1BFBA0F4008AA9E7 /* Fleece.md */,
 				27C4AC961CDFFDA100938365 /* Performance.md */,
+				275F7F5C210FBFFC00861DE8 /* Deltas.md */,
 				270FA25E1BF53CAD005DCB13 /* Fleece */,
 				279AC5321C096872002C80DB /* Tool */,
 				272E5A441BF7FD1700848580 /* Tests */,
