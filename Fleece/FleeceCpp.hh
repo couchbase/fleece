@@ -490,6 +490,25 @@ namespace fleeceapi {
     };
 
 
+    class Delta {
+    public:
+        static inline fleece::alloc_slice create(Value old, FLSharedKeys oldSK,
+                                                 Value nuu, FLSharedKeys nuuSK);
+        static inline bool create(Value old, FLSharedKeys oldSK,
+                                  Value nuu, FLSharedKeys nuuSK,
+                                  Encoder &jsonEncoder);
+
+        static inline fleece::alloc_slice apply(Value old,
+                                                FLSharedKeys sk,
+                                                fleece::slice jsonDelta,
+                                                FLError *error);
+        static inline bool apply(Value old,
+                                 FLSharedKeys sk,
+                                 Value jsonDelta,
+                                 Encoder &encoder);
+    };
+
+
     class ExternResolver {
     public:
         /** Constructs a resolver for a Fleece document in memory. Extern pointers in it will be
@@ -607,4 +626,26 @@ namespace fleeceapi {
     inline void Encoder::reset()                {return FLEncoder_Reset(_enc);}
     inline FLError Encoder::error() const       {return FLEncoder_GetError(_enc);}
     inline const char* Encoder::errorMessage() const {return FLEncoder_GetErrorMessage(_enc);}
+
+    inline fleece::alloc_slice Delta::create(Value old, FLSharedKeys oldSK,
+                                             Value nuu, FLSharedKeys nuuSK) {
+        return FLCreateDelta(old, oldSK, nuu, nuuSK);
+    }
+    inline bool Delta::create(Value old, FLSharedKeys oldSK,
+                              Value nuu, FLSharedKeys nuuSK,
+                              Encoder &jsonEncoder) {
+        return FLEncodeDelta(old, oldSK, nuu, nuuSK, jsonEncoder);
+    }
+    inline fleece::alloc_slice Delta::apply(Value old,
+                                            FLSharedKeys sk,
+                                            fleece::slice jsonDelta,
+                                            FLError *error) {
+        return FLApplyDelta(old, sk, jsonDelta, error);
+    }
+    inline bool Delta::apply(Value old,
+                             FLSharedKeys sk,
+                             Value jsonDelta,
+                             Encoder &encoder) {
+        return FLEncodeApplyingDelta(old, sk, jsonDelta, encoder);
+    }
 }

@@ -2,7 +2,7 @@
 
 The Fleece API includes functions that behave like the Unix tools `diff` and `patch`: they find the differences between two Fleece values, encode them in a compact format called a "delta", and can reconstitute the second value given the first and the delta. This provides an efficient way to store the change history of a document, or to transmit a change over a network.
 
-In the public C API, the functions are `FLCreateDelta`, `FLEncodeDelta`, `FLApplyDelta`, and `FLEncodeApplyingDelta`. In the (mostly-internal) C++ API, the functions are `CreateDelta` and `ApplyDelta`. See the headers for documentation.
+In the C API (Fleece.h), the functions are `FLCreateDelta`, `FLEncodeDelta`, `FLApplyDelta`, and `FLEncodeApplyingDelta`. In the public C++ API (FleeceCpp.hh) they are methods of the `Delta` class. See the headers for documentation.
 
 ## Delta Format
 
@@ -15,7 +15,7 @@ A delta of two Fleece values is expressed as a JSON value, of the form:
 * `newValue` — The value is completely replaced with *newValue*.
 * `[ newValue ]` — The value is completely replaced with *newValue*. (This form is used for disambiguation when *newValue* is an array or object.)
 * `[ ]` — The value is deleted.
-* `{ "k1": v1, ... }` — Incremental update of an object. Each value `v`*n* describes a delta of the old value at the corresponding key `k`*n*. (If a key didn't appear in the old object, its value will be an insertion.)
+* `{ "k1": v1, ... }` — Incremental update of an object. Each value `v`*n* is (recursively) a delta to apply to the old value at the corresponding key `k`*n*. (If a key didn't appear in the old object, the delta represents an insertion.)
 * `["patch", 0, 2]` — Incremental update of a string. The `patch` string is a series of operations,  which describe what to do with consecutive ranges of the original UTF-8 string to transform it into the new one. The total byte count of all the operations must equal the length of the original string. There are three operations, each of which starts with a decimal whole number *n*:
     * `n=` — The next *n* bytes are left alone (i.e. copied to the new string.)
     * `n-` — The next n bytes are deleted (skipped)
@@ -43,4 +43,4 @@ delta: ["1-1+T|12=5-4+eter|13=3+he |37=1-3+its|6=1-27=4-5=",0,2]
 
 ## Limitations
 
-This implementation does not yet efficiently encode incremental changes to arrays. I will try to address this in the future. Computing the changes from one array to another is a difficult, ambiguous, and potentially expensive task, as described in the documentation of JsonDiffPatch.
+This implementation does not yet efficiently encode incremental changes to arrays. I will try to address this in the future. Computing the changes from one array to another is a complex, ambiguous, and potentially expensive task...
