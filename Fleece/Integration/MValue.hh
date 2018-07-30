@@ -104,10 +104,10 @@ namespace fleeceapi {
             }
         }
 
-        void encodeTo(Encoder &enc) const {
+        void encodeTo(Encoder &enc, FLSharedKeys sk) const {
             assert(!isEmpty());
             if (_value)
-                enc << _value;
+                enc.writeValue(_value, sk);
             else
                 encodeNative(enc, _native);
         }

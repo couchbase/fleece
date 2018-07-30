@@ -150,13 +150,14 @@ namespace fleeceapi {
             if (!MCollection::isMutated()) {
                 enc << _dict;
             } else {
+                auto sk = MCollection::context()->sharedKeys();
                 enc.beginDict(count());
                 for (iterator i(*this); i; ++i) {
                     enc.writeKey(i.key());
                     if (i.value())
-                        enc << i.value();
+                        enc.writeValue(i.value(), sk);
                     else
-                        i.mvalue().encodeTo(enc);
+                        i.mvalue().encodeTo(enc, sk);
                 }
                 enc.endDict();
             }

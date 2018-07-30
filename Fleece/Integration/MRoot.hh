@@ -68,7 +68,7 @@ namespace fleeceapi {
         Native asNative() const             {return _slot.asNative(this);}
         bool isMutated() const              {return _slot.isMutated();}
 
-        void encodeTo(Encoder &enc) const   {_slot.encodeTo(enc);}
+        void encodeTo(Encoder &enc) const   {_slot.encodeTo(enc, MCollection::context()->sharedKeys());}
         alloc_slice encode() const          {Encoder enc; encodeTo(enc); return enc.finish();}
 
         alloc_slice encodeDelta() const {

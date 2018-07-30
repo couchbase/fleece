@@ -50,7 +50,7 @@ static void checkDelta(const char *json1, const char *json2, const char *deltaEx
     }
 
     // Compute the delta and check it:
-    alloc_slice jsonDelta = CreateDelta(v1, v2, true);
+    alloc_slice jsonDelta = CreateDelta(v1, nullptr, v2, nullptr, true);
     CHECK(jsonDelta == slice(deltaExpected));
 
     if (jsonDelta.size > 0) {
@@ -115,7 +115,7 @@ TEST_CASE("Delta nested dicts", "[delta]") {
 
 
 static void checkDelta(const Value *left, const Value *right, const Value *expectedDelta) {
-    alloc_slice jsonDelta = CreateDelta(left, right);
+    alloc_slice jsonDelta = CreateDelta(left, nullptr, right, nullptr);
     alloc_slice fleeceDelta = JSONConverter::convertJSON(jsonDelta);
     const Value *delta = Value::fromData(fleeceDelta);
     INFO("Delta of " << toJSONString(left) << "  -->  " << toJSONString(right) << "  ==  " << toJSONString(expectedDelta) << "  ...  got  " << toJSONString(delta));

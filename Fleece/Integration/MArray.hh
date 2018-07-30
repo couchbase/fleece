@@ -144,13 +144,14 @@ namespace fleeceapi {
             if (!MCollection::isMutated()) {
                 enc << _array;
             } else {
+                auto sk = MCollection::context()->sharedKeys();
                 enc.beginArray(count());
                 uint32_t i = 0;
                 for (auto &v : _vec) {
                     if (v.isEmpty())
-                        enc.writeValue(_array[i]);
+                        enc.writeValue(_array[i], sk);
                     else
-                        v.encodeTo(enc);
+                        v.encodeTo(enc, sk);
                     ++i;
                 }
                 enc.endArray();
