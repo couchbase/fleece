@@ -290,23 +290,27 @@ namespace fleece {
 
             auto offset = _base.size + nextWritePos();
             throwIf(offset > 1u<<31, MemoryError, "encoded data too large");
-            s = writeData(kStringTag, s);
-            if (s.buf) {
+            slice sWritten = writeData(kStringTag, s);
+#if !FL_EMBEDDED
+            if (!sWritten.buf)
+                sWritten = slice{_stringStorage.write(s), s.size};
+#endif
+            if (sWritten.buf) {
 #if 0
                 if (_strings.count() == 0)
                     fprintf(stderr, "---- new encoder ----\n");
-                fprintf(stderr, "Caching `%.*s` --> %u\n", (int)s.size, s.buf, offset);
+                fprintf(stderr, "Caching `%.*s` --> %u\n", (int)sWritten.size, sWritten.buf, offset);
 #endif
                 if (entry.first.buf == nullptr) {
                     // insert string
                     StringTable::info i = {(uint32_t)offset};
-                    _strings.addAt(entry, s, i);
+                    _strings.addAt(entry, sWritten, i);
                 } else {
                     // replace string
                     entry.second.offset = (uint32_t)offset;
                 }
             }
-            return s;
+            return sWritten;
 
         } else {
             return writeData(kStringTag, s);

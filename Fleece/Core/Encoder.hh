@@ -218,6 +218,7 @@ namespace fleece {
         std::vector<valueArray> _stack; // Stack of open arrays/dicts
         unsigned _stackDepth {0};    // Current depth of _stack
         StringTable _strings;        // Maps strings to the offsets where they appear as values
+        Writer _stringStorage;       // Backing store for strings in _strings
         bool _uniqueStrings {true};  // Should strings be uniqued before writing?
         SharedKeys *_sharedKeys {nullptr};  // Client-provided key-to-int mapping
         slice _base;                 // Base Fleece data being appended to (if any)
