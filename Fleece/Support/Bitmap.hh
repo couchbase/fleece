@@ -17,10 +17,13 @@
 //
 
 #pragma once
-#ifdef __clang__
-#include <algorithm>    // for std::__pop_count
-#endif
 
+extern "C" {
+    // Clang & GCC builtin functions:
+    extern int __builtin_popcount(unsigned int) noexcept;
+    extern int __builtin_popcountl(unsigned long) noexcept;
+    extern int __builtin_popcountll(unsigned long long) noexcept;
+}
 
 namespace fleece {
 
@@ -44,11 +47,12 @@ namespace fleece {
 
     private:
         static unsigned popcount(Rep bits) {
-#ifdef __clang__
-            return std::__pop_count(bits);
-#else
-            return __builtin_popcountl(bits);
-#endif
+            if (sizeof(Rep) <= sizeof(int))
+                return __builtin_popcount(bits);
+            else if (sizeof(Rep) <= sizeof(long))
+                return __builtin_popcountl(bits);
+            else
+                return __builtin_popcountll(bits);
         }
 
         static Rep mask(unsigned bitNo)         {return Rep(1) << bitNo;}

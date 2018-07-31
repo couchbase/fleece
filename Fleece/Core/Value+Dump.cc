@@ -73,7 +73,7 @@ namespace fleece {
     size_t Value::dump(std::ostream &out, bool wide, int indent, const void *base) const {
         ssize_t pos = _byte - (uint8_t*)base;
         char buf[64];
-        sprintf(buf, "%s%04zx: %02x %02x", (pos < 0 ? "-" : ""), abs(pos), _byte[0], _byte[1]);
+        sprintf(buf, "%s%04zx: %02x %02x", (pos < 0 ? "-" : ""), std::abs(pos), _byte[0], _byte[1]);
         out << buf;
         auto size = dataSize();
         if (wide && size < kWide)
