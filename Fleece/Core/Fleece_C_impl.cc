@@ -549,20 +549,20 @@ void FLResolver_End(FLSlice document) {
 
 
 FLSliceResult FLCreateDelta(FLValue old, FLSharedKeys oldSK, FLValue nuu, FLSharedKeys nuuSK) {
-    return toSliceResult(CreateDelta(old, oldSK, nuu, nuuSK));
+    return toSliceResult(Delta::create(old, oldSK, nuu, nuuSK));
 }
 
 bool FLEncodeDelta(FLValue old, FLSharedKeys oldSK, FLValue nuu, FLSharedKeys nuuSK,
                    FLEncoder jsonEncoder) {
     JSONEncoder *enc = jsonEncoder->jsonEncoder.get();
     assert(enc);  //TODO: Support encoding to Fleece
-    return CreateDelta(old, oldSK, nuu, nuuSK, *enc);
+    return Delta::create(old, oldSK, nuu, nuuSK, *enc);
 }
 
 
 FLSliceResult FLApplyDelta(FLValue old, FLSharedKeys sk, FLSlice jsonDelta, FLError *outError) {
     try {
-        return toSliceResult(ApplyDelta(old, sk, jsonDelta));
+        return toSliceResult(Delta::apply(old, sk, jsonDelta));
     } catchError(outError);
     return {};
 }
@@ -572,7 +572,7 @@ bool FLEncodeApplyingDelta(FLValue old, FLSharedKeys sk, FLValue delta, FLEncode
         Encoder *enc = encoder->fleeceEncoder.get();
         if (!enc)
             FleeceException::_throw(EncodeError, "FLEncodeApplyingDelta cannot encode JSON");
-        ApplyDelta(old, sk, delta, *enc);
+        Delta::apply(old, sk, delta, *enc);
         return true;
     } catch (const std::exception &x) {
         encoder->recordException(x);

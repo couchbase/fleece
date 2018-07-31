@@ -16,21 +16,13 @@
 // limitations under the License.
 //
 
-// Delta format: <https://github.com/benjamine/jsondiffpatch/blob/master/docs/deltas.md>
-// This implementation differs from that reference one:
-// * When it encodes a modification or deletion, it does not write the old value; it leaves a '0'
-//   in its place instead.
-//   The reason is that we don't need the old value to apply the delta, and it can make the delta
-//   data much larger.
-// * There is no special handling of array diffs (yet).
-// * There is no special handling of text diffs (yet).
-
 #include "Delta.hh"
 #include "Fleece.hh"
 #include "JSONEncoder.hh"
 #include "JSONConverter.hh"
 #include "JSON5.hh"
 #include "FleeceException.hh"
+#include "TempArray.hh"
 #include "diff_match_patch.hh"
 #include <sstream>
 #include <unordered_set>
@@ -44,9 +36,11 @@ namespace fleece {
     // (this is really just here for test purposes so we can use the JDP unit test dataset...)
     bool gCompatibleDeltas = false;
 
-    static const size_t kMinStringDiffLength = 60;
+    // Minimum length of strings that will be considered for diffing
+    static constexpr size_t kMinStringDiffLength = 60;
 
-    static const float kTextDiffTimeout = 0.5;
+    // Maximum time (in seconds) that the string-diff algorithm is allowed to run
+    static constexpr float kTextDiffTimeout = 0.25;
 
     // Codes that appear as the 3rd item of an array item in a diff
     enum {
@@ -56,137 +50,73 @@ namespace fleece {
     };
 
 
-#pragma mark - STRING DELTAS:
-
-
-    static string createStringDelta(slice oldStr, slice nuuStr) {
-        if (nuuStr.size < kMinStringDiffLength
-                || (gCompatibleDeltas && oldStr.size > kMinStringDiffLength))
-            return "";
-        diff_match_patch<string> dmp;
-        dmp.Diff_Timeout = kTextDiffTimeout;
-        auto patches = dmp.patch_make(string(oldStr), string(nuuStr));
-
-        if (gCompatibleDeltas)
-            return dmp.patch_toText(patches);
-
-        long pos = 0, lastPos = 0, correction = 0;
-        stringstream str;
-        for (auto patch = patches.begin(); patch != patches.end(); ++patch) {
-            pos = patch->start1 + correction;
-            auto &diffs = patch->diffs;
-            for (auto cur_diff = diffs.begin(); cur_diff != diffs.end(); ++cur_diff) {
-                string &text = cur_diff->text;
-                auto length = text.length();
-                if (cur_diff->operation == diff_match_patch<string>::EQUAL) {
-                    pos += length;
-                } else {
-                    if (pos > lastPos) {
-                        str << (pos-lastPos) << '=';
-                    }
-                    if (cur_diff->operation == diff_match_patch<string>::DELETE) {
-                        str << length << '-';
-                        pos += length;
-                    } else {
-                        str << length << '+' << text << '|';
-                    }
-                    lastPos = pos;
-                }
-                if ((off_t)str.tellp() + 6 >= nuuStr.size)
-                    return "";          // Patch is too long; send new str instead
-            }
-            correction += patch->length1 - patch->length2;
-        }
-        if (oldStr.size > lastPos)
-            str << (oldStr.size-lastPos) << '=';
-        return str.str();
-    }
-
-
-    static string applyStringDelta(slice oldStr, slice diff) {
-        if (diff[0] == '@') {
-            diff_match_patch<string> dmp;
-            return dmp.patch_apply(dmp.patch_fromText(string(diff)), string(oldStr)).first;
-        } else {
-            stringstream in{string(diff)};
-            in.exceptions(stringstream::failbit | stringstream::badbit);
-            stringstream out;
-            unsigned pos = 0;
-            while (in.peek() >= 0) {
-                char op;
-                unsigned len;
-                in >> len;
-                in >> op;
-                switch (op) {
-                    case '=':
-                        if (pos + len > oldStr.size)
-                            FleeceException::_throw(InvalidData, "Invalid length in text delta");
-                        out.write((const char*)&oldStr[pos], len);
-                        pos += len;
-                        break;
-                    case '-':
-                        pos += len;
-                        break;
-                    case '+': {
-                        char insertion[len];
-                        in.read(insertion, len);
-                        out.write(insertion, len);
-                        in >> op;
-                        if (op != '|')
-                            FleeceException::_throw(InvalidData, "Missing insertion delimiter in text delta");
-                        break;
-                    }
-                    default:
-                        FleeceException::_throw(InvalidData, "Unknown op in text delta");
-                }
-            }
-            if (pos != oldStr.size)
-                FleeceException::_throw(InvalidData, "Length mismatch in text delta");
-
-            return out.str();
-        }
-    }
-
-
 #pragma mark - CREATING DELTAS:
 
 
-    struct pathItem {
+    alloc_slice Delta::create(const Value *old, SharedKeys *oldSK,
+                              const Value *nuu, SharedKeys *nuuSK,
+                              bool json5)
+    {
+        JSONEncoder enc;
+        enc.setJSON5(json5);
+        if (create(old, oldSK, nuu, nuuSK, enc))
+            return enc.extractOutput();
+        else
+            return {};
+    }
+
+
+    bool Delta::create(const Value *old, SharedKeys *oldSK,
+                       const Value *nuu, SharedKeys *nuuSK,
+                       JSONEncoder &enc)
+    {
+        return Delta(oldSK, nuuSK, enc)._write(old, nuu, nullptr);
+    }
+
+
+    Delta::Delta(SharedKeys *oldSK,
+          SharedKeys *nuuSK,
+          JSONEncoder &enc)
+    :_oldSK(oldSK)
+    ,_nuuSK(nuuSK)
+    ,_encoder(&enc)
+    { }
+
+
+    struct Delta::pathItem {
         pathItem *parent;
         bool isOpen;
         slice key;
     };
 
 
-    static void writePath(pathItem *path, JSONEncoder &enc) {
+    void Delta::writePath(pathItem *path) {
         if (!path)
             return;
-        writePath(path->parent, enc);
+        writePath(path->parent);
         path->parent = nullptr;
         if (!path->isOpen) {
-            enc.beginDictionary();
+            _encoder->beginDictionary();
             path->isOpen = true;
         }
-        enc.writeKey(path->key);
+        _encoder->writeKey(path->key);
     }
 
 
-    static bool writeDelta(const Value *old, SharedKeys *oldSK,
-                           const Value *nuu, SharedKeys *nuuSK,
-                           JSONEncoder &enc,
-                           pathItem *path)
-    {
+    bool Delta::_write(const Value *old, const Value *nuu, pathItem *path) {
+        if (_usuallyFalse(old == nuu))
+            return false;
         if (old) {
             if (!nuu) {
                 // `old` was deleted: write []
-                writePath(path, enc);
-                enc.beginArray();
+                writePath(path);
+                _encoder->beginArray();
                 if (gCompatibleDeltas) {
-                    enc.writeValue(old);
-                    enc.writeInt(0);
-                    enc.writeInt(kDeletionCode);
+                    _encoder->writeValue(old);
+                    _encoder->writeInt(0);
+                    _encoder->writeInt(kDeletionCode);
                 }
-                enc.endArray();
+                _encoder->endArray();
                 return true;
             }
 
@@ -198,93 +128,288 @@ namespace fleece {
                     pathItem curLevel = {path, false, nullslice};
                     unsigned oldKeysSeen = 0;
                     // Iterate all the new & maybe-changed keys:
-                    for (Dict::iterator i_nuu(nuuDict, nuuSK); i_nuu; ++i_nuu) {
+                    for (Dict::iterator i_nuu(nuuDict, _nuuSK); i_nuu; ++i_nuu) {
                         slice key = i_nuu.keyString();
-                        auto oldValue = oldDict->get(key, oldSK);
+                        auto oldValue = oldDict->get(key, _oldSK);
                         if (oldValue)
                             ++oldKeysSeen;
                         curLevel.key = key;
-                        writeDelta(oldValue, oldSK, i_nuu.value(), nuuSK, enc, &curLevel);
+                        _write(oldValue, i_nuu.value(), &curLevel);
                     }
                     // Iterate all the deleted keys:
                     if (oldKeysSeen < oldDict->count()) {
-                        for (Dict::iterator i_old(oldDict, oldSK); i_old; ++i_old) {
+                        for (Dict::iterator i_old(oldDict, _oldSK); i_old; ++i_old) {
                             slice key = i_old.keyString();
-                            if (nuuDict->get(key, nuuSK) == nullptr) {
+                            if (nuuDict->get(key, _nuuSK) == nullptr) {
                                 curLevel.key = key;
-                                writeDelta(i_old.value(), oldSK, nullptr, nuuSK, enc, &curLevel);
+                                _write(i_old.value(), nullptr, &curLevel);
                             }
                         }
                     }
                     if (!curLevel.isOpen)
                         return false;
-                    enc.endDictionary();
+                    _encoder->endDictionary();
                     return true;
+
+                } else if (oldType == kArray) {
+                    // Scan forwards through unchanged items:
+                    auto oldArray = (const Array*)old, nuuArray = (const Array*)nuu;
+                    auto oldCount = oldArray->count(), nuuCount = nuuArray->count();
+                    auto minCount = min(oldCount, nuuCount);
+                    if (minCount > 0) {
+                        pathItem curLevel = {path, false, nullslice};
+                        uint32_t index = 0;
+                        char key[10];
+                        for (Array::iterator iOld(oldArray), iNew(nuuArray); index < minCount;
+                             ++iOld, ++iNew, ++index) {
+                            sprintf(key, "%d", index);
+                            curLevel.key = slice(key);
+                            _write(iOld.value(), iNew.value(), &curLevel);
+                        }
+                        if (oldCount != nuuCount) {
+                            sprintf(key, "%d-", index);
+                            curLevel.key = slice(key);
+                            writePath(&curLevel);
+                            _encoder->beginArray();
+                            for (; index < nuuCount; ++index) {
+                                _encoder->writeValue(nuuArray->get(index), _nuuSK);
+                            }
+                            _encoder->endArray();
+                        }
+                        if (!curLevel.isOpen)
+                            return false;
+                        _encoder->endDictionary();
+                        return true;
+                    } else if (oldCount == 0 && nuuCount == 0) {
+                        return false;
+                    }
 
                 } else if (old->isEqual(nuu)) {
                     // Equal objects: do nothing
                     return false;
 
                 } else if (oldType == kString && nuuType == kString) {
-                    // Strings: Maybe use smart text diff
+                    // Strings: Try to use smart text diff
                     string strPatch = createStringDelta(old->asString(), nuu->asString());
                     if (!strPatch.empty()) {
-                        enc.beginArray();
-                        enc.writeString(strPatch);
-                        enc.writeInt(0);
-                        enc.writeInt(kTextDiffCode);
-                        enc.endArray();
+                        writePath(path);
+                        _encoder->beginArray();
+                        _encoder->writeString(strPatch);
+                        _encoder->writeInt(0);
+                        _encoder->writeInt(kTextDiffCode);
+                        _encoder->endArray();
                         return true;
                     }
                     // if there's no smart diff, fall through to the generic case...
                 }
             }
-
-        } else {
-            // !old, so `nuu` was added
-            if (!nuu)
-                return false;
         }
 
         // Generic modification/insertion:
-        writePath(path, enc);
+        writePath(path);
         if (nuu->type() < kArray && path && !gCompatibleDeltas) {
-            enc.writeValue(nuu);
+            _encoder->writeValue(nuu);
         } else {
-            enc.beginArray();
+            _encoder->beginArray();
             if (gCompatibleDeltas && old)
-                enc.writeValue(old);
-            enc.writeValue(nuu);
-            enc.endArray();
+                _encoder->writeValue(old);
+            _encoder->writeValue(nuu);
+            _encoder->endArray();
         }
         return true;
-    }
-
-
-    bool CreateDelta(const Value *old, SharedKeys *oldSK,
-                     const Value *nuu, SharedKeys *nuuSK,
-                     JSONEncoder &enc)
-    {
-        return writeDelta(old, oldSK, nuu, nuuSK, enc, nullptr);
-    }
-
-    alloc_slice CreateDelta(const Value *old, SharedKeys *oldSK,
-                            const Value *nuu, SharedKeys *nuuSK,
-                            bool json5) {
-        JSONEncoder enc;
-        enc.setJSON5(json5);
-        if (writeDelta(old, oldSK, nuu, nuuSK, enc, nullptr))
-            return enc.extractOutput();
-        else
-            return {};
     }
 
 
 #pragma mark - APPLYING DELTAS:
 
 
+    alloc_slice Delta::apply(const Value *old, SharedKeys *sk, slice jsonDelta, bool isJSON5) {
+        assert(jsonDelta);
+        string json5;
+        if (isJSON5) {
+            json5 = ConvertJSON5(string(jsonDelta));
+            jsonDelta = slice(json5);
+        }
+        alloc_slice fleeceData = JSONConverter::convertJSON(jsonDelta);
+        const Value *fleeceDelta = Value::fromTrustedData(fleeceData);
+        Encoder enc;
+        apply(old, sk, fleeceDelta, enc);
+        return enc.extractOutput();
+    }
+
+
+    void Delta::apply(const Value *old, SharedKeys *sk, const Value* NONNULL delta, Encoder &enc) {
+        Delta(sk, enc)._apply(old, delta);
+    }
+
+
+    Delta::Delta(SharedKeys *oldSK, Encoder &decoder)
+    :_oldSK(oldSK)
+    ,_decoder(&decoder)
+    { }
+
+
+    void Delta::_apply(const Value *old, const Value *delta) {
+        switch(delta->type()) {
+            case kArray:
+                _applyArray(old, (const Array*)delta);
+                break;
+            case kDict: {
+                switch (old ? old->type() : kNull) {
+                    case kArray:
+                        _patchArray((const Array*)old, (const Dict*)delta);
+                        break;
+                    case kDict:
+                        _patchDict((const Dict*)old, (const Dict*)delta);
+                        break;
+                    default:
+                        FleeceException::_throw(InvalidData, "Invalid {} in delta");
+                }
+                break;
+            }
+            default:
+                _decoder->writeValue(delta);
+                break;
+        }
+    }
+
+
+    inline void Delta::_applyArray(const Value *old, const Array* NONNULL delta) {
+        switch (delta->count()) {
+            case 0:
+                // Deletion:
+                throwIf(!old, InvalidData, "Invalid deletion in delta");
+                // 'undefined' in the context of a dict value means a deletion of a key
+                // inherited from the parent.
+                _decoder->writeValue(Value::kUndefinedValue);
+                break;
+            case 1:
+                // Insertion / replacement:
+                _decoder->writeValue(delta->get(0));
+                break;
+            case 2:
+                // Replacement (JsonDiffPatch format):
+                throwIf(!old, InvalidData, "Invalid replace in delta");
+                _decoder->writeValue(delta->get(1));
+                break;
+            case 3: {
+                switch(delta->get(2)->asInt()) {
+                    case kDeletionCode:
+                        // JsonDiffPatch deletion:
+                        throwIf(!old, InvalidData, "Invalid deletion in delta");
+                        _decoder->writeValue(Value::kUndefinedValue);
+                        break;
+                    case kTextDiffCode: {
+                        // Text diff:
+                        slice oldStr;
+                        if (old)
+                            oldStr = old->asString();
+                        throwIf(!oldStr, InvalidData, "Invalid text replace in delta");
+                        slice diff = delta->get(0)->asString();
+                        throwIf(diff.size == 0, InvalidData, "Invalid text diff in delta");
+                        auto nuuStr = applyStringDelta(oldStr, diff);
+                        _decoder->writeString(nuuStr);
+                        break;
+                    }
+                    default:
+                        FleeceException::_throw(InvalidData, "Unknown mode in delta");
+                }
+                break;
+            }
+            default:
+                FleeceException::_throw(InvalidData, "Bad array count in delta");
+        }
+    }
+
+
+    inline void Delta::_patchDict(const Dict* NONNULL old, const Dict* NONNULL delta) {
+        // Dict: Incremental update
+        if (_decoder->valueIsInBase(old)) {
+            // If the old dict is in the base, we can create an inherited dict:
+            _decoder->beginDictionary(old);
+            for (Dict::iterator i(delta); i; ++i) {
+                slice key = i.keyString();
+                _decoder->writeKey(key);
+                _apply(old->get(key, _oldSK), i.value());  // recurse into dict item!
+            }
+            _decoder->endDictionary();
+        } else {
+            // In the general case, have to write a new dict from scratch:
+            _decoder->beginDictionary();
+            // Process the unaffected, deleted, and modified keys:
+            unsigned deltaKeysUsed = 0;
+            for (Dict::iterator i(old, _oldSK); i; ++i) {
+                slice key = i.keyString();
+                const Value *valueDelta = delta->get(key);
+                if (valueDelta)
+                    ++deltaKeysUsed;
+                if (!isDeltaDeletion(valueDelta)) {                 // skip deletions
+                    _decoder->writeKey(key);
+                    auto oldValue = i.value();
+                    if (valueDelta == nullptr)
+                        _decoder->writeValue(oldValue, _oldSK);               // unaffected
+                    else
+                        _apply(oldValue, valueDelta);  // replaced/modified
+                }
+            }
+            // Now add the inserted keys:
+            if (deltaKeysUsed < delta->count()) {
+                for (Dict::iterator i(delta); i; ++i) {
+                    slice key = i.keyString();
+                    if (old->get(key, _oldSK) == nullptr) {
+                        _decoder->writeKey(key);
+                        _apply(nullptr, i.value());  // recurse into insertion
+                    }
+                }
+            }
+            _decoder->endDictionary();
+        }
+    }
+
+
+    inline void Delta::_patchArray(const Array* NONNULL old, const Dict* NONNULL delta) {
+        // Array: Incremental update
+        _decoder->beginArray();
+        uint32_t index = 0;
+        const Value *remainder = nullptr;
+        for (Array::iterator iOld(old); iOld; ++iOld, ++index) {
+            auto oldItem = iOld.value();
+            char key[10];
+            sprintf(key, "%d", index);
+            auto replacement = delta->get(slice(key));
+            if (replacement) {
+                // Patch this array item:
+                _apply(oldItem, replacement);
+            } else {
+                strcat(key, "-");
+                remainder = delta->get(slice(key));
+                if (remainder) {
+                    break;
+                } else {
+                    // Array item is unaffected:
+                    _decoder->writeValue(oldItem);
+                }
+            }
+        }
+
+        if (!remainder) {
+            char key[10];
+            sprintf(key, "%d-", old->count());
+            remainder = delta->get(slice(key));
+        }
+        if (remainder) {
+            // Remainder of array is replaced by the array from the delta:
+            auto remainderArray = remainder->asArray();
+            throwIf(!remainderArray, InvalidData, "Invalid array remainder in delta");
+            for (Array::iterator iRem(remainderArray); iRem; ++iRem)
+                _decoder->writeValue(iRem.value());
+        }
+        _decoder->endArray();
+    }
+
+
     // Does this delta represent a deletion?
-    static bool isDeltaDeletion(const Value *delta) {
+    inline bool Delta::isDeltaDeletion(const Value *delta) {
         if (!delta)
             return false;
         auto array = delta->asArray();
@@ -295,122 +420,94 @@ namespace fleece {
     }
 
 
-    void ApplyDelta(const Value *old, SharedKeys *sk, const Value *delta, Encoder &enc) {
-        switch(delta->type()) {
-            case kArray: {
-                // Array: Insertion / deletion / replacement
-                auto a = (const Array*)delta;
-                switch (a->count()) {
-                    case 0:
-                        if (!old)
-                            FleeceException::_throw(InvalidData, "Invalid deletion in delta");
-                        // 'undefined' in the context of a dict value means a deletion of a key
-                        // inherited from the parent.
-                        enc.writeValue(Value::kUndefinedValue);
-                        break;
-                    case 1:
-                        enc.writeValue(a->get(0));
-                        break;
-                    case 2:
-                        if (!old)
-                            FleeceException::_throw(InvalidData, "Invalid replace in delta");
-                        enc.writeValue(a->get(1));
-                        break;
-                    case 3: {
-                        switch(a->get(2)->asInt()) {
-                            case kDeletionCode:
-                                if (!old)
-                                    FleeceException::_throw(InvalidData, "Invalid deletion in delta");
-                                enc.writeValue(Value::kUndefinedValue);
-                                break;
-                            case kTextDiffCode: {
-                                slice oldStr = old->asString();
-                                if (!oldStr)
-                                    FleeceException::_throw(InvalidData, "Invalid text replace in delta");
-                                slice diff = a->get(0)->asString();
-                                if (diff.size == 0)
-                                    FleeceException::_throw(InvalidData, "Invalid text diff in delta");
-                                auto nuuStr = applyStringDelta(oldStr, diff);
-                                enc.writeString(nuuStr);
-                                break;
-                            }
-                            default:
-                                FleeceException::_throw(InvalidData, "Unknown mode in delta");
-                        }
-                        break;
-                    }
-                    default:
-                        FleeceException::_throw(InvalidData, "Bad array count in delta");
-                }
-                break;
-            }
-            case kDict: {
-                // Dict: Incremental update
-                auto deltaDict = (const Dict*)delta;
-                auto oldDict = old ? old->asDict() : nullptr;
-                if (!oldDict)
-                    FleeceException::_throw(InvalidData, "Invalid {} in delta");
-                if (enc.valueIsInBase(oldDict)) {
-                    // If the old dict is in the base, we can create an inherited dict:
-                    enc.beginDictionary(oldDict);
-                    for (Dict::iterator i(deltaDict); i; ++i) {
-                        slice key = i.keyString();
-                        enc.writeKey(key);
-                        ApplyDelta(oldDict->get(key, sk), sk, i.value(), enc);  // recurse into dict item!
-                    }
-                    enc.endDictionary();
+#pragma mark - STRING DELTAS:
+
+
+    string Delta::createStringDelta(slice oldStr, slice nuuStr) {
+        if (nuuStr.size < kMinStringDiffLength
+                || (gCompatibleDeltas && oldStr.size > kMinStringDiffLength))
+            return "";
+        diff_match_patch<string> dmp;
+        dmp.Diff_Timeout = kTextDiffTimeout;
+        auto patches = dmp.patch_make(string(oldStr), string(nuuStr));
+
+        if (gCompatibleDeltas)
+            return dmp.patch_toText(patches);
+
+        long pos = 0, lastPos = 0, correction = 0;
+        stringstream diff;
+        for (auto patch = patches.begin(); patch != patches.end(); ++patch) {
+            pos = patch->start1 + correction;
+            auto &diffs = patch->diffs;
+            for (auto cur_diff = diffs.begin(); cur_diff != diffs.end(); ++cur_diff) {
+                string &text = cur_diff->text;
+                auto length = text.length();
+                if (cur_diff->operation == diff_match_patch<string>::EQUAL) {
+                    pos += length;
                 } else {
-                    // In the general case, have to write a new dict from scratch:
-                    enc.beginDictionary();
-                    // Process the unaffected, deleted, and modified keys:
-                    unsigned deltaKeysUsed = 0;
-                    for (Dict::iterator i(oldDict, sk); i; ++i) {
-                        slice key = i.keyString();
-                        const Value *valueDelta = deltaDict->get(key);
-                        if (valueDelta)
-                            ++deltaKeysUsed;
-                        if (!isDeltaDeletion(valueDelta)) {                 // skip deletions
-                            enc.writeKey(key);
-                            auto oldValue = i.value();
-                            if (valueDelta == nullptr)
-                                enc.writeValue(oldValue, sk);               // unaffected
-                            else
-                                ApplyDelta(oldValue, sk, valueDelta, enc);  // replaced/modified
-                        }
+                    if (pos > lastPos) {
+                        diff << (pos-lastPos) << '=';
                     }
-                    // Now add the inserted keys:
-                    if (deltaKeysUsed < deltaDict->count()) {
-                        for (Dict::iterator i(deltaDict); i; ++i) {
-                            slice key = i.keyString();
-                            if (oldDict->get(key, sk) == nullptr) {
-                                enc.writeKey(key);
-                                ApplyDelta(nullptr, sk, i.value(), enc);  // recurse into insertion
-                            }
-                        }
+                    if (cur_diff->operation == diff_match_patch<string>::DELETE) {
+                        diff << length << '-';
+                        pos += length;
+                    } else {
+                        diff << length << '+' << text << '|';
                     }
-                    enc.endDictionary();
+                    lastPos = pos;
                 }
-                break;
+                if ((off_t)diff.tellp() + 6 >= nuuStr.size)
+                    return "";          // Patch is too long; give up on using a diff
             }
-            default:
-                enc.writeValue(delta);
-                break;
+            correction += patch->length1 - patch->length2;
         }
+        if (oldStr.size > lastPos)
+            diff << (oldStr.size-lastPos) << '=';
+        return diff.str();
     }
 
 
-    alloc_slice ApplyDelta(const Value *old, SharedKeys *sk, slice jsonDelta, bool isJSON5) {
-        assert(jsonDelta);
-        string json5;
-        if (isJSON5) {
-            json5 = ConvertJSON5(string(jsonDelta));
-            jsonDelta = slice(json5);
+    string Delta::applyStringDelta(slice oldStr, slice diff) {
+#if 0
+        // Support for JsonDiffPatch-format string diffs:
+        if (diff[0] == '@') {
+            diff_match_patch<string> dmp;
+            return dmp.patch_apply(dmp.patch_fromText(string(diff)), string(oldStr)).first;
         }
-        alloc_slice fleeceData = JSONConverter::convertJSON(jsonDelta);
-        const Value *fleeceDelta = Value::fromTrustedData(fleeceData);
-        Encoder enc;
-        ApplyDelta(old, sk, fleeceDelta, enc);
-        return enc.extractOutput();
+#endif
+
+        stringstream in{string(diff)};
+        in.exceptions(stringstream::failbit | stringstream::badbit);
+        stringstream nuu;
+        unsigned pos = 0;
+        while (in.peek() >= 0) {
+            char op;
+            unsigned len;
+            in >> len;
+            in >> op;
+            switch (op) {
+                case '=':
+                    throwIf(pos + len > oldStr.size, InvalidData, "Invalid length in text delta");
+                    nuu.write((const char*)&oldStr[pos], len);
+                    pos += len;
+                    break;
+                case '-':
+                    pos += len;
+                    break;
+                case '+': {
+                    TempArray(insertion, char, len);
+                    in.read(insertion, len);
+                    nuu.write(insertion, len);
+                    in >> op;
+                    throwIf(op != '|', InvalidData, "Missing insertion delimiter in text delta");
+                    break;
+                }
+                default:
+                    FleeceException::_throw(InvalidData, "Unknown op in text delta");
+            }
+        }
+        throwIf(pos != oldStr.size, InvalidData, "Length mismatch in text delta");
+        return nuu.str();
     }
 
 }

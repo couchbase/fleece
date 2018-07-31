@@ -54,14 +54,14 @@ static void checkDelta(const char *json1, const char *json2, const char *deltaEx
     }
 
     // Compute the delta and check it:
-    alloc_slice jsonDelta = CreateDelta(v1, nullptr, v2, nullptr, true);
+    alloc_slice jsonDelta = Delta::create(v1, nullptr, v2, nullptr, true);
     CHECK(jsonDelta == slice(deltaExpected));
 
     if (jsonDelta.size > 0) {
         // Now apply the delta to the old value to get the new one:
-        alloc_slice f2_reconstituted = ApplyDelta(v1, nullptr, jsonDelta, true);
+        alloc_slice f2_reconstituted = Delta::apply(v1, nullptr, jsonDelta, true);
         auto v2_reconstituted = Value::fromData(f2_reconstituted);
-        INFO("v2 reconstituted:  " << toJSONString(v2_reconstituted) << "   original:  " << toJSONString(v2));
+        INFO("value2 reconstituted:  " << toJSONString(v2_reconstituted) << " ;  should be:  " << toJSONString(v2) << " ;  delta: " << jsonDelta);
         CHECK(v2_reconstituted->isEqual(v2));
     }
 }
@@ -107,22 +107,38 @@ TEST_CASE("Delta simple dicts", "[delta]") {
 }
 
 
-TEST_CASE("Delta arrays", "[delta]") {
-    // There are no optimizations for array deltas yet; it just treats it as a value change
-    checkDelta("[1, 2]", "[1, 3]", "[[1,3]]");
-}
-
-
 TEST_CASE("Delta nested dicts", "[delta]") {
     checkDelta("{foo: {bar: [1], baz:{goo:[3]},wow:0}}", "{foo: {bar: [1], baz:{goo:[3]},wow:0}}", nullptr);
     checkDelta("{foo: {bar: [1]}, goo: 2}", "{foo: {bar: [1]}, goo: 3}", "{goo:3}");
-    checkDelta("{foo: {bar: [1]}, goo: 2}", "{foo: {bar: [2]}, goo: 2}", "{foo:{bar:[[2]]}}");
-    checkDelta("{foo: {bar: [1]}, goo: [2]}", "{foo: {bar: [2]}, goo: [3]}", "{foo:{bar:[[2]]},goo:[[3]]}");
+    checkDelta("{foo: {bar: [1]}, goo: 2}", "{foo: {bar: [2]}, goo: 2}", "{foo:{bar:{\"0\":2}}}");
+    checkDelta("{foo: {bar: [1]}, goo: [2]}", "{foo: {bar: [2]}, goo: [3]}", "{foo:{bar:{\"0\":2}},goo:{\"0\":3}}");
+}
+
+
+TEST_CASE("Delta simple arrays", "[delta]") {
+    checkDelta("[]", "[]", nullptr);
+    checkDelta("[1, 2, 3]", "[1, 2, 3]", nullptr);
+
+    checkDelta("[]", "[1, 2, 3]", "[[1,2,3]]");
+    checkDelta("[1, 2, 3]", "[]", "[[]]");
+    checkDelta("[1, 2, 3]", "[1, 2, 3, 4, 5]", "{\"3-\":[4,5]}");
+    checkDelta("[1, 2, 3, 4, 5]", "[1, 2, 3]", "{\"3-\":[]}");
+    checkDelta("[1, 2, 3]", "[1, 9, 3]", "{\"1\":9}");
+    checkDelta("[1, 2, 3]", "[4, 5, 6]", "{\"0\":4,\"1\":5,\"2\":6}");
+}
+
+
+TEST_CASE("Delta nested arrays", "[delta]") {
+    checkDelta("[[[]]]", "[[[]]]", nullptr);
+    checkDelta("[1,[2,[3]]]", "[1,[2,[3]]]", nullptr);
+    checkDelta("[1, [21, 22], 3]", "[1, [21, 222], 3]", "{\"1\":{\"1\":222}}");
+    checkDelta("[1, [21, 22], 3]", "[1, [21, 22, 23], 3]", "{\"1\":{\"2-\":[23]}}");
+    checkDelta("[1, {'hi':'there'}, 3]", "[1, {'hi':'ho'}, 3]", "{\"1\":{hi:\"ho\"}}");
 }
 
 
 static void checkDelta(const Value *left, const Value *right, const Value *expectedDelta) {
-    alloc_slice jsonDelta = CreateDelta(left, nullptr, right, nullptr);
+    alloc_slice jsonDelta = Delta::create(left, nullptr, right, nullptr);
     alloc_slice fleeceDelta = JSONConverter::convertJSON(jsonDelta);
     const Value *delta = Value::fromData(fleeceDelta);
     INFO("Delta of " << toJSONString(left) << "  -->  " << toJSONString(right) << "  ==  " << toJSONString(expectedDelta) << "  ...  got  " << toJSONString(delta));

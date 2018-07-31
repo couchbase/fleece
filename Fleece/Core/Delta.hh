@@ -5,38 +5,61 @@
 //
 
 #pragma once
-#include "slice.hh"
+#include "Fleece.hh"
+#include <string>
 
 namespace fleece {
-    class Value;
-    class Encoder;
     class JSONEncoder;
-    class SharedKeys;
 
 
-    /** Returns JSON that describes the changes to turn the value `old` into `nuu`.
-        If the values are equal, returns nullslice. */
-    alloc_slice CreateDelta(const Value *old, SharedKeys *oldSK,
-                            const Value *nuu, SharedKeys *nuuSK,
-                            bool json5 =false);
+    class Delta {
+    public:
 
-    /** Writes JSON that describes the changes to turn the value `old` into `nuu`.
-        If the values are equal, writes nothing and returns false. */
-    bool CreateDelta(const Value *old, SharedKeys *oldSK,
-                     const Value *nuu, SharedKeys *nuuSK,
-                     JSONEncoder&);
+        /** Returns JSON that describes the changes to turn the value `old` into `nuu`.
+            If the values are equal, returns nullslice. */
+            static alloc_slice create(const Value *old, SharedKeys *oldSK,
+                                      const Value *nuu, SharedKeys *nuuSK,
+                                      bool json5 =false);
+
+        /** Writes JSON that describes the changes to turn the value `old` into `nuu`.
+            If the values are equal, writes nothing and returns false. */
+        static bool create(const Value *old, SharedKeys *oldSK,
+                           const Value *nuu, SharedKeys *nuuSK,
+                           JSONEncoder&);
 
 
-    /** Applies the JSON data created by `CreateDelta` to the value `old`, which must be equal
-        to the `old` value originally passed to `CreateDelta`, and returns a Fleece document
-        equal to the original `nuu` value.
-        If the delta is malformed or can't be applied to `old`, throws a FleeceException. */
-    alloc_slice ApplyDelta(const Value *old, SharedKeys*, slice jsonDelta, bool isJSON5 =false);
+        /** Applies the JSON delta created by `create` to the value `old` (which must be equal
+            to the `old` value originally passed to `create`) and returns a Fleece document
+            equal to the original `nuu` value.
+            If the delta is malformed or can't be applied to `old`, throws a FleeceException. */
+        static alloc_slice apply(const Value *old, SharedKeys*,
+                                 slice jsonDelta, bool isJSON5 =false);
 
-    /** Applies the (parsed) JSON data created by `CreateDelta` to the value `old`, which must be
-        equal to the `old` value originally passed to `CreateDelta`, and writes the corresponding
-        `nuu` value to the encoder.
-        If the delta is malformed or can't be applied to `old`, throws a FleeceException. */
-    void ApplyDelta(const Value *old, SharedKeys*, const Value* NONNULL delta, Encoder&);
+        /** Applies the (parsed) JSON delta produced by `create` to the value `old` (which must be
+            equal to the `old` value originally passed to `create`) and writes the corresponding
+            `nuu` value to the Fleece encoder.
+            If the delta is malformed or can't be applied to `old`, throws a FleeceException. */
+        static void apply(const Value *old, SharedKeys*, const Value* NONNULL delta, Encoder&);
 
+    private:
+        struct pathItem;
+
+        Delta(SharedKeys *oldSK, SharedKeys *nuuSK, JSONEncoder&);
+        bool _write(const Value *old, const Value *nuu, pathItem *path);
+
+        Delta(SharedKeys *oldSK, Encoder&);
+        void _apply(const Value *old, const Value* NONNULL delta);
+        void _applyArray(const Value* old, const Array* NONNULL delta);
+        void _patchArray(const Array* NONNULL old, const Dict* NONNULL delta);
+        void _patchDict(const Dict* NONNULL old, const Dict* NONNULL delta);
+
+        void writePath(pathItem*);
+        static bool isDeltaDeletion(const Value *delta);
+        static std::string createStringDelta(slice oldStr, slice nuuStr);
+        static std::string applyStringDelta(slice oldStr, slice diff);
+
+        SharedKeys *_oldSK, *_nuuSK;
+        JSONEncoder* _encoder;
+        Encoder* _decoder;
+    };
 }
