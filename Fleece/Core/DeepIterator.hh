@@ -54,8 +54,11 @@ namespace fleece {
         /** The path to the current value. */
         const std::vector<PathComponent>& path() const  {return _path;}
 
+        /** The path expressed as a string in JavaScript syntax using "." and "[]". */
+        std::string pathString() const;
+
         /** The path to the current value, in JSONPointer (RFC 6901) syntax. */
-        std::string jsonPointer();
+        std::string jsonPointer() const;
 
         /** The Dict key of the current value, or nullkey if the parent is an Array. */
         slice keyString() const                         {return _path.empty() ? nullslice : _path.back().key;}

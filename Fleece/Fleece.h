@@ -515,6 +515,9 @@ extern "C" {
                                 FLPathComponent* * FLNONNULL outPath,
                                 size_t* FLNONNULL outDepth);
 
+    /** Returns the current path in JavaScript format. */
+    FLSliceResult FLDeepIterator_GetPathString(FLDeepIterator FLNONNULL);
+
     /** Returns the current path in JSONPointer format (RFC 6901). */
     FLSliceResult FLDeepIterator_GetJSONPointer(FLDeepIterator FLNONNULL);
 

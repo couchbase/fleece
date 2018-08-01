@@ -377,6 +377,10 @@ void FLDeepIterator_GetPath(FLDeepIterator i, FLPathComponent* *outPath, size_t 
     *outDepth = path.size();
 }
 
+FLSliceResult FLDeepIterator_GetPathString(FLDeepIterator i) {
+    return toSliceResult(alloc_slice(i->pathString()));
+}
+
 FLSliceResult FLDeepIterator_GetJSONPointer(FLDeepIterator i) {
     return toSliceResult(alloc_slice(i->jsonPointer()));
 }

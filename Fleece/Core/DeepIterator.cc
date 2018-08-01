@@ -93,7 +93,30 @@ namespace fleece {
     }
 
 
-    std::string DeepIterator::jsonPointer() {
+    std::string DeepIterator::pathString() const {
+        std::stringstream s;
+        for (auto &component : _path) {
+            if (component.key) {
+                bool quote = false;
+                for (auto cp = (const char*)component.key.buf; cp < component.key.end(); ++cp) {
+                    if (!isalnum(*cp) && *cp != '_') {
+                        quote = true;
+                        break;
+                    }
+                }
+                s << (quote ? "[\"" : ".");
+                s.write((char*)component.key.buf, component.key.size);
+                if (quote)
+                    s << "\"]";
+            } else {
+                s << '[' << component.index << ']';
+            }
+        }
+        return s.str();
+    }
+
+
+    std::string DeepIterator::jsonPointer() const {
         if (_path.empty())
             return "/";
         std::stringstream s;
