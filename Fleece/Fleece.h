@@ -66,6 +66,18 @@ extern "C" {
         size_t size;
     } FLSlice;
 
+    /** A heap-allocated, reference-counted slice. This type is really just a hint in an API
+        that the data can be retained instead of copied, by assigning it to an alloc_slice.
+        You can just treat it like FLSlice. */
+#ifdef __cplusplus
+    struct FLHeapSlice : public FLSlice {
+        FLHeapSlice()                           {buf = nullptr; size = 0;}
+        FLHeapSlice(const void *b, size_t s)    {buf = b; size = s;}
+    };
+#else
+    typedef FLSlice FLHeapSlice;
+#endif
+
     /** Creates a slice pointing to the contents of a C string. */
     static inline FLSlice FLStr(const char *str) {
         FLSlice foo = { str, str ? strlen(str) : 0 };

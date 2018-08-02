@@ -35,7 +35,7 @@
 #endif
 #endif
 
-struct FLSlice; struct FLSliceResult;
+struct FLSlice; struct FLHeapSlice; struct FLSliceResult;
 
 namespace fleece {
     struct slice;
@@ -236,7 +236,9 @@ namespace fleece {
         explicit alloc_slice(const std::string &str)
             :alloc_slice(slice(str)) {}
         explicit alloc_slice(FLSlice);
+        alloc_slice(FLHeapSlice);
         alloc_slice(FLSliceResult&&);
+        alloc_slice(const FLSliceResult&);
 
         ~alloc_slice()                                      {if (buf) release();}
         alloc_slice(const alloc_slice&) noexcept;
@@ -255,6 +257,7 @@ namespace fleece {
 
         alloc_slice& operator= (pure_slice s);
         alloc_slice& operator= (FLSlice);
+        alloc_slice& operator= (FLHeapSlice) noexcept;
 
         explicit operator bool() const                      {return buf != nullptr;}
 
@@ -272,8 +275,9 @@ namespace fleece {
 
         static void release(slice s) noexcept               {((alloc_slice*)&s)->release();}
 
-        operator FLSlice () const;
-        explicit operator FLSliceResult ();
+        operator FLSlice () const noexcept;
+        operator FLHeapSlice () const noexcept;
+        explicit operator FLSliceResult () noexcept;
 
         void shorten(size_t s)                          {assert(s <= size); pure_slice::setSize(s);}
 
