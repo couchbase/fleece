@@ -96,7 +96,7 @@ namespace fleece { namespace hashtree {
 
 
     // Internal class representing an interior node
-    struct Interior {
+    class Interior {
     public:
         const Leaf* findNearest(hash_t hash) const;
         unsigned leafCount() const;

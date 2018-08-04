@@ -10,6 +10,7 @@
 #include "NodeRef.hh"
 #include "RefCounted.hh"
 #include "slice.hh"
+#include "TempArray.hh"
 
 namespace fleece { namespace hashtree {
     using namespace std;
@@ -257,7 +258,7 @@ namespace fleece { namespace hashtree {
             // `nodes` is an in-memory staging area for the child nodes I'll write.
             // The offsets in it are absolute positions in the encoded output,
             // except for ones that are bitmaps.
-            Node nodes[n];
+            TempArray(nodes, Node, n);
 
             // Write interior nodes, then leaf node Values, then leaf node keys.
             // This keeps the keys near me, for better locality of reference.
@@ -311,6 +312,9 @@ namespace fleece { namespace hashtree {
             out << " }";
         }
 
+        static void operator delete(void* ptr) {
+            ::operator delete(ptr);
+        }
 
     private:
         static MutableInterior* newNode(unsigned capacity, MutableInterior *orig =nullptr) {
@@ -319,6 +323,10 @@ namespace fleece { namespace hashtree {
 
         static void* operator new(size_t size, unsigned capacity) {
             return ::operator new(size + capacity*sizeof(NodeRef));
+        }
+
+        static void operator delete(void* ptr, unsigned capacity) {
+            ::operator delete(ptr, capacity);
         }
 
         static MutableInterior* mutableCopy(const Interior *iNode, unsigned extraCapacity =0) {
