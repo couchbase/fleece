@@ -292,6 +292,7 @@ namespace fleece {
 #pragma mark - ALLOC_SLICE
 
 
+#ifndef NDEBUG
 #if FL_EMBEDDED
     static constexpr size_t kHeapAlignmentMask = 0x03;
 #else
@@ -300,6 +301,7 @@ namespace fleece {
     static inline bool isHeapAligned(const void *p) {
         return ((size_t)p & kHeapAlignmentMask) == 0;
     }
+#endif
 
 
 // FL_DETECT_COPIES enables a check for unnecessary copying of alloc_slice memory: situations
