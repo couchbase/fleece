@@ -44,7 +44,7 @@ delta: {"1": "fi", "3-": ["fum"]}
 
 old:   [{"first": "Mad", "last": "Hatter"}, {"first": "Cheshire", "last": "Puss"}]
 new:   [{"first": "Mad", "last": "Hatter"}, {"first": "Cheshire", "last": "Cat"}]
-delta: ["1": {"last": "Cat"}]
+delta: {"1": {"last": "Cat"}}
 
 old:   "The fog comes in on little cat feet"
 new:   "The dog comes in on little cat feet"
