@@ -10,7 +10,7 @@
 #include "Array.hh"
 #include "HeapArray.hh"
 
-namespace fleece {
+namespace fleece { namespace impl {
     class MutableDict;
 
 
@@ -51,4 +51,5 @@ namespace fleece {
 
         using iterator = internal::HeapArray::iterator;
     };
-}
+    
+} }

@@ -21,7 +21,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace fleeceapi {
+namespace fleece {
 
     template <class Native>
     class MDictIterator;
@@ -78,14 +78,14 @@ namespace fleeceapi {
             if (i != _map.end())
                 return !i->second.isEmpty();
             else
-                return _dict.get(key, sharedKeys()) != nullptr;
+                return _dict.get(key) != nullptr;
         }
 
         /** Returns the value for the given key, or an empty MValue if it's not found. */
         const MValue& get(slice key) const {
             auto i = _map.find(key);
             if (i == _map.end()) {
-                auto value = _dict.get(key, sharedKeys());
+                auto value = _dict.get(key);
                 if (!value)
                     return MValue::empty;
                 // Add an entry to the map, so that the caller can associate a Native object
@@ -109,7 +109,7 @@ namespace fleeceapi {
                 i->second = val;
             } else {
                 // Not found; check _dict:
-                if (_dict.get(key, sharedKeys())) {
+                if (_dict.get(key)) {
                     if (val.isEmpty())
                         --_count;
                 } else {
@@ -137,7 +137,7 @@ namespace fleeceapi {
                 return true;
             MCollection::mutate();
             _map.clear();
-            for (Dict::iterator i(_dict, sharedKeys()); i; ++i)
+            for (Dict::iterator i(_dict); i; ++i)
                 _map.emplace(i.keyString(), MValue::empty);
             _count = 0;
             return true;
@@ -150,21 +150,17 @@ namespace fleeceapi {
             if (!MCollection::isMutated()) {
                 enc << _dict;
             } else {
-                auto sk = MCollection::context()->sharedKeys();
                 enc.beginDict(count());
                 for (iterator i(*this); i; ++i) {
                     enc.writeKey(i.key());
                     if (i.value())
-                        enc.writeValue(i.value(), sk);
+                        enc.writeValue(i.value());
                     else
-                        i.mvalue().encodeTo(enc, sk);
+                        i.mvalue().encodeTo(enc);
                 }
                 enc.endDict();
             }
         }
-
-        /** The FLSharedKeys used for encoding dictionary keys. */
-        FLSharedKeys sharedKeys() const     {return MCollection::context()->sharedKeys();}
 
     private:
         typename MDict::MapType::iterator _setInMap(slice key, const MValue &val) {

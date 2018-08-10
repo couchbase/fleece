@@ -43,56 +43,54 @@
  Bits marked "-" are reserved and should be set to zero.
 */
 
-namespace fleece {
-    namespace internal {
+namespace fleece { namespace impl { namespace internal {
 
-        enum {
-            kNarrow = 2,
-            kWide   = 4
-        };
+    enum {
+        kNarrow = 2,
+        kWide   = 4
+    };
 
-        static inline int width(bool wide) { return wide ? kWide : kNarrow; }
+    static inline int width(bool wide) { return wide ? kWide : kNarrow; }
 
-        // The actual tags used in the encoded data, i.e. high 4 bits of 1st byte:
-        enum tags : uint8_t {
-            kShortIntTag = 0,
-            kIntTag,
-            kFloatTag,
-            kSpecialTag,
-            kStringTag,
-            kBinaryTag,
-            kArrayTag,
-            kDictTag,
-            kPointerTagFirst = 8            // 9...15 are also pointers
-        };
+    // The actual tags used in the encoded data, i.e. high 4 bits of 1st byte:
+    enum tags : uint8_t {
+        kShortIntTag = 0,
+        kIntTag,
+        kFloatTag,
+        kSpecialTag,
+        kStringTag,
+        kBinaryTag,
+        kArrayTag,
+        kDictTag,
+        kPointerTagFirst = 8            // 9...15 are also pointers
+    };
 
-        // Interpretation of ss-- in a special value:
-        enum {
-            kSpecialValueNull       = 0x00,       // 0000
-            kSpecialValueUndefined  = 0x0C,       // 1100
-            kSpecialValueFalse      = 0x04,       // 0100
-            kSpecialValueTrue       = 0x08,       // 1000
-        };
+    // Interpretation of ss-- in a special value:
+    enum {
+        kSpecialValueNull       = 0x00,       // 0000
+        kSpecialValueUndefined  = 0x0C,       // 1100
+        kSpecialValueFalse      = 0x04,       // 0100
+        kSpecialValueTrue       = 0x08,       // 1000
+    };
 
-        // Min/max length of string that will be considered for sharing
-        // (not part of the format, just a heuristic used by the encoder & Obj-C decoder)
-        static const size_t kMinSharedStringSize =  2;
-        static const size_t kMaxSharedStringSize = 15;
+    // Min/max length of string that will be considered for sharing
+    // (not part of the format, just a heuristic used by the encoder & Obj-C decoder)
+    static const size_t kMinSharedStringSize =  2;
+    static const size_t kMaxSharedStringSize = 15;
 
-        // Minimum array count that has to be stored outside the header
-        static const uint32_t kLongArrayCount = 0x07FF;
+    // Minimum array count that has to be stored outside the header
+    static const uint32_t kLongArrayCount = 0x07FF;
 
-        class Pointer;
-        class HeapValue;
-        class ValueSlot;
-        class HeapCollection;
-        class HeapArray;
-        class HeapDict;
+    class Pointer;
+    class HeapValue;
+    class ValueSlot;
+    class HeapCollection;
+    class HeapArray;
+    class HeapDict;
 
 #ifndef NDEBUG
-        extern std::atomic<unsigned> gTotalComparisons;
-        extern bool gDisableNecessarySharedKeysCheck;
+    extern std::atomic<unsigned> gTotalComparisons;
+    extern bool gDisableNecessarySharedKeysCheck;
 #endif
 
-    }
-}
+} } }

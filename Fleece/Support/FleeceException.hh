@@ -18,7 +18,7 @@
 
 #pragma once
 #include <stdexcept>
-#include "PlatformCompat.hh"
+#include "fleece/Base.hh"
 
 namespace fleece {
 

@@ -26,7 +26,7 @@
 
 using namespace std;
 
-namespace fleece {
+namespace fleece { namespace impl {
 
     // The `offset` type is interpreted as a little-endian offset down from the containing object.
     #define deref(OFF, TYPE)    ((const TYPE*)((uint8_t*)this - (OFF)))
@@ -179,4 +179,4 @@ namespace fleece {
         out << "]\n";
     }
 
-}
+} }

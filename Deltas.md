@@ -2,7 +2,7 @@
 
 The Fleece API includes functions that behave like the Unix tools `diff` and `patch`: they find the differences between two Fleece values, encode them in a compact format called a "delta", and can reconstitute the second value given the first and the delta. This provides an efficient way to store the change history of a document, or to transmit a change over a network.
 
-In the C API (Fleece.h), the functions are `FLCreateDelta`, `FLEncodeDelta`, `FLApplyDelta`, and `FLEncodeApplyingDelta`. In the public C++ API (FleeceCpp.hh) they are methods of the `Delta` class. See the headers for documentation.
+In the C API (Fleece.h), the functions are `FLCreateDelta`, `FLEncodeDelta`, `FLApplyDelta`, and `FLEncodeApplyingDelta`. In the public C++ API (Fleece.hh) they are methods of the `Delta` class. See the headers for documentation.
 
 ## Delta Format
 

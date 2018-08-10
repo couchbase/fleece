@@ -16,10 +16,10 @@
 // limitations under the License.
 //
 
-#include "slice.hh"
+#include "fleece/slice.hh"
 #include "encode.h"
 #include "decode.h"
-#include "Fleece.h" // for FLSlice and FLSliceResult
+#include "fleece/Fleece.h" // for FLSlice and FLSliceResult
 #include <algorithm>
 #include <assert.h>
 #include <math.h>

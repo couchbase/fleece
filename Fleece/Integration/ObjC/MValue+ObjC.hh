@@ -30,22 +30,22 @@
 // FleeceArray and FleeceDictionary override this to return their MCollection instance.
 // This is used by the implementation of MValue<id>::encodeNative(), below.
 @interface NSObject (FleeceMutable)
-@property (readonly, nonatomic) fleeceapi::MCollection<id>* fl_collection;
+@property (readonly, nonatomic) fleece::MCollection<id>* fl_collection;
 @end
 
 
 @interface FleeceArray ()
 
-- (instancetype) initWithMValue: (fleeceapi::MValue<id>*)mv
-                       inParent: (fleeceapi::MCollection<id>*)parent;
+- (instancetype) initWithMValue: (fleece::MValue<id>*)mv
+                       inParent: (fleece::MCollection<id>*)parent;
 
 @end
 
 
 @interface FleeceDict ()
 
-- (instancetype) initWithMValue: (fleeceapi::MValue<id>*)mv
-                       inParent: (fleeceapi::MCollection<id>*)parent;
+- (instancetype) initWithMValue: (fleece::MValue<id>*)mv
+                       inParent: (fleece::MCollection<id>*)parent;
 
 @end
 

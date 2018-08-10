@@ -10,7 +10,7 @@
 #include "HashTree+Internal.hh"
 #include <ostream>
 
-namespace fleece { namespace hashtree {
+namespace fleece { namespace impl { namespace hashtree {
     class MutableNode;
 
 
@@ -72,4 +72,4 @@ namespace fleece { namespace hashtree {
         size_t _addr;
     };
 
-} }
+} } }

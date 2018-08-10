@@ -9,12 +9,12 @@
 #include "ValueSlot.hh"
 #include <vector>
 
-namespace fleece {
+namespace fleece { namespace impl {
     class MutableArray;
     class MutableDict;
-}
+} }
 
-namespace fleece { namespace internal {
+namespace fleece { namespace impl { namespace internal {
 
     class HeapArray : public HeapCollection {
     public:
@@ -83,8 +83,8 @@ namespace fleece { namespace internal {
 
 
     protected:
-        friend class fleece::Array;
-        friend class fleece::MutableArray;
+        friend class impl::Array;
+        friend class impl::MutableArray;
 
         ~HeapArray() =default;
         const ValueSlot* first();          // Called by Array::impl
@@ -101,4 +101,5 @@ namespace fleece { namespace internal {
         // The original Array that this is a mutable copy of.
         const Array* _source {nullptr};
     };
-} }
+    
+} } }

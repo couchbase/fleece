@@ -17,7 +17,7 @@
 //
 
 #include "Encoder.hh"
-#include "Fleece.hh"
+#include "FleeceImpl.hh"
 #include "Pointer.hh"
 #include "SharedKeys.hh"
 #include "MutableDict.hh"
@@ -33,7 +33,7 @@
 #include <stdlib.h>
 
 
-namespace fleece {
+namespace fleece { namespace impl {
     using namespace internal;
 
     typedef uint8_t byte;
@@ -54,6 +54,13 @@ namespace fleece {
      _strings(10)
     {
         push(kSpecialTag, 1);                   // Top-level 'array' is just a single item
+    }
+
+    Encoder::~Encoder() {
+    }
+
+    void Encoder::setSharedKeys(SharedKeys *s) {
+        _sharedKeys = s;
     }
 
     void Encoder::setBase(slice base, bool markExternPointers, size_t cutoff) {
@@ -111,12 +118,20 @@ namespace fleece {
         return itemPos;
     }
 
-    alloc_slice Encoder::extractOutput() {
+    alloc_slice Encoder::finish() {
         end();
-        alloc_slice out = _out.extractOutput();
+        alloc_slice out = _out.finish();
         if (out.size == 0)
             out.reset();
         return out;
+    }
+
+    Retained<Doc> Encoder::finishDoc() {
+        Retained<Doc> doc = new Doc(finish(),
+                                    Doc::kTrusted,
+                                    _sharedKeys,
+                                    (_markExternPtrs ? _base : nullslice));
+        return doc;
     }
 
     // Returns position in the stream of the next write. Pads stream to even pos if necessary.
@@ -406,7 +421,7 @@ namespace fleece {
 
 
     void Encoder::writeValue(const Value *value,
-                             const SharedKeys *sk,
+                             const SharedKeys* &sk,
                              const WriteValueFunc *writeNestedValue)
     {
         if (valueIsInBase(value) && !isNarrowValue(value)) {
@@ -449,12 +464,14 @@ namespace fleece {
                 ++_copyingCollection;
                 auto dict = (const Dict*)value;
                 if (dict->isMutable()) {
-                    dict->heapDict()->writeTo(*this, sk/*, writeNestedValue*/);
+                    dict->heapDict()->writeTo(*this/*, writeNestedValue*/);
                 } else {
                     auto iter = dict->begin();
                     beginDictionary(iter.count());
                     for (; iter; ++iter) {
                         if (!writeNestedValue || !(*writeNestedValue)(iter.key(), iter.value())) {
+                            if (!sk && iter.key()->isInteger())
+                                sk = value->sharedKeys();
                             writeKey(iter.key(), sk);
                             writeValue(iter.value(), sk, writeNestedValue);
                         }
@@ -468,6 +485,13 @@ namespace fleece {
                 FleeceException::_throw(UnknownValue, "illegal tag in Value; corrupt data?");
         }
     }
+
+
+    void Encoder::writeValue(const Value* NONNULL value, const WriteValueFunc *fn) {
+        const SharedKeys *sk = nullptr;
+        writeValue(value, sk, fn);
+    }
+
 
 
 #pragma mark - POINTERS:
@@ -573,7 +597,6 @@ namespace fleece {
             addedKey(str);
         } else {
             throwIf(!key->isInteger(), InvalidData, "Key must be a string or integer");
-            throwIf(!valueIsInBase(key), InvalidData, "Numeric key must be in the base");
             writeKey((int)key->asInt());
         }
     }
@@ -765,5 +788,4 @@ namespace fleece {
         }
     }
 
-}
-
+} }

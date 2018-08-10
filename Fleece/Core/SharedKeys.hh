@@ -17,25 +17,24 @@
 //
 
 #pragma once
+#include "RefCounted.hh"
 #include "StringTable.hh"
 #include <vector>
 
 
-namespace fleece {
+namespace fleece { namespace impl {
 
     /** Keeps track of a set of dictionary keys that are stored in abbreviated (small integer) form.
 
         Encoders can be configured to use an instance of this, and will use it to abbreviate keys
-        that are given to them as strings. (Note: This class is not thread-safe!)
-
-        The Dict class does _not_ use this; it has no outside context to be able to find shared
-        state such as this object. The client is responsible for using this object to map between
-        string and integer keys when using Dicts that were encoded this way. */
-    class SharedKeys {
+        that are given to them as strings. (Note: This class is not thread-safe!) */
+    class SharedKeys : public RefCounted {
     public:
 
         SharedKeys() { }
-        virtual ~SharedKeys();
+        SharedKeys(slice stateData)             {loadFrom(stateData);}
+
+        alloc_slice stateData() const;
 
         /** Sets the maximum number of keys that can be stored in the mapping. After this number is
             reached, `encode` won't add any new strings. (Defaults to 2048.) */
@@ -82,6 +81,10 @@ namespace fleece {
         void setPlatformStringForKey(int key, PlatformString) const;
         PlatformString platformStringForKey(int key) const;
 
+    protected:
+        virtual ~SharedKeys() =default;
+        virtual bool loadFrom(slice stateData);
+        
     private:
         friend class PersistentSharedKeys;
 
@@ -132,7 +135,7 @@ namespace fleece {
         virtual void write(slice encodedData) =0;
 
         /** Updates state given previously-persisted data. */
-        bool loadFrom(slice fleeceData);
+        bool loadFrom(slice fleeceData) override;
 
     private:
         virtual int add(slice str) override;
@@ -141,4 +144,4 @@ namespace fleece {
         size_t _committedPersistedCount {0};    // Number of strings written to storage & committed
         bool _inTransaction {false};            // True during a transaction
     };
-}
+} }

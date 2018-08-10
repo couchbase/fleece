@@ -17,7 +17,7 @@
 //
 
 #include "Delta.hh"
-#include "Fleece.hh"
+#include "FleeceImpl.hh"
 #include "JSONEncoder.hh"
 #include "JSONConverter.hh"
 #include "JSON5.hh"
@@ -28,7 +28,7 @@
 #include <unordered_set>
 
 
-namespace fleece {
+namespace fleece { namespace impl {
     using namespace std;
 
 
@@ -53,33 +53,25 @@ namespace fleece {
 #pragma mark - CREATING DELTAS:
 
 
-    alloc_slice Delta::create(const Value *old, SharedKeys *oldSK,
-                              const Value *nuu, SharedKeys *nuuSK,
-                              bool json5)
+    alloc_slice Delta::create(const Value *old, const Value *nuu, bool json5)
     {
         JSONEncoder enc;
         enc.setJSON5(json5);
-        if (create(old, oldSK, nuu, nuuSK, enc))
-            return enc.extractOutput();
+        if (create(old, nuu, enc))
+            return enc.finish();
         else
             return {};
     }
 
 
-    bool Delta::create(const Value *old, SharedKeys *oldSK,
-                       const Value *nuu, SharedKeys *nuuSK,
-                       JSONEncoder &enc)
+    bool Delta::create(const Value *old, const Value *nuu, JSONEncoder &enc)
     {
-        return Delta(oldSK, nuuSK, enc)._write(old, nuu, nullptr);
+        return Delta(enc)._write(old, nuu, nullptr);
     }
 
 
-    Delta::Delta(SharedKeys *oldSK,
-          SharedKeys *nuuSK,
-          JSONEncoder &enc)
-    :_oldSK(oldSK)
-    ,_nuuSK(nuuSK)
-    ,_encoder(&enc)
+    Delta::Delta(JSONEncoder &enc)
+    :_encoder(&enc)
     { }
 
 
@@ -128,9 +120,9 @@ namespace fleece {
                     pathItem curLevel = {path, false, nullslice};
                     unsigned oldKeysSeen = 0;
                     // Iterate all the new & maybe-changed keys:
-                    for (Dict::iterator i_nuu(nuuDict, _nuuSK); i_nuu; ++i_nuu) {
+                    for (Dict::iterator i_nuu(nuuDict); i_nuu; ++i_nuu) {
                         slice key = i_nuu.keyString();
-                        auto oldValue = oldDict->get(key, _oldSK);
+                        auto oldValue = oldDict->get(key);
                         if (oldValue)
                             ++oldKeysSeen;
                         curLevel.key = key;
@@ -138,9 +130,9 @@ namespace fleece {
                     }
                     // Iterate all the deleted keys:
                     if (oldKeysSeen < oldDict->count()) {
-                        for (Dict::iterator i_old(oldDict, _oldSK); i_old; ++i_old) {
+                        for (Dict::iterator i_old(oldDict); i_old; ++i_old) {
                             slice key = i_old.keyString();
-                            if (nuuDict->get(key, _nuuSK) == nullptr) {
+                            if (nuuDict->get(key) == nullptr) {
                                 curLevel.key = key;
                                 _write(i_old.value(), nullptr, &curLevel);
                             }
@@ -172,7 +164,7 @@ namespace fleece {
                             writePath(&curLevel);
                             _encoder->beginArray();
                             for (; index < nuuCount; ++index) {
-                                _encoder->writeValue(nuuArray->get(index), _nuuSK);
+                                _encoder->writeValue(nuuArray->get(index));
                             }
                             _encoder->endArray();
                         }
@@ -223,7 +215,7 @@ namespace fleece {
 #pragma mark - APPLYING DELTAS:
 
 
-    alloc_slice Delta::apply(const Value *old, SharedKeys *sk, slice jsonDelta, bool isJSON5) {
+    alloc_slice Delta::apply(const Value *old, slice jsonDelta, bool isJSON5) {
         assert(jsonDelta);
         string json5;
         if (isJSON5) {
@@ -233,19 +225,18 @@ namespace fleece {
         alloc_slice fleeceData = JSONConverter::convertJSON(jsonDelta);
         const Value *fleeceDelta = Value::fromTrustedData(fleeceData);
         Encoder enc;
-        apply(old, sk, fleeceDelta, enc);
-        return enc.extractOutput();
+        apply(old, fleeceDelta, enc);
+        return enc.finish();
     }
 
 
-    void Delta::apply(const Value *old, SharedKeys *sk, const Value* NONNULL delta, Encoder &enc) {
-        Delta(sk, enc)._apply(old, delta);
+    void Delta::apply(const Value *old, const Value* NONNULL delta, Encoder &enc) {
+        Delta(enc)._apply(old, delta);
     }
 
 
-    Delta::Delta(SharedKeys *oldSK, Encoder &decoder)
-    :_oldSK(oldSK)
-    ,_decoder(&decoder)
+    Delta::Delta(Encoder &decoder)
+    :_decoder(&decoder)
     { }
 
 
@@ -330,7 +321,7 @@ namespace fleece {
             for (Dict::iterator i(delta); i; ++i) {
                 slice key = i.keyString();
                 _decoder->writeKey(key);
-                _apply(old->get(key, _oldSK), i.value());  // recurse into dict item!
+                _apply(old->get(key), i.value());  // recurse into dict item!
             }
             _decoder->endDictionary();
         } else {
@@ -338,7 +329,7 @@ namespace fleece {
             _decoder->beginDictionary();
             // Process the unaffected, deleted, and modified keys:
             unsigned deltaKeysUsed = 0;
-            for (Dict::iterator i(old, _oldSK); i; ++i) {
+            for (Dict::iterator i(old); i; ++i) {
                 slice key = i.keyString();
                 const Value *valueDelta = delta->get(key);
                 if (valueDelta)
@@ -347,7 +338,7 @@ namespace fleece {
                     _decoder->writeKey(key);
                     auto oldValue = i.value();
                     if (valueDelta == nullptr)
-                        _decoder->writeValue(oldValue, _oldSK);               // unaffected
+                        _decoder->writeValue(oldValue);               // unaffected
                     else
                         _apply(oldValue, valueDelta);  // replaced/modified
                 }
@@ -356,7 +347,7 @@ namespace fleece {
             if (deltaKeysUsed < delta->count()) {
                 for (Dict::iterator i(delta); i; ++i) {
                     slice key = i.keyString();
-                    if (old->get(key, _oldSK) == nullptr) {
+                    if (old->get(key) == nullptr) {
                         _decoder->writeKey(key);
                         _apply(nullptr, i.value());  // recurse into insertion
                     }
@@ -510,4 +501,4 @@ namespace fleece {
         return nuu.str();
     }
 
-}
+} }

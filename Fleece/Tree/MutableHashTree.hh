@@ -6,14 +6,15 @@
 
 #pragma once
 #include "HashTree.hh"
-#include "slice.hh"
+#include "fleece/slice.hh"
 #include <functional>
 #include <memory>
 
-namespace fleece {
+namespace fleece { namespace impl {
     class MutableArray;
     class MutableDict;
     class Encoder;
+
     namespace hashtree {
         class MutableInterior;
         class NodeRef;
@@ -59,4 +60,5 @@ namespace fleece {
 
         friend class HashTree::iterator;
     };
-}
+    
+} }

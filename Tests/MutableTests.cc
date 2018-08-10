@@ -17,12 +17,13 @@
 //
 
 #include "FleeceTests.hh"
-#include "Fleece.hh"
+#include "FleeceImpl.hh"
 #include "MutableArray.hh"
 #include "MutableDict.hh"
-#include "ExternResolver.hh"
+#include "Doc.hh"
 
 namespace fleece {
+    using namespace fleece::impl;
 
     TEST_CASE("MutableArray type checking", "[Mutable]") {
         Retained<MutableArray> ma = MutableArray::newArray();
@@ -171,7 +172,7 @@ namespace fleece {
         enc << "totoro";
         enc << "catbus";
         enc.endArray();
-        alloc_slice data = enc.extractOutput();
+        alloc_slice data = enc.finish();
         const Array* fleeceArray = Value::fromData(data)->asArray();
 
         CHECK(fleeceArray->asMutable() == nullptr);
@@ -374,7 +375,7 @@ namespace fleece {
             enc << "totoro";
             enc << "catbus";
             enc.endArray();
-            data = enc.extractOutput();
+            data = enc.finish();
         }
         std::cerr << "Original data: " << data << "\n";
         const Array* fleeceArray = Value::fromData(data)->asArray();
@@ -386,7 +387,7 @@ namespace fleece {
         enc2 << fleeceArray->get(1);
         enc2 << fleeceArray->get(0);
         enc2.endArray();
-        alloc_slice data2 = enc2.extractOutput();
+        alloc_slice data2 = enc2.finish();
         std::cerr << "Delta:         " << data2 << "\n";
         REQUIRE(data2.size == 8);      // may change slightly with changes to implementation
 
@@ -421,7 +422,7 @@ namespace fleece {
             enc.writeKey("Size");
             enc << "XXXL";
             enc.endDictionary();
-            data = enc.extractOutput();
+            data = enc.finish();
         }
         const Dict* originalDict = Value::fromData(data)->asDict();
         std::cerr << "Contents:      " << originalDict->toJSON().asString() << "\n";
@@ -465,7 +466,7 @@ namespace fleece {
         enc2.setBase(data);
         enc2.reuseBaseStrings();
         enc2.writeValue(update);
-        alloc_slice delta = enc2.extractOutput();
+        alloc_slice delta = enc2.finish();
         REQUIRE(delta.size == 32);      // may change slightly with changes to implementation
 
         // Check that removeAll works when there's a base Dict:
@@ -526,7 +527,7 @@ namespace fleece {
         enc.setBase(data);
         enc.reuseBaseStrings();
         enc.writeValue(mp);
-        alloc_slice data2 = enc.extractOutput();
+        alloc_slice data2 = enc.finish();
 
         alloc_slice combined(data);
         combined.append(data2);
@@ -537,21 +538,21 @@ namespace fleece {
     }
 
 
-    TEST_CASE("ExternResolver", "[Mutable]") {
-        auto data = readTestFile("1person.fleece");
-        auto person = Value::fromTrustedData(data)->asDict();
+    TEST_CASE("Extern Destination", "[Mutable]") {
+        Retained<Doc> doc = new Doc(readTestFile("1person.fleece"));
+        auto person = doc->asDict();
 
         Retained<MutableDict> mp = MutableDict::newDict(person);
         mp->set("age"_sl, 666);
 
         Encoder enc;
-        enc.setBase(data, true);
+        enc.setBase(doc->data(), true);
         enc.reuseBaseStrings();
         enc.writeValue(mp);
-        alloc_slice data2 = enc.extractOutput();
+        alloc_slice data2 = enc.finish();
 
-        ExternResolver xr(data2, data);
-        const Dict* newDict = Value::fromData(data2)->asDict();
+        Retained<Doc> newDoc = new Doc(data2, Doc::kTrusted, nullptr, doc->data());
+        const Dict* newDict = newDoc->asDict();
         std::cerr << "Contents:      " << newDict->toJSON().asString() << "\n";
 
         CHECK(newDict->get("age"_sl)->asInt() == 666);
@@ -577,7 +578,7 @@ namespace fleece {
                 enc.reuseBaseStrings();
             }
             enc.writeValue(md);
-            alloc_slice data2 = enc.extractOutput();
+            alloc_slice data2 = enc.finish();
             md = nullptr;
 
             // Append live part of old data and the delta, to produce the new data:
@@ -638,7 +639,7 @@ namespace fleece {
                 enc.reuseBaseStrings();
             }
             enc.writeValue(md);
-            alloc_slice data2 = enc.extractOutput();
+            alloc_slice data2 = enc.finish();
             md = nullptr;
 
             // Append live part of old data and the delta, to produce the new data:
@@ -669,7 +670,7 @@ namespace fleece {
 
         Encoder enc;
         enc.writeValue(dict);
-        alloc_slice packedData = enc.extractOutput();
+        alloc_slice packedData = enc.finish();
         std::cerr << "(Packed data would be " << packedData.size << " bytes)\n";
     }
 

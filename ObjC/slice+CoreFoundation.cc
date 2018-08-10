@@ -16,7 +16,7 @@
 // limitations under the License.
 //
 
-#include "slice.hh"
+#include "fleece/slice.hh"
 
 #if __APPLE__
 #include <CoreFoundation/CFString.h>

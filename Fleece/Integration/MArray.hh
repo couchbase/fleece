@@ -20,7 +20,7 @@
 #include "MCollection.hh"
 #include <vector>
 
-namespace fleeceapi {
+namespace fleece {
 
     /** A mutable array of MValues. */
     template <class Native>
@@ -144,14 +144,13 @@ namespace fleeceapi {
             if (!MCollection::isMutated()) {
                 enc << _array;
             } else {
-                auto sk = MCollection::context()->sharedKeys();
                 enc.beginArray(count());
                 uint32_t i = 0;
                 for (auto &v : _vec) {
                     if (v.isEmpty())
-                        enc.writeValue(_array[i], sk);
+                        enc.writeValue(_array[i]);
                     else
-                        v.encodeTo(enc, sk);
+                        v.encodeTo(enc);
                     ++i;
                 }
                 enc.endArray();

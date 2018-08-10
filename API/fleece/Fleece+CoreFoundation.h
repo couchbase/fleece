@@ -18,7 +18,7 @@
 
 #pragma once
 #include <CoreFoundation/CFBase.h>
-#include "Fleece.h"
+#include "fleece/Fleece.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,7 +32,7 @@ extern "C" {
 
     /** Returns a Value as a corresponding CoreFoundation object.
         Caller must CFRelease the result. */
-    CFTypeRef FLValue_CopyCFObject(FLValue, FLSharedKeys);
+    CFTypeRef FLValue_CopyCFObject(FLValue);
 
 
     /** Same as FLDictGet, but takes the key as a CFStringRef. */
@@ -54,7 +54,7 @@ extern "C" {
 
     
     /** Returns a Value as a corresponding (autoreleased) Foundation object. */
-    id FLValue_GetNSObject(FLValue, FLSharedKeys, NSMapTable *sharedStrings);
+    id FLValue_GetNSObject(FLValue, NSMapTable *sharedStrings);
 
 
     /** Same as FLDictGet, but takes the key as an NSString. */

@@ -17,10 +17,10 @@
 //
 
 #pragma once
-#include "slice.hh"
+#include "fleece/slice.hh"
 #include "Value.hh"
 
-namespace fleece {
+namespace fleece { namespace impl {
 
     class MutableHashTree;
 
@@ -67,4 +67,4 @@ namespace fleece {
         friend class hashtree::MutableInterior;
         friend class MutableHashTree;
     };
-}
+} }

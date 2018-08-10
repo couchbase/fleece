@@ -22,9 +22,8 @@
 #include "varint.hh"
 #include <algorithm>
 
-namespace fleece { namespace internal {
+namespace fleece { namespace impl { namespace internal {
     using namespace std;
-    using namespace internal;
 
 
     ValueSlot::ValueSlot(Null)
@@ -227,4 +226,4 @@ namespace fleece { namespace internal {
         return mval;
     }
 
-} }
+} } }

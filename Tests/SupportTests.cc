@@ -17,7 +17,7 @@
 //
 
 #include "FleeceTests.hh"
-#include "Fleece.hh"
+#include "FleeceImpl.hh"
 #include "TempArray.hh"
 #include "sliceIO.hh"
 #include <iostream>

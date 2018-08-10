@@ -8,7 +8,7 @@
 #include "Dict.hh"
 #include "HeapDict.hh"
 
-namespace fleece {
+namespace fleece { namespace impl {
     class MutableArray;
 
 
@@ -42,4 +42,5 @@ namespace fleece {
 
         using iterator = internal::HeapDict::iterator;
     };
-}
+    
+} }

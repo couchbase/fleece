@@ -16,11 +16,9 @@
 		270FA27F1BF53CEA005DCB13 /* Writer.cc in Sources */ = {isa = PBXBuildFile; fileRef = 270FA2711BF53CEA005DCB13 /* Writer.cc */; };
 		270FA2801BF53CEA005DCB13 /* Writer.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2721BF53CEA005DCB13 /* Writer.hh */; };
 		270FA2811BF53CEA005DCB13 /* Endian.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2731BF53CEA005DCB13 /* Endian.hh */; };
-		270FA2821BF53CEA005DCB13 /* slice.cc in Sources */ = {isa = PBXBuildFile; fileRef = 270FA2741BF53CEA005DCB13 /* slice.cc */; };
-		270FA2831BF53CEA005DCB13 /* slice.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2751BF53CEA005DCB13 /* slice.hh */; };
-		270FA2841BF53CEA005DCB13 /* varint.cc in Sources */ = {isa = PBXBuildFile; fileRef = 270FA2761BF53CEA005DCB13 /* varint.cc */; };
 		270FA2851BF53CEA005DCB13 /* varint.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2771BF53CEA005DCB13 /* varint.hh */; };
 		270FA2871BF53D32005DCB13 /* forestdb_endian.h in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2861BF53D32005DCB13 /* forestdb_endian.h */; };
+		271507F7212349B8005FE6E8 /* API_ValueTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 271507F6212349B8005FE6E8 /* API_ValueTests.cc */; };
 		27298E3C1C00F812000CFBA8 /* JSONConverter.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27298E3A1C00F812000CFBA8 /* JSONConverter.cc */; };
 		27298E651C00F8A9000CFBA8 /* jsonsl.c in Sources */ = {isa = PBXBuildFile; fileRef = 27298E491C00F8A9000CFBA8 /* jsonsl.c */; settings = {COMPILER_FLAGS = "-Wno-unreachable-code-break"; }; };
 		27298E661C00F8A9000CFBA8 /* jsonsl.h in Headers */ = {isa = PBXBuildFile; fileRef = 27298E4A1C00F8A9000CFBA8 /* jsonsl.h */; };
@@ -30,7 +28,6 @@
 		272E5A551BF7FE9C00848580 /* libFleece.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 270FA25C1BF53CAD005DCB13 /* libFleece.a */; };
 		272E5A5D1BF800A100848580 /* EncoderTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 272E5A5B1BF800A100848580 /* EncoderTests.cc */; };
 		272E5A5F1BF91DBE00848580 /* ObjCTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 272E5A5E1BF91DBE00848580 /* ObjCTests.mm */; };
-		272E5A611BF91F6C00848580 /* slice+CoreFoundation.cc in Sources */ = {isa = PBXBuildFile; fileRef = 272E5A601BF91F6C00848580 /* slice+CoreFoundation.cc */; };
 		2734B89E1F8583FF00BE5249 /* MArray.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8951F8583FF00BE5249 /* MArray.hh */; };
 		2734B89F1F8583FF00BE5249 /* MValue.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8961F8583FF00BE5249 /* MValue.hh */; };
 		2734B8A01F8583FF00BE5249 /* MArray+ObjC.h in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8971F8583FF00BE5249 /* MArray+ObjC.h */; };
@@ -50,15 +47,12 @@
 		274D824F209A8D01008BB39F /* MutableTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 274D824E209A8D01008BB39F /* MutableTests.cc */; };
 		274D8252209CF9B3008BB39F /* HeapValue.cc in Sources */ = {isa = PBXBuildFile; fileRef = 274D8250209CF9B3008BB39F /* HeapValue.cc */; };
 		274D8253209CF9B3008BB39F /* HeapValue.hh in Headers */ = {isa = PBXBuildFile; fileRef = 274D8251209CF9B3008BB39F /* HeapValue.hh */; };
-		274D8256209D1764008BB39F /* RefCounted.cc in Sources */ = {isa = PBXBuildFile; fileRef = 274D8254209D1764008BB39F /* RefCounted.cc */; };
 		274D8257209D1764008BB39F /* RefCounted.hh in Headers */ = {isa = PBXBuildFile; fileRef = 274D8255209D1764008BB39F /* RefCounted.hh */; };
 		275CED521D3EF7BE001DE46C /* FleeceException.cc in Sources */ = {isa = PBXBuildFile; fileRef = 275CED501D3EF7BE001DE46C /* FleeceException.cc */; };
 		275CED531D3EF7BE001DE46C /* FleeceException.hh in Headers */ = {isa = PBXBuildFile; fileRef = 275CED511D3EF7BE001DE46C /* FleeceException.hh */; };
 		276D15461E007D3000543B1B /* JSON5.cc in Sources */ = {isa = PBXBuildFile; fileRef = 276D15441E007D3000543B1B /* JSON5.cc */; };
 		276D15471E007D3000543B1B /* JSON5.hh in Headers */ = {isa = PBXBuildFile; fileRef = 276D15451E007D3000543B1B /* JSON5.hh */; };
 		276D15491E008E7A00543B1B /* JSON5Tests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 276D15481E008E7A00543B1B /* JSON5Tests.cc */; };
-		2770153C1D59645A008BADD7 /* cdecode.c in Sources */ = {isa = PBXBuildFile; fileRef = 277015351D596436008BADD7 /* cdecode.c */; };
-		2770153D1D59645A008BADD7 /* cencode.c in Sources */ = {isa = PBXBuildFile; fileRef = 277015371D596436008BADD7 /* cencode.c */; };
 		2776AA21208678AA004ACE85 /* DeepIterator.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2776AA1F208678AA004ACE85 /* DeepIterator.cc */; };
 		2776AA22208678AA004ACE85 /* DeepIterator.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2776AA20208678AA004ACE85 /* DeepIterator.hh */; };
 		2776AA782093C982004ACE85 /* sliceIO.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2776AA762093C982004ACE85 /* sliceIO.cc */; };
@@ -68,16 +62,18 @@
 		277F45B0208E871000A0D159 /* HashTree.hh in Headers */ = {isa = PBXBuildFile; fileRef = 277F45AE208E871000A0D159 /* HashTree.hh */; };
 		277F45B1208E871000A0D159 /* HashTree.cc in Sources */ = {isa = PBXBuildFile; fileRef = 277F45AF208E871000A0D159 /* HashTree.cc */; };
 		277F45B4208FDA1800A0D159 /* HashTreeTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27C8DF09208521B600A99BFC /* HashTreeTests.cc */; };
-		278163B51CE69CA800B94E32 /* Fleece_C_impl.cc in Sources */ = {isa = PBXBuildFile; fileRef = 278163B31CE69CA800B94E32 /* Fleece_C_impl.cc */; settings = {COMPILER_FLAGS = "-Wno-return-type-c-linkage"; }; };
-		278163B61CE69CA800B94E32 /* Fleece.h in Headers */ = {isa = PBXBuildFile; fileRef = 278163B41CE69CA800B94E32 /* Fleece.h */; };
+		278163B51CE69CA800B94E32 /* Fleece.cc in Sources */ = {isa = PBXBuildFile; fileRef = 278163B31CE69CA800B94E32 /* Fleece.cc */; settings = {COMPILER_FLAGS = "-Wno-return-type-c-linkage"; }; };
 		278163B91CE6BB8C00B94E32 /* C_Test.c in Sources */ = {isa = PBXBuildFile; fileRef = 278163B81CE6BB8C00B94E32 /* C_Test.c */; };
 		278163BD1CE7A72300B94E32 /* KeyTree.hh in Headers */ = {isa = PBXBuildFile; fileRef = 278163BB1CE7A72300B94E32 /* KeyTree.hh */; };
+		27867AF2211E27E5007BDA5F /* Doc.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27867AF0211E27E5007BDA5F /* Doc.cc */; };
+		27867AF3211E27E5007BDA5F /* Doc.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27867AF1211E27E5007BDA5F /* Doc.hh */; };
 		2797BCAC1C0FBFDE00E5C991 /* StringTable.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2797BCAA1C0FBFDE00E5C991 /* StringTable.cc */; };
 		2797BCAD1C0FBFDE00E5C991 /* StringTable.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2797BCAB1C0FBFDE00E5C991 /* StringTable.hh */; };
 		279AC52B1C07776A002C80DB /* ValueTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 279AC52A1C07776A002C80DB /* ValueTests.cc */; };
 		279AC5341C096872002C80DB /* fleece_tool.cc in Sources */ = {isa = PBXBuildFile; fileRef = 279AC5331C096872002C80DB /* fleece_tool.cc */; };
 		279AC5381C096B5C002C80DB /* libFleece.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 270FA25C1BF53CAD005DCB13 /* libFleece.a */; };
 		279AC53C1C097941002C80DB /* Value+Dump.cc in Sources */ = {isa = PBXBuildFile; fileRef = 279AC53B1C097941002C80DB /* Value+Dump.cc */; };
+		27A2F73B21248DA50081927B /* FLSlice.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A2F73A21248DA40081927B /* FLSlice.h */; };
 		27A924CF1D9C32E800086206 /* Path.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27A924CD1D9C32E800086206 /* Path.cc */; };
 		27A924D01D9C32E800086206 /* Path.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27A924CE1D9C32E800086206 /* Path.hh */; };
 		27AEFAC221090FF400106ED8 /* Delta.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27AEFAC021090FF400106ED8 /* Delta.cc */; };
@@ -108,7 +104,6 @@
 		27D7217A1F8E8EEA00AA4458 /* Dict.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27CA08401F6B0E9400FF8C71 /* Dict.hh */; };
 		27D7217B1F8E8EEA00AA4458 /* StringTable.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2797BCAB1C0FBFDE00E5C991 /* StringTable.hh */; };
 		27D7217C1F8E8EEA00AA4458 /* JSONEncoder.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27FE87F21E53E43200C5CF3F /* JSONEncoder.hh */; };
-		27D7217D1F8E8EEA00AA4458 /* slice.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2751BF53CEA005DCB13 /* slice.hh */; };
 		27D7217E1F8E8EEA00AA4458 /* MArray+ObjC.h in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8971F8583FF00BE5249 /* MArray+ObjC.h */; };
 		27D7217F1F8E8EEA00AA4458 /* varint.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2771BF53CEA005DCB13 /* varint.hh */; };
 		27D721801F8E8EEA00AA4458 /* MValue.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8961F8583FF00BE5249 /* MValue.hh */; };
@@ -121,10 +116,60 @@
 		27D721871F8E8EEA00AA4458 /* Writer.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2721BF53CEA005DCB13 /* Writer.hh */; };
 		27D721881F8E8EEA00AA4458 /* Encoder.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA26F1BF53CEA005DCB13 /* Encoder.hh */; };
 		27D721891F8E8EEA00AA4458 /* Path.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27A924CE1D9C32E800086206 /* Path.hh */; };
-		27D7218A1F8E8EEA00AA4458 /* Fleece.h in Headers */ = {isa = PBXBuildFile; fileRef = 278163B41CE69CA800B94E32 /* Fleece.h */; };
 		27D7218B1F8E8EEA00AA4458 /* FleeceException.hh in Headers */ = {isa = PBXBuildFile; fileRef = 275CED511D3EF7BE001DE46C /* FleeceException.hh */; };
 		27D7218C1F8E8EEA00AA4458 /* SharedKeys.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27E3DD411DB6A14200F2872D /* SharedKeys.hh */; };
 		27D721961F8E900400AA4458 /* libFleeceMutableObjC.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D721901F8E8EEA00AA4458 /* libFleeceMutableObjC.a */; };
+		27DE2E922125FA1700123597 /* varint.cc in Sources */ = {isa = PBXBuildFile; fileRef = 270FA2761BF53CEA005DCB13 /* varint.cc */; };
+		27DE2E962125FA1700123597 /* RefCounted.cc in Sources */ = {isa = PBXBuildFile; fileRef = 274D8254209D1764008BB39F /* RefCounted.cc */; };
+		27DE2E9D2125FA1700123597 /* slice+CoreFoundation.cc in Sources */ = {isa = PBXBuildFile; fileRef = 272E5A601BF91F6C00848580 /* slice+CoreFoundation.cc */; };
+		27DE2E9E2125FA1700123597 /* slice.cc in Sources */ = {isa = PBXBuildFile; fileRef = 270FA2741BF53CEA005DCB13 /* slice.cc */; };
+		27DE2EB22125FA1700123597 /* JSON5.hh in Headers */ = {isa = PBXBuildFile; fileRef = 276D15451E007D3000543B1B /* JSON5.hh */; };
+		27DE2EB32125FA1700123597 /* RefCounted.hh in Headers */ = {isa = PBXBuildFile; fileRef = 274D8255209D1764008BB39F /* RefCounted.hh */; };
+		27DE2EB42125FA1700123597 /* Delta.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27AEFAC121090FF400106ED8 /* Delta.hh */; };
+		27DE2EB52125FA1700123597 /* jsonsl.h in Headers */ = {isa = PBXBuildFile; fileRef = 27298E4A1C00F8A9000CFBA8 /* jsonsl.h */; };
+		27DE2EB62125FA1700123597 /* FileUtils.hh in Headers */ = {isa = PBXBuildFile; fileRef = 277A06B220B36D1A00970354 /* FileUtils.hh */; };
+		27DE2EB72125FA1700123597 /* CatchHelper.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27E3DD4B1DB6C32400F2872D /* CatchHelper.hh */; };
+		27DE2EB82125FA1700123597 /* diff_match_patch.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27AEFAC721091A8C00106ED8 /* diff_match_patch.hh */; };
+		27DE2EB92125FA1700123597 /* MDict.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2734B89C1F8583FF00BE5249 /* MDict.hh */; };
+		27DE2EBA2125FA1700123597 /* FleeceDocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8AB1F859AEC00BE5249 /* FleeceDocument.h */; };
+		27DE2EBB2125FA1700123597 /* sliceIO.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2776AA772093C982004ACE85 /* sliceIO.hh */; };
+		27DE2EBC2125FA1700123597 /* KeyTree.hh in Headers */ = {isa = PBXBuildFile; fileRef = 278163BB1CE7A72300B94E32 /* KeyTree.hh */; };
+		27DE2EBD2125FA1700123597 /* Array.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C4ACAB1CE5146500938365 /* Array.hh */; };
+		27DE2EBE2125FA1700123597 /* DeepIterator.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2776AA20208678AA004ACE85 /* DeepIterator.hh */; };
+		27DE2EBF2125FA1700123597 /* MArray.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8951F8583FF00BE5249 /* MArray.hh */; };
+		27DE2EC02125FA1700123597 /* Dict.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27CA08401F6B0E9400FF8C71 /* Dict.hh */; };
+		27DE2EC12125FA1700123597 /* StringTable.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2797BCAB1C0FBFDE00E5C991 /* StringTable.hh */; };
+		27DE2EC22125FA1700123597 /* JSONEncoder.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27FE87F21E53E43200C5CF3F /* JSONEncoder.hh */; };
+		27DE2EC32125FA1700123597 /* NodeRef.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27B802D620DD750E00599DF0 /* NodeRef.hh */; };
+		27DE2EC42125FA1700123597 /* TempArray.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27F666462017FE7C00A8ED31 /* TempArray.hh */; };
+		27DE2EC52125FA1700123597 /* Doc.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27867AF1211E27E5007BDA5F /* Doc.hh */; };
+		27DE2EC62125FA1700123597 /* MArray+ObjC.h in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8971F8583FF00BE5249 /* MArray+ObjC.h */; };
+		27DE2EC72125FA1700123597 /* varint.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2771BF53CEA005DCB13 /* varint.hh */; };
+		27DE2EC82125FA1700123597 /* HashTree.hh in Headers */ = {isa = PBXBuildFile; fileRef = 277F45AE208E871000A0D159 /* HashTree.hh */; };
+		27DE2EC92125FA1700123597 /* MValue.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8961F8583FF00BE5249 /* MValue.hh */; };
+		27DE2ECA2125FA1700123597 /* Value.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA26B1BF53CEA005DCB13 /* Value.hh */; };
+		27DE2ECB2125FA1700123597 /* Endian.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2731BF53CEA005DCB13 /* Endian.hh */; };
+		27DE2ECC2125FA1700123597 /* HeapArray.hh in Headers */ = {isa = PBXBuildFile; fileRef = 274D824B209A7577008BB39F /* HeapArray.hh */; };
+		27DE2ECD2125FA1700123597 /* forestdb_endian.h in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2861BF53D32005DCB13 /* forestdb_endian.h */; };
+		27DE2ECE2125FA1700123597 /* MDict+ObjC.h in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8991F8583FF00BE5249 /* MDict+ObjC.h */; };
+		27DE2ECF2125FA1700123597 /* FLSlice.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A2F73A21248DA40081927B /* FLSlice.h */; };
+		27DE2ED02125FA1700123597 /* Pointer.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27F25A8D20AA053D00E181FA /* Pointer.hh */; };
+		27DE2ED12125FA1700123597 /* ValueSlot.hh in Headers */ = {isa = PBXBuildFile; fileRef = 274D8247209A5906008BB39F /* ValueSlot.hh */; };
+		27DE2ED22125FA1700123597 /* MCollection.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2734B89B1F8583FF00BE5249 /* MCollection.hh */; };
+		27DE2ED32125FA1700123597 /* CaseListReporter.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27E3DD4A1DB6C32400F2872D /* CaseListReporter.hh */; };
+		27DE2ED42125FA1700123597 /* Writer.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2721BF53CEA005DCB13 /* Writer.hh */; };
+		27DE2ED52125FA1700123597 /* Encoder.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA26F1BF53CEA005DCB13 /* Encoder.hh */; };
+		27DE2ED62125FA1700123597 /* MutableHashTree.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C8DF052084102900A99BFC /* MutableHashTree.hh */; };
+		27DE2ED72125FA1700123597 /* Path.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27A924CE1D9C32E800086206 /* Path.hh */; };
+		27DE2ED82125FA1700123597 /* HeapDict.hh in Headers */ = {isa = PBXBuildFile; fileRef = 274D8243209A3A77008BB39F /* HeapDict.hh */; };
+		27DE2ED92125FA1700123597 /* HeapValue.hh in Headers */ = {isa = PBXBuildFile; fileRef = 274D8251209CF9B3008BB39F /* HeapValue.hh */; };
+		27DE2EDA2125FA1700123597 /* FleeceException.hh in Headers */ = {isa = PBXBuildFile; fileRef = 275CED511D3EF7BE001DE46C /* FleeceException.hh */; };
+		27DE2EDB2125FA1700123597 /* SharedKeys.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27E3DD411DB6A14200F2872D /* SharedKeys.hh */; };
+		27DE2EE32125FAC600123597 /* libFleeceBase.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27DE2EDF2125FA1700123597 /* libFleeceBase.a */; };
+		27DE2EE82125FB2100123597 /* cdecode.c in Sources */ = {isa = PBXBuildFile; fileRef = 277015351D596436008BADD7 /* cdecode.c */; };
+		27DE2EE92125FB2100123597 /* cencode.c in Sources */ = {isa = PBXBuildFile; fileRef = 277015371D596436008BADD7 /* cencode.c */; };
+		27DE2EEA2125FC5A00123597 /* Writer.cc in Sources */ = {isa = PBXBuildFile; fileRef = 270FA2711BF53CEA005DCB13 /* Writer.cc */; };
+		27DE2EEB2125FC9300123597 /* FleeceException.cc in Sources */ = {isa = PBXBuildFile; fileRef = 275CED501D3EF7BE001DE46C /* FleeceException.cc */; };
 		27E3DD421DB6A14200F2872D /* SharedKeys.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27E3DD401DB6A14200F2872D /* SharedKeys.cc */; };
 		27E3DD431DB6A14200F2872D /* SharedKeys.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27E3DD411DB6A14200F2872D /* SharedKeys.hh */; };
 		27E3DD4C1DB6C32400F2872D /* CaseListReporter.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27E3DD4A1DB6C32400F2872D /* CaseListReporter.hh */; };
@@ -133,8 +178,6 @@
 		27F25A8420A6560A00E181FA /* LibC++Debug.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27F25A8320A6560900E181FA /* LibC++Debug.cc */; };
 		27F25A8E20AA053D00E181FA /* Pointer.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27F25A8C20AA053D00E181FA /* Pointer.cc */; };
 		27F25A8F20AA053D00E181FA /* Pointer.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27F25A8D20AA053D00E181FA /* Pointer.hh */; };
-		27F25A9220AA1E7100E181FA /* ExternResolver.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27F25A9020AA1E7100E181FA /* ExternResolver.cc */; };
-		27F25A9320AA1E7100E181FA /* ExternResolver.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27F25A9120AA1E7100E181FA /* ExternResolver.hh */; };
 		27F666442017E26700A8ED31 /* SupportTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27F666432017E26700A8ED31 /* SupportTests.cc */; };
 		27F666472017FE7C00A8ED31 /* TempArray.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27F666462017FE7C00A8ED31 /* TempArray.hh */; };
 		27FE87F31E53E43200C5CF3F /* JSONEncoder.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27FE87F11E53E43200C5CF3F /* JSONEncoder.cc */; };
@@ -162,6 +205,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 270FA25B1BF53CAD005DCB13;
 			remoteInfo = Fleece;
+		};
+		27DE2EE02125FA9500123597 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 270FA2541BF53CAD005DCB13 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 27DE2E882125FA1700123597;
+			remoteInfo = FleeceBase;
 		};
 		27F25A7A20A6523E00E181FA /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -194,9 +244,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		270515521D9053BE00D62D05 /* Fleece+CoreFoundation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Fleece+CoreFoundation.h"; sourceTree = "<group>"; };
 		270515531D9058F200D62D05 /* Fleece+CoreFoundation.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "Fleece+CoreFoundation.mm"; sourceTree = "<group>"; };
-		270515551D90596000D62D05 /* Fleece_C_impl.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Fleece_C_impl.hh; sourceTree = "<group>"; };
+		270515551D90596000D62D05 /* Fleece+ImplGlue.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "Fleece+ImplGlue.hh"; sourceTree = "<group>"; };
 		270FA25C1BF53CAD005DCB13 /* libFleece.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libFleece.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		270FA26A1BF53CEA005DCB13 /* Value.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Value.cc; sourceTree = "<group>"; };
 		270FA26B1BF53CEA005DCB13 /* Value.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Value.hh; sourceTree = "<group>"; };
@@ -207,12 +256,17 @@
 		270FA2721BF53CEA005DCB13 /* Writer.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Writer.hh; sourceTree = "<group>"; };
 		270FA2731BF53CEA005DCB13 /* Endian.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Endian.hh; sourceTree = "<group>"; };
 		270FA2741BF53CEA005DCB13 /* slice.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = slice.cc; sourceTree = "<group>"; };
-		270FA2751BF53CEA005DCB13 /* slice.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = slice.hh; sourceTree = "<group>"; };
 		270FA2761BF53CEA005DCB13 /* varint.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = varint.cc; sourceTree = "<group>"; };
 		270FA2771BF53CEA005DCB13 /* varint.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = varint.hh; sourceTree = "<group>"; };
 		270FA2861BF53D32005DCB13 /* forestdb_endian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = forestdb_endian.h; sourceTree = "<group>"; };
-		271507F0212254DE005FE6E8 /* FLSlice.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FLSlice.h; sourceTree = "<group>"; };
-		2715BA1D1D820C690061D92E /* PlatformCompat.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = PlatformCompat.hh; sourceTree = "<group>"; };
+		271507E92122381E005FE6E8 /* Fleece+CoreFoundation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Fleece+CoreFoundation.h"; sourceTree = "<group>"; };
+		271507EA2122381E005FE6E8 /* Fleece.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Fleece.h; sourceTree = "<group>"; };
+		271507EB2122381E005FE6E8 /* Fleece.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Fleece.hh; sourceTree = "<group>"; };
+		271507EC2122381E005FE6E8 /* Mutable.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Mutable.hh; sourceTree = "<group>"; };
+		271507ED2122381E005FE6E8 /* PlatformCompat.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = PlatformCompat.hh; sourceTree = "<group>"; };
+		271507EE2122381E005FE6E8 /* slice.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = slice.hh; sourceTree = "<group>"; };
+		271507EF21223A02005FE6E8 /* Base.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Base.hh; sourceTree = "<group>"; };
+		271507F6212349B8005FE6E8 /* API_ValueTests.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = API_ValueTests.cc; sourceTree = "<group>"; };
 		27298E3A1C00F812000CFBA8 /* JSONConverter.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSONConverter.cc; sourceTree = "<group>"; };
 		27298E491C00F8A9000CFBA8 /* jsonsl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jsonsl.c; sourceTree = "<group>"; };
 		27298E4A1C00F8A9000CFBA8 /* jsonsl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = jsonsl.h; sourceTree = "<group>"; };
@@ -292,18 +346,20 @@
 		277F45AE208E871000A0D159 /* HashTree.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HashTree.hh; sourceTree = "<group>"; };
 		277F45AF208E871000A0D159 /* HashTree.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = HashTree.cc; sourceTree = "<group>"; };
 		277F45B3208E9A9100A0D159 /* Bitmap.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Bitmap.hh; sourceTree = "<group>"; };
-		278163B31CE69CA800B94E32 /* Fleece_C_impl.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Fleece_C_impl.cc; sourceTree = "<group>"; };
-		278163B41CE69CA800B94E32 /* Fleece.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Fleece.h; sourceTree = "<group>"; };
-		278163B71CE6A07A00B94E32 /* Fleece.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Fleece.hh; sourceTree = "<group>"; };
+		278163B31CE69CA800B94E32 /* Fleece.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Fleece.cc; sourceTree = "<group>"; };
+		278163B71CE6A07A00B94E32 /* FleeceImpl.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FleeceImpl.hh; sourceTree = "<group>"; };
 		278163B81CE6BB8C00B94E32 /* C_Test.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = C_Test.c; sourceTree = "<group>"; };
 		278163BA1CE7A72300B94E32 /* KeyTree.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = KeyTree.cc; sourceTree = "<group>"; };
 		278163BB1CE7A72300B94E32 /* KeyTree.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = KeyTree.hh; sourceTree = "<group>"; };
+		27867AF0211E27E5007BDA5F /* Doc.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Doc.cc; sourceTree = "<group>"; };
+		27867AF1211E27E5007BDA5F /* Doc.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Doc.hh; sourceTree = "<group>"; };
 		2797BCAA1C0FBFDE00E5C991 /* StringTable.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StringTable.cc; sourceTree = "<group>"; };
 		2797BCAB1C0FBFDE00E5C991 /* StringTable.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = StringTable.hh; sourceTree = "<group>"; };
 		279AC52A1C07776A002C80DB /* ValueTests.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ValueTests.cc; sourceTree = "<group>"; };
 		279AC5311C096872002C80DB /* fleece */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = fleece; sourceTree = BUILT_PRODUCTS_DIR; };
 		279AC5331C096872002C80DB /* fleece_tool.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = fleece_tool.cc; sourceTree = "<group>"; };
 		279AC53B1C097941002C80DB /* Value+Dump.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "Value+Dump.cc"; sourceTree = "<group>"; };
+		27A2F73A21248DA40081927B /* FLSlice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FLSlice.h; sourceTree = "<group>"; };
 		27A924CD1D9C32E800086206 /* Path.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Path.cc; sourceTree = "<group>"; };
 		27A924CE1D9C32E800086206 /* Path.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Path.hh; sourceTree = "<group>"; };
 		27AEFAC021090FF400106ED8 /* Delta.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Delta.cc; sourceTree = "<group>"; };
@@ -329,7 +385,7 @@
 		27D721241F8C4B7500AA4458 /* MDictIterator.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MDictIterator.hh; sourceTree = "<group>"; };
 		27D721501F8D8F3F00AA4458 /* MContext.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MContext.hh; sourceTree = "<group>"; };
 		27D721901F8E8EEA00AA4458 /* libFleeceMutableObjC.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libFleeceMutableObjC.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		27D7F8791E5521CC0088FADF /* FleeceCpp.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FleeceCpp.hh; sourceTree = "<group>"; };
+		27DE2EDF2125FA1700123597 /* libFleeceBase.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libFleeceBase.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		27E3DD401DB6A14200F2872D /* SharedKeys.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SharedKeys.cc; sourceTree = "<group>"; };
 		27E3DD411DB6A14200F2872D /* SharedKeys.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = SharedKeys.hh; sourceTree = "<group>"; };
 		27E3DD471DB6B86000F2872D /* catch.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = catch.hpp; sourceTree = "<group>"; };
@@ -344,8 +400,6 @@
 		27F25A8320A6560900E181FA /* LibC++Debug.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "LibC++Debug.cc"; sourceTree = "<group>"; };
 		27F25A8C20AA053D00E181FA /* Pointer.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Pointer.cc; sourceTree = "<group>"; };
 		27F25A8D20AA053D00E181FA /* Pointer.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Pointer.hh; sourceTree = "<group>"; };
-		27F25A9020AA1E7100E181FA /* ExternResolver.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ExternResolver.cc; sourceTree = "<group>"; };
-		27F25A9120AA1E7100E181FA /* ExternResolver.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ExternResolver.hh; sourceTree = "<group>"; };
 		27F666432017E26700A8ED31 /* SupportTests.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SupportTests.cc; sourceTree = "<group>"; };
 		27F666462017FE7C00A8ED31 /* TempArray.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = TempArray.hh; sourceTree = "<group>"; };
 		27FE87F11E53E43200C5CF3F /* JSONEncoder.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSONEncoder.cc; sourceTree = "<group>"; };
@@ -357,6 +411,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27DE2EE32125FAC600123597 /* libFleeceBase.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -384,6 +439,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		27DE2EB02125FA1700123597 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -395,6 +457,7 @@
 				275C67DB1BFBA0F4008AA9E7 /* Fleece.md */,
 				27C4AC961CDFFDA100938365 /* Performance.md */,
 				275F7F5C210FBFFC00861DE8 /* Deltas.md */,
+				271507DE212225B3005FE6E8 /* API */,
 				270FA25E1BF53CAD005DCB13 /* Fleece */,
 				279AC5321C096872002C80DB /* Tool */,
 				272E5A441BF7FD1700848580 /* Tests */,
@@ -402,6 +465,7 @@
 				27298E3E1C00F8A9000CFBA8 /* vendor */,
 				270FA25D1BF53CAD005DCB13 /* Products */,
 				2750735D1F4B5F0F003D2CCE /* CMakeLists.txt */,
+				27DE2EE22125FAC600123597 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -412,6 +476,7 @@
 				272E5A4B1BF7FE5600848580 /* Test */,
 				279AC5311C096872002C80DB /* fleece */,
 				27D721901F8E8EEA00AA4458 /* libFleeceMutableObjC.a */,
+				27DE2EDF2125FA1700123597 /* libFleeceBase.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -419,12 +484,7 @@
 		270FA25E1BF53CAD005DCB13 /* Fleece */ = {
 			isa = PBXGroup;
 			children = (
-				278163B41CE69CA800B94E32 /* Fleece.h */,
-				271507F0212254DE005FE6E8 /* FLSlice.h */,
-				27D7F8791E5521CC0088FADF /* FleeceCpp.hh */,
-				270515521D9053BE00D62D05 /* Fleece+CoreFoundation.h */,
-				270FA2751BF53CEA005DCB13 /* slice.hh */,
-				2715BA1D1D820C690061D92E /* PlatformCompat.hh */,
+				271507E721223319005FE6E8 /* API_Impl */,
 				27CEE41C20EFEBB600089A85 /* Core */,
 				2734B8941F8583FF00BE5249 /* Integration */,
 				27A89D7C209FC44500C3BEB2 /* Mutable */,
@@ -434,6 +494,37 @@
 				27CEE41B20EFE97100089A85 /* Experimental */,
 			);
 			path = Fleece;
+			sourceTree = "<group>";
+		};
+		271507DE212225B3005FE6E8 /* API */ = {
+			isa = PBXGroup;
+			children = (
+				271507E82122381E005FE6E8 /* fleece */,
+			);
+			path = API;
+			sourceTree = "<group>";
+		};
+		271507E721223319005FE6E8 /* API_Impl */ = {
+			isa = PBXGroup;
+			children = (
+				278163B31CE69CA800B94E32 /* Fleece.cc */,
+				270515551D90596000D62D05 /* Fleece+ImplGlue.hh */,
+			);
+			path = API_Impl;
+			sourceTree = "<group>";
+		};
+		271507E82122381E005FE6E8 /* fleece */ = {
+			isa = PBXGroup;
+			children = (
+				27A2F73A21248DA40081927B /* FLSlice.h */,
+				271507EA2122381E005FE6E8 /* Fleece.h */,
+				271507E92122381E005FE6E8 /* Fleece+CoreFoundation.h */,
+				271507EE2122381E005FE6E8 /* slice.hh */,
+				271507EB2122381E005FE6E8 /* Fleece.hh */,
+				271507EC2122381E005FE6E8 /* Mutable.hh */,
+				271507EF21223A02005FE6E8 /* Base.hh */,
+			);
+			path = fleece;
 			sourceTree = "<group>";
 		};
 		27298E3E1C00F8A9000CFBA8 /* vendor */ = {
@@ -471,6 +562,7 @@
 				272E5A5E1BF91DBE00848580 /* ObjCTests.mm */,
 				27AEFAC4210913C500106ED8 /* DeltaTests.cc */,
 				27C8DF09208521B600A99BFC /* HashTreeTests.cc */,
+				271507F6212349B8005FE6E8 /* API_ValueTests.cc */,
 				278163B81CE6BB8C00B94E32 /* C_Test.c */,
 				27EC8D5B1CEBA72E00199FE6 /* mn_wordlist.h */,
 				2747D9841CFB9BC300C48211 /* 1person.json */,
@@ -583,6 +675,7 @@
 				276D15451E007D3000543B1B /* JSON5.hh */,
 				27FE87F11E53E43200C5CF3F /* JSONEncoder.cc */,
 				27FE87F21E53E43200C5CF3F /* JSONEncoder.hh */,
+				271507ED2122381E005FE6E8 /* PlatformCompat.hh */,
 				274D8254209D1764008BB39F /* RefCounted.cc */,
 				274D8255209D1764008BB39F /* RefCounted.hh */,
 				270FA2741BF53CEA005DCB13 /* slice.cc */,
@@ -617,16 +710,12 @@
 		27CEE41C20EFEBB600089A85 /* Core */ = {
 			isa = PBXGroup;
 			children = (
-				278163B71CE6A07A00B94E32 /* Fleece.hh */,
+				278163B71CE6A07A00B94E32 /* FleeceImpl.hh */,
 				272E5A671BFA7C3100848580 /* Internal.hh */,
-				278163B31CE69CA800B94E32 /* Fleece_C_impl.cc */,
-				270515551D90596000D62D05 /* Fleece_C_impl.hh */,
 				270FA26A1BF53CEA005DCB13 /* Value.cc */,
 				270FA26B1BF53CEA005DCB13 /* Value.hh */,
 				27F25A8C20AA053D00E181FA /* Pointer.cc */,
 				27F25A8D20AA053D00E181FA /* Pointer.hh */,
-				27F25A9020AA1E7100E181FA /* ExternResolver.cc */,
-				27F25A9120AA1E7100E181FA /* ExternResolver.hh */,
 				27C4ACAA1CE5146500938365 /* Array.cc */,
 				27C4ACAB1CE5146500938365 /* Array.hh */,
 				27CA08411F6B0E9400FF8C71 /* Dict.cc */,
@@ -642,6 +731,8 @@
 				27298E761C00FB48000CFBA8 /* JSONConverter.hh */,
 				27E3DD401DB6A14200F2872D /* SharedKeys.cc */,
 				27E3DD411DB6A14200F2872D /* SharedKeys.hh */,
+				27867AF0211E27E5007BDA5F /* Doc.cc */,
+				27867AF1211E27E5007BDA5F /* Doc.hh */,
 				27AEFAC021090FF400106ED8 /* Delta.cc */,
 				27AEFAC121090FF400106ED8 /* Delta.hh */,
 			);
@@ -662,6 +753,13 @@
 				2734B89A1F8583FF00BE5249 /* MTests.mm */,
 			);
 			path = ObjC;
+			sourceTree = "<group>";
+		};
+		27DE2EE22125FAC600123597 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		27E3DD2A1DB1C17900F2872D /* ObjC */ = {
@@ -699,7 +797,6 @@
 				27AEFAC321090FF400106ED8 /* Delta.hh in Headers */,
 				27298E661C00F8A9000CFBA8 /* jsonsl.h in Headers */,
 				277A06B420B36D1A00970354 /* FileUtils.hh in Headers */,
-				27F25A9320AA1E7100E181FA /* ExternResolver.hh in Headers */,
 				27E3DD4D1DB6C32400F2872D /* CatchHelper.hh in Headers */,
 				27AEFAC921091A8C00106ED8 /* diff_match_patch.hh in Headers */,
 				2734B8A51F8583FF00BE5249 /* MDict.hh in Headers */,
@@ -714,7 +811,7 @@
 				27FE87F41E53E43200C5CF3F /* JSONEncoder.hh in Headers */,
 				27B802D820DD750E00599DF0 /* NodeRef.hh in Headers */,
 				27F666472017FE7C00A8ED31 /* TempArray.hh in Headers */,
-				270FA2831BF53CEA005DCB13 /* slice.hh in Headers */,
+				27867AF3211E27E5007BDA5F /* Doc.hh in Headers */,
 				2734B8A01F8583FF00BE5249 /* MArray+ObjC.h in Headers */,
 				270FA2851BF53CEA005DCB13 /* varint.hh in Headers */,
 				277F45B0208E871000A0D159 /* HashTree.hh in Headers */,
@@ -724,6 +821,7 @@
 				274D824D209A7577008BB39F /* HeapArray.hh in Headers */,
 				270FA2871BF53D32005DCB13 /* forestdb_endian.h in Headers */,
 				2734B8A21F8583FF00BE5249 /* MDict+ObjC.h in Headers */,
+				27A2F73B21248DA50081927B /* FLSlice.h in Headers */,
 				27F25A8F20AA053D00E181FA /* Pointer.hh in Headers */,
 				274D8249209A5906008BB39F /* ValueSlot.hh in Headers */,
 				2734B8A41F8583FF00BE5249 /* MCollection.hh in Headers */,
@@ -732,7 +830,6 @@
 				270FA27D1BF53CEA005DCB13 /* Encoder.hh in Headers */,
 				27C8DF072084102900A99BFC /* MutableHashTree.hh in Headers */,
 				27A924D01D9C32E800086206 /* Path.hh in Headers */,
-				278163B61CE69CA800B94E32 /* Fleece.h in Headers */,
 				274D8245209A3A77008BB39F /* HeapDict.hh in Headers */,
 				274D8253209CF9B3008BB39F /* HeapValue.hh in Headers */,
 				275CED531D3EF7BE001DE46C /* FleeceException.hh in Headers */,
@@ -755,7 +852,6 @@
 				27D7217A1F8E8EEA00AA4458 /* Dict.hh in Headers */,
 				27D7217B1F8E8EEA00AA4458 /* StringTable.hh in Headers */,
 				27D7217C1F8E8EEA00AA4458 /* JSONEncoder.hh in Headers */,
-				27D7217D1F8E8EEA00AA4458 /* slice.hh in Headers */,
 				27D7217E1F8E8EEA00AA4458 /* MArray+ObjC.h in Headers */,
 				27D7217F1F8E8EEA00AA4458 /* varint.hh in Headers */,
 				27D721801F8E8EEA00AA4458 /* MValue.hh in Headers */,
@@ -768,9 +864,57 @@
 				27D721871F8E8EEA00AA4458 /* Writer.hh in Headers */,
 				27D721881F8E8EEA00AA4458 /* Encoder.hh in Headers */,
 				27D721891F8E8EEA00AA4458 /* Path.hh in Headers */,
-				27D7218A1F8E8EEA00AA4458 /* Fleece.h in Headers */,
 				27D7218B1F8E8EEA00AA4458 /* FleeceException.hh in Headers */,
 				27D7218C1F8E8EEA00AA4458 /* SharedKeys.hh in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		27DE2EB12125FA1700123597 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				27DE2EB22125FA1700123597 /* JSON5.hh in Headers */,
+				27DE2EB32125FA1700123597 /* RefCounted.hh in Headers */,
+				27DE2EB42125FA1700123597 /* Delta.hh in Headers */,
+				27DE2EB52125FA1700123597 /* jsonsl.h in Headers */,
+				27DE2EB62125FA1700123597 /* FileUtils.hh in Headers */,
+				27DE2EB72125FA1700123597 /* CatchHelper.hh in Headers */,
+				27DE2EB82125FA1700123597 /* diff_match_patch.hh in Headers */,
+				27DE2EB92125FA1700123597 /* MDict.hh in Headers */,
+				27DE2EBA2125FA1700123597 /* FleeceDocument.h in Headers */,
+				27DE2EBB2125FA1700123597 /* sliceIO.hh in Headers */,
+				27DE2EBC2125FA1700123597 /* KeyTree.hh in Headers */,
+				27DE2EBD2125FA1700123597 /* Array.hh in Headers */,
+				27DE2EBE2125FA1700123597 /* DeepIterator.hh in Headers */,
+				27DE2EBF2125FA1700123597 /* MArray.hh in Headers */,
+				27DE2EC02125FA1700123597 /* Dict.hh in Headers */,
+				27DE2EC12125FA1700123597 /* StringTable.hh in Headers */,
+				27DE2EC22125FA1700123597 /* JSONEncoder.hh in Headers */,
+				27DE2EC32125FA1700123597 /* NodeRef.hh in Headers */,
+				27DE2EC42125FA1700123597 /* TempArray.hh in Headers */,
+				27DE2EC52125FA1700123597 /* Doc.hh in Headers */,
+				27DE2EC62125FA1700123597 /* MArray+ObjC.h in Headers */,
+				27DE2EC72125FA1700123597 /* varint.hh in Headers */,
+				27DE2EC82125FA1700123597 /* HashTree.hh in Headers */,
+				27DE2EC92125FA1700123597 /* MValue.hh in Headers */,
+				27DE2ECA2125FA1700123597 /* Value.hh in Headers */,
+				27DE2ECB2125FA1700123597 /* Endian.hh in Headers */,
+				27DE2ECC2125FA1700123597 /* HeapArray.hh in Headers */,
+				27DE2ECD2125FA1700123597 /* forestdb_endian.h in Headers */,
+				27DE2ECE2125FA1700123597 /* MDict+ObjC.h in Headers */,
+				27DE2ECF2125FA1700123597 /* FLSlice.h in Headers */,
+				27DE2ED02125FA1700123597 /* Pointer.hh in Headers */,
+				27DE2ED12125FA1700123597 /* ValueSlot.hh in Headers */,
+				27DE2ED22125FA1700123597 /* MCollection.hh in Headers */,
+				27DE2ED32125FA1700123597 /* CaseListReporter.hh in Headers */,
+				27DE2ED42125FA1700123597 /* Writer.hh in Headers */,
+				27DE2ED52125FA1700123597 /* Encoder.hh in Headers */,
+				27DE2ED62125FA1700123597 /* MutableHashTree.hh in Headers */,
+				27DE2ED72125FA1700123597 /* Path.hh in Headers */,
+				27DE2ED82125FA1700123597 /* HeapDict.hh in Headers */,
+				27DE2ED92125FA1700123597 /* HeapValue.hh in Headers */,
+				27DE2EDA2125FA1700123597 /* FleeceException.hh in Headers */,
+				27DE2EDB2125FA1700123597 /* SharedKeys.hh in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -788,6 +932,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				27DE2EE12125FA9500123597 /* PBXTargetDependency */,
 			);
 			name = Fleece;
 			productName = Fleece;
@@ -849,6 +994,23 @@
 			productReference = 27D721901F8E8EEA00AA4458 /* libFleeceMutableObjC.a */;
 			productType = "com.apple.product-type.library.static";
 		};
+		27DE2E882125FA1700123597 /* FleeceBase */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 27DE2EDC2125FA1700123597 /* Build configuration list for PBXNativeTarget "FleeceBase" */;
+			buildPhases = (
+				27DE2E892125FA1700123597 /* Sources */,
+				27DE2EB02125FA1700123597 /* Frameworks */,
+				27DE2EB12125FA1700123597 /* Headers */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FleeceBase;
+			productName = Fleece;
+			productReference = 27DE2EDF2125FA1700123597 /* libFleeceBase.a */;
+			productType = "com.apple.product-type.library.static";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -882,6 +1044,7 @@
 			projectRoot = "";
 			targets = (
 				270FA25B1BF53CAD005DCB13 /* Fleece */,
+				27DE2E882125FA1700123597 /* FleeceBase */,
 				27D721511F8E8EEA00AA4458 /* FleeceMutableObjC */,
 				272E5A4A1BF7FE5600848580 /* Test */,
 				279AC5301C096872002C80DB /* Tool */,
@@ -895,31 +1058,25 @@
 			buildActionMask = 2147483647;
 			files = (
 				270FA27E1BF53CEA005DCB13 /* Encoder+ObjC.mm in Sources */,
-				2770153C1D59645A008BADD7 /* cdecode.c in Sources */,
 				27C8DF082084102900A99BFC /* MutableHashTree.cc in Sources */,
 				277F45B1208E871000A0D159 /* HashTree.cc in Sources */,
 				270FA27B1BF53CEA005DCB13 /* Value+ObjC.mm in Sources */,
 				27C4ACAC1CE5146500938365 /* Array.cc in Sources */,
 				277A06B320B36D1A00970354 /* FileUtils.cc in Sources */,
 				274D8244209A3A77008BB39F /* HeapDict.cc in Sources */,
-				270FA2841BF53CEA005DCB13 /* varint.cc in Sources */,
 				2776AA782093C982004ACE85 /* sliceIO.cc in Sources */,
 				276D15461E007D3000543B1B /* JSON5.cc in Sources */,
 				27A924CF1D9C32E800086206 /* Path.cc in Sources */,
-				274D8256209D1764008BB39F /* RefCounted.cc in Sources */,
 				274D824C209A7577008BB39F /* HeapArray.cc in Sources */,
 				2734B8B11F870FB400BE5249 /* MContext.cc in Sources */,
 				275CED521D3EF7BE001DE46C /* FleeceException.cc in Sources */,
-				27F25A9220AA1E7100E181FA /* ExternResolver.cc in Sources */,
-				278163B51CE69CA800B94E32 /* Fleece_C_impl.cc in Sources */,
+				278163B51CE69CA800B94E32 /* Fleece.cc in Sources */,
 				27AEFAC221090FF400106ED8 /* Delta.cc in Sources */,
 				270515571D905C1D00D62D05 /* Fleece+CoreFoundation.mm in Sources */,
-				272E5A611BF91F6C00848580 /* slice+CoreFoundation.cc in Sources */,
-				270FA2821BF53CEA005DCB13 /* slice.cc in Sources */,
 				270FA2781BF53CEA005DCB13 /* Value.cc in Sources */,
 				27E3DD421DB6A14200F2872D /* SharedKeys.cc in Sources */,
-				2770153D1D59645A008BADD7 /* cencode.c in Sources */,
 				27CA08431F6B0E9400FF8C71 /* Dict.cc in Sources */,
+				27867AF2211E27E5007BDA5F /* Doc.cc in Sources */,
 				27298E801C04E665000CFBA8 /* Encoder.cc in Sources */,
 				27298E3C1C00F812000CFBA8 /* JSONConverter.cc in Sources */,
 				279AC53C1C097941002C80DB /* Value+Dump.cc in Sources */,
@@ -941,6 +1098,7 @@
 			files = (
 				27393C941FEC30E300FBFE59 /* FleeceTestsMain.cc in Sources */,
 				272E5A5D1BF800A100848580 /* EncoderTests.cc in Sources */,
+				271507F7212349B8005FE6E8 /* API_ValueTests.cc in Sources */,
 				27F25A8420A6560A00E181FA /* LibC++Debug.cc in Sources */,
 				272E5A521BF7FE7100848580 /* FleeceTests.cc in Sources */,
 				278163B91CE6BB8C00B94E32 /* C_Test.c in Sources */,
@@ -977,6 +1135,21 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		27DE2E892125FA1700123597 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				27DE2EEB2125FC9300123597 /* FleeceException.cc in Sources */,
+				27DE2E962125FA1700123597 /* RefCounted.cc in Sources */,
+				27DE2E9E2125FA1700123597 /* slice.cc in Sources */,
+				27DE2E9D2125FA1700123597 /* slice+CoreFoundation.cc in Sources */,
+				27DE2EEA2125FC5A00123597 /* Writer.cc in Sources */,
+				27DE2E922125FA1700123597 /* varint.cc in Sources */,
+				27DE2EE82125FB2100123597 /* cdecode.c in Sources */,
+				27DE2EE92125FB2100123597 /* cencode.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -994,6 +1167,11 @@
 			isa = PBXTargetDependency;
 			target = 270FA25B1BF53CAD005DCB13 /* Fleece */;
 			targetProxy = 27D721911F8E8FE500AA4458 /* PBXContainerItemProxy */;
+		};
+		27DE2EE12125FA9500123597 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 27DE2E882125FA1700123597 /* FleeceBase */;
+			targetProxy = 27DE2EE02125FA9500123597 /* PBXContainerItemProxy */;
 		};
 		27F25A7B20A6523E00E181FA /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -1064,9 +1242,7 @@
 			baseConfigurationReference = 27F25A8220A6559800E181FA /* FleeceMutableObjC.xcconfig */;
 			buildSettings = {
 				EXECUTABLE_PREFIX = lib;
-				HEADER_SEARCH_PATHS = /usr/local/include/;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SUPPORTED_PLATFORMS = "macosx iphoneos iphonesimulator appletvos appletvsimulator";
 			};
 			name = Debug;
 		};
@@ -1075,9 +1251,23 @@
 			baseConfigurationReference = 27F25A8220A6559800E181FA /* FleeceMutableObjC.xcconfig */;
 			buildSettings = {
 				EXECUTABLE_PREFIX = lib;
-				HEADER_SEARCH_PATHS = /usr/local/include/;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SUPPORTED_PLATFORMS = "macosx iphoneos iphonesimulator appletvos appletvsimulator";
+			};
+			name = Release;
+		};
+		27DE2EDD2125FA1700123597 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2776AA48208A6CED004ACE85 /* FleeceStaticLib.xcconfig */;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		27DE2EDE2125FA1700123597 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2776AA48208A6CED004ACE85 /* FleeceStaticLib.xcconfig */;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};
@@ -1125,6 +1315,15 @@
 			buildConfigurations = (
 				27D7218E1F8E8EEA00AA4458 /* Debug */,
 				27D7218F1F8E8EEA00AA4458 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		27DE2EDC2125FA1700123597 /* Build configuration list for PBXNativeTarget "FleeceBase" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				27DE2EDD2125FA1700123597 /* Debug */,
+				27DE2EDE2125FA1700123597 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

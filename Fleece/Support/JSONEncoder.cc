@@ -17,10 +17,10 @@
 //
 
 #include "JSONEncoder.hh"
-#include "Fleece.hh"
+#include "FleeceImpl.hh"
 #include <algorithm>
 
-namespace fleece {
+namespace fleece { namespace impl {
 
     void JSONEncoder::writeString(slice str) {
         comma();
@@ -94,7 +94,7 @@ namespace fleece {
             };
             std::vector<kv> items;
             items.reserve(dict->count());
-            for (auto iter = dict->begin(_sharedKeys); iter; ++iter)
+            for (auto iter = dict->begin(); iter; ++iter)
                 items.push_back({iter.keyString(), iter.value()});
             std::sort(items.begin(), items.end());
             for (auto &item : items) {
@@ -102,7 +102,7 @@ namespace fleece {
                 writeValue(item.value);
             }
         } else {
-            for (auto iter = dict->begin(_sharedKeys); iter; ++iter) {
+            for (auto iter = dict->begin(); iter; ++iter) {
                 slice keyStr = iter.keyString();
                 if (keyStr) {
                     writeKey(keyStr);
@@ -121,11 +121,7 @@ namespace fleece {
     }
 
 
-    void JSONEncoder::writeValue(const Value *v, SharedKeys *sk) {
-        auto savedSK = _sharedKeys;
-        if (sk)
-            _sharedKeys = sk;
-
+    void JSONEncoder::writeValue(const Value *v) {
         switch (v->type()) {
             case kNull:
                 if (v->isUndefined()) {
@@ -169,8 +165,6 @@ namespace fleece {
             default:
                 FleeceException::_throw(UnknownValue, "illegal typecode in Value; corrupt data?");
         }
-
-        _sharedKeys = savedSK;
     }
 
-}
+} }

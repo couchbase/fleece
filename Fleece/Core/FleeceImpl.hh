@@ -1,5 +1,5 @@
 //
-// Fleece.hh
+// FleeceImpl.hh
 //
 // Copyright (c) 2016 Couchbase, Inc All rights reserved.
 //

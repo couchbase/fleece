@@ -19,7 +19,7 @@
 #include "NodeRef.hh"
 #include "MutableNode.hh"
 
-namespace fleece { namespace hashtree {
+namespace fleece { namespace impl { namespace hashtree {
 
     bool NodeRef::isLeaf() const {
         return isMutable() ? _asMutable()->isLeaf() : _asImmutable()->isLeaf();
@@ -81,4 +81,4 @@ namespace fleece { namespace hashtree {
                      : _asImmutable()->interior.dump(out, indent);
     }
 
-} }
+} } }

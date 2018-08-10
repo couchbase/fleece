@@ -19,7 +19,7 @@
 #pragma once
 #include "MDict.hh"
 
-namespace fleeceapi {
+namespace fleece {
 
     template <class Native>
         class MDictIterator {
@@ -31,7 +31,7 @@ namespace fleeceapi {
             :_dict(dict)
             ,_mapIter(dict._map.begin())
             ,_mapEnd(dict._map.end())
-            ,_dictIter(dict._dict, _dict.sharedKeys())
+            ,_dictIter(dict._dict)
             {
                 read(); // find first k/v
             }

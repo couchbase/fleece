@@ -17,14 +17,14 @@
 //
 
 #pragma once
-#include "slice.hh"
+#include "fleece/slice.hh"
 #include "Value.hh"
 #include "Bitmap.hh"
 #include "Encoder.hh"
 #include "Endian.hh"
 #include <memory>
 
-namespace fleece { namespace hashtree {
+namespace fleece { namespace impl { namespace hashtree {
 
     /*
         Data format:
@@ -141,5 +141,5 @@ namespace fleece { namespace hashtree {
         bool isLeaf() const                 {return (leaf._valueOffset & 1) != 0;}
     };
     
-} }
+} } }
 

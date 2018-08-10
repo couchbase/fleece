@@ -17,7 +17,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#include "Fleece.hh"
+#include "FleeceImpl.hh"
 #include "SharedKeys.hh"
 #include "FleeceException.hh"
 
@@ -46,6 +46,44 @@ static const size_t kMinAllocedNSStringSize = 1;  // do tagged strings exist in 
 
 
 namespace fleece {
+    using namespace fleece::impl::internal;
+
+    static NSString* convertString(pure_slice strSlice) {
+        auto str = strSlice.asNSString();
+        throwIf(!str, InvalidData, "Invalid UTF-8 in string");
+        return str;
+    }
+
+
+    NSString* pure_slice::asNSString(NSMapTable *sharedStrings) const {
+        if (sharedStrings == nil || size < std::max(kMinSharedStringSize,
+                                                    kMinAllocedNSStringSize)
+            || size > kMaxSharedStringSize)
+            return convertString(*this);
+
+        // Look up an existing shared string for this Value*:
+        NSString* str = MapGet(sharedStrings, buf);
+        if (!str) {
+            str = convertString(*this);
+            MapInsert(sharedStrings, buf, str);
+    #if LOG_CACHED_STRINGS
+            fprintf(stderr, "SHAREDSTRINGS[%p] %p --> %p %s\n",
+                    sharedStrings, buf, str, str.UTF8String);
+    #endif
+        }
+    #if LOG_CACHED_STRINGS
+        else {
+            fprintf(stderr, "SHAREDSTRINGS[%p] *Used* %p --> %s\n",
+                    sharedStrings, buf, str.UTF8String);
+        }
+    #endif
+        return str;
+    }
+
+}
+
+
+namespace fleece { namespace impl {
 
     // Creates an NSMapTable that maps opaque pointers to Obj-C objects (NSStrings).
     NSMapTable* Value::createSharedStringsTable() noexcept {
@@ -57,40 +95,7 @@ namespace fleece {
     }
 
 
-    static NSString* convertString(pure_slice strSlice) {
-        auto str = strSlice.asNSString();
-        throwIf(!str, InvalidData, "Invalid UTF-8 in string");
-        return str;
-    }
-
-
-    NSString* pure_slice::asNSString(NSMapTable *sharedStrings) const {
-        if (sharedStrings == nil || size < std::max(internal::kMinSharedStringSize,
-                                                    kMinAllocedNSStringSize)
-                                 || size > internal::kMaxSharedStringSize)
-            return convertString(*this);
-
-        // Look up an existing shared string for this Value*:
-        NSString* str = MapGet(sharedStrings, buf);
-        if (!str) {
-            str = convertString(*this);
-            MapInsert(sharedStrings, buf, str);
-#if LOG_CACHED_STRINGS
-            fprintf(stderr, "SHAREDSTRINGS[%p] %p --> %p %s\n",
-                    sharedStrings, buf, str, str.UTF8String);
-#endif
-        }
-#if LOG_CACHED_STRINGS
-        else {
-            fprintf(stderr, "SHAREDSTRINGS[%p] *Used* %p --> %s\n",
-                    sharedStrings, buf, str.UTF8String);
-        }
-#endif
-        return str;
-    }
-
-
-    id Value::toNSObject(__unsafe_unretained NSMapTable *sharedStrings, const SharedKeys *sk) const
+    id Value::toNSObject(__unsafe_unretained NSMapTable *sharedStrings) const
     {
         switch (type()) {
             case kNull:
@@ -120,16 +125,16 @@ namespace fleece {
                 auto iter = asArray()->begin();
                 auto result = [[NSMutableArray alloc] initWithCapacity: iter.count()];
                 for (; iter; ++iter) {
-                    [result addObject: iter->toNSObject(sharedStrings, sk)];
+                    [result addObject: iter->toNSObject(sharedStrings)];
                 }
                 return result;
             }
             case kDict: {
-                Dict::iterator iter(asDict(), sk);
+                Dict::iterator iter(asDict());
                 auto result = [[NSMutableDictionary alloc] initWithCapacity: iter.count()];
                 for (; iter; ++iter) {
                     NSString* key = iter.keyToNSString(sharedStrings);
-                    result[key] = iter.value()->toNSObject(sharedStrings, sk);
+                    result[key] = iter.value()->toNSObject(sharedStrings);
                 }
                 return result;
             }
@@ -144,7 +149,7 @@ namespace fleece {
         if (!key())
             return nil;
         NSString* keyStr = nil;
-        if (key()->isInteger() && _sharedKeys) {
+        if (key()->isInteger() && (_sharedKeys || findSharedKeys())) {
             // Decode int key using SharedKeys:
             auto encodedKey = (int)key()->asInt();
             keyStr = (__bridge NSString*)_sharedKeys->platformStringForKey(encodedKey);
@@ -167,9 +172,9 @@ namespace fleece {
 #endif
         }
         if (!keyStr)
-            keyStr = key()->toNSObject(sharedStrings, _sharedKeys);
+            keyStr = key()->toNSObject(sharedStrings);
         return keyStr;
     }
 
 
-}
+} }

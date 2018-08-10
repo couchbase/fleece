@@ -9,9 +9,9 @@
 #pragma once
 #include "NodeRef.hh"
 #include "RefCounted.hh"
-#include "slice.hh"
+#include "fleece/slice.hh"
 
-namespace fleece { namespace hashtree {
+namespace fleece { namespace impl { namespace hashtree {
     using namespace std;
 
 
@@ -416,4 +416,4 @@ namespace fleece { namespace hashtree {
         NodeRef _children[0];           // Variable-size array; size is given by _capacity
     };
 
-} }
+} } }

@@ -21,13 +21,13 @@
 
 
 @implementation NSObject (FleeceMutable)
-- (fleeceapi::MCollection<id>*) fl_collection {
+- (fleece::MCollection<id>*) fl_collection {
     return nullptr;
 }
 @end
 
 
-namespace fleeceapi {
+namespace fleece {
 
     // These are the three MValue methods that have to be implemented in any specialization,
     // here specialized for <id>.

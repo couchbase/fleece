@@ -16,8 +16,8 @@
 // limitations under the License.
 //
 
-#import "Fleece_C_impl.hh"
-#import "Fleece+CoreFoundation.h"
+#import "Fleece+ImplGlue.hh"
+#import "fleece/Fleece+CoreFoundation.h"
 #import <Foundation/Foundation.h>
 
 
@@ -43,10 +43,10 @@ bool FLEncoder_WriteNSObject(FLEncoder encoder, id obj) {
 }
 
 
-id FLValue_GetNSObject(FLValue value, FLSharedKeys sharedKeys, NSMapTable* sharedStrings) {
+id FLValue_GetNSObject(FLValue value, NSMapTable* sharedStrings) {
     try {
         if (value)
-            return value->toNSObject(sharedStrings, sharedKeys);
+            return value->toNSObject(sharedStrings);
     } catchError(nullptr)
     return nullptr;
 }
@@ -85,8 +85,8 @@ bool FLEncoder_WriteCFObject(FLEncoder encoder, CFTypeRef obj) {
 }
 
 
-CFTypeRef FLValue_CopyCFObject(FLValue value, FLSharedKeys sharedKeys) {
-    id obj = FLValue_GetNSObject(value, sharedKeys, nullptr);
+CFTypeRef FLValue_CopyCFObject(FLValue value) {
+    id obj = FLValue_GetNSObject(value, nullptr);
     return obj ? CFBridgingRetain(obj) : nullptr;
 }
 

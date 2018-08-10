@@ -6,12 +6,13 @@
 //
 
 #include "FleeceTests.hh"
-#include "Fleece.hh"
+#include "FleeceImpl.hh"
 #include "MutableHashTree.hh"
 #include "Encoder.hh"
 
 using namespace std;
 using namespace fleece;
+using namespace fleece::impl;
 
 static const char* kDigits[10] = {"zero", "one", "two", "three", "four", "five", "six",
                                   "seven", "eight", "nine"};
@@ -30,7 +31,7 @@ public:
         for (size_t i = 0; i < N; i++)
             enc.writeInt(i);
         enc.endArray();
-        _valueBuf = enc.extractOutput();
+        _valueBuf = enc.finish();
         values = Value::fromTrustedData(_valueBuf)->asArray();
 
         keys.clear();
@@ -87,7 +88,7 @@ public:
         Encoder enc;
         enc.suppressTrailer();
         tree.writeTo(enc);
-        return enc.extractOutput();
+        return enc.finish();
     }
 
 };
@@ -324,7 +325,7 @@ TEST_CASE_METHOD(HashTreeTests, "HashTree Re-Encode Delta", "[HashTree]") {
     enc.setBase(data);
     enc.suppressTrailer();
     tree.writeTo(enc);
-    alloc_slice delta = enc.extractOutput();
+    alloc_slice delta = enc.finish();
 
     cerr << "Original is " << data.size << " bytes encoded:\t" << data.hexString() << "\n";
     cerr << "Delta is " << delta.size << " bytes encoded:\t" << data.hexString() << "\n";

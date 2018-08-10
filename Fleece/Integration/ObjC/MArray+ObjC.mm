@@ -21,7 +21,7 @@
 #import "MArray.hh"
 #import "PlatformCompat.hh"
 
-using namespace fleeceapi;
+using namespace fleece;
 
 
 @implementation FleeceArray
@@ -30,8 +30,8 @@ using namespace fleeceapi;
 }
 
 
-- (instancetype) initWithMValue: (fleeceapi::MValue<id>*)mv
-                       inParent: (fleeceapi::MCollection<id>*)parent
+- (instancetype) initWithMValue: (fleece::MValue<id>*)mv
+                       inParent: (fleece::MCollection<id>*)parent
 {
     self = [super init];
     if (self) {
@@ -63,9 +63,8 @@ using namespace fleeceapi;
 
 
 - (void) fl_encodeToFLEncoder: (FLEncoder)enc {
-    Encoder encoder(enc);
+    SharedEncoder encoder(enc);
     _array.encodeTo(encoder);
-    encoder.release();
 }
 
 

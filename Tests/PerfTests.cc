@@ -17,7 +17,7 @@
 //
 
 #include "FleeceTests.hh"
-#include "Fleece.hh"
+#include "FleeceImpl.hh"
 #include "JSONConverter.hh"
 #include "MutableHashTree.hh"
 #include "varint.hh"
@@ -46,6 +46,7 @@
 
 
 using namespace fleece;
+using namespace fleece::impl;
 
 
 #if !FL_EMBEDDED
@@ -96,7 +97,7 @@ TEST_CASE("Perf Convert1000People", "[.Perf]") {
 
             jr.encodeJSON(input);
             e.end();
-            auto result = e.extractOutput();
+            auto result = e.finish();
             if (i == kSamples-1)
                 lastResult = result;
         }
@@ -187,16 +188,16 @@ TEST_CASE("Perf LoadPeople", "[.Perf]") {
     auto doc = readTestFile("1000people.fleece");
 
     Dict::key keys[10] = {
-        Dict::key(slice("about")),
-        Dict::key(slice("age")),
-        Dict::key(slice("balance")),
-        Dict::key(slice("guid")),
-        Dict::key(slice("isActive")),
-        Dict::key(slice("latitude")),
-        Dict::key(slice("longitude")),
-        Dict::key(slice("name")),
-        Dict::key(slice("registered")),
-        Dict::key(slice("tags")),
+        {"about"_sl},
+        {"age"_sl},
+        {"balance"_sl},
+        {"guid"_sl},
+        {"isActive"_sl},
+        {"latitude"_sl},
+        {"longitude"_sl},
+        {"name"_sl},
+        {"registered"_sl},
+        {"tags"_sl},
     };
 
     fprintf(stderr, "Looking up 1000 people...\n");
@@ -242,7 +243,7 @@ TEST_CASE("Perf DictSearch", "[.Perf]") {
             break;
     }
     enc.endDictionary();
-    alloc_slice dictData = enc.extractOutput();
+    alloc_slice dictData = enc.finish();
     auto people = Value::fromTrustedData(dictData)->asDict();
 
     Benchmark bench;
@@ -292,7 +293,7 @@ TEST_CASE("Perf TreeSearch", "[.Perf]") {
     Encoder enc;
     enc.suppressTrailer();
     tree.writeTo(enc);
-    alloc_slice treeData = enc.extractOutput();
+    alloc_slice treeData = enc.finish();
     const HashTree *imTree = HashTree::fromData(treeData);
 
     Benchmark bench;

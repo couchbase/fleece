@@ -23,7 +23,6 @@
 #include "PlatformCompat.hh"
 
 using namespace fleece;
-using namespace fleeceapi;
 
 
 @implementation FleeceDict
@@ -67,9 +66,8 @@ using namespace fleeceapi;
 
 
 - (void) fl_encodeToFLEncoder: (FLEncoder)enc {
-    Encoder encoder(enc);
+    SharedEncoder encoder(enc);
     _dict.encodeTo(encoder);
-    encoder.release();
 }
 
 

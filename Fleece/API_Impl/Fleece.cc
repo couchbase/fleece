@@ -1,5 +1,5 @@
 //
-// fleece_C_impl.cc
+// Fleece.cc
 //
 // Copyright (c) 2016 Couchbase, Inc All rights reserved.
 //
@@ -16,23 +16,22 @@
 // limitations under the License.
 //
 
-#include "Fleece_C_impl.hh"
+#include "Fleece+ImplGlue.hh"
 #include "MutableArray.hh"
 #include "MutableDict.hh"
-#include "ExternResolver.hh"
 #include "Delta.hh"
-#include "Fleece.h"
+#include "fleece/Fleece.h"
 #include "JSON5.hh"
 
 
-namespace fleece {
+namespace fleece { namespace impl {
 
     void recordError(const std::exception &x, FLError *outError) noexcept {
         if (outError)
             *outError = (FLError) FleeceException::getCode(x);
     }
 
-}
+} }
 
 
 bool FLSlice_Equal(FLSlice a, FLSlice b)        {return (slice)a == (slice)b;}
@@ -49,8 +48,9 @@ void FLSliceResult_Free(FLSliceResult s) {
 }
 
 
-FLValue FLValue_FromData(FLSlice data)          {return Value::fromData(data);}
-FLValue FLValue_FromTrustedData(FLSlice data)   {return Value::fromTrustedData(data);}
+FLValue FLValue_FromData(FLSlice data, FLTrust trust)   {
+    return trust ? Value::fromTrustedData(data) : Value::fromData(data);
+}
 
 
 const char* FLDump(FLValue v) {
@@ -62,7 +62,7 @@ const char* FLDump(FLValue v) {
 }
 
 const char* FLDumpData(FLSlice data) {
-    return FLDump(FLValue_FromData(data));
+    return FLDump(Value::fromData(data));
 }
 
 
@@ -82,6 +82,10 @@ FLArray FLValue_AsArray(FLValue v)              {return v ? v->asArray() : nullp
 FLDict FLValue_AsDict(FLValue v)                {return v ? v->asDict() : nullptr;}
 
 
+FLDoc FLValue_FindDoc(FLValue v) {
+    return v ? retain(Doc::containing(v).get()) : nullptr;
+}
+
 FLSliceResult FLValue_ToString(FLValue v) {
     if (v) {
         try {
@@ -93,25 +97,23 @@ FLSliceResult FLValue_ToString(FLValue v) {
 
 
 FLSliceResult FLValue_ToJSONX(FLValue v,
-                              FLSharedKeys sk,
                               bool json5,
                               bool canonical)
 {
     if (v) {
         try {
             JSONEncoder encoder;
-            encoder.setSharedKeys(sk);
             encoder.setJSON5(json5);
             encoder.setCanonical(canonical);
             encoder.writeValue(v);
-            return toSliceResult(encoder.extractOutput());
+            return toSliceResult(encoder.finish());
         } catchError(nullptr)
     }
     return {nullptr, 0};
 }
 
-FLSliceResult FLValue_ToJSON(FLValue v)      {return FLValue_ToJSONX(v, nullptr, false, false);}
-FLSliceResult FLValue_ToJSON5(FLValue v)     {return FLValue_ToJSONX(v, nullptr, true,  false);}
+FLSliceResult FLValue_ToJSON(FLValue v)      {return FLValue_ToJSONX(v, false, false);}
+FLSliceResult FLValue_ToJSON5(FLValue v)     {return FLValue_ToJSONX(v, true,  false);}
 
 
 FLSliceResult FLData_ConvertJSON(FLSlice json, FLError *outError) {
@@ -229,10 +231,7 @@ uint32_t FLDict_Count(FLDict d)                          {return d ? d->count() 
 bool FLDict_IsEmpty(FLDict d)                            {return d ? d->empty() : true;}
 FLValue FLDict_Get(FLDict d, FLSlice keyString)          {return d ? d->get(keyString) : nullptr;}
 
-FLValue FLDict_GetSharedKey(FLDict d, FLSlice keyString, FLSharedKeys sk) {
-    return d ? d->get(keyString, sk) : nullptr;
-}
-
+#if 0
 FLSlice FLSharedKey_GetKeyString(FLSharedKeys sk, int keyCode, FLError* outError)
 {
     slice key;
@@ -245,16 +244,11 @@ FLSlice FLSharedKey_GetKeyString(FLSharedKeys sk, int keyCode, FLError* outError
     
     return key;
 }
+#endif
 
 void FLDictIterator_Begin(FLDict d, FLDictIterator* i) {
     static_assert(sizeof(FLDictIterator) >= sizeof(Dict::iterator), "FLDictIterator is too small");
     new (i) Dict::iterator(d);
-    // Note: this is safe even if d is null.
-}
-
-void FLDictIterator_BeginShared(FLDict d, FLDictIterator* i, FLSharedKeys sk) {
-    static_assert(sizeof(FLDictIterator) >= sizeof(Dict::iterator), "FLDictIterator is too small");
-    new (i) Dict::iterator(d, sk);
     // Note: this is safe even if d is null.
 }
 
@@ -290,17 +284,10 @@ void FLDictIterator_End(FLDictIterator* i) {
 }
 
 
-FLDictKey FLDictKey_Init(FLSlice string, bool cachePointers) {
+FLDictKey FLDictKey_Init(FLSlice string) {
     FLDictKey key;
     static_assert(sizeof(FLDictKey) >= sizeof(Dict::key), "FLDictKey is too small");
-    new (&key) Dict::key(string, nullptr, cachePointers);
-    return key;
-}
-
-FLDictKey FLDictKey_InitWithSharedKeys(FLSlice string, FLSharedKeys sharedKeys) {
-    FLDictKey key;
-    static_assert(sizeof(FLDictKey) >= sizeof(Dict::key), "FLDictKey is too small");
-    new (&key) Dict::key(string, (SharedKeys*)sharedKeys, false);
+    new (&key) Dict::key(string);
     return key;
 }
 
@@ -312,7 +299,7 @@ FLSlice FLDictKey_GetString(const FLDictKey *key) {
 FLValue FLDict_GetWithKey(FLDict d, FLDictKey *k) {
     if (!d)
         return nullptr;
-    auto key = *(Dict::key*)k;
+    auto &key = *(Dict::key*)k;
     return d->get(key);
 }
 
@@ -353,10 +340,28 @@ FLMutableDict FLMutableDict_GetMutableDict(FLMutableDict d, FLString key) {
 }
 
 
+//////// SHARED KEYS
+
+
+FLSharedKeys FLSharedKeys_Create()                          {return retain(new SharedKeys());}
+FLSharedKeys FLSharedKeys_Retain(FLSharedKeys sk)           {return retain(sk);}
+void FLSharedKeys_Release(FLSharedKeys sk)                  {release(sk);}
+FLSharedKeys FLSharedKeys_CreateFromStateData(FLSlice data) {return retain(new SharedKeys(data));}
+FLSliceResult FLSharedKeys_GetStateData(FLSharedKeys sk)    {return toSliceResult(sk->stateData());}
+FLString FLSharedKeys_Decode(FLSharedKeys sk, int key)      {return sk->decode(key);}
+
+int FLSharedKeys_Encode(FLSharedKeys sk, FLString keyStr, bool add) {
+    int intKey;
+    if (!(add ? sk->encodeAndAdd(keyStr, intKey) : sk->encode(keyStr, intKey)))
+        intKey = -1;
+    return intKey;
+}
+
+
 #pragma mark - DEEP ITERATOR:
 
 
-FLDeepIterator FLDeepIterator_New(FLValue v, FLSharedKeys sk)   {return new DeepIterator(v, sk);}
+FLDeepIterator FLDeepIterator_New(FLValue v)                    {return new DeepIterator(v);}
 void FLDeepIterator_Free(FLDeepIterator i)                      {delete i;}
 FLValue FLDeepIterator_GetValue(FLDeepIterator i)               {return i->value();}
 FLSlice FLDeepIterator_GetKey(FLDeepIterator i)                 {return i->keyString();}
@@ -389,9 +394,9 @@ FLSliceResult FLDeepIterator_GetJSONPointer(FLDeepIterator i) {
 #pragma mark - KEY-PATHS:
 
 
-FLKeyPath FLKeyPath_New(FLSlice specifier, FLSharedKeys sharedKeys, FLError *outError) {
+FLKeyPath FLKeyPath_New(FLSlice specifier, FLError *outError) {
     try {
-        return new Path((std::string)(slice)specifier, sharedKeys);
+        return new Path((std::string)(slice)specifier);
     } catchError(outError)
     return nullptr;
 }
@@ -404,11 +409,10 @@ FLValue FLKeyPath_Eval(FLKeyPath path, FLValue root) {
     return path->eval(root);
 }
 
-FLValue FLKeyPath_EvalOnce(FLSlice specifier, FLSharedKeys sharedKeys, FLValue root,
-                           FLError *outError)
+FLValue FLKeyPath_EvalOnce(FLSlice specifier, FLValue root, FLError *outError)
 {
     try {
-        return Path::eval((std::string)(slice)specifier, sharedKeys, root);
+        return Path::eval((std::string)(slice)specifier, root);
     } catchError(outError)
     return nullptr;
 }
@@ -436,7 +440,8 @@ void FLEncoder_Free(FLEncoder e)                         {
 }
 
 void FLEncoder_SetSharedKeys(FLEncoder e, FLSharedKeys sk) {
-    ENCODER_DO(e, setSharedKeys(sk));
+    if (e->isFleece())
+        e->fleeceEncoder->setSharedKeys(sk);
 }
 
 void FLEncoder_MakeDelta(FLEncoder e, FLSlice base, bool reuseStrings, bool externPointers) {
@@ -460,19 +465,13 @@ bool FLEncoder_WriteDouble(FLEncoder e, double d)        {ENCODER_TRY(e, writeDo
 bool FLEncoder_WriteString(FLEncoder e, FLSlice s)       {ENCODER_TRY(e, writeString(s));}
 bool FLEncoder_WriteData(FLEncoder e, FLSlice d)         {ENCODER_TRY(e, writeData(d));}
 bool FLEncoder_WriteRaw(FLEncoder e, FLSlice r)          {ENCODER_TRY(e, writeRaw(r));}
+bool FLEncoder_WriteValue(FLEncoder e, FLValue v)        {ENCODER_TRY(e, writeValue(v));}
 
 bool FLEncoder_BeginArray(FLEncoder e, size_t reserve)   {ENCODER_TRY(e, beginArray(reserve));}
 bool FLEncoder_EndArray(FLEncoder e)                     {ENCODER_TRY(e, endArray());}
 bool FLEncoder_BeginDict(FLEncoder e, size_t reserve)    {ENCODER_TRY(e, beginDictionary(reserve));}
 bool FLEncoder_WriteKey(FLEncoder e, FLSlice s)          {ENCODER_TRY(e, writeKey(s));}
 bool FLEncoder_EndDict(FLEncoder e)                      {ENCODER_TRY(e, endDictionary());}
-
-bool FLEncoder_WriteValueWithSharedKeys(FLEncoder e, FLValue v, FLSharedKeys sk)
-                                                         {ENCODER_TRY(e, writeValue(v, sk));}
-bool FLEncoder_WriteValue(FLEncoder e, FLValue v) {
-    return FLEncoder_WriteValueWithSharedKeys(e, v, nullptr);
-}
-
 
 
 bool FLEncoder_ConvertJSON(FLEncoder e, FLSlice json) {
@@ -518,10 +517,27 @@ void* FLEncoder_GetExtraInfo(FLEncoder e) {
     return e->extraInfo;
 }
 
+FLDoc FLEncoder_FinishDoc(FLEncoder e, FLError *outError) {
+    if (!e->fleeceEncoder)
+        e->errorCode = kFLUnsupported;  // Doc class doesn't support JSON data
+    if (!e->hasError()) {
+        try {
+            return retain(e->fleeceEncoder->finishDoc().get());       // finish() can throw
+        } catch (const std::exception &x) {
+            e->recordException(x);
+        }
+    }
+    // Failure:
+    if (outError)
+        *outError = e->errorCode;
+    return nullptr;
+}
+
+
 FLSliceResult FLEncoder_Finish(FLEncoder e, FLError *outError) {
     if (!e->hasError()) {
         try {
-            return toSliceResult(ENCODER_DO(e, extractOutput()));       // extractOutput can throw
+            return toSliceResult(ENCODER_DO(e, finish()));       // extractOutput can throw
         } catch (const std::exception &x) {
             e->recordException(x);
         }
@@ -533,50 +549,63 @@ FLSliceResult FLEncoder_Finish(FLEncoder e, FLError *outError) {
 }
 
 
-#pragma mark - RESOLVER
+#pragma mark - DOCUMENTS
 
 
-void FLResolver_Begin(FLSlice document, FLSlice destination) {
-    (void)new ExternResolver(document, destination);
+FLDoc FLDoc_FromData(FLSlice data, FLTrust trust, FLSharedKeys sk, FLSlice externData) {
+    return retain(new Doc(data, (Doc::Trust)trust, sk, externData));
 }
 
-void FLResolver_End(FLSlice document) {
-    auto resolver = ExternResolver::resolverForPointerFrom(document.buf);
-    if (resolver) {
-        assert(resolver->source() == slice(document));
-        delete resolver;
-    }
+FLDoc FLDoc_FromResultData(FLSliceResult data, FLTrust trust, FLSharedKeys sk, FLSlice externData) {
+    return retain(new Doc(alloc_slice(data), (Doc::Trust)trust, sk, externData));
+}
+
+FLDoc FLDoc_FromJSON(FLSlice json, FLError *outError) {
+    try {
+        return retain(Doc::fromJSON(json).get());
+    } catchError(outError);
+    return nullptr;
+}
+
+void FLDoc_Release(FLDoc doc)                           {release(doc);}
+FLDoc FLDoc_Retain(FLDoc doc)                           {return retain(doc);}
+
+FLSharedKeys FLDoc_GetSharedKeys(FLDoc doc)             {return doc ? doc->sharedKeys() : nullptr;}
+FLValue FLDoc_GetRoot(FLDoc doc)                        {return doc ? doc->root() : nullptr;}
+FLSlice FLDoc_GetData(FLDoc doc)                        {return doc ? doc->data() : nullslice;}
+
+FLSliceResult FLDoc_GetAllocedData(FLDoc doc) {
+    return doc ? toSliceResult(doc->allocedData()) : FLSliceResult{};
 }
 
 
 #pragma mark - DELTA COMPRESSION
 
 
-FLSliceResult FLCreateDelta(FLValue old, FLSharedKeys oldSK, FLValue nuu, FLSharedKeys nuuSK) {
-    return toSliceResult(Delta::create(old, oldSK, nuu, nuuSK));
+FLSliceResult FLCreateDelta(FLValue old, FLValue nuu) {
+    return toSliceResult(Delta::create(old, nuu));
 }
 
-bool FLEncodeDelta(FLValue old, FLSharedKeys oldSK, FLValue nuu, FLSharedKeys nuuSK,
-                   FLEncoder jsonEncoder) {
+bool FLEncodeDelta(FLValue old, FLValue nuu, FLEncoder jsonEncoder) {
     JSONEncoder *enc = jsonEncoder->jsonEncoder.get();
     assert(enc);  //TODO: Support encoding to Fleece
-    return Delta::create(old, oldSK, nuu, nuuSK, *enc);
+    return Delta::create(old, nuu, *enc);
 }
 
 
-FLSliceResult FLApplyDelta(FLValue old, FLSharedKeys sk, FLSlice jsonDelta, FLError *outError) {
+FLSliceResult FLApplyDelta(FLValue old, FLSlice jsonDelta, FLError *outError) {
     try {
-        return toSliceResult(Delta::apply(old, sk, jsonDelta));
+        return toSliceResult(Delta::apply(old, jsonDelta));
     } catchError(outError);
     return {};
 }
 
-bool FLEncodeApplyingDelta(FLValue old, FLSharedKeys sk, FLValue delta, FLEncoder encoder) {
+bool FLEncodeApplyingDelta(FLValue old, FLValue delta, FLEncoder encoder) {
     try {
         Encoder *enc = encoder->fleeceEncoder.get();
         if (!enc)
             FleeceException::_throw(EncodeError, "FLEncodeApplyingDelta cannot encode JSON");
-        Delta::apply(old, sk, delta, *enc);
+        Delta::apply(old, delta, *enc);
         return true;
     } catch (const std::exception &x) {
         encoder->recordException(x);

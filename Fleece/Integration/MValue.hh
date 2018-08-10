@@ -17,11 +17,11 @@
 //
 
 #pragma once
-#include "FleeceCpp.hh"
-#include "PlatformCompat.hh"
-#include "slice.hh"
+#include "fleece/Fleece.hh"
+#include "fleece/Base.hh"
+#include "fleece/slice.hh"
 
-namespace fleeceapi {
+namespace fleece {
     using slice = fleece::slice;
     using alloc_slice = fleece::alloc_slice;
 
@@ -104,10 +104,10 @@ namespace fleeceapi {
             }
         }
 
-        void encodeTo(Encoder &enc, FLSharedKeys sk) const {
+        void encodeTo(Encoder &enc) const {
             assert(!isEmpty());
             if (_value)
-                enc.writeValue(_value, sk);
+                enc.writeValue(_value);
             else
                 encodeNative(enc, _native);
         }

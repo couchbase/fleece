@@ -17,15 +17,12 @@
 //
 
 #pragma once
-
+#include "fleece/Base.hh"
 
 #ifdef _MSC_VER
 
-    #define _usuallyTrue(VAL)               (VAL)
-    #define _usuallyFalse(VAL)              (VAL)
     #define NOINLINE                        __declspec(noinline)
 	#define LITECORE_UNUSED
-    #define NONNULL
     #define __typeof                        decltype
 
     #define __has_extension(X)              0
@@ -52,8 +49,6 @@
     #define LITECORE_UNUSED __attribute__((unused))
     #endif
 
-    #define _usuallyTrue(VAL)               __builtin_expect(VAL, true)
-    #define _usuallyFalse(VAL)              __builtin_expect(VAL, false)
     #define NOINLINE                        __attribute((noinline))
     
     #ifdef __clang__

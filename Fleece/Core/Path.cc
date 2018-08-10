@@ -24,7 +24,7 @@
 
 using namespace std;
 
-namespace fleece {
+namespace fleece { namespace impl {
 
     // Parses a path expression, calling the callback for each property or array index.
     void Path::forEachComponent(slice in, eachComponentCallback callback) {
@@ -115,8 +115,7 @@ namespace fleece {
     }
 
 
-    /*static*/ const Value* Path::evalJSONPointer(slice specifier, SharedKeys *sk,
-                                                  const Value *root)
+    /*static*/ const Value* Path::evalJSONPointer(slice specifier, const Value *root)
     {
         auto current = root;
         throwIf(specifier.readByte() != '/', PathSyntaxError, "JSONPointer does not start with '/'");
@@ -137,7 +136,7 @@ namespace fleece {
                 }
                 case kDict: {
                     string key = param.asString();
-                    current = ((const Dict*)current)->get(key, sk);
+                    current = ((const Dict*)current)->get(key);
                     break;
                 }
                 default:
@@ -152,24 +151,24 @@ namespace fleece {
         return current;
     }
 
-    /*static*/ const Value* Path::eval(slice specifier, SharedKeys *sk, const Value *root) {
+    /*static*/ const Value* Path::eval(slice specifier, const Value *root) {
         const Value *item = root;
         if (_usuallyFalse(!item))
             return nullptr;
         forEachComponent(specifier, [&](char token, slice component, int32_t index) {
-            item = Element::eval(token, component, index, sk, item);
+            item = Element::eval(token, component, index, item);
             return (item != nullptr);
         });
         return item;
     }
 
 
-    Path::Path(const string &specifier, SharedKeys *sk)
+    Path::Path(const string &specifier)
     :_specifier(specifier)
     {
         forEachComponent(slice(_specifier), [&](char token, slice component, int32_t index) {
             if (token == '.')
-                _path.emplace_back(component, sk);
+                _path.emplace_back(component);
             else
                 _path.emplace_back(index);
             return true;
@@ -190,9 +189,9 @@ namespace fleece {
     }
 
 
-    Path::Element::Element(slice property, SharedKeys *sk)
+    Path::Element::Element(slice property)
     :_keyBuf(property)
-    ,_key(new Dict::key(_keyBuf, sk, false))
+    ,_key(new Dict::key(_keyBuf))
     { }
 
 
@@ -208,12 +207,12 @@ namespace fleece {
     }
 
     /*static*/ const Value* Path::Element::eval(char token, slice comp, int32_t index,
-                                                SharedKeys *sk, const Value *item) noexcept {
+                                                const Value *item) noexcept {
         if (token == '.') {
             auto d = item->asDict();
             if (_usuallyFalse(!d))
                 return nullptr;
-            return d->get(comp, sk);
+            return d->get(comp);
         } else {
             return getFromArray(item, index);
         }
@@ -255,4 +254,4 @@ namespace fleece {
     }
 
 
-}
+} }

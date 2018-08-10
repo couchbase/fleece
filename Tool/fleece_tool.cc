@@ -16,7 +16,7 @@
 // limitations under the License.
 //
 
-#include "JSONConverter.hh"
+#include "fleece/Fleece.hh"
 #include <stdio.h>
 #include <unistd.h>
 #include <iostream>
@@ -102,18 +102,23 @@ int main(int argc, const char * argv[]) {
         auto input = readInput(in);
 
         if (encode) {
-            auto output = JSONConverter::convertJSON(input);
+            Doc doc = Doc::fromJSON(input);
+            if (!doc)
+                throw "Invalid JSON input";
+            slice output = doc.data();
             fwrite(output.buf, 1, output.size, stdout);
         } else if (decode) {
-            auto root = Value::fromData(input);
-            if (!root)
+            Doc doc(input);
+            if (!doc)
                 throw "Couldn't parse input as Fleece";
-            auto json = root->toJSON();
+            auto json = doc.root().toJSON();
             fwrite(json.buf, json.size, 1, stdout);
             fprintf(stdout, "\n");
         } else if (dump) {
-            if (!Value::dump(input, cout))
+            alloc_slice output = Doc::dump(input);
+            if (!output)
                 throw "Couldn't parse input as Fleece";
+            cout.write((const char*)output.buf, output.size);
         }
 
         return 0;

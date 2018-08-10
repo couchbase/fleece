@@ -17,7 +17,7 @@
 //
 
 #include "varint.hh"
-#include "slice.hh"
+#include "fleece/slice.hh"
 #include "Endian.hh"
 #include <algorithm>
 #include <assert.h>

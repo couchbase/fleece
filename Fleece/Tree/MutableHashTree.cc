@@ -20,7 +20,7 @@
 
 using namespace std;
 
-namespace fleece {
+namespace fleece { namespace impl {
     using namespace internal;
     using namespace hashtree;
 
@@ -248,4 +248,4 @@ namespace fleece {
         return *this;
     }
 
-}
+} }
