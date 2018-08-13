@@ -90,8 +90,9 @@ namespace fleece { namespace internal {
             sizeByteCount = PutUVarInt(&sizeBuf, s.size);
         }
         auto hv = new (sizeByteCount + s.size) HeapValue(valueTag, tiny);
-        memcpy(&hv->_data[0], sizeBuf, sizeByteCount);
-        memcpy(&hv->_data[sizeByteCount], s.buf, s.size);
+        uint8_t *strData = &hv->_header + 1;
+        memcpy(strData, sizeBuf, sizeByteCount);
+        memcpy(strData + sizeByteCount, s.buf, s.size);
         return hv;
     }
 

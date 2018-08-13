@@ -14,7 +14,7 @@ namespace fleece {
         struct offsetValue {
             uint8_t _pad = 0xFF;                // Unused byte, to ensure _header is at an odd address
             uint8_t _header;                    // Value header byte (tag | tiny)
-            uint8_t _data[1];                   // Extra Value data (object is dynamically sized)
+//          uint8_t _data[0];                   // Extra Value data (object is dynamically sized)
 
 #ifdef __cplusplus
             offsetValue() {}
