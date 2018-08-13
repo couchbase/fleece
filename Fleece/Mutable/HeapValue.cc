@@ -51,6 +51,13 @@ namespace fleece { namespace internal {
         return new (0) HeapValue(kSpecialTag, b ? kSpecialValueTrue : kSpecialValueFalse);
     }
 
+#ifdef _MSC_VER
+#pragma warning(push)
+// Relying on some unsigned integer trickery, so suppress
+// warning C4146: unary minus operator applied to unsigned type, result still unsigned
+#pragma warning(disable : 4146)
+#endif
+
     template <class INT>
     HeapValue* HeapValue::createInt(INT i, bool isUnsigned) {
         if (i < 2048 && (isUnsigned || -i < 2048)) {
@@ -66,6 +73,10 @@ namespace fleece { namespace internal {
                           {buf, size});
         }
     }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 
     HeapValue* HeapValue::create(float f) {

@@ -16,12 +16,11 @@ namespace fleece {
             uint8_t _header;                    // Value header byte (tag | tiny)
 //          uint8_t _data[0];                   // Extra Value data (object is dynamically sized)
 
-#ifdef __cplusplus
             offsetValue() {}
         private:
-            offsetValue(const offsetValue&); // undefined
-            offsetValue& operator=(const offsetValue&); // undefined
-#endif
+            offsetValue(const offsetValue&) = delete;
+            offsetValue(offsetValue&&) = delete;
+            offsetValue& operator=(const offsetValue&) = delete;
         };
 
         /** Stores a Value in a heap block.
@@ -51,7 +50,7 @@ namespace fleece {
 
             void* operator new(size_t size)                 {return ::operator new(size);}
             void operator delete(void* ptr)                 {::operator delete(ptr);}
-            void operator delete(void* ptr, size_t size)    {::operator delete(ptr, size);}
+            void operator delete(void* ptr, size_t size)    {::operator delete(ptr);}
         protected:
             ~HeapValue() =default;
             static HeapValue* create(tags tag, int tiny, slice extraData);
