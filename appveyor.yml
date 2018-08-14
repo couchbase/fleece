@@ -23,4 +23,4 @@ before_build:
     - ps: New-Item -Type Directory build_cmake\x86; New-Item -Type Directory build_cmake\x86_store; New-Item -Type Directory build_cmake\x64; New-Item -Type Directory build_cmake\x64_store; New-Item -Type Directory build_cmake\arm
     
 build_script:
-    - ps: build_cmake\build.ps1 -Platform $PLATFORM
+    - ps: .\build_cmake\build.ps1 -Platform $env:PLATFORM
