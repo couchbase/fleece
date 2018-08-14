@@ -1,0 +1,26 @@
+version: 2.5.0.{build}
+branches:
+    only:
+        - master
+
+skip_tags: true
+init:
+    - cmd: git config --global core.autocrlf true
+
+# Environment
+image: Visual Studio 2015
+clone_depth: 1
+
+platform:
+    - x86
+    - x64
+    - ARM
+    
+matrix:
+    fast_finish: true
+    
+before_build:
+    - ps: New-Item -Type Directory build_cmake\x86; New-Item -Type Directory build_cmake\x86_store; New-Item -Type Directory build_cmake\x64; New-Item -Type Directory build_cmake\x64_store; New-Item -Type Directory build_cmake\arm
+    
+build_script:
+    - ps: build_cmake\build.ps1 -Platform $PLATFORM
