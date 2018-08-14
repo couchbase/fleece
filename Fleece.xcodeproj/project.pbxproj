@@ -211,6 +211,7 @@
 		270FA2761BF53CEA005DCB13 /* varint.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = varint.cc; sourceTree = "<group>"; };
 		270FA2771BF53CEA005DCB13 /* varint.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = varint.hh; sourceTree = "<group>"; };
 		270FA2861BF53D32005DCB13 /* forestdb_endian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = forestdb_endian.h; sourceTree = "<group>"; };
+		271507F0212254DE005FE6E8 /* FLSlice.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FLSlice.h; sourceTree = "<group>"; };
 		2715BA1D1D820C690061D92E /* PlatformCompat.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = PlatformCompat.hh; sourceTree = "<group>"; };
 		27298E3A1C00F812000CFBA8 /* JSONConverter.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSONConverter.cc; sourceTree = "<group>"; };
 		27298E491C00F8A9000CFBA8 /* jsonsl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jsonsl.c; sourceTree = "<group>"; };
@@ -419,6 +420,7 @@
 			isa = PBXGroup;
 			children = (
 				278163B41CE69CA800B94E32 /* Fleece.h */,
+				271507F0212254DE005FE6E8 /* FLSlice.h */,
 				27D7F8791E5521CC0088FADF /* FleeceCpp.hh */,
 				270515521D9053BE00D62D05 /* Fleece+CoreFoundation.h */,
 				270FA2751BF53CEA005DCB13 /* slice.hh */,
