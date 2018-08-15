@@ -28,6 +28,10 @@
 #ifndef _MSC_VER
     #include <sys/stat.h>
     #include <unistd.h>
+#define _open open
+#define _close close
+#define _write write
+#define _read read
 #else
     #include <io.h>
     #include <windows.h>
