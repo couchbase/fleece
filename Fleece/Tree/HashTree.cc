@@ -154,7 +154,7 @@ namespace fleece {
 
 
     const HashTree* HashTree::fromData(slice data) {
-        return (const HashTree*)offsetby(data.end(), -sizeof(Interior));
+        return (const HashTree*)offsetby(data.end(), -(ssize_t)sizeof(Interior));
     }
 
 
