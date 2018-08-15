@@ -22,6 +22,7 @@
 #include <sstream>
 #ifndef _MSC_VER
 #include <unistd.h>
+#define _isatty isatty
 #else
 #include <io.h>
 #ifndef STDOUT_FILENO
