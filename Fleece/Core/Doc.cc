@@ -48,10 +48,23 @@ namespace fleece { namespace impl {
             lock_guard<mutex> lock(sMutex);
             if (_usuallyFalse(!sMemoryMap))
                 sMemoryMap = new map<size_t, Scope*>;
-            if (!sMemoryMap->insert({size_t(data.end()), this}).second)
-                FleeceException::_throw(InternalError,
-                                        "Duplicate Scope for (%p .. %p)", data.buf, data.end());
-            Log("Register   (%p ... %p) --> Scope %p, sk=%p [Now %zu]", data.buf, data.end(), this, sk, sMemoryMap->size());
+            auto result = sMemoryMap->insert({size_t(data.end()), this});   // <iterator,inserted>
+            if (result.second) {
+                _registered = true;
+                Log("Register   (%p ... %p) --> Scope %p, sk=%p [Now %zu]",
+                    data.buf, data.end(), this, sk, sMemoryMap->size());
+            } else {
+                Scope *existing = result.first->second;
+                if (existing->_data == data && existing->_externDestination == _externDestination
+                                            && existing->_sk == _sk) {
+                    Log("Duplicate  (%p ... %p) --> Scope %p, sk=%p",
+                        data.buf, data.end(), this, sk);
+                } else {
+                    FleeceException::_throw(InternalError,
+                                            "Incompatible duplicate Scope %p for (%p .. %p): conflicts with %p",
+                                            this, data.buf, data.end(), existing);
+                }
+            }
         }
     }
 
@@ -62,7 +75,7 @@ namespace fleece { namespace impl {
 
 
     void Scope::unregister() noexcept {
-        if (_data) {
+        if (_registered) {
             lock_guard<mutex> lock(sMutex);
             Log("Unregister (%p ... %p) --> Scope %p, sk=%p",
                 _data.buf, _data.end(), this, _sk.get());
@@ -70,6 +83,7 @@ namespace fleece { namespace impl {
                 fprintf(stderr, "WARNING: fleece::Scope failed to unregister (%p .. %p)",
                         _data.buf, _data.end());
             }
+            _registered = false;
         }
     }
 

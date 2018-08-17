@@ -175,4 +175,27 @@ namespace fleece {
         CHECK(Doc::sharedKeys(root) == nullptr);
     }
 
+
+    TEST_CASE("Duplicate Docs") {
+        const Dict *root;
+        {
+            alloc_slice data = readTestFile("1person.fleece");
+            Retained<SharedKeys> sk = new SharedKeys();
+            Retained<Doc> doc1 = new Doc(data, Doc::kUntrusted, sk);
+            Retained<Doc> doc2 = new Doc(data, Doc::kUntrusted, sk);
+            CHECK(doc1->data() == data);
+            CHECK(doc2->data() == data);
+            CHECK(doc1->sharedKeys() == sk);
+            CHECK(doc2->sharedKeys() == sk);
+            root = (const Dict*)doc1->root();
+            CHECK(root);
+            CHECK(root->sharedKeys() == sk);
+
+            root = (const Dict*)doc2->root();
+            CHECK(root);
+            CHECK(root->sharedKeys() == sk);
+        }
+        CHECK(Doc::sharedKeys(root) == nullptr);
+    }
+
 }

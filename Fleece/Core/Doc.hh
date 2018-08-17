@@ -49,6 +49,7 @@ namespace fleece { namespace impl {
         Retained<SharedKeys> _sk;
         slice const         _externDestination;
         slice const         _data;
+        bool                _registered {false};
     protected:
         bool                _isDoc {false};
     };
