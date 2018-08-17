@@ -37,7 +37,9 @@ _FLValue_ToString
 _FLValue_ToJSON
 _FLValue_ToJSONX
 _FLValue_ToJSON5
+_FLValue_FindDoc
 
+_FLData_ConvertJSON
 _FLJSON5_ToJSON
 
 _FLArray_Count
@@ -87,7 +89,7 @@ _FLEncoder_EndDict
 _FLEncoder_ConvertJSON
 _FLEncoder_BytesWritten
 _FLEncoder_Finish
-_FLEncoder_ExtractOutput
+_FLEncoder_FinishDoc
 _FLEncoder_GetError
 _FLEncoder_GetErrorMessage
 
@@ -95,6 +97,10 @@ _FLKeyPath_New
 _FLKeyPath_Free
 _FLKeyPath_Eval
 _FLKeyPath_EvalOnce
+
+_FLSharedKeys_Decode
+_FLSharedKeys_Release
+_FLSharedKeys_Retain
 
 _FLCreateDelta
 _FLEncodeDelta

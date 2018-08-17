@@ -25,7 +25,7 @@
 		27298E781C01A461000CFBA8 /* PerfTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27298E771C01A461000CFBA8 /* PerfTests.cc */; };
 		27298E801C04E665000CFBA8 /* Encoder.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27298E7F1C04E665000CFBA8 /* Encoder.cc */; };
 		272E5A521BF7FE7100848580 /* FleeceTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 272E5A451BF7FD8F00848580 /* FleeceTests.cc */; };
-		272E5A551BF7FE9C00848580 /* libFleece.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 270FA25C1BF53CAD005DCB13 /* libFleece.a */; };
+		272E5A551BF7FE9C00848580 /* libfleeceStatic.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 270FA25C1BF53CAD005DCB13 /* libfleeceStatic.a */; };
 		272E5A5D1BF800A100848580 /* EncoderTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 272E5A5B1BF800A100848580 /* EncoderTests.cc */; };
 		272E5A5F1BF91DBE00848580 /* ObjCTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 272E5A5E1BF91DBE00848580 /* ObjCTests.mm */; };
 		2734B89E1F8583FF00BE5249 /* MArray.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8951F8583FF00BE5249 /* MArray.hh */; };
@@ -71,7 +71,7 @@
 		2797BCAD1C0FBFDE00E5C991 /* StringTable.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2797BCAB1C0FBFDE00E5C991 /* StringTable.hh */; };
 		279AC52B1C07776A002C80DB /* ValueTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 279AC52A1C07776A002C80DB /* ValueTests.cc */; };
 		279AC5341C096872002C80DB /* fleece_tool.cc in Sources */ = {isa = PBXBuildFile; fileRef = 279AC5331C096872002C80DB /* fleece_tool.cc */; };
-		279AC5381C096B5C002C80DB /* libFleece.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 270FA25C1BF53CAD005DCB13 /* libFleece.a */; };
+		279AC5381C096B5C002C80DB /* libfleeceStatic.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 270FA25C1BF53CAD005DCB13 /* libfleeceStatic.a */; };
 		279AC53C1C097941002C80DB /* Value+Dump.cc in Sources */ = {isa = PBXBuildFile; fileRef = 279AC53B1C097941002C80DB /* Value+Dump.cc */; };
 		27A2F73B21248DA50081927B /* FLSlice.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A2F73A21248DA40081927B /* FLSlice.h */; };
 		27A924CF1D9C32E800086206 /* Path.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27A924CD1D9C32E800086206 /* Path.cc */; };
@@ -84,6 +84,10 @@
 		27B802D820DD750E00599DF0 /* NodeRef.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27B802D620DD750E00599DF0 /* NodeRef.hh */; };
 		27C4ACAC1CE5146500938365 /* Array.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27C4ACAA1CE5146500938365 /* Array.cc */; };
 		27C4ACAD1CE5146500938365 /* Array.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C4ACAB1CE5146500938365 /* Array.hh */; };
+		27C4CEA92127722300470DE9 /* libfleeceStatic.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 270FA25C1BF53CAD005DCB13 /* libfleeceStatic.a */; };
+		27C4CEAF2127743200470DE9 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C4CEAE2127743200470DE9 /* Foundation.framework */; };
+		27C4CEB121277CC600470DE9 /* C_Test.c in Sources */ = {isa = PBXBuildFile; fileRef = 278163B81CE6BB8C00B94E32 /* C_Test.c */; };
+		27C4CEB321277D5900470DE9 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C4CEB221277D5900470DE9 /* libc++.tbd */; };
 		27C8DF072084102900A99BFC /* MutableHashTree.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C8DF052084102900A99BFC /* MutableHashTree.hh */; };
 		27C8DF082084102900A99BFC /* MutableHashTree.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27C8DF062084102900A99BFC /* MutableHashTree.cc */; };
 		27CA08421F6B0E9400FF8C71 /* Dict.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27CA08401F6B0E9400FF8C71 /* Dict.hh */; };
@@ -199,6 +203,13 @@
 			remoteGlobalIDString = 270FA25B1BF53CAD005DCB13;
 			remoteInfo = Fleece;
 		};
+		27C4CEA72127720C00470DE9 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 270FA2541BF53CAD005DCB13 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 270FA25B1BF53CAD005DCB13;
+			remoteInfo = Fleece;
+		};
 		27D721911F8E8FE500AA4458 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 270FA2541BF53CAD005DCB13 /* Project object */;
@@ -246,7 +257,7 @@
 /* Begin PBXFileReference section */
 		270515531D9058F200D62D05 /* Fleece+CoreFoundation.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "Fleece+CoreFoundation.mm"; sourceTree = "<group>"; };
 		270515551D90596000D62D05 /* Fleece+ImplGlue.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "Fleece+ImplGlue.hh"; sourceTree = "<group>"; };
-		270FA25C1BF53CAD005DCB13 /* libFleece.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libFleece.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		270FA25C1BF53CAD005DCB13 /* libfleeceStatic.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libfleeceStatic.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		270FA26A1BF53CEA005DCB13 /* Value.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Value.cc; sourceTree = "<group>"; };
 		270FA26B1BF53CEA005DCB13 /* Value.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Value.hh; sourceTree = "<group>"; };
 		270FA26D1BF53CEA005DCB13 /* Value+ObjC.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "Value+ObjC.mm"; sourceTree = "<group>"; };
@@ -373,6 +384,12 @@
 		27C4AC961CDFFDA100938365 /* Performance.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = Performance.md; sourceTree = "<group>"; };
 		27C4ACAA1CE5146500938365 /* Array.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Array.cc; sourceTree = "<group>"; };
 		27C4ACAB1CE5146500938365 /* Array.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Array.hh; sourceTree = "<group>"; };
+		27C4CE9C2127719D00470DE9 /* libfleece.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libfleece.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		27C4CEAA2127729D00470DE9 /* FleeceDylib.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FleeceDylib.xcconfig; sourceTree = "<group>"; };
+		27C4CEAC2127741000470DE9 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		27C4CEAE2127743200470DE9 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		27C4CEB02127781300470DE9 /* FleeceDylib_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FleeceDylib_Release.xcconfig; sourceTree = "<group>"; };
+		27C4CEB221277D5900470DE9 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
 		27C8DF052084102900A99BFC /* MutableHashTree.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MutableHashTree.hh; sourceTree = "<group>"; };
 		27C8DF062084102900A99BFC /* MutableHashTree.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MutableHashTree.cc; sourceTree = "<group>"; };
 		27C8DF09208521B600A99BFC /* HashTreeTests.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = HashTreeTests.cc; sourceTree = "<group>"; };
@@ -419,7 +436,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				272E5A551BF7FE9C00848580 /* libFleece.a in Frameworks */,
+				272E5A551BF7FE9C00848580 /* libfleeceStatic.a in Frameworks */,
 				27D721961F8E900400AA4458 /* libFleeceMutableObjC.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -428,7 +445,17 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				279AC5381C096B5C002C80DB /* libFleece.a in Frameworks */,
+				279AC5381C096B5C002C80DB /* libfleeceStatic.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		27C4CE9A2127719D00470DE9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				27C4CEB321277D5900470DE9 /* libc++.tbd in Frameworks */,
+				27C4CEAF2127743200470DE9 /* Foundation.framework in Frameworks */,
+				27C4CEA92127722300470DE9 /* libfleeceStatic.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -472,11 +499,12 @@
 		270FA25D1BF53CAD005DCB13 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				270FA25C1BF53CAD005DCB13 /* libFleece.a */,
+				270FA25C1BF53CAD005DCB13 /* libfleeceStatic.a */,
 				272E5A4B1BF7FE5600848580 /* Test */,
 				279AC5311C096872002C80DB /* fleece */,
 				27D721901F8E8EEA00AA4458 /* libFleeceMutableObjC.a */,
 				27DE2EDF2125FA1700123597 /* libFleeceBase.a */,
+				27C4CE9C2127719D00470DE9 /* libfleece.dylib */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -613,6 +641,8 @@
 				2776AA46208A6C5A004ACE85 /* Project_Release.xcconfig */,
 				27F25A8220A6559800E181FA /* FleeceMutableObjC.xcconfig */,
 				2776AA48208A6CED004ACE85 /* FleeceStaticLib.xcconfig */,
+				27C4CEAA2127729D00470DE9 /* FleeceDylib.xcconfig */,
+				27C4CEB02127781300470DE9 /* FleeceDylib_Release.xcconfig */,
 				2776AA49208A6E01004ACE85 /* FleeceTest.xcconfig */,
 				2776AA47208A6C5A004ACE85 /* XcodeWarnings.xcconfig */,
 			);
@@ -758,6 +788,9 @@
 		27DE2EE22125FAC600123597 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				27C4CEB221277D5900470DE9 /* libc++.tbd */,
+				27C4CEAE2127743200470DE9 /* Foundation.framework */,
+				27C4CEAC2127741000470DE9 /* CoreFoundation.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -834,6 +867,13 @@
 				274D8253209CF9B3008BB39F /* HeapValue.hh in Headers */,
 				275CED531D3EF7BE001DE46C /* FleeceException.hh in Headers */,
 				27E3DD431DB6A14200F2872D /* SharedKeys.hh in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		27C4CE982127719D00470DE9 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -936,7 +976,7 @@
 			);
 			name = Fleece;
 			productName = Fleece;
-			productReference = 270FA25C1BF53CAD005DCB13 /* libFleece.a */;
+			productReference = 270FA25C1BF53CAD005DCB13 /* libfleeceStatic.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 		272E5A4A1BF7FE5600848580 /* Test */ = {
@@ -975,6 +1015,24 @@
 			productName = Tool;
 			productReference = 279AC5311C096872002C80DB /* fleece */;
 			productType = "com.apple.product-type.tool";
+		};
+		27C4CE9B2127719D00470DE9 /* fleeceDylib */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 27C4CEA62127719D00470DE9 /* Build configuration list for PBXNativeTarget "fleeceDylib" */;
+			buildPhases = (
+				27C4CE982127719D00470DE9 /* Headers */,
+				27C4CE992127719D00470DE9 /* Sources */,
+				27C4CE9A2127719D00470DE9 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				27C4CEA82127720C00470DE9 /* PBXTargetDependency */,
+			);
+			name = fleeceDylib;
+			productName = fleeceDylib;
+			productReference = 27C4CE9C2127719D00470DE9 /* libfleece.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
 		};
 		27D721511F8E8EEA00AA4458 /* FleeceMutableObjC */ = {
 			isa = PBXNativeTarget;
@@ -1029,6 +1087,9 @@
 					279AC5301C096872002C80DB = {
 						CreatedOnToolsVersion = 7.1.1;
 					};
+					27C4CE9B2127719D00470DE9 = {
+						CreatedOnToolsVersion = 10.0;
+					};
 				};
 			};
 			buildConfigurationList = 270FA2571BF53CAD005DCB13 /* Build configuration list for PBXProject "Fleece" */;
@@ -1045,6 +1106,7 @@
 			targets = (
 				270FA25B1BF53CAD005DCB13 /* Fleece */,
 				27DE2E882125FA1700123597 /* FleeceBase */,
+				27C4CE9B2127719D00470DE9 /* fleeceDylib */,
 				27D721511F8E8EEA00AA4458 /* FleeceMutableObjC */,
 				272E5A4A1BF7FE5600848580 /* Test */,
 				279AC5301C096872002C80DB /* Tool */,
@@ -1124,6 +1186,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		27C4CE992127719D00470DE9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				27C4CEB121277CC600470DE9 /* C_Test.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		27D721521F8E8EEA00AA4458 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1162,6 +1232,11 @@
 			isa = PBXTargetDependency;
 			target = 270FA25B1BF53CAD005DCB13 /* Fleece */;
 			targetProxy = 279AC5391C09759C002C80DB /* PBXContainerItemProxy */;
+		};
+		27C4CEA82127720C00470DE9 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 270FA25B1BF53CAD005DCB13 /* Fleece */;
+			targetProxy = 27C4CEA72127720C00470DE9 /* PBXContainerItemProxy */;
 		};
 		27D721921F8E8FE500AA4458 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -1237,6 +1312,20 @@
 			};
 			name = Release;
 		};
+		27C4CEA42127719D00470DE9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 27C4CEAA2127729D00470DE9 /* FleeceDylib.xcconfig */;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		27C4CEA52127719D00470DE9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 27C4CEAA2127729D00470DE9 /* FleeceDylib.xcconfig */;
+			buildSettings = {
+			};
+			name = Release;
+		};
 		27D7218E1F8E8EEA00AA4458 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27F25A8220A6559800E181FA /* FleeceMutableObjC.xcconfig */;
@@ -1306,6 +1395,15 @@
 			buildConfigurations = (
 				279AC5361C096872002C80DB /* Debug */,
 				279AC5371C096872002C80DB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		27C4CEA62127719D00470DE9 /* Build configuration list for PBXNativeTarget "fleeceDylib" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				27C4CEA42127719D00470DE9 /* Debug */,
+				27C4CEA52127719D00470DE9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
