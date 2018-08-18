@@ -20,6 +20,7 @@
 #include "MValue.hh"
 #include "MContext.hh"
 #include "PlatformCompat.hh"
+#include <assert.h>
 
 namespace fleeceapi {
 

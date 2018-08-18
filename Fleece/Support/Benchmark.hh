@@ -18,8 +18,8 @@
 
 #pragma once
 #include "Stopwatch.hh"
-#include <assert.h>
 #include <vector>
+#include "betterassert.hh"
 
 
 class Benchmark {

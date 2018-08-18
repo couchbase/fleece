@@ -8,6 +8,7 @@
 #include "Array.hh"
 #include "ValueSlot.hh"
 #include <vector>
+#include "betterassert.hh"
 
 namespace fleece {
     class MutableArray;

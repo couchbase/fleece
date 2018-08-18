@@ -23,6 +23,7 @@
 #include "Delta.hh"
 #include "Fleece.h"
 #include "JSON5.hh"
+#include "betterassert.hh"
 
 
 namespace fleece {

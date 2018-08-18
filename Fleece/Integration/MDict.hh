@@ -20,6 +20,7 @@
 #include "MCollection.hh"
 #include <unordered_map>
 #include <vector>
+#include <assert.h>
 
 namespace fleeceapi {
 

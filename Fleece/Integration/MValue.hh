@@ -20,6 +20,7 @@
 #include "FleeceCpp.hh"
 #include "PlatformCompat.hh"
 #include "slice.hh"
+#include <assert.h>
 
 namespace fleeceapi {
     using slice = fleece::slice;

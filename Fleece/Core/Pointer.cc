@@ -18,6 +18,7 @@
 
 #include "Pointer.hh"
 #include <stdio.h>
+#include "betterassert.hh"
 
 namespace fleece { namespace internal {
 

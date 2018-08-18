@@ -27,10 +27,10 @@
 #include "PlatformCompat.hh"
 #include "TempArray.hh"
 #include <algorithm>
-#include <assert.h>
 #include <cmath>
 #include <float.h>
 #include <stdlib.h>
+#include "betterassert.hh"
 
 
 namespace fleece {

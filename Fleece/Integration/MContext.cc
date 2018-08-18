@@ -17,6 +17,7 @@
 //
 
 #include "MContext.hh"
+#include "betterassert.hh"
 
 namespace fleeceapi {
 

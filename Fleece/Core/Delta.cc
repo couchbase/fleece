@@ -26,6 +26,7 @@
 #include "diff_match_patch.hh"
 #include <sstream>
 #include <unordered_set>
+#include "betterassert.hh"
 
 
 namespace fleece {

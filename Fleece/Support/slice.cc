@@ -21,7 +21,6 @@
 #include "decode.h"
 #include "Fleece.h" // for FLSlice and FLSliceResult
 #include <algorithm>
-#include <assert.h>
 #include <math.h>
 #include <stdlib.h>
 #include <atomic>
@@ -30,6 +29,7 @@
 #ifdef _MSC_VER
 #include "memmem.h"
 #endif
+#include "betterassert.hh"
 
 namespace fleece {
 
