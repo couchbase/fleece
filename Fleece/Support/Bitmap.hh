@@ -32,7 +32,7 @@ extern "C" {
 namespace fleece {
 
     /** Returns the number of 1 bits in the integer `bits`. */
-    template<typename INT, typename = std::enable_if<std::is_integral<INT>::value, INT>::type>
+    template<class INT, typename std::enable_if<std::is_integral<INT>::value, INT>::type = 0>
     INT popcount(INT bits) {
 #ifdef _MSC_VER
         extern int _popcount(unsigned int) noexcept;
