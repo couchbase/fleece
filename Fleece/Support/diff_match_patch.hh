@@ -1803,16 +1803,16 @@ class diff_match_patch {
     while (text.find(pattern) != text.rfind(pattern)
         && (ssize_t)pattern.length() < Match_MaxBits - Patch_Margin - Patch_Margin) {
       padding += Patch_Margin;
-      pattern = safeMid(text, std::max(0l, patch.start2 - padding),
+      pattern = safeMid(text, std::max(0l, (long)(patch.start2 - padding)),
           std::min((ssize_t)text.length(), patch.start2 + patch.length1 + padding)
-          - std::max(0l, patch.start2 - padding));
+          - std::max(0l, (long)(patch.start2 - padding)));
     }
     // Add one chunk for good luck.
     padding += Patch_Margin;
 
     // Add the prefix.
-    string_t prefix = safeMid(text, std::max(0l, patch.start2 - padding),
-        patch.start2 - std::max(0l, patch.start2 - padding));
+    string_t prefix = safeMid(text, std::max(0l, (long)(patch.start2 - padding)),
+        patch.start2 - std::max(0l, (long)(patch.start2 - padding)));
     if (!prefix.empty()) {
       patch.diffs.push_front(Diff(EQUAL, prefix));
     }

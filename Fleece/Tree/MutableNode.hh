@@ -10,6 +10,7 @@
 #include "NodeRef.hh"
 #include "RefCounted.hh"
 #include "slice.hh"
+#include "TempArray.hh"
 #include "betterassert.hh"
 
 namespace fleece { namespace hashtree {
@@ -258,7 +259,7 @@ namespace fleece { namespace hashtree {
             // `nodes` is an in-memory staging area for the child nodes I'll write.
             // The offsets in it are absolute positions in the encoded output,
             // except for ones that are bitmaps.
-            Node nodes[n];
+            TempArray(nodes, Node, n);
 
             // Write interior nodes, then leaf node Values, then leaf node keys.
             // This keeps the keys near me, for better locality of reference.
@@ -312,14 +313,26 @@ namespace fleece { namespace hashtree {
             out << " }";
         }
 
+        static void operator delete(void* ptr) {
+            ::operator delete(ptr);
+        }
 
     private:
+        MutableInterior() = delete;
+        MutableInterior(const MutableInterior& i) = delete;
+        MutableInterior(MutableInterior&& i) = delete;
+        MutableInterior& operator=(const MutableInterior&) = delete;
+
         static MutableInterior* newNode(unsigned capacity, MutableInterior *orig =nullptr) {
             return new (capacity) MutableInterior(capacity, orig);
         }
 
         static void* operator new(size_t size, unsigned capacity) {
             return ::operator new(size + capacity*sizeof(NodeRef));
+        }
+
+        static void operator delete(void* ptr, unsigned capacity) {
+            ::operator delete(ptr);
         }
 
         static MutableInterior* mutableCopy(const Interior *iNode, unsigned extraCapacity =0) {
@@ -414,7 +427,17 @@ namespace fleece { namespace hashtree {
 
 
         Bitmap<bitmap_t> _bitmap {0};
+#ifdef _MSC_VER
+#pragma warning(push)
+// warning C4200: nonstandard extension used: zero-sized array in struct/union
+// note: This member will be ignored by a defaulted constructor or copy/move assignment operator
+// Jim: So keep the default copy, move, and constructor deleted, and use care if they are overriden
+#pragma warning(disable : 4200)
+#endif
         NodeRef _children[0];           // Variable-size array; size is given by _capacity
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
     };
 
 } }

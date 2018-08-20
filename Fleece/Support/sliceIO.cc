@@ -28,6 +28,10 @@
 #ifndef _MSC_VER
     #include <sys/stat.h>
     #include <unistd.h>
+    #define _open open
+    #define _close close
+    #define _write write
+    #define _read read
 #else
     #include <io.h>
     #include <windows.h>
@@ -41,7 +45,7 @@
 namespace fleece {
 
     alloc_slice readFile(const char *path) {
-        int fd = ::open(path, O_RDONLY | O_BINARY);
+        int fd = ::_open(path, O_RDONLY | O_BINARY);
         if (fd < 0)
             FleeceException::_throwErrno("Can't open file");
         struct stat stat;
@@ -49,21 +53,21 @@ namespace fleece {
         if (stat.st_size > SIZE_MAX)
             throw std::logic_error("File too big for address space");
         alloc_slice data((size_t)stat.st_size);
-        ssize_t bytesRead = ::read(fd, (void*)data.buf, data.size);
+        ssize_t bytesRead = ::_read(fd, (void*)data.buf, data.size);
         if (bytesRead < (ssize_t)data.size)
             FleeceException::_throwErrno("Can't read file");
-        ::close(fd);
+        ::_close(fd);
         return data;
     }
 
     void writeToFile(slice s, const char *path, int mode) {
-        int fd = ::open(path, mode | O_WRONLY | O_BINARY, 0600);
+        int fd = ::_open(path, mode | O_WRONLY | O_BINARY, 0600);
         if (fd < 0)
             FleeceException::_throwErrno("Can't open file");
-        ssize_t written = ::write(fd, s.buf, s.size);
+        ssize_t written = ::_write(fd, s.buf, s.size);
         if(written < (ssize_t)s.size)
             FleeceException::_throwErrno("Can't write file");
-        ::close(fd);
+        ::_close(fd);
     }
 
     void writeToFile(slice s, const char *path) {
