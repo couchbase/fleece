@@ -20,7 +20,6 @@
 
 #ifdef _MSC_VER
 
-#include <cpuid.h>
 #include <mutex>
 #include <bitset>
 #include <array>
