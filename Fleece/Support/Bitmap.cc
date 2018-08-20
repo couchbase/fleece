@@ -41,9 +41,7 @@ namespace fleece {
     }
 
 
-#ifdef _M_ARM
-    #define can_popcnt()  false
-#else
+#ifndef _M_ARM
     static bool _can_popcnt = false;
     static void detect_popcnt()
     {
@@ -72,15 +70,27 @@ namespace fleece {
 #endif
 
     int _popcount(unsigned int v) noexcept {
+#ifndef _M_ARM
         return can_popcnt() ? __popcnt(v) : popcount_c(v);
+#else
+        return popcount_c(v);
+#endif;
     }
 
     int _popcountl(unsigned long v) noexcept {
+#ifndef _M_ARM
         return can_popcnt() ? __popcnt(v) : popcount_c(v);
+#else
+        return popcount_c(v);
+#endif;
     }
 
     int _popcountll(unsigned long long v) noexcept {
-        return can_popcnt() ? __popcnt64(v) : popcount_c(v);
+#ifdef _WIN64
+        return can_popcnt() ? (int)__popcnt64(v) : popcount_c(v);
+#else
+        return popcount_c(v);
+#endif
     }
     
 }
