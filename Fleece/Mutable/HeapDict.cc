@@ -21,6 +21,7 @@
 #include "ValueSlot.hh"
 #include "MutableDict.hh"
 #include "Encoder.hh"
+#include "betterassert.hh"
 
 namespace fleece { namespace internal {
 

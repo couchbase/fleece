@@ -19,6 +19,7 @@
 #include "HeapValue.hh"
 #include "varint.hh"
 #include <algorithm>
+#include "betterassert.hh"
 
 namespace fleece { namespace internal {
     using namespace std;

@@ -20,14 +20,17 @@
 #include "SharedKeys.hh"
 #include "FleeceException.hh"
 #include "PlatformCompat.hh"
+#include <iostream>
 
 using namespace std;
 
 namespace fleece {
 
     // Parses a path expression, calling the callback for each property or array index.
-    void Path::forEachComponent(slice in, function_ref<bool(char, slice, int32_t)> callback) {
+    void Path::forEachComponent(slice in, eachComponentCallback callback) {
         throwIf(in.size == 0, PathSyntaxError, "Empty path");
+        throwIf(in[in.size-1] == '\\', PathSyntaxError, "'\\' at end of string");
+
         uint8_t token = in.peekByte();
         if (token == '$') {
             // Starts with "$." or "$["
@@ -35,11 +38,15 @@ namespace fleece {
             if (in.size == 0)
                 return;                 // Just "$" means the root
             token = in.readByte();
-            if (token != '.' && token != '[')
-                FleeceException::_throw(PathSyntaxError, "Invalid path delimiter after $");
+            throwIf(token != '.' && token != '[', PathSyntaxError, "Invalid path delimiter after $");
         } else if (token == '[' || token == '.') {
             // Starts with "[" or "."
             in.moveStart(1);
+        } else if (token == '\\') {
+            // First character of path is escaped (probably a '$' or '.' or '[')
+            if (in[1] == '$')
+                in.moveStart(1);
+            token = '.';
         } else {
             // Else starts with a property name
             token = '.';
@@ -52,14 +59,30 @@ namespace fleece {
             // Read parameter (property name or array index):
             const uint8_t* next;
             slice param;
+            alloc_slice unescaped;
             int32_t index = 0;
 
             if (token == '.') {
                 // Find end of property name:
-                next = in.findAnyByteOf(slice(".[", 2));
-                if (!next)
+                next = in.findAnyByteOf(".[\\"_sl);
+                if (next == nullptr) {
+                    param = in;
                     next = (const uint8_t*)in.end();
-                param = slice(in.buf, next);
+                } else if (*next != '\\') {
+                    param = slice(in.buf, next);
+                } else {
+                    // Name contains escapes -- need to unescape it:
+                    unescaped.reset(in.size);
+                    auto dst = (uint8_t*)unescaped.buf;
+                    for (next = (const uint8_t*)in.buf; next < in.end(); ++next) {
+                        uint8_t c = *next;
+                        if (c == '\\')
+                            c = *++next;
+                        *dst++ = c;
+                    }
+                    param = slice(unescaped.buf, dst);
+                }
+
             } else if (token == '[') {
                 // Find end of array index:
                 next = in.findByteOrEnd(']');
@@ -69,16 +92,15 @@ namespace fleece {
                 // Parse array index:
                 slice n = param;
                 int64_t i = n.readSignedDecimal();
-                if (_usuallyFalse(n.size > 0 || i > INT32_MAX || i < INT32_MIN))
-                    FleeceException::_throw(PathSyntaxError, "Invalid array index");
+                throwIf(n.size > 0 || i > INT32_MAX || i < INT32_MIN,
+                        PathSyntaxError, "Invalid array index");
                 index = (int32_t)i;
             } else {
                 FleeceException::_throw(PathSyntaxError, "Invalid path component");
             }
 
             // Invoke the callback:
-            if (param.size == 0)
-                FleeceException::_throw(PathSyntaxError, "Empty property or index");
+            throwIf(param.size == 0, PathSyntaxError, "Empty property or index");
             if (_usuallyFalse(!callback(token, param, index)))
                 return;
 
@@ -168,6 +190,12 @@ namespace fleece {
     }
 
 
+    Path::Element::Element(slice property, SharedKeys *sk)
+    :_keyBuf(property)
+    ,_key(new Dict::key(_keyBuf, sk, false))
+    { }
+
+
     const Value* Path::Element::eval(const Value *item) const noexcept {
         if (_key) {
             auto d = item->asDict();
@@ -204,5 +232,27 @@ namespace fleece {
         }
         return a->get((uint32_t)index);
     }
+
+
+    void Path::writeProperty(std::ostream &out, slice key, bool first) {
+        if (first) {
+            if (key.hasPrefix('$'))
+                out << '\\';
+        } else {
+            out << '.';
+        }
+        const uint8_t *toQuote;
+        while (nullptr != (toQuote = key.findAnyByteOf(".[\\"_sl))) {
+            out.write((const char *)key.buf, toQuote - (const uint8_t*)key.buf);
+            out << '\\' << *toQuote;
+            key.setStart(toQuote + 1);
+        }
+        out.write((const char *)key.buf, key.size);
+    }
+
+    void Path::writeIndex(std::ostream &out, int index) {
+        out << '[' << index << ']';
+    }
+
 
 }

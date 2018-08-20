@@ -19,6 +19,7 @@
 #pragma once
 #include "Dict.hh"
 #include "function_ref.hh"
+#include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
@@ -33,7 +34,8 @@ namespace fleece {
         It looks like "foo.bar[2][-3].baz" -- that is, properties prefixed with a ".", and array
         indexes in brackets. (Negative indexes count from the end of the array.)
         A leading JSONPath-like "$." is allowed but ignored.
-        This class is pretty experimental ... syntax may change without warning! */
+        A '\' can be used to escape a special character ('.', '[' or '$') at the start of a
+        property name (but not yet in the middle of a name.) */
     class Path {
     public:
         class Element;
@@ -58,9 +60,20 @@ namespace fleece {
                                             SharedKeys*,
                                             const Value* root NONNULL);
 
+
+        /** Utility for writing a path component to a stream.
+            It will add a backslash before any '.' and '[' characters.
+            If `first` is true it will also backslash-escape a leading '$'.
+            If `first` is false, it will prefix a '.'. */
+        static void writeProperty(std::ostream&, slice key, bool first =false);
+
+        /** Utility for writing a path component to a stream. */
+        static void writeIndex(std::ostream&, int arrayIndex);
+
+
         class Element {
         public:
-            Element(slice property, SharedKeys *sk) :_key(new Dict::key(property, sk, false)) { }
+            Element(slice property, SharedKeys *sk);
             Element(int32_t arrayIndex)             :_index(arrayIndex) { }
             const Value* eval(const Value* NONNULL) const noexcept;
             bool isKey() const                      {return _key != nullptr;}
@@ -72,12 +85,14 @@ namespace fleece {
         private:
             static const Value* getFromArray(const Value* NONNULL, int32_t index) noexcept;
 
+            alloc_slice _keyBuf;
             std::unique_ptr<Dict::key> _key {nullptr};
             int32_t _index {0};
         };
 
     private:
-        static void forEachComponent(slice in, function_ref<bool(char,slice,int32_t)> callback);
+        using eachComponentCallback = function_ref<bool(char,slice,int32_t)>;
+        static void forEachComponent(slice in, eachComponentCallback);
 
         const std::string _specifier;
         std::vector<Element> _path;

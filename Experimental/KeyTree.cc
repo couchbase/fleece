@@ -18,11 +18,11 @@
 
 #include "KeyTree.hh"
 #include "varint.hh"
-#include <assert.h>
 #include <math.h>
 #include <iostream>
 #include <algorithm>
 #include "PlatformCompat.hh"
+#include "betterassert.hh"
 
 namespace fleece {
 

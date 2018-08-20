@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <ostream>
 #include <string>
+#include "betterassert.hh"
 
 using namespace std;
 

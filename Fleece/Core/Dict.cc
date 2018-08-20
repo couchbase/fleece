@@ -23,6 +23,7 @@
 #include "PlatformCompat.hh"
 #include <atomic>
 #include <string>
+#include "betterassert.hh"
 
 
 namespace fleece {

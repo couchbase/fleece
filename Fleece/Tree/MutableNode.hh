@@ -11,6 +11,7 @@
 #include "RefCounted.hh"
 #include "slice.hh"
 #include "TempArray.hh"
+#include "betterassert.hh"
 
 namespace fleece { namespace hashtree {
     using namespace std;

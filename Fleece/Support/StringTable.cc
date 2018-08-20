@@ -19,8 +19,8 @@
 #include "StringTable.hh"
 #include "PlatformCompat.hh"
 #include <algorithm>
-#include <assert.h>
 #include <stdlib.h>
+#include "betterassert.hh"
 
 namespace fleece {
 

@@ -9,6 +9,7 @@
 #include "HashTree.hh"
 #include "HashTree+Internal.hh"
 #include <ostream>
+#include "betterassert.hh"
 
 namespace fleece { namespace hashtree {
     class MutableNode;

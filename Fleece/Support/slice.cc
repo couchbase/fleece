@@ -21,7 +21,6 @@
 #include "decode.h"
 #include "Fleece.h" // for FLSlice and FLSliceResult
 #include <algorithm>
-#include <assert.h>
 #include <math.h>
 #include <stdlib.h>
 #include <atomic>
@@ -30,6 +29,7 @@
 #ifdef _MSC_VER
 #include "memmem.h"
 #endif
+#include "betterassert.hh"
 
 namespace fleece {
 
@@ -292,6 +292,7 @@ namespace fleece {
 #pragma mark - ALLOC_SLICE
 
 
+#ifndef NDEBUG
 #if FL_EMBEDDED
     static constexpr size_t kHeapAlignmentMask = 0x03;
 #else
@@ -300,6 +301,7 @@ namespace fleece {
     static inline bool isHeapAligned(const void *p) {
         return ((size_t)p & kHeapAlignmentMask) == 0;
     }
+#endif
 
 
 // FL_DETECT_COPIES enables a check for unnecessary copying of alloc_slice memory: situations

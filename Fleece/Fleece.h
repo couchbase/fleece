@@ -20,10 +20,7 @@
 #ifndef _FLEECE_H
 #define _FLEECE_H
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <string.h>
+#include "FLSlice.h"
 
 #ifdef __clang__
     #define FLNONNULL                     __attribute__((nonnull))
@@ -59,74 +56,6 @@ extern "C" {
     typedef struct _FLKeyPath*     FLKeyPath;       ///< A reference to a key path
     typedef struct _FLDeepIterator* FLDeepIterator; ///< A reference to a deep iterator
 #endif
-
-    /** A simple reference to a block of memory. Does not imply ownership. */
-    typedef struct FLSlice {
-        const void *buf;
-        size_t size;
-    } FLSlice;
-
-    /** A heap-allocated, reference-counted slice. This type is really just a hint in an API
-        that the data can be retained instead of copied, by assigning it to an alloc_slice.
-        You can just treat it like FLSlice. */
-#ifdef __cplusplus
-    struct FLHeapSlice : public FLSlice {
-        FLHeapSlice()                           {buf = nullptr; size = 0;}
-        FLHeapSlice(const void *b, size_t s)    {buf = b; size = s;}
-    };
-#else
-    typedef FLSlice FLHeapSlice;
-#endif
-
-    /** Creates a slice pointing to the contents of a C string. */
-    static inline FLSlice FLStr(const char *str) {
-        FLSlice foo = { str, str ? strlen(str) : 0 };
-        return foo;
-    }
-
-    // Macro version of FLStr, for use in initializing compile-time constants.
-    // STR must be a C string literal.
-    #ifdef _MSC_VER
-    #define FLSTR(STR) {("" STR), sizeof(("" STR))-1}
-    #else
-    #define FLSTR(STR) ((FLSlice){("" STR), sizeof(("" STR))-1})
-    #endif
-
-    // A convenient constant denoting a null slice.
-    #ifdef _MSC_VER
-    static const FLSlice kFLSliceNull = { NULL, 0 };
-    #else
-    #define kFLSliceNull ((FLSlice){NULL, 0})
-    #endif
-
-
-#define FL_SLICE_DEFINED
-
-
-    /** A block of memory returned from an API call. The caller takes ownership, may modify the
-        bytes, and must call FLSliceFree when done. */
-    typedef struct FLSliceResult {
-        void *buf;      // note: not const, since caller owns the buffer
-        size_t size;
-
-#ifdef __cplusplus
-        explicit operator FLSlice () const {return {buf, size};}
-#endif
-    } FLSliceResult;
-
-    typedef FLSlice FLString;
-    typedef FLSliceResult FLStringResult;
-
-    /** Frees the memory of a FLSliceResult. */
-    void FLSliceResult_Free(FLSliceResult);
-
-
-    /** Equality test of two slices. */
-    bool FLSlice_Equal(FLSlice a, FLSlice b);
-
-    /** Lexicographic comparison of two slices; basically like memcmp(), but taking into account
-        differences in length. */
-    int FLSlice_Compare(FLSlice, FLSlice);
 
 
     /** Types of Fleece values. Basically JSON, with the addition of Data (raw blob). */
