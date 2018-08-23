@@ -45,13 +45,13 @@ namespace fleece {
             Any writeValue() calls whose Value points into the base data will be written as
             pointers.
             @param base  The base Fleece document that's being appended to.
-            @param cutoff  If nonzero, this specifies the maximum number of bytes of the base
-                            (starting from the end) that should be used. Any base data before
-                            the cutoff will not be referenced in the encoder output.
             @param markExternPointers  If true, pointers into the base document (i.e. out of the
                         encoded data) will be marked with the `extern` flag. This allows the use
                         of an ExternResolver, so the new document can be used without having to
-                        append it onto the base. */
+                        append it onto the base.
+            @param cutoff  If nonzero, this specifies the maximum number of bytes of the base
+                            (starting from the end) that should be used. Any base data before
+                            the cutoff will not be referenced in the encoder output. */
         void setBase(slice base, bool markExternPointers =false, size_t cutoff =0);
 
         /** Scans the base document for strings and adds them to the encoder's string table.
