@@ -18,6 +18,7 @@
 
 #include "JSONEncoder.hh"
 #include "FleeceImpl.hh"
+#include "SmallVector.hh"
 #include <algorithm>
 
 namespace fleece { namespace impl {
@@ -92,7 +93,7 @@ namespace fleece { namespace impl {
                 const Value *value;
                 bool operator< (const kv &other) const {return key < other.key;}
             };
-            std::vector<kv> items;
+            smallVector<kv, 4> items;
             items.reserve(dict->count());
             for (auto iter = dict->begin(); iter; ++iter)
                 items.push_back({iter.keyString(), iter.value()});

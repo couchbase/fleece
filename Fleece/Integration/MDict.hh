@@ -18,8 +18,8 @@
 
 #pragma once
 #include "MCollection.hh"
+#include "SmallVector.hh"
 #include <unordered_map>
-#include <vector>
 
 namespace fleece {
 
@@ -171,7 +171,7 @@ namespace fleece {
 
         Dict                     _dict;     // Base Fleece dict (if any)
         MapType                  _map;      // Maps changed keys --> MValues
-        std::vector<alloc_slice> _newKeys;  // storage for new key slices for _map
+        smallVector<alloc_slice,1> _newKeys;  // storage for new key slices for _map
         uint32_t                 _count {0};// Current count
 
         friend MDictIterator<Native>;

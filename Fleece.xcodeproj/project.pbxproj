@@ -88,6 +88,7 @@
 		27C4CEAF2127743200470DE9 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C4CEAE2127743200470DE9 /* Foundation.framework */; };
 		27C4CEB121277CC600470DE9 /* C_Test.c in Sources */ = {isa = PBXBuildFile; fileRef = 278163B81CE6BB8C00B94E32 /* C_Test.c */; };
 		27C4CEB321277D5900470DE9 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C4CEB221277D5900470DE9 /* libc++.tbd */; };
+		27C59BA4212F898F003C8492 /* SmallVector.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C59BA2212F898F003C8492 /* SmallVector.hh */; };
 		27C8DF072084102900A99BFC /* MutableHashTree.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C8DF052084102900A99BFC /* MutableHashTree.hh */; };
 		27C8DF082084102900A99BFC /* MutableHashTree.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27C8DF062084102900A99BFC /* MutableHashTree.cc */; };
 		27CA08421F6B0E9400FF8C71 /* Dict.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27CA08401F6B0E9400FF8C71 /* Dict.hh */; };
@@ -390,6 +391,7 @@
 		27C4CEAE2127743200470DE9 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		27C4CEB02127781300470DE9 /* FleeceDylib_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FleeceDylib_Release.xcconfig; sourceTree = "<group>"; };
 		27C4CEB221277D5900470DE9 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
+		27C59BA2212F898F003C8492 /* SmallVector.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SmallVector.hh; sourceTree = "<group>"; };
 		27C8DF052084102900A99BFC /* MutableHashTree.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MutableHashTree.hh; sourceTree = "<group>"; };
 		27C8DF062084102900A99BFC /* MutableHashTree.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MutableHashTree.cc; sourceTree = "<group>"; };
 		27C8DF09208521B600A99BFC /* HashTreeTests.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = HashTreeTests.cc; sourceTree = "<group>"; };
@@ -711,6 +713,7 @@
 				270FA2741BF53CEA005DCB13 /* slice.cc */,
 				2776AA762093C982004ACE85 /* sliceIO.cc */,
 				2776AA772093C982004ACE85 /* sliceIO.hh */,
+				27C59BA2212F898F003C8492 /* SmallVector.hh */,
 				2797BCAA1C0FBFDE00E5C991 /* StringTable.cc */,
 				2797BCAB1C0FBFDE00E5C991 /* StringTable.hh */,
 				27CEE41920EFE79D00089A85 /* Stopwatch.hh */,
@@ -950,6 +953,7 @@
 				27DE2ED42125FA1700123597 /* Writer.hh in Headers */,
 				27DE2ED52125FA1700123597 /* Encoder.hh in Headers */,
 				27DE2ED62125FA1700123597 /* MutableHashTree.hh in Headers */,
+				27C59BA4212F898F003C8492 /* SmallVector.hh in Headers */,
 				27DE2ED72125FA1700123597 /* Path.hh in Headers */,
 				27DE2ED82125FA1700123597 /* HeapDict.hh in Headers */,
 				27DE2ED92125FA1700123597 /* HeapValue.hh in Headers */,

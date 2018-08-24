@@ -19,6 +19,7 @@
 #pragma once
 
 #include "fleece/slice.hh"
+#include "SmallVector.hh"
 #include <stdio.h>
 #include <vector>
 
@@ -105,7 +106,7 @@ namespace fleece {
         Writer(const Writer&) = delete;
         const Writer& operator=(const Writer&) = delete;
 
-        std::vector<Chunk> _chunks;
+        smallVector<Chunk, 4> _chunks;
         size_t _chunkSize;
         size_t _baseOffset {0};
         size_t _length {0};

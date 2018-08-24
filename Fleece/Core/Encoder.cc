@@ -38,8 +38,6 @@ namespace fleece { namespace impl {
 
     typedef uint8_t byte;
 
-    static constexpr size_t kInitialStackSize = 4;
-
     Encoder::Encoder(size_t reserveSize)
     :_out(reserveSize),
      _stack(kInitialStackSize),
@@ -516,9 +514,9 @@ namespace fleece { namespace impl {
     // Check whether any pointers in _items can't fit in a narrow Value:
     void Encoder::checkPointerWidths(valueArray *items, size_t pointerOrigin) {
         if (!items->wide) {
-            for (auto v = items->begin(); v != items->end(); ++v) {
-                if (v->isPointer()) {
-                    ssize_t pos = v->_asPointer()->offset<true>() - _base.size;
+            for (Value &v : *items) {
+                if (v.isPointer()) {
+                    ssize_t pos = v._asPointer()->offset<true>() - _base.size;
                     if (pointerOrigin - pos > Pointer::kMaxNarrowOffset) {
                         items->wide = true;
                         break;
@@ -533,12 +531,12 @@ namespace fleece { namespace impl {
     void Encoder::fixPointers(valueArray *items) {
         size_t pointerOrigin = nextWritePos();
         int width = items->wide ? kWide : kNarrow;
-        for (auto v = items->begin(); v != items->end(); ++v) {
-            if (v->isPointer()) {
-                ssize_t pos = v->_asPointer()->offset<true>() - _base.size;
+        for (Value &v : *items) {
+            if (v.isPointer()) {
+                ssize_t pos = v._asPointer()->offset<true>() - _base.size;
                 assert(pos < (ssize_t)pointerOrigin);
                 bool isExternal = (pos < 0);
-                *v = Pointer(pointerOrigin - pos, width, isExternal && _markExternPtrs);
+                v = Pointer(pointerOrigin - pos, width, isExternal && _markExternPtrs);
             }
             pointerOrigin += width;
         }
@@ -638,6 +636,11 @@ namespace fleece { namespace impl {
         }
     }
 
+    void Encoder::pop() {
+        --_stackDepth;
+        _items = &_stack[_stackDepth - 1];
+    }
+
     void Encoder::beginArray(size_t reserve) {
         push(kArrayTag, reserve);
     }
@@ -673,8 +676,7 @@ namespace fleece { namespace impl {
 
         // Pop _items off the stack:
         valueArray *items = _items;
-        --_stackDepth;
-        _items = &_stack[_stackDepth - 1];
+        pop();
         _writingKey = _blockedOnKey = false;
 
         if (tag == kDictTag)
@@ -712,8 +714,8 @@ namespace fleece { namespace impl {
             } else {
                 TempArray(narrow, uint16_t, nValues);
                 size_t i = 0;
-                for (auto v = items->begin(); v != items->end(); ++v, ++i) {
-                    ::memcpy(&narrow[i], &*v, kNarrow);
+                for (auto &v : *items) {
+                    ::memcpy(&narrow[i++], &v, kNarrow);
                 }
                 _out.write(narrow, kNarrow*nValues);
             }

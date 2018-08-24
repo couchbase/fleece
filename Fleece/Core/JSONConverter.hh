@@ -22,7 +22,6 @@
 #include "Doc.hh"
 #include "FleeceException.hh"
 #include "fleece/slice.hh"
-#include <vector>
 #include <map>
 
 extern "C" {

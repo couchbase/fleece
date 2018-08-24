@@ -22,9 +22,8 @@
 #include "Writer.hh"
 #include "Doc.hh"
 #include "StringTable.hh"
-#include <array>
+#include "SmallVector.hh"
 #include "function_ref.hh"
-#include <vector>
 
 
 namespace fleece { namespace impl {
@@ -178,14 +177,18 @@ namespace fleece { namespace impl {
         slice baseUsed() const                  {return _baseMinUsed != 0 ? slice(_baseMinUsed, _base.end()) : nullslice;}
 
     private:
+        static constexpr size_t kInitialStackSize = 4;
+        static constexpr size_t kInitialCollectionCapacity = 4;
+
         // Stores the pending values to be written to an in-progress array/dict
-        class valueArray : public std::vector<Value> {
+        class valueArray : public smallVector<Value, kInitialCollectionCapacity> {
         public:
             valueArray()                    { }
             void reset(internal::tags t)    {tag = t; wide = false; keys.clear();}
+            
             internal::tags tag;
             bool wide;
-            std::vector<slice> keys;
+            smallVector<slice, kInitialCollectionCapacity> keys;
         };
 
         void addItem(Value v);
@@ -207,6 +210,7 @@ namespace fleece { namespace impl {
         void fixPointers(valueArray *items NONNULL);
         void endCollection(internal::tags tag);
         void push(internal::tags tag, size_t reserve);
+        inline void pop();
         void writeValue(const Value* NONNULL, const WriteValueFunc*);
         void writeValue(const Value* NONNULL, const SharedKeys* &, const WriteValueFunc*);
         const Value* minUsed(const Value *value);
@@ -218,7 +222,7 @@ namespace fleece { namespace impl {
 
         Writer _out;            // Where output is written to
         valueArray *_items;     // Values of the currently-open array/dict; == &_stack[_stackDepth]
-        std::vector<valueArray> _stack; // Stack of open arrays/dicts
+        smallVector<valueArray, kInitialStackSize> _stack; // Stack of open arrays/dicts
         unsigned _stackDepth {0};    // Current depth of _stack
         StringTable _strings;        // Maps strings to the offsets where they appear as values
         Writer _stringStorage;       // Backing store for strings in _strings

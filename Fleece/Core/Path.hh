@@ -18,11 +18,11 @@
 
 #pragma once
 #include "Dict.hh"
+#include "SmallVector.hh"
 #include "function_ref.hh"
 #include <iostream>
 #include <memory>
 #include <string>
-#include <vector>
 #include <functional>
 
 namespace fleece { namespace impl {
@@ -43,7 +43,7 @@ namespace fleece { namespace impl {
         Path(const std::string &specifier);
 
         const std::string& specifier() const        {return _specifier;}
-        const std::vector<Element>& path() const    {return _path;}
+        const smallVector<Element,4>& path() const    {return _path;}
 
         const Value* eval(const Value *root NONNULL) const noexcept;
 
@@ -92,7 +92,7 @@ namespace fleece { namespace impl {
         static void forEachComponent(slice in, eachComponentCallback);
 
         const std::string _specifier;
-        std::vector<Element> _path;
+        smallVector<Element, 4> _path;
     };
 
 } }
