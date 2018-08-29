@@ -18,9 +18,17 @@
 
 #include "fleece/Fleece.hh"
 #include <stdio.h>
-#include <unistd.h>
 #include <iostream>
 #include <sstream>
+#ifndef _MSC_VER
+#include <unistd.h>
+#define _isatty isatty
+#else
+#include <io.h>
+#ifndef STDOUT_FILENO
+#define STDOUT_FILENO 1
+#endif
+#endif
 
 using namespace fleece;
 using namespace std;
@@ -96,7 +104,7 @@ int main(int argc, const char * argv[]) {
             return 1;
         }
 
-        if (encode && isatty(STDOUT_FILENO))
+        if (encode && _isatty(STDOUT_FILENO))
             throw "Let's not spew binary Fleece data to a terminal! Please redirect stdout.";
 
         auto input = readInput(in);

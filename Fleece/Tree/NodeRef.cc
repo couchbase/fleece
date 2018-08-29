@@ -18,6 +18,7 @@
 
 #include "NodeRef.hh"
 #include "MutableNode.hh"
+#include "betterassert.hh"
 
 namespace fleece { namespace impl { namespace hashtree {
 

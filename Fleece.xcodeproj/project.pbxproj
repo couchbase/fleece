@@ -84,6 +84,8 @@
 		27B802D820DD750E00599DF0 /* NodeRef.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27B802D620DD750E00599DF0 /* NodeRef.hh */; };
 		27C4ACAC1CE5146500938365 /* Array.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27C4ACAA1CE5146500938365 /* Array.cc */; };
 		27C4ACAD1CE5146500938365 /* Array.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C4ACAB1CE5146500938365 /* Array.hh */; };
+        27C4CEBA2127976900470DE9 /* betterassert.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27C4CEB82127976900470DE9 /* betterassert.cc */; };
+        27C4CEBB2127976900470DE9 /* betterassert.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C4CEB92127976900470DE9 /* betterassert.hh */; };
 		27C4CEA92127722300470DE9 /* libfleeceStatic.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 270FA25C1BF53CAD005DCB13 /* libfleeceStatic.a */; };
 		27C4CEAF2127743200470DE9 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C4CEAE2127743200470DE9 /* Foundation.framework */; };
 		27C4CEB121277CC600470DE9 /* C_Test.c in Sources */ = {isa = PBXBuildFile; fileRef = 278163B81CE6BB8C00B94E32 /* C_Test.c */; };
@@ -94,6 +96,7 @@
 		27CA08421F6B0E9400FF8C71 /* Dict.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27CA08401F6B0E9400FF8C71 /* Dict.hh */; };
 		27CA08431F6B0E9400FF8C71 /* Dict.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27CA08411F6B0E9400FF8C71 /* Dict.cc */; };
 		27CEE41A20EFE92E00089A85 /* KeyTree.cc in Sources */ = {isa = PBXBuildFile; fileRef = 278163BA1CE7A72300B94E32 /* KeyTree.cc */; };
+		27D5771A212B3032002410BA /* Bitmap.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27D57719212B3032002410BA /* Bitmap.cc */; };
 		27D7215E1F8E8EEA00AA4458 /* MDict+ObjC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2734B89D1F8583FF00BE5249 /* MDict+ObjC.mm */; };
 		27D721651F8E8EEA00AA4458 /* MValue+ObjC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27D721201F8C04F100AA4458 /* MValue+ObjC.mm */; };
 		27D721661F8E8EEA00AA4458 /* FleeceDocument.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2734B8AC1F859AEC00BE5249 /* FleeceDocument.mm */; };
@@ -385,6 +388,8 @@
 		27C4AC961CDFFDA100938365 /* Performance.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = Performance.md; sourceTree = "<group>"; };
 		27C4ACAA1CE5146500938365 /* Array.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Array.cc; sourceTree = "<group>"; };
 		27C4ACAB1CE5146500938365 /* Array.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Array.hh; sourceTree = "<group>"; };
+        27C4CEB82127976900470DE9 /* betterassert.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = betterassert.cc; sourceTree = "<group>"; };
+        27C4CEB92127976900470DE9 /* betterassert.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = betterassert.hh; sourceTree = "<group>"; };
 		27C4CE9C2127719D00470DE9 /* libfleece.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libfleece.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		27C4CEAA2127729D00470DE9 /* FleeceDylib.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FleeceDylib.xcconfig; sourceTree = "<group>"; };
 		27C4CEAC2127741000470DE9 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
@@ -399,6 +404,7 @@
 		27CA08411F6B0E9400FF8C71 /* Dict.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Dict.cc; sourceTree = "<group>"; };
 		27CEE41920EFE79D00089A85 /* Stopwatch.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Stopwatch.hh; sourceTree = "<group>"; };
 		27CEE44F20F00B4E00089A85 /* Fleece.exp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.exports; path = Fleece.exp; sourceTree = "<group>"; };
+		27D57719212B3032002410BA /* Bitmap.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Bitmap.cc; sourceTree = "<group>"; };
 		27D721201F8C04F100AA4458 /* MValue+ObjC.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = "MValue+ObjC.mm"; sourceTree = "<group>"; };
 		27D721221F8C053900AA4458 /* MValue+ObjC.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "MValue+ObjC.hh"; sourceTree = "<group>"; };
 		27D721241F8C4B7500AA4458 /* MDictIterator.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MDictIterator.hh; sourceTree = "<group>"; };
@@ -695,8 +701,11 @@
 		27AFF69720EFE6CE0055E966 /* Support */ = {
 			isa = PBXGroup;
 			children = (
+				27C4CEB82127976900470DE9 /* betterassert.cc */,
+				27C4CEB92127976900470DE9 /* betterassert.hh */,
 				2746DD3B1D931BE9000517BC /* Benchmark.hh */,
 				277F45B3208E9A9100A0D159 /* Bitmap.hh */,
+				27D57719212B3032002410BA /* Bitmap.cc */,
 				270FA2731BF53CEA005DCB13 /* Endian.hh */,
 				277A06B120B36D1A00970354 /* FileUtils.cc */,
 				277A06B220B36D1A00970354 /* FileUtils.hh */,
@@ -852,6 +861,7 @@
 				270FA2851BF53CEA005DCB13 /* varint.hh in Headers */,
 				277F45B0208E871000A0D159 /* HashTree.hh in Headers */,
 				2734B89F1F8583FF00BE5249 /* MValue.hh in Headers */,
+				27C4CEBB2127976900470DE9 /* betterassert.hh in Headers */,
 				270FA2791BF53CEA005DCB13 /* Value.hh in Headers */,
 				270FA2811BF53CEA005DCB13 /* Endian.hh in Headers */,
 				274D824D209A7577008BB39F /* HeapArray.hh in Headers */,
@@ -1079,7 +1089,7 @@
 		270FA2541BF53CAD005DCB13 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0930;
+				LastUpgradeCheck = 1000;
 				ORGANIZATIONNAME = Couchbase;
 				TargetAttributes = {
 					270FA25B1BF53CAD005DCB13 = {
@@ -1123,6 +1133,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27C4CEBA2127976900470DE9 /* betterassert.cc in Sources */,
 				270FA27E1BF53CEA005DCB13 /* Encoder+ObjC.mm in Sources */,
 				27C8DF082084102900A99BFC /* MutableHashTree.cc in Sources */,
 				277F45B1208E871000A0D159 /* HashTree.cc in Sources */,
@@ -1141,6 +1152,7 @@
 				270515571D905C1D00D62D05 /* Fleece+CoreFoundation.mm in Sources */,
 				270FA2781BF53CEA005DCB13 /* Value.cc in Sources */,
 				27E3DD421DB6A14200F2872D /* SharedKeys.cc in Sources */,
+                27D5771A212B3032002410BA /* Bitmap.cc in Sources */,
 				27CA08431F6B0E9400FF8C71 /* Dict.cc in Sources */,
 				27867AF2211E27E5007BDA5F /* Doc.cc in Sources */,
 				27298E801C04E665000CFBA8 /* Encoder.cc in Sources */,
@@ -1302,6 +1314,84 @@
 			};
 			name = Release;
 		};
+		27744AB521372EB000399DCA /* Debug-EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2776AA45208A6C5A004ACE85 /* Project_Debug.xcconfig */;
+			buildSettings = {
+			};
+			name = "Debug-EE";
+		};
+		27744AB621372EB000399DCA /* Debug-EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2776AA48208A6CED004ACE85 /* FleeceStaticLib.xcconfig */;
+			buildSettings = {
+			};
+			name = "Debug-EE";
+		};
+		27744AB721372EB000399DCA /* Debug-EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 27F25A8220A6559800E181FA /* FleeceMutableObjC.xcconfig */;
+			buildSettings = {
+				EXECUTABLE_PREFIX = lib;
+				HEADER_SEARCH_PATHS = /usr/local/include/;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "macosx iphoneos iphonesimulator appletvos appletvsimulator";
+			};
+			name = "Debug-EE";
+		};
+		27744AB821372EB000399DCA /* Debug-EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2776AA49208A6E01004ACE85 /* FleeceTest.xcconfig */;
+			buildSettings = {
+			};
+			name = "Debug-EE";
+		};
+		27744AB921372EB000399DCA /* Debug-EE */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = fleece;
+			};
+			name = "Debug-EE";
+		};
+		27744ABA21372EB800399DCA /* Release-EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2776AA46208A6C5A004ACE85 /* Project_Release.xcconfig */;
+			buildSettings = {
+			};
+			name = "Release-EE";
+		};
+		27744ABB21372EB800399DCA /* Release-EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2776AA48208A6CED004ACE85 /* FleeceStaticLib.xcconfig */;
+			buildSettings = {
+			};
+			name = "Release-EE";
+		};
+		27744ABC21372EB800399DCA /* Release-EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 27F25A8220A6559800E181FA /* FleeceMutableObjC.xcconfig */;
+			buildSettings = {
+				EXECUTABLE_PREFIX = lib;
+				HEADER_SEARCH_PATHS = /usr/local/include/;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "macosx iphoneos iphonesimulator appletvos appletvsimulator";
+			};
+			name = "Release-EE";
+		};
+		27744ABD21372EB800399DCA /* Release-EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2776AA49208A6E01004ACE85 /* FleeceTest.xcconfig */;
+			buildSettings = {
+			};
+			name = "Release-EE";
+		};
+		27744ABE21372EB800399DCA /* Release-EE */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = fleece;
+			};
+			name = "Release-EE";
+		};
 		279AC5361C096872002C80DB /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1371,7 +1461,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				270FA2651BF53CAD005DCB13 /* Debug */,
+				27744AB521372EB000399DCA /* Debug-EE */,
 				270FA2661BF53CAD005DCB13 /* Release */,
+				27744ABA21372EB800399DCA /* Release-EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -1380,7 +1472,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				270FA2681BF53CAD005DCB13 /* Debug */,
+				27744AB621372EB000399DCA /* Debug-EE */,
 				270FA2691BF53CAD005DCB13 /* Release */,
+				27744ABB21372EB800399DCA /* Release-EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -1389,7 +1483,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				272E5A501BF7FE5600848580 /* Debug */,
+				27744AB821372EB000399DCA /* Debug-EE */,
 				272E5A511BF7FE5600848580 /* Release */,
+				27744ABD21372EB800399DCA /* Release-EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -1398,7 +1494,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				279AC5361C096872002C80DB /* Debug */,
+				27744AB921372EB000399DCA /* Debug-EE */,
 				279AC5371C096872002C80DB /* Release */,
+				27744ABE21372EB800399DCA /* Release-EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -1416,7 +1514,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				27D7218E1F8E8EEA00AA4458 /* Debug */,
+				27744AB721372EB000399DCA /* Debug-EE */,
 				27D7218F1F8E8EEA00AA4458 /* Release */,
+				27744ABC21372EB800399DCA /* Release-EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

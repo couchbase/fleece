@@ -20,6 +20,7 @@
 #import "MValue+ObjC.hh"
 #import "MArray.hh"
 #import "PlatformCompat.hh"
+#include "betterassert.hh"
 
 using namespace fleece;
 

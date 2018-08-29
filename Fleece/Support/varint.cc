@@ -20,7 +20,7 @@
 #include "fleece/slice.hh"
 #include "Endian.hh"
 #include <algorithm>
-#include <assert.h>
+#include "betterassert.hh"
 
 
 namespace fleece {

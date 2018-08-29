@@ -28,8 +28,8 @@
 #include "varint.hh"
 #include "PlatformCompat.hh"
 #include "JSONEncoder.hh"
-#include <assert.h>
 #include <math.h>
+#include "betterassert.hh"
 
 
 namespace fleece { namespace impl {

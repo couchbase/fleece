@@ -20,6 +20,7 @@
 #include "HeapDict.hh"
 #include "MutableArray.hh"
 #include "varint.hh"
+#include "betterassert.hh"
 
 namespace fleece { namespace impl { namespace internal {
 

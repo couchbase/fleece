@@ -18,6 +18,7 @@
 
 #include "FleeceTests.hh"
 #include "FleeceImpl.hh"
+#include "Bitmap.hh"
 #include "TempArray.hh"
 #include "sliceIO.hh"
 #include <iostream>
@@ -93,3 +94,19 @@ TEST_CASE("Slice I/O") {
 #endif
 }
 #endif
+
+
+TEST_CASE("Bitmap") {
+    CHECK(popcount(0) == 0);
+    CHECK(popcount(0l) == 0);
+    CHECK(popcount(0ll) == 0);
+    CHECK(popcount(-1) == sizeof(int)*8);
+    CHECK(popcount(-1l) == sizeof(long)*8);
+    CHECK(popcount(-1ll) == sizeof(long long)*8);
+
+    Bitmap<uint32_t> b(0x12345678);
+    CHECK(Bitmap<uint32_t>::capacity == 32);
+    CHECK(!b.empty());
+    CHECK(b.bitCount() == 13);
+    CHECK(b.indexOfBit(8) == 4);
+}

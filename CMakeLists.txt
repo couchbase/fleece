@@ -11,6 +11,11 @@ if(CMAKE_BUILD_TYPE STREQUAL Debug)
     add_definitions(-DDEBUG)
 endif()
 
+get_directory_property(FLEECEDEFS COMPILE_DEFINITIONS)
+if(NOT FLEECEDEFS MATCHES "_CRT_SECURE_NO_WARNINGS")
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+endif()
+
 aux_source_directory(Fleece/API_Impl/    FLEECE_API_SRC)
 aux_source_directory(Fleece/Core/        FLEECE_CORE_SRC)
 aux_source_directory(Fleece/Integration/ FLEECE_INTEGRATION_SRC)
@@ -31,7 +36,7 @@ if (APPLE AND NOT ANDROID)
                                 COMPILE_FLAGS  -Wno-return-type-c-linkage)
 elseif(WIN32)
     include_directories("MSVC")
-    set(FLEECE_SRC ${FLEECE_SRC} MSVC/memmem.cc)
+    set(FLEECE_SRC ${FLEECE_SRC} MSVC/memmem.cc MSVC/vasprintf-msvc.c)
 endif()
 
 include_directories(API              # public

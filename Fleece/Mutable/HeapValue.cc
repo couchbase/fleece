@@ -19,6 +19,7 @@
 #include "HeapValue.hh"
 #include "varint.hh"
 #include <algorithm>
+#include "betterassert.hh"
 
 namespace fleece { namespace impl { namespace internal {
     using namespace std;
@@ -51,6 +52,13 @@ namespace fleece { namespace impl { namespace internal {
         return new (0) HeapValue(kSpecialTag, b ? kSpecialValueTrue : kSpecialValueFalse);
     }
 
+#ifdef _MSC_VER
+#pragma warning(push)
+// Relying on some unsigned integer trickery, so suppress
+// warning C4146: unary minus operator applied to unsigned type, result still unsigned
+#pragma warning(disable : 4146)
+#endif
+
     template <class INT>
     HeapValue* HeapValue::createInt(INT i, bool isUnsigned) {
         if (i < 2048 && (isUnsigned || -i < 2048)) {
@@ -66,6 +74,10 @@ namespace fleece { namespace impl { namespace internal {
                           {buf, size});
         }
     }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 
     HeapValue* HeapValue::create(float f) {
@@ -90,8 +102,9 @@ namespace fleece { namespace impl { namespace internal {
             sizeByteCount = PutUVarInt(&sizeBuf, s.size);
         }
         auto hv = new (sizeByteCount + s.size) HeapValue(valueTag, tiny);
-        memcpy(&hv->_data[0], sizeBuf, sizeByteCount);
-        memcpy(&hv->_data[sizeByteCount], s.buf, s.size);
+        uint8_t *strData = &hv->_header + 1;
+        memcpy(strData, sizeBuf, sizeByteCount);
+        memcpy(strData + sizeByteCount, s.buf, s.size);
         return hv;
     }
 

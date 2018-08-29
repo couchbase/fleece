@@ -21,8 +21,8 @@
 #include "FleeceException.hh"
 #include "decode.h"
 #include "encode.h"
-#include <assert.h>
 #include <algorithm>
+#include "betterassert.hh"
 
 
 namespace fleece {

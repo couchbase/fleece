@@ -65,10 +65,11 @@ namespace fleece { namespace impl { namespace internal {
             uint8_t             _inlineData[sizeof(void*)];
             const Value*        _asValue {nullptr};
         };
+
         uint8_t _moreInlineData[sizeof(void*) - 1];
         bool _isInline {false};
 
-        static constexpr size_t kInlineCapacity = sizeof(_inlineData) + sizeof(_moreInlineData);
+        static constexpr size_t kInlineCapacity = sizeof(ValueSlot::_inlineData) + sizeof(ValueSlot::_moreInlineData);
     };
 
 } } }

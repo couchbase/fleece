@@ -20,6 +20,7 @@
 #include "Doc.hh"
 #include <tuple>
 #include <stdio.h>
+#include "betterassert.hh"
 
 using namespace std;
 

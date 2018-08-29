@@ -144,6 +144,13 @@ namespace fleece { namespace impl { namespace internal {
     void ValueSlot::set(int64_t i)   {setInt(i, false);}
     void ValueSlot::set(uint64_t i)  {setInt(i, true);}
 
+#ifdef _MSC_VER
+#pragma warning(push)
+// unary minus operator applied to unsigned type, result still unsigned
+// short circuited by isUnsigned
+#pragma warning(disable : 4146)
+#endif
+
     template <class INT>
     void ValueSlot::setInt(INT i, bool isUnsigned) {
         if (i < 2048 && (isUnsigned || -i < 2048)) {
@@ -157,6 +164,10 @@ namespace fleece { namespace impl { namespace internal {
                      {buf, size});
         }
     }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 
     void ValueSlot::set(float f) {

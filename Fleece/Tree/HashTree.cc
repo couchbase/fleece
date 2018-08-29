@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <ostream>
 #include <string>
+#include "TempArray.hh"
 
 using namespace std;
 
@@ -115,7 +116,7 @@ namespace fleece { namespace impl {
             } else {
                 //FIX: DRY FAIL: This is nearly identical to MInteriorNode::writeTo()
                 unsigned n = childCount();
-                Node nodes[n];
+                TempArray(nodes, Node, n);
                 for (unsigned i = 0; i < n; ++i) {
                     auto child = childAtIndex(i);
                     if (!child->isLeaf())
@@ -153,7 +154,7 @@ namespace fleece { namespace impl {
 
 
     const HashTree* HashTree::fromData(slice data) {
-        return (const HashTree*)offsetby(data.end(), -sizeof(Interior));
+        return (const HashTree*)offsetby(data.end(), -(ssize_t)sizeof(Interior));
     }
 
 

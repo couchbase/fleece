@@ -19,6 +19,7 @@
 #pragma once
 #include "MCollection.hh"
 #include <vector>
+#include <assert.h>
 
 namespace fleece {
 

@@ -1,5 +1,5 @@
 //
-// FileUtils.cc
+// betterassert.cc
 //
 // Copyright © 2018 Couchbase. All rights reserved.
 //
@@ -16,25 +16,28 @@
 // limitations under the License.
 //
 
-#include "FileUtils.hh"
-#ifdef _MSC_VER
-#define ftello      ftell
-#endif
+#include "betterassert.hh"
+#include <stdexcept>
+#include <stdio.h>
+#include <string.h>
+
+#ifndef NDEBUG
 
 namespace fleece {
 
-
-    void check_fwrite(FILE *f, const void *data, size_t size) {
-        auto written = fwrite(data, 1, size, f);
-        if (written < size)
-            FleeceException::_throwErrno("Can't write to file");
+    void _assert_failed(const char *condition, const char *fn, const char *file, int line) {
+        const char *slash = strrchr(file, '/');
+        if (!slash)
+            slash = strrchr(file, '\\');
+        if (slash)
+            file = slash + 1;
+        char msg[256];
+        sprintf(msg, "FAILED ASSERTION `%s` in %s (at %s line %d)",
+                condition, (fn ? fn : ""), file, line);
+        fprintf(stderr, "%s\n", msg);
+        throw assertion_failure(msg);
     }
 
-    off_t check_getEOF(FILE *f) {
-        checkErrno(fseek(f, 0, SEEK_END), "Can't get file size");
-        off_t eof = ftello(f);
-        if (eof < 0)
-            FleeceException::_throwErrno("Can't get file size");
-        return eof;
-    }
 }
+
+#endif

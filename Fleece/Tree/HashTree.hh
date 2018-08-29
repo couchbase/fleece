@@ -28,7 +28,7 @@ namespace fleece { namespace impl {
         class Interior;
         class MutableInterior;
         class NodeRef;
-        class iteratorImpl;
+        struct iteratorImpl;
     }
 
 
