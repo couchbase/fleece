@@ -82,6 +82,9 @@ FLSlice FLValue_AsData(FLValue v)               {return v ? (FLSlice)v->asData()
 FLArray FLValue_AsArray(FLValue v)              {return v ? v->asArray() : nullptr;}
 FLDict FLValue_AsDict(FLValue v)                {return v ? v->asDict() : nullptr;}
 
+FLValue FLValue_Retain(FLValue v)               {return retain(v);}
+void FLValue_Release(FLValue v)                 {release(v);}
+
 
 FLDoc FLValue_FindDoc(FLValue v) {
     return v ? retain(Doc::containing(v).get()) : nullptr;
@@ -186,8 +189,6 @@ static FLMutableArray _newMutableArray(FLArray a) noexcept {
 FLMutableArray FLArray_MutableCopy(FLArray a)       {return a ? _newMutableArray(a) : nullptr;}
 FLMutableArray FLMutableArray_New(void)             {return FLArray_MutableCopy(nullptr);}
 FLMutableArray FLArray_AsMutable(FLArray a)         {return a ? a->asMutable() : nullptr;}
-FLMutableArray FLMutableArray_Retain(FLMutableArray a) {return retain(a);}
-void FLMutableArray_Release(FLMutableArray a)       {release(a);}
 FLArray FLMutableArray_GetSource(FLMutableArray a)  {return a ? a->source() : nullptr;}
 bool FLMutableArray_IsChanged(FLMutableArray a)     {return a && a->isChanged();}
 void FLMutableArray_Resize(FLMutableArray a, uint32_t size)     {a->resize(size);}
@@ -315,8 +316,6 @@ static FLMutableDict _newMutableDict(FLDict d) noexcept {
 FLMutableDict FLDict_MutableCopy(FLDict d)          {return d ? _newMutableDict(d) : nullptr;}
 FLMutableDict FLMutableDict_New(void)               {return FLDict_MutableCopy(nullptr);}
 FLMutableDict FLDict_AsMutable(FLDict d)            {return d ? d->asMutable() : nullptr;}
-FLMutableDict FLMutableDict_Retain(FLMutableDict d) {return retain(d);}
-void FLMutableDict_Release(FLMutableDict d)         {release(d);}
 FLDict FLMutableDict_GetSource(FLMutableDict d)     {return d ? d->source() : nullptr;}
 bool FLMutableDict_IsChanged(FLMutableDict d)       {return d && d->isChanged();}
 
@@ -445,12 +444,29 @@ void FLEncoder_SetSharedKeys(FLEncoder e, FLSharedKeys sk) {
         e->fleeceEncoder->setSharedKeys(sk);
 }
 
+void FLEncoder_SuppressTrailer(FLEncoder e) {
+    if (e->isFleece())
+        e->fleeceEncoder->suppressTrailer();
+}
+
 void FLEncoder_MakeDelta(FLEncoder e, FLSlice base, bool reuseStrings, bool externPointers) {
     if (e->isFleece()) {
         e->fleeceEncoder->setBase(base, externPointers);
         if(reuseStrings)
             e->fleeceEncoder->reuseBaseStrings();
     }
+}
+
+FLSlice FLEncoder_GetBase(FLEncoder e) {
+    if (e->isFleece())
+        return e->fleeceEncoder->base();
+    return {};
+}
+
+size_t FLEncoder_GetNextWritePos(FLEncoder e) {
+    if (e->isFleece())
+        return e->fleeceEncoder->nextWritePos();
+    return 0;
 }
 
 size_t FLEncoder_BytesWritten(FLEncoder e) {
@@ -516,6 +532,12 @@ void FLEncoder_SetExtraInfo(FLEncoder e, void *info) {
 
 void* FLEncoder_GetExtraInfo(FLEncoder e) {
     return e->extraInfo;
+}
+
+size_t FLEncoder_FinishItem(FLEncoder e) {
+    if (e->isFleece())
+        return e->fleeceEncoder->finishItem();
+    return 0;
 }
 
 FLDoc FLEncoder_FinishDoc(FLEncoder e, FLError *outError) {

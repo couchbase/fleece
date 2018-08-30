@@ -10,7 +10,7 @@
 #include <functional>
 #include <memory>
 
-namespace fleece { namespace impl {
+namespace fleece {
     class MutableArray;
     class MutableDict;
     class Encoder;
@@ -30,18 +30,18 @@ namespace fleece { namespace impl {
         MutableHashTree& operator= (MutableHashTree&&);
         MutableHashTree& operator= (const HashTree*);
 
-        const Value* get(slice key) const;
+        Value get(slice key) const;
 
-        MutableArray* getMutableArray(slice key);
-        MutableDict* getMutableDict(slice key);
+        MutableArray getMutableArray(slice key);
+        MutableDict getMutableDict(slice key);
 
         unsigned count() const;
 
         bool isChanged() const                  {return _root != nullptr;}
 
-        using InsertCallback = std::function<const Value*(const Value*)>;
+        using InsertCallback = std::function<Value(Value)>;
 
-        void set(slice key, const Value*);
+        void set(slice key, Value);
         bool insert(slice key, InsertCallback);
         bool remove(slice key);
 
@@ -53,7 +53,6 @@ namespace fleece { namespace impl {
         
     private:
         hashtree::NodeRef rootNode() const;
-        Value* getMutable(slice key, internal::tags ifType);
 
         const HashTree* _imRoot {nullptr};
         hashtree::MutableInterior* _root {nullptr};
@@ -61,4 +60,4 @@ namespace fleece { namespace impl {
         friend class HashTree::iterator;
     };
     
-} }
+} 

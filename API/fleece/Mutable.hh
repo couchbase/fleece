@@ -9,6 +9,32 @@
 
 namespace fleece {
 
+    /** Equivalent to Value except that, if it holds a mutable Array/Dict, it will retain the
+        reference so it won't be freed. */
+    class RetainedValue : public Value {
+    public:
+        RetainedValue()                           { }
+        RetainedValue(FLValue v)                  :Value(FLValue_Retain(v)) { }
+        RetainedValue(Value &v)                   :Value(FLValue_Retain(v)) { }
+        RetainedValue(RetainedValue &&v)          :Value(v) {v._val = nullptr;}
+        ~RetainedValue()                          {FLValue_Release(_val);}
+
+        RetainedValue& operator= (const Value &v) {
+            FLValue_Retain(v);
+            FLValue_Release(_val);
+            _val = v;
+            return *this;
+        }
+
+        RetainedValue& operator= (RetainedValue &&v) {
+            if (v._val != _val) {
+                FLValue_Release(_val);
+                _val = v._val;
+            }
+            return *this;
+        }
+    };
+
 
     /** A mutable form of Array. Its storage lives in the heap, not in the (immutable) Fleece
         document. It can be used to make a changed form of a document, which can then be
@@ -18,6 +44,7 @@ namespace fleece {
         static MutableArray newArray()          {return MutableArray(FLMutableArray_New(), true);}
         static MutableArray newArray(Array a)   {return MutableArray(FLArray_MutableCopy(a), true);}
 
+        MutableArray()                          :Array() { }
         MutableArray(FLMutableArray a)          :Array((FLArray)a) {FLMutableArray_Retain(*this);}
         MutableArray(const MutableArray &a)     :Array((FLArray)a) {FLMutableArray_Retain(*this);}
         MutableArray(MutableArray &&a)          :Array((FLArray)a) {a._val = nullptr;}
@@ -82,6 +109,7 @@ namespace fleece {
         static MutableDict newDict()            {return MutableDict(FLMutableDict_New(), true);}
         static MutableDict newDict(Dict d)      {return MutableDict(FLDict_MutableCopy(d), true);}
 
+        MutableDict()                           :Dict() { }
         MutableDict(FLMutableDict d)            :Dict((FLDict)d) {FLMutableDict_Retain(*this);}
         MutableDict(const MutableDict &d)       :Dict((FLDict)d) {FLMutableDict_Retain(*this);}
         MutableDict(MutableDict &&d)            :Dict((FLDict)d) {d._val = nullptr;}

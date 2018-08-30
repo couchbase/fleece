@@ -47,7 +47,7 @@ namespace fleece {
     public:
         Value()                                         { }
         Value(FLValue v)                                :_val(v) { }
-        operator FLValue const ()                       {return _val;}
+        operator FLValue() const                        {return _val;}
 
         inline FLValueType type() const;
         inline bool isInteger() const;
@@ -71,6 +71,7 @@ namespace fleece {
         inline alloc_slice toJSON5() const;
 
         inline alloc_slice toJSON(bool json5 =false, bool canonical =false);
+        inline std::string toJSONString()               {return std::string(toJSON());}
 
         explicit operator bool() const                  {return _val != nullptr;}
         bool operator! () const                         {return _val == nullptr;}
@@ -377,6 +378,9 @@ namespace fleece {
         void setSharedKeys(SharedKeys sk)               {FLEncoder_SetSharedKeys(_enc, sk);}
 
         inline void makeDelta(slice base, bool reuseStrings =true, bool externPointers =false);
+        slice base() const                              {return FLEncoder_GetBase(_enc);}
+
+        void suppressTrailer()                          {FLEncoder_SuppressTrailer(_enc);}
 
         operator ::FLEncoder ()                         {return _enc;}
 
@@ -402,10 +406,14 @@ namespace fleece {
         template <class T>
         inline void write(slice key, T value)       {writeKey(key); *this << value;}
 
+        inline void writeRaw(slice data)            {FLEncoder_WriteRaw(_enc, data);}
+
         inline size_t bytesWritten() const;
+        inline size_t nextWritePos() const          {return FLEncoder_GetNextWritePos(_enc);}
 
         inline Doc finishDoc(FLError* =nullptr);
         inline alloc_slice finish(FLError* =nullptr);
+        inline size_t finishItem()                  {return FLEncoder_FinishItem(_enc);}
         inline void reset();
 
         inline FLError error() const;

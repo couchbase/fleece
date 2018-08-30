@@ -232,6 +232,10 @@ extern "C" {
     FLStringResult FLJSON5_ToJSON(FLString json5, FLError *error);
 
 
+    FLValue FLValue_Retain(FLValue);
+    void FLValue_Release(FLValue);
+
+
     //////// ARRAY
 
 
@@ -283,8 +287,12 @@ extern "C" {
 
     FLMutableArray FLMutableArray_New(void);
 
-    FLMutableArray FLMutableArray_Retain(FLMutableArray);
-    void FLMutableArray_Release(FLMutableArray);
+    static inline FLMutableArray FLMutableArray_Retain(FLMutableArray d) {
+        return (FLMutableArray)FLValue_Retain((FLValue)d);
+    }
+    static inline void FLMutableArray_Release(FLMutableArray d) {
+        FLValue_Release((FLValue)d);
+    }
 
     FLArray FLMutableArray_GetSource(FLMutableArray);
 
@@ -401,8 +409,12 @@ extern "C" {
 
     FLMutableDict FLMutableDict_New(void);
 
-    FLMutableDict FLMutableDict_Retain(FLMutableDict);
-    void FLMutableDict_Release(FLMutableDict);
+    static inline FLMutableDict FLMutableDict_Retain(FLMutableDict d) {
+        return (FLMutableDict)FLValue_Retain((FLValue)d);
+    }
+    static inline void FLMutableDict_Release(FLMutableDict d) {
+        FLValue_Release((FLValue)d);
+    }
 
     FLDict FLMutableDict_GetSource(FLMutableDict);
 
@@ -552,6 +564,10 @@ extern "C" {
     void FLEncoder_MakeDelta(FLEncoder e FLNONNULL, FLSlice base,
                              bool reuseStrings, bool externPointers);
 
+    FLSlice FLEncoder_GetBase(FLEncoder FLNONNULL);
+
+    void FLEncoder_SuppressTrailer(FLEncoder FLNONNULL);
+
     /** Resets the state of an encoder without freeing it. It can then be reused to encode
         another value. */
     void FLEncoder_Reset(FLEncoder FLNONNULL);
@@ -648,6 +664,11 @@ extern "C" {
 
     /** Returns the number of bytes encoded so far. */
     size_t FLEncoder_BytesWritten(FLEncoder FLNONNULL);
+
+    size_t FLEncoder_GetNextWritePos(FLEncoder FLNONNULL);
+
+    /** Finishes encoding the current item, and returns its offset in the output data. */
+    size_t FLEncoder_FinishItem(FLEncoder FLNONNULL);
 
     /** Ends encoding; if there has been no error, it returns the encoded Fleece data packaged in
         an FLDoc. (This function does not support JSON encoding.)

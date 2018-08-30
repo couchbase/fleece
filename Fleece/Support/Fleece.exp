@@ -92,6 +92,10 @@ _FLEncoder_Finish
 _FLEncoder_FinishDoc
 _FLEncoder_GetError
 _FLEncoder_GetErrorMessage
+_FLEncoder_FinishItem
+_FLEncoder_GetBase
+_FLEncoder_GetNextWritePos
+_FLEncoder_SuppressTrailer
 
 _FLKeyPath_New
 _FLKeyPath_Free

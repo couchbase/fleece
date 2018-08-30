@@ -10,8 +10,8 @@
 #include "HashTree+Internal.hh"
 #include "NodeRef.hh"
 #include "MutableNode.hh"
+#include "fleece/Mutable.hh"
 #include "Bitmap.hh"
-#include "Encoder.hh"
 #include "HeapArray.hh"
 #include "HeapDict.hh"
 #include <algorithm>
@@ -21,8 +21,8 @@
 
 using namespace std;
 
-namespace fleece { namespace impl {
-    using namespace internal;
+namespace fleece {
+//    using namespace impl::internal;
     using namespace hashtree;
 
 
@@ -74,7 +74,7 @@ namespace fleece { namespace impl {
             return {};
     }
 
-    const Value* MutableHashTree::get(slice key) const {
+    Value MutableHashTree::get(slice key) const {
         if (_root) {
             Target target(key);
             NodeRef leaf = _root->findNearest(target.hash);
@@ -104,9 +104,9 @@ namespace fleece { namespace impl {
         return true;
     }
 
-    void MutableHashTree::set(slice key, const Value* val) {
+    void MutableHashTree::set(slice key, Value val) {
         if (val)
-            insert(key, [=](const Value*){ return val; });
+            insert(key, [=](Value){ return val; });
         else
             remove(key);
     }
@@ -121,23 +121,23 @@ namespace fleece { namespace impl {
     }
 
 
-    MutableArray* MutableHashTree::getMutableArray(slice key) {
-        return (MutableArray*)getMutable(key, kArrayTag);
-    }
-
-    MutableDict* MutableHashTree::getMutableDict(slice key) {
-        return (MutableDict*)getMutable(key, kDictTag);
-    }
-
-    Value* MutableHashTree::getMutable(slice key, tags ifType) {
-        Retained<HeapCollection> result = nullptr;
-        insert(key, [&](const Value *value) {
-            result = HeapCollection::mutableCopy(value, ifType);
-            return result ? result->asValue() : nullptr;
+    MutableArray MutableHashTree::getMutableArray(slice key) {
+        MutableArray result;
+        insert(key, [&](Value value) -> Value {
+            result = value.asArray().asMutable();
+            return result;
         });
-        return (Value*)HeapCollection::asValue(result);
+       return result;
     }
 
+    MutableDict MutableHashTree::getMutableDict(slice key) {
+        MutableDict result;
+        insert(key, [&](Value value) -> Value {
+            result = value.asDict().asMutable();
+            return result;
+        });
+        return result;
+    }
 
     uint32_t MutableHashTree::writeTo(Encoder &enc) {
         if (_root) {
@@ -186,7 +186,7 @@ namespace fleece { namespace impl {
             ,depth {0}
             { }
 
-            pair<slice,const Value*> next() {
+            pair<slice,Value> next() {
                 while (unsigned(++current.index) >= current.parent.childCount()) {
                     if (depth > 0) {
                         // Pop the stack:
@@ -249,4 +249,4 @@ namespace fleece { namespace impl {
         return *this;
     }
 
-} }
+}

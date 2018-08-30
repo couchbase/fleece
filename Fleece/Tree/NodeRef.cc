@@ -20,7 +20,7 @@
 #include "MutableNode.hh"
 #include "betterassert.hh"
 
-namespace fleece { namespace impl { namespace hashtree {
+namespace fleece { namespace hashtree {
 
     bool NodeRef::isLeaf() const {
         return isMutable() ? _asMutable()->isLeaf() : _asImmutable()->isLeaf();
@@ -31,9 +31,9 @@ namespace fleece { namespace impl { namespace hashtree {
         return isMutable() ? ((MutableLeaf*)_asMutable())->_hash : _asImmutable()->leaf.hash();
     }
 
-    const Value* NodeRef::value() const {
+    Value NodeRef::value() const {
         assert(isLeaf());
-        return isMutable() ? ((MutableLeaf*)_asMutable())->_value.get() : _asImmutable()->leaf.value();
+        return isMutable() ? ((MutableLeaf*)_asMutable())->_value : _asImmutable()->leaf.value();
     }
 
     bool NodeRef::matches(Target target) const {
@@ -82,4 +82,4 @@ namespace fleece { namespace impl { namespace hashtree {
                      : _asImmutable()->interior.dump(out, indent);
     }
 
-} } }
+} } 

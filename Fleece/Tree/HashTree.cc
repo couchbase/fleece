@@ -24,19 +24,26 @@
 #include <ostream>
 #include <string>
 #include "TempArray.hh"
+#include "betterassert.hh"
 
 using namespace std;
 
-namespace fleece { namespace impl {
+namespace fleece {
 
     // The `offset` type is interpreted as a little-endian offset down from the containing object.
     #define deref(OFF, TYPE)    ((const TYPE*)((uint8_t*)this - (OFF)))
+    #define derefValue(OFF)     Value((FLValue)deref(OFF, void))
 
     namespace hashtree {
 
-        const Value* Leaf::key() const        {return deref(_keyOffset, Value);}
-        const Value* Leaf::value() const      {return deref(_valueOffset & ~1, Value);}
-        slice Leaf::keyString() const         {return deref(_keyOffset, Value)->asString();}
+        void Leaf::validate() const {
+            assert(_keyOffset > 0);
+            assert(_valueOffset > 0);
+        }
+
+        Value Leaf::key() const                 {return derefValue(_keyOffset);}
+        Value Leaf::value() const               {return derefValue(_valueOffset & ~1);}
+        slice Leaf::keyString() const           {return derefValue(_keyOffset).asString();}
 
         uint32_t Leaf::writeTo(Encoder &enc, bool writeKey) const {
             if (enc.base().contains(this)) {
@@ -57,15 +64,23 @@ namespace fleece { namespace impl {
             out << string(2*indent, ' ') << hashStr << '"';
             auto k = keyString();
             out.write((char*)k.buf, k.size);
-            out << "\"=" << value()->toJSONString() << "]";
+            out << "\"=" << value().toJSONString() << "]";
         }
 
         
-        bitmap_t Interior::bitmap() const     {return _decLittle32(_bitmap);}
+        void Interior::validate() const {
+            assert(_childrenOffset > 0);
+        }
+
+        bitmap_t Interior::bitmap() const             {return _decLittle32(_bitmap);}
 
         bool Interior::hasChild(unsigned bitNo) const {return asBitmap(bitmap()).containsBit(bitNo);}
         unsigned Interior::childCount() const         {return asBitmap(bitmap()).bitCount();}
-        const Node* Interior::childAtIndex(int i) const {return deref(_childrenOffset, Node) + i;}
+
+        const Node* Interior::childAtIndex(int i) const {
+            assert(_childrenOffset > 0);
+            return (deref(_childrenOffset, Node) + i)->validate();
+        }
 
         const Node* Interior::childForBitNumber(unsigned bitNo) const {
             return hasChild(bitNo) ? childAtIndex( asBitmap(bitmap()).indexOfBit(bitNo) ) : nullptr;
@@ -162,7 +177,7 @@ namespace fleece { namespace impl {
         return (const Interior*)this;
     }
 
-    const Value* HashTree::get(slice key) const {
+    Value HashTree::get(slice key) const {
         auto root = rootNode();
         auto leaf = root->findNearest(key.hash());
         if (leaf && leaf->keyString() == key)
@@ -180,4 +195,4 @@ namespace fleece { namespace impl {
         out << "]\n";
     }
 
-} }
+}
