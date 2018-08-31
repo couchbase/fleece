@@ -230,9 +230,7 @@ namespace fleece {
         property name (but not yet in the middle of a name.) */
     class KeyPath {
     public:
-        KeyPath(slice specifier, FLError *error)
-        :_path(FLKeyPath_New(specifier, error))
-        { }
+        KeyPath(slice spec, FLError *err)               :_path(FLKeyPath_New(spec, err)) { }
         ~KeyPath()                                      {FLKeyPath_Free(_path);}
         explicit operator bool() const                  {return _path != nullptr;}
 
@@ -435,6 +433,19 @@ namespace fleece {
         Encoder& operator<< (const std::string &s)  {writeString(s); return *this;}
         Encoder& operator<< (Value v)               {writeValue(v); return *this;}
 
+        class keyref {
+        public:
+            keyref(Encoder &enc, slice key)         :_enc(enc), _key(key) { }
+            template <class T>
+            inline void operator= (T value)         {_enc.writeKey(_key); _enc << value;}
+        private:
+            Encoder &_enc;
+            slice _key;
+        };
+
+        // This enables e.g. `enc["key"_sl] = 17`
+        inline keyref operator[] (slice key)       {return keyref(*this, key);}
+
 #ifdef __OBJC__
         bool writeNSObject(id obj)                 {return FLEncoder_WriteNSObject(_enc, obj);}
         Encoder& operator<< (id obj)               {writeNSObject(obj); return *this;}
@@ -594,6 +605,10 @@ namespace fleece {
     inline void Encoder::reset()                {return FLEncoder_Reset(_enc);}
     inline FLError Encoder::error() const       {return FLEncoder_GetError(_enc);}
     inline const char* Encoder::errorMessage() const {return FLEncoder_GetErrorMessage(_enc);}
+
+    // specialization for assigning bool value since there is no Encoder<<bool
+    template<>
+    inline void Encoder::keyref::operator= (bool value) {_enc.writeKey(_key); _enc.writeBool(value);}
 
     inline fleece::alloc_slice JSONDelta::create(Value old, Value nuu) {
         return FLCreateJSONDelta(old, nuu);

@@ -95,6 +95,23 @@ TEST_CASE("API Doc") {
 }
 
 
+TEST_CASE("API Encoder", "[Encoder]") {
+    Encoder enc;
+    enc.beginDict();
+    enc["foo"_sl] = 17;
+    enc["bar"_sl] = "wow";
+    enc["bool"_sl] = true;
+//    enc["huh?"_sl] = &enc;
+    enc.endDict();
+    Doc doc = enc.finishDoc();
+
+    CHECK(doc["foo"_sl].asInt() == 17);
+    CHECK(doc["bar"_sl].asString() == "wow"_sl);
+    CHECK(doc["bool"_sl].asBool() == true);
+    CHECK(doc["bool"_sl].type() == kFLBoolean);
+}
+
+
 TEST_CASE("API Paths", "[Encoder]") {
     Doc doc = Doc::fromJSON(readTestFile(kBigJSONTestFileName));
     auto root = doc.root();
