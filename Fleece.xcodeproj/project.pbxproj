@@ -53,6 +53,7 @@
 		276D15461E007D3000543B1B /* JSON5.cc in Sources */ = {isa = PBXBuildFile; fileRef = 276D15441E007D3000543B1B /* JSON5.cc */; };
 		276D15471E007D3000543B1B /* JSON5.hh in Headers */ = {isa = PBXBuildFile; fileRef = 276D15451E007D3000543B1B /* JSON5.hh */; };
 		276D15491E008E7A00543B1B /* JSON5Tests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 276D15481E008E7A00543B1B /* JSON5Tests.cc */; };
+		27744ADE2139C6AE00399DCA /* betterassert.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27C4CEB82127976900470DE9 /* betterassert.cc */; };
 		2776AA21208678AA004ACE85 /* DeepIterator.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2776AA1F208678AA004ACE85 /* DeepIterator.cc */; };
 		2776AA22208678AA004ACE85 /* DeepIterator.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2776AA20208678AA004ACE85 /* DeepIterator.hh */; };
 		2776AA782093C982004ACE85 /* sliceIO.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2776AA762093C982004ACE85 /* sliceIO.cc */; };
@@ -1225,6 +1226,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27744ADE2139C6AE00399DCA /* betterassert.cc in Sources */,
 				27DE2EEB2125FC9300123597 /* FleeceException.cc in Sources */,
 				27DE2E962125FA1700123597 /* RefCounted.cc in Sources */,
 				27DE2E9E2125FA1700123597 /* slice.cc in Sources */,

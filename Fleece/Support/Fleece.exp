@@ -68,6 +68,7 @@ _FLEncoder_GetExtraInfo
 _FLEncoder_SetExtraInfo
 _FLEncoder_New
 _FLEncoder_NewWithOptions
+_FLEncoder_Amend
 _FLEncoder_Free
 _FLEncoder_Reset
 _FLEncoder_SetSharedKeys
@@ -106,10 +107,10 @@ _FLSharedKeys_Decode
 _FLSharedKeys_Release
 _FLSharedKeys_Retain
 
-_FLCreateDelta
-_FLEncodeDelta
-_FLApplyDelta
-_FLEncodeApplyingDelta
+_FLCreateJSONDelta
+_FLEncodeJSONDelta
+_FLApplyJSONDelta
+_FLEncodeApplyingJSONDelta
 
 # Fleece CF/Obj-C:
 _FLEncoder_WriteCFObject
