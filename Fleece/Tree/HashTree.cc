@@ -20,10 +20,11 @@
 #include "HashTree+Internal.hh"
 #include "Bitmap.hh"
 #include "Endian.hh"
+#include "PlatformCompat.hh"
+#include "TempArray.hh"
 #include <algorithm>
 #include <ostream>
 #include <string>
-#include "TempArray.hh"
 #include "betterassert.hh"
 
 using namespace std;

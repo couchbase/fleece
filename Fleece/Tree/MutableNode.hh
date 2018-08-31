@@ -8,6 +8,7 @@
 
 #pragma once
 #include "NodeRef.hh"
+#include "PlatformCompat.hh"
 #include "RefCounted.hh"
 #include "fleece/Mutable.hh"
 #include "fleece/slice.hh"
