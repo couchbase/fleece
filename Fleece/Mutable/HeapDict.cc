@@ -23,7 +23,7 @@
 #include "Encoder.hh"
 #include "betterassert.hh"
 
-namespace fleece { namespace internal {
+namespace fleece { namespace impl { namespace internal {
 
     HeapDict::HeapDict(const Dict *d)
     :HeapCollection(kDictTag)
@@ -150,7 +150,7 @@ namespace fleece { namespace internal {
     }
 
 
-    void HeapDict::writeTo(Encoder &enc, const SharedKeys *sk) {
+    void HeapDict::writeTo(Encoder &enc) {
         if (_source && _map.size() + 1 < count() && !tooManyAncestors()) {
             // Write just the changed keys, with _source as parent:
             enc.beginDictionary(_source, _map.size());
@@ -164,7 +164,7 @@ namespace fleece { namespace internal {
             enc.beginDictionary(iter.count());
             for (; iter; ++iter) {
                 enc.writeKey(iter.keyString());
-                enc.writeValue(iter.value(), sk);
+                enc.writeValue(iter.value());
             }
             enc.endDictionary();
         }
@@ -235,4 +235,4 @@ namespace fleece { namespace internal {
         return *this;
     }
 
-} }
+} } }

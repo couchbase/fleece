@@ -17,14 +17,43 @@
 //
 
 #include "SharedKeys.hh"
-#include "Fleece.hh"
+#include "FleeceImpl.hh"
 #include "FleeceException.hh"
 
-namespace fleece {
+namespace fleece { namespace impl {
     using namespace std;
 
-    SharedKeys::~SharedKeys()
-    { }
+
+    bool SharedKeys::loadFrom(slice stateData) {
+        const Value *v = Value::fromData(stateData);
+        if (!v)
+            return false;
+        const Array *strs = v->asArray();
+        if (!strs)
+            return false;
+
+        Array::iterator i(strs);
+        if (i.count() <= count())
+            return false;
+        i += (unsigned)count();           // Start at the first new string
+        for (; i; ++i) {
+            slice str = i.value()->asString();
+            if (!str)
+                return false;
+            SharedKeys::add(str);
+        }
+        return true;
+    }
+
+
+    alloc_slice SharedKeys::stateData() const {
+        Encoder enc;
+        enc.beginArray(count());
+        for (auto i = byKey().begin(); i != byKey().end(); ++i)
+            enc.writeString(*i);
+        enc.endArray();
+        return enc.finish();
+    }
 
 
     bool SharedKeys::encode(slice str, int &key) const {
@@ -144,38 +173,18 @@ namespace fleece {
     // Subclass's read() method calls this
     bool PersistentSharedKeys::loadFrom(slice fleeceData) {
         throwIf(changed(), SharedKeysStateError, "can't load when already changed");
-        const Value *v = Value::fromData(fleeceData);
-        if (!v)
+        if (!SharedKeys::loadFrom(fleeceData))
             return false;
-        const Array *strs = v->asArray();
-        if (!strs)
-            return false;
-
-        Array::iterator i(strs);
-        if (i.count() <= count())
-            return false;
-        i += (unsigned)count();           // Start at the first new string
-        for (; i; ++i) {
-            slice str = i.value()->asString();
-            if (!str)
-                return false;
-            SharedKeys::add(str);
-        }
         _committedPersistedCount = _persistedCount = count();
         return true;
     }
 
 
     void PersistentSharedKeys::save() {
-        if (!changed())
-            return;
-        Encoder enc;
-        enc.beginArray(count());
-        for (auto i = byKey().begin(); i != byKey().end(); ++i)
-            enc.writeString(*i);
-        enc.endArray();
-        write(enc.extractOutput());     // subclass hook
-        _persistedCount = count();
+        if (changed()) {
+            write(stateData());     // subclass hook
+            _persistedCount = count();
+        }
     }
 
 
@@ -190,5 +199,4 @@ namespace fleece {
         return SharedKeys::add(str);
     }
 
-}
-
+} }

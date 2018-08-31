@@ -17,10 +17,9 @@
 //
 
 #pragma once
-#include "slice.hh"
-#include "Value.hh"
+#include "fleece/slice.hh"
+#include "fleece/Fleece.hh"
 #include "Bitmap.hh"
-#include "Encoder.hh"
 #include "Endian.hh"
 #include <memory>
 
@@ -56,8 +55,10 @@ namespace fleece { namespace hashtree {
     // Internal class representing a leaf node
     class Leaf {
     public:
-        const Value* key() const;
-        const Value* value() const;
+        void validate() const;
+
+        Value key() const;
+        Value value() const;
         slice keyString() const;
 
         hash_t hash() const             {return keyString().hash();}
@@ -98,6 +99,8 @@ namespace fleece { namespace hashtree {
     // Internal class representing an interior node
     class Interior {
     public:
+        void validate() const;
+
         const Leaf* findNearest(hash_t hash) const;
         unsigned leafCount() const;
 
@@ -139,6 +142,11 @@ namespace fleece { namespace hashtree {
 
         Node() { }
         bool isLeaf() const                 {return (leaf._valueOffset & 1) != 0;}
+
+        const Node* validate() const {
+            if (isLeaf()) leaf.validate(); else interior.validate();
+            return this;
+        }
     };
     
 } }

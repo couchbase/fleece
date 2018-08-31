@@ -18,14 +18,15 @@
 
 #include <Foundation/Foundation.h>
 #include "FleeceTests.hh"
-#include "Fleece.hh"
+#include "FleeceImpl.hh"
 
+using namespace fleece::impl;
 
 static void checkIt(id obj, const char* json) {
     Encoder enc;
     enc.writeObjC(obj);
     enc.end();
-    auto result = enc.extractOutput();
+    auto result = enc.finish();
     auto v = Value::fromData(result);
     REQUIRE(v != nullptr);
     REQUIRE(v->toJSON() == alloc_slice(json));
@@ -205,14 +206,14 @@ TEST_CASE("Obj-C PerfSerialize", "[.Perf]") {
                 Encoder enc;
                 for (NSDictionary *person in people) {
                     enc.writeObjC(person);
-                    auto d = enc.extractOutput();
+                    auto d = enc.finish();
                     totalSize += d.size;
                     enc.reset();
                 }
 #else
                 Encoder enc;
                 enc.write(people);
-                auto d = enc.extractOutput();
+                auto d = enc.finish();
                 totalSize += d.size;
 #endif
             }

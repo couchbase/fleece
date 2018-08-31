@@ -24,27 +24,6 @@ typedef struct FLSlice {
     size_t size;
 } FLSlice;
 
-/** Creates a slice pointing to the contents of a C string. */
-static inline FLSlice FLStr(const char *str) {
-    FLSlice foo = { str, str ? strlen(str) : 0 };
-    return foo;
-}
-
-// Macro version of FLStr, for use in initializing compile-time constants.
-// STR must be a C string literal.
-#ifdef _MSC_VER
-    #define FLSTR(STR) {("" STR), sizeof(("" STR))-1}
-#else
-    #define FLSTR(STR) ((FLSlice){("" STR), sizeof(("" STR))-1})
-#endif
-
-// A convenient constant denoting a null slice.
-#ifdef _MSC_VER
-    static const FLSlice kFLSliceNull = { NULL, 0 };
-#else
-    #define kFLSliceNull ((FLSlice){NULL, 0})
-#endif
-
 
 /** A block of memory returned from an API call. The caller takes ownership, may modify the
     bytes, and must call FLSliceFree when done. */
@@ -75,6 +54,29 @@ typedef FLSlice FLString;
 typedef FLSliceResult FLStringResult;
 
 
+// A convenient constant denoting a null slice.
+#ifdef _MSC_VER
+    static const FLSlice kFLSliceNull = { NULL, 0 };
+#else
+    #define kFLSliceNull ((FLSlice){NULL, 0})
+#endif
+
+
+/** Creates a slice pointing to the contents of a C string. */
+static inline FLSlice FLStr(const char *str) {
+    FLSlice foo = { str, str ? strlen(str) : 0 };
+    return foo;
+}
+
+// Macro version of FLStr, for use in initializing compile-time constants.
+// STR must be a C string literal.
+#ifdef _MSC_VER
+    #define FLSTR(STR) {("" STR), sizeof(("" STR))-1}
+#else
+    #define FLSTR(STR) ((FLSlice){("" STR), sizeof(("" STR))-1})
+#endif
+
+
 /** Equality test of two slices. */
 bool FLSlice_Equal(FLSlice a, FLSlice b);
 
@@ -84,8 +86,6 @@ int FLSlice_Compare(FLSlice, FLSlice);
 
 /** Frees the memory of a FLSliceResult. */
 void FLSliceResult_Free(FLSliceResult);
-
-#define FL_SLICE_DEFINED
 
 
 #ifdef __cplusplus

@@ -19,10 +19,8 @@
 #pragma once
 #include "MValue.hh"
 #include "MContext.hh"
-#include "PlatformCompat.hh"
-#include <assert.h>
 
-namespace fleeceapi {
+namespace fleece {
 
     /** Abstract superclass of MArray and MDict.
         Keeps a strong reference to a Context, and manages upward connections to slot & parent. */

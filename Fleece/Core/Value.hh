@@ -19,7 +19,7 @@
 #pragma once
 #include "Internal.hh"
 #include "FleeceException.hh"
-#include "slice.hh"
+#include "fleece/slice.hh"
 #include "Endian.hh"
 #include <stdint.h>
 #include <map>
@@ -27,12 +27,13 @@
 #import <Foundation/NSMapTable.h>
 #endif
 
-
 namespace fleece {
+    class Writer;
+}
 
+namespace fleece { namespace impl {
     class Array;
     class Dict;
-    class Writer;
     class SharedKeys;
 
 
@@ -130,17 +131,21 @@ namespace fleece {
         /** Returns true if this value is a mutable array or dict. */
         bool isMutable() const              {return ((size_t)this & 1) != 0;}
 
+        /** Looks up the SharedKeys from the enclosing Doc (if any.) */
+        SharedKeys* sharedKeys() const noexcept;
+
+
         //////// Conversion:
 
         /** Writes a JSON representation to a Writer.
             If you call it as toJSON<5>(...), writes JSON5, which leaves most keys unquoted. */
         template <int VER =1>
-        void toJSON(Writer&, const SharedKeys* =nullptr) const;
+        void toJSON(Writer&) const;
 
         /** Returns a JSON representation.
             If you call it as toJSON<5>(...), writes JSON5, which leaves most keys unquoted. */
         template <int VER =1>
-        alloc_slice toJSON(const SharedKeys* =nullptr, bool canonical =false) const;
+        alloc_slice toJSON(bool canonical =false) const;
 
         /** Returns a JSON string representation of a Value. */
         std::string toJSONString() const;
@@ -169,7 +174,7 @@ namespace fleece {
             New strings will be added to the table. The table can be used for multiple calls
             and will reduce the number of NSString objects created by the decoder.
             (Not noexcept, but can only throw Objective-C exceptions.) */
-        id toNSObject(NSMapTable *sharedStrings =nil, const SharedKeys* = nullptr) const;
+        id toNSObject(NSMapTable *sharedStrings =nil) const;
 
         /** Creates a new shared-string table for use with toNSObject. */
         static NSMapTable* createSharedStringsTable() noexcept;
@@ -244,4 +249,4 @@ namespace fleece {
         template <bool WIDE> friend struct dictImpl;
     };
 
-}
+} }

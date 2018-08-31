@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "slice.hh"
+#include "fleece/slice.hh"
 #include "JSON5.hh"
 #include "sliceIO.hh"
 #include "Benchmark.hh"

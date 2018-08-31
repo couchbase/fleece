@@ -17,14 +17,15 @@
 //
 
 #include "FleeceTests.hh"
-#include "Fleece.hh"
-#include "Delta.hh"
+#include "FleeceImpl.hh"
+#include "JSONDelta.hh"
 
-namespace fleece {
+namespace fleece { namespace impl {
     extern bool gCompatibleDeltas;
-}
+} }
 
 using namespace fleece;
+using namespace fleece::impl;
 
 
 static std::string toJSONString(const Value *v) {
@@ -54,12 +55,12 @@ static void checkDelta(const char *json1, const char *json2, const char *deltaEx
     }
 
     // Compute the delta and check it:
-    alloc_slice jsonDelta = Delta::create(v1, nullptr, v2, nullptr, true);
+    alloc_slice jsonDelta = JSONDelta::create(v1, v2, true);
     CHECK(jsonDelta == slice(deltaExpected));
 
     if (jsonDelta.size > 0) {
         // Now apply the delta to the old value to get the new one:
-        alloc_slice f2_reconstituted = Delta::apply(v1, nullptr, jsonDelta, true);
+        alloc_slice f2_reconstituted = JSONDelta::apply(v1, jsonDelta, true);
         auto v2_reconstituted = Value::fromData(f2_reconstituted);
         INFO("value2 reconstituted:  " << toJSONString(v2_reconstituted) << " ;  should be:  " << toJSONString(v2) << " ;  delta: " << jsonDelta);
         CHECK(v2_reconstituted->isEqual(v2));
@@ -138,7 +139,7 @@ TEST_CASE("Delta nested arrays", "[delta]") {
 
 
 static void checkDelta(const Value *left, const Value *right, const Value *expectedDelta) {
-    alloc_slice jsonDelta = Delta::create(left, nullptr, right, nullptr);
+    alloc_slice jsonDelta = JSONDelta::create(left, right);
     alloc_slice fleeceDelta = JSONConverter::convertJSON(jsonDelta);
     const Value *delta = Value::fromData(fleeceDelta);
     INFO("Delta of " << toJSONString(left) << "  -->  " << toJSONString(right) << "  ==  " << toJSONString(expectedDelta) << "  ...  got  " << toJSONString(delta));
@@ -155,7 +156,7 @@ TEST_CASE("JSONDiffPatch test suite", "[delta]") {
     JSONConverter jr(enc);
     jr.encodeJSON(ConvertJSON5(std::string(input)));
     enc.end();
-    alloc_slice encoded = enc.extractOutput();
+    alloc_slice encoded = enc.finish();
     const Dict *testSuites = Value::fromData(encoded)->asDict();
     REQUIRE(testSuites);
 

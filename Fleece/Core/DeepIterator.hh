@@ -13,7 +13,7 @@
 #include <vector>
 #include <deque>
 
-namespace fleece {
+namespace fleece { namespace impl {
     class SharedKeys;
 
 
@@ -32,7 +32,7 @@ namespace fleece {
         small amount of heap space, roughly proportional to the number of sub-containers. */
     class DeepIterator {
     public:
-        DeepIterator(const Value *root, SharedKeys *sk =nullptr);
+        DeepIterator(const Value *root);
 
         inline explicit operator bool() const           {return _value != nullptr;}
         inline DeepIterator& operator++ ()              {next(); return *this;}
@@ -70,7 +70,7 @@ namespace fleece {
         bool iterateContainer(const Value *);
         void queueChildren();
 
-        SharedKeys* _sk;
+        const SharedKeys* _sk {nullptr};
         const Value* _value;
         std::vector<PathComponent> _path;
         std::deque<std::pair<PathComponent,const Value*>> _stack;
@@ -80,4 +80,4 @@ namespace fleece {
         uint32_t _arrayIndex;
     };
 
-}
+} }

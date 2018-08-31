@@ -21,7 +21,7 @@
 #include <algorithm>
 #include "betterassert.hh"
 
-namespace fleece { namespace internal {
+namespace fleece { namespace impl { namespace internal {
     using namespace std;
 
 
@@ -135,4 +135,4 @@ namespace fleece { namespace internal {
         fleece::release(HeapValue::asHeapValue(v));
     }
 
-} }
+} } }

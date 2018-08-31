@@ -19,7 +19,7 @@
 #pragma once
 #include "Array.hh"
 
-namespace fleece {
+namespace fleece { namespace impl {
 
     class MutableDict;
     class SharedKeys;
@@ -32,14 +32,10 @@ namespace fleece {
 
         bool empty() const noexcept                         {return countIsZero();}
 
-        /** Looks up the Value for a string key, assuming the keys are sorted
-            (as they are by default.) */
+        /** Looks up the Value for a string key. */
         const Value* get(slice keyToFind) const noexcept;
 
-        const Value* get(slice keyToFind, SharedKeys*) const noexcept;
-
-        /** Looks up the Value for an integer key, assuming the keys are sorted
-            (as they are by default.) */
+        /** Looks up the Value for an integer (shared) key. */
         const Value* get(int numericKeyToFind) const noexcept;
 
         /** If this array is mutable, returns the equivalent MutableArray*, else returns nullptr. */
@@ -81,6 +77,8 @@ namespace fleece {
             /** Steps forward by one or more items. (Throws if stepping past the end.) */
             iterator& operator += (uint32_t);
 
+            const SharedKeys* sharedKeys() const            {return _sharedKeys;}
+
 #ifdef __OBJC__
             NSString* keyToNSString(NSMapTable *sharedStrings) const;
 #endif
@@ -90,6 +88,7 @@ namespace fleece {
             void readKV() noexcept;
             const Value* rawKey() noexcept             {return _a._first;}
             const Value* rawValue() noexcept           {return _a.second();}
+            bool findSharedKeys() const;
 
             Array::impl _a;
             const Value *_key, *_value;
@@ -102,38 +101,29 @@ namespace fleece {
         };
 
         iterator begin() const noexcept                      {return iterator(this);}
-        iterator begin(const SharedKeys *sk) const noexcept  {return iterator(this, sk);}
 
-        /** An abstracted key for dictionaries. It will cache the key as an encoded Value, and it
+        /** An abstracted key for dictionaries. It will cache the key's shared int value, and it
             will cache the index at which the key was last found, which speeds up succssive
             lookups.
-            Warning: An instance of this should be used only on a single thread.
-            Warning: If you set the `cache` flag to true, the key will cache the Value
-            representation of the string, so it should only be used with dictionaries that are
-            stored in the same encoded data. */
+            Warning: An instance of this should be used only on a single thread, and only with
+            documents that share the same SharedKeys. */
         class key {
         public:
             /** Constructs a key from a string.
                 Warning: the input string's memory MUST remain valid for as long as the key is in
                 use! (The key stores a pointer to the string, but does not copy it.) */
-            key(slice rawString);
-
-            /** Constructs a key from a string. If the data was encoded using a SharedKeys mapping,
-                you need to use this constructor so the proper numeric encoding can be found & used.
-                Warning: the input string's memory MUST remain valid for as long as the key is in
-                use! (The key may store a pointer to the string, but does not copy it.) */
-            key(slice rawString, SharedKeys*, bool cachePointer =false);
-
+            key(slice rawString)                         :_rawString(rawString) { }
+            ~key();
             slice string() const noexcept                {return _rawString;}
-            const Value* asValue() const noexcept        {return _keyValue;}
             int compare(const key &k) const noexcept     {return _rawString.compare(k._rawString);}
+            key(const key&) =delete;
         private:
+            void setSharedKeys(SharedKeys*);
+            
             slice const _rawString;
-            const Value* _keyValue  {nullptr};
             SharedKeys* _sharedKeys {nullptr};
             uint32_t _hint          {0xFFFFFFFF};
             int32_t _numericKey;
-            bool _cachePointer;
             bool _hasNumericKey     {false};
 
             template <bool WIDE> friend struct dictImpl;
@@ -159,4 +149,4 @@ namespace fleece {
         friend class internal::HeapDict;
     };
 
-}
+} }

@@ -20,7 +20,7 @@
 
 #include "Value.hh"
 
-namespace fleece {
+namespace fleece { namespace impl {
 
     class Dict;
     class MutableArray;
@@ -110,4 +110,4 @@ namespace fleece {
         template <bool WIDE> friend struct dictImpl;
     };
 
-}
+} }

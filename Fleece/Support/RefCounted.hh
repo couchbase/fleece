@@ -17,7 +17,6 @@
 //
 
 #pragma once
-#include "PlatformCompat.hh"
 #include <atomic>
 
 namespace fleece {
@@ -50,6 +49,8 @@ namespace fleece {
         inline void _release() noexcept         { if (--_refCount <= 0) delete this; }
         static constexpr int32_t kInitialRefCount = 0;
 #endif
+        inline void _retain() const noexcept          {const_cast<RefCounted*>(this)->_retain();}
+        inline void _release() const noexcept         {const_cast<RefCounted*>(this)->_release();}
 
         std::atomic<int32_t> _refCount {kInitialRefCount};
     };

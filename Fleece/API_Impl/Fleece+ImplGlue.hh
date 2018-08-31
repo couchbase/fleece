@@ -1,5 +1,5 @@
 //
-// Fleece_C_impl.hh
+// Fleece+ImplGlue.hh
 //
 // Copyright (c) 2016 Couchbase, Inc All rights reserved.
 //
@@ -17,32 +17,39 @@
 //
 
 #pragma once
-#include "Fleece.hh"
+#include "FleeceImpl.hh"
 #include "JSONEncoder.hh"
 #include "Path.hh"
 #include "DeepIterator.hh"
+#include "Doc.hh"
 #include "FleeceException.hh"
+
 using namespace fleece;
+using namespace fleece::impl;
 
-namespace fleece {
+
+namespace fleece { namespace impl {
     struct FLEncoderImpl;
-}
+} }
 
-#define FL_IMPL
-typedef const Value* FLValue;
-typedef const Array* FLArray;
-typedef const Dict* FLDict;
-typedef MutableArray* FLMutableArray;
-typedef MutableDict* FLMutableDict;
-typedef FLEncoderImpl* FLEncoder;
-typedef SharedKeys* FLSharedKeys;
-typedef Path*       FLKeyPath;
-typedef DeepIterator* FLDeepIterator;
+// Define the public types as typedefs of the impl types:
+typedef const Value*    FLValue;
+typedef const Array*    FLArray;
+typedef const Dict*     FLDict;
+typedef MutableArray*   FLMutableArray;
+typedef MutableDict*    FLMutableDict;
+typedef FLEncoderImpl*  FLEncoder;
+typedef SharedKeys*     FLSharedKeys;
+typedef Path*           FLKeyPath;
+typedef DeepIterator*   FLDeepIterator;
+typedef const Doc*      FLDoc;
 
-#include "Fleece.h" /* the C header */
+#define FL_IMPL         // Prevents redefinition of the above types
+
+#include "fleece/Fleece.h" /* the public C header */
 
 
-namespace fleece {
+namespace fleece { namespace impl {
 
     void recordError(const std::exception &x, FLError *outError) noexcept;
 
@@ -94,7 +101,7 @@ namespace fleece {
 
         void recordException(const std::exception &x) noexcept {
             if (!hasError()) {
-                fleece::recordError(x, &errorCode);
+                fleece::impl::recordError(x, &errorCode);
                 errorMessage = x.what();
             }
         }
@@ -124,4 +131,4 @@ namespace fleece {
         } \
         return false;
 
-}
+} }

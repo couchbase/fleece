@@ -20,7 +20,7 @@
 #include "jsonsl.h"
 #include <map>
 
-namespace fleece {
+namespace fleece { namespace impl {
 
     static int errorCallback(struct jsonsl_st * jsn,
                              jsonsl_error_t err,
@@ -94,7 +94,7 @@ namespace fleece {
         enc.setSharedKeys(sk);
         JSONConverter cvt(enc);
         throwIf(!cvt.encodeJSON(slice(json)), JSONError, cvt.errorMessage());
-        return enc.extractOutput();
+        return enc.finish();
     }
 
     inline void JSONConverter::push(struct jsonsl_state_st *state) {
@@ -229,4 +229,4 @@ namespace fleece {
         return converter(jsn)->gotError(err, errat);
     }
 
-}
+} }

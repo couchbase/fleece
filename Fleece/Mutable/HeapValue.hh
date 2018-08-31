@@ -8,8 +8,9 @@
 #include "Value.hh"
 #include "RefCounted.hh"
 
-namespace fleece {
+namespace fleece { namespace impl {
     namespace internal {
+        using namespace fleece::impl;
 
         struct offsetValue {
             uint8_t _pad = 0xFF;                // Unused byte, to ensure _header is at an odd address
@@ -108,4 +109,4 @@ namespace fleece {
         return internal::HeapValue::create(t)->asValue();
     }
 
-}
+} }

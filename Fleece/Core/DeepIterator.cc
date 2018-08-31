@@ -10,11 +10,10 @@
 #include "SharedKeys.hh"
 #include <sstream>
 
-namespace fleece {
+namespace fleece { namespace impl {
 
-    DeepIterator::DeepIterator(const Value *root, SharedKeys *sk)
-    :_sk(sk)
-    ,_value(root)
+    DeepIterator::DeepIterator(const Value *root)
+    :_value(root)
     ,_skipChildren(false)
     { }
 
@@ -49,6 +48,8 @@ namespace fleece {
                     _path.push_back({(*_dictIt).keyString(), 0});
                     ++(*_dictIt);
                 } else {
+                    if (!_sk)
+                        _sk = _dictIt->sharedKeys();
                     _dictIt.reset();
                 }
             } else {
@@ -144,4 +145,4 @@ namespace fleece {
         return s.str();
     }
 
-}
+} }

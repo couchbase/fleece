@@ -17,10 +17,14 @@
 //
 
 #include "Pointer.hh"
+#include "Doc.hh"
+#include <tuple>
 #include <stdio.h>
 #include "betterassert.hh"
 
-namespace fleece { namespace internal {
+using namespace std;
+
+namespace fleece { namespace impl { namespace internal {
 
     Pointer::Pointer(size_t offset, int width, bool external)
     :Value(kPointerTagFirst, 0)
@@ -46,7 +50,7 @@ namespace fleece { namespace internal {
         assert(offset > 0);
         const Value *dst = offsetby(this, -(ptrdiff_t)offset);
         if (_usuallyFalse(isExternal())) {
-            dst = ExternResolver::resolvePointerFrom(this, dst);
+            dst = Doc::resolvePointerFrom(this, dst);
             if (!dst)
                 fprintf(stderr, "FATAL: Fleece extern pointer at %p, offset -%u,"
                         " did not resolve to any address\n", this, offset);
@@ -65,14 +69,12 @@ namespace fleece { namespace internal {
         const Value *target = offsetby(this, -(ptrdiff_t)off);
 
         if (_usuallyFalse(isExternal())) {
-            auto resolver = ExternResolver::resolverForPointerFrom(this);
-            if (_usuallyFalse(!resolver))
-                return nullptr;
-            target = resolver->resolvePointerTo(target);
+            slice destination;
+            tie(target, destination) = Doc::resolvePointerFromWithRange(this, target);
             if (_usuallyFalse(!target))
                 return nullptr;
-            dataStart = resolver->destination().buf;
-            dataEnd = resolver->destination().end();
+            dataStart = destination.buf;
+            dataEnd = destination.end();
         } else {
             if (_usuallyFalse(target < dataStart) || _usuallyFalse(target >= dataEnd))
                 return nullptr;
@@ -93,4 +95,4 @@ namespace fleece { namespace internal {
     }
 
 
-} }
+} } }

@@ -25,6 +25,8 @@
 #include "Pointer.hh"
 #include "varint.hh"
 #include "DeepIterator.hh"
+#include "SharedKeys.hh"
+#include "Doc.hh"
 #include <sstream>
 
 #undef NOMINMAX
@@ -32,7 +34,8 @@
 
 namespace fleece {
     using namespace std;
-    using namespace internal;
+    using namespace impl;
+    using namespace impl::internal;
 
     class ValueTests {  // Value declares this as a friend so it can call private API
     public:
@@ -130,7 +133,7 @@ namespace fleece {
 
         {
             stringstream s;
-            for (DeepIterator i(person, nullptr); i; ++i) {
+            for (DeepIterator i(person); i; ++i) {
                 s << i.jsonPointer() << ": " << i.value()->toString().asString() << "\n";
             }
             //cerr << s.str();
@@ -141,7 +144,7 @@ namespace fleece {
 
         {
             stringstream s;
-            for (DeepIterator i(person, nullptr); i; ++i) {
+            for (DeepIterator i(person); i; ++i) {
                 if (i.path().empty())
                     continue;
                 s << i.jsonPointer() << ": " << i.value()->toString().asString() << "\n";
@@ -153,4 +156,46 @@ namespace fleece {
 #endif
         }
     }
+
+
+    TEST_CASE("Doc") {
+        const Dict *root;
+        {
+            Retained<SharedKeys> sk = new SharedKeys();
+            Retained<Doc> doc = new Doc(readTestFile("1person.fleece"), Doc::kUntrusted, sk);
+            CHECK(doc->sharedKeys() == sk);
+            root = (const Dict*)doc->root();
+            CHECK(root);
+            CHECK(Doc::sharedKeys(root) == sk);
+
+            auto id = root->get("_id"_sl);
+            REQUIRE(id);
+            CHECK(Doc::sharedKeys(id) == sk);
+        }
+        CHECK(Doc::sharedKeys(root) == nullptr);
+    }
+
+
+    TEST_CASE("Duplicate Docs") {
+        const Dict *root;
+        {
+            alloc_slice data = readTestFile("1person.fleece");
+            Retained<SharedKeys> sk = new SharedKeys();
+            Retained<Doc> doc1 = new Doc(data, Doc::kUntrusted, sk);
+            Retained<Doc> doc2 = new Doc(data, Doc::kUntrusted, sk);
+            CHECK(doc1->data() == data);
+            CHECK(doc2->data() == data);
+            CHECK(doc1->sharedKeys() == sk);
+            CHECK(doc2->sharedKeys() == sk);
+            root = (const Dict*)doc1->root();
+            CHECK(root);
+            CHECK(root->sharedKeys() == sk);
+
+            root = (const Dict*)doc2->root();
+            CHECK(root);
+            CHECK(root->sharedKeys() == sk);
+        }
+        CHECK(Doc::sharedKeys(root) == nullptr);
+    }
+
 }

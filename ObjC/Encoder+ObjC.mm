@@ -18,12 +18,14 @@
 
 #import <Foundation/Foundation.h>
 #import "Encoder.hh"
-#import "Fleece_C_impl.hh"
+#import "Fleece+ImplGlue.hh"
 #import "FleeceException.hh"
+
+using namespace fleece::impl;
 
 
 @interface NSObject (FleeceInternal)
-- (void) fl_encodeTo: (fleece::Encoder*)enc;
+- (void) fl_encodeTo: (Encoder*)enc;
 @end
 
 
@@ -50,7 +52,7 @@ using namespace fleece;
 
 
 @implementation NSObject (FleeceInternal)
-- (void) fl_encodeTo: (fleece::Encoder*)enc {
+- (void) fl_encodeTo: (Encoder*)enc {
     // Default implementation -- object doesn't implement Fleece encoding at all.
     NSString* msg = [NSString stringWithFormat: @"Objects of class %@ cannot be encoded",
                      [self class]];
@@ -60,7 +62,7 @@ using namespace fleece;
 
 
 @implementation NSNull (Fleece)
-- (void) fl_encodeTo: (fleece::Encoder*)enc {
+- (void) fl_encodeTo: (Encoder*)enc {
     enc->writeNull();
 }
 @end

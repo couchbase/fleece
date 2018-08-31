@@ -23,7 +23,7 @@
 #include "MRoot.hh"
 #include "FleeceDocument.h"
 
-using namespace fleeceapi;
+using namespace fleece;
 
 
 static alloc_slice encode(id obj) {
@@ -74,9 +74,9 @@ static void verifyDictIterator(NSDictionary *dict) {
 
 TEST_CASE("MValue", "[Mutable]") {
     @autoreleasepool {
-    MValue<id> val(@"hi");
-    REQUIRE([val.asNative(nullptr) isEqual: @"hi"]);
-    REQUIRE(val.value() == nullptr);
+        MValue<id> val(@"hi");
+        REQUIRE([val.asNative(nullptr) isEqual: @"hi"]);
+        REQUIRE(val.value() == nullptr);
     }
 }
 
@@ -117,7 +117,7 @@ TEST_CASE("MDict", "[Mutable]") {
         alloc_slice newData = root.encode();
 
         // Delta encoding:
-        alloc_slice delta = root.encodeDelta();
+        alloc_slice delta = root.amend();
         REQUIRE(delta.buf != nullptr);
         CHECK(delta.size == 52); // may change
 
@@ -197,7 +197,6 @@ TEST_CASE("MDict no root", "[Mutable]") {
                              @"array":    @[@"boo", @NO],
                              @"dict":     @{@"melt": @32, @"boil": @212}});
         dict = [FleeceDocument objectFromFleeceSlice: data
-                                          sharedKeys: nullptr
                                    mutableContainers: YES];
     }
     NSLog(@"FleeceDict = %@", dict);

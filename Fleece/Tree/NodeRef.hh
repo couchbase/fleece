@@ -57,7 +57,7 @@ namespace fleece { namespace hashtree {
         bool isLeaf() const;
         hash_t hash() const;
         bool matches(Target) const;
-        const Value* value() const;
+        Value value() const;
 
         unsigned childCount() const;
         NodeRef childAtIndex(unsigned index) const;
@@ -73,4 +73,4 @@ namespace fleece { namespace hashtree {
         size_t _addr;
     };
 
-} }
+} } 

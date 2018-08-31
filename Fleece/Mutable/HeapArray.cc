@@ -22,7 +22,7 @@
 #include "varint.hh"
 #include "betterassert.hh"
 
-namespace fleece { namespace internal {
+namespace fleece { namespace impl { namespace internal {
 
     using namespace internal;
 
@@ -156,4 +156,4 @@ namespace fleece { namespace internal {
     }
 
 
-} }
+} } }

@@ -17,7 +17,7 @@
 //
 
 #include "FleeceTests.hh"
-#include "slice.hh"
+#include "fleece/slice.hh"
 #include <fcntl.h>
 
 #if !FL_HAVE_TEST_FILES

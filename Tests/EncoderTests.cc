@@ -29,7 +29,8 @@
 #include <unistd.h>
 
 
-namespace fleece {
+namespace fleece { namespace impl {
+    using namespace fleece::impl::internal;
 
 class EncoderTests {
 public:
@@ -46,7 +47,7 @@ public:
 
     void endEncoding() {
         enc.end();
-        result = enc.extractOutput();
+        result = enc.finish();
         enc.reset();
     }
 
@@ -198,8 +199,6 @@ public:
         REQUIRE(name);
         std::string nameStr = (std::string)name->asString();
         REQUIRE(nameStr == expectedName);
-        REQUIRE(nameKey.asValue() != nullptr);
-        REQUIRE(nameKey.asValue()->asString() == slice("name"));
 
         // Second lookup (using cache)
         name = person->get(nameKey);
@@ -451,7 +450,7 @@ public:
 
     TEST_CASE_METHOD(EncoderTests, "DictionaryNumericKeys", "[Encoder]") {
 #ifndef NDEBUG
-        internal::gDisableNecessarySharedKeysCheck = true;
+        gDisableNecessarySharedKeysCheck = true;
 #endif
         {
             enc.beginDictionary();
@@ -477,7 +476,7 @@ public:
             REQUIRE(d->toJSON() == alloc_slice("{0:23,1:42,2047:-1}"));
         }
 #ifndef NDEBUG
-        internal::gDisableNecessarySharedKeysCheck = false;
+        gDisableNecessarySharedKeysCheck = false;
 #endif
     }
 
@@ -521,7 +520,7 @@ public:
             enc.writeString("there");
             enc.writeString(slice{string, stringLen});
             enc.endArray();
-            auto data = enc.extractOutput();
+            auto data = enc.finish();
         }
         delete [] string;
     }
@@ -584,7 +583,7 @@ public:
 
         Writer w;
         w.writeDecodedBase64(slice("bm90LXJlYWxseS1iaW5hcnk="));
-        REQUIRE(w.extractOutput() == alloc_slice("not-really-binary"));
+        REQUIRE(w.finish() == alloc_slice("not-really-binary"));
     }
 
     TEST_CASE_METHOD(EncoderTests, "Dump", "[Encoder]") {
@@ -661,7 +660,7 @@ public:
 #endif
 
         enc.end();
-        result = enc.extractOutput();
+        result = enc.finish();
 
 #if FL_HAVE_TEST_FILES
         REQUIRE(result.buf);
@@ -712,7 +711,7 @@ public:
 
     TEST_CASE_METHOD(EncoderTests, "FindPersonByIndexKeyed", "[Encoder]") {
         {
-            Dict::key nameKey(slice("name"), nullptr, true);
+            Dict::key nameKey(slice("name"));
 
             // First build a small non-wide Dict:
             enc.beginArray();
@@ -746,7 +745,7 @@ public:
 #if FL_HAVE_TEST_FILES
         {
             // Now try a wide Dict:
-            Dict::key nameKey(slice("name"), nullptr, true);
+            Dict::key nameKey(slice("name"));
 
             auto doc = readTestFile("1000people.fleece");
             auto root = Value::fromTrustedData(doc)->asArray();
@@ -764,7 +763,7 @@ public:
         JSONConverter jr(enc);
         jr.encodeJSON(input);
         enc.end();
-        alloc_slice fleeceData = enc.extractOutput();
+        alloc_slice fleeceData = enc.finish();
         const Value *root = Value::fromData(fleeceData);
         CHECK(root->asArray()->count() == kBigJSONTestCount);
 
@@ -918,5 +917,6 @@ public:
         REQUIRE(keys[(unsigned)n+28].buf == nullptr);
         REQUIRE(keys[(unsigned)9999].buf == nullptr);
     }
-};
+
+} }
 

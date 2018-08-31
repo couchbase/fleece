@@ -15,6 +15,9 @@ GCC_WARN_SIGN_COMPARE = NO
 GCC_TREAT_WARNINGS_AS_ERRORS                       = YES
 
 
+HEADER_SEARCH_PATHS                                = API   // allows for #include <fleece/Fleece.h>
+
+
 IPHONEOS_DEPLOYMENT_TARGET                         = 8.0
 MACOSX_DEPLOYMENT_TARGET                           = 10.9
 TVOS_DEPLOYMENT_TARGET                             = 9.0

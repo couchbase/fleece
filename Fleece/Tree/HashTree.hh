@@ -17,8 +17,8 @@
 //
 
 #pragma once
-#include "slice.hh"
-#include "Value.hh"
+#include "fleece/slice.hh"
+#include "fleece/Fleece.hh"
 
 namespace fleece {
 
@@ -37,7 +37,7 @@ namespace fleece {
     public:
         static const HashTree* fromData(slice data);
 
-        const Value* get(slice) const;
+        Value get(slice) const;
 
         unsigned count() const;
 
@@ -51,14 +51,14 @@ namespace fleece {
             iterator(iterator&&);
             ~iterator();
             slice key() const noexcept                      {return _key;}
-            const Value* value() const noexcept             {return _value;}
-            explicit operator bool() const noexcept         {return _value != nullptr;}
+            Value value() const noexcept                    {return _value;}
+            explicit operator bool() const noexcept         {return !!_value;}
             iterator& operator ++();
         private:
             iterator(hashtree::NodeRef);
             std::unique_ptr<hashtree::iteratorImpl> _impl;
             slice _key;
-            const Value *_value;
+            Value _value;
         };
 
     private:

@@ -16,12 +16,13 @@ if(NOT FLEECEDEFS MATCHES "_CRT_SECURE_NO_WARNINGS")
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
 
+aux_source_directory(Fleece/API_Impl/    FLEECE_API_SRC)
 aux_source_directory(Fleece/Core/        FLEECE_CORE_SRC)
 aux_source_directory(Fleece/Integration/ FLEECE_INTEGRATION_SRC)
 aux_source_directory(Fleece/Mutable/     FLEECE_MUTABLE_SRC)
 aux_source_directory(Fleece/Support/     FLEECE_SUPPORT_SRC)
 aux_source_directory(Fleece/Tree/        FLEECE_TREE_SRC)
-set(FLEECE_SRC ${FLEECE_CORE_SRC} ${FLEECE_INTEGRATION_SRC} ${FLEECE_MUTABLE_SRC}
+set(FLEECE_SRC ${FLEECE_API_SRC} ${FLEECE_CORE_SRC} ${FLEECE_INTEGRATION_SRC} ${FLEECE_MUTABLE_SRC}
                ${FLEECE_SUPPORT_SRC} ${FLEECE_TREE_SRC}
                vendor/jsonsl/jsonsl.c
                              vendor/libb64/cdecode.c
@@ -38,7 +39,8 @@ elseif(WIN32)
     set(FLEECE_SRC ${FLEECE_SRC} MSVC/memmem.cc MSVC/vasprintf-msvc.c)
 endif()
 
-include_directories(Fleece
+include_directories(API              # public
+                    Fleece/API_Impl
                     Fleece/Core
                     Fleece/Integration
                     Fleece/Mutable
@@ -49,7 +51,7 @@ include_directories(Fleece
                     "vendor/jsonsl" )
 
 if(!MSVC)
-	set_source_files_properties(Fleece/Core/Fleece_C_impl.cc  PROPERTIES)
+	set_source_files_properties(Fleece/Core/Fleece.cc  PROPERTIES)
 endif()
 
 add_library(Fleece        SHARED  ${FLEECE_SRC})

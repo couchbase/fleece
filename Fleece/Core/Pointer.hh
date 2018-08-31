@@ -6,9 +6,10 @@
 
 #pragma once
 #include "Value.hh"
-#include "ExternResolver.hh"
 
-namespace fleece { namespace internal {
+namespace fleece { namespace impl { namespace internal {
+    using namespace fleece::impl;
+
 
     class Pointer : public Value {
     public:
@@ -56,4 +57,4 @@ namespace fleece { namespace internal {
     };
 
 
-} }
+} } }

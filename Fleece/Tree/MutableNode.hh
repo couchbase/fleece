@@ -9,7 +9,8 @@
 #pragma once
 #include "NodeRef.hh"
 #include "RefCounted.hh"
-#include "slice.hh"
+#include "fleece/Mutable.hh"
+#include "fleece/slice.hh"
 #include "TempArray.hh"
 #include "betterassert.hh"
 
@@ -49,7 +50,7 @@ namespace fleece { namespace hashtree {
     // A leaf node that holds a single key and value.
     class MutableLeaf : public MutableNode {
     public:
-        MutableLeaf(const Target &t, const Value *v)
+        MutableLeaf(const Target &t, Value v)
         :MutableNode(0)
         ,_key(t.key)
         ,_hash(t.hash)
@@ -73,12 +74,12 @@ namespace fleece { namespace hashtree {
             sprintf(hashStr, "{%08x ", _hash);
             out << string(2*indent, ' ') << hashStr << '"';
             out.write((char*)_key.buf, _key.size);
-            out << "\"=" << _value->toJSONString() << "}";
+            out << "\"=" << _value.toJSONString() << "}";
         }
 
         alloc_slice const _key;
         hash_t const _hash;
-        RetainedConst<Value> _value;
+        RetainedValue _value;
     };
 
 
@@ -165,7 +166,7 @@ namespace fleece { namespace hashtree {
             unsigned bitNo = childBitNumber(target.hash, shift);
             if (!hasChild(bitNo)) {
                 // No child -- add a leaf:
-                const Value *val = (*target.insertCallback)(nullptr);
+                Value val = (*target.insertCallback)(nullptr);
                 if (!val)
                     return nullptr;
                 return addChild(bitNo, new MutableLeaf(target, val));
@@ -174,7 +175,7 @@ namespace fleece { namespace hashtree {
             if (childRef.isLeaf()) {
                 if (childRef.matches(target)) {
                     // Leaf node matches this key; update or copy it:
-                    const Value *val = (*target.insertCallback)(childRef.value());
+                    Value val = (*target.insertCallback)(childRef.value());
                     if (!val)
                         return nullptr;
                     if (childRef.isMutable())

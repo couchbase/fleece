@@ -11,12 +11,12 @@
 #include <unordered_map>
 #include <memory>
 
-namespace fleece {
+namespace fleece { namespace impl {
     class Encoder;
     class SharedKeys;
-}
+} }
 
-namespace fleece { namespace internal {
+namespace fleece { namespace impl { namespace internal {
     class HeapArray;
 
     class HeapDict : public HeapCollection {
@@ -79,11 +79,11 @@ namespace fleece { namespace internal {
             uint32_t _count;
         };
 
-        void writeTo(Encoder&, const SharedKeys*);
+        void writeTo(Encoder&);
 
     protected:
-        friend class fleece::Array;
-        friend class fleece::MutableDict;
+        friend class fleece::impl::Array;
+        friend class fleece::impl::MutableDict;
 
         ~HeapDict() =default;
         HeapArray* kvArray();
@@ -103,4 +103,5 @@ namespace fleece { namespace internal {
         std::deque<alloc_slice> _backingSlices;
         Retained<HeapArray> _iterable;
     };
-} }
+    
+} } }

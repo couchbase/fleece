@@ -1,0 +1,18 @@
+//
+//  FleeceDylib.xcconfig
+//  Fleece
+//
+//  Created by Jens Alfke on 8/17/18.
+//  Copyright © 2018 Couchbase. All rights reserved.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+DYLIB_COMPATIBILITY_VERSION = 1
+DYLIB_CURRENT_VERSION       = 1
+DYLIB_INSTALL_NAME_BASE     = @rpath
+EXECUTABLE_PREFIX           = lib
+
+EXPORTED_SYMBOLS_FILE       = $(SRCROOT)/Fleece/Support/Fleece.exp
+PRODUCT_NAME                = fleece

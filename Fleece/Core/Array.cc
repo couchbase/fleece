@@ -22,10 +22,9 @@
 #include "Internal.hh"
 #include "PlatformCompat.hh"
 #include "varint.hh"
-#include <vector>
 
 
-namespace fleece {
+namespace fleece { namespace impl {
     using namespace internal;
 
 
@@ -142,4 +141,4 @@ namespace fleece {
         return *this;
     }
 
-}
+} }

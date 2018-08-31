@@ -19,8 +19,8 @@
 #pragma once
 
 #include <stddef.h>
-#include "slice.hh"
-#include "PlatformCompat.hh"  // for _usuallyTrue, _usuallyFalse
+#include "fleece/slice.hh"
+#include "fleece/Base.hh"
 
 namespace fleece {
 

@@ -19,9 +19,9 @@
 #pragma once
 
 #include "Encoder.hh"
+#include "Doc.hh"
 #include "FleeceException.hh"
-#include "slice.hh"
-#include <vector>
+#include "fleece/slice.hh"
 #include <map>
 
 extern "C" {
@@ -29,7 +29,7 @@ extern "C" {
     struct jsonsl_st;
 }
 
-namespace fleece {
+namespace fleece { namespace impl {
 
     /** Parses JSON data and writes the values in it to a Fleece encoder. */
     class JSONConverter {
@@ -80,4 +80,4 @@ namespace fleece {
         slice _input;                       // Current JSON being parsed
     };
 
-}
+} }

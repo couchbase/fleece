@@ -17,9 +17,8 @@
 //
 
 #include "FleeceTests.hh"
-#include "Fleece.hh"
+#include "FleeceImpl.hh"
 #include "JSONConverter.hh"
-#include "MutableHashTree.hh"
 #include "varint.hh"
 #include <chrono>
 #include <stdlib.h>
@@ -46,6 +45,7 @@
 
 
 using namespace fleece;
+using namespace fleece::impl;
 
 
 #if !FL_EMBEDDED
@@ -96,7 +96,7 @@ TEST_CASE("Perf Convert1000People", "[.Perf]") {
 
             jr.encodeJSON(input);
             e.end();
-            auto result = e.extractOutput();
+            auto result = e.finish();
             if (i == kSamples-1)
                 lastResult = result;
         }
@@ -187,16 +187,16 @@ TEST_CASE("Perf LoadPeople", "[.Perf]") {
     auto doc = readTestFile("1000people.fleece");
 
     Dict::key keys[10] = {
-        Dict::key(slice("about")),
-        Dict::key(slice("age")),
-        Dict::key(slice("balance")),
-        Dict::key(slice("guid")),
-        Dict::key(slice("isActive")),
-        Dict::key(slice("latitude")),
-        Dict::key(slice("longitude")),
-        Dict::key(slice("name")),
-        Dict::key(slice("registered")),
-        Dict::key(slice("tags")),
+        {"about"_sl},
+        {"age"_sl},
+        {"balance"_sl},
+        {"guid"_sl},
+        {"isActive"_sl},
+        {"latitude"_sl},
+        {"longitude"_sl},
+        {"name"_sl},
+        {"registered"_sl},
+        {"tags"_sl},
     };
 
     fprintf(stderr, "Looking up 1000 people...\n");
@@ -242,7 +242,7 @@ TEST_CASE("Perf DictSearch", "[.Perf]") {
             break;
     }
     enc.endDictionary();
-    alloc_slice dictData = enc.extractOutput();
+    alloc_slice dictData = enc.finish();
     auto people = Value::fromTrustedData(dictData)->asDict();
 
     Benchmark bench;
@@ -255,57 +255,6 @@ TEST_CASE("Perf DictSearch", "[.Perf]") {
         {
             for (int k = 0; k < 100; k++) {
                 const Value *person = people->get(keys[k]);
-                if (!person)
-                    abort();
-            }
-        }
-        bench.stop();
-
-        //std::this_thread::sleep_for(std::chrono::microseconds(100));
-    }
-    bench.printReport();
-}
-
-
-TEST_CASE("Perf TreeSearch", "[.Perf]") {
-    static const int kSamples = 500000;
-
-    // Convert JSON array into a dictionary keyed by _id:
-    auto input = readTestFile("1000people.fleece");
-    if (!input)
-        abort();
-    std::vector<alloc_slice> names;
-    auto people = Value::fromTrustedData(input)->asArray();
-
-    MutableHashTree tree;
-
-    unsigned nPeople = 0;
-    for (Array::iterator i(people); i; ++i) {
-        auto person = i.value()->asDict();
-        auto key = person->get("guid"_sl)->asString();
-        names.emplace_back(key);
-        tree.set(key, person);
-        if (++nPeople >= 1000)
-            break;
-    }
-
-    Encoder enc;
-    enc.suppressTrailer();
-    tree.writeTo(enc);
-    alloc_slice treeData = enc.extractOutput();
-    const HashTree *imTree = HashTree::fromData(treeData);
-
-    Benchmark bench;
-
-    for (int i = 0; i < kSamples; i++) {
-        slice keys[100];
-        for (int k = 0; k < 100; k++)
-            keys[k] = names[ random() % names.size() ];
-        bench.start();
-        {
-            for (int k = 0; k < 100; k++) {
-                const Value *person = imTree->get(keys[k]);
-                //const Value *person = tree.get(keys[k]);
                 if (!person)
                     abort();
             }

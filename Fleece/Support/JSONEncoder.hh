@@ -24,9 +24,7 @@
 #include <stdio.h>
 
 
-namespace fleece {
-
-    class SharedKeys;
+namespace fleece { namespace impl {
 
     /** Generates JSON-encoded data. */
     class JSONEncoder {
@@ -43,13 +41,10 @@ namespace fleece {
         size_t bytesWritten() const             {return _out.length();}
 
         /** Returns the encoded data. */
-        alloc_slice extractOutput()             {return _out.extractOutput();}
+        alloc_slice finish()                    {return _out.finish();}
 
         /** Resets the encoder so it can be used again. */
         void reset()                            {_out.reset(); _first = true;}
-
-        /** Associates a SharedKeys object with this Encoder, for use by writeValue(). */
-        void setSharedKeys(const SharedKeys *s) {_sharedKeys = s;}
 
         /////// Writing data:
 
@@ -66,7 +61,7 @@ namespace fleece {
         
         void writeData(slice d)                 {comma(); _out << '"'; _out.writeBase64(d);
                                                           _out << '"';}
-        void writeValue(const Value *v, SharedKeys *sk =nullptr);
+        void writeValue(const Value *v);
 
         void writeJSON(slice json)              {comma(); _out << json;}
         void writeRaw(slice raw)                {_out << raw;}
@@ -129,7 +124,6 @@ namespace fleece {
         bool _json5 {false};
         bool _canonical {false};
         bool _first {true};
-        const SharedKeys *_sharedKeys {nullptr};
     };
 
-}
+} }

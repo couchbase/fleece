@@ -23,7 +23,7 @@
 #include "FLSlice.h"
 
 #ifdef __clang__
-    #define FLNONNULL                     __attribute__((nonnull))
+    #define FLNONNULL  __attribute__((nonnull))
 #else
     #define FLNONNULL
 #endif
@@ -33,7 +33,7 @@
 extern "C" {
 #endif
 
-    // This is the C API! For the C++ API, see FleeceCpp.hh.
+    // This is the C API! For the C++ API, see Fleece.hh.
 
 
     /** \defgroup Fleece Fleece
@@ -49,12 +49,13 @@ extern "C" {
     typedef const struct _FLValue* FLValue;         ///< A reference to a value of any type.
     typedef const struct _FLArray* FLArray;         ///< A reference to an array value.
     typedef const struct _FLDict*  FLDict;          ///< A reference to a dictionary (map) value.
-    typedef struct _FLArray* FLMutableArray;        ///< A reference to a mutable array.
-    typedef struct _FLDict*  FLMutableDict;         ///< A reference to a mutable dictionary.
-    typedef struct _FLEncoder*     FLEncoder;       ///< A reference to an encoder
-    typedef struct _FLSharedKeys*  FLSharedKeys;    ///< A reference to a shared-keys mapping
-    typedef struct _FLKeyPath*     FLKeyPath;       ///< A reference to a key path
-    typedef struct _FLDeepIterator* FLDeepIterator; ///< A reference to a deep iterator
+    typedef struct _FLArray*       FLMutableArray;  ///< A reference to a mutable array.
+    typedef struct _FLDict*        FLMutableDict;   ///< A reference to a mutable dictionary.
+    typedef struct _FLDoc*         FLDoc;           ///< A reference to a document.
+    typedef struct _FLEncoder*     FLEncoder;       ///< A reference to an encoder.
+    typedef struct _FLSharedKeys*  FLSharedKeys;    ///< A reference to a shared-keys mapping.
+    typedef struct _FLKeyPath*     FLKeyPath;       ///< A reference to a key path.
+    typedef struct _FLDeepIterator* FLDeepIterator; ///< A reference to a deep iterator.
 #endif
 
 
@@ -69,6 +70,13 @@ extern "C" {
         kFLArray,
         kFLDict
     } FLValueType;
+
+
+    /** Specifies whether not input data is trusted to be 100% valid Fleece. */
+    typedef enum {
+        kFLUntrusted,
+        kFLTrusted
+    } FLTrust;
 
 
     /** Output formats a FLEncoder can generate. */
@@ -90,22 +98,35 @@ extern "C" {
         kFLInternalError,      // Something that shouldn't happen
         kFLNotFound,           // Key not found
         kFLSharedKeysStateError, // Misuse of shared keys (not in transaction, etc.)
+        kFLPOSIXError,
+        kFLUnsupported,         // Operation is unsupported
     } FLError;
 
     /** @} */
 
 
-    //////// VALUE
+    //////// DOCUMENT
 
 
-    /** \name Parsing And Converting Values
-        @{ */
+    /** @} */
+    /** \name Documents
+     @{ */
 
-    /** Returns a reference to the root value in the encoded data.
-        Validates the data first; if it's invalid, returns NULL.
-        Does NOT copy or take ownership of the data; the caller is responsible for keeping it
-        intact. Any changes to the data will invalidate any FLValues obtained from it. */
-    FLValue FLValue_FromData(FLSlice data);
+    FLDoc FLDoc_FromData(FLSlice data, FLTrust, FLSharedKeys, FLSlice externData);
+    FLDoc FLDoc_FromResultData(FLSliceResult data, FLTrust, FLSharedKeys, FLSlice externData);
+    FLDoc FLDoc_FromJSON(FLSlice json, FLError *outError);
+
+    void FLDoc_Release(FLDoc);
+    FLDoc FLDoc_Retain(FLDoc);
+
+    FLSlice FLDoc_GetData(FLDoc);
+    FLSliceResult FLDoc_GetAllocedData(FLDoc);
+    FLValue FLDoc_GetRoot(FLDoc);
+    FLSharedKeys FLDoc_GetSharedKeys(FLDoc);
+
+
+    /** \name Parsing And Converting Values Directly
+     @{ */
 
     /** Returns a pointer to the root value in the encoded data, _with only minimal validation_;
         or returns NULL if the validation failed.
@@ -115,7 +136,7 @@ extern "C" {
         database record has some kind of integrity check like a CRC32.
         If invalid data is read by this call, subsequent calls to Value accessor functions can
         crash or return bogus results (including data from arbitrary memory locations.) */
-    FLValue FLValue_FromTrustedData(FLSlice data);
+    FLValue FLValue_FromData(FLSlice data, FLTrust);
 
     /** Directly converts JSON data to Fleece-encoded data.
         You can then call FLValueFromTrustedData to get the root as a Value. */
@@ -129,6 +150,9 @@ extern "C" {
     /** Debugging function that returns a C string of JSON. Does not free the string's memory! */
     const char* FLDumpData(FLSlice data);
 
+
+
+    //////// VALUE
     /** @} */
     /** \name Value Accessors
         @{ */
@@ -197,13 +221,19 @@ extern "C" {
 
     /** Most general Fleece to JSON converter. */
     FLStringResult FLValue_ToJSONX(FLValue v,
-                                  FLSharedKeys sk,
                                   bool json5,
                                   bool canonicalForm);
 
+    /** Looks up the Doc containing the Value, or NULL if the Value was created without a Doc.
+        Caller must release the FLDoc reference!! */
+    FLDoc FLValue_FindDoc(FLValue);
 
     /** Converts valid JSON5 to JSON. */
     FLStringResult FLJSON5_ToJSON(FLString json5, FLError *error);
+
+
+    FLValue FLValue_Retain(FLValue);
+    void FLValue_Release(FLValue);
 
 
     //////// ARRAY
@@ -257,8 +287,12 @@ extern "C" {
 
     FLMutableArray FLMutableArray_New(void);
 
-    FLMutableArray FLMutableArray_Retain(FLMutableArray);
-    void FLMutableArray_Release(FLMutableArray);
+    static inline FLMutableArray FLMutableArray_Retain(FLMutableArray d) {
+        return (FLMutableArray)FLValue_Retain((FLValue)d);
+    }
+    static inline void FLMutableArray_Release(FLMutableArray d) {
+        FLValue_Release((FLValue)d);
+    }
 
     FLArray FLMutableArray_GetSource(FLMutableArray);
 
@@ -301,24 +335,14 @@ extern "C" {
     /** Returns the number of items in a dictionary, or 0 if the pointer is NULL. */
     uint32_t FLDict_Count(FLDict);
 
-    /** Returns true if a dictionary is empty. Slightly faster than `FLDict_Count(a) == 0` */
+    /** Returns true if a dictionary is empty. Faster than `FLDict_Count(a) == 0` */
     bool FLDict_IsEmpty(FLDict);
 
     FLMutableDict FLDict_AsMutable(FLDict);
 
-    /** Looks up a key in a _sorted_ dictionary, returning its value.
+    /** Looks up a key in a dictionary, returning its value.
         Returns NULL if the value is not found or if the dictionary is NULL. */
     FLValue FLDict_Get(FLDict, FLSlice keyString);
-
-    /** Looks up a key in a _sorted_ dictionary, using a shared-keys mapping.
-        If the database has a shared-keys mapping, you MUST use this call instead of FLDict_Get.
-        Returns NULL if the value is not found or if the dictionary is NULL. */
-    FLValue FLDict_GetSharedKey(FLDict d, FLSlice keyString, FLSharedKeys sk);
-    
-    /** Gets a string key from an FLSharedKeys object given its integer encoding 
-        (for use when FLDictIterator_GetKey returns a value of type 'Number' */
-    FLString FLSharedKey_GetKeyString(FLSharedKeys FLNONNULL sk, int keyCode, FLError* outError);
-
 
     /** Opaque dictionary iterator. Put one on the stack and pass its address to
         FLDictIterator_Begin. */
@@ -335,10 +359,7 @@ extern "C" {
         then FLDictIterator_Next. */
     void FLDictIterator_Begin(FLDict, FLDictIterator* FLNONNULL);
 
-    /** Same as FLDictIterator_Begin but iterator will translate shared keys to strings. */
-    void FLDictIterator_BeginShared(FLDict, FLDictIterator* FLNONNULL, FLSharedKeys);
-
-    /** Returns the current key being iterated over. */
+    /** Returns the current key being iterated over. This Value will be a string or an integer. */
     FLValue FLDictIterator_GetKey(const FLDictIterator* FLNONNULL);
 
     /** Returns the current key's string value. */
@@ -371,14 +392,8 @@ extern "C" {
     /** Initializes an FLDictKey struct with a key string.
         Warning: the input string's memory MUST remain valid for as long as the FLDictKey is in
         use! (The FLDictKey stores a pointer to the string, but does not copy it.)
-        @param string  The key string (UTF-8).
-        @param cachePointers  If true, the FLDictKey is allowed to cache a direct Value pointer
-                representation of the key. This provides faster lookup, but means that it can
-                only ever be used with Dicts that live in the same stored data buffer.
-        @return  The opaque key. */
-    FLDictKey FLDictKey_Init(FLSlice string, bool cachePointers);
-
-    FLDictKey FLDictKey_InitWithSharedKeys(FLSlice string, FLSharedKeys sharedKeys);
+        @param string  The key string (UTF-8). */
+    FLDictKey FLDictKey_Init(FLSlice string);
 
     /** Returns the string value of the key (which it was initialized with.) */
     FLString FLDictKey_GetString(const FLDictKey * FLNONNULL);
@@ -394,8 +409,12 @@ extern "C" {
 
     FLMutableDict FLMutableDict_New(void);
 
-    FLMutableDict FLMutableDict_Retain(FLMutableDict);
-    void FLMutableDict_Release(FLMutableDict);
+    static inline FLMutableDict FLMutableDict_Retain(FLMutableDict d) {
+        return (FLMutableDict)FLValue_Retain((FLValue)d);
+    }
+    static inline void FLMutableDict_Release(FLMutableDict d) {
+        FLValue_Release((FLValue)d);
+    }
 
     FLDict FLMutableDict_GetSource(FLMutableDict);
 
@@ -424,7 +443,7 @@ extern "C" {
     /** Creates a FLDeepIterator to iterate over a dictionary.
         Call FLDeepIterator_GetKey and FLDeepIterator_GetValue to get the first item,
         then FLDeepIterator_Next. */
-    FLDeepIterator FLDeepIterator_New(FLValue, FLSharedKeys);
+    FLDeepIterator FLDeepIterator_New(FLValue);
 
     void FLDeepIterator_Free(FLDeepIterator);
 
@@ -462,11 +481,12 @@ extern "C" {
     /** Returns the current path in JSONPointer format (RFC 6901). */
     FLSliceResult FLDeepIterator_GetJSONPointer(FLDeepIterator FLNONNULL);
 
+
     //////// PATH
 
 
     /** Creates a new FLKeyPath object by compiling a path specifier string. */
-    FLKeyPath FLKeyPath_New(FLSlice specifier, FLSharedKeys, FLError *error);
+    FLKeyPath FLKeyPath_New(FLSlice specifier, FLError *error);
 
     /** Frees a compiled FLKeyPath object. (It's ok to pass NULL.) */
     void FLKeyPath_Free(FLKeyPath);
@@ -477,7 +497,19 @@ extern "C" {
     /** Evaluates a key-path from a specifier string, for a given Fleece root object.
         If you only need to evaluate the path once, this is a bit faster than creating an
         FLKeyPath object, evaluating, then freeing it. */
-    FLValue FLKeyPath_EvalOnce(FLSlice specifier, FLSharedKeys, FLValue root FLNONNULL, FLError *error);
+    FLValue FLKeyPath_EvalOnce(FLSlice specifier, FLValue root FLNONNULL, FLError *error);
+
+
+    //////// SHARED KEYS
+
+
+    FLSharedKeys FLSharedKeys_Create(void);
+    FLSharedKeys FLSharedKeys_Retain(FLSharedKeys);
+    void FLSharedKeys_Release(FLSharedKeys);
+    FLSharedKeys FLSharedKeys_CreateFromStateData(FLSlice);
+    FLSliceResult FLSharedKeys_GetStateData(FLSharedKeys FLNONNULL);
+    int FLSharedKeys_Encode(FLSharedKeys FLNONNULL, FLString, bool add);
+    FLString FLSharedKeys_Decode(FLSharedKeys FLNONNULL, int key);
 
 
     //////// ENCODER
@@ -515,13 +547,13 @@ extern "C" {
     void* FLEncoder_GetExtraInfo(FLEncoder FLNONNULL);
 
 
-    /** Tells the encoder to create a delta from the given Fleece document, instead of a standalone
-        document. Any calls to FLEncoder_WriteValue() where the value points inside the base data
-        will write a pointer back to the original value.
-        The resulting data returned by FLEncoder_Finish() will *NOT* be standalone; it can only
+    /** Tells the encoder to logically append to the given Fleece document, rather than making a
+        standalone document. Any calls to FLEncoder_WriteValue() where the value points inside the
+        base data will write a pointer back to the original value.
+        The resulting data returned by FLEncoder_FinishDoc() will *NOT* be standalone; it can only
         be used by first appending it to the base data.
         @param e  The FLEncoder affected.
-        @param base  The base document to create a delta from.
+        @param base  The base document to create an amendment of.
         @param reuseStrings  If true, then writing a string that already exists in the base will
                     just create a pointer back to the original. But the encoder has to scan the
                     base for strings first.
@@ -529,8 +561,12 @@ extern "C" {
                     flag. This allows them to be resolved using the `FLResolver_Begin` function,
                     so that when the delta is used the base document can be anywhere in memory,
                     not just immediately preceding the delta document. */
-    void FLEncoder_MakeDelta(FLEncoder e FLNONNULL, FLSlice base,
-                             bool reuseStrings, bool externPointers);
+    void FLEncoder_Amend(FLEncoder e FLNONNULL, FLSlice base,
+                         bool reuseStrings, bool externPointers);
+
+    FLSlice FLEncoder_GetBase(FLEncoder FLNONNULL);
+
+    void FLEncoder_SuppressTrailer(FLEncoder FLNONNULL);
 
     /** Resets the state of an encoder without freeing it. It can then be reused to encode
         another value. */
@@ -619,9 +655,6 @@ extern "C" {
     /** Writes a Fleece Value to an Encoder. */
     bool FLEncoder_WriteValue(FLEncoder FLNONNULL, FLValue FLNONNULL);
 
-    /** Writes a Fleece Value that uses SharedKeys to an Encoder. */
-    bool FLEncoder_WriteValueWithSharedKeys(FLEncoder FLNONNULL, FLValue FLNONNULL, FLSharedKeys);
-
 
     /** Parses JSON data and writes the object(s) to the encoder. (This acts as a single write,
         like WriteInt; it's just that the value written is likely to be an entire dictionary of
@@ -632,32 +665,25 @@ extern "C" {
     /** Returns the number of bytes encoded so far. */
     size_t FLEncoder_BytesWritten(FLEncoder FLNONNULL);
 
+    size_t FLEncoder_GetNextWritePos(FLEncoder FLNONNULL);
+
+    /** Finishes encoding the current item, and returns its offset in the output data. */
+    size_t FLEncoder_FinishItem(FLEncoder FLNONNULL);
+
+    /** Ends encoding; if there has been no error, it returns the encoded Fleece data packaged in
+        an FLDoc. (This function does not support JSON encoding.)
+        This does not free the FLEncoder; call FLEncoder_Free (or FLEncoder_Reset) next. */
+    FLDoc FLEncoder_FinishDoc(FLEncoder FLNONNULL, FLError*);
+
     /** Ends encoding; if there has been no error, it returns the encoded data, else null.
         This does not free the FLEncoder; call FLEncoder_Free (or FLEncoder_Reset) next. */
-    FLSliceResult FLEncoder_Finish(FLEncoder FLNONNULL, FLError*);
+    FLSliceResult FLEncoder_Finish(FLEncoder e, FLError *outError);
 
     /** Returns the error code of an encoder, or NoError (0) if there's no error. */
     FLError FLEncoder_GetError(FLEncoder FLNONNULL);
 
     /** Returns the error message of an encoder, or NULL if there's no error. */
     const char* FLEncoder_GetErrorMessage(FLEncoder FLNONNULL);
-
-
-    //////// RESOLVER
-
-
-    /** @} */
-    /** \name Extern Resolver
-     @{ */
-
-    /** Indicates that external pointers in `document` (that is, pointers that point outside the
-        document) should be resolved to point into `destination`. This mapping remains in effect
-        until `FLResolver_End` is called on the same `document`. */
-    void FLResolver_Begin(FLSlice document, FLSlice destination);
-
-    /** Ends external pointer resolution from the memory range of `document`. This must be called
-        before that memory is invalidated (freed or overwritten.) */
-    void FLResolver_End(FLSlice document);
 
 
     //////// JSON DELTA COMPRESSION
@@ -673,8 +699,7 @@ extern "C" {
         @param old  A value that's typically the old/original state of some data.
         @param nuu  A value that's typically the new/changed state of the `old` data.
         @return  JSON data representing the changes from `old` to `nuu`. */
-    FLSliceResult FLCreateDelta(FLValue old, FLSharedKeys oldSK,
-                                FLValue nuu, FLSharedKeys nuuSK);
+    FLSliceResult FLCreateJSONDelta(FLValue old, FLValue nuu);
 
     /** Writes JSON that describes the changes to turn the value `old` into `nuu`.
         If the values are equal, writes nothing and returns false.
@@ -684,37 +709,33 @@ extern "C" {
         @param jsonEncoder  An encoder to write the JSON to. Must have been created using
                 `FLEncoder_NewWithOptions`, with JSON or JSON5 format.
         @return  True if a delta was encoded, or false if the values are equal. */
-    bool FLEncodeDelta(FLValue old, FLSharedKeys oldSK,
-                       FLValue nuu, FLSharedKeys nuuSK,
-                       FLEncoder FLNONNULL jsonEncoder);
+    bool FLEncodeJSONDelta(FLValue old, FLValue nuu, FLEncoder FLNONNULL jsonEncoder);
 
 
-    /** Applies the JSON data created by `CreateDelta` to the value `old`, which must be equal
-        to the `old` value originally passed to `FLCreateDelta`, and returns a Fleece document
+    /** Applies the JSON data created by `CreateJSONDelta` to the value `old`, which must be equal
+        to the `old` value originally passed to `FLCreateJSONDelta`, and returns a Fleece document
         equal to the original `nuu` value.
         @param old  A value that's typically the old/original state of some data. This must be
                     equal to the `old` value used when creating the `jsonDelta`.
-        @param jsonDelta  A JSON-encoded delta created by `FLCreateDelta` or `FLEncodeDelta`.
+        @param jsonDelta  A JSON-encoded delta created by `FLCreateJSONDelta` or `FLEncodeJSONDelta`.
         @param error  On failure, error information will be stored where this points, if non-null.
         @return  The corresponding `nuu` value, encoded as Fleece, or null if an error occurred. */
-    FLSliceResult FLApplyDelta(FLValue old,
-                               FLSharedKeys sk,
-                               FLSlice jsonDelta,
-                               FLError *error);
+    FLSliceResult FLApplyJSONDelta(FLValue old,
+                                   FLSlice jsonDelta,
+                                   FLError *error);
 
-    /** Applies the (parsed) JSON data created by `CreateDelta` to the value `old`, which must be
-        equal to the `old` value originally passed to `FLCreateDelta`, and writes the corresponding
+    /** Applies the (parsed) JSON data created by `CreateJSONDelta` to the value `old`, which must be
+        equal to the `old` value originally passed to `FLCreateJSONDelta`, and writes the corresponding
         `nuu` value to the encoder.
         @param old  A value that's typically the old/original state of some data. This must be
                     equal to the `old` value used when creating the `jsonDelta`.
-        @param jsonDelta  A JSON-encoded delta created by `FLCreateDelta` or `FLEncodeDelta`.
+        @param jsonDelta  A JSON-encoded delta created by `FLCreateJSONDelta` or `FLEncodeJSONDelta`.
         @param encoder  A Fleece encoder to write the decoded `nuu` value to. (JSON encoding is not
                     supported.)
         @return  True on success, false on error; call `FLEncoder_GetError` for details. */
-    bool FLEncodeApplyingDelta(FLValue old,
-                               FLSharedKeys sk,
-                               FLValue FLNONNULL jsonDelta,
-                               FLEncoder encoder);
+    bool FLEncodeApplyingJSONDelta(FLValue old,
+                                   FLValue FLNONNULL jsonDelta,
+                                   FLEncoder encoder);
 
     
     /** @} */
@@ -726,14 +747,8 @@ extern "C" {
 
 
 #ifdef __OBJC__
-// Include Obj-C/CF utilities:
+// When compiling as Objective-C, include CoreFoundation / Objective-C utilities:
 #include "Fleece+CoreFoundation.h"
-#endif
-
-
-#ifdef __cplusplus
-// Now include the C++ convenience wrapper:
-#include "FleeceCpp.hh"
 #endif
 
 #endif // _FLEECE_H

@@ -18,7 +18,7 @@
 
 #include "MCollection.hh"
 
-namespace fleeceapi {
+namespace fleece {
 
     /** Top-level object; a type of special single-element Collection that contains the root. */
     template <class Native>
@@ -37,27 +37,24 @@ namespace fleeceapi {
 
         explicit MRoot(MContext *context,
                        bool isMutable =true)
-        :MRoot(context, Value::fromData(context->data()), isMutable)
+        :MRoot(context, Value::fromData(context->data(), kFLUntrusted), isMutable)
         { }
 
         explicit MRoot(alloc_slice fleeceData,
-                       FLSharedKeys sk,
                        Value value,
                        bool isMutable =true)
-        :MRoot(new MContext(fleeceData, sk), isMutable)
+        :MRoot(new MContext(fleeceData), isMutable)
         { }
 
         explicit MRoot(alloc_slice fleeceData,
-                       FLSharedKeys sk =nullptr,
                        bool isMutable =true)
-        :MRoot(fleeceData, sk, Value::fromData(fleeceData), isMutable)
+        :MRoot(fleeceData, Value::fromData(fleeceData, kFLUntrusted), isMutable)
         { }
 
         static Native asNative(alloc_slice fleeceData,
-                               FLSharedKeys sk =nullptr,
                                bool mutableContainers =true)
         {
-            MRoot root(fleeceData, sk, mutableContainers);
+            MRoot root(fleeceData, mutableContainers);
             return root.asNative();
         }
 
@@ -68,12 +65,12 @@ namespace fleeceapi {
         Native asNative() const             {return _slot.asNative(this);}
         bool isMutated() const              {return _slot.isMutated();}
 
-        void encodeTo(Encoder &enc) const   {_slot.encodeTo(enc, MCollection::context()->sharedKeys());}
+        void encodeTo(Encoder &enc) const   {_slot.encodeTo(enc);}
         alloc_slice encode() const          {Encoder enc; encodeTo(enc); return enc.finish();}
 
-        alloc_slice encodeDelta() const {
+        alloc_slice amend() const {
             Encoder enc;
-            enc.makeDelta(context()->data());
+            enc.amend(context()->data());
             encodeTo(enc);
             return enc.finish();
         }

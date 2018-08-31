@@ -16,7 +16,7 @@
 // limitations under the License.
 //
 
-#include "Fleece.hh"
+#include "FleeceImpl.hh"
 #include "Pointer.hh"
 #include <ostream>
 #include <iomanip>
@@ -24,7 +24,7 @@
 #include <sstream>
 #include <stdio.h>
 
-namespace fleece {
+namespace fleece { namespace impl {
     using namespace internal;
 
     void Value::writeDumpBrief(std::ostream &out, const void *base, bool wide) const {
@@ -174,5 +174,4 @@ namespace fleece {
         return out.str();
     }
 
-}
-
+} }

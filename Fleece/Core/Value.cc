@@ -21,6 +21,7 @@
 #include "Array.hh"
 #include "Dict.hh"
 #include "Internal.hh"
+#include "Doc.hh"
 #include "HeapValue.hh"
 #include "Endian.hh"
 #include "FleeceException.hh"
@@ -31,7 +32,7 @@
 #include "betterassert.hh"
 
 
-namespace fleece {
+namespace fleece { namespace impl {
 
     using namespace internal;
 
@@ -222,21 +223,25 @@ namespace fleece {
     }
 
 
+    SharedKeys* Value::sharedKeys() const noexcept {
+        return Doc::sharedKeys(this);
+    }
+
+
     template <int VER>
-    alloc_slice Value::toJSON(const SharedKeys *sk, bool canonical) const {
+    alloc_slice Value::toJSON(bool canonical) const {
         JSONEncoder encoder;
-        encoder.setSharedKeys(sk);
         if (VER >= 5)
             encoder.setJSON5(true);
         encoder.setCanonical(canonical);
         encoder.writeValue(this);
-        return encoder.extractOutput();
+        return encoder.finish();
     }
 
 
     // Explicitly instantiate both needed versions of the templates:
-    template alloc_slice Value::toJSON<1>(const SharedKeys *sk, bool canonical) const;
-    template alloc_slice Value::toJSON<5>(const SharedKeys *sk, bool canonical) const;
+    template alloc_slice Value::toJSON<1>(bool canonical) const;
+    template alloc_slice Value::toJSON<5>(bool canonical) const;
 
 
     std::string Value::toJSONString() const {
@@ -402,4 +407,4 @@ namespace fleece {
     void Value::_retain()   {HeapValue::retain(this);}
     void Value::_release()  {HeapValue::release(this);}
 
-}
+} }

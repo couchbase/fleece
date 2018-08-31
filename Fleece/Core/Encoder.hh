@@ -20,13 +20,13 @@
 
 #include "Value.hh"
 #include "Writer.hh"
+#include "Doc.hh"
 #include "StringTable.hh"
-#include <array>
+#include "SmallVector.hh"
 #include "function_ref.hh"
-#include <vector>
 
 
-namespace fleece {
+namespace fleece { namespace impl {
     class SharedKeys;
 
 
@@ -36,6 +36,7 @@ namespace fleece {
         /** Constructs an encoder. */
         Encoder(size_t reserveOutputSize =256);
         Encoder(FILE* NONNULL);
+        ~Encoder();
 
         /** Sets the uniqueStrings property. If true (the default), the encoder tries to write
             each unique string only once. This saves space but makes the encoder slightly slower. */
@@ -46,12 +47,12 @@ namespace fleece {
             pointers.
             @param base  The base Fleece document that's being appended to.
             @param markExternPointers  If true, pointers into the base document (i.e. out of the
-                        encoded data) will be marked with the `extern` flag. This allows the use
-                        of an ExternResolver, so the new document can be used without having to
-                        append it onto the base.
+                        encoded data) will be marked with the `extern` flag. The resulting Fleece
+                        document must then be opened as a Doc using the `externData` property
+                        pointing to wherever a copy of the base document is.
             @param cutoff  If nonzero, this specifies the maximum number of bytes of the base
-                            (starting from the end) that should be used. Any base data before
-                            the cutoff will not be referenced in the encoder output. */
+                        (starting from the end) that should be used. Any base data before
+                        the cutoff will not be referenced in the encoder output. */
         void setBase(slice base, bool markExternPointers =false, size_t cutoff =0);
 
         /** Scans the base document for strings and adds them to the encoder's string table.
@@ -68,7 +69,10 @@ namespace fleece {
         void end();
 
         /** Returns the encoded data. This implicitly calls end(). */
-        alloc_slice extractOutput();
+        alloc_slice finish();
+
+        /** Returns the encoded data as a Doc. This implicitly calls end(). */
+        Retained<Doc> finishDoc();
 
         /** Resets the encoder so it can be used again. */
         void reset();
@@ -88,17 +92,14 @@ namespace fleece {
 
         void writeData(slice s);
 
-        void writeValue(const Value* NONNULL v,
-                        const SharedKeys *sk =nullptr)      {writeValue(v, sk, nullptr);}
+        void writeValue(const Value* NONNULL v)             {writeValue(v, nullptr);}
 
         using WriteValueFunc = function_ref<bool(const Value *key, const Value *value)>;
 
         /** Alternative writeValue that invokes a callback before writing any Value.
             If the callback returns false, the value is written as usual, otherwise it's skipped;
             the callback can invoke the Encoder to write a different Value instead if it likes. */
-        void writeValue(const Value* NONNULL v,
-                        const SharedKeys *sk,
-                        WriteValueFunc fn)                  {writeValue(v, sk, &fn);}
+        void writeValue(const Value* NONNULL v, WriteValueFunc fn)  {writeValue(v, &fn);}
 
 #ifdef __OBJC__
         /** Writes an Objective-C object. Supported classes are the ones allowed by
@@ -148,7 +149,7 @@ namespace fleece {
 
         /** Associates a SharedKeys object with this Encoder. The writeKey() methods that take
             strings will consult this object to possibly map the key to an integer. */
-        void setSharedKeys(SharedKeys *s) {_sharedKeys = s;}
+        void setSharedKeys(SharedKeys *s);
 
         //////// "<<" convenience operators;
 
@@ -176,14 +177,18 @@ namespace fleece {
         slice baseUsed() const                  {return _baseMinUsed != 0 ? slice(_baseMinUsed, _base.end()) : nullslice;}
 
     private:
+        static constexpr size_t kInitialStackSize = 4;
+        static constexpr size_t kInitialCollectionCapacity = 4;
+
         // Stores the pending values to be written to an in-progress array/dict
-        class valueArray : public std::vector<Value> {
+        class valueArray : public smallVector<Value, kInitialCollectionCapacity> {
         public:
             valueArray()                    { }
             void reset(internal::tags t)    {tag = t; wide = false; keys.clear();}
+            
             internal::tags tag;
             bool wide;
-            std::vector<slice> keys;
+            smallVector<slice, kInitialCollectionCapacity> keys;
         };
 
         void addItem(Value v);
@@ -205,7 +210,9 @@ namespace fleece {
         void fixPointers(valueArray *items NONNULL);
         void endCollection(internal::tags tag);
         void push(internal::tags tag, size_t reserve);
-        void writeValue(const Value* NONNULL, const SharedKeys* const, const WriteValueFunc*);
+        inline void pop();
+        void writeValue(const Value* NONNULL, const WriteValueFunc*);
+        void writeValue(const Value* NONNULL, const SharedKeys* &, const WriteValueFunc*);
         const Value* minUsed(const Value *value);
 
         Encoder(const Encoder&) = delete;
@@ -215,12 +222,12 @@ namespace fleece {
 
         Writer _out;            // Where output is written to
         valueArray *_items;     // Values of the currently-open array/dict; == &_stack[_stackDepth]
-        std::vector<valueArray> _stack; // Stack of open arrays/dicts
+        smallVector<valueArray, kInitialStackSize> _stack; // Stack of open arrays/dicts
         unsigned _stackDepth {0};    // Current depth of _stack
         StringTable _strings;        // Maps strings to the offsets where they appear as values
         Writer _stringStorage;       // Backing store for strings in _strings
         bool _uniqueStrings {true};  // Should strings be uniqued before writing?
-        SharedKeys *_sharedKeys {nullptr};  // Client-provided key-to-int mapping
+        Retained<SharedKeys> _sharedKeys;  // Client-provided key-to-int mapping
         slice _base;                 // Base Fleece data being appended to (if any)
         const void* _baseCutoff {0}; // Lowest addr in _base that I can write a ptr to
         const void* _baseMinUsed {0};// Lowest addr in _base I've written a ptr to
@@ -238,5 +245,4 @@ namespace fleece {
 #endif
     };
 
-}
-
+} }

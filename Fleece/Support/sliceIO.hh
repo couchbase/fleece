@@ -17,7 +17,7 @@
 //
 
 #pragma once
-#include "slice.hh"
+#include "fleece/slice.hh"
 #include <string>
 #include <stdio.h>
 

@@ -43,7 +43,8 @@ namespace fleece {
         "internal Fleece library error",
         "key not found",
         "incorrect use of persistent shared keys",
-        "POSIX error"
+        "POSIX error",
+        "unsupported operation",
     };
 
     void FleeceException::_throw(ErrorCode code, const char *what, ...) {

@@ -18,7 +18,8 @@
 
 #pragma once
 
-#include "slice.hh"
+#include "fleece/slice.hh"
+#include "SmallVector.hh"
 #include <stdio.h>
 #include <vector>
 
@@ -48,7 +49,7 @@ namespace fleece {
 
         /** Returns the data written. The Writer stops managing this memory; it now belongs to
             the caller and will be freed when no more alloc_slices refer to it. */
-        alloc_slice extractOutput();
+        alloc_slice finish();
 
         /** Writes data. If the output is going to memory (the default), returns a pointer to where
             the data got written to. If the output is being written to a file, returns nullptr. */
@@ -105,7 +106,7 @@ namespace fleece {
         Writer(const Writer&) = delete;
         const Writer& operator=(const Writer&) = delete;
 
-        std::vector<Chunk> _chunks;
+        smallVector<Chunk, 4> _chunks;
         size_t _chunkSize;
         size_t _baseOffset {0};
         size_t _length {0};

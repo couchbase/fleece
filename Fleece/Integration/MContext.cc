@@ -19,11 +19,10 @@
 #include "MContext.hh"
 #include "betterassert.hh"
 
-namespace fleeceapi {
+namespace fleece {
 
-    MContext::MContext(const alloc_slice &data, FLSharedKeys sk)
+    MContext::MContext(const alloc_slice &data)
     :_data(data)
-    ,_sharedKeys(sk)
     {
 #ifndef NDEBUG
         ++gInstanceCount;

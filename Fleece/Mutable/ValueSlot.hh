@@ -7,7 +7,8 @@
 #pragma once
 #include "HeapValue.hh"
 
-namespace fleece { namespace internal {
+namespace fleece { namespace impl { namespace internal {
+    using namespace fleece::impl;
     class HeapCollection;
 
 
@@ -71,4 +72,4 @@ namespace fleece { namespace internal {
         static constexpr size_t kInlineCapacity = sizeof(ValueSlot::_inlineData) + sizeof(ValueSlot::_moreInlineData);
     };
 
-} }
+} } }

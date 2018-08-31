@@ -53,6 +53,7 @@ namespace fleece {
     ,_outputFile(std::move(w._outputFile))
     {
         w._chunks.clear();
+        w._outputFile = nullptr;
     }
 
     Writer::~Writer() {
@@ -63,6 +64,7 @@ namespace fleece {
     Writer& Writer::operator= (Writer&& w) noexcept {
         _chunks = std::move(w._chunks);
         _outputFile = std::move(w._outputFile);
+        w._outputFile = nullptr;
         return *this;
     }
 
@@ -144,7 +146,7 @@ namespace fleece {
         return result;
     }
 
-    alloc_slice Writer::extractOutput() {
+    alloc_slice Writer::finish() {
         assert(!_outputFile);
         alloc_slice output;
 #if 0 //TODO: Restore this optimization
