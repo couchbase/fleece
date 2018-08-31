@@ -18,7 +18,7 @@
 
 #include "FleeceTests.hh"
 #include "FleeceImpl.hh"
-#include "Delta.hh"
+#include "JSONDelta.hh"
 
 namespace fleece { namespace impl {
     extern bool gCompatibleDeltas;
@@ -55,12 +55,12 @@ static void checkDelta(const char *json1, const char *json2, const char *deltaEx
     }
 
     // Compute the delta and check it:
-    alloc_slice jsonDelta = Delta::create(v1, v2, true);
+    alloc_slice jsonDelta = JSONDelta::create(v1, v2, true);
     CHECK(jsonDelta == slice(deltaExpected));
 
     if (jsonDelta.size > 0) {
         // Now apply the delta to the old value to get the new one:
-        alloc_slice f2_reconstituted = Delta::apply(v1, jsonDelta, true);
+        alloc_slice f2_reconstituted = JSONDelta::apply(v1, jsonDelta, true);
         auto v2_reconstituted = Value::fromData(f2_reconstituted);
         INFO("value2 reconstituted:  " << toJSONString(v2_reconstituted) << " ;  should be:  " << toJSONString(v2) << " ;  delta: " << jsonDelta);
         CHECK(v2_reconstituted->isEqual(v2));
@@ -139,7 +139,7 @@ TEST_CASE("Delta nested arrays", "[delta]") {
 
 
 static void checkDelta(const Value *left, const Value *right, const Value *expectedDelta) {
-    alloc_slice jsonDelta = Delta::create(left, right);
+    alloc_slice jsonDelta = JSONDelta::create(left, right);
     alloc_slice fleeceDelta = JSONConverter::convertJSON(jsonDelta);
     const Value *delta = Value::fromData(fleeceDelta);
     INFO("Delta of " << toJSONString(left) << "  -->  " << toJSONString(right) << "  ==  " << toJSONString(expectedDelta) << "  ...  got  " << toJSONString(delta));

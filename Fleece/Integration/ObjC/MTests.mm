@@ -117,7 +117,7 @@ TEST_CASE("MDict", "[Mutable]") {
         alloc_slice newData = root.encode();
 
         // Delta encoding:
-        alloc_slice delta = root.encodeDelta();
+        alloc_slice delta = root.amend();
         REQUIRE(delta.buf != nullptr);
         CHECK(delta.size == 52); // may change
 

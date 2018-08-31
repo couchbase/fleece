@@ -1,5 +1,5 @@
 //
-// Delta.hh
+// JSONDelta.hh
 //
 // Copyright © 2018 Couchbase. All rights reserved.
 //
@@ -12,7 +12,7 @@ namespace fleece { namespace impl {
     class JSONEncoder;
 
 
-    class Delta {
+    class JSONDelta {
     public:
 
         /** Returns JSON that describes the changes to turn the value `old` into `nuu`.
@@ -39,10 +39,10 @@ namespace fleece { namespace impl {
     private:
         struct pathItem;
 
-        Delta(JSONEncoder&);
+        JSONDelta(JSONEncoder&);
         bool _write(const Value *old, const Value *nuu, pathItem *path);
 
-        Delta(Encoder&);
+        JSONDelta(Encoder&);
         void _apply(const Value *old, const Value* NONNULL delta);
         void _applyArray(const Value* old, const Array* NONNULL delta);
         void _patchArray(const Array* NONNULL old, const Dict* NONNULL delta);

@@ -1,5 +1,5 @@
 //
-// Delta.cc
+// JSONDelta.cc
 //
 // Copyright © 2018 Couchbase. All rights reserved.
 //
@@ -16,7 +16,7 @@
 // limitations under the License.
 //
 
-#include "Delta.hh"
+#include "JSONDelta.hh"
 #include "FleeceImpl.hh"
 #include "JSONEncoder.hh"
 #include "JSONConverter.hh"
@@ -54,7 +54,7 @@ namespace fleece { namespace impl {
 #pragma mark - CREATING DELTAS:
 
 
-    alloc_slice Delta::create(const Value *old, const Value *nuu, bool json5)
+    alloc_slice JSONDelta::create(const Value *old, const Value *nuu, bool json5)
     {
         JSONEncoder enc;
         enc.setJSON5(json5);
@@ -65,25 +65,25 @@ namespace fleece { namespace impl {
     }
 
 
-    bool Delta::create(const Value *old, const Value *nuu, JSONEncoder &enc)
+    bool JSONDelta::create(const Value *old, const Value *nuu, JSONEncoder &enc)
     {
-        return Delta(enc)._write(old, nuu, nullptr);
+        return JSONDelta(enc)._write(old, nuu, nullptr);
     }
 
 
-    Delta::Delta(JSONEncoder &enc)
+    JSONDelta::JSONDelta(JSONEncoder &enc)
     :_encoder(&enc)
     { }
 
 
-    struct Delta::pathItem {
+    struct JSONDelta::pathItem {
         pathItem *parent;
         bool isOpen;
         slice key;
     };
 
 
-    void Delta::writePath(pathItem *path) {
+    void JSONDelta::writePath(pathItem *path) {
         if (!path)
             return;
         writePath(path->parent);
@@ -96,7 +96,7 @@ namespace fleece { namespace impl {
     }
 
 
-    bool Delta::_write(const Value *old, const Value *nuu, pathItem *path) {
+    bool JSONDelta::_write(const Value *old, const Value *nuu, pathItem *path) {
         if (_usuallyFalse(old == nuu))
             return false;
         if (old) {
@@ -216,7 +216,7 @@ namespace fleece { namespace impl {
 #pragma mark - APPLYING DELTAS:
 
 
-    alloc_slice Delta::apply(const Value *old, slice jsonDelta, bool isJSON5) {
+    alloc_slice JSONDelta::apply(const Value *old, slice jsonDelta, bool isJSON5) {
         assert(jsonDelta);
         string json5;
         if (isJSON5) {
@@ -231,17 +231,17 @@ namespace fleece { namespace impl {
     }
 
 
-    void Delta::apply(const Value *old, const Value* NONNULL delta, Encoder &enc) {
-        Delta(enc)._apply(old, delta);
+    void JSONDelta::apply(const Value *old, const Value* NONNULL delta, Encoder &enc) {
+        JSONDelta(enc)._apply(old, delta);
     }
 
 
-    Delta::Delta(Encoder &decoder)
+    JSONDelta::JSONDelta(Encoder &decoder)
     :_decoder(&decoder)
     { }
 
 
-    void Delta::_apply(const Value *old, const Value *delta) {
+    void JSONDelta::_apply(const Value *old, const Value *delta) {
         switch(delta->type()) {
             case kArray:
                 _applyArray(old, (const Array*)delta);
@@ -266,7 +266,7 @@ namespace fleece { namespace impl {
     }
 
 
-    inline void Delta::_applyArray(const Value *old, const Array* NONNULL delta) {
+    inline void JSONDelta::_applyArray(const Value *old, const Array* NONNULL delta) {
         switch (delta->count()) {
             case 0:
                 // Deletion:
@@ -314,7 +314,7 @@ namespace fleece { namespace impl {
     }
 
 
-    inline void Delta::_patchDict(const Dict* NONNULL old, const Dict* NONNULL delta) {
+    inline void JSONDelta::_patchDict(const Dict* NONNULL old, const Dict* NONNULL delta) {
         // Dict: Incremental update
         if (_decoder->valueIsInBase(old)) {
             // If the old dict is in the base, we can create an inherited dict:
@@ -359,7 +359,7 @@ namespace fleece { namespace impl {
     }
 
 
-    inline void Delta::_patchArray(const Array* NONNULL old, const Dict* NONNULL delta) {
+    inline void JSONDelta::_patchArray(const Array* NONNULL old, const Dict* NONNULL delta) {
         // Array: Incremental update
         _decoder->beginArray();
         uint32_t index = 0;
@@ -401,7 +401,7 @@ namespace fleece { namespace impl {
 
 
     // Does this delta represent a deletion?
-    inline bool Delta::isDeltaDeletion(const Value *delta) {
+    inline bool JSONDelta::isDeltaDeletion(const Value *delta) {
         if (!delta)
             return false;
         auto array = delta->asArray();
@@ -415,7 +415,7 @@ namespace fleece { namespace impl {
 #pragma mark - STRING DELTAS:
 
 
-    string Delta::createStringDelta(slice oldStr, slice nuuStr) {
+    string JSONDelta::createStringDelta(slice oldStr, slice nuuStr) {
         if (nuuStr.size < kMinStringDiffLength
                 || (gCompatibleDeltas && oldStr.size > kMinStringDiffLength))
             return "";
@@ -459,7 +459,7 @@ namespace fleece { namespace impl {
     }
 
 
-    string Delta::applyStringDelta(slice oldStr, slice diff) {
+    string JSONDelta::applyStringDelta(slice oldStr, slice diff) {
 #if 0
         // Support for JsonDiffPatch-format string diffs:
         if (diff[0] == '@') {

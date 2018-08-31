@@ -76,20 +76,20 @@
 		27A2F73B21248DA50081927B /* FLSlice.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A2F73A21248DA40081927B /* FLSlice.h */; };
 		27A924CF1D9C32E800086206 /* Path.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27A924CD1D9C32E800086206 /* Path.cc */; };
 		27A924D01D9C32E800086206 /* Path.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27A924CE1D9C32E800086206 /* Path.hh */; };
-		27AEFAC221090FF400106ED8 /* Delta.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27AEFAC021090FF400106ED8 /* Delta.cc */; };
-		27AEFAC321090FF400106ED8 /* Delta.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27AEFAC121090FF400106ED8 /* Delta.hh */; };
+		27AEFAC221090FF400106ED8 /* JSONDelta.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27AEFAC021090FF400106ED8 /* JSONDelta.cc */; };
+		27AEFAC321090FF400106ED8 /* JSONDelta.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27AEFAC121090FF400106ED8 /* JSONDelta.hh */; };
 		27AEFAC5210913C500106ED8 /* DeltaTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27AEFAC4210913C500106ED8 /* DeltaTests.cc */; };
 		27AEFAC921091A8C00106ED8 /* diff_match_patch.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27AEFAC721091A8C00106ED8 /* diff_match_patch.hh */; };
 		27B802D720DD750E00599DF0 /* NodeRef.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27B802D520DD750E00599DF0 /* NodeRef.cc */; };
 		27B802D820DD750E00599DF0 /* NodeRef.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27B802D620DD750E00599DF0 /* NodeRef.hh */; };
 		27C4ACAC1CE5146500938365 /* Array.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27C4ACAA1CE5146500938365 /* Array.cc */; };
 		27C4ACAD1CE5146500938365 /* Array.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C4ACAB1CE5146500938365 /* Array.hh */; };
-        27C4CEBA2127976900470DE9 /* betterassert.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27C4CEB82127976900470DE9 /* betterassert.cc */; };
-        27C4CEBB2127976900470DE9 /* betterassert.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C4CEB92127976900470DE9 /* betterassert.hh */; };
 		27C4CEA92127722300470DE9 /* libfleeceStatic.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 270FA25C1BF53CAD005DCB13 /* libfleeceStatic.a */; };
 		27C4CEAF2127743200470DE9 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C4CEAE2127743200470DE9 /* Foundation.framework */; };
 		27C4CEB121277CC600470DE9 /* C_Test.c in Sources */ = {isa = PBXBuildFile; fileRef = 278163B81CE6BB8C00B94E32 /* C_Test.c */; };
 		27C4CEB321277D5900470DE9 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C4CEB221277D5900470DE9 /* libc++.tbd */; };
+		27C4CEBA2127976900470DE9 /* betterassert.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27C4CEB82127976900470DE9 /* betterassert.cc */; };
+		27C4CEBB2127976900470DE9 /* betterassert.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C4CEB92127976900470DE9 /* betterassert.hh */; };
 		27C59BA4212F898F003C8492 /* SmallVector.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C59BA2212F898F003C8492 /* SmallVector.hh */; };
 		27C8DF072084102900A99BFC /* MutableHashTree.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27C8DF052084102900A99BFC /* MutableHashTree.hh */; };
 		27C8DF082084102900A99BFC /* MutableHashTree.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27C8DF062084102900A99BFC /* MutableHashTree.cc */; };
@@ -133,7 +133,7 @@
 		27DE2E9E2125FA1700123597 /* slice.cc in Sources */ = {isa = PBXBuildFile; fileRef = 270FA2741BF53CEA005DCB13 /* slice.cc */; };
 		27DE2EB22125FA1700123597 /* JSON5.hh in Headers */ = {isa = PBXBuildFile; fileRef = 276D15451E007D3000543B1B /* JSON5.hh */; };
 		27DE2EB32125FA1700123597 /* RefCounted.hh in Headers */ = {isa = PBXBuildFile; fileRef = 274D8255209D1764008BB39F /* RefCounted.hh */; };
-		27DE2EB42125FA1700123597 /* Delta.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27AEFAC121090FF400106ED8 /* Delta.hh */; };
+		27DE2EB42125FA1700123597 /* JSONDelta.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27AEFAC121090FF400106ED8 /* JSONDelta.hh */; };
 		27DE2EB52125FA1700123597 /* jsonsl.h in Headers */ = {isa = PBXBuildFile; fileRef = 27298E4A1C00F8A9000CFBA8 /* jsonsl.h */; };
 		27DE2EB62125FA1700123597 /* FileUtils.hh in Headers */ = {isa = PBXBuildFile; fileRef = 277A06B220B36D1A00970354 /* FileUtils.hh */; };
 		27DE2EB72125FA1700123597 /* CatchHelper.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27E3DD4B1DB6C32400F2872D /* CatchHelper.hh */; };
@@ -377,8 +377,8 @@
 		27A2F73A21248DA40081927B /* FLSlice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FLSlice.h; sourceTree = "<group>"; };
 		27A924CD1D9C32E800086206 /* Path.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Path.cc; sourceTree = "<group>"; };
 		27A924CE1D9C32E800086206 /* Path.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Path.hh; sourceTree = "<group>"; };
-		27AEFAC021090FF400106ED8 /* Delta.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Delta.cc; sourceTree = "<group>"; };
-		27AEFAC121090FF400106ED8 /* Delta.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Delta.hh; sourceTree = "<group>"; };
+		27AEFAC021090FF400106ED8 /* JSONDelta.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSONDelta.cc; sourceTree = "<group>"; };
+		27AEFAC121090FF400106ED8 /* JSONDelta.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = JSONDelta.hh; sourceTree = "<group>"; };
 		27AEFAC4210913C500106ED8 /* DeltaTests.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DeltaTests.cc; sourceTree = "<group>"; };
 		27AEFAC721091A8C00106ED8 /* diff_match_patch.hh */ = {isa = PBXFileReference; indentWidth = 2; lastKnownFileType = sourcecode.cpp.h; path = diff_match_patch.hh; sourceTree = "<group>"; };
 		27B802D520DD750E00599DF0 /* NodeRef.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = NodeRef.cc; sourceTree = "<group>"; };
@@ -388,14 +388,14 @@
 		27C4AC961CDFFDA100938365 /* Performance.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = Performance.md; sourceTree = "<group>"; };
 		27C4ACAA1CE5146500938365 /* Array.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Array.cc; sourceTree = "<group>"; };
 		27C4ACAB1CE5146500938365 /* Array.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Array.hh; sourceTree = "<group>"; };
-        27C4CEB82127976900470DE9 /* betterassert.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = betterassert.cc; sourceTree = "<group>"; };
-        27C4CEB92127976900470DE9 /* betterassert.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = betterassert.hh; sourceTree = "<group>"; };
 		27C4CE9C2127719D00470DE9 /* libfleece.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libfleece.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		27C4CEAA2127729D00470DE9 /* FleeceDylib.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FleeceDylib.xcconfig; sourceTree = "<group>"; };
 		27C4CEAC2127741000470DE9 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		27C4CEAE2127743200470DE9 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		27C4CEB02127781300470DE9 /* FleeceDylib_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FleeceDylib_Release.xcconfig; sourceTree = "<group>"; };
 		27C4CEB221277D5900470DE9 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
+		27C4CEB82127976900470DE9 /* betterassert.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = betterassert.cc; sourceTree = "<group>"; };
+		27C4CEB92127976900470DE9 /* betterassert.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = betterassert.hh; sourceTree = "<group>"; };
 		27C59BA2212F898F003C8492 /* SmallVector.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SmallVector.hh; sourceTree = "<group>"; };
 		27C8DF052084102900A99BFC /* MutableHashTree.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MutableHashTree.hh; sourceTree = "<group>"; };
 		27C8DF062084102900A99BFC /* MutableHashTree.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MutableHashTree.cc; sourceTree = "<group>"; };
@@ -775,8 +775,8 @@
 				27E3DD411DB6A14200F2872D /* SharedKeys.hh */,
 				27867AF0211E27E5007BDA5F /* Doc.cc */,
 				27867AF1211E27E5007BDA5F /* Doc.hh */,
-				27AEFAC021090FF400106ED8 /* Delta.cc */,
-				27AEFAC121090FF400106ED8 /* Delta.hh */,
+				27AEFAC021090FF400106ED8 /* JSONDelta.cc */,
+				27AEFAC121090FF400106ED8 /* JSONDelta.hh */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -839,7 +839,7 @@
 			files = (
 				276D15471E007D3000543B1B /* JSON5.hh in Headers */,
 				274D8257209D1764008BB39F /* RefCounted.hh in Headers */,
-				27AEFAC321090FF400106ED8 /* Delta.hh in Headers */,
+				27AEFAC321090FF400106ED8 /* JSONDelta.hh in Headers */,
 				27298E661C00F8A9000CFBA8 /* jsonsl.h in Headers */,
 				277A06B420B36D1A00970354 /* FileUtils.hh in Headers */,
 				27E3DD4D1DB6C32400F2872D /* CatchHelper.hh in Headers */,
@@ -928,7 +928,7 @@
 			files = (
 				27DE2EB22125FA1700123597 /* JSON5.hh in Headers */,
 				27DE2EB32125FA1700123597 /* RefCounted.hh in Headers */,
-				27DE2EB42125FA1700123597 /* Delta.hh in Headers */,
+				27DE2EB42125FA1700123597 /* JSONDelta.hh in Headers */,
 				27DE2EB52125FA1700123597 /* jsonsl.h in Headers */,
 				27DE2EB62125FA1700123597 /* FileUtils.hh in Headers */,
 				27DE2EB72125FA1700123597 /* CatchHelper.hh in Headers */,
@@ -1148,11 +1148,11 @@
 				2734B8B11F870FB400BE5249 /* MContext.cc in Sources */,
 				275CED521D3EF7BE001DE46C /* FleeceException.cc in Sources */,
 				278163B51CE69CA800B94E32 /* Fleece.cc in Sources */,
-				27AEFAC221090FF400106ED8 /* Delta.cc in Sources */,
+				27AEFAC221090FF400106ED8 /* JSONDelta.cc in Sources */,
 				270515571D905C1D00D62D05 /* Fleece+CoreFoundation.mm in Sources */,
 				270FA2781BF53CEA005DCB13 /* Value.cc in Sources */,
 				27E3DD421DB6A14200F2872D /* SharedKeys.cc in Sources */,
-                27D5771A212B3032002410BA /* Bitmap.cc in Sources */,
+				27D5771A212B3032002410BA /* Bitmap.cc in Sources */,
 				27CA08431F6B0E9400FF8C71 /* Dict.cc in Sources */,
 				27867AF2211E27E5007BDA5F /* Doc.cc in Sources */,
 				27298E801C04E665000CFBA8 /* Encoder.cc in Sources */,
@@ -1392,6 +1392,34 @@
 			};
 			name = "Release-EE";
 		};
+		27744AD82137452300399DCA /* Debug-EE */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = Fleece;
+			};
+			name = "Debug-EE";
+		};
+		27744AD92137452300399DCA /* Release-EE */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = Fleece;
+			};
+			name = "Release-EE";
+		};
+		27744ADA2137452300399DCA /* Debug-EE */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = fleeceDylib;
+			};
+			name = "Debug-EE";
+		};
+		27744ADB2137452300399DCA /* Release-EE */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = fleeceDylib;
+			};
+			name = "Release-EE";
+		};
 		279AC5361C096872002C80DB /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1506,6 +1534,8 @@
 			buildConfigurations = (
 				27C4CEA42127719D00470DE9 /* Debug */,
 				27C4CEA52127719D00470DE9 /* Release */,
+				27744ADA2137452300399DCA /* Debug-EE */,
+				27744ADB2137452300399DCA /* Release-EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -1526,6 +1556,8 @@
 			buildConfigurations = (
 				27DE2EDD2125FA1700123597 /* Debug */,
 				27DE2EDE2125FA1700123597 /* Release */,
+				27744AD82137452300399DCA /* Debug-EE */,
+				27744AD92137452300399DCA /* Release-EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

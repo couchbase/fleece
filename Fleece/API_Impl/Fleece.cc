@@ -19,7 +19,7 @@
 #include "Fleece+ImplGlue.hh"
 #include "MutableArray.hh"
 #include "MutableDict.hh"
-#include "Delta.hh"
+#include "JSONDelta.hh"
 #include "fleece/Fleece.h"
 #include "JSON5.hh"
 #include "betterassert.hh"
@@ -449,7 +449,7 @@ void FLEncoder_SuppressTrailer(FLEncoder e) {
         e->fleeceEncoder->suppressTrailer();
 }
 
-void FLEncoder_MakeDelta(FLEncoder e, FLSlice base, bool reuseStrings, bool externPointers) {
+void FLEncoder_Amend(FLEncoder e, FLSlice base, bool reuseStrings, bool externPointers) {
     if (e->isFleece()) {
         e->fleeceEncoder->setBase(base, externPointers);
         if(reuseStrings)
@@ -605,30 +605,30 @@ FLSliceResult FLDoc_GetAllocedData(FLDoc doc) {
 #pragma mark - DELTA COMPRESSION
 
 
-FLSliceResult FLCreateDelta(FLValue old, FLValue nuu) {
-    return toSliceResult(Delta::create(old, nuu));
+FLSliceResult FLCreateJSONDelta(FLValue old, FLValue nuu) {
+    return toSliceResult(JSONDelta::create(old, nuu));
 }
 
-bool FLEncodeDelta(FLValue old, FLValue nuu, FLEncoder jsonEncoder) {
+bool FLEncodeJSONDelta(FLValue old, FLValue nuu, FLEncoder jsonEncoder) {
     JSONEncoder *enc = jsonEncoder->jsonEncoder.get();
     assert(enc);  //TODO: Support encoding to Fleece
-    return Delta::create(old, nuu, *enc);
+    return JSONDelta::create(old, nuu, *enc);
 }
 
 
-FLSliceResult FLApplyDelta(FLValue old, FLSlice jsonDelta, FLError *outError) {
+FLSliceResult FLApplyJSONDelta(FLValue old, FLSlice jsonDelta, FLError *outError) {
     try {
-        return toSliceResult(Delta::apply(old, jsonDelta));
+        return toSliceResult(JSONDelta::apply(old, jsonDelta));
     } catchError(outError);
     return {};
 }
 
-bool FLEncodeApplyingDelta(FLValue old, FLValue delta, FLEncoder encoder) {
+bool FLEncodeApplyingJSONDelta(FLValue old, FLValue delta, FLEncoder encoder) {
     try {
         Encoder *enc = encoder->fleeceEncoder.get();
         if (!enc)
-            FleeceException::_throw(EncodeError, "FLEncodeApplyingDelta cannot encode JSON");
-        Delta::apply(old, delta, *enc);
+            FleeceException::_throw(EncodeError, "FLEncodeApplyingJSONDelta cannot encode JSON");
+        JSONDelta::apply(old, delta, *enc);
         return true;
     } catch (const std::exception &x) {
         encoder->recordException(x);

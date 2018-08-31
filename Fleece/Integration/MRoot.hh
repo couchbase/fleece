@@ -68,9 +68,9 @@ namespace fleece {
         void encodeTo(Encoder &enc) const   {_slot.encodeTo(enc);}
         alloc_slice encode() const          {Encoder enc; encodeTo(enc); return enc.finish();}
 
-        alloc_slice encodeDelta() const {
+        alloc_slice amend() const {
             Encoder enc;
-            enc.makeDelta(context()->data());
+            enc.amend(context()->data());
             encodeTo(enc);
             return enc.finish();
         }

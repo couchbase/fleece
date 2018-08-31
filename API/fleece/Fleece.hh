@@ -377,7 +377,7 @@ namespace fleece {
 
         void setSharedKeys(SharedKeys sk)               {FLEncoder_SetSharedKeys(_enc, sk);}
 
-        inline void makeDelta(slice base, bool reuseStrings =true, bool externPointers =false);
+        inline void amend(slice base, bool reuseStrings =true, bool externPointers =false);
         slice base() const                              {return FLEncoder_GetBase(_enc);}
 
         void suppressTrailer()                          {FLEncoder_SuppressTrailer(_enc);}
@@ -476,7 +476,7 @@ namespace fleece {
 
 
     /** Support for generating and applying JSON-format deltas/diffs between two Fleece values. */
-    class Delta {
+    class JSONDelta {
     public:
         static inline fleece::alloc_slice create(Value old, Value nuu);
         static inline bool create(Value old, Value nuu, Encoder &jsonEncoder);
@@ -570,8 +570,8 @@ namespace fleece {
     inline Value Dict::iterator::value() const  {return FLDictIterator_GetValue(this);}
     inline bool Dict::iterator::next()          {return FLDictIterator_Next(this);}
 
-    inline void Encoder::makeDelta(slice base, bool reuseStrings, bool externPointers)
-                                                {FLEncoder_MakeDelta(_enc, base,
+    inline void Encoder::amend(slice base, bool reuseStrings, bool externPointers)
+                                                {FLEncoder_Amend(_enc, base,
                                                                      reuseStrings, externPointers);}
     inline bool Encoder::writeNull()            {return FLEncoder_WriteNull(_enc);}
     inline bool Encoder::writeBool(bool b)      {return FLEncoder_WriteBool(_enc, b);}
@@ -595,21 +595,21 @@ namespace fleece {
     inline FLError Encoder::error() const       {return FLEncoder_GetError(_enc);}
     inline const char* Encoder::errorMessage() const {return FLEncoder_GetErrorMessage(_enc);}
 
-    inline fleece::alloc_slice Delta::create(Value old, Value nuu) {
-        return FLCreateDelta(old, nuu);
+    inline fleece::alloc_slice JSONDelta::create(Value old, Value nuu) {
+        return FLCreateJSONDelta(old, nuu);
     }
-    inline bool Delta::create(Value old, Value nuu, Encoder &jsonEncoder) {
-        return FLEncodeDelta(old, nuu, jsonEncoder);
+    inline bool JSONDelta::create(Value old, Value nuu, Encoder &jsonEncoder) {
+        return FLEncodeJSONDelta(old, nuu, jsonEncoder);
     }
-    inline fleece::alloc_slice Delta::apply(Value old,
-                                            fleece::slice jsonDelta,
-                                            FLError *error) {
-        return FLApplyDelta(old, jsonDelta, error);
+    inline fleece::alloc_slice JSONDelta::apply(Value old,
+                                                fleece::slice jsonDelta,
+                                                FLError *error) {
+        return FLApplyJSONDelta(old, jsonDelta, error);
     }
-    inline bool Delta::apply(Value old,
-                             Value jsonDelta,
-                             Encoder &encoder) {
-        return FLEncodeApplyingDelta(old, jsonDelta, encoder);
+    inline bool JSONDelta::apply(Value old,
+                                 Value jsonDelta,
+                                 Encoder &encoder) {
+        return FLEncodeApplyingJSONDelta(old, jsonDelta, encoder);
     }
 
     inline Doc& Doc::operator=(const Doc &other) {

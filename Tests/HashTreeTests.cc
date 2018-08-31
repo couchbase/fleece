@@ -319,7 +319,7 @@ TEST_CASE_METHOD(HashTreeTests, "HashTree Re-Encode Delta", "[HashTree]") {
     tree.dump(cerr);
 
     Encoder enc;
-    enc.makeDelta(data, false);
+    enc.amend(data, false);
     enc.suppressTrailer();
     tree.writeTo(enc);
     alloc_slice delta = enc.finish();
