@@ -77,8 +77,8 @@ namespace fleece { namespace impl {
     void Scope::unregister() noexcept {
         if (_registered) {
             lock_guard<mutex> lock(sMutex);
-            Log("Unregister (%p ... %p) --> Scope %p, sk=%p",
-                _data.buf, _data.end(), this, _sk.get());
+            Log("Unregister (%p ... %p) --> Scope %p, sk=%p   [now %zu]",
+                _data.buf, _data.end(), this, _sk.get(), sMemoryMap->size()-1);
             if (sMemoryMap->erase(size_t(_data.end())) == 0) {
                 fprintf(stderr, "WARNING: fleece::Scope failed to unregister (%p .. %p)",
                         _data.buf, _data.end());

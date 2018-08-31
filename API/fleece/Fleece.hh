@@ -319,8 +319,8 @@ namespace fleece {
         :_doc(FLDoc_FromResultData(FLSliceResult(fleeceData), trust, sk, externDestination))
         { }
 
-        static Doc fromJSON(fleece::slice json,
-                            FLError *outError = nullptr) {return FLDoc_FromJSON(json, outError);}
+        static inline Doc fromJSON(fleece::slice json, FLError *outError = nullptr);
+
         static alloc_slice dump(slice fleeceData)   {return FLData_Dump(fleeceData);}
 
         Doc()                                       :_doc(nullptr) { }
@@ -610,6 +610,10 @@ namespace fleece {
                                  Value jsonDelta,
                                  Encoder &encoder) {
         return FLEncodeApplyingJSONDelta(old, jsonDelta, encoder);
+    }
+
+    inline Doc Doc::fromJSON(fleece::slice json, FLError *outError) {
+        return Doc(FLDoc_FromJSON(json, outError), false);
     }
 
     inline Doc& Doc::operator=(const Doc &other) {
