@@ -124,7 +124,7 @@ namespace fleece {
     MutableArray MutableHashTree::getMutableArray(slice key) {
         MutableArray result;
         insert(key, [&](Value value) -> Value {
-            result = value.asArray().asMutable();
+            result = MutableArray::newArray(value.asArray());
             return result;
         });
        return result;
@@ -133,7 +133,7 @@ namespace fleece {
     MutableDict MutableHashTree::getMutableDict(slice key) {
         MutableDict result;
         insert(key, [&](Value value) -> Value {
-            result = value.asDict().asMutable();
+            result = MutableDict::newDict(value.asDict());
             return result;
         });
         return result;
