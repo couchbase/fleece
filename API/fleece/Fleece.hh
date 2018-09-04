@@ -361,7 +361,6 @@ namespace fleece {
     class Encoder {
     public:
         Encoder()                                       :_enc(FLEncoder_New()) { }
-        explicit Encoder(FLEncoder enc)                 :_enc(enc) { }
 
         explicit Encoder(FLEncoderFormat format,
                          size_t reserveSize =0,
@@ -369,13 +368,20 @@ namespace fleece {
         :_enc(FLEncoder_NewWithOptions(format, reserveSize, uniqueStrings))
         { }
 
+        explicit Encoder(FILE *file,
+                         bool uniqueStrings =true)
+        :_enc(FLEncoder_NewWritingToFile(file, uniqueStrings))
+        { }
+
+        explicit Encoder(FLEncoder enc)                 :_enc(enc) { }
+
         void detach()                                   {_enc = nullptr;}
         
         ~Encoder()                                      {FLEncoder_Free(_enc);}
 
         void setSharedKeys(SharedKeys sk)               {FLEncoder_SetSharedKeys(_enc, sk);}
 
-        inline void amend(slice base, bool reuseStrings =true, bool externPointers =false);
+        inline void amend(slice base, bool reuseStrings =false, bool externPointers =false);
         slice base() const                              {return FLEncoder_GetBase(_enc);}
 
         void suppressTrailer()                          {FLEncoder_SuppressTrailer(_enc);}

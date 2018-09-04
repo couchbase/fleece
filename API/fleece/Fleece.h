@@ -21,6 +21,7 @@
 #define _FLEECE_H
 
 #include "FLSlice.h"
+#include <stdio.h>
 
 #ifdef __clang__
     #define FLNONNULL  __attribute__((nonnull))
@@ -533,6 +534,9 @@ extern "C" {
     FLEncoder FLEncoder_NewWithOptions(FLEncoderFormat format,
                                        size_t reserveSize,
                                        bool uniqueStrings);
+
+    /** Creates a new Fleece encoder that writes to a file, not to memory. */
+    FLEncoder FLEncoder_NewWritingToFile(FILE* FLNONNULL, bool uniqueStrings);
 
     /** Frees the space used by an encoder. */
     void FLEncoder_Free(FLEncoder);

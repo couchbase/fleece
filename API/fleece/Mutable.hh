@@ -63,6 +63,7 @@ namespace fleece {
             if (a._val != _val) {
                 FLMutableArray_Release(*this);
                 _val = a._val;
+                a._val = nullptr;
             }
             return *this;
         }
@@ -128,6 +129,7 @@ namespace fleece {
             if (d._val != _val) {
                 FLMutableDict_Release(*this);
                 _val = d._val;
+                d._val = nullptr;
             }
             return *this;
         }

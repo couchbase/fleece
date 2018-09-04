@@ -81,6 +81,11 @@ namespace fleece { namespace impl {
             }
         }
 
+        FLEncoderImpl(FILE *outputFile, bool uniqueStrings =true) {
+            fleeceEncoder.reset(new Encoder(outputFile));
+            fleeceEncoder->uniqueStrings(uniqueStrings);
+        }
+
         FLEncoderImpl(Encoder *encoder)
         :ownsFleeceEncoder(false)
         ,fleeceEncoder(encoder)

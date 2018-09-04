@@ -147,7 +147,8 @@ namespace fleece {
     }
 
     alloc_slice Writer::finish() {
-        assert(!_outputFile);
+        if (_outputFile)
+            return {};
         alloc_slice output;
 #if 0 //TODO: Restore this optimization
         if (_chunks.size() == 1 && _chunks[0].start() != &_initialBuf) {

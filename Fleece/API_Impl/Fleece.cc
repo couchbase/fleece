@@ -186,8 +186,8 @@ static FLMutableArray _newMutableArray(FLArray a) noexcept {
     return nullptr;
 }
 
+FLMutableArray FLMutableArray_New(void)             {return _newMutableArray(nullptr);}
 FLMutableArray FLArray_MutableCopy(FLArray a)       {return a ? _newMutableArray(a) : nullptr;}
-FLMutableArray FLMutableArray_New(void)             {return FLArray_MutableCopy(nullptr);}
 FLMutableArray FLArray_AsMutable(FLArray a)         {return a ? a->asMutable() : nullptr;}
 FLArray FLMutableArray_GetSource(FLMutableArray a)  {return a ? a->source() : nullptr;}
 bool FLMutableArray_IsChanged(FLMutableArray a)     {return a && a->isChanged();}
@@ -313,8 +313,8 @@ static FLMutableDict _newMutableDict(FLDict d) noexcept {
     return nullptr;
 }
 
+FLMutableDict FLMutableDict_New(void)               {return _newMutableDict(nullptr);}
 FLMutableDict FLDict_MutableCopy(FLDict d)          {return d ? _newMutableDict(d) : nullptr;}
-FLMutableDict FLMutableDict_New(void)               {return FLDict_MutableCopy(nullptr);}
 FLMutableDict FLDict_AsMutable(FLDict d)            {return d ? d->asMutable() : nullptr;}
 FLDict FLMutableDict_GetSource(FLMutableDict d)     {return d ? d->source() : nullptr;}
 bool FLMutableDict_IsChanged(FLMutableDict d)       {return d && d->isChanged();}
@@ -431,6 +431,10 @@ FLEncoder FLEncoder_NewWithOptions(FLEncoderFormat format,
     return new FLEncoderImpl(format, reserveSize, uniqueStrings);
 }
 
+FLEncoder FLEncoder_NewWritingToFile(FILE *outputFile, bool uniqueStrings) {
+    return new FLEncoderImpl(outputFile, uniqueStrings);
+}
+
 void FLEncoder_Reset(FLEncoder e) {
     e->reset();
 }
@@ -450,7 +454,7 @@ void FLEncoder_SuppressTrailer(FLEncoder e) {
 }
 
 void FLEncoder_Amend(FLEncoder e, FLSlice base, bool reuseStrings, bool externPointers) {
-    if (e->isFleece()) {
+    if (e->isFleece() && base.size > 0) {
         e->fleeceEncoder->setBase(base, externPointers);
         if(reuseStrings)
             e->fleeceEncoder->reuseBaseStrings();
@@ -560,7 +564,7 @@ FLDoc FLEncoder_FinishDoc(FLEncoder e, FLError *outError) {
 FLSliceResult FLEncoder_Finish(FLEncoder e, FLError *outError) {
     if (!e->hasError()) {
         try {
-            return toSliceResult(ENCODER_DO(e, finish()));       // extractOutput can throw
+            return toSliceResult(ENCODER_DO(e, finish()));       // finish() can throw
         } catch (const std::exception &x) {
             e->recordException(x);
         }
