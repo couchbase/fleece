@@ -12,4 +12,3 @@ DEBUG_INFORMATION_FORMAT        = dwarf;
 EXECUTABLE_PREFIX               = lib
 GENERATE_MASTER_OBJECT_FILE     = NO;
 PRODUCT_NAME                    = fleeceStatic
-

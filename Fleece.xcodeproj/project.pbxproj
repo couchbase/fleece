@@ -174,7 +174,7 @@
 		27DE2ED92125FA1700123597 /* HeapValue.hh in Headers */ = {isa = PBXBuildFile; fileRef = 274D8251209CF9B3008BB39F /* HeapValue.hh */; };
 		27DE2EDA2125FA1700123597 /* FleeceException.hh in Headers */ = {isa = PBXBuildFile; fileRef = 275CED511D3EF7BE001DE46C /* FleeceException.hh */; };
 		27DE2EDB2125FA1700123597 /* SharedKeys.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27E3DD411DB6A14200F2872D /* SharedKeys.hh */; };
-		27DE2EE32125FAC600123597 /* libFleeceBase.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27DE2EDF2125FA1700123597 /* libFleeceBase.a */; };
+		27DE2EE32125FAC600123597 /* libfleeceBase.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27DE2EDF2125FA1700123597 /* libfleeceBase.a */; };
 		27DE2EE82125FB2100123597 /* cdecode.c in Sources */ = {isa = PBXBuildFile; fileRef = 277015351D596436008BADD7 /* cdecode.c */; };
 		27DE2EE92125FB2100123597 /* cencode.c in Sources */ = {isa = PBXBuildFile; fileRef = 277015371D596436008BADD7 /* cencode.c */; };
 		27DE2EEA2125FC5A00123597 /* Writer.cc in Sources */ = {isa = PBXBuildFile; fileRef = 270FA2711BF53CEA005DCB13 /* Writer.cc */; };
@@ -343,6 +343,7 @@
 		2770153F1D5A3B2C008BADD7 /* encode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = encode.h; sourceTree = "<group>"; };
 		277015401D5A63B9008BADD7 /* CHANGELOG */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CHANGELOG; sourceTree = "<group>"; };
 		277015411D5A64B4008BADD7 /* AUTHORS */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = AUTHORS; sourceTree = "<group>"; };
+		27744AE5213F0E6A00399DCA /* FleeceBase.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = FleeceBase.xcconfig; sourceTree = "<group>"; };
 		2776AA1F208678AA004ACE85 /* DeepIterator.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DeepIterator.cc; sourceTree = "<group>"; };
 		2776AA20208678AA004ACE85 /* DeepIterator.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DeepIterator.hh; sourceTree = "<group>"; };
 		2776AA232086C94B004ACE85 /* 1person-deepIterOutput.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "1person-deepIterOutput.txt"; sourceTree = "<group>"; };
@@ -411,7 +412,7 @@
 		27D721241F8C4B7500AA4458 /* MDictIterator.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MDictIterator.hh; sourceTree = "<group>"; };
 		27D721501F8D8F3F00AA4458 /* MContext.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MContext.hh; sourceTree = "<group>"; };
 		27D721901F8E8EEA00AA4458 /* libFleeceMutableObjC.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libFleeceMutableObjC.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		27DE2EDF2125FA1700123597 /* libFleeceBase.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libFleeceBase.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		27DE2EDF2125FA1700123597 /* libfleeceBase.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libfleeceBase.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		27E3DD401DB6A14200F2872D /* SharedKeys.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SharedKeys.cc; sourceTree = "<group>"; };
 		27E3DD411DB6A14200F2872D /* SharedKeys.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = SharedKeys.hh; sourceTree = "<group>"; };
 		27E3DD471DB6B86000F2872D /* catch.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = catch.hpp; sourceTree = "<group>"; };
@@ -437,7 +438,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				27DE2EE32125FAC600123597 /* libFleeceBase.a in Frameworks */,
+				27DE2EE32125FAC600123597 /* libfleeceBase.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -512,7 +513,7 @@
 				272E5A4B1BF7FE5600848580 /* Test */,
 				279AC5311C096872002C80DB /* fleece */,
 				27D721901F8E8EEA00AA4458 /* libFleeceMutableObjC.a */,
-				27DE2EDF2125FA1700123597 /* libFleeceBase.a */,
+				27DE2EDF2125FA1700123597 /* libfleeceBase.a */,
 				27C4CE9C2127719D00470DE9 /* libfleece.dylib */,
 			);
 			name = Products;
@@ -650,6 +651,7 @@
 				2776AA46208A6C5A004ACE85 /* Project_Release.xcconfig */,
 				27F25A8220A6559800E181FA /* FleeceMutableObjC.xcconfig */,
 				2776AA48208A6CED004ACE85 /* FleeceStaticLib.xcconfig */,
+				27744AE5213F0E6A00399DCA /* FleeceBase.xcconfig */,
 				27C4CEAA2127729D00470DE9 /* FleeceDylib.xcconfig */,
 				27C4CEB02127781300470DE9 /* FleeceDylib_Release.xcconfig */,
 				2776AA49208A6E01004ACE85 /* FleeceTest.xcconfig */,
@@ -1081,7 +1083,7 @@
 			);
 			name = FleeceBase;
 			productName = Fleece;
-			productReference = 27DE2EDF2125FA1700123597 /* libFleeceBase.a */;
+			productReference = 27DE2EDF2125FA1700123597 /* libfleeceBase.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 /* End PBXNativeTarget section */
@@ -1396,29 +1398,29 @@
 		};
 		27744AD82137452300399DCA /* Debug-EE */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 27744AE5213F0E6A00399DCA /* FleeceBase.xcconfig */;
 			buildSettings = {
-				PRODUCT_NAME = Fleece;
 			};
 			name = "Debug-EE";
 		};
 		27744AD92137452300399DCA /* Release-EE */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 27744AE5213F0E6A00399DCA /* FleeceBase.xcconfig */;
 			buildSettings = {
-				PRODUCT_NAME = Fleece;
 			};
 			name = "Release-EE";
 		};
 		27744ADA2137452300399DCA /* Debug-EE */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 27C4CEAA2127729D00470DE9 /* FleeceDylib.xcconfig */;
 			buildSettings = {
-				PRODUCT_NAME = fleeceDylib;
 			};
 			name = "Debug-EE";
 		};
 		27744ADB2137452300399DCA /* Release-EE */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 27C4CEB02127781300470DE9 /* FleeceDylib_Release.xcconfig */;
 			buildSettings = {
-				PRODUCT_NAME = fleeceDylib;
 			};
 			name = "Release-EE";
 		};
@@ -1470,17 +1472,15 @@
 		};
 		27DE2EDD2125FA1700123597 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 2776AA48208A6CED004ACE85 /* FleeceStaticLib.xcconfig */;
+			baseConfigurationReference = 27744AE5213F0E6A00399DCA /* FleeceBase.xcconfig */;
 			buildSettings = {
-				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
 		};
 		27DE2EDE2125FA1700123597 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 2776AA48208A6CED004ACE85 /* FleeceStaticLib.xcconfig */;
+			baseConfigurationReference = 27744AE5213F0E6A00399DCA /* FleeceBase.xcconfig */;
 			buildSettings = {
-				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};

@@ -1,0 +1,11 @@
+//
+//  FleeceBase.xcconfig
+//  Fleece
+//
+//  Created by Jens Alfke on 9/4/18.
+//  Copyright © 2018 Couchbase. All rights reserved.
+//
+
+#include "FleeceStaticLib.xcconfig"
+
+PRODUCT_NAME                    = fleeceBase
