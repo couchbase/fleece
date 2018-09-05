@@ -11,27 +11,28 @@
 
 #include <stdexcept>
 
+#ifndef assert_always
+    #ifdef _MSC_VER
+        #define assert_always(e) ((void) ((e) ? ((void)0) : fleece::_assert_failed (#e, __FUNCSIG__, __FILE__, __LINE__)))
+    #else
+        #define assert_always(e) ((void) ((e) ? ((void)0) : fleece::_assert_failed (#e, __PRETTY_FUNCTION__, __FILE__, __LINE__)))
+    #endif
+
+    namespace fleece {
+        [[noreturn]] void _assert_failed(const char *condition, const char *fn,
+                                         const char *file, int line);
+
+        class assertion_failure : public std::logic_error {
+        public:
+            assertion_failure(const char *what) :logic_error(what) { }
+        };
+    }
+#endif // assert_always
+
+
 #ifndef NDEBUG
 
-    #ifndef betterassert
-        #ifdef _MSC_VER
-            #define betterassert(e) ((void) ((e) ? ((void)0) : fleece::_assert_failed (#e, __FUNCSIG__, __FILE__, __LINE__)))
-        #else
-            #define betterassert(e) ((void) ((e) ? ((void)0) : fleece::_assert_failed (#e, __PRETTY_FUNCTION__, __FILE__, __LINE__)))
-        #endif
-
-        namespace fleece {
-            [[noreturn]] void _assert_failed(const char *condition, const char *fn,
-                                             const char *file, int line);
-            
-            class assertion_failure : public std::logic_error {
-            public:
-                assertion_failure(const char *what) :logic_error(what) { }
-            };
-        }
-    #endif // betterassert
-
     #undef assert
-    #define assert(e) betterassert(e)
+    #define assert(e) assert_always(e)
 
 #endif //NDEBUG
