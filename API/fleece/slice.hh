@@ -39,6 +39,11 @@ struct __CFString;
 #endif
 
 
+// Utility for using slice with printf-style formatting.
+// Use "%.*" in the format string; then for the corresponding argument put FMTSLICE(theslice).
+#define FMTSLICE(S)    (int)(S).size, (S).buf
+
+
 namespace fleece {
     struct slice;
     struct alloc_slice;
