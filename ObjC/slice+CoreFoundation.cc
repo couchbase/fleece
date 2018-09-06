@@ -24,6 +24,13 @@
 
 namespace fleece {
 
+    CFStringRef pure_slice::createCFString() const {
+        if (!buf)
+            return nullptr;
+        return CFStringCreateWithBytes(nullptr, (const uint8_t*)buf, size,
+                                       kCFStringEncodingUTF8, false);
+    }
+
     alloc_slice::alloc_slice(CFStringRef str) {
         CFIndex lengthInChars = CFStringGetLength(str);
         resize(CFStringGetMaximumSizeForEncoding(lengthInChars, kCFStringEncodingUTF8));

@@ -26,21 +26,26 @@
 #include <memory>
 #include <assert.h>
 
-#ifdef __APPLE__
-#import <CoreFoundation/CFString.h>
 #ifdef __OBJC__
 #import <Foundation/NSData.h>
 #import <Foundation/NSString.h>
 @class NSMapTable;
 #endif
-#endif
 
 struct FLSlice; struct FLHeapSlice; struct FLSliceResult;
+
+#ifdef __APPLE__
+struct __CFString;
+#endif
+
 
 namespace fleece {
     struct slice;
     struct alloc_slice;
 
+#ifdef __APPLE__
+    using CFStringRef = const struct ::__CFString *;
+#endif
     
     /** Adds a byte offset to a pointer. */
     template <typename T>
@@ -131,12 +136,7 @@ namespace fleece {
         static T* reallocBytes(T* bytes, size_t newSz);
 
 #ifdef __APPLE__
-        CFStringRef createCFString() const {
-            if (!buf)
-                return nullptr;
-            return CFStringCreateWithBytes(nullptr, (const uint8_t*)buf, size,
-                                           kCFStringEncodingUTF8, false);
-        }
+        CFStringRef createCFString() const;
 #ifdef __OBJC__
         pure_slice(NSData* data)
         :pure_slice(data.bytes, data.length) {}
@@ -308,7 +308,7 @@ namespace fleece {
 #endif
         ~nsstring_slice();
     private:
-        CFIndex getBytes(CFStringRef, CFIndex lengthInChars);
+        long getBytes(CFStringRef, long lengthInChars);
         char _local[127];
         bool _needsFree;
     };
