@@ -11,3 +11,5 @@ DerivedData/
 Debug/
 Release/
 *.pyc
+Documentation/C
+Documentation/Cpp

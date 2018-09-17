@@ -24,6 +24,8 @@
 extern "C" {
 #endif
 
+    /** \defgroup CF    CoreFoundation and Objective-C Helpers
+        @{ */
 
     /** Writes a Core Foundation (or Objective-C) object to an Encoder.
         Supports all the JSON types, as well as CFData. */
@@ -84,6 +86,7 @@ extern "C" {
 
 #endif
 
+/** @} */
 
 #ifdef __cplusplus
 }

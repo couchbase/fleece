@@ -314,6 +314,8 @@
 		27393C931FEC30E300FBFE59 /* FleeceTestsMain.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FleeceTestsMain.cc; sourceTree = "<group>"; };
 		2746DD3B1D931BE9000517BC /* Benchmark.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Benchmark.hh; sourceTree = "<group>"; };
 		2747D9841CFB9BC300C48211 /* 1person.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = 1person.json; sourceTree = "<group>"; };
+		274C948B2150175700F9AEA9 /* Doxyfile */ = {isa = PBXFileReference; lastKnownFileType = text; name = Doxyfile; path = Documentation/Doxyfile; sourceTree = "<group>"; };
+		274C948C215058BB00F9AEA9 /* Doxyfile_C++ */ = {isa = PBXFileReference; lastKnownFileType = text; name = "Doxyfile_C++"; path = "Documentation/Doxyfile_C++"; sourceTree = "<group>"; };
 		274D8242209A3A77008BB39F /* HeapDict.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = HeapDict.cc; sourceTree = "<group>"; };
 		274D8243209A3A77008BB39F /* HeapDict.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HeapDict.hh; sourceTree = "<group>"; };
 		274D8246209A5906008BB39F /* ValueSlot.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ValueSlot.cc; sourceTree = "<group>"; };
@@ -494,6 +496,8 @@
 				275C67DB1BFBA0F4008AA9E7 /* Fleece.md */,
 				27C4AC961CDFFDA100938365 /* Performance.md */,
 				275F7F5C210FBFFC00861DE8 /* Deltas.md */,
+				274C948B2150175700F9AEA9 /* Doxyfile */,
+				274C948C215058BB00F9AEA9 /* Doxyfile_C++ */,
 				271507DE212225B3005FE6E8 /* API */,
 				270FA25E1BF53CAD005DCB13 /* Fleece */,
 				279AC5321C096872002C80DB /* Tool */,
@@ -985,6 +989,7 @@
 				270FA2581BF53CAD005DCB13 /* Sources */,
 				270FA2591BF53CAD005DCB13 /* Frameworks */,
 				270FA25A1BF53CAD005DCB13 /* Headers */,
+				274C948D21505C7700F9AEA9 /* Build Documentation */,
 			);
 			buildRules = (
 			);
@@ -1130,6 +1135,36 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		274C948D21505C7700F9AEA9 /* Build Documentation */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/API/fleece/FLSlice.h",
+				"$(SRCROOT)/API/fleece/Fleece.h",
+				"$(SRCROOT)/API/fleece/Fleece+CoreFoundation.h",
+				"$(SRCROOT)/API/fleece/slice.hh",
+				"$(SRCROOT)/API/fleece/Fleece.hh",
+				"$(SRCROOT)/API/fleece/Mutable.hh",
+				"$(SRCROOT)/API/fleece/Base.hh",
+			);
+			name = "Build Documentation";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(SRCROOT)/Documentation/C/html/index.html",
+				"$(SRCROOT)/Documentation/C++/html/index.html",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = "/bin/sh -e";
+			shellScript = "cd $SRCROOT\ndoxygen Documentation/Doxyfile\ndoxygen Documentation/Doxyfile_C++\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		270FA2581BF53CAD005DCB13 /* Sources */ = {

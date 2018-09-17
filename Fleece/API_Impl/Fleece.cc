@@ -48,6 +48,10 @@ void FLSliceResult_Free(FLSliceResult s) {
     alloc_slice::release({s.buf, s.size});
 }
 
+FLSliceResult FLSlice_Copy(FLSlice s) {
+    return toSliceResult(alloc_slice(s));
+}
+
 
 FLValue FLValue_FromData(FLSlice data, FLTrust trust)   {
     return trust ? Value::fromTrustedData(data) : Value::fromData(data);

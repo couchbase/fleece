@@ -18,6 +18,10 @@ extern "C" {
 #endif
 
 
+/** \defgroup FLSlice    Slices
+    @{ */
+
+
 /** A simple reference to a block of memory. Does not imply ownership. */
 typedef struct FLSlice {
     const void *buf;
@@ -54,7 +58,7 @@ typedef FLSlice FLString;
 typedef FLSliceResult FLStringResult;
 
 
-// A convenient constant denoting a null slice.
+/** A convenient constant denoting a null slice. */
 #ifdef _MSC_VER
     static const FLSlice kFLSliceNull = { NULL, 0 };
 #else
@@ -62,14 +66,15 @@ typedef FLSliceResult FLStringResult;
 #endif
 
 
-/** Creates a slice pointing to the contents of a C string. */
+/** Returns a slice pointing to the contents of a C string.
+    (Performance is O(n) with the length of the string, since it has to call `strlen`.) */
 static inline FLSlice FLStr(const char *str) {
     FLSlice foo = { str, str ? strlen(str) : 0 };
     return foo;
 }
 
 // Macro version of FLStr, for use in initializing compile-time constants.
-// STR must be a C string literal.
+// STR must be a C string literal. Has zero runtime overhead.
 #ifdef _MSC_VER
     #define FLSTR(STR) {("" STR), sizeof(("" STR))-1}
 #else
@@ -87,6 +92,11 @@ int FLSlice_Compare(FLSlice, FLSlice);
 /** Frees the memory of a FLSliceResult. */
 void FLSliceResult_Free(FLSliceResult);
 
+/** Allocates an FLSliceResult, copying the given slice. */
+FLSliceResult FLSlice_Copy(FLSlice);
+
+
+/** @} */
 
 #ifdef __cplusplus
 }
