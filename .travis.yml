@@ -1,11 +1,9 @@
 language: cpp
-compiler:
-  - clang
-  - gcc
 
 matrix:
   include:
-    - os: linux
+    - name: Linux GCC 6
+      os: linux
       addons:
         apt:
           sources:
@@ -14,7 +12,8 @@ matrix:
             - g++-6
       env:
         - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
-    - os: linux
+    - name: Linux Clang 5
+      os: linux
       addons:
         apt:
           sources:
@@ -23,9 +22,20 @@ matrix:
             - clang-5.0
       env:
         - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
-  include:
-    - os: osx
+    - name: Linux Clang 3.9
+      os: linux
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-3.9
+          packages:
+            - clang-3.9
+      env:
+        - MATRIX_EVAL="CC=clang-3.9 && CXX=clang++-3.9"
+    - name: Mac Clang (Xcode 9)
+      os: osx
       osx_image: xcode9
+      
 before_install:
     - eval "${MATRIX_EVAL}"
 
