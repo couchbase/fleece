@@ -22,9 +22,9 @@
 #ifndef _MSC_VER
 extern "C" {
     // Clang & GCC builtin functions for hardware-accelerated popcount:
-    extern int __builtin_popcount(unsigned int) noexcept;
-    extern int __builtin_popcountl(unsigned long) noexcept;
-    extern int __builtin_popcountll(unsigned long long) noexcept;
+    extern int __builtin_popcount(unsigned int);
+    extern int __builtin_popcountl(unsigned long);
+    extern int __builtin_popcountll(unsigned long long);
 }
 #endif
 
