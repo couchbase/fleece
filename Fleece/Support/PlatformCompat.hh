@@ -18,6 +18,9 @@
 
 #pragma once
 #include "fleece/Base.hh"
+#ifdef __APPLE__
+#include "TargetConditionals.h"
+#endif
 
 #ifdef _MSC_VER
 
@@ -47,6 +50,12 @@
     #define LITECORE_UNUSED __unused
     #else
     #define LITECORE_UNUSED __attribute__((unused))
+    #endif
+
+    #if TARGET_IPHONE_SIMULATOR
+    #define THREAD_LOCAL
+    #else
+    #define THREAD_LOCAL thread_local
     #endif
 
     #define NOINLINE                        __attribute((noinline))
