@@ -1622,7 +1622,7 @@ class diff_match_patch {
    */
  public:
   ssize_t match_main(const string_t &text, const string_t &pattern, ssize_t loc) const {
-    loc = std::max(0l, std::min(loc, (ssize_t)text.length()));
+    loc = std::max((ssize_t)0l, std::min(loc, (ssize_t)text.length()));
     if (text == pattern) {
       // Shortcut (potentially not guaranteed by the algorithm)
       return 0;
