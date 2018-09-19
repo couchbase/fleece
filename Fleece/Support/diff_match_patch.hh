@@ -1697,7 +1697,7 @@ class diff_match_patch {
       }
       // Use the result from this iteration as the maximum for the next.
       bin_max = bin_mid;
-      ssize_t start = std::max(1l, loc - bin_mid + 1);
+      ssize_t start = std::max((ssize_t)1l, loc - bin_mid + 1);
       ssize_t finish = std::min(loc + bin_mid, (ssize_t)text.length()) + pattern.length();
 
       rd = new ssize_t[finish + 2];
@@ -1729,7 +1729,7 @@ class diff_match_patch {
             best_loc = j - 1;
             if (best_loc > loc) {
               // When passing loc, don't exceed our current distance from loc.
-              start = std::max(1l, 2 * loc - (ssize_t)best_loc);
+              start = std::max((ssize_t)1l, 2 * loc - (ssize_t)best_loc);
             } else {
               // Already passed loc, downhill from here on in.
               break;
