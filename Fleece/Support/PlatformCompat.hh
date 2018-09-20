@@ -52,12 +52,6 @@
     #define LITECORE_UNUSED __attribute__((unused))
     #endif
 
-    #if TARGET_IPHONE_SIMULATOR
-    #define THREAD_LOCAL
-    #else
-    #define THREAD_LOCAL thread_local
-    #endif
-
     #define NOINLINE                        __attribute((noinline))
     
     #ifdef __clang__
