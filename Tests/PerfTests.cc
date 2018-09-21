@@ -26,7 +26,7 @@
 #ifndef _MSC_VER
 #include <unistd.h>
 #endif
-#if FL_EMBEDDED //FIX: This is really for GCC
+#if FL_EMBEDDED || defined(_MSC_VER) //FIX: This is really for GCC
 #define random rand
 #endif
 

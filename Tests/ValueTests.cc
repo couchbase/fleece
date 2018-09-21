@@ -98,11 +98,11 @@ namespace fleece {
     }
 
     TEST_CASE("Pointers") {
-        ValueTests::testPointers();
+        fleece::ValueTests::testPointers();
     }
 
     TEST_CASE("Deref") {
-        ValueTests::testDeref();
+        fleece::ValueTests::testDeref();
     }
 
     TEST_CASE("DeepIterator") {

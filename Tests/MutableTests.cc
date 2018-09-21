@@ -21,6 +21,10 @@
 #include "MutableArray.hh"
 #include "MutableDict.hh"
 #include "Doc.hh"
+#ifdef _MSC_VER
+#define random rand
+#define srandom srand
+#endif
 
 namespace fleece {
     using namespace fleece::impl;

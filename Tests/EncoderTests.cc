@@ -26,8 +26,10 @@
 #include "mn_wordlist.h"
 #include <iostream>
 #include <float.h>
-#include <unistd.h>
 
+#ifndef _MSC_VER
+#include <unistd.h>
+#endif
 
 namespace fleece { namespace impl {
     using namespace fleece::impl::internal;
