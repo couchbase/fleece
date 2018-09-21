@@ -179,7 +179,7 @@ namespace fleece {
     TEST_CASE("Duplicate Docs") {
         const Dict *root;
         {
-            alloc_slice data = readTestFile("1person.fleece");
+            alloc_slice data( readTestFile("1person.fleece") );
             Retained<SharedKeys> sk = new SharedKeys();
             Retained<Doc> doc1 = new Doc(data, Doc::kUntrusted, sk);
             Retained<Doc> doc2 = new Doc(data, Doc::kUntrusted, sk);

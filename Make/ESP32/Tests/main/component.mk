@@ -14,7 +14,7 @@ COMPONENT_SRCDIRS 			:= ../../../../Tests  ../../../../Experimental
 
 COMPONENT_PRIV_INCLUDEDIRS 	:= ../../../../vendor/catch  ../../../../vendor/jsonsl  ../../../../Experimental
 
-COMPONENT_EMBED_FILES := ../../../../Tests/1000people.fleece
+COMPONENT_EMBED_FILES := 1000people.fleece
 
 CPPFLAGS += -D_GNU_SOURCE  -DFL_EMBEDDED  -DFL_ESP32  -DFL_HAVE_FILESYSTEM=0  -DDEBUG=1
 CFLAGS   += -Wno-unknown-pragmas  -Wno-char-subscripts

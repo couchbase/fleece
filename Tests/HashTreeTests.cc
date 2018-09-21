@@ -8,9 +8,6 @@
 #include "FleeceTests.hh"
 #include "MutableHashTree.hh"
 #include "PlatformCompat.hh"
-#ifdef _MSC_VER
-#define random rand
-#endif
 
 using namespace std;
 using namespace fleece;

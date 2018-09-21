@@ -2217,7 +2217,7 @@ class diff_match_patch {
           }
         }
         // Compute the head context for the next patch.
-        precontext = safeMid(diff_text2(patch.diffs), std::max(0l, (ssize_t)precontext.length() - Patch_Margin));
+        precontext = safeMid(diff_text2(patch.diffs), std::max((ssize_t)0, (ssize_t)precontext.length() - Patch_Margin));
         // Append the end context for this patch.
         postcontext = diff_text1(bigpatch.diffs);
         if ((ssize_t)postcontext.length() > Patch_Margin) {

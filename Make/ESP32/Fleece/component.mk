@@ -1,8 +1,9 @@
 # ESP32 component Makefile
 
 
-COMPONENT_SRCDIRS 			:= ../../../Fleece/Core  ../../../Fleece/Mutable  ../../../Fleece/Tree \
-	  						   ../../../Fleece/Support  ../../../vendor/jsonsl  ../../../vendor/libb64
+COMPONENT_SRCDIRS 			:= ../../../Fleece/API_Impl  ../../../Fleece/Core  ../../../Fleece/Mutable \
+	  						   ../../../Fleece/Support  ../../../Fleece/Tree \
+							   ../../../vendor/jsonsl  ../../../vendor/libb64
 COMPONENT_ADD_INCLUDEDIRS 	:= ../../../API \
 							   ../../../Fleece/Core  ../../../Fleece/Mutable  ../../../Fleece/Tree \
 							   ../../../Fleece/Support

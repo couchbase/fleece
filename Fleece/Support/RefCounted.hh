@@ -41,16 +41,18 @@ namespace fleece {
         friend void release(T*) noexcept;
 
 #if DEBUG
-        void _retain() noexcept;
-        void _release() noexcept;
-        static constexpr int32_t kInitialRefCount = -66666;
+        void _retain() noexcept                 {_careful_retain();}
+        void _release() noexcept                {_careful_release();}
 #else
         inline void _retain() noexcept          { ++_refCount; }
         inline void _release() noexcept         { if (--_refCount <= 0) delete this; }
-        static constexpr int32_t kInitialRefCount = 0;
 #endif
-        inline void _retain() const noexcept          {const_cast<RefCounted*>(this)->_retain();}
-        inline void _release() const noexcept         {const_cast<RefCounted*>(this)->_release();}
+        static const int32_t kInitialRefCount;
+        void _careful_retain() noexcept;
+        void _careful_release() noexcept;
+
+        inline void _retain() const noexcept    {const_cast<RefCounted*>(this)->_retain();}
+        inline void _release() const noexcept   {const_cast<RefCounted*>(this)->_release();}
 
         std::atomic<int32_t> _refCount {kInitialRefCount};
     };

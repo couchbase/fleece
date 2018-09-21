@@ -27,6 +27,12 @@
 #include <windows.h>
 #endif
 
+#include <stdlib.h>
+#if defined(_MSC_VER) || defined(ESP_PLATFORM)
+    #define random rand
+    #define srandom srand
+#endif
+
 using namespace fleece;
 
 #if FL_HAVE_FILESYSTEM
