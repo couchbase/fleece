@@ -178,7 +178,7 @@ namespace fleece {
         public:
             // Warning: the input string's memory MUST remain valid for as long as the Key is in
             // use! (The Key stores a pointer to the string, but does not copy it.)
-            Key(slice string);
+            explicit Key(slice string);
             inline slice string() const;
             operator slice() const                      {return string();}
         private:
@@ -531,6 +531,10 @@ namespace fleece {
 
         const alloc_slice& data() const                 {return *this;}
         explicit operator bool () const                 {return Dict::operator bool();}
+
+        // MI disambiguation:
+        inline Value operator[] (slice key) const       {return Dict::get(key);}
+        inline Value operator[] (const char *key) const {return Dict::get(key);}
     };
 
 
