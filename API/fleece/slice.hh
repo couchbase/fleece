@@ -36,6 +36,7 @@ struct FLSlice; struct FLHeapSlice; struct FLSliceResult;
 
 #ifdef __APPLE__
 struct __CFString;
+struct __CFData;
 #endif
 
 
@@ -50,6 +51,7 @@ namespace fleece {
 
 #ifdef __APPLE__
     using CFStringRef = const struct ::__CFString *;
+    using CFDataRef   = const struct ::__CFData *;
 #endif
     
     /** Adds a byte offset to a pointer. */
@@ -142,6 +144,7 @@ namespace fleece {
 
 #ifdef __APPLE__
         CFStringRef createCFString() const;
+        CFDataRef createCFData() const;
 #ifdef __OBJC__
         pure_slice(NSData* data)
         :pure_slice(data.bytes, data.length) {}
@@ -291,6 +294,14 @@ namespace fleece {
 
 #ifdef __APPLE__
         explicit alloc_slice(CFStringRef);
+
+        CFDataRef createCFData() const;
+
+#ifdef __OBJC__
+        /** Creates an NSData using initWithBytesNoCopy and a deallocator that releases this
+            alloc_slice. The data is not copied and does not belong to the NSData object. */
+        NSData* uncopiedNSData() const                 {return CFBridgingRelease(createCFData());}
+#endif
 #endif
 
     private:

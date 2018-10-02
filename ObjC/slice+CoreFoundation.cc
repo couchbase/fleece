@@ -31,6 +31,14 @@ namespace fleece {
                                        kCFStringEncodingUTF8, false);
     }
 
+
+    CFDataRef pure_slice::createCFData() const {
+        if (!buf)
+            return nullptr;
+        return CFDataCreate(nullptr, (const UInt8*)buf, size);
+    }
+
+
     alloc_slice::alloc_slice(CFStringRef str) {
         CFIndex lengthInChars = CFStringGetLength(str);
         resize(CFStringGetMaximumSizeForEncoding(lengthInChars, kCFStringEncodingUTF8));
@@ -41,6 +49,26 @@ namespace fleece {
             throw std::runtime_error("couldn't get CFString bytes");
         resize(byteCount);
     }
+
+
+    static CFAllocatorRef SliceAllocator() {
+        static CFAllocatorContext context = {
+            0,
+            nullptr,
+            [](const void *p) -> const void* { alloc_slice::retain(slice(p,1)); return p; },
+            [](const void *p) -> void        { alloc_slice::release(slice(p,1)); },
+        };
+        static CFAllocatorRef kAllocator = CFAllocatorCreate(nullptr, &context);
+        return kAllocator;
+    }
+
+
+    CFDataRef alloc_slice::createCFData() const {
+        if (!buf)
+            return nullptr;
+        return CFDataCreateWithBytesNoCopy(nullptr, (const UInt8*)buf, size, SliceAllocator());
+    }
+
     
 
     nsstring_slice::nsstring_slice(CFStringRef str)

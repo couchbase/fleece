@@ -72,7 +72,7 @@ NSData* FLEncoder_FinishWithNSData(FLEncoder enc, NSError** outError) {
     FLError code;
     FLSliceResult result = FLEncoder_Finish(enc, &code);
     if (result.buf)
-        return [NSData dataWithBytesNoCopy: result.buf length: result.size freeWhenDone: YES];
+        return alloc_slice(result).uncopiedNSData();
     if (outError)
         *outError = [NSError errorWithDomain: FLErrorDomain code: code userInfo: nullptr];
     return nil;
