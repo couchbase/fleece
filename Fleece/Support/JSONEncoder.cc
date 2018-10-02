@@ -57,7 +57,8 @@ namespace fleece { namespace impl {
                 }
             }
         }
-        _out.write({start, end});
+        if (end > start)
+            _out.write({start, end});
         _out << '"';
     }
 
