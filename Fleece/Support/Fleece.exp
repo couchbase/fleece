@@ -4,7 +4,8 @@
 
 _FLSlice_Equal
 _FLSlice_Compare
-_FLSliceResult_Free
+_FLSliceResult_Retain
+_FLSliceResult_Release
 
 _FLDoc_FromData
 _FLDoc_FromResultData

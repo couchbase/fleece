@@ -22,17 +22,20 @@ extern "C" {
     @{ */
 
 
-/** A simple reference to a block of memory. Does not imply ownership. */
+/** A simple reference to a block of memory. Does not imply ownership.
+    (This is equivalent to the C++ class `slice`.) */
 typedef struct FLSlice {
     const void *buf;
     size_t size;
 } FLSlice;
 
 
-/** A block of memory returned from an API call. The caller takes ownership, may modify the
-    bytes, and must call FLSliceFree when done. */
+/** A block of memory returned from an API call. The caller takes ownership, and must call
+    FLSlice_Release (or FLSlice_Free) when done. The heap block may be shared with other users,
+    so it must not be modified.
+    (This is equivalent to the C++ class `alloc_slice`.) */
 typedef struct FLSliceResult {
-    void *buf;      // note: not const, since caller owns the buffer
+    const void *buf;
     size_t size;
 
 #ifdef __cplusplus
@@ -89,8 +92,18 @@ bool FLSlice_Equal(FLSlice a, FLSlice b);
     differences in length. */
 int FLSlice_Compare(FLSlice, FLSlice);
 
-/** Frees the memory of a FLSliceResult. */
-void FLSliceResult_Free(FLSliceResult);
+/** Increments the ref-count of a FLSliceResult. */
+FLSliceResult FLSliceResult_Retain(FLSliceResult);
+
+/** Decrements the ref-count of a FLSliceResult, freeing its memory if it reached zero. */
+void FLSliceResult_Release(FLSliceResult);
+
+/** Frees a FLSliceResult. (Actually it decrements its ref-count, only freeing the memory it
+    points to when the ref-count reaches zero.)
+    (This is identical to FLSliceResult_Release, but kept for compatibility reasons.) */
+static inline void FLSliceResult_Free(FLSliceResult s) {
+    FLSliceResult_Release(s);
+}
 
 /** Allocates an FLSliceResult, copying the given slice. */
 FLSliceResult FLSlice_Copy(FLSlice);

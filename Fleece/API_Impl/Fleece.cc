@@ -44,8 +44,13 @@ static FLSliceResult toSliceResult(alloc_slice &&s) {
     return {(void*)s.buf, s.size};
 }
 
-void FLSliceResult_Free(FLSliceResult s) {
+void FLSliceResult_Release(FLSliceResult s) {
     alloc_slice::release({s.buf, s.size});
+}
+
+FLSliceResult FLSliceResult_Retain(FLSliceResult s) {
+    alloc_slice::retain({s.buf, s.size});
+    return s;
 }
 
 FLSliceResult FLSlice_Copy(FLSlice s) {

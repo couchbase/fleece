@@ -280,6 +280,7 @@ namespace fleece {
         alloc_slice& retain() noexcept;
         void release() noexcept;
 
+        static void retain(slice s) noexcept                {((alloc_slice*)&s)->retain();}
         static void release(slice s) noexcept               {((alloc_slice*)&s)->release();}
 
         operator FLSlice () const noexcept;
