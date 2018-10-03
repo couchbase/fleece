@@ -2,13 +2,13 @@
 
 The Fleece API includes functions that behave like the Unix tools `diff` and `patch`: they find the differences between two Fleece values, encode them in a compact format called a "delta", and can reconstitute the second value given the first and the delta. This provides an efficient way to store the change history of a document, or to transmit a change over a network.
 
-In the C API (Fleece.h), the functions are `FLCreateDelta`, `FLEncodeDelta`, `FLApplyDelta`, and `FLEncodeApplyingDelta`. In the public C++ API (Fleece.hh) they are methods of the `Delta` class. See the headers for documentation.
+In the C API (Fleece.h), the functions are `FLCreateJSONDelta`, `FLEncodeJSONDelta`, `FLApplyJSONDelta`, and `FLEncodeApplyingJSONDelta`. In the public C++ API (Fleece.hh) they are methods of the `JSONDelta` class. See the headers for documentation.
 
 ## Delta Format
 
 Deltas are intended as opaque values to be passed to the `Apply`... functions. But for debugging purposes, and to aid in the creation of compatible implementations, here's a description of their internal format.
 
-This format is based on Benjamín Eidelman's [JsonDiffPatch](https://github.com/benjamine/jsondiffpatch/blob/master/docs/deltas.md), but has been extensively modified to be more compact. (JsonDiffPatch's patches carry a lot of information about the old value, to enable fuzzy patching when the base isn't exactly the same as the value the patch was created from, but for our purposes we don't need this.) 
+> Acknowledgements: This format is based on Benjamín Eidelman's [JsonDiffPatch](https://github.com/benjamine/jsondiffpatch/blob/master/docs/deltas.md), but has been extensively modified to be more compact. (JsonDiffPatch's patches carry a lot of information about the old value, to enable fuzzy patching when the base isn't exactly the same as the value the patch was created from, but for our purposes we don't need this.) 
 
 A delta of two Fleece values is expressed as a JSON value, of the form:
 
@@ -18,7 +18,7 @@ A delta of two Fleece values is expressed as a JSON value, of the form:
 * `{ "k1": v1, ... }` — An object or array is incrementally updated by applying deltas to its items: 
     - Applied to an object: Each value `v`*n* is (recursively) a delta to apply to the old value at the corresponding key `k`*n*. (If a key didn't appear in the old object, the delta represents an insertion.)
     - Applied to an array: the keys are numeric strings representing indices in the old array, and the values are the deltas to (recursively) apply to the values at those indices. There may also be a key `"n-"`, representing all array indices from _n_ onward, whose value is an array of the values to replace that range with.
-* `["patch", 0, 2]` — Incremental update of a string. The `patch` string is a series of operations,  which describe what to do with consecutive ranges of the original UTF-8 string to transform it into the new one. The total byte count of all the operations must equal the length of the original string. There are three operations, each of which starts with a decimal whole number *n*:
+* `["...", 0, 2]` — Incremental update of a string. The `"..."` string represents a series of operations,  which describe what to do with consecutive ranges of the original UTF-8 string to transform it into the new one. The total byte count of all the operations must equal the length of the original string. There are three operations, each of which starts with a decimal whole number *n*:
     * `n=` — The next *n* bytes are left alone (i.e. copied to the new string.)
     * `n-` — The next n bytes are deleted (skipped)
     * `n+newbytes|` — The *n* bytes following the `+` (the *newbytes*) are inserted into the new string. The `|` marker is not a delimiter; it's just there to make the patch more readable, and to act as a safety check while processing the patch.
