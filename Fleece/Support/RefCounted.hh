@@ -31,7 +31,7 @@ namespace fleece {
 
     protected:
         /** Destructor is accessible only so that it can be overridden.
-            Never call delete, only release! */
+            Never call delete, only release! Overrides should be made protected or private. */
         virtual ~RefCounted();
 
     private:
@@ -47,14 +47,19 @@ namespace fleece {
         inline void _retain() noexcept          { ++_refCount; }
         inline void _release() noexcept         { if (--_refCount <= 0) delete this; }
 #endif
-        static const int32_t kInitialRefCount;
-        void _careful_retain() noexcept;
-        void _careful_release() noexcept;
-
         inline void _retain() const noexcept    {const_cast<RefCounted*>(this)->_retain();}
         inline void _release() const noexcept   {const_cast<RefCounted*>(this)->_release();}
 
-        std::atomic<int32_t> _refCount {kInitialRefCount};
+        static constexpr int32_t kCarefulInitialRefCount = -6666666;
+        void _careful_retain() noexcept;
+        void _careful_release() noexcept;
+
+        std::atomic<int32_t> _refCount
+#if DEBUG
+                                        {kCarefulInitialRefCount};
+#else
+                                        {0};
+#endif
     };
 
 
