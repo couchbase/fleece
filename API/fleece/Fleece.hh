@@ -405,6 +405,7 @@ namespace fleece {
         inline bool endArray();
         inline bool beginDict(size_t reserveCount =0);
         inline bool writeKey(slice);
+        inline bool writeKey(Value);
         inline bool endDict();
 
         template <class T>
@@ -607,7 +608,8 @@ namespace fleece {
     inline bool Encoder::beginArray(size_t rsv) {return FLEncoder_BeginArray(_enc, rsv);}
     inline bool Encoder::endArray()             {return FLEncoder_EndArray(_enc);}
     inline bool Encoder::beginDict(size_t rsv)  {return FLEncoder_BeginDict(_enc, rsv);}
-    inline bool Encoder::writeKey(slice key) {return FLEncoder_WriteKey(_enc, key);}
+    inline bool Encoder::writeKey(slice key)    {return FLEncoder_WriteKey(_enc, key);}
+    inline bool Encoder::writeKey(Value key)    {return FLEncoder_WriteKeyValue(_enc, key);}
     inline bool Encoder::endDict()              {return FLEncoder_EndDict(_enc);}
     inline size_t Encoder::bytesWritten() const {return FLEncoder_BytesWritten(_enc);}
     inline Doc Encoder::finishDoc(FLError* err) {return FLEncoder_FinishDoc(_enc, err);}

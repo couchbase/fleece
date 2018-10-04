@@ -20,6 +20,7 @@
 #include "FleeceImpl.hh"
 #include "SmallVector.hh"
 #include <algorithm>
+#include "betterassert.hh"
 
 namespace fleece { namespace impl {
 
@@ -74,6 +75,7 @@ namespace fleece { namespace impl {
     }
 
     void JSONEncoder::writeKey(slice s) {
+        assert(s);
         if (_json5 && canBeUnquotedJSON5Key(s)) {
             comma();
             _out.write((char*)s.buf, s.size);

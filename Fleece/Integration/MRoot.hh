@@ -68,9 +68,9 @@ namespace fleece {
         void encodeTo(Encoder &enc) const   {_slot.encodeTo(enc);}
         alloc_slice encode() const          {Encoder enc; encodeTo(enc); return enc.finish();}
 
-        alloc_slice amend() const {
+        alloc_slice amend(bool reuseStrings =false, bool externPointers =false) const {
             Encoder enc;
-            enc.amend(context()->data());
+            enc.amend(context()->data(), reuseStrings, externPointers);
             encodeTo(enc);
             return enc.finish();
         }

@@ -919,6 +919,10 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
     /** Specifies the key for the next value to be written to the current dictionary. */
     bool FLEncoder_WriteKey(FLEncoder FLNONNULL, FLString);
 
+    /** Specifies the key for the next value to be written to the current dictionary.
+        The key is given as a Value, which must be a string or integer. */
+    bool FLEncoder_WriteKeyValue(FLEncoder FLNONNULL, FLValue FLNONNULL);
+
     /** Ends writing a dictionary value; pops back the previous encoding state. */
     bool FLEncoder_EndDict(FLEncoder FLNONNULL);
 

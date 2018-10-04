@@ -501,6 +501,7 @@ bool FLEncoder_BeginArray(FLEncoder e, size_t reserve)   {ENCODER_TRY(e, beginAr
 bool FLEncoder_EndArray(FLEncoder e)                     {ENCODER_TRY(e, endArray());}
 bool FLEncoder_BeginDict(FLEncoder e, size_t reserve)    {ENCODER_TRY(e, beginDictionary(reserve));}
 bool FLEncoder_WriteKey(FLEncoder e, FLSlice s)          {ENCODER_TRY(e, writeKey(s));}
+bool FLEncoder_WriteKeyValue(FLEncoder e, FLValue key)   {ENCODER_TRY(e, writeKey(key));}
 bool FLEncoder_EndDict(FLEncoder e)                      {ENCODER_TRY(e, endDictionary());}
 
 

@@ -83,6 +83,7 @@ namespace fleece { namespace impl {
 
         void writeKey(slice s);
         void writeKey(const std::string &s)     {writeKey(slice(s));}
+        void writeKey(const Value *v)           {writeKey(v->asString());}
 
         //////// "<<" convenience operators;
 
