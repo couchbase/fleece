@@ -313,17 +313,30 @@ namespace fleece { namespace impl {
     }
 
     const Value* Dict::get(int keyToFind) const noexcept {
-        if (isWideArray())
+        if (_usuallyFalse(isMutable()))
+            return heapDict()->get(keyToFind);
+        else if (isWideArray())
             return dictImpl<true>(this).get(keyToFind);
         else
             return dictImpl<false>(this).get(keyToFind);
     }
 
     const Value* Dict::get(key &keyToFind) const noexcept {
-        if (isWideArray())
+        if (_usuallyFalse(isMutable()))
+            return heapDict()->get(keyToFind);
+        else if (isWideArray())
             return dictImpl<true>(this).get(keyToFind);
         else
             return dictImpl<false>(this).get(keyToFind);
+    }
+
+    const Value* Dict::get(const key_t &keyToFind) const noexcept {
+        if (_usuallyFalse(isMutable()))
+            return heapDict()->get(keyToFind);
+        else if (keyToFind.shared())
+            return get(keyToFind.asInt());
+        else
+            return get(keyToFind.asString());
     }
 
     MutableDict* Dict::asMutable() const {
@@ -411,6 +424,13 @@ namespace fleece { namespace impl {
             keyStr = _sharedKeys->decode((int)_key->asInt());
         }
         return keyStr;
+    }
+
+    key_t Dict::iterator::keyt() const noexcept {
+        if (_key->isInteger())
+            return (int)_key->asInt();
+        else
+            return _key->asString();
     }
 
     Dict::iterator& Dict::iterator::operator++() {

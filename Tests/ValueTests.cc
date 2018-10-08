@@ -176,7 +176,7 @@ namespace fleece {
     }
 
 
-    TEST_CASE("Doc") {
+    TEST_CASE("Doc", "[SharedKeys]") {
         const Dict *root;
         {
             Retained<SharedKeys> sk = new SharedKeys();
@@ -194,7 +194,7 @@ namespace fleece {
     }
 
 
-    TEST_CASE("Duplicate Docs") {
+    TEST_CASE("Duplicate Docs", "[SharedKeys]") {
         const Dict *root;
         {
             alloc_slice data( readTestFile("1person.fleece") );

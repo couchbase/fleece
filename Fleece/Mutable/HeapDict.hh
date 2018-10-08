@@ -7,6 +7,7 @@
 #pragma once
 #include "Dict.hh"
 #include "ValueSlot.hh"
+#include "SharedKeys.hh"
 #include <deque>
 #include <unordered_map>
 #include <memory>
@@ -27,11 +28,15 @@ namespace fleece { namespace impl { namespace internal {
         MutableDict* asMutableDict() const        {return (MutableDict*)asValue();}
 
         const Dict* source() const                          {return _source;}
+        SharedKeys* sharedKeys() const                      {return _sharedKeys;}
 
         uint32_t count() const                              {return _count;}
         bool empty() const                                  {return _count == 0;}
         
         const Value* get(slice keyToFind) const noexcept;
+        const Value* get(int keyToFind) const noexcept;
+        const Value* get(Dict::key &keyToFind) const noexcept;
+        const Value* get(const key_t &keyToFind) const noexcept;
 
         // Warning: Modifying a HeapDict invalidates all Dict::iterators on it!
 
@@ -48,6 +53,11 @@ namespace fleece { namespace impl { namespace internal {
         /** Promotes a Dict value to a HeapDict (in place) and returns it.
             Or if the value is already a HeapDict, just returns it. Else returns null. */
         MutableDict* getMutableDict(slice key)    {return (MutableDict*)asValue(getMutable(key, kDictTag));}
+
+        void writeTo(Encoder&);
+
+
+        using keyMap = std::map<key_t, ValueSlot>;
 
 
         class iterator {
@@ -69,17 +79,18 @@ namespace fleece { namespace impl { namespace internal {
         private:
             void getSource();
             void getNew();
+            void decodeKey(key_t);
 
             slice _key;
             const Value* _value;
             Dict::iterator _sourceIter;
-            std::map<slice, ValueSlot>::const_iterator _newIter, _newEnd;
+            keyMap::const_iterator _newIter, _newEnd;
             bool _sourceActive, _newActive;
-            slice _sourceKey;
+            key_t _sourceKey;
             uint32_t _count;
+            SharedKeys* _sharedKeys;
         };
 
-        void writeTo(Encoder&);
 
     protected:
         friend class fleece::impl::Array;
@@ -89,17 +100,20 @@ namespace fleece { namespace impl { namespace internal {
         HeapArray* kvArray();
 
     private:
+        key_t encodeKey(slice) const noexcept;
         void markChanged();
-        alloc_slice _allocateKey(slice key);
+        key_t _allocateKey(key_t key);
         ValueSlot* _findValueFor(slice keyToFind) const noexcept;
-        ValueSlot& _makeValueFor(slice key);
+        ValueSlot* _findValueFor(key_t keyToFind) const noexcept;
+        ValueSlot& _makeValueFor(key_t key);
         ValueSlot& _mutableValueToSetFor(slice key);
         HeapCollection* getMutable(slice key, tags ifType);
         bool tooManyAncestors() const;
 
         uint32_t _count {0};
         const Dict* _source {nullptr};
-        std::map<slice, ValueSlot> _map;
+        Retained<SharedKeys> _sharedKeys;
+        keyMap _map;
         std::deque<alloc_slice> _backingSlices;
         Retained<HeapArray> _iterable;
     };

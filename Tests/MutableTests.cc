@@ -406,24 +406,26 @@ namespace fleece {
     }
 
 
-    TEST_CASE("Encoding mutable dict", "[Mutable]") {
+    static void testEncodingMutableDictWithSharedKeys(SharedKeys *sk) {
         alloc_slice data;
         {
             Encoder enc;
+            enc.setSharedKeys(sk);
             enc.beginDictionary();
-            enc.writeKey("Name");
-            enc << "totoro";
-            enc.writeKey("Vehicle");
-            enc << "catbus";
-            enc.writeKey("Mood");
-            enc << "happy";
             enc.writeKey("Asleep");
             enc << "true";
-            enc.writeKey("Size");
+            enc.writeKey("Mood");
+            enc << "happy";
+            enc.writeKey("Name");
+            enc << "totoro";
+            enc.writeKey("zzShirt Size");       // will not become a shared key due to space
             enc << "XXXL";
+            enc.writeKey("Vehicle");
+            enc << "catbus";
             enc.endDictionary();
             data = enc.finish();
         }
+        Scope original(data, sk);
         const Dict* originalDict = Value::fromData(data)->asDict();
         std::cerr << "Contents:      " << originalDict->toJSON().asString() << "\n";
         std::cerr << "Original data: " << data << "\n\n";
@@ -431,7 +433,7 @@ namespace fleece {
 
         Retained<MutableDict> update = MutableDict::newDict(originalDict);
         CHECK(update->count() == 5);
-        update->set("Friend"_sl, "catbus"_sl);
+        update->set("zFriend"_sl, "catbus"_sl);
         CHECK(update->count() == 6);
         update->set("Vehicle"_sl, "top"_sl);
         CHECK(update->count() == 6);
@@ -444,30 +446,31 @@ namespace fleece {
 
         {
             MutableDict::iterator i(update);
-            CHECKiter(i, "Friend", "catbus");
             CHECKiter(i, "Mood", "happy");
             CHECKiter(i, "Name", "totoro");
-            CHECKiter(i, "Size", "XXXL");
             CHECKiter(i, "Vehicle", "top");
+            CHECKiter(i, "zFriend", "catbus");
+            CHECKiter(i, "zzShirt Size", "XXXL");
             CHECK(!i);
         }
 
         { // Try the same thing but with a Dict iterator:
             Dict::iterator i(update);
-            CHECKiter(i, "Friend", "catbus");
             CHECKiter(i, "Mood", "happy");
             CHECKiter(i, "Name", "totoro");
-            CHECKiter(i, "Size", "XXXL");
             CHECKiter(i, "Vehicle", "top");
+            CHECKiter(i, "zFriend", "catbus");
+            CHECKiter(i, "zzShirt Size", "XXXL");
             CHECK(!i);
         }
 
         Encoder enc2;
+        enc2.setSharedKeys(sk);
         enc2.setBase(data);
         enc2.reuseBaseStrings();
         enc2.writeValue(update);
         alloc_slice delta = enc2.finish();
-        REQUIRE(delta.size == 32);      // may change slightly with changes to implementation
+        REQUIRE(delta.size == (sk ? 24 : 32));      // may change slightly with changes to implementation
 
         // Check that removeAll works when there's a base Dict:
         update->removeAll();
@@ -479,31 +482,40 @@ namespace fleece {
 
         alloc_slice combinedData(data);
         combinedData.append(delta);
+        Scope combined(combinedData, sk);
         const Dict* newDict = Value::fromData(combinedData)->asDict();
         std::cerr << "Delta:         " << delta << "\n\n";
         Value::dump(combinedData, std::cerr);
 
         CHECK(newDict->get("Name"_sl)->asString() == "totoro"_sl);
-        CHECK(newDict->get("Friend"_sl)->asString() == "catbus"_sl);
+        CHECK(newDict->get("zFriend"_sl)->asString() == "catbus"_sl);
         CHECK(newDict->get("Mood"_sl)->asString() == "happy"_sl);
-        CHECK(newDict->get("Size"_sl)->asString() == "XXXL"_sl);
+        CHECK(newDict->get("zzShirt Size"_sl)->asString() == "XXXL"_sl);
         CHECK(newDict->get("Vehicle"_sl)->asString() == "top"_sl);
         CHECK(newDict->get("Asleep"_sl) == nullptr);
         CHECK(newDict->get("Q"_sl) == nullptr);
 
         {
             Dict::iterator i(newDict);
-            CHECKiter(i, "Friend", "catbus");
             CHECKiter(i, "Mood", "happy");
             CHECKiter(i, "Name", "totoro");
-            CHECKiter(i, "Size", "XXXL");
             CHECKiter(i, "Vehicle", "top");
+            CHECKiter(i, "zFriend", "catbus");
+            CHECKiter(i, "zzShirt Size", "XXXL");
             CHECK(!i);
         }
         //CHECK(newDict->rawCount() == 4);
         CHECK(newDict->count() == 5);
 
         std::cerr << "\nContents:      " << newDict->toJSON().asString() << "\n";
+    }
+
+    TEST_CASE("Encoding mutable dict", "[Mutable]") {
+        testEncodingMutableDictWithSharedKeys(nullptr);
+    }
+
+    TEST_CASE("Encoding mutable dict with shared keys", "[Mutable][SharedKeys]") {
+        testEncodingMutableDictWithSharedKeys(retained(new SharedKeys));
     }
 
 
