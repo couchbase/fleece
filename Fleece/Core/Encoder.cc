@@ -615,6 +615,13 @@ namespace fleece { namespace impl {
         }
     }
 
+    void Encoder::writeKey(key_t key) {
+        if (key.shared())
+            writeKey(key.asInt());
+        else
+            writeKey(key.asString());
+    }
+
     void Encoder::addedKey(slice str) {
         // Note: str will be nullslice iff the key is numeric
         _items->keys.push_back(str);

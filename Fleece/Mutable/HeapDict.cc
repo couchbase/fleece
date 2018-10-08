@@ -21,6 +21,7 @@
 #include "ValueSlot.hh"
 #include "MutableDict.hh"
 #include "Encoder.hh"
+#include "SharedKeys.hh"
 #include "betterassert.hh"
 
 namespace fleece { namespace impl { namespace internal {
@@ -29,6 +30,7 @@ namespace fleece { namespace impl { namespace internal {
     :HeapCollection(kDictTag)
     ,_count(d ? d->count() : 0)
     ,_source(d)
+    ,_sharedKeys(_source ? _source->sharedKeys() : nullptr)
     { }
 
 
@@ -38,7 +40,20 @@ namespace fleece { namespace impl { namespace internal {
     }
 
 
+    key_t HeapDict::encodeKey(slice key) const noexcept {
+        int intKey;
+        if (_sharedKeys && _sharedKeys->encode(key, intKey))
+            return intKey;
+        return key;
+    }
+
+
     ValueSlot* HeapDict::_findValueFor(slice key) const noexcept {
+        return _findValueFor(encodeKey(key));
+    }
+
+
+    ValueSlot* HeapDict::_findValueFor(key_t key) const noexcept {
         auto it = _map.find(key);
         if (it == _map.end())
             return nullptr;
@@ -46,24 +61,34 @@ namespace fleece { namespace impl { namespace internal {
     }
 
 
-    alloc_slice HeapDict::_allocateKey(slice key) {
-        alloc_slice allocedKey(key);
+    key_t HeapDict::_allocateKey(key_t key) {
+        if (key.shared())
+            return key;
+        alloc_slice allocedKey(key.asString());
         _backingSlices.push_back(allocedKey);
-        return allocedKey;
+        return key_t(allocedKey);
     }
 
 
-    ValueSlot& HeapDict::_makeValueFor(slice key) {
+    ValueSlot& HeapDict::_makeValueFor(key_t key) {
         // Look in my map first:
         auto it = _map.find(key);
         if (it != _map.end())
             return it->second;
         // If not in map, add it as an empty value:
-        return _map[_allocateKey(key)];                // creates a new value
+        return _map[key_t(_allocateKey(key))];                // creates a new value
     }
 
 
-    ValueSlot& HeapDict::_mutableValueToSetFor(slice key) {
+    // this is the innards of the set() method
+    ValueSlot& HeapDict::_mutableValueToSetFor(slice stringKey) {
+        key_t key;
+        int intKey;
+        if (_sharedKeys && _sharedKeys->encodeAndAdd(stringKey, intKey))
+            key = intKey;
+        else
+            key = stringKey;
+
         auto &val = _makeValueFor(key);
         if (!val && !(_source && _source->get(key)))
             ++_count;
@@ -81,7 +106,35 @@ namespace fleece { namespace impl { namespace internal {
     }
 
 
-    HeapCollection* HeapDict::getMutable(slice key, tags ifType) {
+    const Value* HeapDict::get(int key) const noexcept {
+        auto it = _map.find(key);
+        if (it != _map.end())
+            return it->second.asValue();
+        else
+            return _source ? _source->get(key) : nullptr;
+    }
+
+
+    const Value* HeapDict::get(Dict::key &key) const noexcept {
+        ValueSlot* val = _findValueFor(key.string());
+        if (val)
+            return val->asValue();
+        else
+            return _source ? _source->get(key) : nullptr;
+    }
+
+
+    const Value* HeapDict::get(const key_t &key) const noexcept {
+        auto it = _map.find(key);
+        if (it != _map.end())
+            return it->second.asValue();
+        else
+            return _source ? _source->get(key) : nullptr;
+    }
+
+
+    HeapCollection* HeapDict::getMutable(slice stringKey, tags ifType) {
+        key_t key = encodeKey(stringKey);
         Retained<HeapCollection> result;
         ValueSlot* mval = _findValueFor(key);
         if (mval) {
@@ -97,7 +150,8 @@ namespace fleece { namespace impl { namespace internal {
     }
 
 
-    void HeapDict::remove(slice key) {
+    void HeapDict::remove(slice stringKey) {
+        key_t key = encodeKey(stringKey);
         if (_source && _source->get(key)) {
             auto it = _map.find(key);
             if (it != _map.end()) {
@@ -123,7 +177,7 @@ namespace fleece { namespace impl { namespace internal {
         _backingSlices.clear();
         if (_source) {
             for (Dict::iterator i(_source); i; ++i)
-                _makeValueFor(i.keyString());    // override source with empty values
+                _makeValueFor(i.keyt());    // override source with empty values
         }
         _count = 0;
         markChanged();
@@ -179,6 +233,7 @@ namespace fleece { namespace impl { namespace internal {
     ,_newIter(dict->_map.begin())
     ,_newEnd(dict->_map.end())
     ,_count(dict->count() + 1)
+    ,_sharedKeys(dict->sharedKeys())
     {
         getSource();
         getNew();
@@ -192,11 +247,18 @@ namespace fleece { namespace impl { namespace internal {
     void HeapDict::iterator::getSource() {
         _sourceActive = (bool)_sourceIter;
         if (_usuallyTrue(_sourceActive))
-            _sourceKey = _sourceIter.keyString();
+            _sourceKey = _sourceIter.key();
     }
 
     void HeapDict::iterator::getNew() {
-        _newActive = _newIter != _newEnd;
+        _newActive = (_newIter != _newEnd);
+    }
+
+    void HeapDict::iterator::decodeKey(key_t key) {
+        if (key.shared())
+            _key = _sharedKeys->decode(key.asInt());
+        else
+            _key = key.asString();
     }
 
 
@@ -207,7 +269,7 @@ namespace fleece { namespace impl { namespace internal {
         while (_usuallyTrue(_sourceActive || _newActive)) {
             if (!_newActive || (_sourceActive && _sourceKey < _newIter->first)) {
                 // Key from _source is lower, so add its pair:
-                _key = _sourceKey;
+                decodeKey(_sourceKey);
                 _value = _sourceIter.value();
                 ++_sourceIter;
                 getSource();
@@ -216,7 +278,7 @@ namespace fleece { namespace impl { namespace internal {
                 bool exists = !!(_newIter->second);
                 if (_usuallyTrue(exists)) {
                     // Key from _map is lower or equal, and its value exists, so add its pair:
-                    _key = _newIter->first;
+                    decodeKey(_newIter->first);
                     _value = _newIter->second.asValue();
                 }
                 if (_sourceActive && _sourceKey == _newIter->first) {

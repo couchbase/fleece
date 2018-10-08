@@ -23,6 +23,30 @@
 
 
 namespace fleece { namespace impl {
+    class Value;
+
+
+    /** A Dict key that may be either a string or a small integer. */
+    class key_t {
+    public:
+        key_t()                                     { }
+        key_t(slice key)        :_string(key)       {assert(key);}
+        key_t(int key)          :_int((int16_t)key) {assert(key >= 0 && key <= INT16_MAX);}
+
+        key_t(const Value *v) noexcept;
+
+        bool shared() const     {return !_string;}
+        int asInt() const       {assert(shared()); return _int;}
+        slice asString() const  {return _string;}
+
+        bool operator== (const key_t &k) const noexcept;
+        bool operator< (const key_t &k) const noexcept;
+
+    private:
+        slice _string;
+        int16_t _int {-1};
+    };
+
 
     /** Keeps track of a set of dictionary keys that are stored in abbreviated (small integer) form.
 

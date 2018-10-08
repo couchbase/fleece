@@ -23,6 +23,7 @@ namespace fleece { namespace impl {
 
     class MutableDict;
     class SharedKeys;
+    class key_t;
 
     /** A Value that's a dictionary/map */
     class Dict : public Value {
@@ -78,6 +79,7 @@ namespace fleece { namespace impl {
             iterator& operator += (uint32_t);
 
             const SharedKeys* sharedKeys() const            {return _sharedKeys;}
+            key_t keyt() const noexcept;
 
 #ifdef __OBJC__
             NSString* keyToNSString(NSMapTable *sharedStrings) const;
@@ -132,6 +134,8 @@ namespace fleece { namespace impl {
         /** Looks up the Value for a key, in a form that can cache the key's Fleece object.
             Using the Fleece object is significantly faster than a normal get. */
         const Value* get(key&) const noexcept;
+
+        const Value* get(const key_t&) const noexcept;
 
         constexpr Dict()  :Value(internal::kDictTag, 0, 0) { }
 

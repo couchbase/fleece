@@ -77,7 +77,7 @@ TEST_CASE("DeepIterator") {
 #endif
 
 
-TEST_CASE("API Doc") {
+TEST_CASE("API Doc", "[SharedKeys]") {
     Dict root;
     {
         SharedKeys sk = SharedKeys::create();

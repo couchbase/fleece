@@ -24,6 +24,26 @@ namespace fleece { namespace impl {
     using namespace std;
 
 
+    key_t::key_t(const Value *v) noexcept {
+        if (v->isInteger())
+            _int = (int16_t)v->asInt();
+        else
+            _string = v->asString();
+    }
+
+    bool key_t::operator== (const key_t &k) const noexcept {
+        return shared() ? (_int == k._int) : (_string == k._string);
+    }
+
+    bool key_t::operator< (const key_t &k) const noexcept {
+        if (shared())
+            return k.shared() ? (_int < k._int) : true;
+        else
+            return k.shared() ? false : (_string < k._string);
+    }
+
+
+
     bool SharedKeys::loadFrom(slice stateData) {
         const Value *v = Value::fromData(stateData);
         if (!v)

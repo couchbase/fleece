@@ -28,6 +28,7 @@
 
 namespace fleece { namespace impl {
     class SharedKeys;
+    class key_t;
 
 
     /** Generates Fleece-encoded data. */
@@ -146,6 +147,8 @@ namespace fleece { namespace impl {
         /** Writes a string Value as a key to the current dictionary. */
         void writeKey(const Value* NONNULL);
         void writeKey(const Value* NONNULL, const SharedKeys*);
+
+        void writeKey(key_t);
 
         /** Associates a SharedKeys object with this Encoder. The writeKey() methods that take
             strings will consult this object to possibly map the key to an integer. */
