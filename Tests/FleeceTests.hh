@@ -37,7 +37,7 @@ using namespace fleece;
 
 #if FL_HAVE_FILESYSTEM
     #ifdef _MSC_VER
-        #define kTempDir "C:\\tmp"
+        #define kTempDir "C:\\tmp\\"
     #else
         #define kTempDir "/tmp/"
     #endif

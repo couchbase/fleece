@@ -678,11 +678,11 @@ public:
 
 #if FL_HAVE_TEST_FILES
     TEST_CASE_METHOD(EncoderTests, "Encode To File", "[Encoder]") {
-        auto doc = readTestFile("1000people.fleece");
+    	auto doc = readTestFile("1000people.fleece");
         auto root = Value::fromTrustedData(doc)->asArray();
 
         {
-            FILE *out = fopen(kTempDir"fleecetemp.fleece", "w");
+            FILE *out = fopen(kTempDir"fleecetemp.fleece", "wb");
             Encoder fenc(out);
             fenc.writeValue(root);
             fenc.end();
