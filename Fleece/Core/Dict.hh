@@ -30,7 +30,7 @@ namespace fleece { namespace impl {
         /** The number of items in the dictionary. */
         uint32_t count() const noexcept;
 
-        bool empty() const noexcept                         {return countIsZero();}
+        bool empty() const noexcept;
 
         /** Looks up the Value for a string key. */
         const Value* get(slice keyToFind) const noexcept;

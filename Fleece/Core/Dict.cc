@@ -297,6 +297,12 @@ namespace fleece { namespace impl {
         }
     }
 
+    bool Dict::empty() const noexcept {
+        if (_usuallyFalse(isMutable()))
+            return heapDict()->empty();
+        return countIsZero();
+    }
+
     const Value* Dict::get(slice keyToFind) const noexcept {
         if (_usuallyFalse(isMutable()))
             return heapDict()->get(keyToFind);

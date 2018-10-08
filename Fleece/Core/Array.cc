@@ -28,6 +28,9 @@ namespace fleece { namespace impl {
     using namespace internal;
 
 
+#pragma mark - ARRAY::IMPL:
+
+
     Array::impl::impl(const Value* v) noexcept {
         if (_usuallyFalse(v == nullptr)) {
             _first = nullptr;
@@ -99,10 +102,19 @@ namespace fleece { namespace impl {
     }
 
 
+#pragma mark - ARRAY:
+
+
     uint32_t Array::count() const noexcept {
         if (_usuallyFalse(isMutable()))
             return heapArray()->count();
         return impl(this)._count;
+    }
+
+    bool Array::empty() const noexcept {
+        if (_usuallyFalse(isMutable()))
+            return heapArray()->empty();
+        return countIsZero();
     }
 
     const Value* Array::get(uint32_t index) const noexcept {
@@ -123,6 +135,8 @@ namespace fleece { namespace impl {
     const Array* const Array::kEmpty = &kEmptyArrayInstance;
 
 
+#pragma mark - ARRAY::ITERATOR:
+    
 
     Array::iterator::iterator(const Array *a) noexcept
     :impl(a),

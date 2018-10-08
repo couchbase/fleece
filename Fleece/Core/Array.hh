@@ -47,7 +47,7 @@ namespace fleece { namespace impl {
         /** The number of items in the array. */
         uint32_t count() const noexcept;
 
-        bool empty() const noexcept                         {return countIsZero();}
+        bool empty() const noexcept;
 
         /** Accesses an array item. Returns nullptr for out of range index.
             If you're accessing a lot of items of the same array, it's faster to make an
