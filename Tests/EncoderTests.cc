@@ -450,10 +450,9 @@ public:
         }
     }
 
-    TEST_CASE_METHOD(EncoderTests, "DictionaryNumericKeys", "[Encoder]") {
 #ifndef NDEBUG
+    TEST_CASE_METHOD(EncoderTests, "DictionaryNumericKeys", "[Encoder]") {
         gDisableNecessarySharedKeysCheck = true;
-#endif
         {
             enc.beginDictionary();
             enc.writeKey(0);
@@ -477,10 +476,9 @@ public:
             REQUIRE(d->get(slice("barrr")) == (const Value*)nullptr);
             REQUIRE(d->toJSON() == alloc_slice("{0:23,1:42,2047:-1}"));
         }
-#ifndef NDEBUG
         gDisableNecessarySharedKeysCheck = false;
-#endif
     }
+#endif
 
     TEST_CASE_METHOD(EncoderTests, "Deep Nesting", "[Encoder]") {
         for (int depth = 0; depth < 100; ++depth) {
