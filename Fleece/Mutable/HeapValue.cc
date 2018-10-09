@@ -75,6 +75,11 @@ namespace fleece { namespace impl { namespace internal {
         }
     }
 
+    template HeapValue* HeapValue::createInt<int>(int i, bool isUnsigned);
+    template HeapValue* HeapValue::createInt<unsigned>(unsigned i, bool isUnsigned);
+    template HeapValue* HeapValue::createInt<int64_t>(int64_t i, bool isUnsigned);
+    template HeapValue* HeapValue::createInt<uint64_t>(uint64_t i, bool isUnsigned);
+
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
