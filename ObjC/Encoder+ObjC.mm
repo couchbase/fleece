@@ -43,6 +43,20 @@ namespace fleece {
 using namespace fleece;
 
 
+bool FLEncoder_WriteNSObject(FLEncoder encoder, id obj) {
+    try {
+        if (!encoder->hasError()) {
+            throwIf(!obj, InvalidData, "Can't encode nil");
+            [obj fl_encodeToFLEncoder: encoder];
+        }
+        return true;
+    } catch (const std::exception &x) {
+        encoder->recordException(x);
+    }
+    return false;
+}
+
+
 @implementation NSObject (Fleece)
 - (void) fl_encodeToFLEncoder: (FLEncoder)enc {
     // Fall back to the internal fl_encodeTo:, which takes a raw C++ Encoder*.
