@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2700BB9C217E8C0D00797537 /* ParseDate.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2700BB9A217E8C0C00797537 /* ParseDate.hh */; };
+		2700BB9D217E8C0D00797537 /* ParseDate.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2700BB9B217E8C0C00797537 /* ParseDate.cc */; };
 		270515571D905C1D00D62D05 /* Fleece+CoreFoundation.mm in Sources */ = {isa = PBXBuildFile; fileRef = 270515531D9058F200D62D05 /* Fleece+CoreFoundation.mm */; settings = {COMPILER_FLAGS = "-Wno-return-type-c-linkage"; }; };
 		270FA2781BF53CEA005DCB13 /* Value.cc in Sources */ = {isa = PBXBuildFile; fileRef = 270FA26A1BF53CEA005DCB13 /* Value.cc */; };
 		270FA2791BF53CEA005DCB13 /* Value.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA26B1BF53CEA005DCB13 /* Value.hh */; };
@@ -260,6 +262,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		2700BB9A217E8C0C00797537 /* ParseDate.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ParseDate.hh; sourceTree = "<group>"; };
+		2700BB9B217E8C0C00797537 /* ParseDate.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ParseDate.cc; sourceTree = "<group>"; };
 		270515531D9058F200D62D05 /* Fleece+CoreFoundation.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "Fleece+CoreFoundation.mm"; sourceTree = "<group>"; };
 		270515551D90596000D62D05 /* Fleece+ImplGlue.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "Fleece+ImplGlue.hh"; sourceTree = "<group>"; };
 		270FA25C1BF53CAD005DCB13 /* libfleeceStatic.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libfleeceStatic.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -723,6 +727,8 @@
 				276D15451E007D3000543B1B /* JSON5.hh */,
 				27FE87F11E53E43200C5CF3F /* JSONEncoder.cc */,
 				27FE87F21E53E43200C5CF3F /* JSONEncoder.hh */,
+				2700BB9B217E8C0C00797537 /* ParseDate.cc */,
+				2700BB9A217E8C0C00797537 /* ParseDate.hh */,
 				271507ED2122381E005FE6E8 /* PlatformCompat.hh */,
 				274D8254209D1764008BB39F /* RefCounted.cc */,
 				274D8255209D1764008BB39F /* RefCounted.hh */,
@@ -943,6 +949,7 @@
 				27DE2EB92125FA1700123597 /* MDict.hh in Headers */,
 				27DE2EBA2125FA1700123597 /* FleeceDocument.h in Headers */,
 				27DE2EBB2125FA1700123597 /* sliceIO.hh in Headers */,
+				2700BB9C217E8C0D00797537 /* ParseDate.hh in Headers */,
 				27DE2EBC2125FA1700123597 /* KeyTree.hh in Headers */,
 				27DE2EBD2125FA1700123597 /* Array.hh in Headers */,
 				27DE2EBE2125FA1700123597 /* DeepIterator.hh in Headers */,
@@ -1272,6 +1279,7 @@
 				27DE2E922125FA1700123597 /* varint.cc in Sources */,
 				27DE2EE82125FB2100123597 /* cdecode.c in Sources */,
 				27DE2EE92125FB2100123597 /* cencode.c in Sources */,
+				2700BB9D217E8C0D00797537 /* ParseDate.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

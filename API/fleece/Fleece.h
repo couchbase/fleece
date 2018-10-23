@@ -230,6 +230,13 @@ extern "C" {
     } FLValueType;
 
 
+    /** A timestamp, expressed as milliseconds since the Unix epoch (1-1-1970 midnight UTC.) */
+    typedef int64_t FLTimestamp;
+
+    /** A value representing a missing timestamp; returned when a date cannot be parsed. */
+    #define FLTimestampNone INT64_MIN
+
+
     /** Returns the data type of an arbitrary Value.
         (If the parameter is a NULL pointer, returns `kFLUndefined`.) */
     FLValueType FLValue_GetType(FLValue);
@@ -268,6 +275,11 @@ extern "C" {
 
     /** Returns the exact contents of a string value, or null for all other types. */
     FLString FLValue_AsString(FLValue);
+
+    /** Converts a value to a timestamp, in milliseconds since Unix epoch, or INT64_MIN on failure.
+        - A string is parsed as ISO-8601 (standard JSON date format).
+        - A number is interpreted as a timestamp and returned as-is. */
+    FLTimestamp FLValue_AsTimestamp(FLValue);
 
     /** Returns the exact contents of a data value, or null for all other types. */
     FLSlice FLValue_AsData(FLValue);
@@ -882,6 +894,15 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
         zero bytes.
         @warning Do _not_ use this to write a dictionary key; use FLEncoder_WriteKey instead. */
     bool FLEncoder_WriteString(FLEncoder FLNONNULL, FLString);
+
+    /** Writes a timestamp to an encoder, as an ISO-8601 date string.
+        (Note: since neither Fleece nor JSON have a 'Date' type, the encoded string has no
+        metadata that distinguishes it as a date. It's just a string.)
+        @param encoder  The encoder to write to.
+        @param ts  The timestamp (milliseconds since Unix epoch 1-1-1970).
+        @param asUTC  If true, date is written in UTC (GMT); if false, with the local timezone.
+        @return  True on success, false on error. */
+    bool FLEncoder_WriteDateString(FLEncoder FLNONNULL encoder, FLTimestamp ts, bool asUTC);
 
     /** Writes a binary data value (a blob) to an encoder. This can contain absolutely anything
         including null bytes.

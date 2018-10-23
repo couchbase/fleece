@@ -116,6 +116,14 @@ namespace fleece { namespace impl {
         /** Returns the exact contents of a binary data value. Other types return a null slice. */
         slice asData() const noexcept;
 
+        typedef int64_t FLTimestamp;
+        #define FLTimestampNone INT64_MIN
+
+        /** Converts a value to a timestamp, in milliseconds since Unix epoch, or INT64_MIN on failure.
+             - A string is parsed as ISO-8601 (standard JSON date format).
+             - A number is interpreted as a timestamp and returned as-is. */
+        FLTimestamp asTimestamp() const noexcept;
+
         /** If this value is an array, returns it cast to 'const Array*', else returns nullptr. */
         const Array* asArray() const noexcept;
 

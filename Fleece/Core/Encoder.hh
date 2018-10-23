@@ -90,6 +90,8 @@ namespace fleece { namespace impl {
         void writeString(const std::string&);
         void writeString(slice s)           {(void)_writeString(s);}
 
+        void writeDateString(int64_t timestamp, bool asUTC =true);
+
         void writeData(slice s);
 
         void writeValue(const Value* NONNULL v)             {writeValue(v, nullptr);}

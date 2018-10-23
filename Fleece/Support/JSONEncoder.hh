@@ -58,6 +58,7 @@ namespace fleece { namespace impl {
 
         void writeString(const std::string &s)  {writeString(slice(s));}
         void writeString(slice s);
+        void writeDateString(int64_t timestamp, bool asUTC);
         
         void writeData(slice d)                 {comma(); _out << '"'; _out.writeBase64(d);
                                                           _out << '"';}

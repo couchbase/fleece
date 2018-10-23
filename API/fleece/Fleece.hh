@@ -60,6 +60,7 @@ namespace fleece {
         inline float asFloat() const;
         inline double asDouble() const;
         inline slice asString() const;
+        inline FLTimestamp asTimestamp() const;
         inline slice asData() const;
         inline Array asArray() const;
         inline Dict asDict() const;
@@ -397,6 +398,7 @@ namespace fleece {
         inline bool writeString(slice);
         inline bool writeString(const char *s)          {return writeString(slice(s));}
         inline bool writeString(std::string s)          {return writeString(slice(s));}
+        inline bool writeDateString(FLTimestamp, bool asUTC =true);
         inline bool writeData(slice);
         inline bool writeValue(Value);
         inline bool convertJSON(slice);
@@ -551,6 +553,7 @@ namespace fleece {
     inline uint64_t Value::asUnsigned() const   {return FLValue_AsUnsigned(_val);}
     inline float Value::asFloat() const         {return FLValue_AsFloat(_val);}
     inline double Value::asDouble() const       {return FLValue_AsDouble(_val);}
+    inline FLTimestamp Value::asTimestamp() const {return FLValue_AsTimestamp(_val);}
     inline slice Value::asString() const     {return FLValue_AsString(_val);}
     inline slice Value::asData() const        {return FLValue_AsData(_val);}
     inline Array Value::asArray() const         {return FLValue_AsArray(_val);}
@@ -601,7 +604,9 @@ namespace fleece {
     inline bool Encoder::writeUInt(uint64_t n)  {return FLEncoder_WriteUInt(_enc, n);}
     inline bool Encoder::writeFloat(float n)    {return FLEncoder_WriteFloat(_enc, n);}
     inline bool Encoder::writeDouble(double n)  {return FLEncoder_WriteDouble(_enc, n);}
-    inline bool Encoder::writeString(slice s){return FLEncoder_WriteString(_enc, s);}
+    inline bool Encoder::writeString(slice s)   {return FLEncoder_WriteString(_enc, s);}
+    inline bool Encoder::writeDateString(FLTimestamp ts, bool asUTC)
+                                                {return FLEncoder_WriteDateString(_enc, ts, asUTC);}
     inline bool Encoder::writeData(slice data){return FLEncoder_WriteData(_enc, data);}
     inline bool Encoder::writeValue(Value v)    {return FLEncoder_WriteValue(_enc, v);}
     inline bool Encoder::convertJSON(slice j) {return FLEncoder_ConvertJSON(_enc, j);}

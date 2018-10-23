@@ -19,6 +19,7 @@
 #include "JSONEncoder.hh"
 #include "FleeceImpl.hh"
 #include "SmallVector.hh"
+#include "ParseDate.hh"
 #include <algorithm>
 #include "betterassert.hh"
 
@@ -61,6 +62,12 @@ namespace fleece { namespace impl {
         if (end > start)
             _out.write({start, end});
         _out << '"';
+    }
+
+
+    void JSONEncoder::writeDateString(int64_t timestamp, bool asUTC) {
+        char str[kFormattedISO8601DateMaxSize];
+        writeString(FormatISO8601Date(str, timestamp, asUTC));
     }
 
 

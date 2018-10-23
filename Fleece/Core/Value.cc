@@ -28,6 +28,7 @@
 #include "varint.hh"
 #include "PlatformCompat.hh"
 #include "JSONEncoder.hh"
+#include "ParseDate.hh"
 #include <math.h>
 #include "betterassert.hh"
 
@@ -208,6 +209,19 @@ namespace fleece { namespace impl {
 
     slice Value::asData() const noexcept {
         return _usuallyTrue(tag() == kBinaryTag) ? getStringBytes() : nullslice;
+    }
+
+    int64_t Value::asTimestamp() const noexcept {
+        switch (tag()) {
+            case kStringTag:
+                return ParseISO8601Date(asString());
+            case kShortIntTag:
+            case kIntTag:
+            case kFloatTag:
+                return asInt();
+            default:
+                return kInvalidDate;
+        }
     }
 
     const Array* Value::asArray() const noexcept {

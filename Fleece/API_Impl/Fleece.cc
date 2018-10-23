@@ -90,6 +90,7 @@ FLString FLValue_AsString(FLValue v)            {return v ? (FLString)v->asStrin
 FLSlice FLValue_AsData(FLValue v)               {return v ? (FLSlice)v->asData() : kFLSliceNull;}
 FLArray FLValue_AsArray(FLValue v)              {return v ? v->asArray() : nullptr;}
 FLDict FLValue_AsDict(FLValue v)                {return v ? v->asDict() : nullptr;}
+FLTimestamp FLValue_AsTimestamp(FLValue v)      {return v ? v->asTimestamp() : FLTimestampNone;}
 
 FLValue FLValue_Retain(FLValue v)               {return retain(v);}
 void FLValue_Release(FLValue v)                 {release(v);}
@@ -493,6 +494,8 @@ bool FLEncoder_WriteUInt(FLEncoder e, uint64_t u)        {ENCODER_TRY(e, writeUI
 bool FLEncoder_WriteFloat(FLEncoder e, float f)          {ENCODER_TRY(e, writeFloat(f));}
 bool FLEncoder_WriteDouble(FLEncoder e, double d)        {ENCODER_TRY(e, writeDouble(d));}
 bool FLEncoder_WriteString(FLEncoder e, FLSlice s)       {ENCODER_TRY(e, writeString(s));}
+bool FLEncoder_WriteDateString(FLEncoder e, FLTimestamp ts, bool asUTC)
+                                                         {ENCODER_TRY(e, writeDateString(ts,asUTC));}
 bool FLEncoder_WriteData(FLEncoder e, FLSlice d)         {ENCODER_TRY(e, writeData(d));}
 bool FLEncoder_WriteRaw(FLEncoder e, FLSlice r)          {ENCODER_TRY(e, writeRaw(r));}
 bool FLEncoder_WriteValue(FLEncoder e, FLValue v)        {ENCODER_TRY(e, writeValue(v));}
