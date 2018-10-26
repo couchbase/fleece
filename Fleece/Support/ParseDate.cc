@@ -69,6 +69,7 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include <math.h>
+#include <time.h>
 
 typedef uint8_t u8;
 typedef int64_t sqlite3_int64;
