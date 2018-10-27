@@ -70,6 +70,7 @@
 #include <ctype.h>
 #include <math.h>
 #include <time.h>
+#include "PlatformCompat.hh"
 
 typedef uint8_t u8;
 typedef int64_t sqlite3_int64;
@@ -365,10 +366,9 @@ namespace fleece {
         int millis = time % 1000;
 
         // Format it, up to the seconds:
-        struct tm* (*timeConvert)(const time_t *, struct tm *);
-        timeConvert = asUTC ? gmtime_r : localtime_r;
         struct tm timebuf;
-        size_t len = strftime(buf, kFormattedISO8601DateMaxSize, "%FT%T", timeConvert(&secs, &timebuf));
+        struct tm* result = asUTC ? gmtime_r(&secs, &timebuf) : localtime_r(&secs, &timebuf);
+        size_t len = strftime(buf, kFormattedISO8601DateMaxSize, "%FT%T", result);
 
         // Write the milliseconds:
         if (millis > 0) {

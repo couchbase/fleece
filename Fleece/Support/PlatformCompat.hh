@@ -32,7 +32,11 @@
     #define __has_feature(F)                0
     #define __func__                        __FUNCTION__
 
-    #define localtime_r(a, b)               localtime_s(b, a)
+    #include <time.h>
+
+    #define gmtime_r(a, b)                  (gmtime_s(b, a) == 0 ? b : NULL)
+    #define localtime_r(a, b)               (localtime_s(b, a) == 0 ? b : NULL)
+
     #define timegm                          _mkgmtime
 
     #include <BaseTsd.h>
