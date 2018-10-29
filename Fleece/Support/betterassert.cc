@@ -21,8 +21,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifndef NDEBUG
-
 namespace fleece {
 
     void _assert_failed(const char *condition, const char *fn, const char *file, int line) {
@@ -39,5 +37,3 @@ namespace fleece {
     }
 
 }
-
-#endif
