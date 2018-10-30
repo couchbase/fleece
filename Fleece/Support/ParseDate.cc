@@ -362,7 +362,7 @@ namespace fleece {
         }
         
         // Split out the milliseconds from the timestamp:
-        time_t secs = time / 1000;
+        time_t secs = time_t(time / 1000);
         int millis = time % 1000;
 
         // Format it, up to the seconds:
