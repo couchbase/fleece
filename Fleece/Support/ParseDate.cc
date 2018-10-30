@@ -377,12 +377,12 @@ namespace fleece {
         }
 
         // Write the time-zone:
-        buf += len;
+        char *tz = buf + len;
         if (asUTC) {
-            strcat(buf, "Z");
+            strcpy(tz, "Z");
             ++len;
         } else {
-            len += strftime(buf, 6, "%z", &timebuf);
+            len += strftime(tz, 6, "%z", &timebuf);
         }
         return {buf, len};
     }
