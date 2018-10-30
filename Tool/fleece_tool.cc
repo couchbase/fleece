@@ -33,52 +33,131 @@
 using namespace fleece;
 using namespace std;
 
+
 static void usage(void) {
-    fprintf(stderr, "usage: fleece --encode [JSON file]\n");
-    fprintf(stderr, "       fleece --decode [Fleece file]\n");
-    fprintf(stderr, "       fleece --dump [Fleece file]\n");
+    fprintf(stderr, "usage: fleece [--hex] encode [JSON file]\n");
+    fprintf(stderr, "       fleece [--hex] decode [Fleece file]\n");
+    fprintf(stderr, "       fleece dump [Fleece file]\n");
     fprintf(stderr, "  Reads stdin unless a file is given; always writes to stdout.\n");
 }
 
-static alloc_slice readInput(FILE *in) {
+
+#if defined(__ANDROID__) || defined(__GLIBC__) || defined(_MSC_VER)
+// digittoint is a BSD function, not available on Android, Linux, etc.
+static int digittoint(char ch) {
+    int d = ch - '0';
+    if ((unsigned) d < 10) {
+        return d;
+    }
+    d = ch - 'a';
+    if ((unsigned) d < 6) {
+        return d + 10;
+    }
+    d = ch - 'A';
+    if ((unsigned) d < 6) {
+        return d + 10;
+    }
+    return 0;
+}
+#endif // defined(__ANDROID__) || defined(__GLIBC__)
+
+
+static size_t decodeHex(uint8_t buf[], size_t n) {
+    if (n & 1)
+        return 0;
+    size_t size = 0;
+    const uint8_t *cp = buf, *end = buf + n;
+    unsigned byte = 0;
+    bool partial = false;
+    while (cp < end) {
+        uint8_t c = *cp++;
+        if (isspace(c))
+            continue;
+        if (!isxdigit(c))
+            return 0;
+        auto nybble = digittoint(c);
+        partial = !partial;
+        if (partial)
+            byte = nybble << 4;
+        else
+            buf[size++] = uint8_t(byte | nybble);
+    }
+    if (partial)
+        return 0;
+    return size;
+}
+
+
+static alloc_slice readInput(FILE *in, bool asHex) {
     stringstream out;
-    char buf[1024];
+    uint8_t buf[1024];
     while (true) {
         size_t n = ::fread(buf, 1, sizeof(buf), in);
         if (n == 0)
             break;
-        out.write(buf, n);
+        if (asHex) {
+            n = decodeHex(buf, n);
+            if (n == 0)
+                throw "Invalid hex input";
+        }
+        out.write((char*)buf, n);
     }
     if (ferror(in))
         throw "Error reading input";
     return alloc_slice(out.str());
 }
 
+
+static void writeOutput(slice output, bool asHex =false) {
+    if (asHex) {
+        string hex = output.hexString();
+        fputs(hex.c_str(), stdout);
+    } else {
+        fwrite(output.buf, 1, output.size, stdout);
+    }
+}
+
+
 int main(int argc, const char * argv[]) {
     try {
-        bool encode = false, decode = false, dump = false;
+        bool encode = false, decode = false, dump = false, hex = false;
 
         int i;
         for (i = 1; i < argc; ++i) {
             const char *arg = argv[i];
-            if (arg[0] != '-') {
-                break;
-            } else if (strcmp(arg, "-") == 0) {
-                i++;
-                break;
-            } else if (strcmp(arg, "--encode") == 0) {
-                encode = true;
-            } else if (strcmp(arg, "--decode") == 0) {
-                decode = true;
-            } else if (strcmp(arg, "--dump") == 0) {
-                dump = true;
-            } else if (strcmp(arg, "--help") == 0) {
-                usage();
-                return 0;
+            if (arg[0] == '-') {
+                if (strcmp(arg, "-") == 0) {
+                    i++;
+                    break;
+                } else if (strcmp(arg, "--encode") == 0) {
+                    encode = true;
+                } else if (strcmp(arg, "--decode") == 0) {
+                    decode = true;
+                } else if (strcmp(arg, "--dump") == 0) {
+                    dump = true;
+                } else if (strcmp(arg, "--hex") == 0) {
+                    hex = true;
+                } else if (strcmp(arg, "--help") == 0) {
+                    usage();
+                    return 0;
+                } else {
+                    fprintf(stderr, "Unknown option '%s'\n", arg);
+                    usage();
+                    return 1;
+                }
+            } else if (encode+decode+dump == 0) {
+                // Also allow mode without '--' prefix, if none was chosen yet:
+                if (strcmp(arg, "encode") == 0) {
+                    encode = true;
+                } else if (strcmp(arg, "decode") == 0) {
+                    decode = true;
+                } else if (strcmp(arg, "dump") == 0) {
+                    dump = true;
+                } else {
+                    break;
+                }
             } else {
-                fprintf(stderr, "Unknown option '%s'\n", arg);
-                usage();
-                return 1;
+                break;
             }
         }
 
@@ -104,29 +183,29 @@ int main(int argc, const char * argv[]) {
             return 1;
         }
 
-        if (encode && _isatty(STDOUT_FILENO))
+        if (encode && !hex && _isatty(STDOUT_FILENO))
             throw "Let's not spew binary Fleece data to a terminal! Please redirect stdout.";
 
-        auto input = readInput(in);
+        auto input = readInput(in, (decode && hex));
 
         if (encode) {
             Doc doc = Doc::fromJSON(input);
             if (!doc)
                 throw "Invalid JSON input";
             slice output = doc.data();
-            fwrite(output.buf, 1, output.size, stdout);
+            writeOutput(output, hex);
         } else if (decode) {
             Doc doc(input);
             if (!doc)
                 throw "Couldn't parse input as Fleece";
             auto json = doc.root().toJSON();
-            fwrite(json.buf, json.size, 1, stdout);
+            writeOutput(json);
             fprintf(stdout, "\n");
         } else if (dump) {
             alloc_slice output = Doc::dump(input);
             if (!output)
                 throw "Couldn't parse input as Fleece";
-            cout.write((const char*)output.buf, output.size);
+            writeOutput(output);
         }
 
         return 0;
