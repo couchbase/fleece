@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		2700BB9C217E8C0D00797537 /* ParseDate.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2700BB9A217E8C0C00797537 /* ParseDate.hh */; };
 		2700BB9D217E8C0D00797537 /* ParseDate.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2700BB9B217E8C0C00797537 /* ParseDate.cc */; };
+		2700BBA2218B949900797537 /* Backtrace.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2700BBA0218B949900797537 /* Backtrace.hh */; };
+		2700BBA3218B949900797537 /* Backtrace.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2700BBA1218B949900797537 /* Backtrace.cc */; };
 		270515571D905C1D00D62D05 /* Fleece+CoreFoundation.mm in Sources */ = {isa = PBXBuildFile; fileRef = 270515531D9058F200D62D05 /* Fleece+CoreFoundation.mm */; settings = {COMPILER_FLAGS = "-Wno-return-type-c-linkage"; }; };
 		270FA2781BF53CEA005DCB13 /* Value.cc in Sources */ = {isa = PBXBuildFile; fileRef = 270FA26A1BF53CEA005DCB13 /* Value.cc */; };
 		270FA2791BF53CEA005DCB13 /* Value.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA26B1BF53CEA005DCB13 /* Value.hh */; };
@@ -264,6 +266,8 @@
 /* Begin PBXFileReference section */
 		2700BB9A217E8C0C00797537 /* ParseDate.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ParseDate.hh; sourceTree = "<group>"; };
 		2700BB9B217E8C0C00797537 /* ParseDate.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ParseDate.cc; sourceTree = "<group>"; };
+		2700BBA0218B949900797537 /* Backtrace.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Backtrace.hh; sourceTree = "<group>"; };
+		2700BBA1218B949900797537 /* Backtrace.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Backtrace.cc; sourceTree = "<group>"; };
 		270515531D9058F200D62D05 /* Fleece+CoreFoundation.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "Fleece+CoreFoundation.mm"; sourceTree = "<group>"; };
 		270515551D90596000D62D05 /* Fleece+ImplGlue.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "Fleece+ImplGlue.hh"; sourceTree = "<group>"; };
 		270FA25C1BF53CAD005DCB13 /* libfleeceStatic.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libfleeceStatic.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -712,6 +716,8 @@
 		27AFF69720EFE6CE0055E966 /* Support */ = {
 			isa = PBXGroup;
 			children = (
+				2700BBA0218B949900797537 /* Backtrace.hh */,
+				2700BBA1218B949900797537 /* Backtrace.cc */,
 				27C4CEB82127976900470DE9 /* betterassert.cc */,
 				27C4CEB92127976900470DE9 /* betterassert.hh */,
 				2746DD3B1D931BE9000517BC /* Benchmark.hh */,
@@ -970,6 +976,7 @@
 				27DE2ECD2125FA1700123597 /* forestdb_endian.h in Headers */,
 				27DE2ECE2125FA1700123597 /* MDict+ObjC.h in Headers */,
 				27DE2ECF2125FA1700123597 /* FLSlice.h in Headers */,
+				2700BBA2218B949900797537 /* Backtrace.hh in Headers */,
 				27DE2ED02125FA1700123597 /* Pointer.hh in Headers */,
 				27DE2ED12125FA1700123597 /* ValueSlot.hh in Headers */,
 				27DE2ED22125FA1700123597 /* MCollection.hh in Headers */,
@@ -1273,6 +1280,7 @@
 				27744ADE2139C6AE00399DCA /* betterassert.cc in Sources */,
 				27DE2EEB2125FC9300123597 /* FleeceException.cc in Sources */,
 				27DE2E962125FA1700123597 /* RefCounted.cc in Sources */,
+				2700BBA3218B949900797537 /* Backtrace.cc in Sources */,
 				27DE2E9E2125FA1700123597 /* slice.cc in Sources */,
 				27DE2E9D2125FA1700123597 /* slice+CoreFoundation.cc in Sources */,
 				27DE2EEA2125FC5A00123597 /* Writer.cc in Sources */,

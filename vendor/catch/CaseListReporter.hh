@@ -7,6 +7,7 @@
 //
 
 #include "catch.hpp"
+#include "Backtrace.hh"
 #include <time.h>
 
 
@@ -60,6 +61,18 @@ struct CaseListReporter : public Catch::ConsoleReporter {
     void sectionEnded( Catch::SectionStats const& sectionStats ) CATCH_OVERRIDE {
         --_sectionNesting;
         ConsoleReporter::sectionEnded(sectionStats);
+    }
+
+    virtual bool assertionEnded( Catch::AssertionStats const& stats ) CATCH_OVERRIDE {
+        if (stats.assertionResult.getResultType() == Catch::ResultWas::FatalErrorCondition) {
+            std::cerr << "\n\n********** CRASH: "
+                      << stats.assertionResult.getMessage()
+                      << " **********";
+            fleece::Backtrace bt(5);
+            bt.writeTo(std::cerr);
+            std::cerr << "\n********** CRASH **********\n";
+        }
+        return Catch::ConsoleReporter::assertionEnded(stats);
     }
 
     std::string _curFile;
