@@ -36,7 +36,7 @@ namespace fleece { namespace impl {
     using namespace internal;
 
     static mutex sMutex;
-    static map<size_t, Scope*>* sMemoryMap;
+    Scope::memoryMap* Scope::sMemoryMap;
 
 
     Scope::Scope(slice data, SharedKeys *sk, slice destination) noexcept
@@ -47,24 +47,27 @@ namespace fleece { namespace impl {
         if (_data) {
             lock_guard<mutex> lock(sMutex);
             if (_usuallyFalse(!sMemoryMap))
-                sMemoryMap = new map<size_t, Scope*>;
-            auto result = sMemoryMap->insert({size_t(data.end()), this});   // <iterator,inserted>
-            if (result.second) {
-                _registered = true;
-                Log("Register   (%p ... %p) --> Scope %p, sk=%p [Now %zu]",
-                    data.buf, data.end(), this, sk, sMemoryMap->size());
-            } else {
-                Scope *existing = result.first->second;
+                sMemoryMap = new multimap<size_t, Scope*>;
+            auto key = size_t(data.end());
+            _iter = sMemoryMap->insert({key, this});
+            _registered = true;
+            Log("Register   (%p ... %p) --> Scope %p, sk=%p [Now %zu]",
+                data.buf, data.end(), this, sk, sMemoryMap->size());
+//#if DEBUG
+            if (_iter != sMemoryMap->begin() && prev(_iter)->first == key) {
+                Scope *existing = prev(_iter)->second;
                 if (existing->_data == data && existing->_externDestination == _externDestination
-                                            && existing->_sk == _sk) {
+                    && existing->_sk == _sk) {
                     Log("Duplicate  (%p ... %p) --> Scope %p, sk=%p",
                         data.buf, data.end(), this, sk);
                 } else {
                     FleeceException::_throw(InternalError,
-                                            "Incompatible duplicate Scope %p for (%p .. %p): conflicts with %p",
-                                            this, data.buf, data.end(), existing);
+                                            "Incompatible duplicate Scope %p for (%p .. %p) with sk=%p: conflicts with %p with sk=%p",
+                                            this, data.buf, data.end(), sk,
+                                            existing, existing->_sk.get());
                 }
             }
+//#endif
         }
     }
 
@@ -79,10 +82,7 @@ namespace fleece { namespace impl {
             lock_guard<mutex> lock(sMutex);
             Log("Unregister (%p ... %p) --> Scope %p, sk=%p   [now %zu]",
                 _data.buf, _data.end(), this, _sk.get(), sMemoryMap->size()-1);
-            if (sMemoryMap->erase(size_t(_data.end())) == 0) {
-                fprintf(stderr, "WARNING: fleece::Scope failed to unregister (%p .. %p)",
-                        _data.buf, _data.end());
-            }
+            sMemoryMap->erase(_iter);
             _registered = false;
         }
     }

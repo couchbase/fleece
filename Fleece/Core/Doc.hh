@@ -8,6 +8,7 @@
 #include "RefCounted.hh"
 #include "Value.hh"
 #include "fleece/slice.hh"
+#include <map>
 
 namespace fleece { namespace impl {
     class SharedKeys;
@@ -45,11 +46,15 @@ namespace fleece { namespace impl {
 
     private:
         Scope(const Scope&) =delete;
+
+        using memoryMap = std::multimap<size_t, Scope*>;
+        static memoryMap *sMemoryMap;
         
         Retained<SharedKeys> _sk;
         slice const         _externDestination;
         slice const         _data;
         bool                _registered {false};
+        memoryMap::iterator _iter;
     protected:
         bool                _isDoc {false};
     };
