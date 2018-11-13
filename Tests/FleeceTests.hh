@@ -53,6 +53,8 @@ using namespace fleece;
 #if FL_HAVE_TEST_FILES
     #ifdef _MSC_VER
         #define kTestFilesDir "..\\Tests\\"
+    #elif defined(LITECORE_CPP_TESTS)
+        #define kTestFilesDir "vendor/fleece/Tests/"
     #else
         #define kTestFilesDir "Tests/"
     #endif
