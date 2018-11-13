@@ -62,8 +62,14 @@ namespace fleece {
     }
 
 
-    void FleeceException::_throwErrno(const char *what) {
-        auto message = std::string(what) + ": " + strerror(errno);
+    void FleeceException::_throwErrno(const char *what, ...) {
+        va_list args;
+        va_start(args, what);
+        char *msg;
+        vasprintf(&msg, what, args);
+        va_end(args);
+        auto message = std::string(msg) + ": " + strerror(errno);
+        free(msg);
         throw FleeceException(POSIXError, errno, message);
     }
 

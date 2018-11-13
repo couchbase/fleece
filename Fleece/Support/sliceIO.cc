@@ -47,7 +47,7 @@ namespace fleece {
     alloc_slice readFile(const char *path) {
         int fd = ::_open(path, O_RDONLY | O_BINARY);
         if (fd < 0)
-            FleeceException::_throwErrno("Can't open file");
+            FleeceException::_throwErrno("Can't open file %s", path);
         struct stat stat;
         fstat(fd, &stat);
         if (stat.st_size > SIZE_MAX)
@@ -55,7 +55,7 @@ namespace fleece {
         alloc_slice data((size_t)stat.st_size);
         ssize_t bytesRead = ::_read(fd, (void*)data.buf, data.size);
         if (bytesRead < (ssize_t)data.size)
-            FleeceException::_throwErrno("Can't read file");
+            FleeceException::_throwErrno("Can't read file %s", path);
         ::_close(fd);
         return data;
     }
