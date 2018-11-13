@@ -53,10 +53,11 @@ namespace fleece {
 
     static CFAllocatorRef SliceAllocator() {
         static CFAllocatorContext context = {
-            0,
-            nullptr,
-            [](const void *p) -> const void* { alloc_slice::retain(slice(p,1)); return p; },
-            [](const void *p) -> void        { alloc_slice::release(slice(p,1)); },
+            .version = 0,
+            .info = nullptr,
+            .retain = [](const void *p) -> const void* { alloc_slice::retain(slice(p,1)); return p; },
+            .release = [](const void *p) -> void        { alloc_slice::release(slice(p,1)); },
+            .deallocate = [](void *p, void *info) -> void   { alloc_slice::release(slice(p,1)); },
         };
         static CFAllocatorRef kAllocator = CFAllocatorCreate(nullptr, &context);
         return kAllocator;
@@ -66,7 +67,11 @@ namespace fleece {
     CFDataRef alloc_slice::createCFData() const {
         if (!buf)
             return nullptr;
-        return CFDataCreateWithBytesNoCopy(nullptr, (const UInt8*)buf, size, SliceAllocator());
+        auto data = CFDataCreateWithBytesNoCopy(nullptr, (const UInt8*)buf, size, SliceAllocator());
+        if (!data)
+            throw std::bad_alloc();
+        const_cast<alloc_slice*>(this)->retain();
+        return data;
     }
 
     
