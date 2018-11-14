@@ -343,6 +343,29 @@ namespace fleece { namespace impl {
             return dictImpl<false>(this).getParent();
     }
 
+    bool Dict::isEqualToDict(const Dict* dv) const {
+        Dict::iterator i(this);
+        Dict::iterator j(dv);
+        if (!this->getParent() && !dv->getParent() && i.count() != j.count())
+            return false;
+        if (sharedKeys() == dv->sharedKeys()) {
+            // If both dicts use same sharedKeys, their keys must be in the same order.
+            for (; i; ++i, ++j)
+                if (i.keyString() != j.keyString() || !i.value()->isEqual(j.value()))
+                    return false;
+        } else {
+            unsigned n = 0;
+            for (; i; ++i, ++n) {
+                auto dvalue = dv->get(i.keyString());
+                if (!dvalue || !i.value()->isEqual(dvalue))
+                    return false;
+            }
+            if (dv->count() != n)
+                return false;
+        }
+        return true;
+    }
+
     static constexpr Dict kEmptyDictInstance;
     const Dict* const Dict::kEmpty = &kEmptyDictInstance;
 

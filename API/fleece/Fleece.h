@@ -294,6 +294,9 @@ extern "C" {
         Arrays and dictionaries don't have a representation and will return NULL. */
     FLStringResult FLValue_ToString(FLValue);
 
+    /** Compares two values for equality. This is a deep recursive comparison. */
+    bool FLValue_IsEqual(FLValue, FLValue);
+
     /** \name Ref-counting (mutable values only)
          @{ */
 

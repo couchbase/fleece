@@ -79,6 +79,8 @@ namespace fleece {
         bool operator== (Value v) const                 {return _val == v._val;}
         bool operator== (FLValue v) const               {return _val == v;}
 
+        bool isEqual(Value v) const                     {return FLValue_IsEqual(_val, v);}
+
         Value& operator= (Value v)                      {_val = v._val; return *this;}
 
         inline Value operator[] (const KeyPath &kp) const;

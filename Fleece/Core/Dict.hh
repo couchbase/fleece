@@ -49,6 +49,8 @@ namespace fleece { namespace impl {
         }
 #endif
 
+        bool isEqualToDict(const Dict* NONNULL) const;
+
         /** An empty Dict. */
         static const Dict* const kEmpty;
 

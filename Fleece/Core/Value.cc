@@ -264,8 +264,10 @@ namespace fleece { namespace impl {
 
 
     bool Value::isEqual(const Value *v) const {
-        if (_byte[0] != v->_byte[0])
+        if (!v || _byte[0] != v->_byte[0])
             return false;
+        if (_usuallyFalse(this == v))
+            return true;
         switch (tag()) {
             case kShortIntTag:
             case kIntTag:
@@ -290,17 +292,8 @@ namespace fleece { namespace impl {
                         return false;
                 return true;
             }
-            case kDictTag: {
-                auto dthis = (const Dict*)this, dv = (const Dict*)v;
-                Dict::iterator i(dthis);
-                Dict::iterator j(dv);
-                if (!dthis->getParent() && !dv->getParent() && i.count() != j.count())
-                    return false;
-                for (; i; ++i, ++j)
-                    if (i.keyString() != j.keyString() || !i.value()->isEqual(j.value()))
-                        return false;
-                return true;
-            }
+            case kDictTag:
+                return ((const Dict*)this)->isEqualToDict((const Dict*)v);
             default:
                 return false;
         }

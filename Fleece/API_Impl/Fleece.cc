@@ -100,6 +100,13 @@ FLDoc FLValue_FindDoc(FLValue v) {
     return v ? retain(Doc::containing(v).get()) : nullptr;
 }
 
+bool FLValue_IsEqual(FLValue v1, FLValue v2) {
+    if (_usuallyTrue(v1 != nullptr))
+        return v1->isEqual(v2);
+    else
+        return v2 == nullptr;
+}
+
 FLSliceResult FLValue_ToString(FLValue v) {
     if (v) {
         try {
