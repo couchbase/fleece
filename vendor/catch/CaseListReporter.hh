@@ -8,6 +8,8 @@
 
 #include "catch.hpp"
 #include "Backtrace.hh"
+#include "Stopwatch.hh"
+#include <chrono>
 #include <time.h>
 
 
@@ -17,13 +19,13 @@ struct CaseListReporter : public Catch::ConsoleReporter {
     CaseListReporter( Catch::ReporterConfig const& _config )
     :   Catch::ConsoleReporter( _config )
     {
-        auto now = time(nullptr);
-        stream << "STARTING TESTS AT " << ctime(&now) << "\n";
+        _start = time(nullptr);
+        stream << "STARTING TESTS AT " << ctime(&_start);
     }
 
     virtual ~CaseListReporter() CATCH_OVERRIDE {
         auto now = time(nullptr);
-        stream << "ENDED TESTS AT " << ctime(&now) << "\n";
+        stream << "ENDED TESTS IN " << (now - _start) << "sec, AT " << ctime(&now);
     }
 
     static std::string getDescription() {
@@ -41,8 +43,10 @@ struct CaseListReporter : public Catch::ConsoleReporter {
         _firstSection = true;
         _sectionNesting = 0;
         ConsoleReporter::testCaseStarting(_testInfo);
+        _stopwatch.reset();
     }
     virtual void testCaseEnded( Catch::TestCaseStats const& _testCaseStats ) CATCH_OVERRIDE {
+        stream << "\t    [" << _stopwatch.elapsed() << " sec]\n";
         ConsoleReporter::testCaseEnded(_testCaseStats);
     }
 
@@ -78,6 +82,8 @@ struct CaseListReporter : public Catch::ConsoleReporter {
     std::string _curFile;
     bool _firstSection;
     unsigned _sectionNesting;
+    time_t _start;
+    fleece::Stopwatch _stopwatch;
 };
 
 REGISTER_REPORTER( "list", CaseListReporter )
