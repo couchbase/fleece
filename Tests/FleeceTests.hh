@@ -51,12 +51,18 @@ using namespace fleece;
 
 // Directory containing test files:
 #if FL_HAVE_TEST_FILES
-    #ifdef _MSC_VER
-        #define kTestFilesDir "..\\Tests\\"
-    #elif defined(LITECORE_CPP_TESTS)
-        #define kTestFilesDir "vendor/fleece/Tests/"
+    #if defined(LITECORE_CPP_TESTS)
+        #ifdef _MSC_VER
+            #define kTestFilesDir "..\\vendor\\fleece\\Tests\\"
+        #else
+            #define kTestFilesDir "vendor/fleece/Tests/"
+        #endif
     #else
-        #define kTestFilesDir "Tests/"
+        #ifdef _MSC_VER
+            #define kTestFilesDir "..\\Tests\\"
+        #else
+            #define kTestFilesDir "Tests/"
+        #endif
     #endif
     static const char* kBigJSONTestFileName = "1000people.json";
     static const size_t kBigJSONTestCount = 1000;
