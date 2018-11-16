@@ -7,7 +7,6 @@ _FLSlice_Compare
 _FLSliceResult_Retain
 _FLSliceResult_Release
 
-_FLDoc_FromData
 _FLDoc_FromResultData
 _FLDoc_FromJSON
 _FLDoc_Release

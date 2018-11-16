@@ -28,7 +28,7 @@ namespace fleece { namespace impl { namespace internal {
         ,_items(initialCount)
         { }
 
-        HeapArray(const Array* NONNULL);
+        HeapArray(const Array*);
 
         static MutableArray* asMutableArray(HeapArray *a)   {return (MutableArray*)asValue(a);}
         MutableArray* asMutableArray() const        {return (MutableArray*)asValue();}

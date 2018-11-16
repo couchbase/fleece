@@ -100,14 +100,6 @@ extern "C" {
     } FLTrust;
 
 
-    /** Creates an FLDoc from Fleece-encoded data. The resulting document does **not** copy
-        or retain the input data, so the caller is in charge of ensuring that the data remains
-        intact for as long as the FLDoc and any FLValues obtained from it exist.
-
-        @note A safer way to create a doc, if you can spare the heap space, is to call FLSlice_Copy
-        to copy the encoded data to an FLSliceResult, then call FLDoc_FromResultData. */
-    FLDoc FLDoc_FromData(FLSlice data, FLTrust, FLSharedKeys, FLSlice externData);
-
     /** Creates an FLDoc from Fleece-encoded data that's been returned as a result from
         FLSlice_Copy or other API. The resulting document retains the data, so you don't need to
         worry about it remaining valid. */

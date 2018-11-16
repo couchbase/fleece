@@ -109,6 +109,7 @@ namespace fleece {
         bool hasSuffix(uint8_t b) const noexcept        {return size > 0 && (*this)[size-1] == b;}
 
         bool contains(const void *addr) const noexcept;
+        bool contains(pure_slice) const noexcept;
 
         slice copy() const;
 

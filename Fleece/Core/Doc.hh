@@ -23,11 +23,18 @@ namespace fleece { namespace impl {
         Scope(slice fleeceData,
               SharedKeys*,
               slice externDestination =nullslice) noexcept;
+        Scope(const alloc_slice &fleeceData,
+              SharedKeys*,
+              slice externDestination =nullslice) noexcept;
+        Scope(const Scope &parentScope,
+              slice subData);
         ~Scope();
 
         static Scope* containing(const Value* NONNULL) noexcept;
 
         slice data() const                      {return _data;}
+        alloc_slice allocedData() const         {return _alloced;}
+
         SharedKeys* sharedKeys() const          {return _sk;}
         slice externDestination() const         {return _externDestination;}
 
@@ -46,6 +53,7 @@ namespace fleece { namespace impl {
 
     private:
         Scope(const Scope&) =delete;
+        void registr() noexcept;
 
         using memoryMap = std::multimap<size_t, Scope*>;
         static memoryMap *sMemoryMap;
@@ -53,6 +61,7 @@ namespace fleece { namespace impl {
         Retained<SharedKeys> _sk;
         slice const         _externDestination;
         slice const         _data;
+        alloc_slice const   _alloced;
         bool                _registered {false};
         memoryMap::iterator _iter;
     protected:
@@ -69,21 +78,19 @@ namespace fleece { namespace impl {
             kUntrusted, kTrusted
         };
 
-        Doc(slice fleeceData,
-            Trust =kUntrusted,
-            SharedKeys* =nullptr,
-            slice externDestination =nullslice) noexcept;
-        Doc(alloc_slice fleeceData,
+        Doc(const alloc_slice &fleeceData,
             Trust =kUntrusted,
             SharedKeys* =nullptr,
             slice externDest =nullslice) noexcept;
 
-        static Retained<Doc> fromFleece(slice fleece, Trust =kUntrusted);
+        Doc(const Scope &parentScope,
+            slice subData,
+            Trust =kUntrusted) noexcept;
+
+        static Retained<Doc> fromFleece(const alloc_slice &fleece, Trust =kUntrusted);
         static Retained<Doc> fromJSON(slice json);
 
         static RetainedConst<Doc> containing(const Value* NONNULL) noexcept;
-
-        alloc_slice allocedData() const         {return _alloced;}
 
         const Value* root() const               {return _root;}
         const Dict* asDict() const              {return _root ? _root->asDict() : nullptr;}
@@ -93,8 +100,9 @@ namespace fleece { namespace impl {
         virtual ~Doc() =default;
 
     private:
+        void init(Trust) noexcept;
+
         const Value*        _root {nullptr};
-        alloc_slice         _alloced;
     };
 
 } }

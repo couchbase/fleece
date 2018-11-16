@@ -44,36 +44,62 @@ namespace fleece { namespace impl {
     ,_externDestination(destination)
     ,_data(data)
     {
-        if (_data) {
-            lock_guard<mutex> lock(sMutex);
-            if (_usuallyFalse(!sMemoryMap))
-                sMemoryMap = new multimap<size_t, Scope*>;
-            auto key = size_t(data.end());
-            _iter = sMemoryMap->insert({key, this});
-            _registered = true;
-            Log("Register   (%p ... %p) --> Scope %p, sk=%p [Now %zu]",
-                data.buf, data.end(), this, sk, sMemoryMap->size());
-//#if DEBUG
-            if (_iter != sMemoryMap->begin() && prev(_iter)->first == key) {
-                Scope *existing = prev(_iter)->second;
-                if (existing->_data == data && existing->_externDestination == _externDestination
-                    && existing->_sk == _sk) {
-                    Log("Duplicate  (%p ... %p) --> Scope %p, sk=%p",
-                        data.buf, data.end(), this, sk);
-                } else {
-                    FleeceException::_throw(InternalError,
-                                            "Incompatible duplicate Scope %p for (%p .. %p) with sk=%p: conflicts with %p with sk=%p",
-                                            this, data.buf, data.end(), sk,
-                                            existing, existing->_sk.get());
-                }
-            }
-//#endif
-        }
+        if (data)
+            registr();
+    }
+
+
+    Scope::Scope(const alloc_slice &data, SharedKeys *sk, slice destination) noexcept
+    :_sk(sk)
+    ,_externDestination(destination)
+    ,_data(data)
+    ,_alloced(data)
+    {
+        if (data)
+            registr();
+    }
+
+
+    Scope::Scope(const Scope &parentScope, slice subData)
+    :_sk(parentScope.sharedKeys())
+    ,_externDestination(parentScope.externDestination())
+    ,_data(subData)
+    ,_alloced(parentScope._alloced)
+    {
+        if (subData)
+            assert(parentScope.data().contains(subData));
     }
 
 
     Scope::~Scope() {
         unregister();
+    }
+
+
+    void Scope::registr() noexcept {
+        lock_guard<mutex> lock(sMutex);
+        if (_usuallyFalse(!sMemoryMap))
+            sMemoryMap = new multimap<size_t, Scope*>;
+        auto key = size_t(_data.end());
+        _iter = sMemoryMap->insert({key, this});
+        _registered = true;
+        Log("Register   (%p ... %p) --> Scope %p, sk=%p [Now %zu]",
+            data.buf, data.end(), this, sk, sMemoryMap->size());
+//#if DEBUG
+        if (_iter != sMemoryMap->begin() && prev(_iter)->first == key) {
+            Scope *existing = prev(_iter)->second;
+            if (existing->_data == _data && existing->_externDestination == _externDestination
+                && existing->_sk == _sk) {
+                Log("Duplicate  (%p ... %p) --> Scope %p, sk=%p",
+                    data.buf, data.end(), this, sk);
+            } else {
+                FleeceException::_throw(InternalError,
+                                        "Incompatible duplicate Scope %p for (%p .. %p) with sk=%p: conflicts with %p with sk=%p",
+                                        this, _data.buf, _data.end(), _sk.get(),
+                                        existing, existing->_sk.get());
+            }
+        }
+//#endif
     }
 
 
@@ -140,11 +166,25 @@ namespace fleece { namespace impl {
 #pragma mark - DOC:
 
 
-    Doc::Doc(slice data, Trust trust, SharedKeys *sk, slice destination) noexcept
+    Doc::Doc(const alloc_slice &data, Trust trust, SharedKeys *sk, slice destination) noexcept
     :Scope(data, sk, destination)
     {
-        if (data) {
-            _root = trust ? Value::fromTrustedData(data) : Value::fromData(data);
+        init(trust);
+    }
+
+
+    Doc::Doc(const Scope &parentScope,
+             slice subData,
+             Trust trust) noexcept
+    :Scope(parentScope, subData)
+    {
+        init(trust);
+    }
+
+
+    void Doc::init(Trust trust) noexcept {
+        if (data()) {
+            _root = trust ? Value::fromTrustedData(data()) : Value::fromData(data());
             if (!_root)
                 unregister();
         }
@@ -152,14 +192,7 @@ namespace fleece { namespace impl {
     }
 
 
-    Doc::Doc(alloc_slice data, Trust trust, SharedKeys *sk, slice destination) noexcept
-    :Doc((slice)data, trust, sk, destination)
-    {
-        _alloced = data;
-    }
-
-
-    Retained<Doc> Doc::fromFleece(slice fleece, Trust trust) {
+    Retained<Doc> Doc::fromFleece(const alloc_slice &fleece, Trust trust) {
         return new Doc(fleece, trust);
     }
 

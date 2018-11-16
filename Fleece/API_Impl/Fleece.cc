@@ -599,10 +599,6 @@ FLSliceResult FLEncoder_Finish(FLEncoder e, FLError *outError) {
 #pragma mark - DOCUMENTS
 
 
-FLDoc FLDoc_FromData(FLSlice data, FLTrust trust, FLSharedKeys sk, FLSlice externData) {
-    return retain(new Doc(data, (Doc::Trust)trust, sk, externData));
-}
-
 FLDoc FLDoc_FromResultData(FLSliceResult data, FLTrust trust, FLSharedKeys sk, FLSlice externData) {
     return retain(new Doc(alloc_slice(data), (Doc::Trust)trust, sk, externData));
 }

@@ -230,6 +230,10 @@ namespace fleece {
             && ::memcmp(offsetby(buf, size - s.size), s.buf, s.size) == 0;
     }
 
+    bool pure_slice::contains(pure_slice s) const noexcept {
+        return s.buf >= buf && s.end() <= end();
+    }
+
     pure_slice::operator std::string() const {
         return std::string((const char*)buf, size);
     }

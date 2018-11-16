@@ -21,7 +21,7 @@ namespace fleece { namespace impl {
             return (new internal::HeapArray(initialCount))->asMutableArray();
         }
 
-        static Retained<MutableArray> newArray(const Array *a NONNULL) {
+        static Retained<MutableArray> newArray(const Array *a) {
             return (new internal::HeapArray(a))->asMutableArray();
         }
 

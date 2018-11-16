@@ -29,7 +29,7 @@ namespace fleece { namespace impl { namespace internal {
 
     HeapArray::HeapArray(const Array *a)
     :HeapCollection(kArrayTag)
-    ,_items(a->count())
+    ,_items(a ? a->count() : 0)
     ,_source(a)
     { }
 

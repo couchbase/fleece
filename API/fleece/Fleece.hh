@@ -306,13 +306,6 @@ namespace fleece {
         external pointers to. */
     class Doc {
     public:
-        Doc(fleece::slice fleeceData,
-            FLTrust trust =kFLUntrusted,
-            SharedKeys sk =nullptr,
-            fleece::slice externDestination =fleece::nullslice) noexcept
-        :_doc(FLDoc_FromData(fleeceData, trust, sk, externDestination))
-        { }
-        
         Doc(fleece::alloc_slice fleeceData,
             FLTrust trust =kFLUntrusted,
             SharedKeys sk =nullptr,
