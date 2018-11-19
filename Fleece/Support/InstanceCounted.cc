@@ -20,6 +20,8 @@
 #include "RefCounted.hh"
 #include <map>
 #include <mutex>
+#include <stdlib.h>
+#include <stdio.h>
 
 #if defined(__clang__) // For __cxa_demangle
 #include <cxxabi.h>
