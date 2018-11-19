@@ -93,4 +93,15 @@ namespace fleece { namespace impl { namespace internal {
     extern bool gDisableNecessarySharedKeysCheck;
 #endif
 
+// Value instances are only declared directly in a few special cases such as the constants
+// Array::kEmpty and Dict::kEmpty. But in those cases it's essential that they be aligned
+// on a 2-byte boundary, i.e. have even addresses, because Fleece treats the LSB of a pointer
+// as a flag indicating a mutable value.
+#ifndef _MSC_VER
+    #define EVEN_ALIGNED __attribute__((aligned(2)))
+#else
+    #define EVEN_ALIGNED
+#endif
+
+
 } } }

@@ -24,6 +24,7 @@
 #include <functional>
 #include <mutex>
 #include <set>
+#include "betterassert.hh"
 
 #if 0
 #define Log(FMT,...) fprintf(stderr, "DOC: " # FMT "\n", __VA_ARGS__)
@@ -197,7 +198,7 @@ namespace fleece { namespace impl {
     }
 
     Retained<Doc> Doc::fromJSON(slice json) {
-        return new Doc(JSONConverter::convertJSON(json));
+        return new Doc(JSONConverter::convertJSON(json), kTrusted);
     }
 
 

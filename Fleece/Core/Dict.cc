@@ -366,7 +366,7 @@ namespace fleece { namespace impl {
         return true;
     }
 
-    static constexpr Dict kEmptyDictInstance;
+    EVEN_ALIGNED static constexpr Dict kEmptyDictInstance;
     const Dict* const Dict::kEmpty = &kEmptyDictInstance;
 
 

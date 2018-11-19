@@ -73,6 +73,7 @@ namespace fleece { namespace impl { namespace internal {
             tie(target, destination) = Doc::resolvePointerFromWithRange(this, target);
             if (_usuallyFalse(!target))
                 return nullptr;
+            assert_always((size_t(target) & 1) == 0);
             dataStart = destination.buf;
             dataEnd = destination.end();
         } else {

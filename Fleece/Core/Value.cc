@@ -51,10 +51,10 @@ namespace fleece { namespace impl {
     };
 
 
-    const Value Value::kNullInstance = Value{kSpecialTag, kSpecialValueNull};
-    const Value* const Value::kNullValue = &kNullInstance;
-
-    const Value Value::kUndefinedInstance = Value{kSpecialTag, kSpecialValueUndefined};
+    EVEN_ALIGNED constexpr Value
+        Value::kNullInstance      = Value{kSpecialTag, kSpecialValueNull},
+        Value::kUndefinedInstance = Value{kSpecialTag, kSpecialValueUndefined};
+    const Value* const Value::kNullValue      = &kNullInstance;
     const Value* const Value::kUndefinedValue = &kUndefinedInstance;
 
 
@@ -318,9 +318,11 @@ namespace fleece { namespace impl {
     const Value* Value::findRoot(slice s) noexcept {
         assert(((size_t)s.buf & 1) == 0);  // Values must be 2-byte aligned
 
-        // Root value is at the end of the data and is two bytes wide:
-        if (_usuallyFalse((size_t)s.buf & 1) || _usuallyFalse(s.size < kNarrow) || _usuallyFalse(s.size % kNarrow))
+        // Reject obviously invalid data (odd address, too short, or odd length)
+        if (_usuallyFalse((size_t)s.buf & 1) || _usuallyFalse(s.size < kNarrow)
+                                             || _usuallyFalse(s.size % kNarrow))
             return nullptr;
+        // Root value is at the end of the data and is two bytes wide:
         auto root = (const Value*)offsetby(s.buf, s.size - internal::kNarrow);
         if (_usuallyTrue(root->isPointer())) {
             // If the root is a pointer, sanity-check the destination, then deref:

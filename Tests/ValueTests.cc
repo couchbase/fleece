@@ -97,6 +97,24 @@ namespace fleece {
         std::cerr << "\n";
     }
 
+    TEST_CASE("Constants") {
+        CHECK(Value::kNullValue->type() == kNull);
+        CHECK(!Value::kNullValue->isUndefined());
+        CHECK(!Value::kNullValue->isMutable());             // tests even-address alignment
+
+        CHECK(Value::kUndefinedValue->type() == kNull);
+        CHECK(Value::kUndefinedValue->isUndefined());
+        CHECK(!Value::kUndefinedValue->isMutable());
+
+        CHECK(Array::kEmpty->type() == kArray);
+        CHECK(Array::kEmpty->count() == 0);
+        CHECK(!Array::kEmpty->isMutable());
+
+        CHECK(Dict::kEmpty->type() == kDict);
+        CHECK(Dict::kEmpty->count() == 0);
+        CHECK(!Dict::kEmpty->isMutable());
+    }
+
     TEST_CASE("Pointers") {
         fleece::ValueTests::testPointers();
     }
