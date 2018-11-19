@@ -51,7 +51,7 @@ namespace fleece { namespace impl {
     };
 
 
-    EVEN_ALIGNED constexpr Value
+    EVEN_ALIGNED const Value
         Value::kNullInstance      = Value{kSpecialTag, kSpecialValueNull},
         Value::kUndefinedInstance = Value{kSpecialTag, kSpecialValueUndefined};
     const Value* const Value::kNullValue      = &kNullInstance;
