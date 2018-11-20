@@ -21,11 +21,13 @@ struct CaseListReporter : public Catch::ConsoleReporter {
     {
         _start = time(nullptr);
         stream << "STARTING TESTS AT " << ctime(&_start);
+        stream.flush();
     }
 
     virtual ~CaseListReporter() CATCH_OVERRIDE {
         auto now = time(nullptr);
         stream << "ENDED TESTS IN " << (now - _start) << "sec, AT " << ctime(&now);
+        stream.flush();
     }
 
     static std::string getDescription() {
@@ -42,11 +44,13 @@ struct CaseListReporter : public Catch::ConsoleReporter {
         stream << "\t>>> " << _testInfo.name << "\n";
         _firstSection = true;
         _sectionNesting = 0;
+        stream.flush();
         ConsoleReporter::testCaseStarting(_testInfo);
         _stopwatch.reset();
     }
     virtual void testCaseEnded( Catch::TestCaseStats const& _testCaseStats ) CATCH_OVERRIDE {
         stream << "\t    [" << _stopwatch.elapsed() << " sec]\n";
+        stream.flush();
         ConsoleReporter::testCaseEnded(_testCaseStats);
     }
 
@@ -57,6 +61,7 @@ struct CaseListReporter : public Catch::ConsoleReporter {
             for (unsigned i = 0; i < _sectionNesting; ++i)
                 stream << "\t";
             stream << "\t--- " << _sectionInfo.name << "\n";
+            stream.flush();
         }
         ++_sectionNesting;
         ConsoleReporter::sectionStarting(_sectionInfo);
