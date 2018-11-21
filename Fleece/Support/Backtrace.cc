@@ -30,6 +30,7 @@
     #define HAVE_EXECINFO
     #include <execinfo.h>   // backtrace(), backtrace_symbols()
 #else
+    #include <stdlib.h>     // free
     #include <unwind.h>     // _Unwind_Backtrace(), etc.
 #endif
 
