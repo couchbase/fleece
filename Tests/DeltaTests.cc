@@ -79,20 +79,49 @@ TEST_CASE("Delta scalars", "[delta]") {
 
 
 TEST_CASE("Delta strings", "[delta]") {
+    // Empty string
+    checkDelta("'hi'", "''", "[\"\"]");
+    // No change
+    checkDelta("'there'", "'there'", nullptr);
+    // Single word
     checkDelta("'hi'", "'there'", "[\"there\"]");
+    // Change one word
+    checkDelta("'Hello World.'",
+               "'Goodbye World.'",
+               "[\"Goodbye World.\"]");
+    // Too short for delta
+    checkDelta("'The fog comes in on little cat feet'",
+               "'The dog comes in on little cat feet'",
+               "[\"The dog comes in on little cat feet\"]");
+    // Modify string
     checkDelta("'to wound the autumnal city. So howled out for the world to give him a name.  The in-dark answered with the wind.'",
                "'To wound the eternal city. So he howled out for the world to give him its name. The in-dark answered with wind.'",
                "[\"1-1+T|12=5-4+eter|13=3+he |37=1-3+its|6=1-27=4-5=\",0,2]");
+    // Insert in middle
     checkDelta("'to wound the autumnal city. The in-dark answered with the wind.'",
                "'to wound the autumnal city. So howled out for the world to give him a name. The in-dark answered with the wind.'",
                "[\"27=48+ So howled out for the world to give him a name.|36=\",0,2]");
+    // Inefficient delta
+    checkDelta("'Lorem ipsum dolor sit amet, assueverit sadipscing usu ea, mei efficiantur intellegebat in, iudico ullamcorper ei ius. Ius quaeque eripuit instructior ea, et ipsum doctus quo, pri decore ornatus et. Te wisi omittantur interpretaris quo, in audire prompta nominati vim. Dicat epicuri delectus sit eu.'",
+               "'Ex quo prima efficiantur, an pro modus pertinax. Magna tractatos qualisque vim id. Eum at omnis inani, labore possim nec id. Exerci audire eam eu, summo liberavisse mel ei. Homero ponderum ea his, cum id impedit fuisset.'",
+               "[\"Ex quo prima efficiantur, an pro modus pertinax. Magna tractatos qualisque vim id. Eum at omnis inani, labore possim nec id. Exerci audire eam eu, summo liberavisse mel ei. Homero ponderum ea his, cum id impedit fuisset.\"]");
+    // Delta control chars in string
+    checkDelta("'ABC+DEF-HIJ=KLM|NOP'",
+               "'AbC-def+HIJKLM|NOP='",
+               "[\"AbC-def+HIJKLM|NOP=\"]");
+    /* FIXME: Does not produce correct deltas
+    // Multi-byte UTF-8 chars
+    checkDelta(u8"'モバイルデータベースは将来のものです。 ある日、私たちのデータが端に集まります。'",
+               u8"'モバイルデータベースがここにあります。 あなたのデータはすべて端にあります。'",
+               u8"[\"30=76-70+がここにあります。 あなたのデータはすべて端にあ|12=\",0,2]");
+    */
 }
 
 
 TEST_CASE("Delta simple dicts", "[delta]") {
     checkDelta("{}", "{}", nullptr);
     checkDelta("{foo: 1}", "{foo: 1}", nullptr);
-    checkDelta("{foo: 1, bar: 2, baz: 3}", "{foo: 1, bar: 2, baz: 3}", nullptr);
+    checkDelta("{foo: 1, bar: 2, baz: 3}", "{baz: 3, foo: 1, bar: 2}", nullptr);
 
     checkDelta("{}", "{bar: 2}", "{bar:2}");
     checkDelta("{foo: 1}", "{}", "{foo:[]}");
@@ -112,7 +141,12 @@ TEST_CASE("Delta nested dicts", "[delta]") {
     checkDelta("{foo: {bar: [1], baz:{goo:[3]},wow:0}}", "{foo: {bar: [1], baz:{goo:[3]},wow:0}}", nullptr);
     checkDelta("{foo: {bar: [1]}, goo: 2}", "{foo: {bar: [1]}, goo: 3}", "{goo:3}");
     checkDelta("{foo: {bar: [1]}, goo: 2}", "{foo: {bar: [2]}, goo: 2}", "{foo:{bar:{\"0\":2}}}");
+    checkDelta("{quuz: true, foo:{bar:{buzz:\"qux\"}}}", "{quuz: true, foo:{bar:{buzz:\"quux\"}}}", "{foo:{bar:{buzz:\"quux\"}}}");
+    checkDelta("{foo: 1, bar: 2, baz: [\"A\", \"B\", \"C\"]}", "{foo: 1, bar: 2, baz: {A: 1, B: 2, C: 3}}", "{baz:[{A:1,B:2,C:3}]}");
     checkDelta("{foo: {bar: [1]}, goo: [2]}", "{foo: {bar: [2]}, goo: [3]}", "{foo:{bar:{\"0\":2}},goo:{\"0\":3}}");
+    checkDelta("{\"glossary\":{\"title\":\"example glossary\",\"GlossDiv\":{\"title\":\"S\",\"GlossList\":{\"GlossEntry\":[{\"ID\":\"SGML\",\"SortAs\":\"SGML\",\"GlossTerm\":\"Standard Generalized Markup Language\",\"Acronym\":\"SGML\",\"Abbrev\":\"ISO 8879:1986\",\"GlossDef\":{\"para\":\"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\",\"GlossSeeAlso\":[\"GML\",\"XML\"]}},{\"ID\":\"SGML\",\"SortAs\":\"SGML\",\"GlossTerm\":\"Standard Generalized Markup Language\",\"Acronym\":\"SGML\",\"Abbrev\":\"ISO 8879:1986\",\"GlossDef\":{\"para\":\"A meta-markup language, used to create markup languages such as DocBook.\",\"GlossSeeAlso\":[\"GML\",\"XML\"]}}],\"GlossSee\":\"markup\"}}}}",
+               "{\"glossary\":{\"title\":\"example glossary\",\"GlossDiv\":{\"title\":\"S\",\"GlossList\":{\"GlossEntry\":[{\"ID\":\"SGML\",\"SortAs\":\"SGML\",\"GlossTerm\":\"Standard Generalized Markup Language\",\"Acronym\":\"SGML\",\"Abbrev\":\"ISO 8879:1986\",\"GlossDef\":{\"para\":\"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit sint cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\",\"GlossSeeAlso\":[\"GML\",\"XML\"]}},{\"ID\":\"SGML\",\"SortAs\":\"SGML\",\"GlossTerm\":\"Standard Generalized Markup Language\",\"Acronym\":\"SGML\",\"Abbrev\":\"ISO 8879:1986\",\"GlossDef\":{\"para\":\"A meta-markup language, used to create markup languages such as DocBook.\",\"GlossSeeAlso\":[\"GML\",\"XML\"]}}],\"GlossSee\":\"markup\"}}}}",
+               "{glossary:{GlossDiv:{GlossList:{GlossEntry:{\"0\":{GlossDef:{para:[\"290=4-4+sint|151=\",0,2]}}}}}}}");
 }
 
 
@@ -122,10 +156,12 @@ TEST_CASE("Delta simple arrays", "[delta]") {
 
     checkDelta("[]", "[1, 2, 3]", "[[1,2,3]]");
     checkDelta("[1, 2, 3]", "[]", "[[]]");
+    checkDelta("[1, 2, 3, 5, 6, 7]", "[1, 2, 3, 4, 5]", "{\"3\":4,\"4\":5,\"5-\":[]}"); // non-optimal - could be {"3-":[4,5]}
     checkDelta("[1, 2, 3]", "[1, 2, 3, 4, 5]", "{\"3-\":[4,5]}");
     checkDelta("[1, 2, 3, 4, 5]", "[1, 2, 3]", "{\"3-\":[]}");
     checkDelta("[1, 2, 3]", "[1, 9, 3]", "{\"1\":9}");
     checkDelta("[1, 2, 3]", "[4, 5, 6]", "{\"0\":4,\"1\":5,\"2\":6}");
+    checkDelta("['Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.']", "['Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, sed nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.']", "{\"0\":[\"149=4-3+sed|78=\",0,2]}");
 }
 
 
