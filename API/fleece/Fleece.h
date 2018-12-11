@@ -287,7 +287,7 @@ extern "C" {
     FLStringResult FLValue_ToString(FLValue);
 
     /** Compares two values for equality. This is a deep recursive comparison. */
-    bool FLValue_IsEqual(FLValue, FLValue);
+    bool FLValue_IsEqual(FLValue v1, FLValue v2);
 
     /** \name Ref-counting (mutable values only)
          @{ */
