@@ -24,6 +24,9 @@
 #include "PlatformCompat.hh"
 #include "betterassert.hh"
 
+#if (defined __ANDROID__) && (__ANDROID_API__ < 18)
+#define log2(x) (log(x) / log(2))
+#endif
 namespace fleece {
 
 
