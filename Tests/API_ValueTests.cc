@@ -135,3 +135,30 @@ TEST_CASE("API Paths", "[Encoder]") {
 #endif
 }
 
+
+TEST_CASE("API Undefined") {
+    Encoder enc;
+    enc.beginArray();
+    enc.writeInt(1234);
+    enc.writeUndefined();
+    enc.writeInt(4321);
+    enc.endArray();
+    auto doc = enc.finishDoc();
+
+    Array a = doc.root().asArray();
+    CHECK(a[0].asInt() == 1234);
+    CHECK(a[1].type() == kFLUndefined);
+    CHECK(a[2].asInt() == 4321);
+
+    Array::iterator i(a);
+    CHECK(i);
+    CHECK(i.value().asInt() == 1234);
+    ++i;
+    CHECK(i);
+    CHECK(i.value().type() == kFLUndefined);
+    ++i;
+    CHECK(i);
+    CHECK(i.value().asInt() == 4321);
+    ++i;
+    CHECK(!i);
+}

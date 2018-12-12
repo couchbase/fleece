@@ -73,6 +73,7 @@ _FLEncoder_Free
 _FLEncoder_Reset
 _FLEncoder_SetSharedKeys
 _FLEncoder_WriteNull
+_FLEncoder_WriteUndefined
 _FLEncoder_WriteBool
 _FLEncoder_WriteInt
 _FLEncoder_WriteUInt

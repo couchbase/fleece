@@ -81,7 +81,8 @@ namespace fleece { namespace impl {
         /////// Writing data:
 
         void writeNull();
-        void writeBool (bool);
+        void writeUndefined();
+        void writeBool(bool);
 
         void writeInt(int64_t i);
         void writeUInt(uint64_t i);
@@ -197,6 +198,7 @@ namespace fleece { namespace impl {
         };
 
         void addItem(Value v);
+        void addSpecial(int specialValue);
         void writeRawValue(slice rawValue, bool canInline =true);
         void writeValue(internal::tags, uint8_t buf[], size_t size, bool canInline =true);
         void reuseBaseStrings(const Value* NONNULL);

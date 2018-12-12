@@ -385,6 +385,7 @@ namespace fleece {
         operator ::FLEncoder ()                         {return _enc;}
 
         inline bool writeNull();
+        inline bool writeUndefined();
         inline bool writeBool(bool);
         inline bool writeInt(int64_t);
         inline bool writeUInt(uint64_t);
@@ -594,6 +595,7 @@ namespace fleece {
                                                 {FLEncoder_Amend(_enc, base,
                                                                      reuseStrings, externPointers);}
     inline bool Encoder::writeNull()            {return FLEncoder_WriteNull(_enc);}
+    inline bool Encoder::writeUndefined()       {return FLEncoder_WriteUndefined(_enc);}
     inline bool Encoder::writeBool(bool b)      {return FLEncoder_WriteBool(_enc, b);}
     inline bool Encoder::writeInt(int64_t n)    {return FLEncoder_WriteInt(_enc, n);}
     inline bool Encoder::writeUInt(uint64_t n)  {return FLEncoder_WriteUInt(_enc, n);}

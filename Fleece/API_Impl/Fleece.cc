@@ -76,8 +76,14 @@ const char* FLDumpData(FLSlice data) {
 }
 
 
+FLValueType FLValue_GetType(FLValue v) {
+    if (_usuallyFalse(v == NULL || v->isUndefined()))
+        return kFLUndefined;
+    else
+        return (FLValueType)v->type();
+}
 
-FLValueType FLValue_GetType(FLValue v)          {return v ? (FLValueType)v->type() : kFLUndefined;}
+
 bool FLValue_IsInteger(FLValue v)               {return v && v->isInteger();}
 bool FLValue_IsUnsigned(FLValue v)              {return v && v->isUnsigned();}
 bool FLValue_IsDouble(FLValue v)                {return v && v->isDouble();}
@@ -495,6 +501,7 @@ size_t FLEncoder_BytesWritten(FLEncoder e) {
 }
 
 bool FLEncoder_WriteNull(FLEncoder e)                    {ENCODER_TRY(e, writeNull());}
+bool FLEncoder_WriteUndefined(FLEncoder e)               {ENCODER_TRY(e, writeUndefined());}
 bool FLEncoder_WriteBool(FLEncoder e, bool b)            {ENCODER_TRY(e, writeBool(b));}
 bool FLEncoder_WriteInt(FLEncoder e, int64_t i)          {ENCODER_TRY(e, writeInt(i));}
 bool FLEncoder_WriteUInt(FLEncoder e, uint64_t u)        {ENCODER_TRY(e, writeUInt(u));}

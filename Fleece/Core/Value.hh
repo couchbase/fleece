@@ -105,8 +105,8 @@ namespace fleece { namespace impl {
         bool isDouble() const noexcept      {return tag() == internal::kFloatTag && (_byte[0] & 0x8);}
 
         /** "undefined" is a special subtype of kNull */
-        bool isUndefined() const noexcept   {return tag() == internal::kSpecialTag
-                                             && tinyValue() == internal::kSpecialValueUndefined;}
+        bool isUndefined() const noexcept   {return _byte[0] == ((internal::kSpecialTag << 4) |
+                                                                internal::kSpecialValueUndefined);}
 
         //////// Non-scalars:
 

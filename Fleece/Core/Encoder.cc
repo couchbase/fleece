@@ -196,9 +196,11 @@ namespace fleece { namespace impl {
 
 #pragma mark - SCALARS:
 
-    void Encoder::writeNull()              {addItem(Value(kSpecialTag, kSpecialValueNull));}
-    void Encoder::writeBool(bool b)        {addItem(Value(kSpecialTag, b ? kSpecialValueTrue
-                                                                         : kSpecialValueFalse));}
+    void Encoder::addSpecial(int specialValue) {addItem(Value(kSpecialTag, specialValue));}
+    void Encoder::writeNull()              {addSpecial(kSpecialValueNull);}
+    void Encoder::writeUndefined()         {addSpecial(kSpecialValueUndefined);}
+    void Encoder::writeBool(bool b)        {addSpecial(b ? kSpecialValueTrue : kSpecialValueFalse);}
+
     void Encoder::writeInt(uint64_t i, bool isSmall, bool isUnsigned) {
         if (isSmall) {
             addItem(Value(kShortIntTag, (i >> 8) & 0x0F, i & 0xFF));

@@ -211,14 +211,14 @@ extern "C" {
 
     /** Types of Fleece values. Basically JSON, with the addition of Data (raw blob). */
     typedef enum {
-        kFLUndefined = -1,  // Type of a NULL pointer, i.e. no such value, like JSON `undefined`
-        kFLNull = 0,        // This is a non-NULL value, equivalent to a JSON 'null'
-        kFLBoolean,
-        kFLNumber,
-        kFLString,
-        kFLData,
-        kFLArray,
-        kFLDict
+        kFLUndefined = -1,  ///< Type of a NULL pointer, i.e. no such value, like JSON `undefined`. Also the type of a value created by FLEncoder_WriteUndefined().
+        kFLNull = 0,        ///< Equivalent to a JSON 'null'
+        kFLBoolean,         ///< A `true` or `false` value
+        kFLNumber,          ///< A numeric value, either integer or floating-point
+        kFLString,          ///< A string
+        kFLData,            ///< Binary data (no JSON equivalent)
+        kFLArray,           ///< An array of values
+        kFLDict             ///< A mapping of strings to values
     } FLValueType;
 
 
@@ -236,9 +236,10 @@ extern "C" {
     /** Returns true if the value is non-NULL and represents an integer. */
     bool FLValue_IsInteger(FLValue);
 
-    /** Returns true if the value is non-NULL and represents an _unsigned_ integer that can only
-        be represented natively as a `uint64_t`. In that case, you should not call `FLValueAsInt`
-        because it will return an incorrect (negative) value; instead call `FLValueAsUnsigned`. */
+    /** Returns true if the value is non-NULL and represents an integer >= 2^63. Such a value can't
+        be represented in C as an `int64_t`, only a `uint64_t`, so you should access it by calling
+        `FLValueAsUnsigned`, _not_ FLValueAsInt, which would return  an incorrect (negative)
+        value. */
     bool FLValue_IsUnsigned(FLValue);
 
     /** Returns true if the value is non-NULL and represents a 64-bit floating-point number. */
@@ -259,10 +260,18 @@ extern "C" {
         does correctly return large `uint64_t` values of 2^63 and up. */
     uint64_t FLValue_AsUnsigned(FLValue);
 
-    /** Returns a value coerced to a 32-bit floating point number. */
+    /** Returns a value coerced to a 32-bit floating point number.
+        True and false are returned as 1.0 and 0.0, and integers are converted to float. All other
+        types are returned as 0.0.
+        @warning  Large integers (outside approximately +/- 2^23) will lose precision due to the
+        limitations of IEEE 32-bit float format. */
     float FLValue_AsFloat(FLValue);
 
-    /** Returns a value coerced to a 64-bit floating point number. */
+    /** Returns a value coerced to a 32-bit floating point number.
+        True and false are returned as 1.0 and 0.0, and integers are converted to float. All other
+        types are returned as 0.0.
+        @warning  Very large integers (outside approximately +/- 2^50) will lose precision due to
+        the limitations of IEEE 32-bit float format. */
     double FLValue_AsDouble(FLValue);
 
     /** Returns the exact contents of a string value, or null for all other types. */
@@ -790,8 +799,7 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
         @param uniqueStrings  (Fleece only) If true, string values that appear multiple times will be written
             as a single shared value. This saves space but makes encoding slightly slower.
             You should only turn this off if you know you're going to be writing large numbers
-            of non-repeated strings. Note also that the `cachePointers` option of FLDictKey
-            will not work if `uniqueStrings` is off. (Default is true) */
+            of non-repeated strings. (Default is true) */
     FLEncoder FLEncoder_NewWithOptions(FLEncoderFormat format,
                                        size_t reserveSize,
                                        bool uniqueStrings);
@@ -860,6 +868,12 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
         `null`, not the "undefined" value represented by a NULL FLValue pointer.) */
     bool FLEncoder_WriteNull(FLEncoder FLNONNULL);
 
+    /** Writes an `undefined` value to an encoder. (Its value when read will not be a `NULL`
+        pointer, but it can be recognized by `FLValue_GetType` returning `kFLUndefined`.)
+        @note The only real use for writing undefined values is to represent "holes" in an array.
+        An undefined dictionary value should be written simply by skipping the key and value. */
+    bool FLEncoder_WriteUndefined(FLEncoder FLNONNULL);
+
     /** Writes a boolean value (true or false) to an encoder. */
     bool FLEncoder_WriteBool(FLEncoder FLNONNULL, bool);
 
@@ -868,7 +882,8 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
         The number will be written in a compact form that uses only as many bytes as necessary. */
     bool FLEncoder_WriteInt(FLEncoder FLNONNULL, int64_t);
 
-    /** Writes an unsigned integer to an encoder. This function is only really necessary for huge
+    /** Writes an unsigned integer to an encoder.
+        @note This function is only really necessary for huge
         64-bit integers greater than or equal to 2^63, which can't be represented as int64_t. */
     bool FLEncoder_WriteUInt(FLEncoder FLNONNULL, uint64_t);
 
@@ -891,7 +906,7 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
     bool FLEncoder_WriteString(FLEncoder FLNONNULL, FLString);
 
     /** Writes a timestamp to an encoder, as an ISO-8601 date string.
-        (Note: since neither Fleece nor JSON have a 'Date' type, the encoded string has no
+        @note Since neither Fleece nor JSON have a 'Date' type, the encoded string has no
         metadata that distinguishes it as a date. It's just a string.)
         @param encoder  The encoder to write to.
         @param ts  The timestamp (milliseconds since Unix epoch 1-1-1970).
