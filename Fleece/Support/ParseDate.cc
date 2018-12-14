@@ -167,6 +167,7 @@ static int parseTimezone(const char *zDate, DateTime *p){
     int c;
     while( sqlite3Isspace(*zDate) ){ zDate++; }
     p->tz = 0;
+    p->validTZ = 0;
     c = *zDate;
     if( c=='-' ){
         sgn = -1;
@@ -198,6 +199,7 @@ static int parseTimezone(const char *zDate, DateTime *p){
     p->tz = sgn*(nMn + nHr*60);
 zulu_time:
     while( sqlite3Isspace(*zDate) ){ zDate++; }
+    p->validTZ = *zDate==0;
     return *zDate!=0;
 }
 
@@ -240,7 +242,6 @@ static int parseHhMmSs(const char *zDate, DateTime *p){
     p->m = m;
     p->s = s + ms;
     if( parseTimezone(zDate, p) ) return 1;
-    p->validTZ = (p->tz!=0)?1:0;
     return 0;
 }
 
@@ -284,6 +285,23 @@ static void computeJD(DateTime *p){
     }
 }
 
+static void inject_local_tz(DateTime* p)
+{
+    time_t rawtime = time(nullptr);
+    struct tm* ptm;
+
+    // Convert that raw time_t to GMT
+    struct tm gbuf;
+    ptm = gmtime_r(&rawtime, &gbuf);
+
+    // Caveat: Undefined behavior during ambigiuous times (e.g. during a repeated
+    // hour at the end of daylight savings time)
+    time_t gmt = mktime(ptm);
+    auto diff = (int)(difftime(rawtime, gmt) / 60.0);
+    p->validTZ = 1;
+    p->tz = diff;
+}
+
 /*
  ** Parse dates of the form
  **
@@ -313,8 +331,9 @@ static int parseYyyyMmDd(const char *zDate, DateTime *p){
     if( parseHhMmSs(zDate, p)==0 ){
         /* We got the time */
     }else if( *zDate==0 ){
-        p->validHMS = 0;
-        p->validTZ = 0;
+        p->validHMS = 1;
+        p->h = p->m = p->s = 0;
+        inject_local_tz(p);
     }else{
         return 1;
     }
@@ -325,6 +344,8 @@ static int parseYyyyMmDd(const char *zDate, DateTime *p){
     p->D = D;
     if( p->validTZ ){
         computeJD(p);
+    } else {
+        inject_local_tz(p);
     }
     return 0;
 }
