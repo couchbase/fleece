@@ -288,8 +288,12 @@ static void computeJD(DateTime *p){
 
 static void inject_local_tz(DateTime* p)
 {
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
+    // Let's hope this works on UWP since Microsoft has removed the
+    // tzset and _tzset functions from UWP
     static std::once_flag once;
     std::call_once(once, [] { tzset(); });
+#endif
 
     time_t rawtime = time(nullptr);
     struct tm* ptm;
