@@ -340,7 +340,8 @@ static int parseYyyyMmDd(const char *zDate, DateTime *p){
         /* We got the time */
     }else if( *zDate==0 ){
         p->validHMS = 1;
-        p->h = p->m = p->s = 0;
+        p->h = p->m = 0;
+        p->s = 0.0;
         inject_local_tz(p);
     }else{
         return 1;
