@@ -70,6 +70,7 @@
 #include <ctype.h>
 #include <math.h>
 #include <time.h>
+#include <mutex>
 #include "PlatformCompat.hh"
 
 typedef uint8_t u8;
@@ -287,6 +288,9 @@ static void computeJD(DateTime *p){
 
 static void inject_local_tz(DateTime* p)
 {
+    static std::once_flag once;
+    std::call_once(once, [] { tzset(); });
+
     time_t rawtime = time(nullptr);
     struct tm* ptm;
 
