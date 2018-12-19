@@ -79,6 +79,8 @@ typedef int64_t sqlite3_int64;
 #define sqlite3Isdigit isdigit
 #define sqlite3Isspace isspace
 
+#define LONG_MONTHS 0x15AA          // 1 bits for months with 31 days
+
 
 /*
  ** A structure for holding a single date and time.
@@ -333,6 +335,18 @@ static int parseYyyyMmDd(const char *zDate, DateTime *p){
     }
     if( getDigits(zDate,4,0,9999,'-',&Y,2,1,12,'-',&M,2,1,31,0,&D)!=3 ){
         return 1;
+    }
+    if (_usuallyFalse(D >= 29)) {
+        // Check for days past the end of the month:
+        if (_usuallyFalse(M == 2)) {
+            if (_usuallyFalse(D > 29)) {
+                return 1;
+            } else if (_usuallyFalse(Y % 4 != 0 || (Y % 100 == 0 && Y % 400 != 0))) {
+                return 1;
+            }
+        } else if (_usuallyFalse(D > 30 && !(LONG_MONTHS & (1 << M)))) {
+            return 1;
+        }
     }
     zDate += 10;
     while( sqlite3Isspace(*zDate) || 'T'==*(u8*)zDate ){ zDate++; }
