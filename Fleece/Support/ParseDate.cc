@@ -296,20 +296,42 @@ static void inject_local_tz(DateTime* p)
     static std::once_flag once;
     std::call_once(once, [] { tzset(); });
 #endif
-
-    time_t rawtime = time(nullptr);
-    struct tm* ptm;
-
+    
+    // In order to consider DST, among other date time oddities,
+    // a tm of the passed date must be constructed to mktime can
+    // be used.  However this has the caveat that since this is
+    // coming from a string with no time zone, it will never be
+    // clear if the "before" or "after" DST is desired in the case
+    // of a rollback of clocks in which an hour is repeated.  Moral
+    // of the story:  USE TIME ZONES IN YOUR DATE STRINGS!
+    struct tm local_time {};
+    local_time.tm_sec = (int)p->s;
+    local_time.tm_min = p->m;
+    local_time.tm_hour = p->h;
+    local_time.tm_mday = p->D;
+    local_time.tm_mon = p->M - 1;
+    local_time.tm_year = p->Y - 1900;
+    local_time.tm_isdst = -1;
+    
+    time_t rawtime = mktime(&local_time);
+    
     // Convert that raw time_t to GMT
     struct tm gbuf;
-    ptm = gmtime_r(&rawtime, &gbuf);
-
+    gmtime_r(&rawtime, &gbuf);
+    
     // Caveat: Undefined behavior during ambigiuous times (e.g. during a repeated
     // hour at the end of daylight savings time)
-    time_t gmt = mktime(ptm);
-    auto diff = (int)(difftime(rawtime, gmt) / 60.0);
+    time_t gmt = mktime(&gbuf);
+    auto diff = difftime(rawtime, gmt);
+    if(local_time.tm_isdst > 0) {
+        // Not sure why this isn't somehow involved since gbuf is correct
+        // but the resulting gmt is not.  Luckily mktime will inform us
+        // if it detected DST
+        diff += 3600;
+    }
+    
     p->validTZ = 1;
-    p->tz = diff;
+    p->tz = (int)(diff / 60.0);
 }
 
 /*
@@ -356,7 +378,6 @@ static int parseYyyyMmDd(const char *zDate, DateTime *p){
         p->validHMS = 1;
         p->h = p->m = 0;
         p->s = 0.0;
-        inject_local_tz(p);
     }else{
         return 1;
     }
