@@ -324,9 +324,8 @@ static void inject_local_tz(DateTime* p)
     time_t gmt = mktime(&gbuf);
     auto diff = difftime(rawtime, gmt);
     if(local_time.tm_isdst > 0) {
-        // Not sure why this isn't somehow involved since gbuf is correct
-        // but the resulting gmt is not.  Luckily mktime will inform us
-        // if it detected DST
+        // mktime uses GMT, but we want UTC which is unaffected
+        // by DST
         diff += 3600;
     }
     
