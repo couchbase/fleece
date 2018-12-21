@@ -26,10 +26,13 @@ namespace fleece {
         to a Retained, right after constructing it. */
     class RefCounted {
     public:
-
+        RefCounted()                            { }
+        
         int refCount() const                    { return _refCount; }
 
     protected:
+        RefCounted(const RefCounted &)          { }
+
         /** Destructor is accessible only so that it can be overridden.
             Never call delete, only release! Overrides should be made protected or private. */
         virtual ~RefCounted();
