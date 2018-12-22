@@ -377,6 +377,7 @@ static int parseYyyyMmDd(const char *zDate, DateTime *p){
         p->validHMS = 1;
         p->h = p->m = 0;
         p->s = 0.0;
+        p->validTZ = 0;
     }else{
         return 1;
     }
