@@ -358,6 +358,7 @@ void FLMutableDict_SetData(FLMutableDict d, FLString k, FLSlice v)      {if(d) d
 void FLMutableDict_SetValue(FLMutableDict d, FLString k, FLValue v)     {if(d) d->set(k, v);}
 
 void FLMutableDict_Remove(FLMutableDict d, FLString key)                {if(d) d->remove(key);}
+void FLMutableDict_RemoveAll(FLMutableDict d)                           {if(d) d->removeAll();}
 
 FLMutableArray FLMutableDict_GetMutableArray(FLMutableDict d, FLString key) {
     return d ? d->getMutableArray(key) : nullptr;

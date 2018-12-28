@@ -2,6 +2,10 @@
 #
 #  Copyright © 2018 Couchbase. All rights reserved.
 
+_kFLNullValue
+_kFLEmptyArray
+_kFLEmptyDict
+
 _FLSlice_Equal
 _FLSlice_Compare
 _FLSliceResult_Retain
@@ -24,6 +28,7 @@ _FLValue_GetType
 _FLValue_IsInteger
 _FLValue_IsUnsigned
 _FLValue_IsDouble
+_FLValue_IsEqual
 _FLValue_AsBool
 _FLValue_AsData
 _FLValue_AsInt
@@ -38,12 +43,16 @@ _FLValue_ToJSON
 _FLValue_ToJSONX
 _FLValue_ToJSON5
 _FLValue_FindDoc
+_FLValue_Release
 
 _FLData_ConvertJSON
 _FLJSON5_ToJSON
 
 _FLArray_Count
+_FLArray_IsEmpty
 _FLArray_Get
+_FLArray_AsMutable
+_FLArray_MutableCopy
 
 _FLArrayIterator_Begin
 _FLArrayIterator_GetCount
@@ -51,11 +60,41 @@ _FLArrayIterator_GetValue
 _FLArrayIterator_GetValueAt
 _FLArrayIterator_Next
 
+_FLMutableArray_New
+_FLMutableArray_GetSource
+_FLMutableArray_IsChanged
+_FLMutableArray_AppendNull
+_FLMutableArray_AppendBool
+_FLMutableArray_AppendInt
+_FLMutableArray_AppendUInt
+_FLMutableArray_AppendFloat
+_FLMutableArray_AppendDouble
+_FLMutableArray_AppendString
+_FLMutableArray_AppendData
+_FLMutableArray_AppendValue
+_FLMutableArray_SetNull
+_FLMutableArray_SetBool
+_FLMutableArray_SetInt
+_FLMutableArray_SetUInt
+_FLMutableArray_SetFloat
+_FLMutableArray_SetDouble
+_FLMutableArray_SetString
+_FLMutableArray_SetData
+_FLMutableArray_SetValue
+_FLMutableArray_Remove
+_FLMutableArray_Resize
+_FLMutableArray_GetMutableArray
+_FLMutableArray_GetMutableDict
+
 _FLDict_Count
+_FLDict_IsEmpty
 _FLDict_Get
 _FLDict_GetWithKey
+_FLDict_AsMutable
+_FLDict_MutableCopy
 
 _FLDictIterator_Begin
+_FLDictIterator_GetCount
 _FLDictIterator_GetKey
 _FLDictIterator_GetKeyString
 _FLDictIterator_GetValue
@@ -63,6 +102,23 @@ _FLDictIterator_Next
 
 _FLDictKey_Init
 _FLDictKey_GetString
+
+_FLMutableDict_New
+_FLMutableDict_GetSource
+_FLMutableDict_IsChanged
+_FLMutableDict_SetNull
+_FLMutableDict_SetBool
+_FLMutableDict_SetInt
+_FLMutableDict_SetUInt
+_FLMutableDict_SetFloat
+_FLMutableDict_SetDouble
+_FLMutableDict_SetString
+_FLMutableDict_SetData
+_FLMutableDict_SetValue
+_FLMutableDict_Remove
+_FLMutableDict_RemoveAll
+_FLMutableDict_GetMutableArray
+_FLMutableDict_GetMutableDict
 
 _FLEncoder_GetExtraInfo
 _FLEncoder_SetExtraInfo
@@ -104,6 +160,22 @@ _FLKeyPath_Free
 _FLKeyPath_Eval
 _FLKeyPath_EvalOnce
 
+_FLDeepIterator_New
+_FLDeepIterator_Free
+_FLDeepIterator_GetValue
+_FLDeepIterator_GetKey
+_FLDeepIterator_GetIndex
+_FLDeepIterator_GetDepth
+_FLDeepIterator_SkipChildren
+_FLDeepIterator_Next
+_FLDeepIterator_GetPath
+_FLDeepIterator_GetPathString
+_FLDeepIterator_GetJSONPointer
+
+_FLSharedKeys_Create
+_FLSharedKeys_CreateFromStateData
+_FLSharedKeys_GetStateData
+_FLSharedKeys_Encode
 _FLSharedKeys_Decode
 _FLSharedKeys_Release
 _FLSharedKeys_Retain
