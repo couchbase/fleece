@@ -54,6 +54,8 @@ namespace fleece { namespace impl { namespace internal {
             Or if the value is already a HeapDict, just returns it. Else returns null. */
         MutableDict* getMutableDict(slice key)    {return (MutableDict*)asValue(getMutable(key, kDictTag));}
 
+        void deepCopyChildren();
+
         void writeTo(Encoder&);
 
 

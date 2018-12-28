@@ -54,6 +54,9 @@ namespace fleece { namespace impl { namespace internal {
         /** Promotes Array or Dict value to mutable equivalent and returns it. */
         HeapCollection* makeMutable(tags ifType);
 
+        /** If the value is mutable, replaces it with a deep copy of itself. */
+        void deepCopyValue();
+
     private:
         void releaseValue();
         void setInline(internal::tags valueTag, int tiny);

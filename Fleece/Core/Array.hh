@@ -108,6 +108,7 @@ namespace fleece { namespace impl {
         friend class Value;
         friend class Dict;
         template <bool WIDE> friend struct dictImpl;
+        friend class internal::HeapArray;
     };
 
 } }

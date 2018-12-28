@@ -57,10 +57,7 @@ namespace fleece {
         const int err_no {0};
     };
 
-
-    static inline void throwIf(bool bad, ErrorCode error, const char *message) {
-        if (_usuallyFalse(bad))
-            FleeceException::_throw(error, message);
-    }
+    #define throwIf(BAD, ERROR, MESSAGE) \
+        if (_usuallyTrue(!(BAD))) ; else FleeceException::_throw(ERROR, MESSAGE)
 
 }

@@ -17,13 +17,22 @@ namespace fleece { namespace impl {
     class MutableArray : public Array {
     public:
 
+        /** Creates a new array of size `initialCount` filled with null Values. */
         static Retained<MutableArray> newArray(uint32_t initialCount =0) {
             return (new internal::HeapArray(initialCount))->asMutableArray();
         }
 
-        static Retained<MutableArray> newArray(const Array *a) {
-            return (new internal::HeapArray(a))->asMutableArray();
+        /** Creates a copy of `a`, or an empty array if `a` is null.
+            If `deepCopy` is true, nested mutable collections will be recursively copied too. */
+        static Retained<MutableArray> newArray(const Array *a, bool deepCopy =false) {
+            auto ha = retained(new internal::HeapArray(a));
+            if (deepCopy)
+                ha->deepCopyChildren();
+            return ha->asMutableArray();
         }
+
+        Retained<MutableArray> copy()               {return newArray(this, false);}
+        Retained<MutableArray> deepCopy()           {return newArray(this, true);}
 
         const Array* source() const                 {return heapArray()->_source;}
         bool isChanged() const                      {return heapArray()->isChanged();}

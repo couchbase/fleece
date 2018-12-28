@@ -9,30 +9,17 @@
 
 namespace fleece {
 
-    /** Equivalent to Value except that, if it holds a mutable Array/Dict, it will retain the
-        reference so it won't be freed. */
-    class RetainedValue : public Value {
+    template <class Collection, class Key>
+    class keyref {
     public:
-        RetainedValue()                           { }
-        RetainedValue(FLValue v)                  :Value(FLValue_Retain(v)) { }
-        RetainedValue(Value &v)                   :Value(FLValue_Retain(v)) { }
-        RetainedValue(RetainedValue &&v)          :Value(v) {v._val = nullptr;}
-        ~RetainedValue()                          {FLValue_Release(_val);}
-
-        RetainedValue& operator= (const Value &v) {
-            FLValue_Retain(v);
-            FLValue_Release(_val);
-            _val = v;
-            return *this;
-        }
-
-        RetainedValue& operator= (RetainedValue &&v) {
-            if (v._val != _val) {
-                FLValue_Release(_val);
-                _val = v._val;
-            }
-            return *this;
-        }
+        keyref(Collection &coll, Key key)           :_coll(coll), _key(key) { }
+        operator Value() const                      {return _coll.get(_key);}
+            template <class T>
+        void operator= (T value)                    {_coll.set(_key, value);}
+        void remove()                               {_coll.remove(_key);}
+    private:
+        Collection &_coll;
+        Key _key;
     };
 
 
@@ -41,12 +28,20 @@ namespace fleece {
         encoded to a new Fleece document. */
     class MutableArray : public Array {
     public:
+        /** Creates a new, empty mutable array. */
         static MutableArray newArray()          {return MutableArray(FLMutableArray_New(), true);}
-        static MutableArray newArray(Array a)   {return MutableArray(FLArray_MutableCopy(a), true);}
+
+        /** Shallow-copies an array. The source array may be mutable or immutable.
+            Copying an immutable Array is very fast because it doesn't copy any of its values;
+            it just makes a reference to the original Array and looks up values on demand. */
+        static inline MutableArray copy(Array a);
+
+        /** Deep-copies an array. */
+        static inline MutableArray deepCopy(Array a);
 
         MutableArray()                          :Array() { }
-        MutableArray(FLMutableArray a)          :Array((FLArray)a) {FLMutableArray_Retain(*this);}
-        MutableArray(const MutableArray &a)     :Array((FLArray)a) {FLMutableArray_Retain(*this);}
+        MutableArray(FLMutableArray a)          :Array((FLArray)FLMutableArray_Retain(a)) { }
+        MutableArray(const MutableArray &a)     :Array((FLArray)FLMutableArray_Retain(a)) { }
         MutableArray(MutableArray &&a)          :Array((FLArray)a) {a._val = nullptr;}
         ~MutableArray()                         {FLMutableArray_Release(*this);}
 
@@ -68,14 +63,22 @@ namespace fleece {
             return *this;
         }
 
+        /** The immutable Array this instance was constructed from (if any). */
         Array source() const                    {return FLMutableArray_GetSource(*this);}
+
+        /** True if this array has been modified since it was created. */
         bool isChanged() const                  {return FLMutableArray_IsChanged(*this);}
 
-        void remove(uint32_t first, uint32_t n) {FLMutableArray_Remove(*this, first, n);}
+        /** Removes a range of values from the array. */
+        void remove(uint32_t first, uint32_t n =1) {FLMutableArray_Remove(*this, first, n);}
+
+        /** Sets the array's size. If the array grows, new values begin as nulls. */
         void resize(uint32_t size)              {FLMutableArray_Resize(*this, size);}
 
         void setNull(uint32_t i)                {FLMutableArray_SetNull(*this, i);}
         void set(uint32_t i, bool v)            {FLMutableArray_SetBool(*this, i, v);}
+        void set(uint32_t i, int v)             {FLMutableArray_SetInt(*this, i, v);}
+        void set(uint32_t i, unsigned v)        {FLMutableArray_SetUInt(*this, i, v);}
         void set(uint32_t i, int64_t v)         {FLMutableArray_SetInt(*this, i, v);}
         void set(uint32_t i, uint64_t v)        {FLMutableArray_SetUInt(*this, i, v);}
         void set(uint32_t i, float v)           {FLMutableArray_SetFloat(*this, i, v);}
@@ -86,6 +89,8 @@ namespace fleece {
 
         void appendNull()                       {FLMutableArray_AppendNull(*this);}
         void append(bool v)                     {FLMutableArray_AppendBool(*this, v);}
+        void append(int v)                      {FLMutableArray_AppendInt(*this, v);}
+        void append(unsigned v)                 {FLMutableArray_AppendUInt(*this, v);}
         void append(int64_t v)                  {FLMutableArray_AppendInt(*this, v);}
         void append(uint64_t v)                 {FLMutableArray_AppendUInt(*this, v);}
         void append(float v)                    {FLMutableArray_AppendFloat(*this, v);}
@@ -94,11 +99,17 @@ namespace fleece {
         void appendData(FLSlice v)              {FLMutableArray_AppendData(*this, v);}
         void append(Value v)                    {FLMutableArray_AppendValue(*this, v);}
 
+        // This enables e.g. `array[10] = 17`
+        inline keyref<MutableArray,uint32_t> operator[] (uint32_t i) {
+            return keyref<MutableArray,uint32_t>(*this, i);
+        }
+
         inline MutableArray getMutableArray(uint32_t i);
         inline MutableDict getMutableDict(uint32_t i);
 
     private:
         MutableArray(FLMutableArray a, bool)     :Array((FLArray)a) {}
+        friend class RetainedValue;
     };
 
 
@@ -108,7 +119,8 @@ namespace fleece {
     class MutableDict : public Dict {
     public:
         static MutableDict newDict()            {return MutableDict(FLMutableDict_New(), true);}
-        static MutableDict newDict(Dict d)      {return MutableDict(FLDict_MutableCopy(d), true);}
+        static inline MutableDict copy(Dict d);
+        static inline MutableDict deepCopy(Dict d);
 
         MutableDict()                           :Dict() { }
         MutableDict(FLMutableDict d)            :Dict((FLDict)d) {FLMutableDict_Retain(*this);}
@@ -141,6 +153,8 @@ namespace fleece {
 
         void setNull(FLString k)                {FLMutableDict_SetNull(*this, k);}
         void set(FLString k, bool v)            {FLMutableDict_SetBool(*this, k, v);}
+        void set(FLString k, int v)             {FLMutableDict_SetInt(*this, k, v);}
+        void set(FLString k, unsigned v)        {FLMutableDict_SetUInt(*this, k, v);}
         void set(FLString k, int64_t v)         {FLMutableDict_SetInt(*this, k, v);}
         void set(FLString k, uint64_t v)        {FLMutableDict_SetUInt(*this, k, v);}
         void set(FLString k, float v)           {FLMutableDict_SetFloat(*this, k, v);}
@@ -149,16 +163,64 @@ namespace fleece {
         void setData(FLString k, FLSlice v)     {FLMutableDict_SetData(*this, k, v);}
         void set(FLString k, Value v)           {FLMutableDict_SetValue(*this, k, v);}
 
+        // This enables e.g. `dict["key"_sl] = 17`
+        inline keyref<MutableDict,slice> operator[] (slice key)     {return keyref<MutableDict,slice>(*this, key);}
+        inline keyref<MutableDict,Key&> operator[] (Key &key)       {return keyref<MutableDict,Key&>(*this, key);}
+
         inline MutableArray getMutableArray(FLString key);
         inline MutableDict getMutableDict(FLString key);
 
     private:
         MutableDict(FLMutableDict d, bool)      :Dict((FLDict)d) {}
+        friend class RetainedValue;
     };
 
     
+    /** Equivalent to Value except that, if it holds a MutableArray/Dict, it will retain the
+        reference so it won't be freed. */
+    class RetainedValue : public Value {
+    public:
+        RetainedValue()                           { }
+        RetainedValue(FLValue v)                  :Value(FLValue_Retain(v)) { }
+        RetainedValue(const Value &v)             :Value(FLValue_Retain(v)) { }
+        RetainedValue(RetainedValue &&v)          :Value(v) {v._val = nullptr;}
+        RetainedValue(MutableArray &&v)           :Value(v) {v._val = nullptr;}
+        RetainedValue(MutableDict &&v)            :Value(v) {v._val = nullptr;}
+        ~RetainedValue()                          {FLValue_Release(_val);}
+
+        RetainedValue& operator= (const Value &v) {
+            FLValue_Retain(v);
+            FLValue_Release(_val);
+            _val = v;
+            return *this;
+        }
+
+        RetainedValue& operator= (RetainedValue &&v) {
+            if (v._val != _val) {
+                FLValue_Release(_val);
+                _val = v._val;
+            }
+            return *this;
+        }
+    };
+
+
 
     //////// IMPLEMENTATION GUNK:
+
+    inline MutableArray MutableArray::copy(Array a) {
+        return MutableArray(FLArray_MutableCopy(a, false), true);
+    }
+    inline MutableArray MutableArray::deepCopy(Array a) {
+        return MutableArray(FLArray_MutableCopy(a, true), true);
+    }
+
+    inline MutableDict MutableDict::copy(Dict d) {
+        return MutableDict(FLDict_MutableCopy(d, false), true);
+    }
+    inline MutableDict MutableDict::deepCopy(Dict d) {
+        return MutableDict(FLDict_MutableCopy(d, true), true);
+    }
 
     inline MutableArray MutableArray::getMutableArray(uint32_t i)
                                                 {return FLMutableArray_GetMutableArray(*this, i);}

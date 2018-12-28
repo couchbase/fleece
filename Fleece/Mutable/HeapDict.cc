@@ -28,10 +28,21 @@ namespace fleece { namespace impl { namespace internal {
 
     HeapDict::HeapDict(const Dict *d)
     :HeapCollection(kDictTag)
-    ,_count(d ? d->count() : 0)
-    ,_source(d)
-    ,_sharedKeys(_source ? _source->sharedKeys() : nullptr)
-    { }
+    {
+        if (d) {
+            _count = d->count();
+            if (d->isMutable()) {
+                auto hd = d->asMutable()->heapDict();
+                _source = hd->_source;
+                _map = hd->_map;
+                _backingSlices = hd->_backingSlices;
+            } else {
+                _source = d;
+            }
+            if (_source)
+                _sharedKeys = _source->sharedKeys();
+        }
+    }
 
 
     void HeapDict::markChanged() {
@@ -222,6 +233,12 @@ namespace fleece { namespace impl { namespace internal {
             }
             enc.endDictionary();
         }
+    }
+
+
+    void HeapDict::deepCopyChildren() {
+        for (auto &entry : _map)
+            entry.second.deepCopyValue();
     }
 
 

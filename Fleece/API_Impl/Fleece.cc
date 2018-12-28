@@ -35,6 +35,11 @@ namespace fleece { namespace impl {
 } }
 
 
+const FLValue kFLNullValue  = Value::kNullValue;
+const FLArray kFLEmptyArray = Array::kEmpty;
+const FLDict kFLEmptyDict   = Dict::kEmpty;
+
+
 bool FLSlice_Equal(FLSlice a, FLSlice b)        {return (slice)a == (slice)b;}
 int FLSlice_Compare(FLSlice a, FLSlice b)       {return ((slice)a).compare((slice)b); }
 
@@ -202,15 +207,15 @@ bool FLArrayIterator_Next(FLArrayIterator* i) {
 }
 
 
-static FLMutableArray _newMutableArray(FLArray a) noexcept {
+static FLMutableArray _newMutableArray(FLArray a, bool deepCopy) noexcept {
     try {
-        return (MutableArray*)retain(MutableArray::newArray(a));
+        return (MutableArray*)retain(MutableArray::newArray(a, deepCopy));
     } catchError(nullptr)
     return nullptr;
 }
 
-FLMutableArray FLMutableArray_New(void)             {return _newMutableArray(nullptr);}
-FLMutableArray FLArray_MutableCopy(FLArray a)       {return a ? _newMutableArray(a) : nullptr;}
+FLMutableArray FLMutableArray_New(void)             {return _newMutableArray(nullptr, false);}
+FLMutableArray FLArray_MutableCopy(FLArray a, bool deep)       {return a ? _newMutableArray(a, deep) : nullptr;}
 FLMutableArray FLArray_AsMutable(FLArray a)         {return a ? a->asMutable() : nullptr;}
 FLArray FLMutableArray_GetSource(FLMutableArray a)  {return a ? a->source() : nullptr;}
 bool FLMutableArray_IsChanged(FLMutableArray a)     {return a && a->isChanged();}
@@ -329,15 +334,15 @@ FLValue FLDict_GetWithKey(FLDict d, FLDictKey *k) {
 }
 
 
-static FLMutableDict _newMutableDict(FLDict d) noexcept {
+static FLMutableDict _newMutableDict(FLDict d, bool deep) noexcept {
     try {
-        return (MutableDict*)retain(MutableDict::newDict(d));
+        return (MutableDict*)retain(MutableDict::newDict(d, deep));
     } catchError(nullptr)
     return nullptr;
 }
 
-FLMutableDict FLMutableDict_New(void)               {return _newMutableDict(nullptr);}
-FLMutableDict FLDict_MutableCopy(FLDict d)          {return d ? _newMutableDict(d) : nullptr;}
+FLMutableDict FLMutableDict_New(void)               {return _newMutableDict(nullptr, false);}
+FLMutableDict FLDict_MutableCopy(FLDict d, bool deep) {return d ? _newMutableDict(d, deep) : nullptr;}
 FLMutableDict FLDict_AsMutable(FLDict d)            {return d ? d->asMutable() : nullptr;}
 FLDict FLMutableDict_GetSource(FLMutableDict d)     {return d ? d->source() : nullptr;}
 bool FLMutableDict_IsChanged(FLMutableDict d)       {return d && d->isChanged();}

@@ -191,6 +191,32 @@ namespace fleece {
     }
 
 
+    TEST_CASE("MutableArray copy", "[Mutable]") {
+        Retained<MutableArray> ma = MutableArray::newArray(2);
+        ma->set(0, 123);
+        ma->set(1, "howdy"_sl);
+
+        Retained<MutableArray> mb = MutableArray::newArray(1);
+        mb->set(0, ma);
+        REQUIRE(mb->get(0) == ma);
+
+        Retained<MutableArray> mc = MutableArray::newArray(1);
+        mc->set(0, mb);
+        REQUIRE(mc->get(0) == mb);
+
+        Retained<MutableArray> copy = mc->copy();
+        CHECK(copy != mc);
+        CHECK(copy->isEqual(mc));
+        CHECK(copy->get(0) == mc->get(0));              // it's shallow
+
+        copy = mc->deepCopy();
+        CHECK(copy != mc);
+        CHECK(copy->isEqual(mc));
+        CHECK(copy->get(0) != mc->get(0));              // it's deep
+        CHECK(copy->get(0)->asArray()->get(0) != ma);   // it's so deep you can't get under it
+    }
+
+
 #pragma mark - MUTABLE DICT:
 
 
@@ -365,6 +391,9 @@ namespace fleece {
         for (int len = 0; len < 50; ++len)
             CHECK(ma->get(len)->asString() == slice(chars, len));
     }
+
+
+#pragma mark - ENCODING:
 
 
     TEST_CASE("Encoding mutable array", "[Mutable]") {

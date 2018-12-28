@@ -310,6 +310,9 @@ extern "C" {
         If the value is not mutable, this call does nothing. */
     void FLValue_Release(FLValue);
 
+
+    extern const FLValue kFLNullValue;
+
     /** @} */
 
     //////// ARRAY
@@ -339,6 +342,7 @@ extern "C" {
     /** Returns an value at an array index, or NULL if the index is out of range. */
     FLValue FLArray_Get(FLArray, uint32_t index);
 
+    extern const FLArray kFLEmptyArray;
 
     /** \name Array iteration
         @{
@@ -389,12 +393,17 @@ while (NULL != (value = FLArrayIterator_GetValue(&iter))) {
     /** \name Mutable Arrays
          @{ */
 
-    /** Creates a new mutable array that's a shallow, lazy copy of the source array.
-        Its initial ref-count is 1, so a call to FLMutableArray_Free will free it.
-        No items are copied up front: instead the new Array keeps a pointer to the source, and
-        if it doesn't yet contain a value for a key, it look it up in the source.
-        If the source array is NULL, an empty mutable Array is returned. */
-    FLMutableArray FLArray_MutableCopy(FLArray);
+    /** Creates a new mutable Array that's a copy of the source Array.
+        Its initial ref-count is 1, so a call to FLMutableArray_Release will free it.
+
+        Copying an immutable Array is very cheap (only one small allocation.) The `deepCopy` flag
+        is ignored.
+
+        Copying a mutable Array is cheap if it's a shallow copy, but if `deepCopy` is true,
+        nested mutable Arrays and Dicts are also copied, recursively.
+
+        If the source Array is NULL, then NULL is returned. */
+    FLMutableArray FLArray_MutableCopy(FLArray, bool deepCopy);
 
     /** Creates a new empty mutable Array.
         Its initial ref-count is 1, so a call to FLMutableArray_Free will free it.  */
@@ -493,6 +502,8 @@ while (NULL != (value = FLArrayIterator_GetValue(&iter))) {
         Returns NULL if the value is not found or if the dictionary is NULL. */
     FLValue FLDict_Get(FLDict, FLSlice keyString);
 
+    extern const FLDict kFLEmptyDict;
+
     /** \name Dict iteration
          @{
 Iterating a dictionary typically looks like this:
@@ -583,12 +594,17 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
     /** \name Mutable dictionaries
          @{ */
 
-    /** Creates a new mutable Dict that's a shallow, lazy copy of the source Dict.
-        Its initial ref-count is 1, so a call to FLMutableDict_Free will free it.
-        No items are copied up front: instead the new Dict keeps a pointer to the source, and
-        if it doesn't yet contain a value for a key, it look it up in the source.
-        If the source dict is NULL, an empty mutable Dict is returned. */
-    FLMutableDict FLDict_MutableCopy(FLDict source);
+    /** Creates a new mutable Dict that's a copy of the source Dict.
+        Its initial ref-count is 1, so a call to FLMutableDict_Release will free it.
+
+        Copying an immutable Dict is very cheap (only one small allocation.) The `deepCopy` flag
+        is ignored.
+
+        Copying a mutable Dict is cheap if it's a shallow copy, but if `deepCopy` is true,
+        nested mutable Dicts and Arrays are also copied, recursively.
+
+        If the source dict is NULL, then NULL is returned. */
+    FLMutableDict FLDict_MutableCopy(FLDict source, bool deepCopy);
 
     /** Creates a new empty mutable Dict.
         Its initial ref-count is 1, so a call to FLMutableDict_Free will free it.  */

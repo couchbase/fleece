@@ -49,6 +49,8 @@ namespace fleece {
         Value(FLValue v)                                :_val(v) { }
         operator FLValue() const                        {return _val;}
 
+        static Value null()                             {return Value(kFLNullValue);}
+
         inline FLValueType type() const;
         inline bool isInteger() const;
         inline bool isUnsigned() const;
@@ -78,10 +80,13 @@ namespace fleece {
         bool operator! () const                         {return _val == nullptr;}
         bool operator== (Value v) const                 {return _val == v._val;}
         bool operator== (FLValue v) const               {return _val == v;}
+        bool operator!= (Value v) const                 {return _val != v._val;}
+        bool operator!= (FLValue v) const               {return _val != v;}
 
         bool isEqual(Value v) const                     {return FLValue_IsEqual(_val, v);}
 
         Value& operator= (Value v)                      {_val = v._val; return *this;}
+        Value& operator= (nullptr_t)                    {_val = nullptr; return *this;}
 
         inline Value operator[] (const KeyPath &kp) const;
 
@@ -95,6 +100,12 @@ namespace fleece {
             return FLValue_GetNSObject(_val, sharedStrings);
         }
 #endif
+
+        // Disallowed because the mutable value would be released, which might free it:
+        Value(MutableArray&&) =delete;
+        Value& operator= (MutableArray&&) =delete;
+        Value(MutableDict&&) =delete;
+        Value& operator= (MutableDict&&) =delete;
 
     protected:
         ::FLValue _val {nullptr};
@@ -116,6 +127,8 @@ namespace fleece {
         Array()                                         :Value() { }
         Array(FLArray a)                                :Value((FLValue)a) { }
         operator FLArray () const                       {return (FLArray)_val;}
+
+        static Array emptyArray()                       {return Array(kFLEmptyArray);}
 
         inline uint32_t count() const;
         inline bool empty() const;
@@ -150,6 +163,10 @@ namespace fleece {
         // begin/end are just provided so you can use the C++11 "for (Value v : array)" syntax.
         inline iterator begin() const                   {return iterator(*this);}
         inline iterator end() const                     {return iterator();}
+
+        // Disallowed because the MutableArray would be released, which might free it:
+        Array(MutableArray&&) =delete;
+        Array& operator= (MutableArray&&) =delete;
     };
 
 
@@ -159,6 +176,8 @@ namespace fleece {
         Dict()                                          :Value() { }
         Dict(FLDict d)                                  :Value((FLValue)d) { }
         operator FLDict () const                        {return (FLDict)_val;}
+
+        static Dict emptyDict()                         {return Dict(kFLEmptyDict);}
 
         inline uint32_t count() const;
         inline bool empty() const;
@@ -220,6 +239,10 @@ namespace fleece {
         // begin/end are just provided so you can use the C++11 "for (Value v : dict)" syntax.
         inline iterator begin() const                   {return iterator(*this);}
         inline iterator end() const                     {return iterator();}
+
+        // Disallowed because the MutableDict would be released, which might free it:
+        Dict(MutableDict&&) =delete;
+        Dict& operator= (MutableDict&&) =delete;
     };
 
 

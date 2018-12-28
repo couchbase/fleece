@@ -124,7 +124,10 @@ namespace fleece {
     MutableArray MutableHashTree::getMutableArray(slice key) {
         MutableArray result;
         insert(key, [&](Value value) -> Value {
-            result = MutableArray::newArray(value.asArray());
+            auto array = value.asArray();
+            result = array.asMutable();
+            if (!result)
+                result = MutableArray::copy(array);
             return result;
         });
        return result;
@@ -133,7 +136,10 @@ namespace fleece {
     MutableDict MutableHashTree::getMutableDict(slice key) {
         MutableDict result;
         insert(key, [&](Value value) -> Value {
-            result = MutableDict::newDict(value.asDict());
+            auto dict = value.asDict();
+            result = dict.asMutable();
+            if (!result)
+                result = MutableDict::copy(dict);
             return result;
         });
         return result;

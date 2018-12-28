@@ -122,6 +122,12 @@ namespace fleece { namespace impl { namespace internal {
             return Value::kUndefinedValue;
     }
 
+    HeapCollection* ValueSlot::asMutableCollection() const {
+        if (!_isInline && _asValue && _asValue->isMutable())
+            return (HeapCollection*)HeapValue::asHeapValue(_asValue);
+        return nullptr;
+    }
+
 
     void ValueSlot::setInline(internal::tags valueTag, int tiny) {
         releaseValue();
@@ -235,6 +241,21 @@ namespace fleece { namespace impl { namespace internal {
         if (mval)
             set(mval->asValue());
         return mval;
+    }
+
+
+    void ValueSlot::deepCopyValue() {
+        if (!_isInline && _asValue && _asValue->isMutable()) {
+            HeapCollection *copy;
+            if (_asValue->tag() == kArrayTag) {
+                copy = new HeapArray((Array*)_asValue);
+                ((HeapArray*)copy)->deepCopyChildren();
+            } else {
+                copy = new HeapDict((Dict*)_asValue);
+                ((HeapDict*)copy)->deepCopyChildren();
+            }
+            set(copy->asValue());
+        }
     }
 
 } } }

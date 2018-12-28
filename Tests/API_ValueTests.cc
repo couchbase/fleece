@@ -18,6 +18,7 @@
 
 #include "FleeceTests.hh"
 #include "fleece/Fleece.hh"
+#include "fleece/Mutable.hh"
 
 using namespace fleece;
 
@@ -161,4 +162,34 @@ TEST_CASE("API Undefined") {
     CHECK(i.value().asInt() == 4321);
     ++i;
     CHECK(!i);
+}
+
+
+TEST_CASE("API constants") {
+    CHECK(Value::null() != nullptr);
+    CHECK(Value::null().type() == kFLNull);
+
+    CHECK((FLValue)Array::emptyArray() != nullptr);
+    CHECK(Array::emptyArray().type() == kFLArray);
+    CHECK(Array::emptyArray().count() == 0);
+
+    CHECK((FLValue)Dict::emptyDict() != nullptr);
+    CHECK(Dict::emptyDict().type() == kFLDict);
+    CHECK(Dict::emptyDict().count() == 0);
+}
+
+
+static MutableArray returnsMutableArray() {
+    MutableArray ma = MutableArray::newArray();
+    ma.append(17);
+    return ma;
+}
+
+TEST_CASE("API Mutable") {
+    // This next line should fail to compile:
+    //Array a = returnsMutableArray();
+
+    // This does compile, since RetainedValue keeps a reference:
+    RetainedValue b = returnsMutableArray();
+    CHECK(b.toJSONString() == "[17]");
 }

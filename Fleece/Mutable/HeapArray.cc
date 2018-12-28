@@ -30,8 +30,17 @@ namespace fleece { namespace impl { namespace internal {
     HeapArray::HeapArray(const Array *a)
     :HeapCollection(kArrayTag)
     ,_items(a ? a->count() : 0)
-    ,_source(a)
-    { }
+    {
+        if (a) {
+            if (a->isMutable()) {
+                auto ha = a->asMutable()->heapArray();
+                _items = ha->_items;
+                _source = ha->_source;
+            } else {
+                _source = a;
+            }
+        }
+    }
 
 
     void HeapArray::populate(unsigned fromIndex) {
@@ -128,6 +137,14 @@ namespace fleece { namespace impl { namespace internal {
         return &_items.front();
     }
 
+
+    void HeapArray::deepCopyChildren() {
+        for (auto &entry : _items)
+            entry.deepCopyValue();
+    }
+
+
+#pragma mark - ITERATOR:
 
 
     HeapArray::iterator::iterator(const HeapArray *ma) noexcept
