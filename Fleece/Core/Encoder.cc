@@ -581,11 +581,8 @@ namespace fleece { namespace impl {
     }
 
     void Encoder::writeKey(int n) {
-        throwIf(!_sharedKeys && n != Dict::kMagicParentKey
-#ifndef NDEBUG
-                             && !gDisableNecessarySharedKeysCheck
-#endif
-                ,EncodeError, "Can't add numeric key without SharedKeys");
+        throwIf(!_sharedKeys && n != Dict::kMagicParentKey && !gDisableNecessarySharedKeysCheck,
+                EncodeError, "Can't add numeric key without SharedKeys");
         addingKey();
         writeInt(n);
         addedKey(nullslice);

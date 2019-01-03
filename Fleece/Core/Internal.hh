@@ -88,9 +88,15 @@ namespace fleece { namespace impl { namespace internal {
     class HeapArray;
     class HeapDict;
 
-#ifndef NDEBUG
-    extern std::atomic<unsigned> gTotalComparisons;
+    // There is a sanity-check that prevents the use of numeric dict keys when there is no
+    // SharedKeys in scope. The Encoder test case "DictionaryNumericKeys" needs to disable this
+    // temporarily, so `gDisableNecessarySharedKeysCheck` is declared for that purpose, but
+    // only in debug builds.
+#ifdef NDEBUG
+    constexpr bool gDisableNecessarySharedKeysCheck = false;
+#else
     extern bool gDisableNecessarySharedKeysCheck;
+    extern std::atomic<unsigned> gTotalComparisons;
 #endif
 
 // Value instances are only declared directly in a few special cases such as the constants
