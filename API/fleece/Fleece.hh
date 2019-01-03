@@ -86,7 +86,7 @@ namespace fleece {
         bool isEqual(Value v) const                     {return FLValue_IsEqual(_val, v);}
 
         Value& operator= (Value v)                      {_val = v._val; return *this;}
-        Value& operator= (nullptr_t)                    {_val = nullptr; return *this;}
+        Value& operator= (std::nullptr_t)               {_val = nullptr; return *this;}
 
         inline Value operator[] (const KeyPath &kp) const;
 
