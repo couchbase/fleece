@@ -1,8 +1,10 @@
-[![Build Status](https://travis-ci.org/couchbaselabs/fleece.svg?branch=master)](https://travis-ci.org/couchbaselabs/fleece)
+[![Travis build Status](https://travis-ci.org/couchbaselabs/fleece.svg?branch=master)](https://travis-ci.org/couchbaselabs/fleece)
+[![Appveyor build Status](https://ci.appveyor.com/api/projects/status/github/couchbaselabs/fleece?svg=true)](https://ci.appveyor.com/project/borrrden/fleece)
+
 
 # Fleece
 
-__Fleece__ is a new binary encoding for semi-structured data. Its data model is a superset of JSON, adding support for binary values. It is designed to be:
+__Fleece__ is a binary encoding for semi-structured data. Its data model is a superset of JSON, adding support for binary values. It is designed to be:
 
 * **Very fast to read:** No parsing is needed, and the data can be navigated and read without any heap allocation. Fleece objects are internal pointers into the raw data. Arrays and dictionaries can be random-accessed. Performance on real-world-scale data has been clocked at 20x that of JSON. (Want proof? See the [benchmark](Performance.md).)
 * **Compact:** Simple values will be about the same size as JSON. Complex ones may be much smaller, since repeated values, especially strings, only need to be stored once.
@@ -26,7 +28,7 @@ __Fleece__ is a new binary encoding for semi-structured data. Its data model is 
 * C++ and C APIs
 * A command-line tool, `fleece`, that can convert JSON to Fleece or vice versa, or dump Fleece data in a human-readable form that shows the internal structure
 * Some experimental stuff:
-    * A [Hash-Array-Mapped Trie](https://en.wikipedia.org/wiki/Hash_array_mapped_trie) implementation for building highly scaleable hash tables in Fleece
+    * A [Hash-Array-Mapped Trie](https://en.wikipedia.org/wiki/Hash_array_mapped_trie) implementation for building highly scaleable persistent hash tables in Fleece
     * At the other extreme, an extremely compact binary tree of strings that might find a use someday
 
 ## FAQ
@@ -49,19 +51,19 @@ Because Foundation is what I know and work with. I'd love to incorporate benchma
 A: It's a reference to the mythical [Golden Fleece](https://en.wikipedia.org/wiki/Golden_Fleece), the treasure sought by Jason and the Argonauts.
 
 **Q: Who wrote this?**  
-[Jens Alfke](https://github.com/snej), with input from [Volker Mische](https://github.com/vmx) and [Dave Rigby](https://github.com/daverigby). (And thanks to Mark Nunberg for the excellent [jsonsl](https://github.com/mnunberg/jsonsl) parser.)
+[Jens Alfke](https://github.com/snej), with design input from [Volker Mische](https://github.com/vmx) and [Dave Rigby](https://github.com/daverigby), and much help with portability and bug-fixing from [Jim Borden](https://github.com/borrrden). (And thanks to Mark Nunberg for the excellent [jsonsl](https://github.com/mnunberg/jsonsl) parser.)
 
 ## Status
 
-Fleece is in active development, and is being used in the in-development Couchbase Lite 2.0, as part of the [LiteCore](https://github.com/couchbase/couchbase-lite-core) project.
+Fleece is in active use and development. It is a core component of Couchbase Lite 2.0, via the [LiteCore](https://github.com/couchbase/couchbase-lite-core) library.
 
 ## Requirements / Compatibility
 
-* Fleece _should_ be buildable with any C++11 compiler, such as current versions of Xcode, Clang, GCC or MSVC. (Yes, there are some Objective-C++ source files (`.mm`), but those are only used to provide Objective-C glue and Mac/iOS specific benchmarks. You can ignore them on other platforms.)
-* There _should_ be no dependencies on any external libraries, other than the standard C library and the C++ STL.
-* It _should_ work correctly, and create interoperable data, on both little-endian and big-endian CPUs.
+* Fleece builds with Xcode, Clang, GCC and MSVC, with C++11 or later. (Yes, there are some Objective-C++ source files (`.mm`), but those are only used to provide Objective-C glue and Mac/iOS specific benchmarks. You can ignore them on other platforms.)
+* There are no dependencies on any external libraries, other than the standard C library and the C++ STL.
+* It _should_ work correctly, and create interoperable data, on both little-endian and big-endian CPUs, but admittedly we are not currently testing or using Fleece on any big-endian platforms.
 
-However, we don't yet have continuous integration on all covered platforms, so it's possible those "should"s are not 100% true at the moment. If you encounter problems, please file an issue and we'll fix it.
+We use Travis and Appveyor for CI, covering Clang, GCC, Xcode and MSVC on macOS, Linux and Windows. If you encounter portability problems, please file an issue and we'll fix it.
 
 ## License
 
