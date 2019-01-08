@@ -19,6 +19,7 @@
 #include "FleeceTests.hh"
 #include "FleeceImpl.hh"
 #include "JSONDelta.hh"
+#include <iostream>
 
 namespace fleece { namespace impl {
     extern bool gCompatibleDeltas;
@@ -27,6 +28,8 @@ namespace fleece { namespace impl {
 using namespace fleece;
 using namespace fleece::impl;
 
+
+static bool isValidUTF8(fleece::slice sl) noexcept;
 
 static std::string toJSONString(const Value *v) {
     return v ? v->toJSONString() : "undefined";
@@ -56,6 +59,8 @@ static void checkDelta(const char *json1, const char *json2, const char *deltaEx
 
     // Compute the delta and check it:
     alloc_slice jsonDelta = JSONDelta::create(v1, v2, true);
+    std::cerr << "Delta: " << std::string(jsonDelta) << "\n";
+    CHECK(isValidUTF8(jsonDelta));
     CHECK(jsonDelta == slice(deltaExpected));
 
     if (jsonDelta.size > 0) {
@@ -79,6 +84,9 @@ TEST_CASE("Delta scalars", "[delta]") {
 
 
 TEST_CASE("Delta strings", "[delta]") {
+    JSONDelta::gMinStringDiffLength = 36;
+    JSONDelta::gTextDiffTimeout = 9999;
+
     // Empty string
     checkDelta("'hi'", "''", "[\"\"]");
     // No change
@@ -106,15 +114,33 @@ TEST_CASE("Delta strings", "[delta]") {
                "'Ex quo prima efficiantur, an pro modus pertinax. Magna tractatos qualisque vim id. Eum at omnis inani, labore possim nec id. Exerci audire eam eu, summo liberavisse mel ei. Homero ponderum ea his, cum id impedit fuisset.'",
                "[\"Ex quo prima efficiantur, an pro modus pertinax. Magna tractatos qualisque vim id. Eum at omnis inani, labore possim nec id. Exerci audire eam eu, summo liberavisse mel ei. Homero ponderum ea his, cum id impedit fuisset.\"]");
     // Delta control chars in string
-    checkDelta("'ABC+DEF-HIJ=KLM|NOP'",
-               "'AbC-def+HIJKLM|NOP='",
-               "[\"AbC-def+HIJKLM|NOP=\"]");
-    /* FIXME: Does not produce correct deltas
-    // Multi-byte UTF-8 chars
+    checkDelta("'ABC+DEF-HIJ=KLM|NOP *******************************'",
+               "'AbC-def+HIJKLM|NOP= *******************************'",
+               "[\"1=7-7+bC-def+|3=1-7=1+=|32=\",0,2]");
+
+    JSONDelta::gMinStringDiffLength = 60;
+}
+
+TEST_CASE("Delta strings UTF-8", "[delta]") {
+    // See issue #40 -- JSONDelta must take care not to put a string patch boundary in the middle
+    // of a UTF-8 multibyte character sequence, or the output will contain invalid UTF-8.
+    JSONDelta::gMinStringDiffLength = 1;
+
+    // Multi-byte UTF-8 chars, with patches occurring in midst of UTF-8 sequences:
     checkDelta(u8"'モバイルデータベースは将来のものです。 ある日、私たちのデータが端に集まります。'",
                u8"'モバイルデータベースがここにあります。 あなたのデータはすべて端にあります。'",
-               u8"[\"30=76-70+がここにあります。 あなたのデータはすべて端にあ|12=\",0,2]");
-    */
+               u8"[\"30=49-37+がここにあります。 あなた|12=3-12+はすべて|6=3-3-3+あ|12=\",0,2]");
+
+    // Here the C7/C6 bytes can't be included in the preceding XXX/YYY diff:
+    checkDelta("'<aaaaaaaaXXX\xC7\x88zzzzzzzz>'",
+               "'<aaaaaaaaYYY\xC6\x88zzzzzzzz>'",
+               "[\"9=5-5+YYY\xC6\x88|9=\",0,2]");
+
+    checkDelta(u8"'யாமறிந்த மொழிகளிலே தமிழ்மொழி போல் இனிதாவது எங்கும் காணோம், பாமரராய் விலங்குகளாய், உலகனைத்தும் இகழ்ச்சிசொலப் பான்மை கெட்டு, நாமமது தமிழரெனக் கொண்டு இங்கு வாழ்ந்திடுதல் நன்றோ? சொல்லீர்! தேமதுரத் இகழ்ச்சிசொலப் உலகமெலாம் பரவும்வகை செய்தல் வேண்டும்.'",
+               u8"'யாமறிந்த மொழிகளிலே தமிழ்மொழி போல் இனிதாவது எங்கும் காணோம், பாமரராய் விலங்குகளாய், உலகனைத்தும் இகழ்ச்சிசொலப் பான்மை கெட்டு, நாமமது தமிழரெனக் கொண்டு இங்கு வாழ்ந்திடுதல் நன்றோ? கொண்டு! தேமதுரத் தமிழோசை உலகமெலாம் பரவும்வகை செய்தல் வேண்டும்.'",
+               "[\"476=3-3+க|3=3-3+ண|3=12-6+டு|27=21-6+தம|3=15-12+ழோசை|104=\",0,2]");
+
+    JSONDelta::gMinStringDiffLength = 60;
 }
 
 
@@ -224,4 +250,42 @@ TEST_CASE("JSONDiffPatch test suite", "[delta]") {
     }
 
     gCompatibleDeltas = false;
+}
+
+
+
+// Based on utf8_check.c by Markus Kuhn, 2005
+// https://www.cl.cam.ac.uk/~mgk25/ucs/utf8_check.c
+static bool isValidUTF8(fleece::slice sl) noexcept
+{
+    auto s = (const uint8_t*)sl.buf;
+    for (auto e = s + sl.size; s != e; ) {
+        while (!(*s & 0x80)) {
+            if (++s == e) {
+                return true;
+            }
+        }
+
+        if ((s[0] & 0x60) == 0x40) {
+            if (s + 1 >= e || (s[1] & 0xc0) != 0x80 || (s[0] & 0xfe) == 0xc0) {
+                return false;
+            }
+            s += 2;
+        } else if ((s[0] & 0xf0) == 0xe0) {
+            if (s + 2 >= e || (s[1] & 0xc0) != 0x80 || (s[2] & 0xc0) != 0x80 ||
+                (s[0] == 0xe0 && (s[1] & 0xe0) == 0x80) || (s[0] == 0xed && (s[1] & 0xe0) == 0xa0)) {
+                return false;
+            }
+            s += 3;
+        } else if ((s[0] & 0xf8) == 0xf0) {
+            if (s + 3 >= e || (s[1] & 0xc0) != 0x80 || (s[2] & 0xc0) != 0x80 || (s[3] & 0xc0) != 0x80 ||
+                (s[0] == 0xf0 && (s[1] & 0xf0) == 0x80) || (s[0] == 0xf4 && s[1] > 0x8f) || s[0] > 0xf4) {
+                return false;
+            }
+            s += 4;
+        } else {
+            return false;
+        }
+    }
+    return true;
 }
