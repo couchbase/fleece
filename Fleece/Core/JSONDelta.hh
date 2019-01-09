@@ -36,6 +36,13 @@ namespace fleece { namespace impl {
             If the delta is malformed or can't be applied to `old`, throws a FleeceException. */
         static void apply(const Value *old, const Value* NONNULL delta, Encoder&);
 
+        /** Minimum byte length of strings that will be considered for diffing (default 60) */
+        static size_t gMinStringDiffLength;
+
+        /** Maximum time (in seconds) that the string-diff algorithm is allowed to run
+            (default 0.25) */
+        static float gTextDiffTimeout;
+
     private:
         struct pathItem;
 

@@ -37,11 +37,9 @@ namespace fleece { namespace impl {
     // (this is really just here for test purposes so we can use the JDP unit test dataset...)
     bool gCompatibleDeltas = false;
 
-    // Minimum length of strings that will be considered for diffing
-    static constexpr size_t kMinStringDiffLength = 60;
+    size_t JSONDelta::gMinStringDiffLength = 60;
 
-    // Maximum time (in seconds) that the string-diff algorithm is allowed to run
-    static constexpr float kTextDiffTimeout = 0.25;
+    float JSONDelta::gTextDiffTimeout = 0.25;
 
     // Codes that appear as the 3rd item of an array item in a diff
     enum {
@@ -49,6 +47,16 @@ namespace fleece { namespace impl {
         kTextDiffCode = 2,
         kArraymoveCode = 3,
     };
+
+
+    // Is `c` the 2nd, 3rd, ... byte of a UTF-8 multibyte character?
+    // <https://en.wikipedia.org/wiki/UTF-8#Description>
+    static inline bool isUTF8Continuation(uint8_t c) {
+        return (c & 0xc0) == 0x80;
+    }
+
+
+    static void snapToUTF8Character(long &pos, size_t &length, slice str);
 
 
 #pragma mark - CREATING DELTAS:
@@ -416,45 +424,62 @@ namespace fleece { namespace impl {
 
 
     string JSONDelta::createStringDelta(slice oldStr, slice nuuStr) {
-        if (nuuStr.size < kMinStringDiffLength
-                || (gCompatibleDeltas && oldStr.size > kMinStringDiffLength))
+        if (nuuStr.size < gMinStringDiffLength
+                || (gCompatibleDeltas && oldStr.size > gMinStringDiffLength))
             return "";
         diff_match_patch<string> dmp;
-        dmp.Diff_Timeout = kTextDiffTimeout;
+        dmp.Diff_Timeout = gTextDiffTimeout;
         auto patches = dmp.patch_make(string(oldStr), string(nuuStr));
 
         if (gCompatibleDeltas)
             return dmp.patch_toText(patches);
 
-        long pos = 0, lastPos = 0, correction = 0;
+        // Iterate over the diffs, writing the encoded form to the output stream:
         stringstream diff;
+        long lastOldPos = 0, correction = 0;
         for (auto patch = patches.begin(); patch != patches.end(); ++patch) {
-            pos = patch->start1 + correction;
+            long oldPos = patch->start1 + correction;   // position in oldStr
+            long nuuPos = patch->start2;                // position in nuuStr
             auto &diffs = patch->diffs;
             for (auto cur_diff = diffs.begin(); cur_diff != diffs.end(); ++cur_diff) {
-                string &text = cur_diff->text;
-                auto length = text.length();
+                auto length = cur_diff->text.length();
                 if (cur_diff->operation == diff_match_patch<string>::EQUAL) {
-                    pos += length;
+                    oldPos += length;
+                    nuuPos += length;
                 } else {
-                    if (pos > lastPos) {
-                        diff << (pos-lastPos) << '=';
+                    // Don't break up a UTF-8 multibyte character:
+                    if (cur_diff->operation == diff_match_patch<string>::DELETE)
+                        snapToUTF8Character(oldPos, length, oldStr);
+                    else
+                        snapToUTF8Character(nuuPos, length, nuuStr);
+
+                    assert(oldPos >= lastOldPos);
+                    if (oldPos > lastOldPos) {
+                        // Write the number of matching bytes since the last insert/delete:
+                        diff << (oldPos-lastOldPos) << '=';
                     }
                     if (cur_diff->operation == diff_match_patch<string>::DELETE) {
+                        // Write the number of deleted bytes:
                         diff << length << '-';
-                        pos += length;
-                    } else {
-                        diff << length << '+' << text << '|';
+                        oldPos += length;
+                    } else /* INSERT */ {
+                        // Write an insertion, both the count and the bytes:
+                        diff << length << '+';
+                        diff.write((const char*)&nuuStr[nuuPos], length);
+                        diff << '|';
+                        nuuPos += length;
                     }
-                    lastPos = pos;
+                    lastOldPos = oldPos;
                 }
                 if ((off_t)diff.tellp() + 6 >= nuuStr.size)
                     return "";          // Patch is too long; give up on using a diff
             }
             correction += patch->length1 - patch->length2;
         }
-        if (oldStr.size > lastPos)
-            diff << (oldStr.size-lastPos) << '=';
+        if (oldStr.size > lastOldPos) {
+            // Write a final matching-bytes count:
+            diff << (oldStr.size-lastOldPos) << '=';
+        }
         return diff.str();
     }
 
@@ -500,6 +525,20 @@ namespace fleece { namespace impl {
         }
         throwIf(pos != oldStr.size, InvalidData, "Length mismatch in text delta");
         return nuu.str();
+    }
+
+
+    // Given a byte range (`pos`, `length`) in the slice `str`, if either end of the range falls
+    // in the middle of a UTF-8 multibyte character, push it _outwards_ to include the entire char.
+    static void snapToUTF8Character(long &pos, size_t &length, slice str) {
+        while (isUTF8Continuation(str[pos])) {
+            --pos;
+            throwIf(pos < 0, InvalidData, "Invalid UTF-8 at start of a string");
+            ++length;
+        }
+        while (pos+length < str.size && isUTF8Continuation(str[pos+length])) {
+            ++length;
+        }
     }
 
 } }
