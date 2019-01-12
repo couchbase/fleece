@@ -10,17 +10,16 @@
 namespace fleece {
 
     template <class Collection, class Key>
-    class keyref {
+    class keyref : public Value {
     public:
-        keyref(Collection &coll, Key key)           :_coll(coll), _key(key) { }
-        operator Value() const                      {return _coll.get(_key);}
+        keyref(Collection &coll, Key key)           :Value(coll.get(key)), _coll(coll), _key(key) { }
             template <class T>
         void operator= (T value)                    {_coll.set(_key, value);}
         void remove()                               {_coll.remove(_key);}
     private:
-        Collection &_coll;
+        Collection _coll;
         Key _key;
-    };
+    }; 
 
 
     /** A mutable form of Array. Its storage lives in the heap, not in the (immutable) Fleece
