@@ -285,6 +285,17 @@ namespace fleece {
     }
 
 
+    alloc_slice pure_slice::decodeBase64() const {
+        size_t expectedLen = (size + 3) / 4 * 3;
+        alloc_slice result(expectedLen);
+        slice decoded = readBase64Into(result);
+        if (decoded.size == 0)
+            return {};
+        assert(decoded.size == expectedLen);
+        return result;
+    }
+
+
     slice::slice(const FLSlice &s)          :slice(s.buf, s.size) { }
     slice::operator FLSlice () const        {return {buf, size};}
 

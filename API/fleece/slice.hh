@@ -127,6 +127,10 @@ namespace fleece {
             a null slice. */
         slice readBase64Into(pure_slice output) const;
 
+        /** Decodes Base64 data from receiver into a new alloc_slice.
+            On failure returns a null slice. */
+        alloc_slice decodeBase64() const;
+
         #define hexCString() hexString().c_str()    // has to be a macro else dtor called too early
         #define cString() asString().c_str()        // has to be a macro else dtor called too early
 
