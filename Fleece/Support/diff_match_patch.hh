@@ -2590,9 +2590,9 @@ template <> struct diff_match_patch_traits<wchar_t> : diff_match_patch_utf32_fro
 #include <cctype>
 template <> struct diff_match_patch_traits<char> : diff_match_patch_utf32_direct<char>
 {
-  static bool is_alnum(char c) { return std::isalnum(c)? true : false; }
-  static bool is_digit(char c) { return std::isdigit(c)? true : false; }
-  static bool is_space(char c) { return std::isspace(c)? true : false; }
+  static bool is_alnum(char c) { return std::isalnum((unsigned char)c)? true : false; }
+  static bool is_digit(char c) { return std::isdigit((unsigned char)c)? true : false; }
+  static bool is_space(char c) { return std::isspace((unsigned char)c)? true : false; }
   static ssize_t to_int(const char* s) { return std::atoi(s); }
   static char from_wchar(wchar_t c) { return static_cast<char>(c); }
   static wchar_t to_wchar(char c) { return static_cast<wchar_t>(c); }
