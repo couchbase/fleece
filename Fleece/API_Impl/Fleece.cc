@@ -207,15 +207,21 @@ bool FLArrayIterator_Next(FLArrayIterator* i) {
 }
 
 
-static FLMutableArray _newMutableArray(FLArray a, bool deepCopy) noexcept {
+static FLMutableArray _newMutableArray(FLArray a, FLCopyFlags flags) noexcept {
     try {
-        return (MutableArray*)retain(MutableArray::newArray(a, deepCopy));
+        return (MutableArray*)retain(MutableArray::newArray(a, CopyFlags(flags)));
     } catchError(nullptr)
     return nullptr;
 }
 
-FLMutableArray FLMutableArray_New(void)             {return _newMutableArray(nullptr, false);}
-FLMutableArray FLArray_MutableCopy(FLArray a, bool deep)       {return a ? _newMutableArray(a, deep) : nullptr;}
+FLMutableArray FLMutableArray_New(void) {
+    return _newMutableArray(nullptr, kFLDefaultCopy);
+}
+
+FLMutableArray FLArray_MutableCopy(FLArray a, FLCopyFlags flags)       {
+    return a ? _newMutableArray(a, flags) : nullptr;
+}
+
 FLMutableArray FLArray_AsMutable(FLArray a)         {return a ? a->asMutable() : nullptr;}
 FLArray FLMutableArray_GetSource(FLMutableArray a)  {return a ? a->source() : nullptr;}
 bool FLMutableArray_IsChanged(FLMutableArray a)     {return a && a->isChanged();}
@@ -334,15 +340,21 @@ FLValue FLDict_GetWithKey(FLDict d, FLDictKey *k) {
 }
 
 
-static FLMutableDict _newMutableDict(FLDict d, bool deep) noexcept {
+static FLMutableDict _newMutableDict(FLDict d, FLCopyFlags flags) noexcept {
     try {
-        return (MutableDict*)retain(MutableDict::newDict(d, deep));
+        return (MutableDict*)retain(MutableDict::newDict(d, CopyFlags(flags)));
     } catchError(nullptr)
     return nullptr;
 }
 
-FLMutableDict FLMutableDict_New(void)               {return _newMutableDict(nullptr, false);}
-FLMutableDict FLDict_MutableCopy(FLDict d, bool deep) {return d ? _newMutableDict(d, deep) : nullptr;}
+FLMutableDict FLMutableDict_New(void) {
+    return _newMutableDict(nullptr, kFLDefaultCopy);
+}
+
+FLMutableDict FLDict_MutableCopy(FLDict d, FLCopyFlags flags) {
+    return d ? _newMutableDict(d, flags) : nullptr;
+}
+
 FLMutableDict FLDict_AsMutable(FLDict d)            {return d ? d->asMutable() : nullptr;}
 FLDict FLMutableDict_GetSource(FLMutableDict d)     {return d ? d->source() : nullptr;}
 bool FLMutableDict_IsChanged(FLMutableDict d)       {return d && d->isChanged();}

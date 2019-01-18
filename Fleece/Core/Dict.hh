@@ -42,6 +42,8 @@ namespace fleece { namespace impl {
         /** If this array is mutable, returns the equivalent MutableArray*, else returns nullptr. */
         MutableDict* asMutable() const;
 
+        MutableDict* mutableCopy(CopyFlags =kDefaultCopy) const;
+
 #ifdef __OBJC__
         /** Looks up the Value for a key given as an NSString object. */
         const Value* get(NSString* key NONNULL) const noexcept {

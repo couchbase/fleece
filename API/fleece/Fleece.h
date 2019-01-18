@@ -190,6 +190,7 @@ extern "C" {
 
     //////// VALUE
 
+
     /** @} */
     /** \defgroup FLValue   Value Accessors
          @{
@@ -310,10 +311,16 @@ extern "C" {
         If the value is not mutable, this call does nothing. */
     void FLValue_Release(FLValue);
 
+    static inline FLArray FLArray_Retain(FLArray v)     {FLValue_Retain((FLValue)v); return v;}
+    static inline void FLArray_Release(FLArray v)       {FLValue_Release((FLValue)v);}
+    static inline FLDict FLDict_Retain(FLDict v)        {FLValue_Retain((FLValue)v); return v;}
+    static inline void FLDict_Release(FLDict v)         {FLValue_Release((FLValue)v);}
+
 
     extern const FLValue kFLNullValue;
 
     /** @} */
+
 
     //////// ARRAY
 
@@ -388,22 +395,33 @@ while (NULL != (value = FLArrayIterator_GetValue(&iter))) {
 
     /** @} */
 
+
     //////// MUTABLE ARRAY
+
 
     /** \name Mutable Arrays
          @{ */
 
+    typedef enum {
+        kFLDefaultCopy        = 0,
+        kFLDeepCopy           = 1,
+        kFLCopyImmutables     = 2,
+        kFLDeepCopyImmutables = (kFLDeepCopy | kFLCopyImmutables),
+    } FLCopyFlags;
+
+
     /** Creates a new mutable Array that's a copy of the source Array.
         Its initial ref-count is 1, so a call to FLMutableArray_Release will free it.
 
-        Copying an immutable Array is very cheap (only one small allocation.) The `deepCopy` flag
-        is ignored.
+        Copying an immutable Array is very cheap (only one small allocation) unless the flag
+        kFLCopyImmutables is set.
 
         Copying a mutable Array is cheap if it's a shallow copy, but if `deepCopy` is true,
-        nested mutable Arrays and Dicts are also copied, recursively.
+        nested mutable Arrays and Dicts are also copied, recursively; if kFLCopyImmutables is
+        also set, immutable values are also copied.
 
         If the source Array is NULL, then NULL is returned. */
-    FLMutableArray FLArray_MutableCopy(FLArray, bool deepCopy);
+    FLMutableArray FLArray_MutableCopy(FLArray, FLCopyFlags);
 
     /** Creates a new empty mutable Array.
         Its initial ref-count is 1, so a call to FLMutableArray_Free will free it.  */
@@ -480,6 +498,7 @@ while (NULL != (value = FLArrayIterator_GetValue(&iter))) {
     FLMutableDict FLMutableArray_GetMutableDict(FLMutableArray, uint32_t index);
 
     /** @} */
+
 
     //////// DICT
 
@@ -590,6 +609,7 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
 
     //////// MUTABLE DICT
 
+
     /** @} */
     /** \name Mutable dictionaries
          @{ */
@@ -604,7 +624,7 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
         nested mutable Dicts and Arrays are also copied, recursively.
 
         If the source dict is NULL, then NULL is returned. */
-    FLMutableDict FLDict_MutableCopy(FLDict source, bool deepCopy);
+    FLMutableDict FLDict_MutableCopy(FLDict source, FLCopyFlags);
 
     /** Creates a new empty mutable Dict.
         Its initial ref-count is 1, so a call to FLMutableDict_Free will free it.  */

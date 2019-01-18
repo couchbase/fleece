@@ -57,6 +57,8 @@ namespace fleece { namespace impl {
         /** If this array is mutable, returns the equivalent MutableArray*, else returns nullptr. */
         MutableArray* asMutable() const;
 
+        MutableArray* mutableCopy(CopyFlags =kDefaultCopy) const;
+
         /** An empty Array. */
         static const Array* const kEmpty;
 

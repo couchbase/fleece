@@ -15,15 +15,14 @@ namespace fleece { namespace impl {
     class MutableDict : public Dict {
     public:
 
-        static Retained<MutableDict> newDict(const Dict *d =nullptr, bool deepCopy =false) {
+        static Retained<MutableDict> newDict(const Dict *d =nullptr, CopyFlags flags =kDefaultCopy) {
             auto hd = retained(new internal::HeapDict(d));
-            if (deepCopy)
-                hd->deepCopyChildren();
+            if (flags)
+                hd->copyChildren(flags);
             return hd->asMutableDict();
         }
 
-        Retained<MutableDict> copy()                        {return newDict(this, false);}
-        Retained<MutableDict> deepCopy()                    {return newDict(this, true);}
+        Retained<MutableDict> copy(CopyFlags f =kDefaultCopy) {return newDict(this, f);}
 
         const Dict* source() const                          {return heapDict()->_source;}
         bool isChanged() const                              {return heapDict()->isChanged();}

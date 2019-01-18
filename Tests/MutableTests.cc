@@ -209,11 +209,46 @@ namespace fleece {
         CHECK(copy->isEqual(mc));
         CHECK(copy->get(0) == mc->get(0));              // it's shallow
 
-        copy = mc->deepCopy();
+        copy = mc->copy(kDeepCopy);
         CHECK(copy != mc);
         CHECK(copy->isEqual(mc));
         CHECK(copy->get(0) != mc->get(0));              // it's deep
         CHECK(copy->get(0)->asArray()->get(0) != ma);   // it's so deep you can't get under it
+    }
+
+
+    TEST_CASE("MutableArray copy immutable", "[Mutable]") {
+        Retained<Doc> doc = Doc::fromJSON("[123, \"howdy\"]"_sl);
+        const Array *a = doc->root()->asArray();
+
+        Retained<MutableArray> copy = MutableArray::newArray(a);
+        CHECK(copy->source() == a);
+        CHECK(copy->isEqual(a));
+
+        Retained<MutableArray> mb = MutableArray::newArray(1);
+        mb->set(0, a);
+        REQUIRE(mb->get(0) == a);
+
+        Retained<MutableArray> mc = MutableArray::newArray(1);
+        mc->set(0, mb);
+        REQUIRE(mc->get(0) == mb);
+
+        copy = mc->copy();
+        CHECK(copy != mc);
+        CHECK(copy->isEqual(mc));
+        CHECK(copy->get(0) == mc->get(0));              // it's shallow
+
+        copy = mc->copy(kDeepCopy);
+        CHECK(copy != mc);
+        CHECK(copy->isEqual(mc));
+        CHECK(copy->get(0) != mc->get(0));              // it's deep
+        CHECK(copy->get(0)->asArray()->get(0) == a);    // but the immutable data is the same
+
+        copy = mc->copy(CopyFlags(kDeepCopy | kCopyImmutables));
+        CHECK(copy != mc);
+        CHECK(copy->isEqual(mc));
+        CHECK(copy->get(0) != mc->get(0));              // it's deep
+        CHECK(copy->get(0)->asArray()->get(0) != a);   // it's so deep you can't get under it
     }
 
 
@@ -390,6 +425,67 @@ namespace fleece {
             ma->set(len, slice(chars, len));
         for (int len = 0; len < 50; ++len)
             CHECK(ma->get(len)->asString() == slice(chars, len));
+    }
+
+
+    TEST_CASE("MutableDict copy", "[Mutable]") {
+        Retained<MutableDict> ma = MutableDict::newDict();
+        ma->set("a"_sl, 123);
+        ma->set("b"_sl, "howdy"_sl);
+
+        Retained<MutableDict> mb = MutableDict::newDict();
+        mb->set("a"_sl, ma);
+        REQUIRE(mb->get("a"_sl) == ma);
+
+        Retained<MutableDict> mc = MutableDict::newDict();
+        mc->set("a"_sl, mb);
+        REQUIRE(mc->get("a"_sl) == mb);
+
+        Retained<MutableDict> copy = mc->copy();
+        CHECK(copy != mc);
+        CHECK(copy->isEqual(mc));
+        CHECK(copy->get("a"_sl) == mc->get("a"_sl));              // it's shallow
+
+        copy = mc->copy(kDeepCopy);
+        CHECK(copy != mc);
+        CHECK(copy->isEqual(mc));
+        CHECK(copy->get("a"_sl) != mc->get("a"_sl));              // it's deep
+        CHECK(copy->get("a"_sl)->asDict()->get("a"_sl) != ma);   // it's so deep you can't get under it
+    }
+
+
+    TEST_CASE("MutableDict copy immutable", "[Mutable]") {
+        Retained<Doc> doc = Doc::fromJSON("{\"a\":123,\"b\":\"howdy\"}"_sl);
+        const Dict *a = doc->root()->asDict();
+
+        Retained<MutableDict> copy = MutableDict::newDict(a);
+        CHECK(copy->source() == a);
+        CHECK(copy->isEqual(a));
+
+        Retained<MutableDict> mb = MutableDict::newDict();
+        mb->set("a"_sl, a);
+        REQUIRE(mb->get("a"_sl) == a);
+
+        Retained<MutableDict> mc = MutableDict::newDict();
+        mc->set("a"_sl, mb);
+        REQUIRE(mc->get("a"_sl) == mb);
+
+        copy = mc->copy();
+        CHECK(copy != mc);
+        CHECK(copy->isEqual(mc));
+        CHECK(copy->get("a"_sl) == mc->get("a"_sl));              // it's shallow
+
+        copy = mc->copy(kDeepCopy);
+        CHECK(copy != mc);
+        CHECK(copy->isEqual(mc));
+        CHECK(copy->get("a"_sl) != mc->get("a"_sl));              // it's deep
+        CHECK(copy->get("a"_sl)->asDict()->get("a"_sl) == a);    // but the immutable data is the same
+
+        copy = mc->copy(CopyFlags(kDeepCopy | kCopyImmutables));
+        CHECK(copy != mc);
+        CHECK(copy->isEqual(mc));
+        CHECK(copy->get("a"_sl) != mc->get("a"_sl));              // it's deep
+        CHECK(copy->get("a"_sl)->asDict()->get("a"_sl) != a);   // it's so deep you can't get under it
     }
 
 

@@ -343,6 +343,10 @@ namespace fleece { namespace impl {
         return isMutable() ? (MutableDict*)this : nullptr;
     }
 
+    MutableDict* Dict::mutableCopy(CopyFlags flags) const {
+        return MutableDict::newDict(this, flags);
+    }
+
     HeapDict* Dict::heapDict() const {
         return (HeapDict*)internal::HeapCollection::asHeapValue(this);
     }

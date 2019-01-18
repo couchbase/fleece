@@ -236,9 +236,23 @@ namespace fleece { namespace impl { namespace internal {
     }
 
 
-    void HeapDict::deepCopyChildren() {
+    void HeapDict::disconnectFromSource() {
+        if (!_source)
+            return;
+        for (Dict::iterator i(_source); i; ++i) {
+            slice key = i.keyString();
+            if (_map.find(key) == _map.end())
+                set(key, i.value());
+        }
+        _source = nullptr;
+    }
+
+
+    void HeapDict::copyChildren(CopyFlags flags) {
+        if (flags & kCopyImmutables)
+            disconnectFromSource();
         for (auto &entry : _map)
-            entry.second.deepCopyValue();
+            entry.second.copyValue(flags);
     }
 
 

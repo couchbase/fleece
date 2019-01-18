@@ -142,6 +142,9 @@ namespace fleece {
 
         inline MutableArray asMutable() const;
 
+        inline MutableArray mutableCopy(FLCopyFlags =kFLDefaultCopy) const;
+
+
         class iterator : private FLArrayIterator {
         public:
             inline iterator(Array);
@@ -194,6 +197,8 @@ namespace fleece {
         Value& operator= (Value v)                      =delete;
 
         inline MutableDict asMutable() const;
+
+        inline MutableDict mutableCopy(FLCopyFlags =kFLDefaultCopy) const;
 
         /** An efficient key for a Dict. */
         class Key {

@@ -62,7 +62,8 @@ namespace fleece { namespace impl { namespace internal {
             Or if the item is already a MutableDict, just returns it. Else returns null. */
         MutableDict* getMutableDict(uint32_t i);
 
-        void deepCopyChildren();
+        void disconnectFromSource();
+        void copyChildren(CopyFlags flags);
 
         class iterator {
         public:

@@ -24,15 +24,14 @@ namespace fleece { namespace impl {
 
         /** Creates a copy of `a`, or an empty array if `a` is null.
             If `deepCopy` is true, nested mutable collections will be recursively copied too. */
-        static Retained<MutableArray> newArray(const Array *a, bool deepCopy =false) {
+        static Retained<MutableArray> newArray(const Array *a, CopyFlags flags =kDefaultCopy) {
             auto ha = retained(new internal::HeapArray(a));
-            if (deepCopy)
-                ha->deepCopyChildren();
+            if (flags)
+                ha->copyChildren(flags);
             return ha->asMutableArray();
         }
 
-        Retained<MutableArray> copy()               {return newArray(this, false);}
-        Retained<MutableArray> deepCopy()           {return newArray(this, true);}
+        Retained<MutableArray> copy(CopyFlags f = kDefaultCopy)    {return newArray(this, f);}
 
         const Array* source() const                 {return heapArray()->_source;}
         bool isChanged() const                      {return heapArray()->isChanged();}

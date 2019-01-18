@@ -55,6 +55,14 @@ namespace fleece { namespace impl {
     constexpr Null nullValue;
 
 
+    /** Option flags for copying values. */
+    enum CopyFlags {
+        kDefaultCopy        = 0,
+        kDeepCopy           = 1,
+        kCopyImmutables     = 2,
+    };
+
+
     /* An encoded data value */
     class Value {
     public:

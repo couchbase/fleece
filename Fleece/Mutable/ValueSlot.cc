@@ -244,15 +244,19 @@ namespace fleece { namespace impl { namespace internal {
     }
 
 
-    void ValueSlot::deepCopyValue() {
-        if (!_isInline && _asValue && _asValue->isMutable()) {
+    void ValueSlot::copyValue(CopyFlags flags) {
+        if (!_isInline && _asValue && ((flags & kCopyImmutables) || _asValue->isMutable())) {
+            bool recurse = (flags & kDeepCopy);
             HeapCollection *copy;
             if (_asValue->tag() == kArrayTag) {
                 copy = new HeapArray((Array*)_asValue);
-                ((HeapArray*)copy)->deepCopyChildren();
+                if (recurse)
+                    ((HeapArray*)copy)->copyChildren(flags);
             } else {
+                assert(_asValue->tag() == kDictTag);
                 copy = new HeapDict((Dict*)_asValue);
-                ((HeapDict*)copy)->deepCopyChildren();
+                if (recurse)
+                    ((HeapDict*)copy)->copyChildren(flags);
             }
             set(copy->asValue());
         }

@@ -127,7 +127,7 @@ namespace fleece {
             auto array = value.asArray();
             result = array.asMutable();
             if (!result)
-                result = MutableArray::copy(array);
+                result = array.mutableCopy();
             return result;
         });
        return result;
@@ -139,7 +139,7 @@ namespace fleece {
             auto dict = value.asDict();
             result = dict.asMutable();
             if (!result)
-                result = MutableDict::copy(dict);
+                result = dict.mutableCopy();
             return result;
         });
         return result;

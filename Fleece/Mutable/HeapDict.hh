@@ -24,8 +24,8 @@ namespace fleece { namespace impl { namespace internal {
     public:
         HeapDict(const Dict* =nullptr);
 
-        static MutableDict* asMutableDict(HeapDict *a)   {return (MutableDict*)asValue(a);}
-        MutableDict* asMutableDict() const        {return (MutableDict*)asValue();}
+        static MutableDict* asMutableDict(HeapDict *a)      {return (MutableDict*)asValue(a);}
+        MutableDict* asMutableDict() const                  {return (MutableDict*)asValue();}
 
         const Dict* source() const                          {return _source;}
         SharedKeys* sharedKeys() const                      {return _sharedKeys;}
@@ -54,7 +54,8 @@ namespace fleece { namespace impl { namespace internal {
             Or if the value is already a HeapDict, just returns it. Else returns null. */
         MutableDict* getMutableDict(slice key)    {return (MutableDict*)asValue(getMutable(key, kDictTag));}
 
-        void deepCopyChildren();
+        void disconnectFromSource();
+        void copyChildren(CopyFlags flags);
 
         void writeTo(Encoder&);
 

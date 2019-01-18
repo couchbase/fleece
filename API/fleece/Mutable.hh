@@ -30,14 +30,6 @@ namespace fleece {
         /** Creates a new, empty mutable array. */
         static MutableArray newArray()          {return MutableArray(FLMutableArray_New(), true);}
 
-        /** Shallow-copies an array. The source array may be mutable or immutable.
-            Copying an immutable Array is very fast because it doesn't copy any of its values;
-            it just makes a reference to the original Array and looks up values on demand. */
-        static inline MutableArray copy(Array a);
-
-        /** Deep-copies an array. */
-        static inline MutableArray deepCopy(Array a);
-
         MutableArray()                          :Array() { }
         MutableArray(FLMutableArray a)          :Array((FLArray)FLMutableArray_Retain(a)) { }
         MutableArray(const MutableArray &a)     :Array((FLArray)FLMutableArray_Retain(a)) { }
@@ -113,6 +105,7 @@ namespace fleece {
     private:
         MutableArray(FLMutableArray a, bool)     :Array((FLArray)a) {}
         friend class RetainedValue;
+        friend class Array;
     };
 
 
@@ -122,8 +115,6 @@ namespace fleece {
     class MutableDict : public Dict {
     public:
         static MutableDict newDict()            {return MutableDict(FLMutableDict_New(), true);}
-        static inline MutableDict copy(Dict d);
-        static inline MutableDict deepCopy(Dict d);
 
         MutableDict()                           :Dict() { }
         MutableDict(FLMutableDict d)            :Dict((FLDict)d) {FLMutableDict_Retain(*this);}
@@ -180,6 +171,7 @@ namespace fleece {
     private:
         MutableDict(FLMutableDict d, bool)      :Dict((FLDict)d) {}
         friend class RetainedValue;
+        friend class Dict;
     };
 
     
@@ -215,18 +207,11 @@ namespace fleece {
 
     //////// IMPLEMENTATION GUNK:
 
-    inline MutableArray MutableArray::copy(Array a) {
-        return MutableArray(FLArray_MutableCopy(a, false), true);
+    inline MutableArray Array::mutableCopy(FLCopyFlags flags) const {
+        return MutableArray(FLArray_MutableCopy(*this, flags), true);
     }
-    inline MutableArray MutableArray::deepCopy(Array a) {
-        return MutableArray(FLArray_MutableCopy(a, true), true);
-    }
-
-    inline MutableDict MutableDict::copy(Dict d) {
-        return MutableDict(FLDict_MutableCopy(d, false), true);
-    }
-    inline MutableDict MutableDict::deepCopy(Dict d) {
-        return MutableDict(FLDict_MutableCopy(d, true), true);
+    inline MutableDict Dict::mutableCopy(FLCopyFlags flags) const {
+        return MutableDict(FLDict_MutableCopy(*this, flags), true);
     }
 
     inline MutableArray MutableArray::getMutableArray(uint32_t i)

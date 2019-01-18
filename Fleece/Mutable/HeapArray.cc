@@ -138,9 +138,24 @@ namespace fleece { namespace impl { namespace internal {
     }
 
 
-    void HeapArray::deepCopyChildren() {
+    void HeapArray::disconnectFromSource() {
+        if (!_source)
+            return;
+        uint32_t index = 0;
+        for (auto &mval : _items) {
+            if (!mval)
+                mval.set(_source->get(index));
+            ++index;
+        }
+        _source = nullptr;
+    }
+
+
+    void HeapArray::copyChildren(CopyFlags flags) {
+        if (flags & kCopyImmutables)
+            disconnectFromSource();
         for (auto &entry : _items)
-            entry.deepCopyValue();
+            entry.copyValue(flags);
     }
 
 
