@@ -173,5 +173,10 @@ namespace fleece {
         return Retained<REFCOUNTED>(r);
     }
 
+    template <typename REFCOUNTED>
+    inline RetainedConst<REFCOUNTED> retained(const REFCOUNTED *r) noexcept {
+        return RetainedConst<REFCOUNTED>(r);
+    }
+
 
 }
