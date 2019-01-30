@@ -138,6 +138,7 @@ namespace fleece {
         inline Value operator[] (const KeyPath &kp) const {return Value::operator[](kp);}
 
         Array& operator= (Array a)                      {_val = a._val; return *this;}
+        Array& operator= (std::nullptr_t)               {_val = nullptr; return *this;}
         Value& operator= (Value v)                      =delete;
 
         inline MutableArray asMutable() const;
@@ -194,6 +195,7 @@ namespace fleece {
         inline Value operator[] (const KeyPath &kp) const {return Value::operator[](kp);}
 
         Dict& operator= (Dict d)                        {_val = d._val; return *this;}
+        Dict& operator= (std::nullptr_t)                {_val = nullptr; return *this;}
         Value& operator= (Value v)                      =delete;
 
         inline MutableDict asMutable() const;

@@ -66,16 +66,19 @@ namespace fleece { namespace impl {
     {
         JSONEncoder enc;
         enc.setJSON5(json5);
-        if (create(old, nuu, enc))
-            return enc.finish();
-        else
-            return {};
+        create(old, nuu, enc);
+        return enc.finish();
     }
 
 
     bool JSONDelta::create(const Value *old, const Value *nuu, JSONEncoder &enc)
     {
-        return JSONDelta(enc)._write(old, nuu, nullptr);
+        if (JSONDelta(enc)._write(old, nuu, nullptr))
+            return true;
+        // If there is no difference, write a no-op delta:
+        enc.beginDictionary();
+        enc.endDictionary();
+        return false;
     }
 
 
@@ -104,6 +107,7 @@ namespace fleece { namespace impl {
     }
 
 
+    // Main encoder function. Called recursively, traversing the hierarchy.
     bool JSONDelta::_write(const Value *old, const Value *nuu, pathItem *path) {
         if (_usuallyFalse(old == nuu))
             return false;
@@ -249,21 +253,26 @@ namespace fleece { namespace impl {
     { }
 
 
+    // Recursively applies the delta to the value, going down into the tree
     void JSONDelta::_apply(const Value *old, const Value *delta) {
         switch(delta->type()) {
             case kArray:
                 _applyArray(old, (const Array*)delta);
                 break;
             case kDict: {
+                auto deltaDict = (const Dict*)delta;
                 switch (old ? old->type() : kNull) {
                     case kArray:
-                        _patchArray((const Array*)old, (const Dict*)delta);
+                        _patchArray((const Array*)old, deltaDict);
                         break;
                     case kDict:
-                        _patchDict((const Dict*)old, (const Dict*)delta);
+                        _patchDict((const Dict*)old, deltaDict);
                         break;
                     default:
-                        FleeceException::_throw(InvalidData, "Invalid {} in delta");
+                        if (deltaDict->empty())
+                            _decoder->writeValue(old);
+                        else
+                            FleeceException::_throw(InvalidData, "Invalid {...} in delta");
                 }
                 break;
             }

@@ -651,13 +651,23 @@ FLSliceResult FLDoc_GetAllocedData(FLDoc doc) {
 
 
 FLSliceResult FLCreateJSONDelta(FLValue old, FLValue nuu) {
-    return toSliceResult(JSONDelta::create(old, nuu));
+    try {
+        return toSliceResult(JSONDelta::create(old, nuu));
+    } catch (const std::exception &x) {
+        return {};
+    }
 }
 
 bool FLEncodeJSONDelta(FLValue old, FLValue nuu, FLEncoder jsonEncoder) {
-    JSONEncoder *enc = jsonEncoder->jsonEncoder.get();
-    assert(enc);  //TODO: Support encoding to Fleece
-    return JSONDelta::create(old, nuu, *enc);
+    try {
+        JSONEncoder *enc = jsonEncoder->jsonEncoder.get();
+        assert(enc);  //TODO: Support encoding to Fleece
+        JSONDelta::create(old, nuu, *enc);
+        return true;
+    } catch (const std::exception &x) {
+        jsonEncoder->recordException(x);
+        return false;
+    }
 }
 
 

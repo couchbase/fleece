@@ -37,6 +37,8 @@ static std::string toJSONString(const Value *v) {
 
 
 static void checkDelta(const char *json1, const char *json2, const char *deltaExpected) {
+    if (!deltaExpected)
+        deltaExpected = "{}";
     // Parse json1 and json2:
     const Value *v1 = nullptr, *v2 = nullptr;
     alloc_slice f1, f2;
@@ -201,6 +203,8 @@ TEST_CASE("Delta nested arrays", "[delta]") {
 
 
 static void checkDelta(const Value *left, const Value *right, const Value *expectedDelta) {
+    if (!expectedDelta)
+        expectedDelta = Dict::kEmpty;
     alloc_slice jsonDelta = JSONDelta::create(left, right);
     alloc_slice fleeceDelta = JSONConverter::convertJSON(jsonDelta);
     const Value *delta = Value::fromData(fleeceDelta);

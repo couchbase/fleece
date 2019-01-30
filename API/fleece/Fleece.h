@@ -1047,22 +1047,21 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
         are frequently used in version-control systems and efficient network protocols.
      */
 
-    /** Returns JSON that encodes the changes to turn the value `old` into `nuu`;
-        or if the values are equal, returns a null slice.
+    /** Returns JSON that encodes the changes to turn the value `old` into `nuu`.
         (The format is documented in Fleece.md, but you should treat it as a black box.)
         @param old  A value that's typically the old/original state of some data.
         @param nuu  A value that's typically the new/changed state of the `old` data.
-        @return  JSON data representing the changes from `old` to `nuu`. */
+        @return  JSON data representing the changes from `old` to `nuu`, or NULL on
+                    (extremely unlikely) failure. */
     FLSliceResult FLCreateJSONDelta(FLValue old, FLValue nuu);
 
     /** Writes JSON that describes the changes to turn the value `old` into `nuu`.
-        If the values are equal, writes nothing and returns false.
         (The format is documented in Fleece.md, but you should treat it as a black box.)
         @param old  A value that's typically the old/original state of some data.
         @param nuu  A value that's typically the new/changed state of the `old` data.
         @param jsonEncoder  An encoder to write the JSON to. Must have been created using
                 `FLEncoder_NewWithOptions`, with JSON or JSON5 format.
-        @return  True if a delta was encoded, or false if the values are equal. */
+        @return  True on success, false on (extremely unlikely) failure. */
     bool FLEncodeJSONDelta(FLValue old, FLValue nuu, FLEncoder FLNONNULL jsonEncoder);
 
 
