@@ -269,7 +269,7 @@ namespace fleece { namespace impl {
                         _patchDict((const Dict*)old, deltaDict);
                         break;
                     default:
-                        if (deltaDict->empty())
+                        if (deltaDict->empty() && old)
                             _decoder->writeValue(old);
                         else
                             FleeceException::_throw(InvalidData, "Invalid {...} in delta");

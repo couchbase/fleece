@@ -166,6 +166,7 @@ TEST_CASE("Delta simple dicts", "[delta]") {
 
 
 TEST_CASE("Delta nested dicts", "[delta]") {
+    checkDelta("{}", "{bar: {baz: 9}}", "{bar:[{baz:9}]}");
     checkDelta("{foo: {bar: [1], baz:{goo:[3]},wow:0}}", "{foo: {bar: [1], baz:{goo:[3]},wow:0}}", nullptr);
     checkDelta("{foo: {bar: [1]}, goo: 2}", "{foo: {bar: [1]}, goo: 3}", "{goo:3}");
     checkDelta("{foo: {bar: [1]}, goo: 2}", "{foo: {bar: [2]}, goo: 2}", "{foo:{bar:{\"0\":2}}}");
