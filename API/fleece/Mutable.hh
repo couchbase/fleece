@@ -95,7 +95,8 @@ namespace fleece {
         void append(const void*) = delete; // Explicitly disallow other pointer types!
 
         // This enables e.g. `array[10] = 17`
-        inline keyref<MutableArray,uint32_t> operator[] (uint32_t i) {
+        inline keyref<MutableArray,uint32_t> operator[] (int i) {
+            assert(i >= 0, "invalid argument to mutable array subscript");
             return keyref<MutableArray,uint32_t>(*this, i);
         }
 
