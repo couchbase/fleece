@@ -167,6 +167,9 @@ namespace fleece {
         inline keyref<MutableDict,Key&> operator[] (Key &key)
             {return keyref<MutableDict,Key&>(*this, key);}
 
+        inline Value operator[] (slice key) const       {return Dict::get(key);}
+        inline Value operator[] (const char *key) const {return Dict::get(key);}
+
         inline MutableArray getMutableArray(FLString key);
         inline MutableDict getMutableDict(FLString key);
 
