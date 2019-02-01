@@ -44,7 +44,9 @@
 
     #define MAXFLOAT FLT_MAX
 
-    #define __printflike(A, B) 
+    #define __printflike(A, B)
+
+    #define cbl_strdup _strdup
 
     #include <winapifamily.h>
 
@@ -69,6 +71,8 @@
     #endif
 
     #define WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) 0
+
+    #define cbl_strdup strdup
 
 #endif
 
