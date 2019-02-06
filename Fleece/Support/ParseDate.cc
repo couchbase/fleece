@@ -290,7 +290,7 @@ static void computeJD(DateTime *p){
 
 static void inject_local_tz(DateTime* p)
 {
-#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
+#if !defined(_MSC_VER) || WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
     // Let's hope this works on UWP since Microsoft has removed the
     // tzset and _tzset functions from UWP
     static std::once_flag once;
@@ -447,7 +447,15 @@ namespace fleece {
             strcpy(tz, "Z");
             ++len;
         } else {
-            len += strftime(tz, 6, "%z", &timebuf);
+            size_t added = strftime(tz, 6, "%z", &timebuf);
+
+            // It would be nice to use tm_gmtoff but that's not available everywhere...
+            if(strncmp("0000", tz + 1, 4) == 0) {
+                strcpy(tz, "Z");
+                ++len;
+            } else {
+                len += added;
+            }
         }
         return {buf, len};
     }
