@@ -27,9 +27,13 @@ namespace fleece { namespace impl {
               slice externDestination =nullslice) noexcept;
         Scope(const Scope &parentScope,
               slice subData) noexcept;
-        ~Scope();
 
-        static Scope* containing(const Value* NONNULL) noexcept;
+        // Scope doesn't need a vtable, but it's useful for identifying subclasses, for example:
+        //     auto s = dynamic_cast<const MyScope*>(Scope::containing(val));
+        // The dynamic_cast will safely check whether the returned Scope is a MyScope instance.
+        virtual ~Scope();
+
+        static const Scope* containing(const Value* NONNULL) noexcept;
 
         slice data() const                      {return _data;}
         alloc_slice allocedData() const         {return _alloced;}
