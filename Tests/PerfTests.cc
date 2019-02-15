@@ -19,6 +19,7 @@
 #include "FleeceTests.hh"
 #include "FleeceImpl.hh"
 #include "JSONConverter.hh"
+#include "Doc.hh"
 #include "varint.hh"
 #include <chrono>
 #include <stdlib.h>
@@ -177,44 +178,57 @@ TEST_CASE("Perf FindPersonByIndexSorted", "[.Perf]")      {testFindPersonByIndex
 TEST_CASE("Perf FindPersonByIndexKeyed", "[.Perf]")       {testFindPersonByIndex(2);}
 
 TEST_CASE("Perf LoadPeople", "[.Perf]") {
-    int kSamples = 50;
-    int kIterations = 1000;
-    Benchmark bench;
+    for (int shareKeys = false; shareKeys <= true; ++shareKeys) {
+        int kSamples = 50;
+        int kIterations = 1000;
+        Benchmark bench;
 
-    auto doc = readTestFile("1000people.fleece");
+        auto data = readTestFile("1000people.fleece");
+        auto sk = retained(new SharedKeys);
 
-    Dict::key keys[10] = {
-        {"about"_sl},
-        {"age"_sl},
-        {"balance"_sl},
-        {"guid"_sl},
-        {"isActive"_sl},
-        {"latitude"_sl},
-        {"longitude"_sl},
-        {"name"_sl},
-        {"registered"_sl},
-        {"tags"_sl},
-    };
-
-    fprintf(stderr, "Looking up 1000 people...\n");
-    for (int i = 0; i < kSamples; i++) {
-        bench.start();
-
-        for (int j = 0; j < kIterations; j++) {
-            auto root = Value::fromTrustedData(doc)->asArray();
-            for (Array::iterator iter(root); iter; ++iter) {
-                const Dict *person = iter->asDict();
-                size_t n = 0;
-                for (int k = 0; k < 10; k++)
-                    if (person->get(keys[k]) != nullptr)
-                        n++;
-                REQUIRE(n == 10);
-            }
+        if (shareKeys) {
+            Encoder enc;
+            enc.setSharedKeys(sk);
+            enc.writeValue(Value::fromTrustedData(data));
+            data = enc.finish();
         }
 
-        bench.stop();
+        Dict::key keys[10] = {
+            {"about"_sl},
+            {"age"_sl},
+            {"balance"_sl},
+            {"guid"_sl},
+            {"isActive"_sl},
+            {"latitude"_sl},
+            {"longitude"_sl},
+            {"name"_sl},
+            {"registered"_sl},
+            {"tags"_sl},
+        };
+
+
+        fprintf(stderr, "Looking up 1000 people (with%s shared keys)...\n", (shareKeys ? "" : "out"));
+        for (int i = 0; i < kSamples; i++) {
+            bench.start();
+
+            for (int j = 0; j < kIterations; j++) {
+                auto doc = retained(new Doc(data, Doc::kTrusted, sk));
+                auto root = doc->root()->asArray();
+                for (Array::iterator iter(root); iter; ++iter) {
+                    const Dict *person = iter->asDict();
+                    size_t n = 0;
+                    for (int k = 0; k < 10; k++)
+                        if (person->get(keys[k]) != nullptr)
+                            n++;
+                    REQUIRE(n == 10);
+                }
+            }
+
+            bench.stop();
+        }
+        bench.printReport(1.0/kIterations, "person");
+        usleep(500 * 1000); //TEMP for Instruments
     }
-    bench.printReport(1.0/kIterations, "person");
 }
 
 
