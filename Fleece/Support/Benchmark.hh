@@ -78,9 +78,9 @@ public:
         if (items)
             scaleName += std::string("/") + std::string(items);
 
-        fprintf(stderr, "Range: %7.3f ... %7.3f %s, Average: %7.3f, median: %7.3f, std dev: %5.3g\n",
-                r.first*scale, r.second*scale, scaleName.c_str(),
-                average()*scale, median()*scale, stddev()*scale);
+        fprintf(stderr, "Median %7.3f %s; mean %7.3f; std dev %5.3g; range (%7.3f ... %7.3f)\n",
+                median()*scale, scaleName.c_str(), average()*scale, stddev()*scale,
+                r.first*scale, r.second*scale);
     }
 
 private:
