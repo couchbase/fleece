@@ -1,85 +1,58 @@
-cmake_minimum_required (VERSION 2.6)
-cmake_policy(VERSION 3.1)
+cmake_minimum_required (VERSION 3.9)
+cmake_policy(VERSION 3.9)
 project (Fleece)
 
 set(COMPILE_FLAGS   "${COMPILE_FLAGS}   -Wall -Werror -Wno-invalid-offsetof")
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_STANDARD 11)
+set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS
+    $<$<CONFIG:Debug>:DEBUG>
+)
 
-# Debug/Release builds
-if(CMAKE_BUILD_TYPE STREQUAL Debug)
-    add_definitions(-DDEBUG)
+if(MSVC)
+    include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/platform_win.cmake")
+elseif(APPLE)
+    include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/platform_apple.cmake")
+elseif(ANDROID OR "${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
+    include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/platform_linux.cmake")
+else()
+    message(FATAL_ERROR "Unsupported platform ${CMAKE_SYSTEM_NAME}!")
 endif()
 
-get_directory_property(FLEECEDEFS COMPILE_DEFINITIONS)
-if(NOT FLEECEDEFS MATCHES "_CRT_SECURE_NO_WARNINGS")
-    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-endif()
-
-aux_source_directory(Fleece/API_Impl/    FLEECE_API_SRC)
-aux_source_directory(Fleece/Core/        FLEECE_CORE_SRC)
-aux_source_directory(Fleece/Integration/ FLEECE_INTEGRATION_SRC)
-aux_source_directory(Fleece/Mutable/     FLEECE_MUTABLE_SRC)
-aux_source_directory(Fleece/Support/     FLEECE_SUPPORT_SRC)
-aux_source_directory(Fleece/Tree/        FLEECE_TREE_SRC)
-set(FLEECE_SRC ${FLEECE_API_SRC} ${FLEECE_CORE_SRC} ${FLEECE_INTEGRATION_SRC} ${FLEECE_MUTABLE_SRC}
-               ${FLEECE_SUPPORT_SRC} ${FLEECE_TREE_SRC}
-               vendor/jsonsl/jsonsl.c
-                             vendor/libb64/cdecode.c
-                             vendor/libb64/cencode.c)
-
-if (APPLE AND NOT ANDROID)
-    include_directories(ObjC/)
-    aux_source_directory(ObjC/  OBJC_SRC)
-    set(FLEECE_SRC ${FLEECE_SRC} ${OBJC_SRC})
-    set_source_files_properties(ObjC/Fleece+CoreFoundation.mm  PROPERTIES
-                                COMPILE_FLAGS  -Wno-return-type-c-linkage)
-elseif(WIN32)
-    include_directories("MSVC")
-    set(FLEECE_SRC ${FLEECE_SRC} MSVC/memmem.cc MSVC/vasprintf-msvc.c)
-endif()
-
-include_directories(API              # public
-                    Fleece/API_Impl
-                    Fleece/Core
-                    Fleece/Integration
-                    Fleece/Mutable
-                    Fleece/Support
-                    Fleece/Tree
-                    Experimental
-                    "vendor/libb64"
-                    "vendor/jsonsl" )
-
-if(!MSVC)
-	set_source_files_properties(Fleece/Core/Fleece.cc  PROPERTIES)
-endif()
-
+set_source_files(RESULT FLEECE_SRC)
 add_library(Fleece        SHARED  ${FLEECE_SRC})
 add_library(FleeceStatic  STATIC  ${FLEECE_SRC})
+setup_build()
 
 # Command-Line Tool
 add_executable(fleeceTool Tool/fleece_tool.cc)
 target_link_libraries(fleeceTool FleeceStatic)
 
 # Fleece Tests
-aux_source_directory(Tests FLEECE_TEST_SRC)
-if(NOT APPLE)
-    LIST(REMOVE_ITEM FLEECE_TEST_SRC Tests/ObjCTests.mm)
-endif()
-include_directories(Tests vendor/catch)
+set_test_source_files(RESULT FLEECE_TEST_SRC)
 add_executable(FleeceTests EXCLUDE_FROM_ALL ${FLEECE_TEST_SRC})
+setup_test_build()
+target_include_directories(FleeceTests PRIVATE Tests vendor/catch)
 target_link_libraries(FleeceTests FleeceStatic)
 file(COPY Tests/1000people.json DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Tests)
 file(COPY Tests/1person.fleece DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Tests)
 file(COPY Tests/1person.json DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Tests)
 
-if (APPLE)
-    set_target_properties(Fleece PROPERTIES LINK_FLAGS
-                          "-exported_symbols_list ${PROJECT_SOURCE_DIR}/Fleece/Support/Fleece.exp")
-    target_link_libraries(Fleece
-                           "-framework CoreFoundation"
-                           "-framework Foundation")
-    target_link_libraries(FleeceTests
-                            "-framework CoreFoundation"
-                            "-framework Foundation")
-endif()
+foreach(platform Fleece FleeceStatic fleeceTool FleeceTests)
+    target_include_directories(
+        ${platform} PRIVATE    
+        API
+        Fleece/API_Impl
+        Fleece/Core
+        Fleece/Integration
+        Fleece/Mutable
+        Fleece/Support
+        Fleece/Tree
+        Experimental
+        vendor/libb64
+        vendor/jsonsl
+    )
+endforeach()
