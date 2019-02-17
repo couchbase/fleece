@@ -14,8 +14,11 @@ function(set_source_files)
         Fleece/Integration/ObjC/FleeceDocument.mm
         Fleece/Integration/ObjC/MArray+ObjC.mm
         Fleece/Integration/ObjC/MDict+ObjC.mm
-        Fleece/Integration/ObjC/MTests.mm
         Fleece/Integration/ObjC/MValue+ObjC.mm
+        ObjC/Encoder+ObjC.mm
+        ObjC/Fleece+CoreFoundation.mm
+        ObjC/slice+CoreFoundation.cc
+        ObjC/Value+ObjC.mm
         PARENT_SCOPE
     )
 endfunction()
@@ -32,6 +35,7 @@ function(set_test_source_files)
         ${WIN_SSS_RESULT} 
         ${BASE_SRC_FILES} 
         Tests/ObjCTests.mm
+        Fleece/Integration/ObjC/MTests.mm
         PARENT_SCOPE
     )
 endfunction()
