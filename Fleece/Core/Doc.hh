@@ -8,7 +8,6 @@
 #include "RefCounted.hh"
 #include "Value.hh"
 #include "fleece/slice.hh"
-#include <map>
 
 namespace fleece { namespace impl {
     class SharedKeys;
@@ -27,7 +26,7 @@ namespace fleece { namespace impl {
               SharedKeys*,
               slice externDestination =nullslice) noexcept;
         Scope(const Scope &parentScope,
-              slice subData);
+              slice subData) noexcept;
         ~Scope();
 
         static Scope* containing(const Value* NONNULL) noexcept;
@@ -55,15 +54,11 @@ namespace fleece { namespace impl {
         Scope(const Scope&) =delete;
         void registr() noexcept;
 
-        using memoryMap = std::multimap<size_t, Scope*>;
-        static memoryMap *sMemoryMap;
-        
         Retained<SharedKeys> _sk;                       // SharedKeys used for this Fleece data
         slice const         _externDestination;         // Extern ptr destination for this data
         slice const         _data;                      // The memory range I represent
         alloc_slice const   _alloced;                   // Retains data if it's an alloc_slice
-        bool                _registered {false};        // Am I registered in sMemoryMap?
-        memoryMap::iterator _iter;                      // Pointer to my entry in sMemoryMap
+        std::atomic_flag    _unregistered ATOMIC_FLAG_INIT; // False if registered in sMemoryMap
 #if DEBUG
         uint32_t            _dataHash;                  // hash of _data, for troubleshooting
 #endif

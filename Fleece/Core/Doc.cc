@@ -21,9 +21,10 @@
 #include "Pointer.hh"
 #include "JSONConverter.hh"
 #include "FleeceException.hh"
+#include <algorithm>
 #include <functional>
 #include <mutex>
-#include <set>
+#include <vector>
 #include "betterassert.hh"
 
 #if 0
@@ -32,12 +33,25 @@
 #define Log(FMT,...)
 #endif
 
+#define Warn(FMT,...) fprintf(stderr, "DOC: WARNING: " # FMT "\n", __VA_ARGS__)
+
+
 namespace fleece { namespace impl {
     using namespace std;
     using namespace internal;
 
+
+    // `sMemoryMap` is a global mapping from pointers to Scopes.
+    struct memEntry {
+        const void *endOfRange; // The _end_ of the memory range covered by the Scope
+        Scope *scope;           // The Scope
+        bool operator< (const memEntry &other) const        {return endOfRange < other.endOfRange;}
+    };
+    using memoryMap = vector<memEntry>;
+    static memoryMap *sMemoryMap;
+
+    // Mutex for access to `sMemoryMap`
     static mutex sMutex;
-    Scope::memoryMap* Scope::sMemoryMap;
 
 
     Scope::Scope(slice data, SharedKeys *sk, slice destination) noexcept
@@ -45,8 +59,7 @@ namespace fleece { namespace impl {
     ,_externDestination(destination)
     ,_data(data)
     {
-        if (data)
-            registr();
+        registr();
     }
 
 
@@ -56,17 +69,18 @@ namespace fleece { namespace impl {
     ,_data(data)
     ,_alloced(data)
     {
-        if (data)
-            registr();
+        registr();
     }
 
 
-    Scope::Scope(const Scope &parentScope, slice subData)
+    Scope::Scope(const Scope &parentScope, slice subData) noexcept
     :_sk(parentScope.sharedKeys())
     ,_externDestination(parentScope.externDestination())
     ,_data(subData)
     ,_alloced(parentScope._alloced)
     {
+        // This ctor does _not_ register the data range, because the parent scope already did.
+        _unregistered.test_and_set();
         if (subData)
             assert(parentScope.data().contains(subData));
     }
@@ -78,51 +92,72 @@ namespace fleece { namespace impl {
 
 
     void Scope::registr() noexcept {
-        lock_guard<mutex> lock(sMutex);
-        if (_usuallyFalse(!sMemoryMap))
-            sMemoryMap = new multimap<size_t, Scope*>;
-        auto key = size_t(_data.end());
-        _iter = sMemoryMap->insert({key, this});
-        _registered = true;
-        Log("Register   (%p ... %p) --> Scope %p, sk=%p [Now %zu]",
-            data.buf, data.end(), this, sk, sMemoryMap->size());
-//#if DEBUG   // Leaving this enabled for troubleshooting
-        if (_iter != sMemoryMap->begin() && prev(_iter)->first == key) {
-            Scope *existing = prev(_iter)->second;
-            if (existing->_data == _data && existing->_externDestination == _externDestination
-                && existing->_sk == _sk) {
-                Log("Duplicate  (%p ... %p) --> Scope %p, sk=%p",
-                    data.buf, data.end(), this, sk);
-            } else {
-                FleeceException::_throw(InternalError,
-                                        "Incompatible duplicate Scope %p for (%p .. %p) with sk=%p: conflicts with %p for (%p .. %p) with sk=%p",
-                                        this, _data.buf, _data.end(), _sk.get(),
-                                        existing, existing->_data.buf, existing->_data.end(),
-                                        existing->_sk.get());
-            }
-        }
-//#endif
+        _unregistered.test_and_set();
+        if (!_data)
+            return;
+
 #if DEBUG
         _dataHash = _data.hash();
 #endif
+        lock_guard<mutex> lock(sMutex);
+        if (_usuallyFalse(!sMemoryMap)) {
+            sMemoryMap = new memoryMap;
+            sMemoryMap->reserve(10);
+        }
+        Log("Register   (%p ... %p) --> Scope %p, sk=%p [Now %zu]",
+            _data.buf, _data.end(), this, _sk.get(), sMemoryMap->size()+1);
+
+        memEntry entry = {_data.end(), this};
+        memoryMap::iterator iter = upper_bound(sMemoryMap->begin(), sMemoryMap->end(), entry);
+
+        // Assert that there isn't another conflicting Scope registered for this data:
+        if (iter != sMemoryMap->begin() && prev(iter)->endOfRange == entry.endOfRange) {
+            Scope *existing = prev(iter)->scope;
+            if (existing->_data == _data && existing->_externDestination == _externDestination
+                && existing->_sk == _sk) {
+                Log("Duplicate  (%p ... %p) --> Scope %p, sk=%p",
+                    _data.buf, _data.end(), this, _sk.get());
+            } else {
+                FleeceException::_throw(InternalError,
+                    "Incompatible duplicate Scope %p for (%p .. %p) with sk=%p: "
+                    "conflicts with %p for (%p .. %p) with sk=%p",
+                    this, _data.buf, _data.end(), _sk.get(),
+                    existing, existing->_data.buf, existing->_data.end(),
+                    existing->_sk.get());
+            }
+        }
+
+        sMemoryMap->insert(iter, entry);
+        _unregistered.clear();
     }
 
 
     void Scope::unregister() noexcept {
-        if (_registered) {
-            lock_guard<mutex> lock(sMutex);
-            Log("Unregister (%p ... %p) --> Scope %p, sk=%p   [now %zu]",
-                _data.buf, _data.end(), this, _sk.get(), sMemoryMap->size()-1);
-            sMemoryMap->erase(_iter);
-            _registered = false;
+        if (!_unregistered.test_and_set()) {            // this is atomic
 #if DEBUG
+            // Assert that the data hasn't been changed since I was created:
             if (_data.hash() != _dataHash)
                 FleeceException::_throw(InternalError,
                     "Memory range (%p .. %p) was altered while Scope %p (sk=%p) was active. "
                     "This usually means the Scope's data was freed/invalidated before the Scope "
                     "was unregistered/deleted. Unregister it earlier!",
-                                        _data.buf, _data.end(), this, _sk.get());
+                    _data.buf, _data.end(), this, _sk.get());
 #endif
+
+            lock_guard<mutex> lock(sMutex);
+            Log("Unregister (%p ... %p) --> Scope %p, sk=%p   [now %zu]",
+                _data.buf, _data.end(), this, _sk.get(), sMemoryMap->size()-1);
+            memEntry entry = {_data.end(), this};
+            auto iter = lower_bound(sMemoryMap->begin(), sMemoryMap->end(), entry);
+            while (iter != sMemoryMap->end() && iter->endOfRange == entry.endOfRange) {
+                if (iter->scope == this) {
+                    sMemoryMap->erase(iter);
+                    return;
+                } else {
+                    ++iter;
+                }
+            }
+            Warn("unregister(%p) couldn't find an entry for (%p ... %p)", this, _data.buf, _data.end());
         }
     }
 
@@ -131,10 +166,10 @@ namespace fleece { namespace impl {
         // must have sMutex to call this
         if (_usuallyFalse(!sMemoryMap))
             return nullptr;
-        auto i = sMemoryMap->upper_bound(size_t(src));
-        if (_usuallyFalse(i == sMemoryMap->end()))
+        auto iter = upper_bound(sMemoryMap->begin(), sMemoryMap->end(), memEntry{src, nullptr});
+        if (_usuallyFalse(iter == sMemoryMap->end()))
             return nullptr;
-        Scope *scope = i->second;
+        Scope *scope = iter->scope;
         if (_usuallyFalse(src < scope->_data.buf))
             return nullptr;
         return scope;
