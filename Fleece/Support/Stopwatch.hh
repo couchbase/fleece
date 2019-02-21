@@ -51,6 +51,16 @@ public:
         }
     }
 
+    /** Like stop(), but returns the time taken since start() was called. */
+    double lap() {
+        if (!_running)
+            return 0;
+        _running = false;
+        auto lap = clock::now() - _start;
+        _total += lap;
+        return std::chrono::duration_cast<seconds>(lap).count();
+    }
+
     void reset() {
         _total = duration::zero();
         if (_running)
@@ -65,6 +75,12 @@ public:
     }
 
     double elapsedMS() const    {return elapsed() * 1000.0;}
+
+    /** Returns number of seconds since the epoch. */
+    static double now() {
+        auto now = std::chrono::time_point_cast<std::chrono::microseconds>(clock::now());
+        return std::chrono::duration_cast<seconds>(now.time_since_epoch()).count();
+    }
 
     static double timeScale(double t, const char* &unit) {
         static const char* kTimeScales[] = {"sec", "ms", "us", "ns"};
