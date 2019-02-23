@@ -143,6 +143,7 @@ _FLEncoder_BeginArray
 _FLEncoder_EndArray
 _FLEncoder_BeginDict
 _FLEncoder_WriteKey
+_FLEncoder_WriteKeyValue
 _FLEncoder_EndDict
 _FLEncoder_ConvertJSON
 _FLEncoder_BytesWritten
