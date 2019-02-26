@@ -74,8 +74,14 @@ namespace fleece { namespace impl {
         bool encode(slice string, int &key) const;
 
         /** Maps a string to an integer. Will automatically add a new mapping if the string
-         qualifies. */
+            qualifies. */
         bool encodeAndAdd(slice string, int &key);
+
+        /** Returns true if the string could be added, i.e. there's room, it's not too long,
+            and it has only valid characters. */
+        inline bool couldAdd(slice str) const {
+            return count() < _maxCount && str.size <= _maxKeyLength && isEligibleToEncode(str);
+        }
 
         /** Decodes an integer back to a string. */
         slice decode(int key) const;
@@ -86,10 +92,6 @@ namespace fleece { namespace impl {
         /** Reverts the mapping to an earlier state by removing the mappings with keys greater than
             or equal to the new count. (I.e. it truncates the byKey vector.) */
         void revertToCount(size_t count);
-
-        /** Determines whether a new string should be added. Default implementation returns true
-            if the string contains only alphanumeric characters, '_' or '-'. */
-        virtual bool isEligibleToEncode(slice str);
 
         bool isUnknownKey(int key) const                {return key >= (int)_byKey.size();}
 
@@ -108,7 +110,11 @@ namespace fleece { namespace impl {
     protected:
         virtual ~SharedKeys() =default;
         virtual bool loadFrom(slice stateData);
-        
+
+        /** Determines whether a new string should be added. Default implementation returns true
+            if the string contains only alphanumeric characters, '_' or '-'. */
+        virtual bool isEligibleToEncode(slice str) const;
+
     private:
         friend class PersistentSharedKeys;
 

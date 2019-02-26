@@ -90,7 +90,7 @@ namespace fleece { namespace impl {
         if (encode(str, key))
             return true;
         // Should this string be encoded?
-        if (count() >= _maxCount || str.size > _maxKeyLength || !isEligibleToEncode(str))
+        if (!couldAdd(str))
             return false;
         // OK, add to table:
         key = add(str);
@@ -98,7 +98,7 @@ namespace fleece { namespace impl {
     }
 
 
-    bool SharedKeys::isEligibleToEncode(slice str) {
+    bool SharedKeys::isEligibleToEncode(slice str) const {
         for (size_t i = 0; i < str.size; ++i)
             if (_usuallyFalse(!isalnum(str[i]) && str[i] != '_' && str[i] != '-'))
                 return false;
