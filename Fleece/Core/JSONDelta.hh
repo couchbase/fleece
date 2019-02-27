@@ -30,11 +30,11 @@ namespace fleece { namespace impl {
             If the delta is malformed or can't be applied to `old`, throws a FleeceException. */
         static alloc_slice apply(const Value *old, slice jsonDelta, bool isJSON5 =false);
 
-        /** Applies the (parsed) JSON delta produced by `create` to the value `old` (which must be
-            equal to the `old` value originally passed to `create`) and writes the corresponding
+        /** Applies the JSON delta created by `create` to the value `old` (which must be equal
+            to the `old` value originally passed to `create`) and writes the corresponding
             `nuu` value to the Fleece encoder.
             If the delta is malformed or can't be applied to `old`, throws a FleeceException. */
-        static void apply(const Value *old, const Value* NONNULL delta, Encoder&);
+        static void apply(const Value *old, slice jsonDelta, bool isJSON5, Encoder&);
 
         /** Minimum byte length of strings that will be considered for diffing (default 60) */
         static size_t gMinStringDiffLength;

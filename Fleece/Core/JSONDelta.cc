@@ -62,8 +62,7 @@ namespace fleece { namespace impl {
 #pragma mark - CREATING DELTAS:
 
 
-    alloc_slice JSONDelta::create(const Value *old, const Value *nuu, bool json5)
-    {
+    /*static*/ alloc_slice JSONDelta::create(const Value *old, const Value *nuu, bool json5) {
         JSONEncoder enc;
         enc.setJSON5(json5);
         create(old, nuu, enc);
@@ -71,8 +70,7 @@ namespace fleece { namespace impl {
     }
 
 
-    bool JSONDelta::create(const Value *old, const Value *nuu, JSONEncoder &enc)
-    {
+    /*static*/ bool JSONDelta::create(const Value *old, const Value *nuu, JSONEncoder &enc) {
         if (JSONDelta(enc)._write(old, nuu, nullptr))
             return true;
         // If there is no difference, write a no-op delta:
@@ -228,23 +226,28 @@ namespace fleece { namespace impl {
 #pragma mark - APPLYING DELTAS:
 
 
-    alloc_slice JSONDelta::apply(const Value *old, slice jsonDelta, bool isJSON5) {
+    /*static*/ alloc_slice JSONDelta::apply(const Value *old, slice jsonDelta, bool isJSON5) {
+        Encoder enc;
+        apply(old, jsonDelta, isJSON5, enc);
+        return enc.finish();
+    }
+
+
+    /*static*/ void JSONDelta::apply(const Value *old, slice jsonDelta, bool isJSON5, Encoder &enc) {
         assert(jsonDelta);
         string json5;
         if (isJSON5) {
             json5 = ConvertJSON5(string(jsonDelta));
             jsonDelta = slice(json5);
         }
-        alloc_slice fleeceData = JSONConverter::convertJSON(jsonDelta);
+
+        // Parse JSON delta to Fleece using same SharedKeys as `old`:
+        auto sk = old->sharedKeys();
+        alloc_slice fleeceData = JSONConverter::convertJSON(jsonDelta, sk);
+        Scope scope(fleeceData, sk);
         const Value *fleeceDelta = Value::fromTrustedData(fleeceData);
-        Encoder enc;
-        apply(old, fleeceDelta, enc);
-        return enc.finish();
-    }
 
-
-    void JSONDelta::apply(const Value *old, const Value* NONNULL delta, Encoder &enc) {
-        JSONDelta(enc)._apply(old, delta);
+        JSONDelta(enc)._apply(old, fleeceDelta);
     }
 
 
@@ -337,9 +340,8 @@ namespace fleece { namespace impl {
             // If the old dict is in the base, we can create an inherited dict:
             _decoder->beginDictionary(old);
             for (Dict::iterator i(delta); i; ++i) {
-                slice key = i.keyString();
-                _decoder->writeKey(key);
-                _apply(old->get(key), i.value());  // recurse into dict item!
+                _decoder->writeKey(i.keyString());
+                _apply(old->get(i.key()), i.value());  // recurse into dict item!
             }
             _decoder->endDictionary();
         } else {
@@ -348,12 +350,11 @@ namespace fleece { namespace impl {
             // Process the unaffected, deleted, and modified keys:
             unsigned deltaKeysUsed = 0;
             for (Dict::iterator i(old); i; ++i) {
-                slice key = i.keyString();
-                const Value *valueDelta = delta->get(key);
+                const Value *valueDelta = delta->get(i.key());
                 if (valueDelta)
                     ++deltaKeysUsed;
                 if (!isDeltaDeletion(valueDelta)) {                 // skip deletions
-                    _decoder->writeKey(key);
+                    _decoder->writeKey(i.keyString());
                     auto oldValue = i.value();
                     if (valueDelta == nullptr)
                         _decoder->writeValue(oldValue);               // unaffected
@@ -364,9 +365,8 @@ namespace fleece { namespace impl {
             // Now add the inserted keys:
             if (deltaKeysUsed < delta->count()) {
                 for (Dict::iterator i(delta); i; ++i) {
-                    slice key = i.keyString();
-                    if (old->get(key) == nullptr) {
-                        _decoder->writeKey(key);
+                    if (old->get(i.key()) == nullptr) {
+                        _decoder->writeKey(i.keyString());
                         _apply(nullptr, i.value());  // recurse into insertion
                     }
                 }
@@ -418,7 +418,7 @@ namespace fleece { namespace impl {
 
 
     // Does this delta represent a deletion?
-    inline bool JSONDelta::isDeltaDeletion(const Value *delta) {
+    /*static*/ inline bool JSONDelta::isDeltaDeletion(const Value *delta) {
         if (!delta)
             return false;
         auto array = delta->asArray();
@@ -432,7 +432,7 @@ namespace fleece { namespace impl {
 #pragma mark - STRING DELTAS:
 
 
-    string JSONDelta::createStringDelta(slice oldStr, slice nuuStr) {
+    /*static*/ string JSONDelta::createStringDelta(slice oldStr, slice nuuStr) {
         if (nuuStr.size < gMinStringDiffLength
                 || (gCompatibleDeltas && oldStr.size > gMinStringDiffLength))
             return "";
@@ -493,7 +493,7 @@ namespace fleece { namespace impl {
     }
 
 
-    string JSONDelta::applyStringDelta(slice oldStr, slice diff) {
+    /*static*/ string JSONDelta::applyStringDelta(slice oldStr, slice diff) {
 #if 0
         // Support for JsonDiffPatch-format string diffs:
         if (diff[0] == '@') {

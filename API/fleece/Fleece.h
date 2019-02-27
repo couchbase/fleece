@@ -1087,7 +1087,7 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
                     supported.)
         @return  True on success, false on error; call `FLEncoder_GetError` for details. */
     bool FLEncodeApplyingJSONDelta(FLValue old,
-                                   FLValue FLNONNULL jsonDelta,
+                                   FLSlice jsonDelta,
                                    FLEncoder encoder);
 
     

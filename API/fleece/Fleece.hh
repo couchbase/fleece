@@ -92,7 +92,7 @@ namespace fleece {
 
         inline Doc findDoc() const;
 
-        static Value fromData(fleece::slice data, FLTrust t =kFLUntrusted)
+        static Value fromData(slice data, FLTrust t =kFLUntrusted)
                                                         {return FLValue_FromData(data,t);}
 
 #ifdef __OBJC__
@@ -336,14 +336,14 @@ namespace fleece {
         external pointers to. */
     class Doc {
     public:
-        Doc(fleece::alloc_slice fleeceData,
+        Doc(alloc_slice fleeceData,
             FLTrust trust =kFLUntrusted,
             SharedKeys sk =nullptr,
-            fleece::slice externDestination =fleece::nullslice) noexcept
+            slice externDestination =nullslice) noexcept
         :_doc(FLDoc_FromResultData(FLSliceResult(fleeceData), trust, sk, externDestination))
         { }
 
-        static inline Doc fromJSON(fleece::slice json, FLError *outError = nullptr);
+        static inline Doc fromJSON(slice json, FLError *outError = nullptr);
 
         static alloc_slice dump(slice fleeceData)   {return FLData_Dump(fleeceData);}
 
@@ -355,7 +355,7 @@ namespace fleece {
         Doc& operator=(Doc &&other);
         ~Doc()                                      {FLDoc_Release(_doc);}
 
-        fleece::slice data() const                  {return FLDoc_GetData(_doc);}
+        slice data() const                          {return FLDoc_GetData(_doc);}
         alloc_slice allocedData() const             {return FLDoc_GetAllocedData(_doc);}
         SharedKeys sharedKeys() const               {return FLDoc_GetSharedKeys(_doc);}
 
@@ -524,14 +524,14 @@ namespace fleece {
     /** Support for generating and applying JSON-format deltas/diffs between two Fleece values. */
     class JSONDelta {
     public:
-        static inline fleece::alloc_slice create(Value old, Value nuu);
+        static inline alloc_slice create(Value old, Value nuu);
         static inline bool create(Value old, Value nuu, Encoder &jsonEncoder);
 
-        static inline fleece::alloc_slice apply(Value old,
-                                                fleece::slice jsonDelta,
-                                                FLError *error);
+        static inline alloc_slice apply(Value old,
+                                        slice jsonDelta,
+                                        FLError *error);
         static inline bool apply(Value old,
-                                 Value jsonDelta,
+                                 slice jsonDelta,
                                  Encoder &encoder);
     };
 
@@ -550,7 +550,7 @@ namespace fleece {
         ,alloc_slice(s)
         { }
 
-        explicit AllocedDict(fleece::slice s)
+        explicit AllocedDict(slice s)
         :AllocedDict(alloc_slice(s)) { }
 
         AllocedDict(const AllocedDict &d)
@@ -654,24 +654,22 @@ namespace fleece {
     template<>
     inline void Encoder::keyref::operator= (bool value) {_enc.writeKey(_key); _enc.writeBool(value);}
 
-    inline fleece::alloc_slice JSONDelta::create(Value old, Value nuu) {
+    inline alloc_slice JSONDelta::create(Value old, Value nuu) {
         return FLCreateJSONDelta(old, nuu);
     }
     inline bool JSONDelta::create(Value old, Value nuu, Encoder &jsonEncoder) {
         return FLEncodeJSONDelta(old, nuu, jsonEncoder);
     }
-    inline fleece::alloc_slice JSONDelta::apply(Value old,
-                                                fleece::slice jsonDelta,
-                                                FLError *error) {
+    inline alloc_slice JSONDelta::apply(Value old, slice jsonDelta, FLError *error) {
         return FLApplyJSONDelta(old, jsonDelta, error);
     }
     inline bool JSONDelta::apply(Value old,
-                                 Value jsonDelta,
+                                 slice jsonDelta,
                                  Encoder &encoder) {
         return FLEncodeApplyingJSONDelta(old, jsonDelta, encoder);
     }
 
-    inline Doc Doc::fromJSON(fleece::slice json, FLError *outError) {
+    inline Doc Doc::fromJSON(slice json, FLError *outError) {
         return Doc(FLDoc_FromJSON(json, outError), false);
     }
 

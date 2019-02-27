@@ -678,12 +678,12 @@ FLSliceResult FLApplyJSONDelta(FLValue old, FLSlice jsonDelta, FLError *outError
     return {};
 }
 
-bool FLEncodeApplyingJSONDelta(FLValue old, FLValue delta, FLEncoder encoder) {
+bool FLEncodeApplyingJSONDelta(FLValue old, FLSlice jsonDelta, FLEncoder encoder) {
     try {
         Encoder *enc = encoder->fleeceEncoder.get();
         if (!enc)
             FleeceException::_throw(EncodeError, "FLEncodeApplyingJSONDelta cannot encode JSON");
-        JSONDelta::apply(old, delta, *enc);
+        JSONDelta::apply(old, jsonDelta, false, *enc);
         return true;
     } catch (const std::exception &x) {
         encoder->recordException(x);

@@ -88,7 +88,7 @@ namespace fleece { namespace impl {
             Trust =kUntrusted) noexcept;
 
         static Retained<Doc> fromFleece(const alloc_slice &fleece, Trust =kUntrusted);
-        static Retained<Doc> fromJSON(slice json);
+        static Retained<Doc> fromJSON(slice json, SharedKeys* =nullptr);
 
         static RetainedConst<Doc> containing(const Value* NONNULL) noexcept;
 

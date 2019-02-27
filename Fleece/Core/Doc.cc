@@ -197,8 +197,8 @@ namespace fleece { namespace impl {
         return new Doc(fleece, trust);
     }
 
-    Retained<Doc> Doc::fromJSON(slice json) {
-        return new Doc(JSONConverter::convertJSON(json), kTrusted);
+    Retained<Doc> Doc::fromJSON(slice json, SharedKeys *sk) {
+        return new Doc(JSONConverter::convertJSON(json, sk), kTrusted, sk);
     }
 
 

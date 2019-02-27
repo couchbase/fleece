@@ -37,26 +37,24 @@ static std::string toJSONString(const Value *v) {
 
 
 static void checkDelta(const char *json1, const char *json2, const char *deltaExpected) {
+    auto sk = retained(new SharedKeys());
+
     if (!deltaExpected)
         deltaExpected = "{}";
     // Parse json1 and json2:
+    Retained<Doc> doc1, doc2;
     const Value *v1 = nullptr, *v2 = nullptr;
-    alloc_slice f1, f2;
     if (json1) {
         auto j = ConvertJSON5(std::string(json1));
         j = std::string("[") + j + "]";
-        f1 = JSONConverter::convertJSON(slice(j));
-        v1 = Value::fromData(f1);
-        REQUIRE(v1);
-        v1 = v1->asArray()->get(0);
+        doc1 = Doc::fromJSON(slice(j), sk);
+        v1 = doc1->root()->asArray()->get(0);
     }
     if (json2) {
         auto j = ConvertJSON5(std::string(json2));
         j = std::string("[") + j + "]";
-        f2 = JSONConverter::convertJSON(slice(j));
-        v2 = Value::fromData(f2);
-        REQUIRE(v2);
-        v2 = v2->asArray()->get(0);
+        doc2 = Doc::fromJSON(slice(j), sk);
+        v2 = doc2->root()->asArray()->get(0);
     }
 
     // Compute the delta and check it:
