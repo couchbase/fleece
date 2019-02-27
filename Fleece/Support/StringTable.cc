@@ -63,6 +63,27 @@ namespace fleece {
         return *s;
     }
 
+    void StringTable::dump() const noexcept {
+        int totalProbes = 0, maxProbes = 0;
+        int n = 0;
+        for (auto i = begin(); i != end(); ++i) {
+            printf("%4d: ", n);
+            slice key = **i;
+            if (key) {
+                size_t index = key.hash() & (_size - 1);
+                int probes = 1 + n - (int)index;
+                totalProbes += probes;
+                maxProbes = std::max(maxProbes, probes);
+                printf("(%4d) '%.*s'\n", probes, (int)key.size, key.buf);
+            } else {
+                printf("--\n");
+            }
+            ++n;
+        }
+        printf(">> Average number of probes = %.2f, max = %d", totalProbes/(double)count(), maxProbes);
+    }
+
+
     bool StringTable::_add(fleece::slice key, uint32_t h, const info& n) noexcept {
         slot &s = find(key, h);
         if (s.first.buf)

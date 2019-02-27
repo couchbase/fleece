@@ -134,11 +134,12 @@ namespace fleece {
         #define hexCString() hexString().c_str()    // has to be a macro else dtor called too early
         #define cString() asString().c_str()        // has to be a macro else dtor called too early
 
-        /** djb2 hash algorithm */
+        /** Computes a 32-bit FNV-1a hash of the slice's contents. (Not cryptographic!) */
         uint32_t hash() const {
-            uint32_t h = 5381;
+            // <https://en.wikipedia.org/wiki/Fowler–Noll–Vo_hash_function#FNV-1a_hash>
+            uint32_t h = 2166136261;
             for (size_t i = 0; i < size; i++)
-                h = (h<<5) + h + (*this)[i];
+                h = (h ^ (*this)[i]) * 16777619;
             return h;
         }
 

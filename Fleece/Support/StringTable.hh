@@ -64,6 +64,8 @@ namespace fleece {
         iterator begin() const                      {return iterator(&_table[0]);}
         iterator end() const                        {return iterator(&_table[_size]);}
 
+        void dump() const noexcept;
+
     private:
         void allocTable(size_t size);
         slot& find(fleece::slice key, uint32_t hash) const noexcept;
