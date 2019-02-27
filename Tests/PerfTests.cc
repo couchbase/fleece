@@ -227,7 +227,6 @@ TEST_CASE("Perf LoadPeople", "[.Perf]") {
             bench.stop();
         }
         bench.printReport(1.0/kIterations, "person");
-        usleep(500 * 1000); //TEMP for Instruments
     }
 }
 
