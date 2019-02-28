@@ -37,8 +37,6 @@
 namespace fleece { namespace impl {
     using namespace internal;
 
-    typedef uint8_t byte;
-
     Encoder::Encoder(size_t reserveSize)
     :_out(reserveSize),
      _stack(kInitialStackSize),
@@ -94,6 +92,7 @@ namespace fleece { namespace impl {
             }
             _items->clear();
         }
+        _out.flush();
         _items = nullptr;
         _stackDepth = 0;
     }
@@ -158,7 +157,9 @@ namespace fleece { namespace impl {
 
 #pragma mark - WRITING:
 
-    void Encoder::addItem(Value v) {
+    // Adds an empty Value to the current collection's item list and returns a pointer to it.
+    // Caller is responsible for initializing the Value.
+    uint8_t* Encoder::placeItem() {
         throwIf(_blockedOnKey, EncodeError, "need a key before this value");
         if (_writingKey) {
             _writingKey = false;
@@ -167,53 +168,56 @@ namespace fleece { namespace impl {
                 _blockedOnKey = _writingKey = true;
         }
 
-        _items->push_back(v);
+        return (byte*) _items->push_back();
     }
 
-    void Encoder::writeValue(tags tag, byte buf[], size_t size, bool canInline) {
-        buf[0] |= tag << 4;
-        writeRawValue(slice(buf, size), canInline);
-        _out.padToEvenLength();
-    }
-
-    void Encoder::writeRawValue(slice rawValue, bool canInline) {
-        if (canInline && rawValue.size <= 4) {
-            if (rawValue.size < 4) {
-                byte buf[4] = {0};      // zero the unused bytes
-                memcpy(buf, rawValue.buf, rawValue.size);
-                addItem(*(Value*)buf);
-            } else {
-                addItem(*(Value*)rawValue.buf);
-            }
-            if (rawValue.size > 2)
+    // Writes blank space for a Value of the given size and returns a pointer to it.
+    template <bool canInline>
+    uint8_t* Encoder::placeValue(size_t size) {
+        byte *buf;
+        if (canInline && size <= 4) {
+            buf = placeItem();
+            if (size < 4)
+                buf[2] = buf[3] = 0;
+            if (size > 2)
                 _items->wide = true;
+            return buf;
         } else {
             writePointer(nextWritePos());
-            _out.write(rawValue.buf, rawValue.size);
+            bool pad = (size & 1);
+            buf = (byte*) _out.write(nullptr, size + pad);
+            if (pad)
+                buf[size] = 0;
         }
+        return buf;
+    }
+
+    template <bool canInline>
+    uint8_t* Encoder::placeValue(tags tag, byte param, size_t size) {
+        assert(param <= 0x0F);
+        byte *buf = placeValue<canInline>(size);
+        buf[0] = byte((tag << 4) | param);
+        return buf;
     }
 
 
 #pragma mark - SCALARS:
 
-    void Encoder::addSpecial(int specialValue) {addItem(Value(kSpecialTag, specialValue));}
+    void Encoder::addSpecial(int specVal)  {new (placeItem()) Value(kSpecialTag, specVal);}
     void Encoder::writeNull()              {addSpecial(kSpecialValueNull);}
     void Encoder::writeUndefined()         {addSpecial(kSpecialValueUndefined);}
     void Encoder::writeBool(bool b)        {addSpecial(b ? kSpecialValueTrue : kSpecialValueFalse);}
 
     void Encoder::writeInt(uint64_t i, bool isSmall, bool isUnsigned) {
         if (isSmall) {
-            addItem(Value(kShortIntTag, (i >> 8) & 0x0F, i & 0xFF));
+            new (placeItem()) Value(kShortIntTag, (i >> 8) & 0x0F, i & 0xFF);
         } else {
-            byte buf[10];
-            size_t size = PutIntOfLength(&buf[1], i, isUnsigned);
-            buf[0] = (byte)size - 1;
+            byte intbuf[10];
+            auto size = PutIntOfLength(intbuf, i, isUnsigned);
+            byte *buf = placeValue<false>(kIntTag, byte(size - 1), 1 + size);
             if (isUnsigned)
                 buf[0] |= 0x08;
-            ++size;
-            if (size & 1)
-                buf[size++] = 0;  // pad to even size
-            writeValue(kIntTag, buf, size);
+            memcpy(buf + 1, intbuf, size);
         }
     }
 
@@ -228,11 +232,9 @@ namespace fleece { namespace impl {
             return _writeFloat((float)n);
         } else {
             littleEndianDouble swapped = n;
-            uint8_t buf[2 + sizeof(swapped)];
-            buf[0] = 0x08; // 'double' size flag
+            auto buf = placeValue<false>(kFloatTag, 0x08, 2 + sizeof(swapped));
             buf[1] = 0;
             memcpy(&buf[2], &swapped, sizeof(swapped));
-            writeValue(kFloatTag, buf, sizeof(buf));
         }
     }
 
@@ -246,11 +248,9 @@ namespace fleece { namespace impl {
 
     void Encoder::_writeFloat(float n) {
         littleEndianFloat swapped = n;
-        uint8_t buf[2 + sizeof(swapped)];
-        buf[0] = 0x00; // 'float' size flag
+        auto buf = placeValue<false>(kFloatTag, 0, 2 + sizeof(swapped));
         buf[1] = 0;
         memcpy(&buf[2], &swapped, sizeof(swapped));
-        writeValue(kFloatTag, buf, sizeof(buf));
     }
 
 
@@ -259,27 +259,29 @@ namespace fleece { namespace impl {
     // used for strings and binary data. Returns the location where s got written to, which
     // can be used until the enoding is over. (Unless it's inline, in which case s.buf is nullptr.)
     slice Encoder::writeData(tags tag, slice s) {
-        uint8_t buf[4 + kMaxVarintLen64];
-        buf[0] = (uint8_t)std::min(s.size, (size_t)0xF);
-        const void *dst;
+        byte *buf;
         if (s.size < kNarrow) {
-            // Tiny data fits inline:
-            memcpy(&buf[1], s.buf, s.size);
-            writeValue(tag, buf, 1 + s.size);
-            dst = nullptr;
+            // Tiny data (0 or 1 byte) fits inline:
+            buf = placeValue<true>(tag, byte(s.size), 1 + s.size);
+            buf[1] = s.size > 0 ? s[0] : 0;
+            buf = nullptr; // this string is ephemeral
         } else {
             // Large data doesn't:
-            size_t bufLen = 1;
+            size_t bufLen = 1 + s.size;
             if (s.size >= 0x0F)
-                bufLen += PutUVarInt(&buf[1], s.size);
-            if (s.size == 0)
-                buf[bufLen++] = 0;
-            buf[0] |= tag << 4;
-            writeRawValue({buf, bufLen}, false);       // write header/count
-            dst = _out.write(s.buf, s.size);
-            _out.padToEvenLength();
+                bufLen += SizeOfVarInt(s.size);
+            buf = placeValue<false>(tag, 0, bufLen);
+            if (s.size < 0x0F) {
+                *buf++ |= byte(s.size);
+            } else {
+                *buf++ |= 0x0F;
+                buf += PutUVarInt(buf, s.size);
+            }
+            memcpy(buf, s.buf, s.size);
+            if (_out.outputFile())
+                buf = nullptr;          // ephemeral if writing to file
         }
-        return slice(dst, s.size);
+        return slice(buf, s.size);
     }
 
     // Returns the location where s got written to, if possible, just like writeData above.
@@ -445,10 +447,11 @@ namespace fleece { namespace impl {
             case kShortIntTag:
             case kIntTag:
             case kFloatTag:
-            case kSpecialTag:
-                writeRawValue(slice(value, value->dataSize()));
-                _out.padToEvenLength();
+            case kSpecialTag: {
+                size_t size = value->dataSize();
+                memcpy(placeValue<true>(size), value, size);
                 break;
+            }
             case kStringTag:
                 writeString(value->asString());
                 break;
@@ -517,7 +520,7 @@ namespace fleece { namespace impl {
 
     // Parameter p is an offset into the current stream, not taking into account the base.
     void Encoder::writePointer(ssize_t p)   {
-        addItem(Pointer(_base.size + p, kWide));
+        new (placeItem()) Pointer(_base.size + p, kWide);
     }
 
     // Check whether any pointers in _items can't fit in a narrow Value:
@@ -692,36 +695,31 @@ namespace fleece { namespace impl {
         pop();
         _writingKey = _blockedOnKey = false;
 
-        if (tag == kDictTag)
-            sortDict(*items);
-
         auto nValues = items->size();    // includes keys if this is a dict!
         auto count = (uint32_t)nValues;
-        if (items->tag == kDictTag)
-            count /= 2;
+        if (_usuallyTrue(count > 0)) {
+            if (_usuallyTrue(tag == kDictTag)) {
+                count /= 2;
+                sortDict(*items);
+            }
 
-        // Write the array header to the outer Value:
-        uint8_t buf[2 + kMaxVarintLen32];
-        uint32_t inlineCount = std::min(count, (uint32_t)kLongArrayCount);
-        buf[0] = (uint8_t)(inlineCount >> 8);
-        buf[1] = (uint8_t)(inlineCount & 0xFF);
-        size_t bufLen = 2;
-        if (count >= kLongArrayCount) {
-            bufLen += PutUVarInt(&buf[2], count - kLongArrayCount);
-            if (bufLen & 1)
-                buf[bufLen++] = 0;
-        }
+            // Write the array/dict header to the outer Value:
+            size_t bufLen = 2;
+            if (count >= kLongArrayCount)
+                bufLen += SizeOfVarInt(count - kLongArrayCount);
+            uint32_t inlineCount = std::min(count, (uint32_t)kLongArrayCount);
+            byte *buf = placeValue<false>(tag, byte(inlineCount >> 8), bufLen);
+            buf[1]  = (byte)(inlineCount & 0xFF);
+            if (count >= kLongArrayCount)
+                PutUVarInt(&buf[2], count - kLongArrayCount);
 
-        checkPointerWidths(items, nextWritePos() + bufLen);
+            checkPointerWidths(items, nextWritePos());
+            if (items->wide)
+                buf[0] |= 0x08;     // "wide" flag
 
-        if (items->wide)
-            buf[0] |= 0x08;     // "wide" flag
-        writeValue(items->tag, buf, bufLen, (count==0));          // can inline only if empty
+            fixPointers(items);
 
-        fixPointers(items);
-
-        // Write the values:
-        if (nValues > 0) {
+            // Write the values:
             if (items->wide) {
                 _out.write(&(*items)[0], kWide*nValues);
             } else {
@@ -732,6 +730,9 @@ namespace fleece { namespace impl {
                 }
                 _out.write(narrow, kNarrow*nValues);
             }
+        } else {
+            byte *buf = placeValue<true>(tag, 0, 2);
+            buf[1] = 0;
         }
 
 #ifndef NDEBUG

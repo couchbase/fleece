@@ -38,14 +38,10 @@ namespace fleece {
     }
 
     Writer::Writer(FILE *outputFile)
-    :_chunkSize(0)
-    ,_outputFile(outputFile)
+    :Writer(kDefaultInitialCapacity)
     {
         assert(outputFile);
-        // Add an empty chunk. This will cause every write() call to take the slow path
-        // through writeToNewChunk, which will detect _outputFile and call fwrite().
-        // That way we don't slow down the normal in-memory control flow of write().
-        _chunks.emplace_back(nullptr, 0);
+        _outputFile = outputFile;
     }
 
     Writer::Writer(Writer&& w) noexcept
@@ -57,6 +53,8 @@ namespace fleece {
     }
 
     Writer::~Writer() {
+        if (_outputFile)
+            flush();
         for (auto &chunk : _chunks)
             freeChunk(chunk);
     }
@@ -113,18 +111,31 @@ namespace fleece {
 
     const void* Writer::writeToNewChunk(const void* data, size_t length) {
         if (_outputFile) {
-            if (data) {
-                if (fwrite(data, 1, length, _outputFile) < length)
-                    FleeceException::_throwErrno("Writer can't write to file");
+            flush();
+            if (length > _chunkSize) {
+                freeChunk(_chunks.back());
+                _chunks.clear();
+                addChunk(length);
             }
-            return nullptr;
         } else {
             if (_usuallyTrue(_chunkSize <= 64*1024))
                 _chunkSize *= 2;
             addChunk(std::max(length, _chunkSize));
-            const void *result = _chunks.back().write(data, length);
-            assert(result);
-            return result;
+        }
+        const void *result = _chunks.back().write(data, length);
+        assert(result);
+        return result;
+    }
+
+    void Writer::flush() {
+        if (_outputFile) {
+            auto &chunk = _chunks.back();
+            size_t writtenLength = chunk.length();
+            if (writtenLength > 0) {
+                if (fwrite(chunk.start(), 1, writtenLength, _outputFile) < writtenLength)
+                    FleeceException::_throwErrno("Writer can't write to file");
+                chunk.reset();
+            }
         }
     }
 
@@ -147,8 +158,10 @@ namespace fleece {
     }
 
     alloc_slice Writer::finish() {
-        if (_outputFile)
+        if (_outputFile) {
+            flush();
             return {};
+        }
         alloc_slice output;
 #if 0 //TODO: Restore this optimization
         if (_chunks.size() == 1 && _chunks[0].start() != &_initialBuf) {

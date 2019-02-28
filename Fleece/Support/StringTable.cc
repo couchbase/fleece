@@ -50,12 +50,12 @@ namespace fleece {
         assert(key.buf != nullptr);
         size_t index = hash & (_size - 1);
         slot *s = &_table[index];
-        if (_usuallyFalse(s->first.buf != nullptr && s->first != key)) {
+        if (_usuallyFalse(s->first.buf != nullptr && (s->second.hash != hash || s->first != key))) {
             slot *end = &_table[_size];
             do {
                 if (++s >= end)
                     s = &_table[0];
-            } while (_usuallyFalse(s->first.buf != nullptr && s->first != key));
+            } while (_usuallyFalse(s->first.buf != nullptr && (s->second.hash != hash || s->first != key)));
         }
         if (s->first.buf == nullptr) {
             s->second.hash = hash;

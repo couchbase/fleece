@@ -183,6 +183,8 @@ namespace fleece { namespace impl {
         slice baseUsed() const                  {return _baseMinUsed != 0 ? slice(_baseMinUsed, _base.end()) : nullslice;}
 
     private:
+        using byte = uint8_t;
+
         static constexpr size_t kInitialStackSize = 4;
         static constexpr size_t kInitialCollectionCapacity = 4;
 
@@ -197,10 +199,10 @@ namespace fleece { namespace impl {
             smallVector<slice, kInitialCollectionCapacity> keys;
         };
 
-        void addItem(Value v);
+        byte* placeItem();
         void addSpecial(int specialValue);
-        void writeRawValue(slice rawValue, bool canInline =true);
-        void writeValue(internal::tags, uint8_t buf[], size_t size, bool canInline =true);
+        template <bool canInline> byte* placeValue(size_t size);
+        template <bool canInline> byte* placeValue(internal::tags tag, byte param, size_t size);
         void reuseBaseStrings(const Value* NONNULL);
         void cacheString(slice s, size_t offsetInBase);
         static bool isNarrowValue(const Value *value NONNULL);

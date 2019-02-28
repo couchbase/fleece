@@ -75,6 +75,8 @@ namespace fleece {
         T& push_back(const T& t)                    {return * new(_grow()) T(t);}
         T& push_back(T&& t)                         {return * new(_grow()) T(t);}
 
+        void* push_back()                           {return _grow();}
+
         void pop_back()                             {get(_size - 1).~T(); --_size;}
 
         template <class... Args>

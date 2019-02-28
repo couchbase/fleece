@@ -44,6 +44,8 @@ namespace fleece {
         const void* curPos() const;
         FILE* outputFile() const                {return _outputFile;}
 
+        void flush();
+
         /** Returns the data written, in pieces. Does not change the state of the Writer. */
         std::vector<slice> output() const;
 
@@ -51,8 +53,7 @@ namespace fleece {
             the caller and will be freed when no more alloc_slices refer to it. */
         alloc_slice finish();
 
-        /** Writes data. If the output is going to memory (the default), returns a pointer to where
-            the data got written to. If the output is being written to a file, returns nullptr. */
+        /** Writes data. Returns a pointer to where the data got written to. */
         const void* write(const void* data, size_t length);
 
         const void* write(slice s)              {return write(s.buf, s.size);}
@@ -67,7 +68,7 @@ namespace fleece {
         void padToEvenLength();
 
         /** Reserves space for data without actually writing anything yet.
-            The data must be written later using rewrite() otherwise there will be garbage in
+            The data must be filled in later, otherwise there will be garbage in
             the output. */
         const void* reserveSpace(size_t length)      {return write(nullptr, length);}
 
