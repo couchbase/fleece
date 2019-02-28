@@ -58,14 +58,17 @@ namespace fleece { namespace impl {
         using memoryMap = std::multimap<size_t, Scope*>;
         static memoryMap *sMemoryMap;
         
-        Retained<SharedKeys> _sk;
-        slice const         _externDestination;
-        slice const         _data;
-        alloc_slice const   _alloced;
-        bool                _registered {false};
-        memoryMap::iterator _iter;
+        Retained<SharedKeys> _sk;                       // SharedKeys used for this Fleece data
+        slice const         _externDestination;         // Extern ptr destination for this data
+        slice const         _data;                      // The memory range I represent
+        alloc_slice const   _alloced;                   // Retains data if it's an alloc_slice
+        bool                _registered {false};        // Am I registered in sMemoryMap?
+        memoryMap::iterator _iter;                      // Pointer to my entry in sMemoryMap
+#if DEBUG
+        uint32_t            _dataHash;                  // hash of _data, for troubleshooting
+#endif
     protected:
-        bool                _isDoc {false};
+        bool                _isDoc {false};             // True if I am a field of a Doc
     };
 
 
@@ -102,7 +105,7 @@ namespace fleece { namespace impl {
     private:
         void init(Trust) noexcept;
 
-        const Value*        _root {nullptr};
+        const Value*        _root {nullptr};            // The root object of the Fleece
     };
 
 } }

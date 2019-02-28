@@ -86,7 +86,7 @@ namespace fleece { namespace impl {
         _registered = true;
         Log("Register   (%p ... %p) --> Scope %p, sk=%p [Now %zu]",
             data.buf, data.end(), this, sk, sMemoryMap->size());
-//#if DEBUG
+//#if DEBUG   // Leaving this enabled for troubleshooting
         if (_iter != sMemoryMap->begin() && prev(_iter)->first == key) {
             Scope *existing = prev(_iter)->second;
             if (existing->_data == _data && existing->_externDestination == _externDestination
@@ -95,12 +95,16 @@ namespace fleece { namespace impl {
                     data.buf, data.end(), this, sk);
             } else {
                 FleeceException::_throw(InternalError,
-                                        "Incompatible duplicate Scope %p for (%p .. %p) with sk=%p: conflicts with %p with sk=%p",
+                                        "Incompatible duplicate Scope %p for (%p .. %p) with sk=%p: conflicts with %p for (%p .. %p) with sk=%p",
                                         this, _data.buf, _data.end(), _sk.get(),
-                                        existing, existing->_sk.get());
+                                        existing, existing->_data.buf, existing->_data.end(),
+                                        existing->_sk.get());
             }
         }
 //#endif
+#if DEBUG
+        _dataHash = _data.hash();
+#endif
     }
 
 
@@ -111,6 +115,14 @@ namespace fleece { namespace impl {
                 _data.buf, _data.end(), this, _sk.get(), sMemoryMap->size()-1);
             sMemoryMap->erase(_iter);
             _registered = false;
+#if DEBUG
+            if (_data.hash() != _dataHash)
+                FleeceException::_throw(InternalError,
+                    "Memory range (%p .. %p) was altered while Scope %p (sk=%p) was active. "
+                    "This usually means the Scope's data was freed/invalidated before the Scope "
+                    "was unregistered/deleted. Unregister it earlier!",
+                                        _data.buf, _data.end(), this, _sk.get());
+#endif
         }
     }
 
