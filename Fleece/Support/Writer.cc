@@ -31,11 +31,9 @@ namespace fleece {
     :_chunkSize(initialCapacity)
     ,_outputFile(nullptr)
     {
-        if (initialCapacity <= kDefaultInitialCapacity)
-            _chunks.emplace_back(_initialBuf, sizeof(_initialBuf));
-        else
-            addChunk(initialCapacity);
+        addChunk(initialCapacity);
     }
+
 
     Writer::Writer(FILE *outputFile)
     :Writer(kDefaultInitialCapacity)
@@ -44,13 +42,18 @@ namespace fleece {
         _outputFile = outputFile;
     }
 
+
     Writer::Writer(Writer&& w) noexcept
-    :_chunks(std::move(w._chunks))
-    ,_outputFile(std::move(w._outputFile))
+    :_available(w._available)
+    ,_chunks(std::move(w._chunks))
+    ,_chunkSize(w._chunkSize)
+    ,_length(w._length)
+    ,_outputFile(w._outputFile)
     {
-        w._chunks.clear();
+        memcpy(_initialBuf, w._initialBuf, sizeof(_initialBuf));
         w._outputFile = nullptr;
     }
+
 
     Writer::~Writer() {
         if (_outputFile)
@@ -59,202 +62,156 @@ namespace fleece {
             freeChunk(chunk);
     }
 
+
     Writer& Writer::operator= (Writer&& w) noexcept {
+        _available = w._available;
+        _length = w._length;
         _chunks = std::move(w._chunks);
-        _outputFile = std::move(w._outputFile);
+        _outputFile = w._outputFile;
+        memcpy(_initialBuf, w._initialBuf, sizeof(_initialBuf));
         w._outputFile = nullptr;
         return *this;
     }
+
 
     void Writer::_reset() {
         if (_outputFile)
             return;
 
-        size_t size = _chunks.size();
-        if (size == 0) {
-            addChunk(_chunkSize);
-        } else {
-            if (size > 1) {
-                for (size_t i = 0; i < size-1; i++)
-                    freeChunk(_chunks[i]);
-                _chunks.erase(_chunks.begin(), _chunks.end() - 1);
-            }
-            _chunks[0].reset();
+        size_t nChunks = _chunks.size();
+        if (nChunks > 1) {
+            for (size_t i = 0; i < nChunks-1; i++)
+                freeChunk(_chunks[i]);
+            _chunks.erase(_chunks.begin(), _chunks.end() - 1);
         }
+        _available = _chunks[0];
     }
 
 
     void Writer::reset() {
         _reset();
-        _baseOffset = _length = 0;
+        _length = _available.size;  // effectively 0
     }
 
-    const void* Writer::curPos() const {
-        return _chunks.back().available().buf;
-    }
 
-    const void* Writer::write(const void* data, size_t length) {
-        const void* result = _chunks.back().write(data, length);
-        if (_usuallyFalse(!result))
-            result = writeToNewChunk(data, length);
-        _length += length;
-        return result;
-    }
-
-    void Writer::padToEvenLength() {
-        if (length() & 1) {
-            if (_usuallyFalse(!_chunks.back().pad()))
-                writeToNewChunk("\0", 1);
-            ++_length;
+#if DEBUG
+    void Writer::assertLengthCorrect() const {
+        if (!_outputFile) {
+            size_t len = 0;
+            forEachChunk([&](slice chunk) {
+                len += chunk.size;
+            });
+            assert(len == length());
         }
     }
+#endif
 
-    const void* Writer::writeToNewChunk(const void* data, size_t length) {
+
+    const void* Writer::writeToNewChunk(slice s) {
+        // If we got here, a call to write(s) would not fit in the current chunk
         if (_outputFile) {
             flush();
-            if (length > _chunkSize) {
+            if (s.size > _chunkSize) {
                 freeChunk(_chunks.back());
                 _chunks.clear();
-                addChunk(length);
+                addChunk(s.size);
             }
+            _length -= _available.size;
+            _available = _chunks[0];
+            _length += _available.size;
         } else {
             if (_usuallyTrue(_chunkSize <= 64*1024))
                 _chunkSize *= 2;
-            addChunk(std::max(length, _chunkSize));
+            addChunk(std::max(s.size, _chunkSize));
         }
-        const void *result = _chunks.back().write(data, length);
-        assert(result);
+
+        // Now that we have room, write:
+        auto result = _available.buf;
+        if (s.buf)
+            ::memcpy((void*)_available.buf, s.buf, s.size);
+        _available.moveStart(s.size);
         return result;
     }
 
+
     void Writer::flush() {
-        if (_outputFile) {
-            auto &chunk = _chunks.back();
-            size_t writtenLength = chunk.length();
-            if (writtenLength > 0) {
-                if (fwrite(chunk.start(), 1, writtenLength, _outputFile) < writtenLength)
-                    FleeceException::_throwErrno("Writer can't write to file");
-                chunk.reset();
-            }
+        if (!_outputFile)
+            return;
+        auto chunk = _chunks.back();
+        size_t writtenLength = chunk.size - _available.size;
+        if (writtenLength > 0) {
+            _length -= _available.size;
+            if (fwrite(chunk.buf, 1, writtenLength, _outputFile) < writtenLength)
+                FleeceException::_throwErrno("Writer can't write to file");
+            _available = chunk;
+            _length += _available.size;
         }
+        assertLengthCorrect();
     }
+
 
     void Writer::addChunk(size_t capacity) {
-        _chunks.emplace_back(capacity);
+        _length -= _available.size;
+        if (!_chunks.empty()) {
+            auto &last = _chunks.back();
+            // (should I realloc() it?)
+            last.setSize(last.size - _available.size);
+        }
+        if (_chunks.empty() && capacity <= kDefaultInitialCapacity)
+            _available = _chunks.emplace_back(_initialBuf, sizeof(_initialBuf));
+        else
+            _available = _chunks.emplace_back(slice::newBytes(capacity), capacity);
+        _length += _available.size;
     }
 
-    void Writer::freeChunk(Chunk &chunk) {
-        if (chunk.start() != &_initialBuf)
+
+    void Writer::freeChunk(slice chunk) {
+        if (chunk.buf != &_initialBuf)
             chunk.free();
     }
 
+
     std::vector<slice> Writer::output() const {
-        assert(!_outputFile);
         std::vector<slice> result;
         result.reserve(_chunks.size());
-        for (const Chunk &chunk : _chunks)
-            result.push_back(chunk.contents());
+        forEachChunk([&](slice chunk) {
+            result.push_back(chunk);
+        });
         return result;
     }
 
+
     alloc_slice Writer::finish() {
+        alloc_slice output;
         if (_outputFile) {
             flush();
-            return {};
-        }
-        alloc_slice output;
-#if 0 //TODO: Restore this optimization
-        if (_chunks.size() == 1 && _chunks[0].start() != &_initialBuf) {
-            _chunks[0].resizeToFit();
-            output = alloc_slice::adopt(_chunks[0].contents());
-            _chunks.clear();
-            _length = 0;
-        } else
-#endif
-        {
+        } else {
             output = alloc_slice(length());
             void* dst = (void*)output.buf;
-            for (auto &chunk : _chunks) {
-                auto contents = chunk.contents();
-                memcpy(dst, contents.buf, contents.size);
-                dst = offsetby(dst, contents.size);
-            }
+            forEachChunk([&](slice chunk) {
+                memcpy(dst, chunk.buf, chunk.size);
+                dst = offsetby(dst, chunk.size);
+            });
             reset();
         }
+        assertLengthCorrect();
         return output;
     }
 
 
     bool Writer::writeOutputToFile(FILE *f) {
-        for (auto &chunk : _chunks) {
-            slice contents = chunk.contents();
-            if (fwrite(contents.buf, contents.size, 1, f) < contents.size)
-                return false;
+        assert(!_outputFile);
+        bool result = true;
+        forEachChunk([&](slice chunk) {
+            if (result && fwrite(chunk.buf, chunk.size, 1, f) < chunk.size)
+                result = false;
+        });
+        if (result) {
+            auto len = length();
+            _reset();       // don't reset _length, so offsets remain consistent after
+            _length = len - _available.size;
         }
-        _reset();       // don't reset _baseOffset or _length, so offsets remain consistent after
-        return true;
-    }
-
-
-
-#pragma mark - CHUNK:
-
-    Writer::Chunk::Chunk(void *buf, size_t size)
-    :_start(buf),
-     _available(buf, size)
-    { }
-
-    Writer::Chunk::Chunk(size_t capacity)
-    :_start(::malloc(capacity)),
-    _available(_start, capacity)
-    {
-        if (_usuallyFalse(!_start))
-            throw std::bad_alloc();
-    }
-
-    Writer::Chunk::Chunk(Chunk&& c) noexcept
-    :_start(c._start),
-     _available(c._available)
-    {
-        c._start = nullptr;
-    }
-
-    Writer::Chunk& Writer::Chunk::operator=(Chunk&& c) noexcept {
-        _start = c._start;
-        _available = c._available;
-        c._start = nullptr;
-        return *this;
-    }
-
-
-    void Writer::Chunk::free() noexcept {
-        ::free(_start);
-        _start = nullptr;
-    }
-
-    const void* Writer::Chunk::write(const void* data, size_t length) {
-        if (_usuallyFalse(_available.size < length))
-            return nullptr;
-        const void *result = _available.buf;
-        if (_usuallyTrue(data != nullptr))
-            ::memcpy((void*)result, data, length);
-        _available.moveStart(length);
         return result;
-    }
-
-    bool Writer::Chunk::pad() {
-        if (_usuallyFalse(_available.size == 0))
-            return false;
-        _available.writeByte(0);
-        return true;
-    }
-
-    void Writer::Chunk::resizeToFit() noexcept {
-        size_t len = length();
-        void *newStart = ::realloc(_start, len);
-        if (newStart)
-            _start = newStart;
-        _available = slice(offsetby(newStart,len), (size_t)0);
     }
 
 

@@ -202,8 +202,7 @@ namespace fleece { namespace impl {
     protected:
         constexpr Value(internal::tags tag, int tiny, int byte1 = 0)
         :_byte {(uint8_t)((tag<<4) | tiny),
-                (uint8_t)byte1,
-                0, 0}
+                (uint8_t)byte1}
         { }
 
         static const Value kNullInstance, kUndefinedInstance;

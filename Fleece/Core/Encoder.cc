@@ -85,8 +85,7 @@ namespace fleece { namespace impl {
                 _out.write(&root, kWide);
                 // Top level Value is 4 bytes, so append a 2-byte pointer to it, because the trailer
                 // needs to be a 2-byte Value:
-                Pointer ptr(4, kNarrow);
-                _out.write(&ptr, kNarrow);
+                new (_out.reserveSpace(kNarrow)) Pointer(4, kNarrow);
             } else {
                 _out.write(&root, kNarrow);
             }
@@ -134,12 +133,8 @@ namespace fleece { namespace impl {
 
     // Returns position in the stream of the next write. Pads stream to even pos if necessary.
     size_t Encoder::nextWritePos() {
-        size_t pos = _out.length();
-        if (pos & 1) {
-            _out.write("\0"_sl);
-            pos++;
-        }
-        return pos;
+        _out.padToEvenLength();
+        return _out.length();
     }
 
     void Encoder::reset() {
@@ -185,7 +180,7 @@ namespace fleece { namespace impl {
         } else {
             writePointer(nextWritePos());
             bool pad = (size & 1);
-            buf = (byte*) _out.write(nullptr, size + pad);
+            buf = _out.reserveSpace<byte>(size + pad);
             if (pad)
                 buf[size] = 0;
         }
@@ -723,12 +718,9 @@ namespace fleece { namespace impl {
             if (items->wide) {
                 _out.write(&(*items)[0], kWide*nValues);
             } else {
-                TempArray(narrow, uint16_t, nValues);
-                size_t i = 0;
-                for (auto &v : *items) {
-                    ::memcpy(&narrow[i++], &v, kNarrow);
-                }
-                _out.write(narrow, kNarrow*nValues);
+                auto narrow = _out.reserveSpace<uint16_t>(nValues);
+                for (auto &v : *items)
+                    ::memcpy(narrow++, &v, kNarrow);
             }
         } else {
             byte *buf = placeValue<true>(tag, 0, 2);

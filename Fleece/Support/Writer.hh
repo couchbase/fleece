@@ -40,11 +40,26 @@ namespace fleece {
 
         void reset();
 
-        size_t length() const                   {return _baseOffset + _length;}
-        const void* curPos() const;
+        size_t length() const                   {return _length - _available.size;}
+        const void* curPos() const              {return _available.buf;}
         FILE* outputFile() const                {return _outputFile;}
 
         void flush();
+
+        /** Invokes the callback for each range of bytes in the output. */
+        template <class T>
+        void forEachChunk(T callback) const {
+            assert(!_outputFile);
+            auto n = _chunks.size();
+            for (auto chunk : _chunks) {
+                if (_usuallyFalse(--n == 0)) {
+                    chunk.setSize(chunk.size - _available.size);
+                    if (chunk.size == 0)
+                        continue;
+                }
+                callback(chunk);
+            }
+        }
 
         /** Returns the data written, in pieces. Does not change the state of the Writer. */
         std::vector<slice> output() const;
@@ -54,65 +69,75 @@ namespace fleece {
         alloc_slice finish();
 
         /** Writes data. Returns a pointer to where the data got written to. */
-        const void* write(const void* data, size_t length);
+        const void* write(slice s) {
+            const void* result;
+            if (_usuallyTrue(s.size <= _available.size)) {
+                result = _available.buf;
+                if (s.buf)
+                    ::memcpy((void*)_available.buf, s.buf, s.size);
+                _available.moveStart(s.size);
+            } else {
+                result = writeToNewChunk(s);
+            }
+            // No need to add to _length; the length() method compensates.
+            assertLengthCorrect();
+            return result;
+        }
 
-        const void* write(slice s)              {return write(s.buf, s.size);}
-
-        Writer& operator<< (uint8_t byte)       {return operator<<(slice(&byte,1));}
-        Writer& operator<< (slice s)            {write(s); return *this;}
-
-        void writeBase64(slice data);
-        void writeDecodedBase64(slice base64String);
-
-        /** Pads output to even length by writing a zero byte if necessary. */
-        void padToEvenLength();
+        const void* write(const void* data NONNULL, size_t length)  {return write({data, length});}
 
         /** Reserves space for data without actually writing anything yet.
             The data must be filled in later, otherwise there will be garbage in
             the output. */
-        const void* reserveSpace(size_t length)      {return write(nullptr, length);}
+        void* reserveSpace(size_t length) {
+            const void* result;
+            if (_usuallyTrue(length <= _available.size)) {
+                result = _available.buf;
+                _available.moveStart(length);
+            } else {
+                result = writeToNewChunk({nullptr, length});
+            }
+            // No need to add to _length; the length() method compensates.
+            assertLengthCorrect();
+            return (void*) result;
+        }
+
+        /** Reserves space for \ref count values of type \ref T. */
+        template <class T>
+        T* reserveSpace(size_t count)           {return (T*) reserveSpace(count * sizeof(T));}
+
+        Writer& operator<< (uint8_t byte)       {return operator<<(slice(&byte,1));}
+        Writer& operator<< (slice s)            {write(s); return *this;}
+
+        /** Pads output to even length by writing a zero byte if necessary. */
+        void padToEvenLength()                  {if (length() & 1) *this << 0;}
+
+        void writeBase64(slice data);
+        void writeDecodedBase64(slice base64String);
 
         bool writeOutputToFile(FILE *);
 
     private:
-        class Chunk {
-        public:
-            Chunk(size_t capacity);
-            Chunk(void *buf, size_t size);
-            Chunk(Chunk&&) noexcept;
-            Chunk(const Chunk&) =delete;
-            Chunk& operator=(Chunk&&) noexcept;
-            void free() noexcept;
-            void reset()              {_available.setStart(_start);}
-            const void* write(const void* data, size_t length);
-            bool pad();
-            void resizeToFit() noexcept;
-            void* start()             {return _start;}
-            size_t length() const     {return (int8_t*)_available.buf - (int8_t*)_start;}
-            size_t capacity() const   {return (int8_t*)_available.end() - (int8_t*)_start;}
-            slice contents() const    {return slice(_start, _available.buf);}
-            slice available() const   {return _available;}
-            bool contains(const void *ptr) const   {return ptr >= _start && ptr <= _available.buf;}
-            size_t offsetOf(const void *ptr) const {return (int8_t*)ptr - (int8_t*)_start;}
-        private:
-            void *_start;
-            slice _available;
-        };
-
         void _reset();
-        const void* writeToNewChunk(const void* data, size_t length);
+        const void* writeToNewChunk(slice);
         void addChunk(size_t capacity);
-        void freeChunk(Chunk &chunk);
+        void freeChunk(slice);
 
         Writer(const Writer&) = delete;
         const Writer& operator=(const Writer&) = delete;
 
-        smallVector<Chunk, 4> _chunks;
-        size_t _chunkSize;
-        size_t _baseOffset {0};
-        size_t _length {0};
-        uint8_t _initialBuf[kDefaultInitialCapacity];
-        FILE* _outputFile;
+#if DEBUG
+        void assertLengthCorrect() const;
+#else
+        void assertLengthCorrect() const { }
+#endif
+
+        slice _available;               // Available range of current chunk
+        smallVector<slice, 4> _chunks;  // Chunks in consecutive order. Last is written to.
+        size_t _chunkSize;              // Size of next chunk to allocate
+        size_t _length {0};             // Output length, offset by _available.size
+        FILE* _outputFile;              // File writing to, or NULL
+        uint8_t _initialBuf[kDefaultInitialCapacity];   // Inline buffer to avoid a malloc
     };
 
 }
