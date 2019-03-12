@@ -47,6 +47,7 @@
     #define __printflike(A, B)
 
     #define cbl_strdup _strdup
+    #define cbl_getcwd _getcwd
 
     #include <winapifamily.h>
 
@@ -73,6 +74,7 @@
     #define WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) 0
 
     #define cbl_strdup strdup
+    #define cbl_getcwd getcwd
 
 #endif
 
