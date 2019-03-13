@@ -25,6 +25,25 @@ endif()
 set_source_files(RESULT FLEECE_SRC)
 add_library(Fleece        SHARED  ${FLEECE_SRC})
 add_library(FleeceStatic  STATIC  ${FLEECE_SRC})
+
+# "FleeceBase" static lib for clients that just need support stuff like slice, varint, RefCounted...
+set(FLEECE_BASE_SRC Fleece/Support/Backtrace.cc
+                    Fleece/Support/FleeceException.cc
+                    Fleece/Support/InstanceCounted.cc
+                    Fleece/Support/ParseDate.cc
+                    Fleece/Support/RefCounted.cc
+                    Fleece/Support/Writer.cc
+                    Fleece/Support/betterassert.cc
+                    Fleece/Support/slice.cc
+                    Fleece/Support/varint.cc
+                    vendor/libb64/cdecode.c
+                    vendor/libb64/cencode.c)
+if (APPLE)
+set(FLEECE_BASE_SRC ${FLEECE_BASE_SRC}
+                    ObjC/slice+CoreFoundation.cc)
+endif()
+add_library(FleeceBase    STATIC  ${FLEECE_BASE_SRC})
+
 setup_build()
 
 # Command-Line Tool
@@ -41,7 +60,7 @@ file(COPY Tests/1000people.json DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Tests)
 file(COPY Tests/1person.fleece DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Tests)
 file(COPY Tests/1person.json DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Tests)
 
-foreach(platform Fleece FleeceStatic fleeceTool FleeceTests)
+foreach(platform Fleece FleeceStatic FleeceBase fleeceTool FleeceTests)
     target_include_directories(
         ${platform} PRIVATE    
         API
