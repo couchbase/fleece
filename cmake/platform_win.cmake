@@ -18,6 +18,10 @@ function(set_source_files)
     )
 endfunction()
 
+function(set_base_platform_files)
+    # No-op
+endfunction()
+
 function(set_test_source_files)
     set(oneValueArgs RESULT)
     cmake_parse_arguments(WIN_SSS "" "${oneValueArgs}" "" ${ARGN})

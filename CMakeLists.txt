@@ -27,6 +27,7 @@ add_library(Fleece        SHARED  ${FLEECE_SRC})
 add_library(FleeceStatic  STATIC  ${FLEECE_SRC})
 
 # "FleeceBase" static lib for clients that just need support stuff like slice, varint, RefCounted...
+set_base_platform_files(RESULT FLEECE_BASE_PLATFORM_SRC)
 set(FLEECE_BASE_SRC Fleece/Support/Backtrace.cc
                     Fleece/Support/FleeceException.cc
                     Fleece/Support/InstanceCounted.cc
@@ -37,11 +38,9 @@ set(FLEECE_BASE_SRC Fleece/Support/Backtrace.cc
                     Fleece/Support/slice.cc
                     Fleece/Support/varint.cc
                     vendor/libb64/cdecode.c
-                    vendor/libb64/cencode.c)
-if (APPLE)
-set(FLEECE_BASE_SRC ${FLEECE_BASE_SRC}
-                    ObjC/slice+CoreFoundation.cc)
-endif()
+                    vendor/libb64/cencode.c
+                    ${FLEECE_BASE_PLATFORM_SRC})
+
 add_library(FleeceBase    STATIC  ${FLEECE_BASE_SRC})
 
 setup_build()
@@ -62,7 +61,7 @@ file(COPY Tests/1person.json DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Tests)
 
 foreach(platform Fleece FleeceStatic FleeceBase fleeceTool FleeceTests)
     target_include_directories(
-        ${platform} PRIVATE    
+        ${platform} PRIVATE
         API
         Fleece/API_Impl
         Fleece/Core

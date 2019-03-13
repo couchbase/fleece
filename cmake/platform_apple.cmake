@@ -23,6 +23,20 @@ function(set_source_files)
     )
 endfunction()
 
+function(set_base_platform_files)
+     set(oneValueArgs RESULT)
+     cmake_parse_arguments(APPLE_SSS "" "${oneValueArgs}" "" ${ARGN})
+     if(NOT DEFINED APPLE_SSS_RESULT)
+         message(FATAL_ERROR "set_source_files_base needs to be called with RESULT")
+     endif()
+
+      set(
+         ${APPLE_SSS_RESULT}
+         ObjC/slice+CoreFoundation.cc
+         PARENT_SCOPE
+     )
+endfunction()
+
 function(set_test_source_files)
     set(oneValueArgs RESULT)
     cmake_parse_arguments(WIN_SSS "" "${oneValueArgs}" "" ${ARGN})

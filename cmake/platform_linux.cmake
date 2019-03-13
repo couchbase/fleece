@@ -11,6 +11,10 @@ function(set_source_files)
     set(${LINUX_SSS_RESULT} ${BASE_SRC_FILES} PARENT_SCOPE)
 endfunction()
 
+function(set_base_platform_files)
+    # No-op
+endfunction()
+
 function(set_test_source_files)
     set(oneValueArgs RESULT)
     cmake_parse_arguments(LINUX_SSS "" "${oneValueArgs}" "" ${ARGN})
