@@ -34,7 +34,7 @@ function(set_test_source_files)
 endfunction()
 
 function(setup_build)
-    foreach(target FleeceStatic Fleece)
+    foreach(target FleeceStatic Fleece FleeceBase)
         target_include_directories(
             ${target} PRIVATE
             MSVC
