@@ -135,8 +135,7 @@ TEST_CASE("revertToCount", "[SharedKeys]") {
 
 TEST_CASE("many keys", "[SharedKeys]") {
     Retained<SharedKeys> sk = new SharedKeys();
-    sk->setMaxCount(1000);
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < SharedKeys::kMaxCount; i++) {
         CHECK(sk->count() == (size_t)i);
         char str[10];
         sprintf(str, "K%d", i);
@@ -150,7 +149,7 @@ TEST_CASE("many keys", "[SharedKeys]") {
     CHECK(!sk->encodeAndAdd("foo"_sl, key));
 
     // Read them back:
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < SharedKeys::kMaxCount; i++) {
         char str[10];
         sprintf(str, "K%d", i);
         CHECK(sk->decode(i) == slice(str));

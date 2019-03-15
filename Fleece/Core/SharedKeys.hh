@@ -19,6 +19,8 @@
 #pragma once
 #include "RefCounted.hh"
 #include "StringTable.hh"
+#include <array>
+#include <mutex>
 #include <vector>
 
 
@@ -51,24 +53,26 @@ namespace fleece { namespace impl {
     /** Keeps track of a set of dictionary keys that are stored in abbreviated (small integer) form.
 
         Encoders can be configured to use an instance of this, and will use it to abbreviate keys
-        that are given to them as strings. (Note: This class is not thread-safe!) */
+        that are given to them as strings.
+
+        When Fleece data that uses shared keys is loaded, a Scope or Doc object must be instantiated
+        to record the SharedKeys instance associated with it. When a Dict access results in an
+        integer key, the Dict will look up a Scope responsible for its address, and get the
+        SharedKeys instance from that Scope.
+
+        NOTE: This class is now thread-safe. */
     class SharedKeys : public RefCounted {
     public:
-
         SharedKeys() { }
         explicit SharedKeys(slice stateData)            {loadFrom(stateData);}
 
         alloc_slice stateData() const;
 
-        /** Sets the maximum number of keys that can be stored in the mapping. After this number is
-            reached, `encode` won't add any new strings. (Defaults to 2048.) */
-        void setMaxCount(size_t m)              {_maxCount = m;}
-
         /** Sets the maximum length of string that can be mapped. (Defaults to 16 bytes.) */
         void setMaxKeyLength(size_t m)          {_maxKeyLength = m;}
 
         /** The number of stored keys. */
-        size_t count() const                    {return _table.count();}
+        size_t count() const                    {return _count;}
 
         /** Maps a string to an integer, or returns false if there is no mapping. */
         bool encode(slice string, int &key) const;
@@ -80,24 +84,28 @@ namespace fleece { namespace impl {
         /** Returns true if the string could be added, i.e. there's room, it's not too long,
             and it has only valid characters. */
         inline bool couldAdd(slice str) const {
-            return count() < _maxCount && str.size <= _maxKeyLength && isEligibleToEncode(str);
+            return count() < kMaxCount && str.size <= _maxKeyLength && isEligibleToEncode(str);
         }
 
         /** Decodes an integer back to a string. */
-        slice decode(int key) const;
+        slice decode(int key) const {
+            if (_usuallyFalse(isUnknownKey(key)))
+                return decodeUnknown(key);
+            return _byKey[key];
+        }
 
         /** A vector whose indices are encoded keys and values are the strings. */
-        const std::vector<alloc_slice>& byKey() const   {return _byKey;}
+        std::vector<alloc_slice> byKey() const;
 
         /** Reverts the mapping to an earlier state by removing the mappings with keys greater than
             or equal to the new count. (I.e. it truncates the byKey vector.) */
         void revertToCount(size_t count);
 
-        bool isUnknownKey(int key) const                {return key >= (int)_byKey.size();}
+        bool isUnknownKey(int key) const                {return (size_t)key >= _count;}
 
         virtual bool refresh()                          {return false;}
 
-        static const size_t kDefaultMaxCount = 2048;        // Max number of keys to store
+        static const size_t kMaxCount = 2048;               // Max number of keys to store
         static const size_t kDefaultMaxKeyLength = 16;      // Max length of string to store
 
         typedef const void* PlatformString;
@@ -118,13 +126,17 @@ namespace fleece { namespace impl {
     private:
         friend class PersistentSharedKeys;
 
-        virtual int add(slice string);
+        bool _encode(slice string, int &key) const;
+        bool _encodeAndAdd(slice string, int &key);
+        virtual int _add(slice string);
+        slice decodeUnknown(int key) const;
 
         fleece::StringTable _table;                     // Hash table mapping slice->int
-        std::vector<alloc_slice> _byKey;                // Reverse mapping, int->slice
-        std::vector<PlatformString> _platformStringsByKey; // Reverse mapping, int->platform key
-        size_t _maxCount {kDefaultMaxCount};            // Max number of strings I will hold
         size_t _maxKeyLength {kDefaultMaxKeyLength};    // Max length of string I will add
+        std::mutex _mutex;
+        size_t _count {0};
+        std::array<alloc_slice, kMaxCount> _byKey;      // Reverse mapping, int->slice
+        std::vector<PlatformString> _platformStringsByKey; // Reverse mapping, int->platform key
     };
 
 
@@ -148,7 +160,9 @@ namespace fleece { namespace impl {
         void save();
 
         /** Reverts to persisted state as of the end of the last transaction.
-            Call if aborting a transaction, or a transaction failed to commit. */
+            Call when aborting a transaction, or a transaction failed to commit.
+            @warning  Any use of encoded keys created during the transaction will
+                      lead to "undefined behavior". */
         void revert();
 
         /** Call this after a transaction ends, after calling save() or revert(). */
@@ -168,7 +182,7 @@ namespace fleece { namespace impl {
         bool loadFrom(slice fleeceData) override;
 
     private:
-        virtual int add(slice str) override;
+        virtual int _add(slice str) override;
 
         size_t _persistedCount {0};             // Number of strings written to storage
         size_t _committedPersistedCount {0};    // Number of strings written to storage & committed

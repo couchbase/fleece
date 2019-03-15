@@ -20,6 +20,10 @@
 #include "FleeceImpl.hh"
 #include "FleeceException.hh"
 
+
+#define LOCK(MUTEX)     lock_guard<mutex> _lock(const_cast<mutex&>(MUTEX))
+
+
 namespace fleece { namespace impl {
     using namespace std;
 
@@ -55,28 +59,36 @@ namespace fleece { namespace impl {
         Array::iterator i(strs);
         if (i.count() <= count())
             return false;
-        i += (unsigned)count();           // Start at the first new string
+
+        LOCK(_mutex);
+        i += (unsigned)count();           // Start at the first _new_ string
         for (; i; ++i) {
             slice str = i.value()->asString();
             if (!str)
                 return false;
-            SharedKeys::add(str);
+            SharedKeys::_add(str);
         }
         return true;
     }
 
 
     alloc_slice SharedKeys::stateData() const {
+        auto count = _count;
         Encoder enc;
-        enc.beginArray(count());
-        for (auto i = byKey().begin(); i != byKey().end(); ++i)
-            enc.writeString(*i);
+        enc.beginArray(count);
+        for (size_t key = 0; key < count; ++key)
+            enc.writeString(_byKey[key]);
         enc.endArray();
         return enc.finish();
     }
 
 
     bool SharedKeys::encode(slice str, int &key) const {
+        LOCK(_mutex);
+        return _encode(str, key);
+    }
+
+    bool SharedKeys::_encode(slice str, int &key) const {
         // Is this string already encoded?
         auto &slot = _table.find(str);
         if (_usuallyTrue(slot.first.buf != nullptr)) {
@@ -86,14 +98,20 @@ namespace fleece { namespace impl {
         return false;
     }
 
+
     bool SharedKeys::encodeAndAdd(slice str, int &key) {
-        if (encode(str, key))
+        LOCK(_mutex);
+        return _encodeAndAdd(str, key);
+    }
+
+    bool SharedKeys::_encodeAndAdd(slice str, int &key) {
+        if (_encode(str, key))
             return true;
         // Should this string be encoded?
         if (!couldAdd(str))
             return false;
         // OK, add to table:
-        key = add(str);
+        key = _add(str);
         return true;
     }
 
@@ -106,20 +124,25 @@ namespace fleece { namespace impl {
     }
 
 
-    slice SharedKeys::decode(int key) const {
+    slice SharedKeys::decodeUnknown(int key) const {
         throwIf(key < 0, InvalidData, "key must be non-negative");
-        if (_usuallyFalse(isUnknownKey(key))) {
-            // Unrecognized key -- if not in a transaction, try reloading
-            const_cast<SharedKeys*>(this)->refresh();
-            if (key >= (int)_byKey.size())
-                return nullslice;
-        }
+        // Unrecognized key -- if not in a transaction, try reloading
+        const_cast<SharedKeys*>(this)->refresh();
+        if (isUnknownKey(key))
+            return nullslice;
         return _byKey[key];
+    }
+
+
+    vector<alloc_slice> SharedKeys::byKey() const {
+        auto count = _count;
+        return vector<alloc_slice>(_byKey.begin(), &_byKey[count]);
     }
 
 
     SharedKeys::PlatformString SharedKeys::platformStringForKey(int key) const {
         throwIf(key < 0, InvalidData, "key must be non-negative");
+        LOCK(_mutex);
         if ((unsigned)key >= _platformStringsByKey.size())
             return nullptr;
         return _platformStringsByKey[key];
@@ -128,7 +151,8 @@ namespace fleece { namespace impl {
 
     void SharedKeys::setPlatformStringForKey(int key, SharedKeys::PlatformString platformKey) const {
         throwIf(key < 0, InvalidData, "key must be non-negative");
-        throwIf((unsigned)key >= _byKey.size(), InvalidData, "key is not yet known");
+        throwIf((unsigned)key >= _count, InvalidData, "key is not yet known");
+        LOCK(_mutex);
         auto &strings = const_cast<SharedKeys*>(this)->_platformStringsByKey;
         if ((unsigned)key >= _platformStringsByKey.size())
             strings.resize(key + 1);
@@ -136,29 +160,30 @@ namespace fleece { namespace impl {
     }
 
 
-    int SharedKeys::add(slice str) {
-        _byKey.emplace_back(str);
-        str = _byKey.back();
-        auto id = (uint32_t)count();
-        StringTable::info info{id};
-        _table.add(str, info);
-        return id;
+    int SharedKeys::_add(slice str) {
+        alloc_slice allocedStr(str);
+        auto id = _count++;
+        _byKey[id] = allocedStr;
+        StringTable::info info{uint32_t(id)};
+        _table.add(allocedStr, info);
+        return int(id);
     }
 
 
     void SharedKeys::revertToCount(size_t toCount) {
-        if (toCount >= count()) {
+        LOCK(_mutex);
+        if (toCount >= _count) {
             throwIf(toCount > count(), SharedKeysStateError, "can't revert to a bigger count");
             return;
         }
-        _byKey.resize(toCount);
+        for (auto key = toCount; key < _count; ++key)
+            _byKey[key] = nullslice;
+        _count = toCount;
+
         // StringTable doesn't support removing, so rebuild it:
         _table.clear();
-        uint32_t key = 0;
-        for (auto i = _byKey.begin(); i != _byKey.end(); ++i) {
-            StringTable::info info{key++};
-            _table.add(*i, info);
-        }
+        for (size_t key = 0; key < toCount; ++key)
+            _table.add(_byKey[key], StringTable::info{uint32_t(key)});
     }
 
 
@@ -214,9 +239,9 @@ namespace fleece { namespace impl {
     }
 
 
-    int PersistentSharedKeys::add(slice str) {
+    int PersistentSharedKeys::_add(slice str) {
         throwIf(!_inTransaction, SharedKeysStateError, "not in transaction");
-        return SharedKeys::add(str);
+        return SharedKeys::_add(str);
     }
 
 } }
