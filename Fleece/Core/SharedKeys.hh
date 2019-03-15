@@ -56,7 +56,7 @@ namespace fleece { namespace impl {
     public:
 
         SharedKeys() { }
-        SharedKeys(slice stateData)             {loadFrom(stateData);}
+        explicit SharedKeys(slice stateData)            {loadFrom(stateData);}
 
         alloc_slice stateData() const;
 

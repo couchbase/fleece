@@ -46,6 +46,8 @@ namespace fleece { namespace impl {
         static std::pair<const Value*,slice> resolvePointerFromWithRange(
                                                                          const internal::Pointer* NONNULL src,
                                                                          const void* NONNULL dst) noexcept;
+        static void dumpAll();
+
     protected:
         static const Scope* _containing(const Value* NONNULL) noexcept;
         void unregister() noexcept;
@@ -76,6 +78,7 @@ namespace fleece { namespace impl {
             kUntrusted, kTrusted
         };
 
+        explicit
         Doc(const alloc_slice &fleeceData,
             Trust =kUntrusted,
             SharedKeys* =nullptr,
@@ -104,3 +107,9 @@ namespace fleece { namespace impl {
     };
 
 } }
+
+
+extern "C" {
+    // For debugging only; to be called from a debugger
+    void FLDumpScopes();
+}

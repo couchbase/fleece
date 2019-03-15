@@ -796,6 +796,7 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
     FLSliceResult FLSharedKeys_GetStateData(FLSharedKeys FLNONNULL);
     int FLSharedKeys_Encode(FLSharedKeys FLNONNULL, FLString, bool add);
     FLString FLSharedKeys_Decode(FLSharedKeys FLNONNULL, int key);
+    unsigned FLSharedKeys_Count(FLSharedKeys FLNONNULL);
 
 
     //////// ENCODER

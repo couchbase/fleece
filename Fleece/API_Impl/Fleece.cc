@@ -387,6 +387,7 @@ FLMutableDict FLMutableDict_GetMutableDict(FLMutableDict d, FLString key) {
 FLSharedKeys FLSharedKeys_Create()                          {return retain(new SharedKeys());}
 FLSharedKeys FLSharedKeys_Retain(FLSharedKeys sk)           {return retain(sk);}
 void FLSharedKeys_Release(FLSharedKeys sk)                  {release(sk);}
+unsigned FLSharedKeys_Count(FLSharedKeys sk)                {return (unsigned)sk->count();}
 FLSharedKeys FLSharedKeys_CreateFromStateData(FLSlice data) {return retain(new SharedKeys(data));}
 FLSliceResult FLSharedKeys_GetStateData(FLSharedKeys sk)    {return toSliceResult(sk->stateData());}
 FLString FLSharedKeys_Decode(FLSharedKeys sk, int key)      {return sk->decode(key);}

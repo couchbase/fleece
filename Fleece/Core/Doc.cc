@@ -211,6 +211,21 @@ namespace fleece { namespace impl {
     }
 
 
+    void Scope::dumpAll() {
+        lock_guard<mutex> lock(sMutex);
+        if (_usuallyFalse(!sMemoryMap)) {
+            fprintf(stderr, "No Scopes have ever been registered.\n");
+            return;
+        }
+        for (auto &entry : *sMemoryMap) {
+            auto scope = entry.scope;
+            fprintf(stderr, "%p -- %p (%4zu bytes) --> SharedKeys[%p]%s\n",
+                    scope->_data.buf, scope->_data.end(), scope->_data.size, scope->sharedKeys(),
+                    (scope->_isDoc ? " (Doc)" : ""));
+        }
+    }
+
+
 #pragma mark - DOC:
 
 
@@ -259,3 +274,8 @@ namespace fleece { namespace impl {
     }
 
 } }
+
+
+void FLDumpScopes() {
+    fleece::impl::Scope::dumpAll();
+}
