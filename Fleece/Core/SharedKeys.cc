@@ -136,7 +136,7 @@ namespace fleece { namespace impl {
 
     vector<alloc_slice> SharedKeys::byKey() const {
         auto count = _count;
-        return vector<alloc_slice>(_byKey.begin(), &_byKey[count]);
+        return vector<alloc_slice>(&_byKey[0], &_byKey[count]);
     }
 
 
