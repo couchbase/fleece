@@ -160,7 +160,7 @@ namespace fleece {
 
         void shrinkTo(size_t sz) {
             if (sz < _size) {
-                for (auto i = _size-1; i > sz; --i)
+                for (auto i = sz; i < _size; ++i)
                     get(i).T::~T();                 // destruct removed item
                 _size = (uint32_t)sz;
             }
