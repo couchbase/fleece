@@ -472,6 +472,12 @@ while (NULL != (value = FLArrayIterator_GetValue(&iter))) {
     /** Sets the value at an index to a Fleece value. */
     void FLMutableArray_SetValue(FLMutableArray, uint32_t index, FLValue);
 
+    /** Inserts a contiguous range of JSON `null` values into the array.
+        @param array  The array to operate on.
+        @param firstIndex  The zero-based index of the first value to be inserted.
+        @param count  The number of items to insert. */
+    void FLMutableArray_Insert(FLMutableArray array, uint32_t firstIndex, uint32_t count);
+
     /** Removes contiguous items from the array.
         @param array  The array to operate on.
         @param firstIndex  The zero-based index of the first item to remove.

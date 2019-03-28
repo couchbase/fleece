@@ -247,6 +247,10 @@ void FLMutableArray_SetString(FLMutableArray a, uint32_t i, FLString v) {if(a) a
 void FLMutableArray_SetData(FLMutableArray a, uint32_t i, FLSlice v)    {if(a) a->set(i, v);}
 void FLMutableArray_SetValue(FLMutableArray a, uint32_t i, FLValue v)   {if(a) a->set(i, v);}
 
+void FLMutableArray_Insert(FLMutableArray a, uint32_t firstIndex, uint32_t count)     {
+    if (a) a->insert(firstIndex, count);
+}
+
 void FLMutableArray_Remove(FLMutableArray a, uint32_t firstIndex, uint32_t count) {
     if(a) a->remove(firstIndex, count);
 }

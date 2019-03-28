@@ -380,6 +380,9 @@ namespace fleece {
 
         bool operator== (const Doc &d) const        {return _doc == d._doc;}
 
+        operator FLDoc() const                      {return _doc;}
+        FLDoc detach()                              {auto d = _doc; _doc = nullptr; return d;}
+
     private:
         friend class Value;
         explicit Doc(FLValue v)                     :_doc(FLValue_FindDoc(v)) { }

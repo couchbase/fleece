@@ -81,6 +81,7 @@ _FLMutableArray_SetDouble
 _FLMutableArray_SetString
 _FLMutableArray_SetData
 _FLMutableArray_SetValue
+_FLMutableArray_Insert
 _FLMutableArray_Remove
 _FLMutableArray_Resize
 _FLMutableArray_GetMutableArray
