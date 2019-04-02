@@ -178,13 +178,23 @@ namespace fleece { namespace impl {
 
 
     void ValueSlot::set(float f) {
-        littleEndianFloat lf(f);
-        setValue(kFloatTag, 0, {&lf, sizeof(lf)});
+        struct {
+            uint8_t filler = 0;
+            littleEndianFloat le;
+        } data;
+        data.le = f;
+        setValue(kFloatTag, 0, {(char*)&data.le - 1, sizeof(data.le) + 1});
+        assert(asValue()->asFloat() == f);  
     }
 
     void ValueSlot::set(double d) {
-        littleEndianDouble ld(d);
-        setValue(kFloatTag, 8, {&ld, sizeof(ld)});
+        struct {
+            uint8_t filler = 0;
+            littleEndianDouble le;
+        } data;
+        data.le = d;
+        setValue(kFloatTag, 8, {(char*)&data.le - 1, sizeof(data.le) + 1});
+        assert(asValue()->asDouble() == d);
     }
 
 
