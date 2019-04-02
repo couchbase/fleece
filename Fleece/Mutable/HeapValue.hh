@@ -9,6 +9,7 @@
 #include "RefCounted.hh"
 
 namespace fleece { namespace impl {
+    class ValueSlot;
 
     namespace internal {
         using namespace fleece::impl;
@@ -59,7 +60,7 @@ namespace fleece { namespace impl {
             HeapValue(tags tag, int tiny);
             tags tag() const                            {return tags(_header >> 4);}
         private:
-            friend class ValueSlot;
+            friend class fleece::impl::ValueSlot;
 
             static void* operator new(size_t size, size_t extraSize);
             HeapValue() { }

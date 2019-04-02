@@ -391,6 +391,11 @@ namespace fleece {
     };
 
 
+    class Null { };
+    /** A convenient way to specify (JSON) null when writing to an Encoder or mutable cllection */
+    constexpr Null nullValue;
+
+
     /** Generates Fleece-encoded data. */
     class Encoder {
     public:
@@ -463,6 +468,7 @@ namespace fleece {
         //////// "<<" convenience operators;
 
         // Note: overriding <<(bool) would be dangerous due to implicit conversion
+        Encoder& operator<< (Null)                  {writeNull(); return *this;}
         Encoder& operator<< (long long i)           {writeInt(i); return *this;}
         Encoder& operator<< (unsigned long long i)  {writeUInt(i); return *this;}
         Encoder& operator<< (long i)                {writeInt(i); return *this;}

@@ -46,6 +46,7 @@ extern "C" {
     typedef const struct _FLValue* FLValue;         ///< A reference to a value of any type.
     typedef const struct _FLArray* FLArray;         ///< A reference to an array value.
     typedef const struct _FLDict*  FLDict;          ///< A reference to a dictionary (map) value.
+    typedef struct _FLSlot*        FLSlot;          ///< A reference to a mutable array/dict item
     typedef struct _FLArray*       FLMutableArray;  ///< A reference to a mutable array.
     typedef struct _FLDict*        FLMutableDict;   ///< A reference to a mutable dictionary.
 #endif
@@ -322,6 +323,20 @@ extern "C" {
     /** @} */
 
 
+    //////// VALUE SLOT
+
+
+    void FLSlot_SetNull(FLSlot FLNONNULL);             ///< Stores a JSON null into a slot.
+    void FLSlot_SetBool(FLSlot FLNONNULL, bool);       ///< Stores a boolean into a slot.
+    void FLSlot_SetInt(FLSlot FLNONNULL, int64_t);     ///< Stores an integer into a slot.
+    void FLSlot_SetUInt(FLSlot FLNONNULL, uint64_t);   ///< Stores an unsigned integer into a slot.
+    void FLSlot_SetFloat(FLSlot FLNONNULL, float);     ///< Stores a float into a slot.
+    void FLSlot_SetDouble(FLSlot FLNONNULL, double);   ///< Stores a double into a slot.
+    void FLSlot_SetString(FLSlot FLNONNULL, FLString); ///< Stores a string into a slot.
+    void FLSlot_SetData(FLSlot FLNONNULL, FLSlice);    ///< Stores a data blob into a slot.
+    void FLSlot_SetValue(FLSlot FLNONNULL, FLValue);   ///< Stores an FLValue into a slot.
+
+
     //////// ARRAY
 
 
@@ -442,35 +457,13 @@ while (NULL != (value = FLArrayIterator_GetValue(&iter))) {
     /** Returns true if the Array has been changed from the source it was copied from. */
     bool FLMutableArray_IsChanged(FLMutableArray);
 
-    /** Appends a JSON `null` value to an array. */
-    void FLMutableArray_AppendNull(FLMutableArray);
-    void FLMutableArray_AppendBool(FLMutableArray, bool);        ///< Appends a boolean.
-    void FLMutableArray_AppendInt(FLMutableArray, int64_t);      ///< Appends an integer.
-    void FLMutableArray_AppendUInt(FLMutableArray, uint64_t);    ///< Appends an unsigned integer.
-    void FLMutableArray_AppendFloat(FLMutableArray, float);      ///< Appends a 32-bit float.
-    void FLMutableArray_AppendDouble(FLMutableArray, double);    ///< Appends a 64-bit float.
-    void FLMutableArray_AppendString(FLMutableArray, FLString);  ///< Appends a string.
-    void FLMutableArray_AppendData(FLMutableArray, FLSlice);     ///< Appends a blob/data.
-    void FLMutableArray_AppendValue(FLMutableArray, FLValue);    ///< Appends a Fleece value.
+    /** Lets you store a value into a MutableArray, by returning a \ref FLSlot that you can call
+        a function like \ref FLSlot_SetInt on. */
+    FLSlot FLMutableArray_Set(FLMutableArray FLNONNULL, uint32_t index);
 
-    /** Sets the value at an index to a JSON `null` value. */
-    void FLMutableArray_SetNull(FLMutableArray, uint32_t index);
-    /** Sets the value at an index to a boolean value. */
-    void FLMutableArray_SetBool(FLMutableArray, uint32_t index, bool);
-    /** Sets the value at an index to an integer. */
-    void FLMutableArray_SetInt(FLMutableArray, uint32_t index, int64_t);
-    /** Sets the value at an index to an unsigned integer. */
-    void FLMutableArray_SetUInt(FLMutableArray, uint32_t index, uint64_t);
-    /** Sets the value at an index to a 32-bit float value. */
-    void FLMutableArray_SetFloat(FLMutableArray, uint32_t index, float);
-    /** Sets the value at an index to a 64-bit float value. */
-    void FLMutableArray_SetDouble(FLMutableArray, uint32_t index, double);
-    /** Sets the value at an index to a string value. */
-    void FLMutableArray_SetString(FLMutableArray, uint32_t index, FLString);
-    /** Sets the value at an index to a blob/data value. */
-    void FLMutableArray_SetData(FLMutableArray, uint32_t index, FLSlice);
-    /** Sets the value at an index to a Fleece value. */
-    void FLMutableArray_SetValue(FLMutableArray, uint32_t index, FLValue);
+    /** Appends a null value to a MutableArray and returns a \ref FLSlot that you can call
+        to store something else in the new value. */
+    FLSlot FLMutableArray_Append(FLMutableArray FLNONNULL);
 
     /** Inserts a contiguous range of JSON `null` values into the array.
         @param array  The array to operate on.
@@ -652,24 +645,9 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
     /** Returns true if the Dict has been changed from the source it was copied from. */
     bool FLMutableDict_IsChanged(FLMutableDict);
 
-    /** Sets the value of a key to a JSON `null` value (which is not the same as removing the key!) */
-    void FLMutableDict_SetNull(FLMutableDict, FLString key);
-    /** Sets the value of a key to a boolean value. */
-    void FLMutableDict_SetBool(FLMutableDict, FLString key, bool);
-    /** Sets the value of a key to an integer value. */
-    void FLMutableDict_SetInt(FLMutableDict, FLString key, int64_t);
-    /** Sets the value of a key to an unsigned integer value. */
-    void FLMutableDict_SetUInt(FLMutableDict, FLString key, uint64_t);
-    /** Sets the value of a key to a 32-bit float value. */
-    void FLMutableDict_SetFloat(FLMutableDict, FLString key, float);
-    /** Sets the value of a key to a 64-bit float value. */
-    void FLMutableDict_SetDouble(FLMutableDict, FLString key, double);
-    /** Sets the value of a key to a string value. */
-    void FLMutableDict_SetString(FLMutableDict, FLString key, FLString);
-    /** Sets the value of a key to a data (blob) value. */
-    void FLMutableDict_SetData(FLMutableDict, FLString key, FLSlice);
-    /** Sets the value of a key to an existing Fleece value. */
-    void FLMutableDict_SetValue(FLMutableDict, FLString key, FLValue);
+    /** Returns the Slot storing the key's value, adding a new one if needed (with a null value.)
+        To set the value itself, call one of the FLSlot functions, e.g. \ref FLSlot_SetInt. */
+    FLSlot FLMutableDict_Set(FLMutableDict FL_NONNULL, FLString key);
 
     /** Removes the value for a key. */
     void FLMutableDict_Remove(FLMutableDict, FLString key);

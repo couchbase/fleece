@@ -36,6 +36,10 @@ namespace fleece { namespace impl {
         const Array* source() const                 {return heapArray()->_source;}
         bool isChanged() const                      {return heapArray()->isChanged();}
 
+        ValueSlot& setting(uint32_t index)          {return heapArray()->setting(index);}
+        ValueSlot& inserting(uint32_t index)        {return heapArray()->inserting(index);}
+        ValueSlot& appending()                      {return heapArray()->appending();}
+
         template <typename T>
         void set(uint32_t index, T t)               {heapArray()->set(index, t);}
 

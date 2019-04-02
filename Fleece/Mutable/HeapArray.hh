@@ -40,14 +40,20 @@ namespace fleece { namespace impl { namespace internal {
 
         const Value* get(uint32_t index);
 
+        ValueSlot& setting(uint32_t index);
+        ValueSlot& appending();
+        ValueSlot& inserting(uint32_t index)        {insert(index, 1); return setting(index);}
+
+
         template <typename T>
-        void set(uint32_t index, T t)               {assert(index<_items.size()); _items[index].set(t); setChanged(true);}
+        void set(uint32_t index, T t)               {setting(index).set(t);}
 
         // Warning: Changing the size of a MutableArray invalidates pointers to items that are
         // small scalar values, and also invalidates iterators.
 
         /** Appends a new Value. */
-        template <typename T>  void append(const T &t)     {_appendMutableValue().set(t);}
+        template <typename T>
+        void append(const T &t)                     {appending().set(t);}
 
 
         void resize(uint32_t newSize);              ///< Appends nulls, or removes items from end
@@ -96,7 +102,6 @@ namespace fleece { namespace impl { namespace internal {
     private:
         void populate(unsigned fromIndex);
         HeapCollection* getMutable(uint32_t index, tags ifType);
-        ValueSlot& _appendMutableValue();
 
         // _items stores each array item as a ValueSlot. If an item's type is 'undefined',
         // that means the item is unchanged and its value can be found at the same index in _source.

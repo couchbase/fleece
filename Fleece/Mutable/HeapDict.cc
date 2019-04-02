@@ -92,7 +92,7 @@ namespace fleece { namespace impl { namespace internal {
 
 
     // this is the innards of the set() method
-    ValueSlot& HeapDict::_mutableValueToSetFor(slice stringKey) {
+    ValueSlot& HeapDict::setting(slice stringKey) {
         key_t key;
         int intKey;
         if (_sharedKeys && _sharedKeys->encodeAndAdd(stringKey, intKey))

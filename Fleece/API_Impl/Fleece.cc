@@ -227,25 +227,28 @@ FLArray FLMutableArray_GetSource(FLMutableArray a)  {return a ? a->source() : nu
 bool FLMutableArray_IsChanged(FLMutableArray a)     {return a && a->isChanged();}
 void FLMutableArray_Resize(FLMutableArray a, uint32_t size)     {a->resize(size);}
 
-void FLMutableArray_AppendNull(FLMutableArray a)                {if(a) a->append(nullValue);}
-void FLMutableArray_AppendBool(FLMutableArray a, bool v)        {if(a) a->append(v);}
-void FLMutableArray_AppendInt(FLMutableArray a, int64_t v)      {if(a) a->append(v);}
-void FLMutableArray_AppendUInt(FLMutableArray a, uint64_t v)    {if(a) a->append(v);}
-void FLMutableArray_AppendFloat(FLMutableArray a, float v)      {if(a) a->append(v);}
-void FLMutableArray_AppendDouble(FLMutableArray a, double v)    {if(a) a->append(v);}
-void FLMutableArray_AppendString(FLMutableArray a, FLString v)  {if(a) a->append(v);}
-void FLMutableArray_AppendData(FLMutableArray a, FLSlice v)     {if(a) a->append(v);}
-void FLMutableArray_AppendValue(FLMutableArray a, FLValue v)    {if(a) a->append(v);}
+FLSlot FLMutableArray_Set(FLMutableArray a, uint32_t index)     {return &a->setting(index);}
+FLSlot FLMutableArray_Append(FLMutableArray a)                  {return &a->appending();}
 
-void FLMutableArray_SetNull(FLMutableArray a, uint32_t i)               {if(a) a->set(i, nullValue);}
-void FLMutableArray_SetBool(FLMutableArray a, uint32_t i, bool v)       {if(a) a->set(i, v);}
-void FLMutableArray_SetInt(FLMutableArray a, uint32_t i, int64_t v)     {if(a) a->set(i, v);}
-void FLMutableArray_SetUInt(FLMutableArray a, uint32_t i, uint64_t v)   {if(a) a->set(i, v);}
-void FLMutableArray_SetFloat(FLMutableArray a, uint32_t i, float v)     {if(a) a->set(i, v);}
-void FLMutableArray_SetDouble(FLMutableArray a, uint32_t i, double v)   {if(a) a->set(i, v);}
-void FLMutableArray_SetString(FLMutableArray a, uint32_t i, FLString v) {if(a) a->set(i, v);}
-void FLMutableArray_SetData(FLMutableArray a, uint32_t i, FLSlice v)    {if(a) a->set(i, v);}
-void FLMutableArray_SetValue(FLMutableArray a, uint32_t i, FLValue v)   {if(a) a->set(i, v);}
+//void FLMutableArray_AppendNull(FLMutableArray a)                {if(a) a->append(nullValue);}
+//void FLMutableArray_AppendBool(FLMutableArray a, bool v)        {if(a) a->append(v);}
+//void FLMutableArray_AppendInt(FLMutableArray a, int64_t v)      {if(a) a->append(v);}
+//void FLMutableArray_AppendUInt(FLMutableArray a, uint64_t v)    {if(a) a->append(v);}
+//void FLMutableArray_AppendFloat(FLMutableArray a, float v)      {if(a) a->append(v);}
+//void FLMutableArray_AppendDouble(FLMutableArray a, double v)    {if(a) a->append(v);}
+//void FLMutableArray_AppendString(FLMutableArray a, FLString v)  {if(a) a->append(v);}
+//void FLMutableArray_AppendData(FLMutableArray a, FLSlice v)     {if(a) a->append(v);}
+//void FLMutableArray_AppendValue(FLMutableArray a, FLValue v)    {if(a) a->append(v);}
+//
+//void FLMutableArray_SetNull(FLMutableArray a, uint32_t i)               {if(a) a->set(i, nullValue);}
+//void FLMutableArray_SetBool(FLMutableArray a, uint32_t i, bool v)       {if(a) a->set(i, v);}
+//void FLMutableArray_SetInt(FLMutableArray a, uint32_t i, int64_t v)     {if(a) a->set(i, v);}
+//void FLMutableArray_SetUInt(FLMutableArray a, uint32_t i, uint64_t v)   {if(a) a->set(i, v);}
+//void FLMutableArray_SetFloat(FLMutableArray a, uint32_t i, float v)     {if(a) a->set(i, v);}
+//void FLMutableArray_SetDouble(FLMutableArray a, uint32_t i, double v)   {if(a) a->set(i, v);}
+//void FLMutableArray_SetString(FLMutableArray a, uint32_t i, FLString v) {if(a) a->set(i, v);}
+//void FLMutableArray_SetData(FLMutableArray a, uint32_t i, FLSlice v)    {if(a) a->set(i, v);}
+//void FLMutableArray_SetValue(FLMutableArray a, uint32_t i, FLValue v)   {if(a) a->set(i, v);}
 
 void FLMutableArray_Insert(FLMutableArray a, uint32_t firstIndex, uint32_t count)     {
     if (a) a->insert(firstIndex, count);
@@ -363,15 +366,17 @@ FLMutableDict FLDict_AsMutable(FLDict d)            {return d ? d->asMutable() :
 FLDict FLMutableDict_GetSource(FLMutableDict d)     {return d ? d->source() : nullptr;}
 bool FLMutableDict_IsChanged(FLMutableDict d)       {return d && d->isChanged();}
 
-void FLMutableDict_SetNull(FLMutableDict d, FLString k)               {if(d) d->set(k, nullValue);}
-void FLMutableDict_SetBool(FLMutableDict d, FLString k, bool v)         {if(d) d->set(k, v);}
-void FLMutableDict_SetInt(FLMutableDict d, FLString k, int64_t v)       {if(d) d->set(k, v);}
-void FLMutableDict_SetUInt(FLMutableDict d, FLString k, uint64_t v)     {if(d) d->set(k, v);}
-void FLMutableDict_SetFloat(FLMutableDict d, FLString k, float v)       {if(d) d->set(k, v);}
-void FLMutableDict_SetDouble(FLMutableDict d, FLString k, double v)     {if(d) d->set(k, v);}
-void FLMutableDict_SetString(FLMutableDict d, FLString k, FLString v)   {if(d) d->set(k, v);}
-void FLMutableDict_SetData(FLMutableDict d, FLString k, FLSlice v)      {if(d) d->set(k, v);}
-void FLMutableDict_SetValue(FLMutableDict d, FLString k, FLValue v)     {if(d) d->set(k, v);}
+FLSlot FLMutableDict_Set(FLMutableDict d, FLString k)     {return &d->setting(k);}
+
+//void FLMutableDict_SetNull(FLMutableDict d, FLString k)               {if(d) d->set(k, nullValue);}
+//void FLMutableDict_SetBool(FLMutableDict d, FLString k, bool v)         {if(d) d->set(k, v);}
+//void FLMutableDict_SetInt(FLMutableDict d, FLString k, int64_t v)       {if(d) d->set(k, v);}
+//void FLMutableDict_SetUInt(FLMutableDict d, FLString k, uint64_t v)     {if(d) d->set(k, v);}
+//void FLMutableDict_SetFloat(FLMutableDict d, FLString k, float v)       {if(d) d->set(k, v);}
+//void FLMutableDict_SetDouble(FLMutableDict d, FLString k, double v)     {if(d) d->set(k, v);}
+//void FLMutableDict_SetString(FLMutableDict d, FLString k, FLString v)   {if(d) d->set(k, v);}
+//void FLMutableDict_SetData(FLMutableDict d, FLString k, FLSlice v)      {if(d) d->set(k, v);}
+//void FLMutableDict_SetValue(FLMutableDict d, FLString k, FLValue v)     {if(d) d->set(k, v);}
 
 void FLMutableDict_Remove(FLMutableDict d, FLString key)                {if(d) d->remove(key);}
 void FLMutableDict_RemoveAll(FLMutableDict d)                           {if(d) d->removeAll();}
@@ -402,6 +407,20 @@ int FLSharedKeys_Encode(FLSharedKeys sk, FLString keyStr, bool add) {
         intKey = -1;
     return intKey;
 }
+
+
+#pragma mark - SLOTS:
+
+
+void FLSlot_SetNull(FLSlot slot)                {slot->set(Null());}
+void FLSlot_SetBool(FLSlot slot, bool v)        {slot->set(v);}
+void FLSlot_SetInt(FLSlot slot, int64_t v)      {slot->set(v);}
+void FLSlot_SetUInt(FLSlot slot, uint64_t v)    {slot->set(v);}
+void FLSlot_SetFloat(FLSlot slot, float v)      {slot->set(v);}
+void FLSlot_SetDouble(FLSlot slot, double v)    {slot->set(v);}
+void FLSlot_SetString(FLSlot slot, FLString v)  {slot->set(v);}
+void FLSlot_SetData(FLSlot slot, FLSlice v)     {slot->setData(v);}
+void FLSlot_SetValue(FLSlot slot, FLValue v)    {slot->set(v);}
 
 
 #pragma mark - DEEP ITERATOR:

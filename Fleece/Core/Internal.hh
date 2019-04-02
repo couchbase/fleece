@@ -83,7 +83,6 @@ namespace fleece { namespace impl { namespace internal {
 
     class Pointer;
     class HeapValue;
-    class ValueSlot;
     class HeapCollection;
     class HeapArray;
     class HeapDict;

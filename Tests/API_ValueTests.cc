@@ -16,15 +16,26 @@
 // limitations under the License.
 //
 
+#include "fleece/Fleece.hh"
+#include <iostream>
+
+namespace fleece {
+    static inline std::ostream& operator<<(std::ostream &out, const fleece::Doc &doc) {
+        out << "Doc(" << (void*)(FLDoc)doc << ")";
+        return out;
+    }
+}
+
 #include "FleeceTests.hh"
 #include "fleece/Fleece.hh"
 #include "fleece/Mutable.hh"
 
 using namespace fleece;
+using namespace std;
 
 
 #if 0
-TEST_CASE("DeepIterator") {
+TEST_CASE("DeepIterator", "[API]") {
     auto input = readTestFile("1person.fleece");
     auto person = Value::fromData(input);
 
@@ -78,7 +89,7 @@ TEST_CASE("DeepIterator") {
 #endif
 
 
-TEST_CASE("API Doc", "[SharedKeys]") {
+TEST_CASE("API Doc", "[API][SharedKeys]") {
     Dict root;
     {
         SharedKeys sk = SharedKeys::create();
@@ -96,7 +107,7 @@ TEST_CASE("API Doc", "[SharedKeys]") {
 }
 
 
-TEST_CASE("API Encoder", "[Encoder]") {
+TEST_CASE("API Encoder", "[API][Encoder]") {
     Encoder enc;
     enc.beginDict();
     enc["foo"_sl] = 17;
@@ -113,7 +124,7 @@ TEST_CASE("API Encoder", "[Encoder]") {
 }
 
 
-TEST_CASE("API Paths", "[Encoder]") {
+TEST_CASE("API Paths", "[API][Encoder]") {
     Doc doc = Doc::fromJSON(readTestFile(kBigJSONTestFileName));
     auto root = doc.root();
     CHECK(root.asArray().count() == kBigJSONTestCount);
@@ -137,7 +148,7 @@ TEST_CASE("API Paths", "[Encoder]") {
 }
 
 
-TEST_CASE("API Undefined") {
+TEST_CASE("API Undefined", "[API]") {
     Encoder enc;
     enc.beginArray();
     enc.writeInt(1234);
@@ -165,7 +176,7 @@ TEST_CASE("API Undefined") {
 }
 
 
-TEST_CASE("API constants") {
+TEST_CASE("API constants", "[API]") {
     CHECK(Value::null() != nullptr);
     CHECK(Value::null().type() == kFLNull);
 
@@ -185,11 +196,36 @@ static MutableArray returnsMutableArray() {
     return ma;
 }
 
-TEST_CASE("API Mutable") {
+TEST_CASE("API Mutable Invalid Assignment", "[API]") {
     // This next line should fail to compile:
     //Array a = returnsMutableArray();
 
     // This does compile, since RetainedValue keeps a reference:
     RetainedValue b = returnsMutableArray();
     CHECK(b.toJSONString() == "[17]");
+}
+
+TEST_CASE("API MutableArray", "[API]") {
+    MutableArray d = MutableArray::newArray();
+    d.append("bar");
+    CHECK(d.toJSONString() == "[\"bar\"]");
+    REQUIRE(d.count() == 1);
+    CHECK(d.get(0).asString() == "bar"_sl);
+
+    d.set(0) = 1234;
+    CHECK(d.toJSONString() == "[1234]");
+    REQUIRE(d.count() == 1);
+    CHECK(d.get(0).asInt() == 1234);
+}
+
+TEST_CASE("API MutableDict", "[API]") {
+    MutableDict d = MutableDict::newDict();
+    d.set("foo"_sl, "bar");
+    REQUIRE(d.get("foo"_sl));
+    CHECK(d.get("foo"_sl).asString() == "bar"_sl);
+
+    d.set("x"_sl) = 1234;
+    CHECK(d.toJSONString() == "{\"foo\":\"bar\",\"x\":1234}");
+    REQUIRE(d.get("x"_sl));
+    CHECK(d.get("x"_sl).asInt() == 1234);
 }
