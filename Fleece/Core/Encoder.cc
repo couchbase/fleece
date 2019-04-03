@@ -221,9 +221,9 @@ namespace fleece { namespace impl {
 
     void Encoder::writeDouble(double n) {
         throwIf(std::isnan(n), InvalidData, "Can't write NaN");
-        if (n == floor(n) && n <= INT64_MAX && n >= INT64_MIN) {
+        if (isIntRepresentable(n)) {
             return writeInt((int64_t)n);
-        } else if (fabs(n) <= FLT_MAX && n == (float)n) {
+        } else if (isFloatRepresentable(n)) {
             return _writeFloat((float)n);
         } else {
             littleEndianDouble swapped = n;
@@ -235,7 +235,7 @@ namespace fleece { namespace impl {
 
     void Encoder::writeFloat(float n) {
         throwIf(std::isnan(n), InvalidData, "Can't write NaN");
-        if (n == floorf(n) && n <= INT32_MAX && n >= INT32_MIN)
+        if (isIntRepresentable(n))
             writeInt((int32_t)n);
         else
             _writeFloat(n);
@@ -246,6 +246,18 @@ namespace fleece { namespace impl {
         auto buf = placeValue<false>(kFloatTag, 0, 2 + sizeof(swapped));
         buf[1] = 0;
         memcpy(&buf[2], &swapped, sizeof(swapped));
+    }
+
+    bool Encoder::isIntRepresentable(float n) noexcept {
+        return (n <= INT32_MAX && n >= INT32_MIN && n == floorf(n));
+    }
+
+    bool Encoder::isIntRepresentable(double n) noexcept {
+        return (n <= INT64_MAX && n >= INT64_MIN && n == floor(n));
+    }
+
+    bool Encoder::isFloatRepresentable(double n) noexcept {
+        return (fabs(n) <= FLT_MAX && n == (float)n);
     }
 
 
