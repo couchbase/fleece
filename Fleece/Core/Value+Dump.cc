@@ -55,16 +55,32 @@ namespace fleece { namespace impl {
             }
             default: { // Pointer:
                 auto ptr = _asPointer();
-                ptr->deref(wide)->writeDumpBrief(out, base, true);
+                bool external = ptr->isExternal();
+                bool legacy = false;
                 long long offset = - (long long)(wide ? ptr->offset<true>() : ptr->offset<false>());
-                char buf[32];
-                if (base)
+                if (base) {
                     offset = (((uint8_t*)_byte + offset) - (uint8_t*)base); // absolute
+                    if (external && !wide && offset >= 32768) {
+                        // This is a narrow pointer that doesn't actually have the 'extern' bit
+                        // but was created before that bit existed; that bit is actually the high
+                        // bit of the offset.
+                        external = false;
+                        legacy = true;
+                        offset -= 32768;
+                    }
+                }
+                if (external)
+                    out << "Extern";
+                else
+                    ptr->deref(wide)->writeDumpBrief(out, base, true);
+                char buf[32];
                 if (offset >= 0)
                     sprintf(buf, " (@%04llx)", offset);
                 else
                     sprintf(buf, " (@-%04llx)", -offset);
                 out << buf;
+                if (legacy)
+                    out << " [legacy ptr]";
                 break;
             }
         }

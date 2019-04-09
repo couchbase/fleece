@@ -46,16 +46,25 @@ namespace fleece { namespace impl { namespace internal {
     }
 
 
-    const Value* Pointer::_deref(uint32_t offset) const {
-        assert(offset > 0);
-        const Value *dst = offsetby(this, -(ptrdiff_t)offset);
-        if (_usuallyFalse(isExternal())) {
-            dst = Doc::resolvePointerFrom(this, dst);
-            if (!dst)
-                fprintf(stderr, "FATAL: Fleece extern pointer at %p, offset -%u,"
-                        " did not resolve to any address\n", this, offset);
+    const Value* Pointer::derefExtern(bool wide, const Value *dst) const {
+        // Resolve external pointer:
+        dst = Doc::resolvePointerFrom(this, dst);
+        if (_usuallyTrue(dst != nullptr))
+            return dst;
+
+        // Either invalid extern ref, or a legacy pointer without an 'extern' flag:
+        if (!wide) {
+            // Find the Scope I'm in and check if the legacy destination is within that scope too:
+            dst = offsetby(this, -(ptrdiff_t)legacyOffset<false>());
+            if (Scope::containing(this)->data().contains(dst))
+                return dst;
         }
-        return dst;
+
+        // Invalid extern:
+        auto off = wide ? offset<true>() : offset<false>();
+        fprintf(stderr, "FATAL: Fleece extern pointer at %p, offset -%u,"
+                        " did not resolve to any address\n", this, off);
+        return nullptr;
     }
 
 
@@ -71,11 +80,19 @@ namespace fleece { namespace impl { namespace internal {
         if (_usuallyFalse(isExternal())) {
             slice destination;
             tie(target, destination) = Doc::resolvePointerFromWithRange(this, target);
-            if (_usuallyFalse(!target))
-                return nullptr;
-            assert_always((size_t(target) & 1) == 0);
-            dataStart = destination.buf;
-            dataEnd = destination.end();
+            if (_usuallyFalse(!target)) {
+                // Either invalid extern ref, or a legacy pointer without an 'extern' flag
+                if (wide)
+                    return nullptr;
+                target = offsetby(this, -(ptrdiff_t)legacyOffset<false>());
+                if (_usuallyFalse(target < dataStart) || _usuallyFalse(target >= dataEnd))
+                    return nullptr;
+                dataEnd = this;
+            } else {
+                assert_always((size_t(target) & 1) == 0);
+                dataStart = destination.buf;
+                dataEnd = destination.end();
+            }
         } else {
             if (_usuallyFalse(target < dataStart) || _usuallyFalse(target >= dataEnd))
                 return nullptr;

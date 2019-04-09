@@ -19,7 +19,6 @@ namespace fleece { namespace impl { namespace internal {
 
         bool isExternal() const                 {return (_byte[0] & 0x40) != 0;}
 
-
         // Returns the byte offset
         template <bool WIDE>
         uint32_t offset() const noexcept {
@@ -30,14 +29,20 @@ namespace fleece { namespace impl { namespace internal {
         }
 
         template <bool WIDE>
-        const Value* deref() const              {return _deref(offset<WIDE>());}
-        const Value* derefWide() const          {return deref<true>();}       // just a workaround
+        inline const Value* deref() const {
+            auto off = offset<WIDE>();
+            assert(off > 0);
+            const Value *dst = offsetby(this, -(ptrdiff_t)off);
+            if (_usuallyFalse(isExternal()))
+                dst = derefExtern(WIDE, dst);
+            return dst;
+        }
 
+        const Value* derefWide() const          {return deref<true>();}       // just a workaround
 
         const Value* deref(bool wide) const {
             return wide ? deref<true>() : deref<false>();
         }
-
 
         // assumes data is untrusted, and double-checks offsets for validity.
         const Value* carefulDeref(bool wide,
@@ -48,7 +53,16 @@ namespace fleece { namespace impl { namespace internal {
         bool validate(bool wide, const void *dataStart) const noexcept;
 
     private:
-        const Value* _deref(uint32_t offset) const;
+        // Byte offset as interpreted prior to the 'extern' flag
+        template <bool WIDE>
+        uint32_t legacyOffset() const noexcept {
+            if (WIDE)
+                return (_dec32(wideBytes()) & ~0x80000000) << 1;
+            else
+                return (_dec16(narrowBytes()) & ~0x8000) << 1;
+        }
+
+        const Value* derefExtern(bool wide, const Value *dst) const;
 
         void setNarrowBytes(uint16_t b)             {*(uint16_t*)_byte = b;}
         void setWideBytes(uint32_t b)               {*(uint32_t*)_byte = b;}

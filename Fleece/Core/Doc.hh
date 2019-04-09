@@ -30,7 +30,7 @@ namespace fleece { namespace impl {
               slice subData);
         ~Scope();
 
-        static Scope* containing(const Value* NONNULL) noexcept;
+        static const Scope* containing(const Value* NONNULL) noexcept;
 
         slice data() const                      {return _data;}
         alloc_slice allocedData() const         {return _alloced;}
