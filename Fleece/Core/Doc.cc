@@ -176,6 +176,12 @@ namespace fleece { namespace impl {
     }
 
 
+    /*static*/ const Scope* Scope::containing(const Value *src) noexcept {
+        lock_guard<mutex> lock(sMutex);
+        return _containing(src);
+    }
+
+
     /*static*/ SharedKeys* Scope::sharedKeys(const Value *v) noexcept {
         lock_guard<mutex> lock(sMutex);
         auto scope = _containing(v);
