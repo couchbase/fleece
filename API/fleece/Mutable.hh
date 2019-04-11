@@ -111,6 +111,8 @@ namespace fleece {
         template <class T>
         void append(T v)                        {append() = v;}
 
+        void insertNulls(uint32_t i, uint32_t n) {FLMutableArray_Insert(*this, i, n);}
+
         // This enables e.g. `array[10] = 17`
         inline keyref<MutableArray,uint32_t> operator[] (int i) {
             assert(i >= 0);

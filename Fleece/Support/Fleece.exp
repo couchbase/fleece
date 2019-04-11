@@ -43,6 +43,7 @@ _FLValue_ToJSON
 _FLValue_ToJSONX
 _FLValue_ToJSON5
 _FLValue_FindDoc
+_FLValue_Retain
 _FLValue_Release
 
 _FLData_ConvertJSON
