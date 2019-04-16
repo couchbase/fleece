@@ -31,6 +31,8 @@ namespace fleece { namespace impl {
 
         // Warning: Modifying a MutableDict invalidates all Dict::iterators on it!
 
+        ValueSlot& setting(slice key)                       {return heapDict()->setting(key);}
+
         template <typename T>
         void set(slice key, T value)                        {heapDict()->set(key, value);}
 

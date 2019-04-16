@@ -53,6 +53,7 @@ namespace fleece {
 
 
     TEST_CASE("MutableArray set values", "[Mutable]") {
+        static constexpr size_t kSize = 11;
         Retained<MutableArray> ma = MutableArray::newArray();
 
         REQUIRE(ma->count() == 0);
@@ -65,13 +66,13 @@ namespace fleece {
         }
 
         CHECK(!ma->isChanged());
-        ma->resize(9);
+        ma->resize(kSize);
         CHECK(ma->isChanged());
-        REQUIRE(ma->count() == 9);
-        REQUIRE(ma->count() == 9);
+        REQUIRE(ma->count() == kSize);
+        REQUIRE(ma->count() == kSize);
         REQUIRE(!ma->empty());
 
-        for (int i = 0; i < 9; i++)
+        for (int i = 0; i < kSize; i++)
             REQUIRE(ma->get(i)->type() == kNull);
 
         ma->set(0, nullValue);
@@ -83,9 +84,13 @@ namespace fleece {
         ma->set(6, 123456789);
         ma->set(7, -123456789);
         ma->set(8, "Hot dog"_sl);
+        ma->set(9, float(M_PI));
+        ma->set(10, M_PI);
 
-        static const valueType kExpectedTypes[9] = {
-            kNull, kBoolean, kBoolean, kNumber, kNumber, kNumber, kNumber, kNumber, kString};
+        static const valueType kExpectedTypes[kSize] = {
+            kNull, kBoolean, kBoolean, kNumber, kNumber, kNumber, kNumber, kNumber, kString,
+            kNumber, kNumber,
+        };
         for (int i = 0; i < 9; i++)
             CHECK(ma->get(i)->type() == kExpectedTypes[i]);
         CHECK(ma->get(1)->asBool() == false);
@@ -96,10 +101,12 @@ namespace fleece {
         CHECK(ma->get(6)->asInt() == 123456789);
         CHECK(ma->get(7)->asInt() == -123456789);
         CHECK(ma->get(8)->asString() == "Hot dog"_sl);
+        CHECK(ma->get(9)->asFloat() == float(M_PI));
+        CHECK(ma->get(10)->asDouble() == M_PI);
 
         {
             MutableArray::iterator i(ma);
-            for (int n = 0; n < 9; ++n) {
+            for (int n = 0; n < kSize; ++n) {
                 std::cerr << "Item " << n << ": " << (void*)i.value() << "\n";
                 CHECK(i);
                 CHECK(i.value() != nullptr);
@@ -109,20 +116,28 @@ namespace fleece {
             CHECK(!i);
         }
 
-        CHECK(ma->asArray()->toJSON() == "[null,false,true,0,-123,2017,123456789,-123456789,\"Hot dog\"]"_sl);
+        CHECK(ma->asArray()->toJSON() == "[null,false,true,0,-123,2017,123456789,-123456789,\"Hot dog\",3.14159,3.141592653589793]"_sl);
 
         ma->remove(3, 5);
-        CHECK(ma->count() == 4);
+        CHECK(ma->count() == 6);
         CHECK(ma->get(2)->type() == kBoolean);
         CHECK(ma->get(2)->asBool() == true);
         CHECK(ma->get(3)->type() == kString);
 
         ma->insert(1, 2);
-        CHECK(ma->count() == 6);
+        CHECK(ma->count() == 8);
         REQUIRE(ma->get(1)->type() == kNull);
         REQUIRE(ma->get(2)->type() == kNull);
         CHECK(ma->get(3)->type() == kBoolean);
         CHECK(ma->get(3)->asBool() == false);
+
+        // Check that FP values are stored as ints when possible:
+        ma->set(0, (float)12345);
+        CHECK(ma->get(0)->isInteger());
+        CHECK(ma->get(0)->asInt() == 12345);
+        ma->set(0, (double)12345);
+        CHECK(ma->get(0)->isInteger());
+        CHECK(ma->get(0)->asInt() == 12345);
     }
 
 

@@ -124,8 +124,14 @@ namespace fleece { namespace impl { namespace internal {
     }
 
 
+    ValueSlot& HeapArray::setting(uint32_t index) {
+        assert(index<_items.size());
+        setChanged(true);
+        return _items[index];
+    }
 
-    internal::ValueSlot& HeapArray::_appendMutableValue() {
+
+    ValueSlot& HeapArray::appending() {
         setChanged(true);
         _items.emplace_back();
         return _items.back();

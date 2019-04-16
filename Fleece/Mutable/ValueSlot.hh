@@ -7,9 +7,11 @@
 #pragma once
 #include "HeapValue.hh"
 
-namespace fleece { namespace impl { namespace internal {
-    using namespace fleece::impl;
-    class HeapCollection;
+namespace fleece { namespace impl {
+    namespace internal {
+        class HeapArray;
+        class HeapDict;
+    }
 
 
     /** A mutable element of a HeapDict or HeapArray. It can store a Value either as a pointer
@@ -17,9 +19,9 @@ namespace fleece { namespace impl { namespace internal {
     class ValueSlot {
     public:
         ValueSlot() { }
-        ValueSlot(HeapCollection *md);
         ValueSlot(Null);
         ~ValueSlot();
+        ValueSlot(internal::HeapCollection *md);
 
         ValueSlot(const ValueSlot&) noexcept;
         ValueSlot& operator= (const ValueSlot&) noexcept;
@@ -30,7 +32,6 @@ namespace fleece { namespace impl { namespace internal {
 
         const Value* asValue() const;
         const Value* asValueOrUndefined() const;
-        HeapCollection* asMutableCollection() const;
 
         // Setters for the various Value types:
         void set(Null);
@@ -51,11 +52,17 @@ namespace fleece { namespace impl { namespace internal {
         template <class T> void set(const Retained<T> &t)       {setValue(t);}
         template <class T> void set(const RetainedConst<T> &t)  {setValue(t);}
 
-        /** Promotes Array or Dict value to mutable equivalent and returns it. */
-        HeapCollection* makeMutable(tags ifType);
-
         /** Replaces an external value with a copy of itself. */
         void copyValue(CopyFlags);
+
+    protected:
+        friend class internal::HeapArray;
+        friend class internal::HeapDict;
+
+        internal::HeapCollection* asMutableCollection() const;
+
+        /** Promotes Array or Dict value to mutable equivalent and returns it. */
+        internal::HeapCollection* makeMutable(internal::tags ifType);
 
     private:
         void releaseValue();
@@ -75,4 +82,4 @@ namespace fleece { namespace impl { namespace internal {
         static constexpr size_t kInlineCapacity = sizeof(ValueSlot::_inlineData) + sizeof(ValueSlot::_moreInlineData);
     };
 
-} } }
+} }

@@ -20,7 +20,39 @@ namespace fleece {
     private:
         Collection _coll;
         Key _key;
-    }; 
+    };
+
+
+    class Slot {
+    public:
+        void setNull()                              {FLSlot_SetNull(_slot);}
+        void operator= (Null)                       {FLSlot_SetNull(_slot);}
+        void operator= (bool v)                     {FLSlot_SetBool(_slot, v);}
+        void operator= (int v)                      {FLSlot_SetInt(_slot, v);}
+        void operator= (unsigned v)                 {FLSlot_SetUInt(_slot, v);}
+        void operator= (int64_t v)                  {FLSlot_SetInt(_slot, v);}
+        void operator= (uint64_t v)                 {FLSlot_SetUInt(_slot, v);}
+        void operator= (float v)                    {FLSlot_SetFloat(_slot, v);}
+        void operator= (double v)                   {FLSlot_SetDouble(_slot, v);}
+        void operator= (FLString v)                 {FLSlot_SetString(_slot, v);}
+        void operator= (const char *v)              {FLSlot_SetString(_slot, slice(v));}
+        void setData(FLSlice v)                     {FLSlot_SetData(_slot, v);}
+        void operator= (Value v)                    {FLSlot_SetValue(_slot, v);}
+
+    private:
+        friend class MutableArray;
+        friend class MutableDict;
+
+        Slot(FLSlot slot)                           :_slot(slot) { }
+        Slot(Slot&& slot)                           :_slot(slot._slot) { }
+        Slot(const Slot&) =delete;
+        Slot& operator=(const Slot&) =delete;
+        Slot& operator=(Slot&&) =delete;
+
+        void operator= (const void*) = delete; // Explicitly disallow other pointer types!
+
+        FLSlot const _slot;
+    };
 
 
     /** A mutable form of Array. Its storage lives in the heap, not in the (immutable) Fleece
@@ -67,33 +99,19 @@ namespace fleece {
         /** Sets the array's size. If the array grows, new values begin as nulls. */
         void resize(uint32_t size)              {FLMutableArray_Resize(*this, size);}
 
-        void setNull(uint32_t i)                {FLMutableArray_SetNull(*this, i);}
-        void set(uint32_t i, bool v)            {FLMutableArray_SetBool(*this, i, v);}
-        void set(uint32_t i, int v)             {FLMutableArray_SetInt(*this, i, v);}
-        void set(uint32_t i, unsigned v)        {FLMutableArray_SetUInt(*this, i, v);}
-        void set(uint32_t i, int64_t v)         {FLMutableArray_SetInt(*this, i, v);}
-        void set(uint32_t i, uint64_t v)        {FLMutableArray_SetUInt(*this, i, v);}
-        void set(uint32_t i, float v)           {FLMutableArray_SetFloat(*this, i, v);}
-        void set(uint32_t i, double v)          {FLMutableArray_SetDouble(*this, i, v);}
-        void set(uint32_t i, FLString v)        {FLMutableArray_SetString(*this, i, v);}
-        void set(uint32_t i, const char *v)     {FLMutableArray_SetString(*this, i, slice(v));}
-        void setData(uint32_t i, FLSlice v)     {FLMutableArray_SetData(*this, i, v);}
-        void set(uint32_t i, Value v)           {FLMutableArray_SetValue(*this, i, v);}
-        void set(uint32_t i, const void*) = delete; // Explicitly disallow other pointer types!
+        Slot set(uint32_t i)                    {return Slot(FLMutableArray_Set(*this, i));}
+        void setNull(uint32_t i)                {set(i).setNull();}
 
-        void appendNull()                       {FLMutableArray_AppendNull(*this);}
-        void append(bool v)                     {FLMutableArray_AppendBool(*this, v);}
-        void append(int v)                      {FLMutableArray_AppendInt(*this, v);}
-        void append(unsigned v)                 {FLMutableArray_AppendUInt(*this, v);}
-        void append(int64_t v)                  {FLMutableArray_AppendInt(*this, v);}
-        void append(uint64_t v)                 {FLMutableArray_AppendUInt(*this, v);}
-        void append(float v)                    {FLMutableArray_AppendFloat(*this, v);}
-        void append(double v)                   {FLMutableArray_AppendDouble(*this, v);}
-        void append(FLString v)                 {FLMutableArray_AppendString(*this, v);}
-        void append(const char *v)              {FLMutableArray_AppendString(*this, slice(v));}
-        void appendData(FLSlice v)              {FLMutableArray_AppendData(*this, v);}
-        void append(Value v)                    {FLMutableArray_AppendValue(*this, v);}
-        void append(const void*) = delete; // Explicitly disallow other pointer types!
+        template <class T>
+        void set(uint32_t i, T v)               {set(i) = v;}
+
+        Slot append()                           {return FLMutableArray_Append(*this);}
+        void appendNull()                       {append().setNull();}
+
+        template <class T>
+        void append(T v)                        {append() = v;}
+
+        void insertNulls(uint32_t i, uint32_t n) {FLMutableArray_Insert(*this, i, n);}
 
         // This enables e.g. `array[10] = 17`
         inline keyref<MutableArray,uint32_t> operator[] (int i) {
@@ -147,19 +165,12 @@ namespace fleece {
 
         void remove(FLString key)               {FLMutableDict_Remove(*this, key);}
 
-        void setNull(FLString k)                {FLMutableDict_SetNull(*this, k);}
-        void set(FLString k, bool v)            {FLMutableDict_SetBool(*this, k, v);}
-        void set(FLString k, int v)             {FLMutableDict_SetInt(*this, k, v);}
-        void set(FLString k, unsigned v)        {FLMutableDict_SetUInt(*this, k, v);}
-        void set(FLString k, int64_t v)         {FLMutableDict_SetInt(*this, k, v);}
-        void set(FLString k, uint64_t v)        {FLMutableDict_SetUInt(*this, k, v);}
-        void set(FLString k, float v)           {FLMutableDict_SetFloat(*this, k, v);}
-        void set(FLString k, double v)          {FLMutableDict_SetDouble(*this, k, v);}
-        void set(FLString k, FLString v)        {FLMutableDict_SetString(*this, k, v);}
-        void set(FLString k, const char *v)     {FLMutableDict_SetString(*this, k, slice(v));}
-        void setData(FLString k, FLSlice v)     {FLMutableDict_SetData(*this, k, v);}
-        void set(FLString k, Value v)           {FLMutableDict_SetValue(*this, k, v);}
-        void set(FLString k, const void*) = delete; // Explicitly disallow other pointer types!
+        Slot set(FLString key)                  {return FLMutableDict_Set(*this, key);}
+        void setNull(FLString key)              {set(key) = nullValue;}
+
+        template <class T>
+        void set(FLString key, T v)             {set(key) = v;}
+
 
         // This enables e.g. `dict["key"_sl] = 17`
         inline keyref<MutableDict,slice> operator[] (slice key)

@@ -182,6 +182,10 @@ namespace fleece { namespace impl {
         slice base() const                      {return _base;}
         slice baseUsed() const                  {return _baseMinUsed != 0 ? slice(_baseMinUsed, _base.end()) : nullslice;}
 
+        static bool isIntRepresentable(float n) noexcept;
+        static bool isIntRepresentable(double n) noexcept;
+        static bool isFloatRepresentable(double n) noexcept;
+
     private:
         using byte = uint8_t;
 

@@ -19,11 +19,13 @@
 #include "ValueSlot.hh"
 #include "HeapArray.hh"
 #include "HeapDict.hh"
+#include "Encoder.hh"
 #include "varint.hh"
 #include <algorithm>
 
-namespace fleece { namespace impl { namespace internal {
+namespace fleece { namespace impl {
     using namespace std;
+    using namespace internal;
 
 
     ValueSlot::ValueSlot(Null)
@@ -177,13 +179,31 @@ namespace fleece { namespace impl { namespace internal {
 
 
     void ValueSlot::set(float f) {
-        littleEndianFloat lf(f);
-        setValue(kFloatTag, 0, {&lf, sizeof(lf)});
+        if (Encoder::isIntRepresentable(f)) {
+            set((int32_t)f);
+        } else {
+            struct {
+                uint8_t filler = 0;
+                littleEndianFloat le;
+            } data;
+            data.le = f;
+            setValue(kFloatTag, 0, {(char*)&data.le - 1, sizeof(data.le) + 1});
+        }
+        assert(asValue()->asFloat() == f);
     }
 
     void ValueSlot::set(double d) {
-        littleEndianDouble ld(d);
-        setValue(kFloatTag, 8, {&ld, sizeof(ld)});
+        if (Encoder::isIntRepresentable(d)) {
+            set((int64_t)d);
+        } else {
+            struct {
+                uint8_t filler = 0;
+                littleEndianDouble le;
+            } data;
+            data.le = d;
+            setValue(kFloatTag, 8, {(char*)&data.le - 1, sizeof(data.le) + 1});
+        }
+        assert(asValue()->asDouble() == d);
     }
 
 
@@ -271,4 +291,4 @@ namespace fleece { namespace impl { namespace internal {
         }
     }
 
-} } }
+} }

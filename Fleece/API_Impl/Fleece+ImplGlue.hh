@@ -18,6 +18,7 @@
 
 #pragma once
 #include "FleeceImpl.hh"
+#include "ValueSlot.hh"
 #include "JSONEncoder.hh"
 #include "Path.hh"
 #include "DeepIterator.hh"
@@ -36,6 +37,7 @@ namespace fleece { namespace impl {
 typedef const Value*    FLValue;
 typedef const Array*    FLArray;
 typedef const Dict*     FLDict;
+typedef ValueSlot*      FLSlot;
 typedef MutableArray*   FLMutableArray;
 typedef MutableDict*    FLMutableDict;
 typedef FLEncoderImpl*  FLEncoder;

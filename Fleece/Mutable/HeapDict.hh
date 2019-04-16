@@ -41,7 +41,9 @@ namespace fleece { namespace impl { namespace internal {
         // Warning: Modifying a HeapDict invalidates all Dict::iterators on it!
 
         template <typename T>
-        void set(slice key, T value)                        {_mutableValueToSetFor(key).set(value);}
+        void set(slice key, T value)                        {setting(key).set(value);}
+
+        ValueSlot& setting(slice key);
 
         void remove(slice key);
         void removeAll();
@@ -109,7 +111,6 @@ namespace fleece { namespace impl { namespace internal {
         ValueSlot* _findValueFor(slice keyToFind) const noexcept;
         ValueSlot* _findValueFor(key_t keyToFind) const noexcept;
         ValueSlot& _makeValueFor(key_t key);
-        ValueSlot& _mutableValueToSetFor(slice key);
         HeapCollection* getMutable(slice key, tags ifType);
         bool tooManyAncestors() const;
 

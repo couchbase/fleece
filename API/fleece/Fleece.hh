@@ -380,12 +380,20 @@ namespace fleece {
 
         bool operator== (const Doc &d) const        {return _doc == d._doc;}
 
+        operator FLDoc() const                      {return _doc;}
+        FLDoc detach()                              {auto d = _doc; _doc = nullptr; return d;}
+
     private:
         friend class Value;
         explicit Doc(FLValue v)                     :_doc(FLValue_FindDoc(v)) { }
 
         FLDoc _doc;
     };
+
+
+    class Null { };
+    /** A convenient way to specify (JSON) null when writing to an Encoder or mutable cllection */
+    constexpr Null nullValue;
 
 
     /** Generates Fleece-encoded data. */
@@ -460,6 +468,7 @@ namespace fleece {
         //////// "<<" convenience operators;
 
         // Note: overriding <<(bool) would be dangerous due to implicit conversion
+        Encoder& operator<< (Null)                  {writeNull(); return *this;}
         Encoder& operator<< (long long i)           {writeInt(i); return *this;}
         Encoder& operator<< (unsigned long long i)  {writeUInt(i); return *this;}
         Encoder& operator<< (long i)                {writeInt(i); return *this;}

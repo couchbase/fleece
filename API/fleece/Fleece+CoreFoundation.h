@@ -18,7 +18,7 @@
 
 #pragma once
 #include <CoreFoundation/CFBase.h>
-#include "fleece/Fleece.h"
+#include "Fleece.h"
 
 #ifdef __cplusplus
 extern "C" {

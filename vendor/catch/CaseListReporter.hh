@@ -7,10 +7,13 @@
 //
 
 #include "catch.hpp"
-#include "Backtrace.hh"
 #include "Stopwatch.hh"
 #include <chrono>
 #include <time.h>
+
+#ifdef CASE_LIST_BACKTRACE
+#include "Backtrace.hh"
+#endif
 
 
 /** Custom reporter that logs a line for every test file and every test case being run.
@@ -72,6 +75,7 @@ struct CaseListReporter : public Catch::ConsoleReporter {
         ConsoleReporter::sectionEnded(sectionStats);
     }
 
+#ifdef CASE_LIST_BACKTRACE
     virtual bool assertionEnded( Catch::AssertionStats const& stats ) CATCH_OVERRIDE {
         if (stats.assertionResult.getResultType() == Catch::ResultWas::FatalErrorCondition) {
             std::cerr << "\n\n********** CRASH: "
@@ -83,6 +87,7 @@ struct CaseListReporter : public Catch::ConsoleReporter {
         }
         return Catch::ConsoleReporter::assertionEnded(stats);
     }
+#endif
 
     std::string _curFile;
     bool _firstSection;

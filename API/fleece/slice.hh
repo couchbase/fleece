@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "fleece/Base.hh"
+#include "Base.hh"
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
