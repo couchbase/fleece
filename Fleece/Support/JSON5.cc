@@ -18,7 +18,6 @@
 
 #include "JSON5.hh"
 #include <sstream>
-#include <stdexcept>
 
 using namespace std;
 
@@ -241,13 +240,19 @@ namespace fleece {
         void fail(const char *error) {
             stringstream message;
             message << error << " (at :" << _pos << ")";
-            throw runtime_error(message.str());
+            throw json5_error(message.str(), _pos);
         }
 
         istream &_in;
         ostream &_out;
-        size_t _pos {0};
+        string::size_type _pos {0};
     };
+
+
+    json5_error::json5_error(const std::string &what, std::string::size_type inputPos_)
+    :std::runtime_error(what)
+    ,inputPos(inputPos_)
+    { }
 
 
     void ConvertJSON5(istream &in, ostream &out) {

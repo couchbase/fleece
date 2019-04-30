@@ -173,11 +173,24 @@ extern "C" {
                                   bool json5,
                                   bool canonicalForm);
 
-    /** Converts valid JSON5 to JSON. Among other things, it converts single quotes to double,
-        adds missing quotes around dictionary keys, and adds missing trailing commas.
-        If given _invalid_ JSON5, it will likely return an error but may just ouput comparably
-        invalid JSON. */
-    FLStringResult FLJSON5_ToJSON(FLString json5, FLError *error);
+    /** Converts valid JSON5 <https://json5.org> to JSON. Among other things, it converts single
+        quotes to double, adds missing quotes around dictionary keys, removes trailing commas,
+        and removes comments.
+        @note If given invalid JSON5, it will _usually_ return an error, but may just ouput
+              comparably invalid JSON, in which case the caller's subsequent JSON parsing will
+              detect the error. The types of errors it overlooks tend to be subtleties of string
+              or number encoding.
+        @param json5  The JSON5 to parse
+        @param outErrorMessage  On failure, the error message will be stored here (if not NULL.)
+                        As this is a \ref FLStringResult, you will be responsible for freeing it.
+        @param outErrorPos  On a parse error, the byte offset in the input where the error occurred
+                        will be stored here (if it's not NULL.)
+        @param outError  On failure, the error code will be stored here (if it's not NULL.)
+        @return  The converted JSON. */
+    FLStringResult FLJSON5_ToJSON(FLString json5,
+                                  FLStringResult *outErrorMessage,
+                                  size_t *outErrorPos,
+                                  FLError *outError);
 
     /** \name Debugging Functions
         @{ */

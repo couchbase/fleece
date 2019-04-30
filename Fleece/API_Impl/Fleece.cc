@@ -155,11 +155,27 @@ FLSliceResult FLData_ConvertJSON(FLSlice json, FLError *outError) {
 }
 
 
-FLSliceResult FLJSON5_ToJSON(FLSlice json5, FLError *error) {
+FLStringResult FLJSON5_ToJSON(FLString json5,
+                              FLStringResult *outErrorMessage, size_t *outErrorPos,
+                              FLError *error) {
+    alloc_slice errorMessage;
+    size_t errorPos = 0;
     try {
         std::string json = ConvertJSON5((std::string((char*)json5.buf, json5.size)));
         return toSliceResult(alloc_slice(json));
-    } catchError(nullptr)
+    } catch (const json5_error &x) {
+        errorMessage = alloc_slice(x.what());
+        errorPos = x.inputPos;
+        if (error)
+            *error = kFLJSONError;
+    } catch (const std::exception &x) {
+        errorMessage = alloc_slice(x.what());
+        recordError(x, error);
+    }
+    if (outErrorMessage)
+        *outErrorMessage = toSliceResult(std::move(errorMessage));
+    if (outErrorPos)
+        *outErrorPos = errorPos;
     return {};
 }
 
