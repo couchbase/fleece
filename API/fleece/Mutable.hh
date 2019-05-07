@@ -32,8 +32,6 @@ namespace fleece {
         void operator= (unsigned v)                 {FLSlot_SetUInt(_slot, v);}
         void operator= (int64_t v)                  {FLSlot_SetInt(_slot, v);}
         void operator= (uint64_t v)                 {FLSlot_SetUInt(_slot, v);}
-        void operator= (long long v)                {FLSlot_SetInt(_slot, v);}
-        void operator= (unsigned long long v)       {FLSlot_SetUInt(_slot, v);}
         void operator= (float v)                    {FLSlot_SetFloat(_slot, v);}
         void operator= (double v)                   {FLSlot_SetDouble(_slot, v);}
         void operator= (FLString v)                 {FLSlot_SetString(_slot, v);}
