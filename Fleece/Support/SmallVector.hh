@@ -24,6 +24,7 @@ namespace fleece {
         ,_capacity(sv._capacity)
         ,_big(sv._big)
         {
+            sv._size = 0;
             if (_big)
                 sv._big = nullptr;
             else
@@ -88,7 +89,7 @@ namespace fleece {
             assert(begin() <= first && first <= last && last <= end());
             for (auto i = first; i < last; ++i)
                 i->T::~T();                 // destruct removed items
-            memcpy(first, last, (end() - last) * sizeof(T));
+            memmove(first, last, (end() - last) * sizeof(T));
             _size -= last - first;
         }
 
