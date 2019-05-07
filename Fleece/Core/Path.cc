@@ -21,19 +21,168 @@
 #include "FleeceException.hh"
 #include "PlatformCompat.hh"
 #include <iostream>
+#include <sstream>
 
 using namespace std;
 
 namespace fleece { namespace impl {
 
+    void Path::addComponents(slice components) {
+        forEachComponent(components, _path.empty(), [&](char token, slice component, int32_t index) {
+            if (token == '.')
+                _path.emplace_back(component);
+            else
+                _path.emplace_back(index);
+            return true;
+        });
+    }
+
+
+    void Path::addProperty(slice key) {
+        throwIf(key.size == 0, PathSyntaxError, "Illegal empty property name");
+        _path.emplace_back(key);
+    }
+
+
+    void Path::addIndex(int index) {
+        _path.emplace_back(index);
+    }
+
+    
+    Path& Path::operator += (const Path &other) {
+        _path.reserve(_path.size() + other.size());
+        for (auto &elem : other._path)
+            _path.push_back(elem);
+        return *this;
+    }
+
+
+    void Path::drop(size_t startAt) {
+        _path.erase(_path.begin(), _path.begin() + startAt);
+    }
+
+
+#pragma mark - ENCODING:
+
+
+    Path::operator std::string() {
+        stringstream out;
+        writeTo(out);
+        return out.str();
+    }
+
+
+    void Path::writeTo(std::ostream &out) const {
+        bool first = true;
+        for (auto &element : _path) {
+            if (element.isKey())
+                writeProperty(out, element.key().string(), first);
+            else
+                writeIndex(out, element.index());
+            first = false;
+        }
+    }
+
+
+    void Path::writeProperty(std::ostream &out, slice key, bool first) {
+        if (first) {
+            if (key.hasPrefix('$'))
+                out << '\\';
+        } else {
+            out << '.';
+        }
+        const uint8_t *toQuote;
+        while (nullptr != (toQuote = key.findAnyByteOf(".[\\"_sl))) {
+            out.write((const char *)key.buf, toQuote - (const uint8_t*)key.buf);
+            out << '\\' << *toQuote;
+            key.setStart(toQuote + 1);
+        }
+        out.write((const char *)key.buf, key.size);
+    }
+
+
+    void Path::writeIndex(std::ostream &out, int index) {
+        out << '[' << index << ']';
+    }
+
+
+#pragma mark - EVALUATION:
+
+
+    const Value* Path::eval(const Value *root) const noexcept {
+        const Value *item = root;
+        if (_usuallyFalse(!item))
+            return nullptr;
+        for (auto &e : _path) {
+            item = e.eval(item);
+            if (!item)
+                break;
+        }
+        return item;
+    }
+
+
+    /*static*/ const Value* Path::eval(slice specifier, const Value *root) {
+        const Value *item = root;
+        if (_usuallyFalse(!item))
+            return nullptr;
+        forEachComponent(specifier, true, [&](char token, slice component, int32_t index) {
+            item = Element::eval(token, component, index, item);
+            return (item != nullptr);
+        });
+        return item;
+    }
+
+
+    /*static*/ const Value* Path::evalJSONPointer(slice specifier, const Value *root)
+    {
+        auto current = root;
+        throwIf(specifier.readByte() != '/', PathSyntaxError, "JSONPointer does not start with '/'");
+        while (specifier.size > 0) {
+            if (!current)
+                return nullptr;
+
+            auto slash = specifier.findByteOrEnd('/');
+            slice param(specifier.buf, slash);
+
+            switch(current->type()) {
+                case kArray: {
+                    auto i = param.readDecimal();
+                    if (_usuallyFalse(param.size > 0 || i > INT32_MAX))
+                        FleeceException::_throw(PathSyntaxError, "Invalid array index in JSONPointer");
+                    current = ((const Array*)current)->get((uint32_t)i);
+                    break;
+                }
+                case kDict: {
+                    string key = param.asString();
+                    current = ((const Dict*)current)->get(key);
+                    break;
+                }
+                default:
+                    current = nullptr;
+                    break;
+            }
+
+            if (slash == specifier.end())
+                break;
+            specifier.setStart(slash+1);
+        }
+        return current;
+    }
+
+
+#pragma mark - PARSING:
+
+
     // Parses a path expression, calling the callback for each property or array index.
-    void Path::forEachComponent(slice in, eachComponentCallback callback) {
+    void Path::forEachComponent(slice in, bool atStart, eachComponentCallback callback) {
         throwIf(in.size == 0, PathSyntaxError, "Empty path");
         throwIf(in[in.size-1] == '\\', PathSyntaxError, "'\\' at end of string");
 
         uint8_t token = in.peekByte();
         if (token == '$') {
             // Starts with "$." or "$["
+            throwIf(!atStart, PathSyntaxError, "Illegal $ in path");
             in.moveStart(1);
             if (in.size == 0)
                 return;                 // Just "$" means the root
@@ -92,17 +241,18 @@ namespace fleece { namespace impl {
                 // Parse array index:
                 slice n = param;
                 int64_t i = n.readSignedDecimal();
-                throwIf(n.size > 0 || i > INT32_MAX || i < INT32_MIN,
+                throwIf(param.size == 0 || n.size > 0 || i > INT32_MAX || i < INT32_MIN,
                         PathSyntaxError, "Invalid array index");
                 index = (int32_t)i;
             } else {
                 FleeceException::_throw(PathSyntaxError, "Invalid path component");
             }
 
-            // Invoke the callback:
-            throwIf(param.size == 0, PathSyntaxError, "Empty property or index");
-            if (_usuallyFalse(!callback(token, param, index)))
-                return;
+            if (param.size > 0) {
+                // Invoke the callback:
+                if (_usuallyFalse(!callback(token, param, index)))
+                    return;
+            }
 
             // Did we read the whole expression?
             if (next >= in.end())
@@ -115,84 +265,22 @@ namespace fleece { namespace impl {
     }
 
 
-    /*static*/ const Value* Path::evalJSONPointer(slice specifier, const Value *root)
-    {
-        auto current = root;
-        throwIf(specifier.readByte() != '/', PathSyntaxError, "JSONPointer does not start with '/'");
-        while (specifier.size > 0) {
-            if (!current)
-                return nullptr;
-
-            auto slash = specifier.findByteOrEnd('/');
-            slice param(specifier.buf, slash);
-
-            switch(current->type()) {
-                case kArray: {
-                    auto i = param.readDecimal();
-                    if (_usuallyFalse(param.size > 0 || i > INT32_MAX))
-                        FleeceException::_throw(PathSyntaxError, "Invalid array index in JSONPointer");
-                    current = ((const Array*)current)->get((uint32_t)i);
-                    break;
-                }
-                case kDict: {
-                    string key = param.asString();
-                    current = ((const Dict*)current)->get(key);
-                    break;
-                }
-                default:
-                    current = nullptr;
-                    break;
-            }
-
-            if (slash == specifier.end())
-                break;
-            specifier.setStart(slash+1);
-        }
-        return current;
-    }
-
-    /*static*/ const Value* Path::eval(slice specifier, const Value *root) {
-        const Value *item = root;
-        if (_usuallyFalse(!item))
-            return nullptr;
-        forEachComponent(specifier, [&](char token, slice component, int32_t index) {
-            item = Element::eval(token, component, index, item);
-            return (item != nullptr);
-        });
-        return item;
-    }
-
-
-    Path::Path(const string &specifier)
-    :_specifier(specifier)
-    {
-        forEachComponent(slice(_specifier), [&](char token, slice component, int32_t index) {
-            if (token == '.')
-                _path.emplace_back(component);
-            else
-                _path.emplace_back(index);
-            return true;
-        });
-    }
-
-
-    const Value* Path::eval(const Value *root) const noexcept {
-        const Value *item = root;
-        if (_usuallyFalse(!item))
-            return nullptr;
-        for (auto &e : _path) {
-            item = e.eval(item);
-            if (!item)
-                break;
-        }
-        return item;
-    }
+#pragma mark - ELEMENT CLASS:
 
 
     Path::Element::Element(slice property)
     :_keyBuf(property)
     ,_key(new Dict::key(_keyBuf))
     { }
+
+
+    Path::Element::Element(const Element &other)
+    :_keyBuf(other._keyBuf)
+    ,_index(other._index)
+    {
+        if (other._key)
+            _key.reset(new Dict::key(_keyBuf));
+    }
 
 
     const Value* Path::Element::eval(const Value *item) const noexcept {
@@ -231,27 +319,5 @@ namespace fleece { namespace impl {
         }
         return a->get((uint32_t)index);
     }
-
-
-    void Path::writeProperty(std::ostream &out, slice key, bool first) {
-        if (first) {
-            if (key.hasPrefix('$'))
-                out << '\\';
-        } else {
-            out << '.';
-        }
-        const uint8_t *toQuote;
-        while (nullptr != (toQuote = key.findAnyByteOf(".[\\"_sl))) {
-            out.write((const char *)key.buf, toQuote - (const uint8_t*)key.buf);
-            out << '\\' << *toQuote;
-            key.setStart(toQuote + 1);
-        }
-        out.write((const char *)key.buf, key.size);
-    }
-
-    void Path::writeIndex(std::ostream &out, int index) {
-        out << '[' << index << ']';
-    }
-
 
 } }

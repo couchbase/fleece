@@ -40,10 +40,32 @@ namespace fleece { namespace impl {
     public:
         class Element;
 
-        Path(const std::string &specifier);
+        //// Construction from a string: (throws FleeceException with code PathSyntaxError)
 
-        const std::string& specifier() const        {return _specifier;}
-        const smallVector<Element,4>& path() const    {return _path;}
+        Path(slice specifier)                       {addComponents(specifier);}
+        Path(const std::string &specifier)          :Path(slice(specifier)) { }
+
+        //// Step-by-step construction:
+
+        Path()                                      { }
+        void addProperty(slice key);
+        void addIndex(int index);
+        void addComponents(slice components);
+
+        Path& operator += (const Path&);
+        void drop(size_t numToDropFromStart);
+
+        //// Path element accessors:
+
+        const smallVector<Element,4>& path() const      {return _path;}
+        smallVector<Element,4>& path()                  {return _path;}
+        bool empty() const                              {return _path.empty();}
+        size_t size() const                             {return _path.size();}
+
+        const Element& operator[] (size_t i) const      {return _path[i];}
+        Element& operator[] (size_t i)                  {return _path[i];}
+
+        //// Evaluation:
 
         const Value* eval(const Value *root NONNULL) const noexcept;
 
@@ -57,6 +79,11 @@ namespace fleece { namespace impl {
         static const Value* evalJSONPointer(slice specifier,
                                             const Value* root NONNULL);
 
+        //// Converting to string:
+
+        explicit operator std::string();
+
+        void writeTo(std::ostream&) const;
 
         /** Utility for writing a path component to a stream.
             It will add a backslash before any '.' and '[' characters.
@@ -68,15 +95,18 @@ namespace fleece { namespace impl {
         static void writeIndex(std::ostream&, int arrayIndex);
 
 
+        /** An element of a Path, representing either a named property or an array index. */
         class Element {
         public:
             Element(slice property);
             Element(int32_t arrayIndex)             :_index(arrayIndex) { }
-            const Value* eval(const Value* NONNULL) const noexcept;
+            Element(const Element &e);
             bool isKey() const                      {return _key != nullptr;}
             Dict::key& key() const                  {return *_key;}
+            slice keyStr() const                    {return _key ? _key->string() : nullslice;}
             int32_t index() const                   {return _index;}
 
+            const Value* eval(const Value* NONNULL) const noexcept;
             static const Value* eval(char token, slice property, int32_t index,
                                      const Value *item NONNULL) noexcept;
         private:
@@ -89,9 +119,8 @@ namespace fleece { namespace impl {
 
     private:
         using eachComponentCallback = function_ref<bool(char,slice,int32_t)>;
-        static void forEachComponent(slice in, eachComponentCallback);
+        static void forEachComponent(slice in, bool atStart, eachComponentCallback);
 
-        const std::string _specifier;
         smallVector<Element, 4> _path;
     };
 
