@@ -225,8 +225,12 @@ namespace fleece { namespace impl {
                     auto dst = (uint8_t*)unescaped.buf;
                     for (next = (const uint8_t*)in.buf; next < in.end(); ++next) {
                         uint8_t c = *next;
-                        if (c == '\\')
+                        if (c == '\\') {
                             c = *++next;
+                        } else if(c == '.' || c == '[') {
+                            break;
+                        }
+
                         *dst++ = c;
                     }
                     param = slice(unescaped.buf, dst);
