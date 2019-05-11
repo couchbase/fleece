@@ -71,7 +71,11 @@
 #include <math.h>
 #include <time.h>
 #include <mutex>
+#include <map>
+#include <algorithm>
+#include <cctype>
 #include "PlatformCompat.hh"
+using namespace std;
 
 typedef uint8_t u8;
 typedef int64_t sqlite3_int64;
@@ -400,6 +404,20 @@ static int parseYyyyMmDd(const char *zDate, DateTime *p){
 
 
 namespace fleece {
+    static map<string, DateComponent> dateComponentMap = {
+        { "millennium", kDateComponentMillennium },
+        { "century", kDateComponentCentury },
+        { "decade", kDateComponentDecade },
+        { "year", kDateComponentYear },
+        { "quarter", kDateComponentQuarter },
+        { "month", kDateComponentMonth },
+        { "week", kDateComponentWeek },
+        { "day", kDateComponentDay },
+        { "hour", kDateComponentHour },
+        { "minute", kDateComponentMinute },
+        { "second", kDateComponentSecond },
+        { "millisecond", kDateComponentMillisecond }
+    };
 
     int64_t ParseISO8601Date(const char* zDate) {
         DateTime x;
@@ -419,6 +437,22 @@ namespace fleece {
         free(cstr);
         return timestamp;
     }
+
+    DateComponent ParseDateComponent(slice component) {
+        string componentStr(component);
+
+        // Warning, tolower on negative char is UB so first convert to unsigned.  It doesn't matter
+        // if the result is nonsense since we are just using it as a lookup key
+        transform(componentStr.begin(), componentStr.end(), componentStr.begin(), 
+            [](unsigned char c){ return std::tolower(c); });
+        const auto entry = dateComponentMap.find(componentStr);
+        if(entry == dateComponentMap.end()) {
+            return kDateComponentInvalid;
+        }
+
+        return entry->second;
+    }
+
 
     slice FormatISO8601Date(char buf[], int64_t time, bool asUTC) {
         if (time == kInvalidDate) {

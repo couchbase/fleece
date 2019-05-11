@@ -24,6 +24,22 @@ namespace fleece {
 
     static constexpr int64_t kInvalidDate = INT64_MIN;
 
+    typedef enum {
+        kDateComponentMillennium,
+        kDateComponentCentury,
+        kDateComponentDecade,
+        kDateComponentYear,
+        kDateComponentQuarter,
+        kDateComponentMonth,
+        kDateComponentWeek,
+        kDateComponentDay,
+        kDateComponentHour,
+        kDateComponentMinute,
+        kDateComponentSecond,
+        kDateComponentMillisecond,
+        kDateComponentInvalid
+    } DateComponent;
+
     /** Parses a C string as an ISO-8601 date-time, returning a timestamp (milliseconds since
         1/1/1970), or kInvalidDate if the string is not valid. */
     int64_t ParseISO8601Date(const char* dateStr);
@@ -31,6 +47,10 @@ namespace fleece {
     /** Parses a C string as an ISO-8601 date-time, returning a timestamp (milliseconds since
         1/1/1970), or kInvalidDate if the string is not valid. */
     int64_t ParseISO8601Date(slice dateStr);
+
+    /** Parses a C string as a date component (valid strings are represented by the DateComponent
+        enum above) */
+    DateComponent ParseDateComponent(slice component);
 
     /** Maximum length of a formatted ISO-8601 date. (Actually it's a bit bigger.) */
     static constexpr size_t kFormattedISO8601DateMaxSize = 40;
