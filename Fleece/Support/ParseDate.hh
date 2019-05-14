@@ -40,6 +40,30 @@ namespace fleece {
         kDateComponentInvalid
     } DateComponent;
 
+    /*
+     ** A structure for holding a single date and time.
+     */
+    typedef struct DateTime DateTime;
+    struct DateTime {
+        int64_t iJD;       /* The julian day number times 86400000 */
+        int Y, M, D;       /* Year, month, and day */
+        int h, m;          /* Hour and minutes */
+        int tz;            /* Timezone offset in minutes */
+        double s;          /* Seconds */
+        char validYMD;     /* True (1) if Y,M,D are valid */
+        char validHMS;     /* True (1) if h,m,s are valid */
+        char validJD;      /* True (1) if iJD is valid */
+        char validTZ;      /* True (1) if tz is valid */
+    };
+
+    DateTime ParseISO8601DateRaw(const char* dateStr);
+
+    DateTime ParseISO8601DateRaw(slice dateStr);
+
+    int64_t ToMillis(DateTime& dt);
+
+    DateTime FromMillis(int64_t millis);
+
     /** Parses a C string as an ISO-8601 date-time, returning a timestamp (milliseconds since
         1/1/1970), or kInvalidDate if the string is not valid. */
     int64_t ParseISO8601Date(const char* dateStr);
@@ -63,5 +87,6 @@ namespace fleece {
         @return  The formatted string (points to `buf`). */
     slice FormatISO8601Date(char buf[], int64_t timestamp, bool asUTC);
 
+    slice FormatISO8601Date(char buf[], int64_t timestamp, int tz);
 }
 
