@@ -107,7 +107,7 @@ namespace fleece {
         bool hasSuffix(pure_slice) const noexcept;
         bool hasPrefix(uint8_t b) const noexcept        {return size > 0 && (*this)[0] == b;}
         bool hasSuffix(uint8_t b) const noexcept        {return size > 0 && (*this)[size-1] == b;}
-        void* containsBytes(pure_slice bytes) const noexcept;
+        const void* containsBytes(pure_slice bytes) const noexcept;
 
         bool containsAddress(const void *addr) const noexcept;
         bool containsAddressRange(pure_slice) const noexcept;

@@ -230,7 +230,7 @@ namespace fleece {
             && ::memcmp(offsetby(buf, size - s.size), s.buf, s.size) == 0;
     }
 
-    void* pure_slice::containsBytes(pure_slice s) const noexcept {
+    const void* pure_slice::containsBytes(pure_slice s) const noexcept {
         return memmem(buf, size, s.buf, s.size);
     }
 
