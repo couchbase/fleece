@@ -38,9 +38,9 @@ namespace fleece {
         set(s, (uint8_t*)end() - (uint8_t*)s);
     }
 
-    bool pure_slice::contains(const void *addr) const noexcept {
+    bool pure_slice::containsAddress(const void *addr) const noexcept {
         return addr >= buf && addr < end();
-    }
+    } 
 
     int pure_slice::compare(pure_slice b) const noexcept {
         // Optimized for speed
@@ -230,7 +230,11 @@ namespace fleece {
             && ::memcmp(offsetby(buf, size - s.size), s.buf, s.size) == 0;
     }
 
-    bool pure_slice::contains(pure_slice s) const noexcept {
+    void* pure_slice::containsBytes(pure_slice s) const noexcept {
+        return memmem(buf, size, s.buf, s.size);
+    }
+
+    bool pure_slice::containsAddressRange(pure_slice s) const noexcept {
         return s.buf >= buf && s.end() <= end();
     }
 
@@ -489,7 +493,7 @@ namespace fleece {
 
     void alloc_slice::append(pure_slice suffix) {
         if (buf)
-            assert(!contains(suffix.buf) && !contains(suffix.end()));
+            assert(!containsAddress(suffix.buf) && !containsAddress(suffix.end()));
         size_t oldSize = size;
         resize(oldSize + suffix.size);
         memcpy((void*)offset(oldSize), suffix.buf, suffix.size);

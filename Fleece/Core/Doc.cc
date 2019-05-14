@@ -84,7 +84,7 @@ namespace fleece { namespace impl {
         // This ctor does _not_ register the data range, because the parent scope already did.
         _unregistered.test_and_set();
         if (subData)
-            assert(parentScope.data().contains(subData));
+            assert(parentScope.data().containsAddressRange(subData));
     }
 
 
@@ -209,7 +209,7 @@ namespace fleece { namespace impl {
 
     const Value* Scope::resolveExternPointerTo(const void* dst) const noexcept {
         dst = offsetby(dst, (char*)_externDestination.end() - (char*)_data.buf);
-        if (_usuallyFalse(!_externDestination.contains(dst)))
+        if (_usuallyFalse(!_externDestination.containsAddress(dst)))
             return nullptr;
         return (const Value*)dst;
     }

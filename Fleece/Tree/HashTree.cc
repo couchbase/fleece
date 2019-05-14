@@ -47,7 +47,7 @@ namespace fleece {
         slice Leaf::keyString() const           {return derefValue(_keyOffset).asString();}
 
         uint32_t Leaf::writeTo(Encoder &enc, bool writeKey) const {
-            if (enc.base().contains(this)) {
+            if (enc.base().containsAddress(this)) {
                 auto pos = int32_t((char*)this - (char*)enc.base().end());
                 return pos - (writeKey ? _keyOffset : _valueOffset);
             } else {
@@ -126,7 +126,7 @@ namespace fleece {
         }
 
         Interior Interior::writeTo(Encoder &enc) const {
-            if (enc.base().contains(this)) {
+            if (enc.base().containsAddress(this)) {
                 auto pos = int32_t((char*)this - (char*)enc.base().end());
                 return makeAbsolute(pos);
             } else {
