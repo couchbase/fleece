@@ -24,19 +24,22 @@ namespace fleece {
 
     static constexpr int64_t kInvalidDate = INT64_MIN;
 
+    /*
+     ** Components of a date that can be extracted, diffed, or added using date-time functions
+     */
     typedef enum {
-        kDateComponentMillennium,
-        kDateComponentCentury,
-        kDateComponentDecade,
-        kDateComponentYear,
-        kDateComponentQuarter,
-        kDateComponentMonth,
-        kDateComponentWeek,
-        kDateComponentDay,
-        kDateComponentHour,
-        kDateComponentMinute,
-        kDateComponentSecond,
-        kDateComponentMillisecond,
+        kDateComponentMillennium,  /* 1000 years */
+        kDateComponentCentury,     /* 100 years */  
+        kDateComponentDecade,      /* 10 years */  
+        kDateComponentYear,        /* 146097 / 400 days */  
+        kDateComponentQuarter,     /* 3 months */
+        kDateComponentMonth,       /* 1/12 years */  
+        kDateComponentWeek,        /* 7 days */
+        kDateComponentDay,         /* 24 hours */
+        kDateComponentHour,        /* 60 minutes */
+        kDateComponentMinute,      /* 60 seconds */
+        kDateComponentSecond,      /* 1000 milliseconds */  
+        kDateComponentMillisecond, /* base unit */
         kDateComponentInvalid
     } DateComponent;
 
@@ -56,12 +59,18 @@ namespace fleece {
         char validTZ;      /* True (1) if tz is valid */
     };
 
+    /** Parses a C string as an ISO-8601 date-time, returning a parsed DateTime struct */
     DateTime ParseISO8601DateRaw(const char* dateStr);
 
+    /** Parses a C string as an ISO-8601 date-time, returning a parsed DateTime struct */
     DateTime ParseISO8601DateRaw(slice dateStr);
 
+    /** Converts an existing DateTime struct into a timestamp (milliseconds since 
+         1/1/1970) */
     int64_t ToMillis(DateTime& dt);
 
+    /** Converts a timestamp (milliseconds since 1/1/1970) into a parsed DateTime struct
+        in UTC time */
     DateTime FromMillis(int64_t millis);
 
     /** Parses a C string as an ISO-8601 date-time, returning a timestamp (milliseconds since
