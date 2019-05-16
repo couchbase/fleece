@@ -357,11 +357,15 @@ static int parseYyyyMmDd(const char *zDate, fleece::DateTime *p, bool doJD){
         }
     }
     zDate += 10;
-    while( sqlite3Isspace(*zDate) || 'T'==*(u8*)zDate ){ zDate++; }
+    while( sqlite3Isspace(*zDate) || 'T'==*(u8*)zDate ) {
+        // N1QL behavior, if even one T is present, then the resulting format should be 'T', not ' '
+        if(*zDate == 'T' || !p->separator) p->separator = *zDate;
+        zDate++;
+    }
     if( parseHhMmSs(zDate, p)==0 ){
         /* We got the time */
     }else if( *zDate==0 ){
-        p->validHMS = 1;
+        p->validHMS = 0;
         p->h = p->m = 0;
         p->s = 0.0;
         p->validTZ = 0;
@@ -422,14 +426,16 @@ namespace fleece {
     };
 
     DateTime ParseISO8601DateRaw(const char* zDate) {
-        DateTime x {0, 0, 0, 0, 0, 0, 0, 0.0, 0, 0, 0, 0};
-        parseYyyyMmDd(zDate,&x,false);
+        DateTime x {0, 0, 0, 0, 0, 0, 0, 0.0, 0, 0, 0, 0, 0};
+        if(parseYyyyMmDd(zDate,&x,false)) {
+            parseHhMmSs(zDate, &x);
+        }
         
         return x;
     }
 
     DateTime ParseISO8601DateRaw(slice date) {
-        DateTime x {0, 0, 0, 0, 0, 0, 0, 0.0, 0, 0, 0, 0};
+        DateTime x {0, 0, 0, 0, 0, 0, 0, 0.0, 0, 0, 0, 0, 0};
         auto cstr = static_cast<char*>(malloc(date.size + 1));
         if (!cstr)
             return x;
@@ -441,7 +447,17 @@ namespace fleece {
         return retVal;
     }
 
-    int64_t ToMillis(DateTime& dt) {
+    int64_t ToMillis(DateTime& dt, bool no_tz) {
+        if(!dt.validHMS) {
+            dt.h = dt.m = 0;
+            dt.s = 0.0;
+            dt.validHMS = 1;
+        }
+
+        if(!no_tz && !dt.validTZ) {
+            inject_local_tz(&dt);
+        } 
+
         computeJD(&dt);
         return dt.iJD - 210866760000000;
     }
@@ -505,7 +521,7 @@ namespace fleece {
     }
 
 
-    slice FormatISO8601Date(char buf[], int64_t time, bool asUTC) {
+    slice FormatISO8601Date(char buf[], int64_t time, bool asUTC, const DateTime* format) {
         if (time == kInvalidDate) {
             *buf = 0;
             return nullslice;
@@ -518,34 +534,59 @@ namespace fleece {
         // Format it, up to the seconds:
         struct tm timebuf;
         struct tm* result = asUTC ? gmtime_r(&secs, &timebuf) : localtime_r(&secs, &timebuf);
-        size_t len = strftime(buf, kFormattedISO8601DateMaxSize, "%FT%T", result);
-
-        // Write the milliseconds:
-        if (millis > 0) {
-            size_t n = sprintf(buf + len, ".%03d", millis);
-            len += n;
+        size_t len = 0;
+        bool ymd = true;
+        bool hms = true;
+        bool zone = true;
+        char separator = 'T';
+        if(format) {
+            ymd = format->validYMD;
+            hms = format->validHMS;
+            zone = format->validTZ;
+            separator = format->separator;
         }
 
-        // Write the time-zone:
-        char *tz = buf + len;
-        if (asUTC) {
-            strcpy(tz, "Z");
-            ++len;
-        } else {
-            size_t added = strftime(tz, 6, "%z", &timebuf);
+        if(ymd) {
+           len += strftime(buf, kFormattedISO8601DateMaxSize, "%F", result);
+        }
 
-            // It would be nice to use tm_gmtoff but that's not available everywhere...
-            if(strncmp("0000", tz + 1, 4) == 0) {
-                strcpy(tz, "Z");
-                ++len;
-            } else {
-                len += added;
+        if(hms) {
+            if(ymd) {
+                buf[len] = separator;
+                len++;
+            }
+
+            len += strftime(buf + len, kFormattedISO8601DateMaxSize - len, "%T", result);
+
+            // Write the milliseconds:
+            if (millis > 0) {
+                len += sprintf(buf + len, ".%03d", millis);
+            }
+
+            if(zone) {
+                // Write the time-zone:
+                char *tz = buf + len;
+                if (asUTC) {
+                    strcpy(tz, "Z");
+                    ++len;
+                } else {
+                    size_t added = strftime(tz, 6, "%z", &timebuf);
+
+                    // It would be nice to use tm_gmtoff but that's not available everywhere...
+                    if(strncmp("0000", tz + 1, 4) == 0) {
+                        strcpy(tz, "Z");
+                        ++len;
+                    } else {
+                        len += added;
+                    }
+                }
             }
         }
+
         return {buf, len};
     }
 
-    slice FormatISO8601Date(char buf[], int64_t time, int offset) {
+    slice FormatISO8601Date(char buf[], int64_t time, int offset, const DateTime* format) {
         if (time == kInvalidDate) {
             *buf = 0;
             return nullslice;
@@ -564,17 +605,41 @@ namespace fleece {
             return nullslice;
         }
 
-        size_t len = strftime(buf, kFormattedISO8601DateMaxSize, "%FT%T", result);
-
-        // Write the milliseconds:
-        if (millis > 0) {
-            size_t n = sprintf(buf + len, ".%03d", millis);
-            len += n;
+        size_t len = 0;
+        bool ymd = true;
+        bool hms = true;
+        bool zone = true;
+        char separator = 'T';
+        if(format) {
+            ymd = format->validYMD;
+            hms = format->validHMS;
+            zone = format->validTZ;
+            separator = format->separator;
         }
 
-        // Write the time-zone:
-        char *tz = buf + len;
-        len += offset_to_str(offset, tz);
+        if(ymd) {
+           len += strftime(buf, kFormattedISO8601DateMaxSize, "%F", result);
+        }
+
+        if(hms) {
+            if(ymd) {
+                buf[len] = format->separator;
+                len++;
+            }
+
+            len += strftime(buf + len, kFormattedISO8601DateMaxSize - len, "%T", result);
+
+            // Write the milliseconds:
+            if (millis > 0) {
+                len += sprintf(buf + len, ".%03d", millis);
+            }
+
+            if(zone) {
+                // Write the time-zone:
+                char *tz = buf + len;
+                len += offset_to_str(offset, tz);
+            }
+        }
   
         return {buf, len};
     }

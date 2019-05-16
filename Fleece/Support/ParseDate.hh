@@ -57,6 +57,7 @@ namespace fleece {
         char validHMS;     /* True (1) if h,m,s are valid */
         char validJD;      /* True (1) if iJD is valid */
         char validTZ;      /* True (1) if tz is valid */
+        char separator;    /* The character used to separate the date and time (T or space) */
     };
 
     /** Parses a C string as an ISO-8601 date-time, returning a parsed DateTime struct */
@@ -67,7 +68,7 @@ namespace fleece {
 
     /** Converts an existing DateTime struct into a timestamp (milliseconds since 
          1/1/1970) */
-    int64_t ToMillis(DateTime& dt);
+    int64_t ToMillis(DateTime& dt, bool no_tz = false);
 
     /** Converts a timestamp (milliseconds since 1/1/1970) into a parsed DateTime struct
         in UTC time */
@@ -93,9 +94,19 @@ namespace fleece {
                     kFormattedISO8601DateMaxSize bytes must be available.
         @param timestamp  The timestamp (milliseconds since 1/1/1970).
         @param asUTC  True to format as UTC, false to use the local time-zone.
+        @param format The model to use for formatting (i.e. which portions to include).
+                      If null, then the full ISO-8601 format is used
         @return  The formatted string (points to `buf`). */
-    slice FormatISO8601Date(char buf[], int64_t timestamp, bool asUTC);
+    slice FormatISO8601Date(char buf[], int64_t timestamp, bool asUTC, const DateTime* format);
 
-    slice FormatISO8601Date(char buf[], int64_t timestamp, int tz);
+    /** Formats a timestamp (milliseconds since 1/1/1970) as an ISO-8601 date-time.
+        @param buf  The location to write the formatted C string. At least
+                    kFormattedISO8601DateMaxSize bytes must be available.
+        @param timestamp  The timestamp (milliseconds since 1/1/1970).
+        @param tz       The timezone offset from UTC in minutes
+        @param format The model to use for formatting (i.e. which portions to include).
+                      If null, then the full ISO-8601 format is used
+        @return  The formatted string (points to `buf`). */
+    slice FormatISO8601Date(char buf[], int64_t timestamp, int tz, const DateTime* format);
 }
 
