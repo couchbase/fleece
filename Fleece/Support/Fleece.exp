@@ -16,6 +16,7 @@ _FLDoc_FromJSON
 _FLDoc_Release
 _FLDoc_Retain
 _FLDoc_GetData
+_FLDoc_GetAllocedData
 _FLDoc_GetRoot
 _FLDoc_GetSharedKeys
 
