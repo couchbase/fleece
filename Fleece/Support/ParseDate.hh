@@ -40,6 +40,12 @@ namespace fleece {
         kDateComponentMinute,      /* 60 seconds */
         kDateComponentSecond,      /* 1000 milliseconds */  
         kDateComponentMillisecond, /* base unit */
+        kDateComponentExtendedMarker,
+        kDateComponentIsoYear,
+        kDateComponentIsoWeek,
+        kDateComponentIsoDayOfWeek,
+        kDateComponentDayOfYear,
+        kDateComponentDayOfWeek,
         kDateComponentInvalid
     } DateComponent;
 

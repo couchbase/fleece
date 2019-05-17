@@ -422,7 +422,14 @@ namespace fleece {
         { "hour", kDateComponentHour },
         { "minute", kDateComponentMinute },
         { "second", kDateComponentSecond },
-        { "millisecond", kDateComponentMillisecond }
+        { "millisecond", kDateComponentMillisecond },
+        { "iso_week", kDateComponentIsoWeek },
+        { "iso_year", kDateComponentIsoYear },
+        { "iso_dow", kDateComponentIsoDayOfWeek },
+        { "day_of_year", kDateComponentDayOfYear },
+        { "doy", kDateComponentDayOfYear },
+        { "day_of_week", kDateComponentDayOfWeek },
+        { "dow", kDateComponentDayOfWeek }
     };
 
     DateTime ParseISO8601DateRaw(const char* zDate) {
