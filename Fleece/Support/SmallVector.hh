@@ -34,6 +34,7 @@ namespace fleece {
 
         smallVector& operator=(smallVector &&sv) {
             _size = sv._size;
+            sv._size = 0;
             _capacity = sv._capacity;
             free(_big);
             _big = sv._big;
