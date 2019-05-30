@@ -42,7 +42,7 @@ namespace fleece { namespace impl {
      _stack(kInitialStackSize),
      _strings(10)
     {
-        push(kSpecialTag, 1);                   // Top-level 'array' is just a single item
+        init();
     }
 
     Encoder::Encoder(FILE *outputFile)
@@ -50,10 +50,32 @@ namespace fleece { namespace impl {
      _stack(kInitialStackSize),
      _strings(10)
     {
-        push(kSpecialTag, 1);                   // Top-level 'array' is just a single item
+        init();
     }
 
     Encoder::~Encoder() {
+    }
+
+    void Encoder::init() {
+        // Initial state has a placeholder collection on the stack, which will contain the real
+        // root value.
+        resetStack();
+        _items->reset(kSpecialTag);
+        _items->reserve(1);
+    }
+
+    void Encoder::resetStack() {
+        _items = &_stack[0];
+        _stackDepth = 1;
+    }
+
+    void Encoder::reset() {
+        if (_items)
+            _items->clear();
+        _out.reset();
+        _strings.clear();
+        _writingKey = _blockedOnKey = false;
+        resetStack();
     }
 
     void Encoder::setSharedKeys(SharedKeys *s) {
@@ -92,6 +114,7 @@ namespace fleece { namespace impl {
             _items->clear();
         }
         _out.flush();
+        // Go to "finished" state, where stack is empty:
         _items = nullptr;
         _stackDepth = 0;
     }
@@ -109,9 +132,7 @@ namespace fleece { namespace impl {
             _out.write(item, (_items->wide ? kWide : kNarrow));
         }
         _items->clear();
-        _items = nullptr;
-        _stackDepth = 0;
-        push(kSpecialTag, 1);
+        resetStack();
         return itemPos;
     }
 
@@ -135,18 +156,6 @@ namespace fleece { namespace impl {
     size_t Encoder::nextWritePos() {
         _out.padToEvenLength();
         return _out.length();
-    }
-
-    void Encoder::reset() {
-        if (_items) {
-            _items->clear();
-            _items = nullptr;
-        }
-        _out.reset();
-        _stackDepth = 0;
-        push(kSpecialTag, 1);
-        _strings.clear();
-        _writingKey = _blockedOnKey = false;
     }
 
 
@@ -644,12 +653,13 @@ namespace fleece { namespace impl {
     }
 
     void Encoder::push(tags tag, size_t reserve) {
+        if (_usuallyFalse(_stackDepth == 0))
+            reset();                        // I'm being reused after finish(), so initialize
         if (_usuallyFalse(_stackDepth >= _stack.size()))
             _stack.resize(2*_stackDepth);
         _items = &_stack[_stackDepth++];
         _items->reset(tag);
         if (reserve > 0) {
-            _items->reserve(reserve);
             if (_usuallyTrue(tag == kDictTag)) {
                 _items->reserve(2 * reserve);
                 _items->keys.reserve(reserve);
@@ -660,6 +670,7 @@ namespace fleece { namespace impl {
     }
 
     void Encoder::pop() {
+        throwIf(_stackDepth <= 1, InternalError, "Encoder stack underflow!");
         --_stackDepth;
         _items = &_stack[_stackDepth - 1];
     }

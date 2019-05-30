@@ -203,6 +203,8 @@ namespace fleece { namespace impl {
             smallVector<slice, kInitialCollectionCapacity> keys;
         };
 
+        void init();
+        void resetStack();
         byte* placeItem();
         void addSpecial(int specialValue);
         template <bool canInline> byte* placeValue(size_t size);
@@ -233,10 +235,10 @@ namespace fleece { namespace impl {
 
         //////// Data members:
 
-        Writer _out;            // Where output is written to
-        valueArray *_items;     // Values of the currently-open array/dict; == &_stack[_stackDepth]
+        Writer _out;                 // Where output is written to
+        valueArray *_items;          // Values of currently-open array/dict; == &_stack[_stackDepth-1]
         smallVector<valueArray, kInitialStackSize> _stack; // Stack of open arrays/dicts
-        unsigned _stackDepth {0};    // Current depth of _stack
+        unsigned _stackDepth;        // Current depth of _stack
         StringTable _strings;        // Maps strings to the offsets where they appear as values
         Writer _stringStorage;       // Backing store for strings in _strings
         bool _uniqueStrings {true};  // Should strings be uniqued before writing?
