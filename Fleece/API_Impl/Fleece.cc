@@ -590,18 +590,21 @@ size_t FLEncoder_FinishItem(FLEncoder e) {
 }
 
 FLDoc FLEncoder_FinishDoc(FLEncoder e, FLError *outError) {
-    if (!e->fleeceEncoder)
-        e->errorCode = kFLUnsupported;  // Doc class doesn't support JSON data
-    if (!e->hasError()) {
-        try {
-            return retain(e->fleeceEncoder->finishDoc().get());       // finish() can throw
-        } catch (const std::exception &x) {
-            e->recordException(x);
+    if (e->fleeceEncoder) {
+        if (!e->hasError()) {
+            try {
+                return retain(e->fleeceEncoder->finishDoc().get());       // finish() can throw
+            } catch (const std::exception &x) {
+                e->recordException(x);
+            }
         }
+    } else {
+        e->errorCode = kFLUnsupported;  // Doc class doesn't support JSON data
     }
     // Failure:
     if (outError)
         *outError = e->errorCode;
+    e->reset();
     return nullptr;
 }
 
@@ -617,6 +620,7 @@ FLSliceResult FLEncoder_Finish(FLEncoder e, FLError *outError) {
     // Failure:
     if (outError)
         *outError = e->errorCode;
+    e->reset();
     return {nullptr, 0};
 }
 

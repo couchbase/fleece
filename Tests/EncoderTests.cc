@@ -784,6 +784,26 @@ public:
 #endif
     }
 
+    TEST_CASE_METHOD(EncoderTests, "Resuse Encoder", "[Encoder]") {
+        enc.beginDictionary();
+        enc.writeKey("foo");
+        enc.writeInt(17);
+        enc.endDictionary();
+        auto data1 = enc.finish();
+
+        enc.beginDictionary();
+        enc.writeKey("bar");
+        enc.writeInt(23);
+        enc.endDictionary();
+        auto data2 = enc.finish();
+
+        enc.beginDictionary();
+        enc.writeKey("baz");
+        enc.writeInt(42);
+        enc.endDictionary();
+        auto data3 = enc.finish();
+    }
+
     TEST_CASE_METHOD(EncoderTests, "Multi-Item", "[Encoder]") {
         enc.suppressTrailer();
         size_t pos[10];
