@@ -1118,7 +1118,7 @@
 		270FA2541BF53CAD005DCB13 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1020;
+				LastUpgradeCheck = 1100;
 				ORGANIZATIONNAME = Couchbase;
 				TargetAttributes = {
 					270FA25B1BF53CAD005DCB13 = {
@@ -1140,6 +1140,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 			);
 			mainGroup = 270FA2531BF53CAD005DCB13;
