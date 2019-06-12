@@ -196,11 +196,20 @@ namespace fleece { namespace impl {
 
 
     bool PersistentSharedKeys::refresh() {
+        // CBL-87: Race with transactionBegan, possible to enter a transaction and
+        // get to here before the transaction reads the new shared keys.  They won't
+        // be read here due to _inTransaction being true
+        LOCK(_refreshMutex);
         return !_inTransaction && read();
     }
 
 
     void PersistentSharedKeys::transactionBegan() {
+        // CBL-87: Race with refresh, several lines between here and when new
+        // shared keys are actually read leaving a void in between where the shared
+        // keys are trying to read but cannot properly be refreshed (via Pusher's
+        // sendRevision for example)
+        LOCK(_refreshMutex);
         throwIf(_inTransaction, SharedKeysStateError, "already in transaction");
         _inTransaction = true;
         read();     // Catch up with any external changes

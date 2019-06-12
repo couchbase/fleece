@@ -181,6 +181,8 @@ namespace fleece { namespace impl {
         /** Updates state given previously-persisted data. */
         bool loadFrom(slice fleeceData) override;
 
+        std::mutex _refreshMutex;
+
     private:
         virtual int _add(slice str) override;
 
