@@ -94,7 +94,7 @@ namespace fleece { namespace impl {
             void readKV() noexcept;
             const Value* rawKey() noexcept             {return _a._first;}
             const Value* rawValue() noexcept           {return _a.second();}
-            bool findSharedKeys() const;
+            SharedKeys* findSharedKeys() const;
 
             Array::impl _a;
             const Value *_key, *_value;

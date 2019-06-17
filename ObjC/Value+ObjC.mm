@@ -149,27 +149,30 @@ namespace fleece { namespace impl {
         if (!key())
             return nil;
         NSString* keyStr = nil;
-        if (key()->isInteger() && (_sharedKeys || findSharedKeys())) {
+        if (key()->isInteger()) {
             // Decode int key using SharedKeys:
-            auto encodedKey = (int)key()->asInt();
-            keyStr = (__bridge NSString*)_sharedKeys->platformStringForKey(encodedKey);
-            if (!keyStr) {
-                slice strSlice = _sharedKeys->decode(encodedKey);
-                if (strSlice) {
-                    keyStr = convertString(strSlice);
-                    _sharedKeys->setPlatformStringForKey(encodedKey,
-                                                CFRetain((__bridge CFStringRef)keyStr));
-                    //TODO: Strings need to be CFRelease'd when the SharedKeys is destructed.
+            auto sk = _sharedKeys ? _sharedKeys : findSharedKeys();
+            if (sk) {
+                auto encodedKey = (int)key()->asInt();
+                keyStr = (__bridge NSString*)sk->platformStringForKey(encodedKey);
+                if (!keyStr) {
+                    slice strSlice = sk->decode(encodedKey);
+                    if (strSlice) {
+                        keyStr = convertString(strSlice);
+                        sk->setPlatformStringForKey(encodedKey,
+                                                    CFRetain((__bridge CFStringRef)keyStr));
+                        //TODO: Strings need to be CFRelease'd when the SharedKeys is destructed.
 #if LOG_CACHED_STRINGS
-                    fprintf(stderr, "SHAREDKEY[%p] %d --> %s\n", _sharedKeys, encodedKey, keyStr.UTF8String);
+                        fprintf(stderr, "SHAREDKEY[%p] %d --> %s\n", sk, encodedKey, keyStr.UTF8String);
 #endif
+                    }
                 }
-            }
 #if LOG_CACHED_STRINGS
-            else {
-                fprintf(stderr, "SHAREDKEY[%p] *Used* %d --> %s\n", _sharedKeys, encodedKey, keyStr.UTF8String);
-            }
+                else {
+                    fprintf(stderr, "SHAREDKEY[%p] *Used* %d --> %s\n", sk, encodedKey, keyStr.UTF8String);
+                }
 #endif
+            }
         }
         if (!keyStr)
             keyStr = key()->toNSObject(sharedStrings);

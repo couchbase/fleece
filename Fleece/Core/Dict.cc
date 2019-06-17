@@ -411,21 +411,20 @@ namespace fleece { namespace impl {
         // skips the parent check, so it will iterate the raw contents
     }
 
-    bool Dict::iterator::findSharedKeys() const {
-        const_cast<Dict::iterator*>(this)->_sharedKeys = Doc::sharedKeys(_a._first);
-        if (_usuallyFalse(!_sharedKeys)) {
-            assert(_sharedKeys || gDisableNecessarySharedKeysCheck);
-            return false;
-        }
-        return true;
+    SharedKeys* Dict::iterator::findSharedKeys() const {
+        auto sk = Doc::sharedKeys(_a._first);
+        const_cast<Dict::iterator*>(this)->_sharedKeys = sk;
+        assert(sk || gDisableNecessarySharedKeysCheck);
+        return sk;
     }
 
     slice Dict::iterator::keyString() const noexcept {
         slice keyStr = _key->asString();
         if (!keyStr && _key->isInteger()) {
-            if (!_sharedKeys && !findSharedKeys())
+            auto sk = _sharedKeys ? _sharedKeys : findSharedKeys();
+            if (!sk)
                 return nullslice;
-            keyStr = _sharedKeys->decode((int)_key->asInt());
+            keyStr = sk->decode((int)_key->asInt());
         }
         return keyStr;
     }
