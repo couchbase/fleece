@@ -16,8 +16,6 @@ matrix:
       os: linux
       addons:
         apt:
-          sources:
-            - llvm-toolchain-trusty-5.0
           packages:
             - clang-5.0
       env:
@@ -26,8 +24,6 @@ matrix:
       os: linux
       addons:
         apt:
-          sources:
-            - llvm-toolchain-trusty-3.9
           packages:
             - clang-3.9
       env:
