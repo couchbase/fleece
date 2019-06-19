@@ -19,7 +19,6 @@
 #include "fleece/slice.hh"
 #include "encode.h"
 #include "decode.h"
-#include "fleece/Fleece.h" // for FLSlice and FLSliceResult
 #include <algorithm>
 #include <math.h>
 #include <stdlib.h>
@@ -300,14 +299,6 @@ namespace fleece {
     }
 
 
-    slice::slice(const FLSlice &s)          :slice(s.buf, s.size) { }
-    slice::operator FLSlice () const        {return {buf, size};}
-
-    slice::operator FLSliceResult () const {
-        return FLSliceResult(alloc_slice(*this));
-    }
-
-
 #pragma mark - ALLOC_SLICE
 
 
@@ -400,23 +391,6 @@ namespace fleece {
     :pure_slice(sharedBuffer::newSlice(s))
     { }
 
-    alloc_slice::alloc_slice(FLSlice s)
-    :alloc_slice(pure_slice{s.buf, s.size})
-    { }
-
-    alloc_slice::alloc_slice(FLSliceResult &&sr)
-    :pure_slice(sr.buf, sr.size)
-    {
-        sr.buf = nullptr;
-        sr.size = 0;
-    }
-
-    alloc_slice::alloc_slice(const FLSliceResult &sr)
-    :pure_slice(sr.buf, sr.size)
-    {
-        retain();
-    }
-
     inline alloc_slice::sharedBuffer* alloc_slice::shared() noexcept {
         return offsetby((sharedBuffer*)buf, -((long long)offsetof(sharedBuffer, _buf)));
     }
@@ -427,12 +401,6 @@ namespace fleece {
 
     alloc_slice::alloc_slice(const alloc_slice& s) noexcept
     :pure_slice(s)
-    {
-        retain();
-    }
-
-    alloc_slice::alloc_slice(FLHeapSlice s)     // FLHeapSlice is known to be an alloc_slice
-    :pure_slice(s.buf, s.size)
     {
         retain();
     }
@@ -472,10 +440,6 @@ namespace fleece {
         return *this;
     }
 
-    alloc_slice& alloc_slice::operator=(FLSlice s) {
-        return operator=(slice(s.buf, s.size));
-    }
-
 
     void alloc_slice::resize(size_t newSize) {
         if (newSize == size) {
@@ -498,16 +462,5 @@ namespace fleece {
         resize(oldSize + suffix.size);
         memcpy((void*)offset(oldSize), suffix.buf, suffix.size);
     }
-
-
-    alloc_slice::operator FLSlice () const noexcept        {return {buf, size};}
-
-    alloc_slice::operator FLHeapSlice () const noexcept    {return {buf, size};}
-
-    alloc_slice::operator FLSliceResult () noexcept {
-        retain();
-        return {(void*)buf, size};
-    }
-
 
 }

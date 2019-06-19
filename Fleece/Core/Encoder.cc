@@ -148,7 +148,7 @@ namespace fleece { namespace impl {
         Retained<Doc> doc = new Doc(finish(),
                                     Doc::kTrusted,
                                     _sharedKeys,
-                                    (_markExternPtrs ? _base : nullslice));
+                                    (_markExternPtrs ? _base : slice()));
         return doc;
     }
 

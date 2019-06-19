@@ -180,7 +180,7 @@ namespace fleece { namespace impl {
         size_t nextWritePos();
         size_t finishItem();
         slice base() const                      {return _base;}
-        slice baseUsed() const                  {return _baseMinUsed != 0 ? slice(_baseMinUsed, _base.end()) : nullslice;}
+        slice baseUsed() const                  {return _baseMinUsed != 0 ? slice(_baseMinUsed, _base.end()) : slice();}
 
         static bool isIntRepresentable(float n) noexcept;
         static bool isIntRepresentable(double n) noexcept;

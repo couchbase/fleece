@@ -186,11 +186,11 @@ namespace fleece {
         inline uint32_t count() const;
         inline bool empty() const;
 
-        inline Value get(slice key) const;
+        inline Value get(slice_NONNULL key) const;
 
-        inline Value get(const char* key) const         {return get(slice(key));}
+        inline Value get(const char* key NONNULL) const {return get(slice(key));}
 
-        inline Value operator[] (slice key) const       {return get(key);}
+        inline Value operator[] (slice_NONNULL key) const       {return get(key);}
         inline Value operator[] (const char *key) const {return get(key);}
         inline Value operator[] (const KeyPath &kp) const {return Value::operator[](kp);}
 
@@ -207,9 +207,9 @@ namespace fleece {
         public:
             // Warning: the input string's memory MUST remain valid for as long as the Key is in
             // use! (The Key stores a pointer to the string, but does not copy it.)
-            explicit Key(slice string);
-            inline slice string() const;
-            operator slice() const                      {return string();}
+            explicit Key(slice_NONNULL string);
+            inline slice_NONNULL string() const;
+            operator slice_NONNULL() const              {return string();}
         private:
             FLDictKey _key;
             friend class Dict;
@@ -263,11 +263,11 @@ namespace fleece {
         property name (but not yet in the middle of a name.) */
     class KeyPath {
     public:
-        KeyPath(slice spec, FLError *err)               :_path(FLKeyPath_New(spec, err)) { }
+        KeyPath(slice_NONNULL spec, FLError *err)               :_path(FLKeyPath_New(spec, err)) { }
         ~KeyPath()                                      {FLKeyPath_Free(_path);}
         explicit operator bool() const                  {return _path != nullptr;}
 
-        static Value eval(slice specifier, Value root, FLError *error) {
+        static Value eval(slice_NONNULL specifier, Value root, FLError *error) {
             return FLKeyPath_EvalOnce(specifier, root, error);
         }
 
@@ -348,9 +348,9 @@ namespace fleece {
         :_doc(FLDoc_FromResultData(FLSliceResult(fleeceData), trust, sk, externDestination))
         { }
 
-        static inline Doc fromJSON(slice json, FLError *outError = nullptr);
+        static inline Doc fromJSON(slice_NONNULL json, FLError *outError = nullptr);
 
-        static alloc_slice dump(slice fleeceData)   {return FLData_Dump(fleeceData);}
+        static alloc_slice dump(slice_NONNULL fleeceData)   {return FLData_Dump(fleeceData);}
 
         Doc()                                       :_doc(nullptr) { }
         Doc(FLDoc d, bool retain = true)            :_doc(d) {if (retain) FLDoc_Retain(_doc);}
@@ -440,17 +440,17 @@ namespace fleece {
         inline bool writeDateString(FLTimestamp, bool asUTC =true);
         inline bool writeData(slice);
         inline bool writeValue(Value);
-        inline bool convertJSON(slice);
+        inline bool convertJSON(slice_NONNULL);
 
         inline bool beginArray(size_t reserveCount =0);
         inline bool endArray();
         inline bool beginDict(size_t reserveCount =0);
-        inline bool writeKey(slice);
+        inline bool writeKey(slice_NONNULL);
         inline bool writeKey(Value);
         inline bool endDict();
 
         template <class T>
-        inline void write(slice key, T value)       {writeKey(key); *this << value;}
+        inline void write(slice_NONNULL key, T value)       {writeKey(key); *this << value;}
 
         inline void writeRaw(slice data)            {FLEncoder_WriteRaw(_enc, data);}
 
@@ -493,7 +493,7 @@ namespace fleece {
         };
 
         // This enables e.g. `enc["key"_sl] = 17`
-        inline keyref operator[] (slice key)       {return keyref(*this, key);}
+        inline keyref operator[] (slice_NONNULL key)       {return keyref(*this, key);}
 
 #ifdef __OBJC__
         bool writeNSObject(id obj)                 {return FLEncoder_WriteNSObject(_enc, obj);}
@@ -623,11 +623,11 @@ namespace fleece {
 
     inline uint32_t Dict::count() const         {return FLDict_Count(*this);}
     inline bool Dict::empty() const             {return FLDict_IsEmpty(*this);}
-    inline Value Dict::get(slice key) const   {return FLDict_Get(*this, key);}
+    inline Value Dict::get(slice_NONNULL key) const   {return FLDict_Get(*this, key);}
     inline Value Dict::get(Dict::Key &key) const{return FLDict_GetWithKey(*this, &key._key);}
 
-    inline Dict::Key::Key(slice s)            :_key(FLDictKey_Init(s)) { }
-    inline slice Dict::Key::string() const   {return FLDictKey_GetString(&_key);}
+    inline Dict::Key::Key(slice_NONNULL s)            :_key(FLDictKey_Init(s)) { }
+    inline slice_NONNULL Dict::Key::string() const   {return FLDictKey_GetString(&_key);}
 
     inline Dict::iterator::iterator(Dict d)     {FLDictIterator_Begin(d, this);}
     inline Value Dict::iterator::key() const    {return FLDictIterator_GetKey(this);}
@@ -650,11 +650,11 @@ namespace fleece {
                                                 {return FLEncoder_WriteDateString(_enc, ts, asUTC);}
     inline bool Encoder::writeData(slice data){return FLEncoder_WriteData(_enc, data);}
     inline bool Encoder::writeValue(Value v)    {return FLEncoder_WriteValue(_enc, v);}
-    inline bool Encoder::convertJSON(slice j) {return FLEncoder_ConvertJSON(_enc, j);}
+    inline bool Encoder::convertJSON(slice_NONNULL j) {return FLEncoder_ConvertJSON(_enc, j);}
     inline bool Encoder::beginArray(size_t rsv) {return FLEncoder_BeginArray(_enc, rsv);}
     inline bool Encoder::endArray()             {return FLEncoder_EndArray(_enc);}
     inline bool Encoder::beginDict(size_t rsv)  {return FLEncoder_BeginDict(_enc, rsv);}
-    inline bool Encoder::writeKey(slice key)    {return FLEncoder_WriteKey(_enc, key);}
+    inline bool Encoder::writeKey(slice_NONNULL key)    {return FLEncoder_WriteKey(_enc, key);}
     inline bool Encoder::writeKey(Value key)    {return FLEncoder_WriteKeyValue(_enc, key);}
     inline bool Encoder::endDict()              {return FLEncoder_EndDict(_enc);}
     inline size_t Encoder::bytesWritten() const {return FLEncoder_BytesWritten(_enc);}
@@ -697,7 +697,7 @@ namespace fleece {
         return *this;
     }
 
-    inline Doc Doc::fromJSON(slice json, FLError *outError) {
+    inline Doc Doc::fromJSON(slice_NONNULL json, FLError *outError) {
         return Doc(FLDoc_FromJSON(json, outError), false);
     }
 

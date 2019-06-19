@@ -684,7 +684,7 @@ FLDoc FLDoc_Retain(FLDoc doc)                           {return retain(doc);}
 
 FLSharedKeys FLDoc_GetSharedKeys(FLDoc doc)             {return doc ? doc->sharedKeys() : nullptr;}
 FLValue FLDoc_GetRoot(FLDoc doc)                        {return doc ? doc->root() : nullptr;}
-FLSlice FLDoc_GetData(FLDoc doc)                        {return doc ? doc->data() : nullslice;}
+FLSlice FLDoc_GetData(FLDoc doc)                        {return doc ? doc->data() : slice();} 
 
 FLSliceResult FLDoc_GetAllocedData(FLDoc doc) {
     return doc ? toSliceResult(doc->allocedData()) : FLSliceResult{};

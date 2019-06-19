@@ -204,11 +204,11 @@ namespace fleece { namespace impl {
     }
 
     slice Value::asString() const noexcept {
-        return _usuallyTrue(tag() == kStringTag) ? getStringBytes() : nullslice;
+        return _usuallyTrue(tag() == kStringTag) ? getStringBytes() : slice();
     }
 
     slice Value::asData() const noexcept {
-        return _usuallyTrue(tag() == kBinaryTag) ? getStringBytes() : nullslice;
+        return _usuallyTrue(tag() == kBinaryTag) ? getStringBytes() : slice();
     }
 
     int64_t Value::asTimestamp() const noexcept {
