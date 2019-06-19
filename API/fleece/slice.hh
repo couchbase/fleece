@@ -19,6 +19,7 @@
 #pragma once
 
 #include "Base.hh"
+#include "FLSlice.h"
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,8 +32,6 @@
 #import <Foundation/NSString.h>
 @class NSMapTable;
 #endif
-
-struct FLSlice; struct FLHeapSlice; struct FLSliceResult;
 
 #ifdef __APPLE__
 struct __CFString;
@@ -48,6 +47,7 @@ struct __CFData;
 namespace fleece {
     struct slice;
     struct alloc_slice;
+    struct nullslice_t;
 
 #ifdef __APPLE__
     using CFStringRef = const struct ::__CFString *;
@@ -185,15 +185,20 @@ namespace fleece {
         Unlike its parent class pure_slice, this supports operations that change buf or size. */
     struct slice : public pure_slice {
         constexpr slice()                           :pure_slice() {}
+        constexpr slice(std::nullptr_t)             :pure_slice() {}
+        inline constexpr slice(nullslice_t);
         constexpr slice(const void* b, size_t s)    :pure_slice(b, s) {}
-        slice(const void* start NONNULL, const void* end NONNULL)
+        constexpr slice(const void* start NONNULL, const void* end NONNULL)
                                                     :slice(start, (uint8_t*)end-(uint8_t*)start){}
-        inline slice(const alloc_slice&);
+
+        inline constexpr slice(const alloc_slice&);
         slice(const std::string& str)               :slice(&str[0], str.length()) {}
-        explicit slice(const char* str)             :slice(str, str ? strlen(str) : 0) {}
+        explicit constexpr slice(const char* str)   :slice(str, str ? strlen(str) : 0) {}
 
         slice& operator=(pure_slice s)              {set(s.buf, s.size); return *this;}
         slice& operator= (alloc_slice&&) =delete;   // Disallowed: might lead to ptr to freed buf
+        slice& operator= (std::nullptr_t) noexcept  {set(nullptr, 0); return *this;}
+        inline slice& operator= (nullslice_t) noexcept;
 
         void setBuf(const void *b NONNULL)          {pure_slice::setBuf(b);}
         void setSize(size_t s)                      {pure_slice::setSize(s);}
@@ -220,18 +225,22 @@ namespace fleece {
 
         void free() noexcept;
 
-        slice(const FLSlice&);
-        operator FLSlice () const;
-        explicit operator FLSliceResult () const;
+        constexpr slice(const FLSlice &s)           :slice(s.buf, s.size) { }
+        operator FLSlice () const                   {return {buf, size};}
+        inline explicit operator FLSliceResult () const;
 
 #ifdef __OBJC__
         slice(NSData* data)                         :pure_slice(data) {}
 #endif
     };
 
+
+    struct nullslice_t : public slice {
+        constexpr nullslice_t()   :slice() {}
+    };
     
-    /** A null/empty slice. */
-    constexpr slice nullslice = slice();
+    /** A null/empty slice. (You can also use `nullptr` for this purpose.) */
+    constexpr nullslice_t nullslice;
 
 
     // Literal syntax for slices: "foo"_sl
@@ -242,8 +251,9 @@ namespace fleece {
 
     /** A slice that owns a ref-counted block of memory. */
     struct alloc_slice : public pure_slice {
-        alloc_slice()
-            :pure_slice() {}
+        constexpr alloc_slice()                             {}
+        constexpr alloc_slice(std::nullptr_t)               {}
+        constexpr alloc_slice(nullslice_t)                  {}
         explicit alloc_slice(size_t s);
         explicit alloc_slice(pure_slice s);
         alloc_slice(const void* b, size_t s)
@@ -252,10 +262,26 @@ namespace fleece {
             :alloc_slice(slice(start, end)) {}
         explicit alloc_slice(const std::string &str)
             :alloc_slice(slice(str)) {}
-        explicit alloc_slice(FLSlice);
-        alloc_slice(FLHeapSlice);
-        alloc_slice(FLSliceResult&&);
-        alloc_slice(const FLSliceResult&);
+        explicit alloc_slice(FLSlice s)     :alloc_slice(pure_slice{s.buf, s.size}) { }
+
+        alloc_slice(FLHeapSlice s)     // FLHeapSlice is known to be an alloc_slice
+        :pure_slice(s.buf, s.size)
+        {
+            retain();
+        }
+
+        alloc_slice(FLSliceResult &&sr)
+        :pure_slice(sr.buf, sr.size)
+        {
+            sr.buf = nullptr;
+            sr.size = 0;
+        }
+
+        alloc_slice(const FLSliceResult &sr)
+        :pure_slice(sr.buf, sr.size)
+        {
+            retain();
+        }
 
         ~alloc_slice()                                      {if (buf) release();}
         alloc_slice(const alloc_slice&) noexcept;
@@ -273,8 +299,9 @@ namespace fleece {
         }
 
         alloc_slice& operator= (pure_slice s);
-        alloc_slice& operator= (FLSlice);
+        alloc_slice& operator= (FLSlice s)                 {return operator=(slice(s.buf, s.size));}
         alloc_slice& operator= (FLHeapSlice) noexcept;
+        alloc_slice& operator= (std::nullptr_t) noexcept    {reset(); return *this;}
 
         explicit operator bool() const                      {return buf != nullptr;}
 
@@ -293,9 +320,9 @@ namespace fleece {
         static void retain(slice s) noexcept                {((alloc_slice*)&s)->retain();}
         static void release(slice s) noexcept               {((alloc_slice*)&s)->release();}
 
-        operator FLSlice () const noexcept;
-        operator FLHeapSlice () const noexcept;
-        explicit operator FLSliceResult () noexcept;
+        operator FLSlice () const noexcept                  {return {buf, size};}
+        operator FLHeapSlice () const noexcept              {return {buf, size};}
+        explicit operator FLSliceResult () noexcept         {retain(); return {(void*)buf, size};}
 
         void shorten(size_t s)                          {assert(s <= size); pure_slice::setSize(s);}
 
@@ -317,6 +344,22 @@ namespace fleece {
         void assignFrom(pure_slice s)                       {set(s.buf, s.size);}
 
         friend struct ::FLSliceResult;
+    };
+
+
+
+    /** A slice whose `buf` may not be NULL. For use as a parameter type. */
+    struct slice_NONNULL : public slice {
+        constexpr slice_NONNULL(const void* b NONNULL, size_t s)    :slice(b, s) {}
+        constexpr slice_NONNULL(slice s)                            :slice_NONNULL(s.buf, s.size) {}
+        constexpr slice_NONNULL(FLSlice s)                          :slice_NONNULL(s.buf,s.size) {}
+        slice_NONNULL(alloc_slice s)                                :slice_NONNULL(s.buf,s.size) {}
+        slice_NONNULL(const std::string &str)               :slice_NONNULL(str.data(),str.size()) {}
+#if __cplusplus >= 201700L
+        slice_NONNULL(std::string_view str)                 :slice_NONNULL(str.data(),str.size()) {}
+#endif
+        slice_NONNULL(std::nullptr_t) =delete;
+        slice_NONNULL(nullslice_t) =delete;
     };
 
 
@@ -353,7 +396,12 @@ namespace fleece {
     inline slice pure_slice::from(size_t off) const                {return slice(offset(off), end());}
     inline slice pure_slice::operator()(size_t i, size_t n) const  {return slice(offset(i), n);}
 
-    inline slice::slice(const alloc_slice &s)  :pure_slice(s) { }
+    inline constexpr slice::slice(nullslice_t)                     :pure_slice() {}
+    inline slice& slice::operator= (nullslice_t) noexcept          {set(nullptr, 0); return *this;}
+    inline constexpr slice::slice(const alloc_slice &s)            :pure_slice(s) { }
+    inline slice::operator FLSliceResult () const {
+        return FLSliceResult(alloc_slice(*this));
+    }
 
 }
 

@@ -103,7 +103,7 @@ namespace fleece { namespace impl {
             Element(const Element &e);
             bool isKey() const                      {return _key != nullptr;}
             Dict::key& key() const                  {return *_key;}
-            slice keyStr() const                    {return _key ? _key->string() : nullslice;}
+            slice keyStr() const                    {return _key ? _key->string() : slice();}
             int32_t index() const                   {return _index;}
 
             const Value* eval(const Value* NONNULL) const noexcept;
