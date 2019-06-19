@@ -36,9 +36,11 @@ namespace fleece { namespace impl {
             case kShortIntTag:
             case kIntTag:
             case kFloatTag:
-            case kStringTag:
-                out << std::string(toJSON());
+            case kStringTag: {
+                auto json = toJSON();
+                out.write((const char*)json.buf, json.size);
                 break;
+            }
             case kBinaryTag:
                 // TODO: show data
                 out << "Binary[";

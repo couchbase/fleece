@@ -38,6 +38,16 @@ struct __CFString;
 struct __CFData;
 #endif
 
+#if __cplusplus >= 201700L
+    #define constexpr17 constexpr
+    #if __has_include(<string_view>)      // Some compilers claim C++17 but don't have <string_view>
+        #define SLICE_SUPPORTS_STRING_VIEW
+        #include <string_view>
+    #endif
+#else
+    #define constexpr17
+#endif
+
 
 // Utility for using slice with printf-style formatting.
 // Use "%.*" in the format string; then for the corresponding argument put FMTSLICE(theslice).
@@ -120,6 +130,10 @@ namespace fleece {
         std::string hexString() const;
         std::string base64String() const;
 
+#ifdef SLICE_SUPPORTS_STRING_VIEW
+        operator std::string_view() const           {return std::string_view((const char*)buf, size);}
+#endif
+
         /** Copies into a C string buffer of the given size. Result is always NUL-terminated and
             will not overflow the buffer. Returns false if the slice was truncated. */
         bool toCString(char *buf, size_t bufSize);
@@ -193,10 +207,13 @@ namespace fleece {
         constexpr slice(const void* b, size_t s)    :pure_slice(b, s) {}
         constexpr slice(const void* start NONNULL, const void* end NONNULL)
                                                     :slice(start, (uint8_t*)end-(uint8_t*)start){}
-
         inline constexpr slice(const alloc_slice&);
+
         slice(const std::string& str)               :slice(&str[0], str.length()) {}
         explicit constexpr slice(const char* str)   :slice(str, str ? strlen(str) : 0) {}
+#ifdef SLICE_SUPPORTS_STRING_VIEW
+        constexpr slice(std::string_view str)       :slice(str.data(), str.length()) {}
+#endif
 
         slice& operator=(pure_slice s)              {set(s.buf, s.size); return *this;}
         slice& operator= (alloc_slice&&) =delete;   // Disallowed: might lead to ptr to freed buf
@@ -292,6 +309,11 @@ namespace fleece {
             retain();
         }
 
+#ifdef SLICE_SUPPORTS_STRING_VIEW
+        explicit alloc_slice(std::string_view str)          :alloc_slice(slice(str)) {}
+        explicit alloc_slice(const char *str)               :alloc_slice(slice(str)) {} // disambiguation
+#endif
+
         ~alloc_slice()                                      {if (buf) release();}
         alloc_slice(const alloc_slice&) noexcept;
         alloc_slice& operator=(const alloc_slice&) noexcept;
@@ -326,6 +348,10 @@ namespace fleece {
         // disambiguation:
         alloc_slice& operator=(const char *str NONNULL)     {*this = (slice)str; return *this;}
         alloc_slice& operator=(const std::string &str)      {*this = (slice)str; return *this;}
+
+#ifdef SLICE_SUPPORTS_STRING_VIEW
+        alloc_slice& operator=(std::string_view str)        {*this = (slice)str; return *this;}
+#endif
 
         alloc_slice& retain() noexcept                      {FLSliceResult_Retain({buf,size}); return *this;}
         inline void release() noexcept                      {FLSliceResult_Release({buf,size});}
@@ -373,7 +399,7 @@ namespace fleece {
         constexpr slice_NONNULL(FLSlice s)                          :slice_NONNULL(s.buf,s.size) {}
         slice_NONNULL(alloc_slice s)                                :slice_NONNULL(s.buf,s.size) {}
         slice_NONNULL(const std::string &str)               :slice_NONNULL(str.data(),str.size()) {}
-#if __cplusplus >= 201700L
+#ifdef SLICE_SUPPORTS_STRING_VIEW
         slice_NONNULL(std::string_view str)                 :slice_NONNULL(str.data(),str.size()) {}
 #endif
         slice_NONNULL(std::nullptr_t) =delete;
