@@ -366,9 +366,10 @@ namespace fleece {
 #if FL_DETECT_COPIES
             // Warn if s appears to be the buffer of an existing alloc_slice:
             if (s.buf && isHeapAligned(s.buf)
-                      && ((size_t)s.buf & 0x1000) != 0   // reading another VM page may crash
-                      && ((const uint32_t*)s.buf)[-1] == kMagic)
+                      && ((size_t)s.buf & 0xFFF) >= 4   // reading another VM page may crash
+                      && ((const uint32_t*)s.buf)[-1] == kMagic) {
                 fprintf(stderr, "$$$$$ Copying existing alloc_slice at {%p, %zu}\n", s.buf, s.size);
+            } 
 #endif
             auto sb = newBuffer(s.size);
             memcpy(&sb->_buf, s.buf, s.size);
