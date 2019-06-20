@@ -298,6 +298,10 @@ namespace fleece {
             return *this;
         }
 
+        /** Creates an alloc_slice that has an extra null (0) byte immediately after the end of the
+            data. This allows the contents of the alloc_slice to be used as a C string. */
+        static alloc_slice nullPaddedString(pure_slice);
+
         alloc_slice& operator= (pure_slice s);
         alloc_slice& operator= (FLSlice s)                 {return operator=(slice(s.buf, s.size));}
         alloc_slice& operator= (FLHeapSlice) noexcept;
