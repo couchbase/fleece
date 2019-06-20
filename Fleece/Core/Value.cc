@@ -51,9 +51,16 @@ namespace fleece { namespace impl {
     };
 
 
-    EVEN_ALIGNED const Value
-        Value::kNullInstance      = Value{kSpecialTag, kSpecialValueNull},
-        Value::kUndefinedInstance = Value{kSpecialTag, kSpecialValueUndefined};
+    class ConstValue : public Value {
+    public:
+        constexpr ConstValue(internal::tags tag, int tiny, int byte1 = 0)
+        :Value(tag, tiny, byte1) { }
+    };
+
+    EVEN_ALIGNED static constexpr const ConstValue
+        kNullInstance           {kSpecialTag, kSpecialValueNull},
+        kUndefinedInstance      {kSpecialTag, kSpecialValueUndefined};
+
     const Value* const Value::kNullValue      = &kNullInstance;
     const Value* const Value::kUndefinedValue = &kUndefinedInstance;
 

@@ -205,8 +205,6 @@ namespace fleece { namespace impl {
                 (uint8_t)byte1}
         { }
 
-        static const Value kNullInstance, kUndefinedInstance;
-
         static const Value* findRoot(slice) noexcept;
         bool validate(const void* dataStart, const void *dataEnd) const noexcept;
 
