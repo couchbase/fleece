@@ -406,6 +406,16 @@ namespace fleece {
         retain();
     }
 
+    alloc_slice alloc_slice::nullPaddedString(pure_slice str) {
+        // Leave a trailing null byte after the end, so it can be used as a C string
+        alloc_slice a(str.size + 1);
+        memcpy((char*)a.buf, str.buf, str.size);
+        ((char*)a.buf)[str.size] = '\0';
+        a.shorten(str.size);            // the null byte is not part of the slice
+        return a;
+    }
+
+
     alloc_slice& alloc_slice::operator=(const alloc_slice& s) noexcept {
         if (s.buf != buf) {
             release();
