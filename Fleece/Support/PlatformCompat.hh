@@ -49,8 +49,6 @@
     #define cbl_strdup _strdup
     #define cbl_getcwd _getcwd
 
-    #define fnmatch(pattern, string, flags) PathMatchSpec(string, pattern)
-
     #include <winapifamily.h>
 
 #else
