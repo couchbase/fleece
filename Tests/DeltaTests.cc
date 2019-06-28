@@ -85,7 +85,7 @@ TEST_CASE("Delta scalars", "[delta]") {
 
 TEST_CASE("Delta strings", "[delta]") {
     JSONDelta::gMinStringDiffLength = 36;
-    JSONDelta::gTextDiffTimeout = 9999;
+    JSONDelta::gTextDiffTimeout = -1; // No timeout since it has platform-specific effects
 
     // Empty string
     checkDelta("'hi'", "''", "[\"\"]");

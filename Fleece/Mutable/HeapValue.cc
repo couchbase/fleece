@@ -26,7 +26,14 @@ namespace fleece { namespace impl { namespace internal {
 
 
     void* HeapValue::operator new(size_t size, size_t valueSize) {
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Winvalid-offsetof"
+#endif
         static_assert(offsetof(HeapValue, _header) & 1, "_header must be at odd address");
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
         return ::operator new(size + valueSize);
     }
 

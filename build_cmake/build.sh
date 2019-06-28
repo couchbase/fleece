@@ -6,3 +6,5 @@ cmake ..
 
 core_count=`getconf _NPROCESSORS_ONLN`
 make -j `expr $core_count + 1`
+make FleeceTests -j `expr $core_count + 1`
+
