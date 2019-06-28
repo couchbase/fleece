@@ -1,5 +1,8 @@
 include("${CMAKE_CURRENT_LIST_DIR}/platform_base.cmake")
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fobjc-arc")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-arc")
+
 function(set_source_files)
     set(oneValueArgs RESULT)
     cmake_parse_arguments(APPLE_SSS "" "${oneValueArgs}" "" ${ARGN})
