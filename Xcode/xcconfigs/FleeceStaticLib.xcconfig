@@ -6,9 +6,10 @@
 //  Copyright © 2018 Couchbase. All rights reserved.
 //
 
-CLANG_ENABLE_MODULES            = NO;
-CLANG_ENABLE_MODULE_DEBUGGING   = NO;
-DEBUG_INFORMATION_FORMAT        = dwarf;
+CLANG_ENABLE_MODULES            = NO
+CLANG_ENABLE_MODULE_DEBUGGING   = NO
+DEBUG_INFORMATION_FORMAT        = dwarf
 EXECUTABLE_PREFIX               = lib
-GENERATE_MASTER_OBJECT_FILE     = NO;
+GCC_PREPROCESSOR_DEFINITIONS    = $(inherited)  FLEECE_EXPORTS
+GENERATE_MASTER_OBJECT_FILE     = NO
 PRODUCT_NAME                    = fleeceStatic

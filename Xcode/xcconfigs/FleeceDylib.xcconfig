@@ -15,3 +15,5 @@ DYLIB_INSTALL_NAME_BASE     = @rpath
 EXECUTABLE_PREFIX           = lib
 
 PRODUCT_NAME                = fleece
+
+OTHER_LDFLAGS               = $(inherited) -all_load
