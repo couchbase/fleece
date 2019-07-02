@@ -13,6 +13,22 @@
 #include <string.h>
 
 
+// Export/import stuff:  see <https://gcc.gnu.org/wiki/Visibility>
+#if defined(_WIN32) || defined(__CYGWIN__)
+    #ifdef FLEECE_EXPORTS
+        #define FLPUBLIC __declspec(dllexport)
+    #else
+        #define FLPUBLIC __declspec(dllimport)
+    #endif
+#else
+    #ifdef FLEECE_EXPORTS
+        #define FLPUBLIC  __attribute__ ((visibility ("default")))
+    #else
+        #define FLPUBLIC
+    #endif
+#endif
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -86,17 +102,17 @@ static inline FLSlice FLStr(const char *str) {
 
 
 /** Equality test of two slices. */
-bool FLSlice_Equal(FLSlice a, FLSlice b);
+FLPUBLIC bool FLSlice_Equal(FLSlice a, FLSlice b);
 
 /** Lexicographic comparison of two slices; basically like memcmp(), but taking into account
     differences in length. */
-int FLSlice_Compare(FLSlice, FLSlice);
+FLPUBLIC int FLSlice_Compare(FLSlice, FLSlice);
 
 /** Increments the ref-count of a FLSliceResult. */
-FLSliceResult FLSliceResult_Retain(FLSliceResult);
+FLPUBLIC FLSliceResult FLSliceResult_Retain(FLSliceResult);
 
 /** Decrements the ref-count of a FLSliceResult, freeing its memory if it reached zero. */
-void FLSliceResult_Release(FLSliceResult);
+FLPUBLIC void FLSliceResult_Release(FLSliceResult);
 
 /** Frees a FLSliceResult. (Actually it decrements its ref-count, only freeing the memory it
     points to when the ref-count reaches zero.)
@@ -106,7 +122,7 @@ static inline void FLSliceResult_Free(FLSliceResult s) {
 }
 
 /** Allocates an FLSliceResult, copying the given slice. */
-FLSliceResult FLSlice_Copy(FLSlice);
+FLPUBLIC FLSliceResult FLSlice_Copy(FLSlice);
 
 
 /** @} */

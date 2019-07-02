@@ -54,4 +54,7 @@ GCC_NO_COMMON_BLOCKS                               = YES
 GCC_PREFIX_HEADER                                  = Fleece/Support/Fleece.pch
 GCC_PRECOMPILE_PREFIX_HEADER                       = YES
 
+GCC_SYMBOLS_PRIVATE_EXTERN = YES
+ENABLE_TESTABILITY = NO                            // testability prevents GCC_SYMBOLS_PRIVATE_EXTERN
+
 COMBINE_HIDPI_IMAGES                               = YES    // Stop Xcode from complaining

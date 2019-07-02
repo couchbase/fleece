@@ -417,7 +417,6 @@
 		27CA08401F6B0E9400FF8C71 /* Dict.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Dict.hh; sourceTree = "<group>"; };
 		27CA08411F6B0E9400FF8C71 /* Dict.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Dict.cc; sourceTree = "<group>"; };
 		27CEE41920EFE79D00089A85 /* Stopwatch.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Stopwatch.hh; sourceTree = "<group>"; };
-		27CEE44F20F00B4E00089A85 /* Fleece.exp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.exports; path = Fleece.exp; sourceTree = "<group>"; };
 		27D57719212B3032002410BA /* Bitmap.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Bitmap.cc; sourceTree = "<group>"; };
 		27D721201F8C04F100AA4458 /* MValue+ObjC.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = "MValue+ObjC.mm"; sourceTree = "<group>"; };
 		27D721221F8C053900AA4458 /* MValue+ObjC.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "MValue+ObjC.hh"; sourceTree = "<group>"; };
@@ -759,7 +758,6 @@
 				2776AA2F2088FEC3004ACE85 /* function_ref.hh */,
 				27F25A8320A6560900E181FA /* LibC++Debug.cc */,
 				273483F71DDA59B900B27A8C /* Fleece.pch */,
-				27CEE44F20F00B4E00089A85 /* Fleece.exp */,
 				27AEFAC721091A8C00106ED8 /* diff_match_patch.hh */,
 			);
 			path = Support;
