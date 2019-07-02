@@ -48,34 +48,34 @@ extern "C" {
     
     /** Writes a Core Foundation (or Objective-C) object to an Encoder.
         Supports all the JSON types, as well as CFData. */
-    bool FLEncoder_WriteNSObject(FLEncoder, id);
+    FLPUBLIC bool FLEncoder_WriteNSObject(FLEncoder, id);
 
 
     /** Creates an NSMapTable configured for storing shared NSStrings for Fleece decoding. */
-    NSMapTable* FLCreateSharedStringsTable(void);
+    FLPUBLIC NSMapTable* FLCreateSharedStringsTable(void);
 
     
     /** Returns a Value as a corresponding (autoreleased) Foundation object. */
-    id FLValue_GetNSObject(FLValue, NSMapTable *sharedStrings);
+    FLPUBLIC id FLValue_GetNSObject(FLValue, NSMapTable *sharedStrings);
 
 
     /** Same as FLDictGet, but takes the key as an NSString. */
-    FLValue FLDict_GetWithNSString(FLDict, NSString*);
+    FLPUBLIC FLValue FLDict_GetWithNSString(FLDict, NSString*);
 
 
     /** Returns an FLDictIterator's current key as an NSString. */
-    NSString* FLDictIterator_GetKeyAsNSString(const FLDictIterator *i,
-                                              NSMapTable *sharedStrings);
+    FLPUBLIC NSString* FLDictIterator_GetKeyAsNSString(const FLDictIterator *i,
+                                                       NSMapTable *sharedStrings);
 
     /** Same as FLEncoder_Finish, but returns result as NSData or error as NSError. */
-    NSData* FLEncoder_FinishWithNSData(FLEncoder, NSError**);
+    FLPUBLIC NSData* FLEncoder_FinishWithNSData(FLEncoder, NSError**);
 
 
     /** NSError domain string for Fleece errors */
-    extern NSString* const FLErrorDomain;
+    FLPUBLIC extern NSString* const FLErrorDomain;
 
 
-    @interface NSObject (Fleece)
+    FLPUBLIC @interface NSObject (Fleece)
     /** This method is called on objects being encoded by
         FLEncoder_WriteNSObject (even recursively) if the encoder doesn't know how to encode
         them. You can implement this method in your classes. In it, call the encoder to write
