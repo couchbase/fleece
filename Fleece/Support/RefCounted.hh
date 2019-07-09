@@ -44,24 +44,22 @@ namespace fleece {
         friend void release(T*) noexcept;
 
 #if DEBUG
-        void _retain() noexcept                 {_careful_retain();}
-        void _release() noexcept                {_careful_release();}
+        void _retain() const noexcept                 {_careful_retain();}
+        void _release() const noexcept                {_careful_release();}
 #else
-        inline void _retain() noexcept          { ++_refCount; }
-        inline void _release() noexcept         { if (--_refCount <= 0) delete this; }
+        inline void _retain() const noexcept          { ++_refCount; }
+        inline void _release() const noexcept         { if (--_refCount <= 0) delete this; }
 #endif
-        inline void _retain() const noexcept    {const_cast<RefCounted*>(this)->_retain();}
-        inline void _release() const noexcept   {const_cast<RefCounted*>(this)->_release();}
 
         static constexpr int32_t kCarefulInitialRefCount = -6666666;
-        void _careful_retain() noexcept;
-        void _careful_release() noexcept;
+        void _careful_retain() const noexcept;
+        void _careful_release() const noexcept;
 
-        std::atomic<int32_t> _refCount
+        mutable std::atomic<int32_t> _refCount
 #if DEBUG
-                                        {kCarefulInitialRefCount};
+                                               {kCarefulInitialRefCount};
 #else
-                                        {0};
+                                               {0};
 #endif
     };
 
@@ -135,10 +133,10 @@ namespace fleece {
     class RetainedConst {
     public:
         RetainedConst() noexcept                        :_ref(nullptr) { }
-        RetainedConst(const T *t) noexcept              :_ref(retain(const_cast<T*>(t))) { }
+        RetainedConst(const T *t) noexcept              :_ref(retain(t)) { }
         RetainedConst(const RetainedConst &r) noexcept  :_ref(retain(r._ref)) { }
         RetainedConst(RetainedConst &&r) noexcept       :_ref(r._ref) {r._ref = nullptr;}
-        ~RetainedConst()                                {release(const_cast<T*>(_ref));}
+        ~RetainedConst()                                {release(_ref);}
 
         operator const T* () const noexcept             {return _ref;}
         const T* operator-> () const noexcept           {return _ref;}
@@ -146,8 +144,8 @@ namespace fleece {
 
         RetainedConst& operator=(const T *t) noexcept {
             auto oldRef = _ref;
-            _ref = retain(const_cast<T*>(t));
-            release(const_cast<T*>(oldRef));
+            _ref = retain(t);
+            release(oldRef);
             return *this;
         }
 

@@ -438,9 +438,11 @@ namespace fleece {
     }
 
     alloc_slice& alloc_slice::operator=(const alloc_slice& s) noexcept {
-        const_cast<alloc_slice&>(s).retain();
-        release();
-        assignFrom(s);
+        if (s.buf != buf) {
+            release();
+            assignFrom(s);
+            retain();
+        }
         return *this;
     }
 

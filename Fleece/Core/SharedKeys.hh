@@ -133,10 +133,10 @@ namespace fleece { namespace impl {
 
         fleece::StringTable _table;                     // Hash table mapping slice->int
         size_t _maxKeyLength {kDefaultMaxKeyLength};    // Max length of string I will add
-        std::mutex _mutex;
+        mutable std::mutex _mutex;
         size_t _count {0};
         std::array<alloc_slice, kMaxCount> _byKey;      // Reverse mapping, int->slice
-        std::vector<PlatformString> _platformStringsByKey; // Reverse mapping, int->platform key
+        mutable std::vector<PlatformString> _platformStringsByKey; // Reverse mapping, int->platform key
     };
 
 

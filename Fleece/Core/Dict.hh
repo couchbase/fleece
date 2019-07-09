@@ -98,7 +98,7 @@ namespace fleece { namespace impl {
 
             Array::impl _a;
             const Value *_key, *_value;
-            const SharedKeys *_sharedKeys {nullptr};
+            mutable const SharedKeys *_sharedKeys {nullptr};
             std::unique_ptr<iterator> _parent;
             int _keyCmp {-1};
 

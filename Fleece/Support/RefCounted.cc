@@ -23,7 +23,7 @@
 
 namespace fleece {
 
-    static void fail(RefCounted *obj, const char *what, int refCount) {
+    static void fail(const RefCounted *obj, const char *what, int refCount) {
         char message[100];
         sprintf(message, "RefCounted object at %p %s while it had an invalid refCount of %d",
              obj, what, refCount);
@@ -57,7 +57,7 @@ namespace fleece {
     // the object.
 
 
-    void RefCounted::_careful_retain() noexcept {
+    void RefCounted::_careful_retain() const noexcept {
         auto oldRef = _refCount++;
 
         // Special case: the initial retain of a new object that takes it to refCount 1
@@ -74,7 +74,7 @@ namespace fleece {
     }
 
 
-    void RefCounted::_careful_release() noexcept {
+    void RefCounted::_careful_release() const noexcept {
         auto oldRef = _refCount--;
 
         // If the refCount was 0 we have a bug where another thread is destructing

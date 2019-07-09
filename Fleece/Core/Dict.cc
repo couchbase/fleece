@@ -413,7 +413,7 @@ namespace fleece { namespace impl {
 
     SharedKeys* Dict::iterator::findSharedKeys() const {
         auto sk = Doc::sharedKeys(_a._first);
-        const_cast<Dict::iterator*>(this)->_sharedKeys = sk;
+        _sharedKeys = sk;
         assert(sk || gDisableNecessarySharedKeysCheck);
         return sk;
     }

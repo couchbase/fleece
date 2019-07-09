@@ -21,7 +21,7 @@
 #include "FleeceException.hh"
 
 
-#define LOCK(MUTEX)     lock_guard<mutex> _lock(const_cast<mutex&>(MUTEX))
+#define LOCK(MUTEX)     lock_guard<mutex> _lock(MUTEX)
 
 
 namespace fleece { namespace impl {
@@ -153,10 +153,9 @@ namespace fleece { namespace impl {
         throwIf(key < 0, InvalidData, "key must be non-negative");
         throwIf((unsigned)key >= _count, InvalidData, "key is not yet known");
         LOCK(_mutex);
-        auto &strings = const_cast<SharedKeys*>(this)->_platformStringsByKey;
         if ((unsigned)key >= _platformStringsByKey.size())
-            strings.resize(key + 1);
-        strings[key] = platformKey;
+            _platformStringsByKey.resize(key + 1);
+        _platformStringsByKey[key] = platformKey;
     }
 
 

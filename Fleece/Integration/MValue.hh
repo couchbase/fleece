@@ -99,7 +99,7 @@ namespace fleece {
                                     const_cast<MCollection<Native>*>(parent),
                                     cacheIt);
                 if (cacheIt)
-                    const_cast<MValue*>(this)->_native = n;
+                    _native = n;
                 return n;
             }
         }
@@ -154,8 +154,8 @@ namespace fleece {
             }
         }
 
-        Value  _value;              // Fleece value; null if I'm new or modified
-        Native _native {nullptr};   // Cached or new/modified native value
+        Value  _value;                      // Fleece value; null if I'm new or modified
+        mutable Native _native {nullptr};   // Cached or new/modified native value
     };
 
 
