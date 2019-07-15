@@ -19,6 +19,7 @@
 #pragma once
 
 #include "fleece/slice.hh"
+#include <string>
 #include <vector>
 
 namespace fleece {
@@ -37,11 +38,16 @@ namespace fleece {
         static KeyTree fromStrings(std::vector<slice>);
 
         unsigned operator[] (slice str) const;
-        slice operator[] (unsigned id) const;
+        std::string operator[] (unsigned id) const;
 
         slice encodedData() const       {return _ownedData;}
 
+        void dump();
+
     private:
+        static uint8_t commonPrefixLength(slice str0, slice str1);
+        void dump(const uint8_t *tree, unsigned depth, unsigned indent =0, unsigned prefix =0);
+        
         alloc_slice _ownedData;
         const void * _data;
     };

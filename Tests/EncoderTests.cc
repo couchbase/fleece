@@ -875,18 +875,20 @@ public:
 
 #pragma mark - KEY TREE:
 
+
     TEST_CASE_METHOD(EncoderTests, "KeyTree", "[Encoder]") {
         bool verbose = false;
-
-        char eeeeeeee[1024] = "";
-        memset(&eeeeeeee[0], 'e', sizeof(eeeeeeee)-1);
 
 #if 1
         const size_t n = sizeof(mn_words)/sizeof(char*);
         const char* rawStrings[n];
         memcpy(rawStrings, mn_words, sizeof(mn_words));
+        char eeeeeeee[1024] = "";
+        memset(&eeeeeeee[0], '@', sizeof(eeeeeeee)-1);
         rawStrings[0] = eeeeeeee;
 #else
+        char eeeeeeee[1024] = "";
+        memset(&eeeeeeee[0], 'e', sizeof(eeeeeeee)-1);
         const char* rawStrings[] = {"alphabetically first", "bravo", "charlie", "delta", eeeeeeee,
             "foxtrot", "ganon in pig form as slain by link at the end of ocarina of time", "hi",
             "i", "jodhpur",
@@ -918,10 +920,10 @@ public:
             REQUIRE(!ids[id]);
             ids[id] = true;
 
-            slice lookup = keys[id];
+            auto lookup = keys[id];
             INFO("    id = " << id << ", lookup = " << lookup );
-            REQUIRE(lookup.buf);
-            REQUIRE(lookup == strings[i]);
+            REQUIRE(!lookup.empty());
+            REQUIRE(slice(lookup) == strings[i]);
         }
 
         REQUIRE(keys[slice("")] == 0);
@@ -931,11 +933,13 @@ public:
         REQUIRE(keys[slice("whiskex")] == 0);
         REQUIRE(keys[slice("whiskez")] == 0);
 
-        REQUIRE(keys[0].buf == nullptr);
-        REQUIRE(keys[(unsigned)n+1].buf == nullptr);
-        REQUIRE(keys[(unsigned)n+2].buf == nullptr);
-        REQUIRE(keys[(unsigned)n+28].buf == nullptr);
-        REQUIRE(keys[(unsigned)9999].buf == nullptr);
+        REQUIRE(keys[0] == "");
+        REQUIRE(keys[(unsigned)n+1] == "");
+        REQUIRE(keys[(unsigned)n+2] == "");
+        REQUIRE(keys[(unsigned)n+28] == "");
+        REQUIRE(keys[(unsigned)9999] == "");
+
+        keys.dump();
     }
 
 } }
