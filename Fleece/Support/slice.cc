@@ -294,7 +294,8 @@ namespace fleece {
         slice decoded = readBase64Into(result);
         if (decoded.size == 0)
             return {};
-        assert(decoded.size == expectedLen);
+        assert(decoded.size <= expectedLen);
+        result.resize(decoded.size);
         return result;
     }
 
