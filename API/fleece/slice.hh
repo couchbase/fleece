@@ -150,18 +150,19 @@ namespace fleece {
         static T* reallocBytes(T* bytes, size_t newSz);
 
 #ifdef __APPLE__
+        explicit pure_slice(CFDataRef data);
         CFStringRef createCFString() const;
         CFDataRef createCFData() const;
 #ifdef __OBJC__
-        pure_slice(NSData* data)
-        :pure_slice(data.bytes, data.length) {}
+        explicit pure_slice(NSData* data)                    :pure_slice((__bridge CFDataRef)data) {}
 
         NSData* copiedNSData() const {
             return buf ? [[NSData alloc] initWithBytes: buf length: size] : nil;
         }
 
         /** Creates an NSData using initWithBytesNoCopy and freeWhenDone:NO.
-            The data is not copied and does not belong to the NSData object. */
+            The data is not copied and does not belong to the NSData object, so make sure it
+            remains valid for the lifespan of that object!. */
         NSData* uncopiedNSData() const {
             if (!buf)
                 return nil;
@@ -172,6 +173,7 @@ namespace fleece {
         NSString* asNSString(NSMapTable *sharedStrings) const;
 #endif
 #endif
+        
     protected:
         void setBuf(const void *b NONNULL)          {const_cast<const void*&>(buf) = b;}
         void setSize(size_t s)                      {const_cast<size_t&>(size) = s;}
@@ -229,8 +231,11 @@ namespace fleece {
         operator FLSlice () const                   {return {buf, size};}
         inline explicit operator FLSliceResult () const;
 
+#ifdef __APPLE__
+        explicit slice(CFDataRef data)                       :pure_slice(data) {}
 #ifdef __OBJC__
-        slice(NSData* data)                         :pure_slice(data) {}
+        explicit slice(NSData* data)                         :pure_slice(data) {}
+#endif
 #endif
     };
 
@@ -331,11 +336,16 @@ namespace fleece {
         void shorten(size_t s)                          {assert(s <= size); pure_slice::setSize(s);}
 
 #ifdef __APPLE__
+        explicit alloc_slice(CFDataRef);
         explicit alloc_slice(CFStringRef);
 
+        /** Creates a CFDataDataRef. The data is not copied: the CFDataRef points to the same
+            bytes as this alloc_slice, which is retained until the CFDataRef is freed. */
         CFDataRef createCFData() const;
 
 #ifdef __OBJC__
+        explicit alloc_slice(NSData *data)             :alloc_slice((__bridge CFDataRef)data) { }
+
         /** Creates an NSData using initWithBytesNoCopy and a deallocator that releases this
             alloc_slice. The data is not copied and does not belong to the NSData object. */
         NSData* uncopiedNSData() const                 {return CFBridgingRelease(createCFData());}

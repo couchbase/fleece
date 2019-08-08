@@ -24,6 +24,11 @@
 
 namespace fleece {
 
+    pure_slice::pure_slice(CFDataRef data)
+    :buf(CFDataGetBytePtr(data))
+    ,size(CFDataGetLength(data))
+    { }
+
     CFStringRef pure_slice::createCFString() const {
         if (!buf)
             return nullptr;
@@ -37,6 +42,11 @@ namespace fleece {
             return nullptr;
         return CFDataCreate(nullptr, (const UInt8*)buf, size);
     }
+
+
+    alloc_slice::alloc_slice(CFDataRef data)
+    :alloc_slice(slice(data))
+    { }
 
 
     alloc_slice::alloc_slice(CFStringRef str) {
