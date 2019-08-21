@@ -216,7 +216,7 @@ namespace fleece { namespace impl { namespace internal {
 
 
     void HeapDict::writeTo(Encoder &enc) {
-        if (_source && _map.size() + 1 < count() && !tooManyAncestors()) {
+        if (enc.valueIsInBase(_source) && _map.size() + 1 < count() && !tooManyAncestors()) {
             // Write just the changed keys, with _source as parent:
             enc.beginDictionary(_source, _map.size());
             for (auto &i : _map) {
