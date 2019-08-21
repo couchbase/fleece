@@ -28,7 +28,8 @@ namespace fleece { namespace impl {
         ValueSlot(ValueSlot &&other) noexcept;
         ValueSlot& operator= (ValueSlot &&other) noexcept;
 
-        explicit operator bool() const                  {return _isInline || _asValue != nullptr;}
+        bool empty() const                              {return !_isInline && _asValue == nullptr;}
+        explicit operator bool() const                  {return !empty();}
 
         const Value* asValue() const;
         const Value* asValueOrUndefined() const;

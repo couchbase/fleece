@@ -507,6 +507,14 @@ namespace fleece {
 #pragma mark - ENCODING:
 
 
+    class FakePersistentSharedKeys : public PersistentSharedKeys {
+    protected:
+        bool read() override                    {return _persistedData && loadFrom(_persistedData);}
+        void write(slice encodedData) override  {_persistedData = encodedData;}
+        alloc_slice _persistedData;
+    };
+
+
     TEST_CASE("Encoding mutable array", "[Mutable]") {
         alloc_slice data;
         {
@@ -547,7 +555,9 @@ namespace fleece {
 
 
     static void testEncodingMutableDictWithSharedKeys(SharedKeys *sk) {
+        auto psk = dynamic_cast<PersistentSharedKeys*>(sk);
         alloc_slice data;
+        if (psk) psk->transactionBegan();
         {
             Encoder enc;
             enc.setSharedKeys(sk);
@@ -565,6 +575,8 @@ namespace fleece {
             enc.endDictionary();
             data = enc.finish();
         }
+        if (psk) {psk->save(); psk->transactionEnded();}
+
         Scope original(data, sk);
         const Dict* originalDict = Value::fromData(data)->asDict();
         std::cerr << "Contents:      " << originalDict->toJSON().asString() << "\n";
@@ -604,12 +616,14 @@ namespace fleece {
             CHECK(!i);
         }
 
+        if (psk) psk->transactionBegan();
         Encoder enc2;
         enc2.setSharedKeys(sk);
         enc2.setBase(data);
         enc2.reuseBaseStrings();
         enc2.writeValue(update);
         alloc_slice delta = enc2.finish();
+        if (psk) {psk->save(); psk->transactionEnded();}
         REQUIRE(delta.size == (sk ? 24 : 32));      // may change slightly with changes to implementation
 
         // Check that removeAll works when there's a base Dict:
@@ -656,6 +670,57 @@ namespace fleece {
 
     TEST_CASE("Encoding mutable dict with shared keys", "[Mutable][SharedKeys]") {
         testEncodingMutableDictWithSharedKeys(retained(new SharedKeys));
+    }
+
+    TEST_CASE("Encoding mutable dict with persistent shared keys", "[Mutable][SharedKeys]") {
+        testEncodingMutableDictWithSharedKeys(retained(new FakePersistentSharedKeys));
+    }
+
+
+    TEST_CASE("Mutable dict with new key and persistent shared keys") {
+        // Regression test for <https://github.com/couchbaselabs/couchbase-lite-C/issues/18>
+        // MutableDict / HeapDict can't create a new shared key in its setter, because if the
+        // SharedKeys are persistent and this is outside a transaction, it'll fail.
+        auto psk = retained(new FakePersistentSharedKeys);
+        Retained<Doc> doc;
+        {
+            psk->transactionBegan();
+            Encoder enc;
+            enc.setSharedKeys(psk);
+            enc.beginDictionary();
+            enc.writeKey("Asleep");
+            enc << "true";
+            enc.endDictionary();
+            doc = enc.finishDoc();
+            psk->save();
+            psk->transactionEnded();
+        }
+
+        auto root = doc->root()->asDict();
+        Retained<MutableDict> mut = MutableDict::newDict(root);
+
+        mut->set("key"_sl, 123);                    // Should not register "key" as a new shared key
+        CHECK(mut->get("key"_sl)->asInt() == 123);
+
+        Retained<Doc> doc2;
+        {
+            psk->transactionBegan();
+            Encoder enc;
+            enc.setSharedKeys(psk);
+            enc.writeValue(mut);                    // This will cause "key" to be registered
+            doc2 = enc.finishDoc();
+            psk->save();
+            psk->transactionEnded();
+        }
+
+        auto root2 = doc2->root()->asDict();
+        CHECK(root2->get("key"_sl)->asInt() == 123);
+
+        CHECK(mut->get("key"_sl)->asInt() == 123);  // Make sure "key" being shared doesn't confuse mut
+
+        mut->set("key"_sl, 456);                    // Make sure "key" doesn't get added again as an int
+        CHECK(mut->count() == 2);
+        CHECK(mut->get("key"_sl)->asInt() == 456);
     }
 
 

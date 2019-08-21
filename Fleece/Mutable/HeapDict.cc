@@ -60,7 +60,17 @@ namespace fleece { namespace impl { namespace internal {
 
 
     ValueSlot* HeapDict::_findValueFor(slice key) const noexcept {
-        return _findValueFor(encodeKey(key));
+        if (_map.empty())
+            return nullptr;
+        key_t encoded = encodeKey(key);
+        auto slot = _findValueFor(encoded);
+        if (!slot && encoded.shared()) {
+            // This string might have become a shared key after I added it, in which case the
+            // above lookup for the encoded (int) version would fail. Try again with the string
+            // version:
+            slot = _findValueFor(key_t(key));
+        }
+        return slot;
     }
 
 
@@ -94,17 +104,17 @@ namespace fleece { namespace impl { namespace internal {
     // this is the innards of the set() method
     ValueSlot& HeapDict::setting(slice stringKey) {
         key_t key;
-        int intKey;
-        if (_sharedKeys && _sharedKeys->encodeAndAdd(stringKey, intKey))
-            key = intKey;
-        else
+        ValueSlot *slotp = _findValueFor(stringKey);
+        if (slotp) {
             key = stringKey;
-
-        auto &val = _makeValueFor(key);
-        if (!val && !(_source && _source->get(key)))
+        } else {
+            key = encodeKey(stringKey);
+            slotp = &_makeValueFor(key);
+        }
+        if (slotp->empty() && !(_source && _source->get(key)))
             ++_count;
         markChanged();
-        return val;
+        return *slotp;
     }
 
 
