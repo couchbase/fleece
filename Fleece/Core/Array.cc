@@ -131,10 +131,6 @@ namespace fleece { namespace impl {
         return isMutable() ? (MutableArray*)this : nullptr;
     }
 
-    MutableArray* Array::mutableCopy(CopyFlags flags) const {
-        return MutableArray::newArray(this, flags);
-    } 
-
     EVEN_ALIGNED static constexpr Array kEmptyArrayInstance;
     const Array* const Array::kEmpty = &kEmptyArrayInstance;
 
