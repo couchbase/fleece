@@ -96,6 +96,7 @@ namespace fleece {
         const uint8_t* findByteNotIn(pure_slice targetBytes) const;
 
         int compare(pure_slice) const noexcept;
+        int caseEquivalentCompare(pure_slice) const noexcept;
         bool caseEquivalent(pure_slice) const noexcept;
         bool operator==(const pure_slice &s) const       {return size==s.size &&
                                                                  memcmp(buf, s.buf, size) == 0;}
@@ -213,6 +214,8 @@ namespace fleece {
                                                      else {moveStart(delta); return true;}}
         slice read(size_t nBytes) noexcept;
         slice readAtMost(size_t nBytes) noexcept;
+        slice readToDelimiter(slice delim, bool skipDelim =true) noexcept;
+        slice readBytesInSet(slice set) noexcept;
         bool readInto(slice dst) noexcept;
 
         bool writeFrom(slice) noexcept;

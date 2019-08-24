@@ -54,6 +54,16 @@ namespace fleece {
         }
     }
 
+    int pure_slice::caseEquivalentCompare(pure_slice b) const noexcept {
+        size_t minSize = std::min(size, b.size);
+        for (size_t i = 0; i < minSize; i++) {
+            int cmp = tolower((*this)[i]) - tolower(b[i]);
+            if (cmp != 0)
+                return cmp;
+        }
+        return (int)size - (int)b.size;
+    }
+
     bool pure_slice::caseEquivalent(pure_slice b) const noexcept {
         if (size != b.size)
             return false;
@@ -77,6 +87,25 @@ namespace fleece {
         moveStart(nBytes);
         return result;
     }
+
+    slice slice::readToDelimiter(slice delim, bool skipDelim) noexcept {
+        slice found = find(delim);
+        if (!found)
+            return nullslice;
+        slice result(buf, found.buf);
+        setStart(skipDelim ? found.end() : found.buf);
+        return result;
+    }
+
+    slice slice::readBytesInSet(slice set) noexcept {
+        const void *next = findByteNotIn(set);
+        if (!next)
+            next = end();
+        slice result(buf, next);
+        setStart(next);
+        return result;
+    }
+
 
     bool slice::readInto(slice dst) noexcept {
         if (dst.size > size)
