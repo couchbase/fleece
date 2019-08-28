@@ -88,12 +88,12 @@ namespace fleece {
         return result;
     }
 
-    slice slice::readToDelimiter(slice delim, bool skipDelim) noexcept {
+    slice slice::readToDelimiter(slice delim) noexcept {
         slice found = find(delim);
         if (!found)
             return nullslice;
         slice result(buf, found.buf);
-        setStart(skipDelim ? found.end() : found.buf);
+        setStart(found.end());
         return result;
     }
 
