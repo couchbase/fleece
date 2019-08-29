@@ -122,6 +122,7 @@ namespace fleece {
         const void* writeToNewChunk(slice);
         void addChunk(size_t capacity);
         void freeChunk(slice);
+        void migrateInitialBuf(const Writer& other);
 
         Writer(const Writer&) = delete;
         const Writer& operator=(const Writer&) = delete;
