@@ -176,14 +176,19 @@ namespace fleece {
         // If a simple std::move is used for _chunks, there will be a leftover
         // garbage entry pointing to the old initial buffer of the previous
         // object. Replace it with the current initial buf.
-        int pos = 0;
         for(auto& chunk : _chunks) {
             if(chunk.buf == other._initialBuf) {
-                _chunks[pos] = slice(_initialBuf, sizeof(_initialBuf));
-                return;
+                chunk = slice(_initialBuf, chunk.size);
+                break;
             }
+        }
 
-            pos++;
+        // By this time, _available has been moved from the old object
+        slice oldInitialBuf = {other._initialBuf, sizeof(other._initialBuf)};
+        if(oldInitialBuf.containsAddress(_available.buf)) {
+            const int availableOffset = oldInitialBuf.offsetOf(_available.buf);
+            _available = slice(_initialBuf, sizeof(_initialBuf));
+            _available.moveStart(availableOffset);
         }
     }
 
