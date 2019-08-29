@@ -125,7 +125,8 @@ TEST_CASE("API Encoder", "[API][Encoder]") {
 
 
 TEST_CASE("API Paths", "[API][Encoder]") {
-    Doc doc = Doc::fromJSON(readTestFile(kBigJSONTestFileName));
+    alloc_slice fleeceData = readTestFile(kBigJSONTestFileName);
+    Doc doc = Doc::fromJSON(fleeceData);
     auto root = doc.root();
     CHECK(root.asArray().count() == kBigJSONTestCount);
 
