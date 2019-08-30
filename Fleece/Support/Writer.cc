@@ -44,12 +44,13 @@ namespace fleece {
 
 
     Writer::Writer(Writer&& w) noexcept
-    :_available(w._available)
+    :_available(std::move(w._available))
     ,_chunks(std::move(w._chunks))
     ,_chunkSize(w._chunkSize)
     ,_length(w._length)
     ,_outputFile(w._outputFile)
     {
+        migrateInitialBuf(w);
         memcpy(_initialBuf, w._initialBuf, sizeof(_initialBuf));
         w._outputFile = nullptr;
     }
@@ -64,9 +65,10 @@ namespace fleece {
 
 
     Writer& Writer::operator= (Writer&& w) noexcept {
-        _available = w._available;
+        _available = std::move(w._available);
         _length = w._length;
         _chunks = std::move(w._chunks);
+        migrateInitialBuf(w);
         _outputFile = w._outputFile;
         memcpy(_initialBuf, w._initialBuf, sizeof(_initialBuf));
         w._outputFile = nullptr;
@@ -169,6 +171,27 @@ namespace fleece {
         if (chunk.buf != &_initialBuf)
             chunk.free();
     }
+
+    void Writer::migrateInitialBuf(const Writer& other) {
+        // If a simple std::move is used for _chunks, there will be a leftover
+        // garbage entry pointing to the old initial buffer of the previous
+        // object. Replace it with the current initial buf.
+        for(auto& chunk : _chunks) {
+            if(chunk.buf == other._initialBuf) {
+                chunk = slice(_initialBuf, chunk.size);
+                break;
+            }
+        }
+
+        // By this time, _available has been moved from the old object
+        slice oldInitialBuf = {other._initialBuf, sizeof(other._initialBuf)};
+        if(oldInitialBuf.containsAddress(_available.buf)) {
+            const int availableOffset = oldInitialBuf.offsetOf(_available.buf);
+            _available = slice(_initialBuf, sizeof(_initialBuf));
+            _available.moveStart(availableOffset);
+        }
+    }
+
 
 
     std::vector<slice> Writer::output() const {
