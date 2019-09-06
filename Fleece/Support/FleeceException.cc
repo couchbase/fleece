@@ -21,8 +21,10 @@
 #include <errno.h>
 #include <memory>
 #include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string>
+#include <string.h>
 
 #ifdef _MSC_VER
 #include "asprintf.h"
