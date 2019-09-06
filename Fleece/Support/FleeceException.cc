@@ -17,16 +17,83 @@
 //
 
 #include "FleeceException.hh"
+#include "PlatformCompat.hh"
 #include <errno.h>
 #include <memory>
 #include <stdarg.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string>
-#include <string.h>
 
 #ifdef _MSC_VER
 #include "asprintf.h"
+#include <windows.h>
+std::string cbl_strerror(int err) {
+    if(err < sys_nerr) {
+        // As of Windows 10, only errors 0 - 42 have a message in strerror
+        return strerror(err);
+    }
+
+    // Hope the POSIX definitions don't change...
+    if(err < 100 || err > 140) {
+        return "Unknown Error";
+    }
+
+    static long wsaEquivalent[] = {
+        WSAEADDRINUSE,
+        WSAEADDRNOTAVAIL,
+        WSAEAFNOSUPPORT,
+        WSAEALREADY,
+        0,
+        WSAECANCELLED,
+        WSAECONNABORTED,
+        WSAECONNREFUSED,
+        WSAECONNRESET,
+        WSAEDESTADDRREQ,
+        WSAEHOSTUNREACH,
+        0,
+        WSAEINPROGRESS,
+        WSAEISCONN,
+        WSAELOOP,
+        WSAEMSGSIZE,
+        WSAENETDOWN,
+        WSAENETRESET,
+        WSAENETUNREACH,
+        WSAENOBUFS,
+        0,
+        0,
+        0,
+        WSAENOPROTOOPT,
+        0,
+        0,
+        WSAENOTCONN,
+        0,
+        WSAENOTSOCK,
+        0,
+        WSAEOPNOTSUPP,
+        0,
+        0,
+        0,
+        0,
+        WSAEPROTONOSUPPORT,
+        WSAEPROTOTYPE,
+        0,
+        WSAETIMEDOUT,
+        0,
+        WSAEWOULDBLOCK
+    };
+
+    const long equivalent = wsaEquivalent[err - 100];
+    if(equivalent == 0) {
+        return "Unknown Error";
+    }
+
+    char buf[1024];
+    buf[0] = 0;
+    FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+		nullptr, equivalent, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		buf, sizeof(buf), nullptr);
+    return std::string(buf);
+}
 #endif
 
 namespace fleece {
@@ -68,7 +135,7 @@ namespace fleece {
         char *msg;
         vasprintf(&msg, what, args);
         va_end(args);
-        auto message = std::string(msg) + ": " + strerror(errno);
+        auto message = std::string(msg) + ": " + cbl_strerror(errno);
         free(msg);
         throw FleeceException(POSIXError, errno, message);
     }

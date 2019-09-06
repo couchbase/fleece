@@ -23,6 +23,9 @@
 #endif
 
 #ifdef _MSC_VER
+    #ifndef WIN32_LEAN_AND_MEAN
+    #define WIN32_LEAN_AND_MEAN
+    #endif
 
     #define NOINLINE                        __declspec(noinline)
 	#define LITECORE_UNUSED
@@ -48,6 +51,9 @@
 
     #define cbl_strdup _strdup
     #define cbl_getcwd _getcwd
+
+    #include <string>
+    std::string cbl_strerror(int err);
 
     #include <winapifamily.h>
 
@@ -75,6 +81,7 @@
 
     #define cbl_strdup strdup
     #define cbl_getcwd getcwd
+    #define cbl_strerror strerror
 
 #endif
 
