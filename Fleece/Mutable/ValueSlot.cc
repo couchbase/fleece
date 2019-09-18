@@ -285,6 +285,10 @@ namespace fleece { namespace impl {
                 case kStringTag:
                     set(_asValue->asString());
                     break;
+                case kFloatTag:
+                    // doubles are not stored inline in 32-bit builds [issue #50]
+                    set(_asValue->asDouble());
+                    break;
                 default:
                     assert(false);
             }
