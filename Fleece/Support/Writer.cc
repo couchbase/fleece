@@ -186,7 +186,7 @@ namespace fleece {
         // By this time, _available has been moved from the old object
         slice oldInitialBuf = {other._initialBuf, sizeof(other._initialBuf)};
         if(oldInitialBuf.containsAddress(_available.buf)) {
-            const int availableOffset = oldInitialBuf.offsetOf(_available.buf);
+            const size_t availableOffset = oldInitialBuf.offsetOf(_available.buf);
             _available = slice(_initialBuf, sizeof(_initialBuf));
             _available.moveStart(availableOffset);
         }
