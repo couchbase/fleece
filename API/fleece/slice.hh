@@ -215,6 +215,7 @@ namespace fleece {
         slice read(size_t nBytes) noexcept;
         slice readAtMost(size_t nBytes) noexcept;
         slice readToDelimiter(slice delim) noexcept;
+        slice readToDelimiterOrEnd(slice delim) noexcept;
         slice readBytesInSet(slice set) noexcept;
         bool readInto(slice dst) noexcept;
 

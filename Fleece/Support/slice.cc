@@ -97,6 +97,19 @@ namespace fleece {
         return result;
     }
 
+    slice slice::readToDelimiterOrEnd(slice delim) noexcept {
+        slice found = find(delim);
+        if (found) {
+            slice result(buf, found.buf);
+            setStart(found.end());
+            return result;
+        } else {
+            slice result = *this;
+            setStart(end());
+            return result;
+        }
+    }
+
     slice slice::readBytesInSet(slice set) noexcept {
         const void *next = findByteNotIn(set);
         if (!next)
