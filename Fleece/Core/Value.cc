@@ -31,6 +31,7 @@
 #include "ParseDate.hh"
 #include <math.h>
 #include "betterassert.hh"
+#include "double-conversion/double-to-string.h"
 
 
 namespace fleece { namespace impl {
@@ -198,11 +199,14 @@ namespace fleece { namespace impl {
                 break;
             }
             case kFloatTag: {
+                const auto &dbl_to_str = double_conversion::DoubleToStringConverter::EcmaScriptConverter();
+		double_conversion::StringBuilder str_builder{buf, static_cast<int>(sizeof(buf))};
                 if (_byte[0] & 0x8)
-                    sprintf(str, "%.16g", asDouble());
-                else
-                    sprintf(str, "%.6g", asFloat());
-                break;
+                    dbl_to_str.ToShortest(asDouble(), &str_builder);
+		else
+		    dbl_to_str.ToShortestSingle(asFloat(), &str_builder);
+
+                return alloc_slice(buf, str_builder.position());
             }
             default:
                 return alloc_slice(asString());

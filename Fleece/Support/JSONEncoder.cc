@@ -22,6 +22,7 @@
 #include "ParseDate.hh"
 #include <algorithm>
 #include "betterassert.hh"
+#include "double-conversion/double-to-string.h"
 
 namespace fleece { namespace impl {
 
@@ -176,6 +177,24 @@ namespace fleece { namespace impl {
             default:
                 FleeceException::_throw(UnknownValue, "illegal typecode in Value; corrupt data?");
         }
+    }
+
+    void JSONEncoder::writeFloat(float f) {
+        comma();
+        char buf[32] = {0};
+	double_conversion::StringBuilder str_builder{buf, static_cast<int>(sizeof(buf))};
+	const auto &dbl_to_str = double_conversion::DoubleToStringConverter::EcmaScriptConverter();
+	dbl_to_str.ToShortestSingle(f, &str_builder);
+	_out.write(buf, str_builder.position());
+    }
+
+    void JSONEncoder::writeDouble(double d) {
+        comma();
+        char buf[32];
+	double_conversion::StringBuilder str_builder{buf, static_cast<int>(sizeof(buf))};
+	const auto &dbl_to_str = double_conversion::DoubleToStringConverter::EcmaScriptConverter();
+	dbl_to_str.ToShortest(d, &str_builder);
+	_out.write(buf, str_builder.position());
     }
 
 } }

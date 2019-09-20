@@ -53,8 +53,8 @@ namespace fleece { namespace impl {
 
         void writeInt(int64_t i)                {writef("%lld", i);}
         void writeUInt(uint64_t i)              {writef("%llu", i);}
-        void writeFloat(float f)                {writef("%.6g", f);}
-        void writeDouble(double d)              {writef("%.16g", d);}
+        void writeFloat(float f);
+        void writeDouble(double d);
 
         void writeString(const std::string &s)  {writeString(slice(s));}
         void writeString(slice s);

@@ -116,7 +116,7 @@ namespace fleece {
             CHECK(!i);
         }
 
-        CHECK(ma->asArray()->toJSON() == "[null,false,true,0,-123,2017,123456789,-123456789,\"Hot dog\",3.14159,3.141592653589793]"_sl);
+        CHECK(ma->asArray()->toJSON() == "[null,false,true,0,-123,2017,123456789,-123456789,\"Hot dog\",3.1415927,3.141592653589793]"_sl);
 
         ma->remove(3, 5);
         CHECK(ma->count() == 6);
