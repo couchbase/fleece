@@ -564,11 +564,12 @@ public:
     TEST_CASE_METHOD(EncoderTests, "JSON", "[Encoder]") {
         slice json("{\"\":\"hello\\nt\\\\here\","
                             "\"\\\"ironic\\\"\":[null,false,true,-100,0,100,123.456,6.02e+23],"
-                            "\"foo\":123}");
+                            "\"foo\":123,"
+                            "\"foo2\":123.13274}");
         JSONConverter j(enc);
         REQUIRE(j.encodeJSON(json));
         endEncoding();
-        auto d = checkDict(3);
+        auto d = checkDict(4);
         auto output = d->toJSON();
         REQUIRE((slice)output == json);
     }

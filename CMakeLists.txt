@@ -27,9 +27,12 @@ if(CMAKE_COMPILER_IS_GNUCC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-psabi")
 endif()
 
+add_subdirectory(vendor/double-conversion)
 set_source_files(RESULT FLEECE_SRC)
 add_library(Fleece        SHARED  ${FLEECE_SRC})
+target_link_libraries(Fleece double-conversion)
 add_library(FleeceStatic  STATIC  ${FLEECE_SRC})
+target_link_libraries(FleeceStatic double-conversion)
 
 # "FleeceBase" static lib for clients that just need support stuff like slice, varint, RefCounted...
 set_base_platform_files(RESULT FLEECE_BASE_PLATFORM_SRC)

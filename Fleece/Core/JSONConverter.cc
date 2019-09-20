@@ -18,6 +18,7 @@
 
 #include "JSONConverter.hh"
 #include "jsonsl.h"
+#include "double-conversion/string-to-double.h"
 #include <map>
 
 namespace fleece { namespace impl {
@@ -114,8 +115,13 @@ namespace fleece { namespace impl {
                 unsigned f = state->special_flags;
                 if (f & JSONSL_SPECIALf_FLOAT) {
                     char *start = (char*)&_input[state->pos_begin];
-                    char *end;
-                    double n = ::strtod(start, &end);
+		    double_conversion::StringToDoubleConverter double_conv{
+                        double_conversion::StringToDoubleConverter::ALLOW_TRAILING_JUNK, 0., 0., "Infinity", "NaN"
+                    };
+		    int processed_characters_count = 0;
+		    double n = double_conv.StringToDouble(start,
+						      static_cast<int>(_input.size - state->pos_begin),
+						      &processed_characters_count);
                     _encoder.writeDouble(n);
                 } else if (f & JSONSL_SPECIALf_UNSIGNED) {
                     _encoder.writeUInt(state->nelem);
