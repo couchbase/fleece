@@ -35,4 +35,8 @@ matrix:
 before_install:
     - eval "${MATRIX_EVAL}"
 
-script: "cd build_cmake && ./build.sh"
+script:
+  - cd build_cmake && ./build.sh
+  - cd ..
+  - LC_NUMERIC="C" ./build_cmake/FleeceTests
+  - LC_NUMERIC="ru_RU.UTF-8" ./build_cmake/FleeceTests

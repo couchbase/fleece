@@ -25,6 +25,7 @@
 #include "jsonsl.h"
 #include "mn_wordlist.h"
 #include <iostream>
+#include <locale.h>
 #include <float.h>
 
 #ifndef _MSC_VER
@@ -38,7 +39,10 @@ class EncoderTests {
 public:
     EncoderTests()
     :enc()
-    { }
+    {
+        // to make sure that we don't depend on current locale
+        setlocale(LC_ALL, "");
+    }
 
     ~EncoderTests() {
         enc.reset();
