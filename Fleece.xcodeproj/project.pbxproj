@@ -197,6 +197,9 @@
 		27F666472017FE7C00A8ED31 /* TempArray.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27F666462017FE7C00A8ED31 /* TempArray.hh */; };
 		27FE87F31E53E43200C5CF3F /* JSONEncoder.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27FE87F11E53E43200C5CF3F /* JSONEncoder.cc */; };
 		27FE87F41E53E43200C5CF3F /* JSONEncoder.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27FE87F21E53E43200C5CF3F /* JSONEncoder.hh */; };
+		72F36FDA2335ECAF00FB7ED5 /* PlatformCompat.cc in Sources */ = {isa = PBXBuildFile; fileRef = 72F36FD92335ECAF00FB7ED5 /* PlatformCompat.cc */; };
+		72F36FDB2335ECAF00FB7ED5 /* PlatformCompat.cc in Sources */ = {isa = PBXBuildFile; fileRef = 72F36FD92335ECAF00FB7ED5 /* PlatformCompat.cc */; };
+		72F36FDC2335ED0100FB7ED5 /* PlatformCompat.cc in Sources */ = {isa = PBXBuildFile; fileRef = 72F36FD92335ECAF00FB7ED5 /* PlatformCompat.cc */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -445,6 +448,7 @@
 		27F666462017FE7C00A8ED31 /* TempArray.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = TempArray.hh; sourceTree = "<group>"; };
 		27FE87F11E53E43200C5CF3F /* JSONEncoder.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSONEncoder.cc; sourceTree = "<group>"; };
 		27FE87F21E53E43200C5CF3F /* JSONEncoder.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = JSONEncoder.hh; sourceTree = "<group>"; };
+		72F36FD92335ECAF00FB7ED5 /* PlatformCompat.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PlatformCompat.cc; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -742,6 +746,7 @@
 				2700BB9B217E8C0C00797537 /* ParseDate.cc */,
 				2700BB9A217E8C0C00797537 /* ParseDate.hh */,
 				271507ED2122381E005FE6E8 /* PlatformCompat.hh */,
+				72F36FD92335ECAF00FB7ED5 /* PlatformCompat.cc */,
 				274D8254209D1764008BB39F /* RefCounted.cc */,
 				274D8255209D1764008BB39F /* RefCounted.hh */,
 				270FA2741BF53CEA005DCB13 /* slice.cc */,
@@ -1211,6 +1216,7 @@
 				27AEFAC221090FF400106ED8 /* JSONDelta.cc in Sources */,
 				270515571D905C1D00D62D05 /* Fleece+CoreFoundation.mm in Sources */,
 				270FA2781BF53CEA005DCB13 /* Value.cc in Sources */,
+				72F36FDA2335ECAF00FB7ED5 /* PlatformCompat.cc in Sources */,
 				27E3DD421DB6A14200F2872D /* SharedKeys.cc in Sources */,
 				27D5771A212B3032002410BA /* Bitmap.cc in Sources */,
 				27CA08431F6B0E9400FF8C71 /* Dict.cc in Sources */,
@@ -1240,6 +1246,7 @@
 				27F25A8420A6560A00E181FA /* LibC++Debug.cc in Sources */,
 				272E5A521BF7FE7100848580 /* FleeceTests.cc in Sources */,
 				278163B91CE6BB8C00B94E32 /* C_Test.c in Sources */,
+				72F36FDC2335ED0100FB7ED5 /* PlatformCompat.cc in Sources */,
 				27F666442017E26700A8ED31 /* SupportTests.cc in Sources */,
 				279AC52B1C07776A002C80DB /* ValueTests.cc in Sources */,
 				27CEE41A20EFE92E00089A85 /* KeyTree.cc in Sources */,
@@ -1291,6 +1298,7 @@
 				2700BBA3218B949900797537 /* Backtrace.cc in Sources */,
 				27DE2E9E2125FA1700123597 /* slice.cc in Sources */,
 				27DFAE13219F83AB00DF57EB /* InstanceCounted.cc in Sources */,
+				72F36FDB2335ECAF00FB7ED5 /* PlatformCompat.cc in Sources */,
 				27DE2E9D2125FA1700123597 /* slice+CoreFoundation.cc in Sources */,
 				27DE2EEA2125FC5A00123597 /* Writer.cc in Sources */,
 				27DE2E922125FA1700123597 /* varint.cc in Sources */,

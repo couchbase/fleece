@@ -22,6 +22,8 @@
 #include "TargetConditionals.h"
 #endif
 
+#include <clocale>
+
 #ifdef _MSC_VER
 
     #define NOINLINE                        __declspec(noinline)
@@ -88,3 +90,6 @@
         #endif
     #endif
 #endif
+
+int cbl_sprintf_l(char* buf, const char* fmt, ...);
+double cbl_strtod_l(const char* start, char** end);

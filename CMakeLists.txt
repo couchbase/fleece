@@ -42,6 +42,7 @@ set(FLEECE_BASE_SRC Fleece/Support/Backtrace.cc
                     Fleece/Support/betterassert.cc
                     Fleece/Support/slice.cc
                     Fleece/Support/varint.cc
+                    Fleece/Support/PlatformCompat.cc
                     vendor/libb64/cdecode.c
                     vendor/libb64/cencode.c
                     ${FLEECE_BASE_PLATFORM_SRC})

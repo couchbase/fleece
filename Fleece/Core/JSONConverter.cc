@@ -115,7 +115,7 @@ namespace fleece { namespace impl {
                 if (f & JSONSL_SPECIALf_FLOAT) {
                     char *start = (char*)&_input[state->pos_begin];
                     char *end;
-                    double n = ::strtod(start, &end);
+                    double n = cbl_strtod_l(start, &end);
                     _encoder.writeDouble(n);
                 } else if (f & JSONSL_SPECIALf_UNSIGNED) {
                     _encoder.writeUInt(state->nelem);

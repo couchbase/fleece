@@ -27,6 +27,7 @@
 #include "DeepIterator.hh"
 #include "SharedKeys.hh"
 #include "Doc.hh"
+#include "PlatformCompat.hh"
 #include <sstream>
 
 #undef NOMINMAX
@@ -214,6 +215,35 @@ namespace fleece {
             CHECK(root->sharedKeys() == sk);
         }
         CHECK(Doc::sharedKeys(root) == nullptr);
+    }
+
+    TEST_CASE("Locale-free encoding") {
+        char* original = setlocale(LC_ALL, "C");
+        char buf[32];
+        double testDouble = 3.14;
+        sprintf(buf, "%.3g", testDouble);
+        CHECK((strcmp(buf, "3.14")) == 0);
+
+        cbl_sprintf_l(buf, "%.3g", testDouble);
+        CHECK((strcmp(buf, "3.14")) == 0);
+
+        double recovered = cbl_strtod_l(buf, nullptr);
+        CHECK(recovered == 3.14); // This is not a round trip guarantee, but it works here
+
+        setlocale(LC_ALL, "fr_FR");
+        sprintf(buf, "%.3g", testDouble);
+        CHECK((strcmp(buf, "3,14")) == 0);
+
+        cbl_sprintf_l(buf, "%.3g", testDouble);
+        CHECK((strcmp(buf, "3.14")) == 0);
+
+        recovered = strtod(buf, nullptr);
+        CHECK(recovered != 3.14); // Locale dependent, incorrect result
+
+        recovered = cbl_strtod_l(buf, nullptr);
+        CHECK(recovered == 3.14); // Locale independent, correct result
+
+        setlocale(LC_ALL, original);
     }
 
 }
