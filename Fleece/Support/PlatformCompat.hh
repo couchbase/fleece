@@ -78,11 +78,12 @@
     #define WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) 0
 
     typedef locale_t cbl_locale_t;
-
+    
+    #include <xlocale.h>
     #define cbl_strdup strdup
     #define cbl_getcwd getcwd
     #define cbl_strtod_l strtod_l
-    #define cbl_sprintf_l sprintf_l
+    #define cbl_sprintf_l(buf, fmt, locale, ...) sprintf_l(buf, locale, fmt, __VA_ARGS__)
 
 #endif
 
