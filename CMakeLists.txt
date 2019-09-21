@@ -37,6 +37,7 @@ set(FLEECE_BASE_SRC Fleece/Support/Backtrace.cc
                     Fleece/Support/FleeceException.cc
                     Fleece/Support/InstanceCounted.cc
                     Fleece/Support/ParseDate.cc
+                    Fleece/Support/PlatformCompat.cc
                     Fleece/Support/RefCounted.cc
                     Fleece/Support/Writer.cc
                     Fleece/Support/betterassert.cc

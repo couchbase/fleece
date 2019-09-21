@@ -18,6 +18,7 @@
 
 #pragma once
 #include "fleece/Base.hh"
+#include <clocale>
 #ifdef __APPLE__
 #include "TargetConditionals.h"
 #endif
@@ -41,6 +42,7 @@
 
     #include <BaseTsd.h>
     typedef SSIZE_T ssize_t;
+    typedef _locale_t cbl_locale_t;
 
     #define MAXFLOAT FLT_MAX
 
@@ -48,6 +50,8 @@
 
     #define cbl_strdup _strdup
     #define cbl_getcwd _getcwd
+    #define cbl_strtod_l _strtod_l
+    #define cbl_sprintf_l _sprintf_l
 
     #include <winapifamily.h>
 
@@ -73,8 +77,12 @@
 
     #define WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) 0
 
+    typedef locale_t cbl_locale_t;
+
     #define cbl_strdup strdup
     #define cbl_getcwd getcwd
+    #define cbl_strtod_l strtod_l
+    #define cbl_sprintf_l sprintf_l
 
 #endif
 
@@ -88,3 +96,5 @@
         #endif
     #endif
 #endif
+
+extern "C" cbl_locale_t c_locale(void);
