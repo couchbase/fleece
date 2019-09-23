@@ -31,6 +31,7 @@ function(set_source_files_base)
         Fleece/Support/FileUtils.cc
         Fleece/Support/FleeceException.cc
         Fleece/Support/InstanceCounted.cc
+        Fleece/Support/NumConversion.cc
         Fleece/Support/JSON5.cc
         Fleece/Support/JSONEncoder.cc
         Fleece/Support/LibC++Debug.cc
@@ -47,6 +48,7 @@ function(set_source_files_base)
         vendor/jsonsl/jsonsl.c
         vendor/libb64/cdecode.c
         vendor/libb64/cencode.c
+        vendor/SwiftDtoa/SwiftDtoa.cc
         PARENT_SCOPE
     )
 endfunction()

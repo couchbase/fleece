@@ -57,7 +57,7 @@ TEST_CASE("Obj-C Ints", "[Encoder]") {
 TEST_CASE("Obj-C Floats", "[Encoder]") {
     checkIt(@0.5,  "0.5");
     checkIt(@-0.5, "-0.5");
-    checkIt(@((float)M_PI), "3.14159");
+    checkIt(@((float)M_PI), "3.1415927");
     checkIt(@((double)M_PI), "3.141592653589793");
 }
 

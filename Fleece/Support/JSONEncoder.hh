@@ -21,6 +21,7 @@
 #include "Writer.hh"
 #include "Value.hh"
 #include "FleeceException.hh"
+#include "NumConversion.hh"
 #include <stdio.h>
 
 
@@ -51,10 +52,10 @@ namespace fleece { namespace impl {
         void writeNull()                        {comma(); _out << slice("null");}
         void writeBool(bool b)                  {comma(); _out.write(b ? "true"_sl : "false"_sl);}
 
-        void writeInt(int64_t i)                {writef("%lld", i);}
-        void writeUInt(uint64_t i)              {writef("%llu", i);}
-        void writeFloat(float f)                {writef("%.6g", f);}
-        void writeDouble(double d)              {writef("%.16g", d);}
+        void writeInt(int64_t i)                {_writeInt("%lld", i);}
+        void writeUInt(uint64_t i)              {_writeInt("%llu", i);}
+        void writeFloat(float f)                {_writeFloat(f);}
+        void writeDouble(double d)              {_writeFloat(d);}
 
         void writeString(const std::string &s)  {writeString(slice(s));}
         void writeString(slice s);
@@ -119,10 +120,17 @@ namespace fleece { namespace impl {
         }
 
         template <class T>
-        void writef(const char *fmt, T t) {
+        void _writeInt(const char *fmt, T t) {
             comma();
             char str[32];
             _out.write(str, sprintf(str, fmt, t));
+        }
+
+        template <class T>
+        void _writeFloat(T t) {
+            comma();
+            char str[32];
+            _out.write(str, WriteFloat(t, str, sizeof(str)));
         }
 
         Writer _out;
