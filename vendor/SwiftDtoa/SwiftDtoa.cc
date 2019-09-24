@@ -2,7 +2,7 @@
 // SwiftDtoa.cc
 //
 // Copied into Fleece repository from commit 6370681 of
-// https://raw.githubusercontent.com/apple/swift/master/stdlib/public/runtime/SwiftDtoa.cpp
+// https://github.com/apple/swift/blob/master/stdlib/public/runtime/SwiftDtoa.cpp
 // Trivial changes made by Jens Alfke to glue it into the Fleece library.
 
 //===--- SwiftDtoa.c ---------------------------------------------*- c -*-===//
@@ -1049,7 +1049,7 @@ size_t swift_format_float(float d, char *dest, size_t length)
         swift_decompose_float(d, digits, sizeof(digits), &decimalExponent);
     // People use float to model integers <= 2^24, so we use that
     // as a cutoff for decimal vs. exponential format.
-    if (decimalExponent < -3 || fabsf(d) > 0x1.0p24F) {
+    if (decimalExponent < -3 || fabsf(d) > (1<<24)) {     // Jens: Was "0x1.0p24F"; changed for MSVC
         return swift_format_exponential(dest, length, signbit(d),
                  digits, digitCount, decimalExponent);
     } else {
@@ -1105,7 +1105,7 @@ size_t swift_format_double(double d, char *dest, size_t length)
         swift_decompose_double(d, digits, sizeof(digits), &decimalExponent);
     // People use double to model integers <= 2^53, so we use that
     // as a cutoff for decimal vs. exponential format.
-    if (decimalExponent < -3 || fabs(d) > 0x1.0p53) {
+    if (decimalExponent < -3 || fabs(d) > (2LL<<53)) {      // Jens: Was "0x1.0p53"; changed for MSVC
         return swift_format_exponential(dest, length, signbit(d),
                  digits, digitCount, decimalExponent);
     } else {
