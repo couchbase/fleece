@@ -136,6 +136,7 @@
 		27D965692339595700F4A51C /* NumConversion.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27D965672339595700F4A51C /* NumConversion.cc */; };
 		27D9656D23397EF700F4A51C /* SwiftDtoa.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D9656B23397EF700F4A51C /* SwiftDtoa.h */; };
 		27D9656E23397EF700F4A51C /* SwiftDtoa.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27D9656C23397EF700F4A51C /* SwiftDtoa.cc */; settings = {COMPILER_FLAGS = "-Wno-implicit-int-conversion -Wno-shadow -Wno-shorten-64-to-32"; }; };
+		27D96573233AB44000F4A51C /* NumericTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27D96572233AB44000F4A51C /* NumericTests.cc */; };
 		27DE2E922125FA1700123597 /* varint.cc in Sources */ = {isa = PBXBuildFile; fileRef = 270FA2761BF53CEA005DCB13 /* varint.cc */; };
 		27DE2E962125FA1700123597 /* RefCounted.cc in Sources */ = {isa = PBXBuildFile; fileRef = 274D8254209D1764008BB39F /* RefCounted.cc */; };
 		27DE2E9D2125FA1700123597 /* slice+CoreFoundation.cc in Sources */ = {isa = PBXBuildFile; fileRef = 272E5A601BF91F6C00848580 /* slice+CoreFoundation.cc */; };
@@ -432,6 +433,7 @@
 		27D965672339595700F4A51C /* NumConversion.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = NumConversion.cc; sourceTree = "<group>"; };
 		27D9656B23397EF700F4A51C /* SwiftDtoa.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SwiftDtoa.h; sourceTree = "<group>"; };
 		27D9656C23397EF700F4A51C /* SwiftDtoa.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SwiftDtoa.cc; sourceTree = "<group>"; };
+		27D96572233AB44000F4A51C /* NumericTests.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = NumericTests.cc; sourceTree = "<group>"; };
 		27DE2EDF2125FA1700123597 /* libfleeceBase.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libfleeceBase.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		27DFAE10219F83AB00DF57EB /* InstanceCounted.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = InstanceCounted.hh; sourceTree = "<group>"; };
 		27DFAE11219F83AB00DF57EB /* InstanceCounted.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = InstanceCounted.cc; sourceTree = "<group>"; };
@@ -622,6 +624,7 @@
 				276D15481E008E7A00543B1B /* JSON5Tests.cc */,
 				27298E771C01A461000CFBA8 /* PerfTests.cc */,
 				274D824E209A8D01008BB39F /* MutableTests.cc */,
+				27D96572233AB44000F4A51C /* NumericTests.cc */,
 				272E5A5E1BF91DBE00848580 /* ObjCTests.mm */,
 				27AEFAC4210913C500106ED8 /* DeltaTests.cc */,
 				27C8DF09208521B600A99BFC /* HashTreeTests.cc */,
@@ -1273,6 +1276,7 @@
 				277F45B4208FDA1800A0D159 /* HashTreeTests.cc in Sources */,
 				27AEFAC5210913C500106ED8 /* DeltaTests.cc in Sources */,
 				27298E781C01A461000CFBA8 /* PerfTests.cc in Sources */,
+				27D96573233AB44000F4A51C /* NumericTests.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
