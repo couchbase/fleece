@@ -17,6 +17,7 @@
 //
 
 #include "JSONConverter.hh"
+#include "NumConversion.hh"
 #include "jsonsl.h"
 #include <map>
 
@@ -114,9 +115,7 @@ namespace fleece { namespace impl {
                 unsigned f = state->special_flags;
                 if (f & JSONSL_SPECIALf_FLOAT) {
                     char *start = (char*)&_input[state->pos_begin];
-                    char *end;
-                    double n = ::strtod(start, &end);
-                    _encoder.writeDouble(n);
+                    _encoder.writeDouble(ParseDouble(start));
                 } else if (f & JSONSL_SPECIALf_UNSIGNED) {
                     _encoder.writeUInt(state->nelem);
                 } else if (f & JSONSL_SPECIALf_SIGNED) {

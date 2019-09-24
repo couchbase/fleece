@@ -240,7 +240,7 @@ public:
         enc.writeBool(true);    checkOutput("3800");    checkReadBool(true);
     }
 
-    TEST_CASE_METHOD(EncoderTests, "Ints", "[Encoder]") {
+    TEST_CASE_METHOD(EncoderTests, "Ints", "[Encoder][Numeric]") {
         enc.writeInt( 0);       checkOutput("0000");    checkRead(0);
         enc.writeInt( 128);     checkOutput("0080");    checkRead(128);
         enc.writeInt( 1234);    checkOutput("04D2");    checkRead(1234);
@@ -294,7 +294,7 @@ public:
         }
     }
 
-    TEST_CASE_METHOD(EncoderTests, "Floats", "[Encoder]") {
+    TEST_CASE_METHOD(EncoderTests, "Floats", "[Encoder][Numeric]") {
         enc.writeFloat( 0.5);   checkOutput("2000 0000 003F 8003");           checkReadFloat( 0.5);
         enc.writeFloat(-0.5);   checkOutput("2000 0000 00BF 8003");           checkReadFloat(-0.5);
         enc.writeFloat((float)M_PI); checkOutput("2000 DB0F 4940 8003");      checkReadFloat((float)M_PI);

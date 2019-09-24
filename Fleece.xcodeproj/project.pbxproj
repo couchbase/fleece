@@ -132,6 +132,11 @@
 		27D7218B1F8E8EEA00AA4458 /* FleeceException.hh in Headers */ = {isa = PBXBuildFile; fileRef = 275CED511D3EF7BE001DE46C /* FleeceException.hh */; };
 		27D7218C1F8E8EEA00AA4458 /* SharedKeys.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27E3DD411DB6A14200F2872D /* SharedKeys.hh */; };
 		27D721961F8E900400AA4458 /* libFleeceMutableObjC.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D721901F8E8EEA00AA4458 /* libFleeceMutableObjC.a */; };
+		27D965682339595700F4A51C /* NumConversion.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27D965662339595700F4A51C /* NumConversion.hh */; };
+		27D965692339595700F4A51C /* NumConversion.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27D965672339595700F4A51C /* NumConversion.cc */; };
+		27D9656D23397EF700F4A51C /* SwiftDtoa.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D9656B23397EF700F4A51C /* SwiftDtoa.h */; };
+		27D9656E23397EF700F4A51C /* SwiftDtoa.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27D9656C23397EF700F4A51C /* SwiftDtoa.cc */; settings = {COMPILER_FLAGS = "-Wno-implicit-int-conversion -Wno-shadow -Wno-shorten-64-to-32"; }; };
+		27D96573233AB44000F4A51C /* NumericTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27D96572233AB44000F4A51C /* NumericTests.cc */; };
 		27DE2E922125FA1700123597 /* varint.cc in Sources */ = {isa = PBXBuildFile; fileRef = 270FA2761BF53CEA005DCB13 /* varint.cc */; };
 		27DE2E962125FA1700123597 /* RefCounted.cc in Sources */ = {isa = PBXBuildFile; fileRef = 274D8254209D1764008BB39F /* RefCounted.cc */; };
 		27DE2E9D2125FA1700123597 /* slice+CoreFoundation.cc in Sources */ = {isa = PBXBuildFile; fileRef = 272E5A601BF91F6C00848580 /* slice+CoreFoundation.cc */; };
@@ -424,6 +429,11 @@
 		27D721241F8C4B7500AA4458 /* MDictIterator.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MDictIterator.hh; sourceTree = "<group>"; };
 		27D721501F8D8F3F00AA4458 /* MContext.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MContext.hh; sourceTree = "<group>"; };
 		27D721901F8E8EEA00AA4458 /* libFleeceMutableObjC.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libFleeceMutableObjC.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		27D965662339595700F4A51C /* NumConversion.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = NumConversion.hh; sourceTree = "<group>"; };
+		27D965672339595700F4A51C /* NumConversion.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = NumConversion.cc; sourceTree = "<group>"; };
+		27D9656B23397EF700F4A51C /* SwiftDtoa.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SwiftDtoa.h; sourceTree = "<group>"; };
+		27D9656C23397EF700F4A51C /* SwiftDtoa.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SwiftDtoa.cc; sourceTree = "<group>"; };
+		27D96572233AB44000F4A51C /* NumericTests.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = NumericTests.cc; sourceTree = "<group>"; };
 		27DE2EDF2125FA1700123597 /* libfleeceBase.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libfleeceBase.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		27DFAE10219F83AB00DF57EB /* InstanceCounted.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = InstanceCounted.hh; sourceTree = "<group>"; };
 		27DFAE11219F83AB00DF57EB /* InstanceCounted.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = InstanceCounted.cc; sourceTree = "<group>"; };
@@ -584,6 +594,7 @@
 		27298E3E1C00F8A9000CFBA8 /* vendor */ = {
 			isa = PBXGroup;
 			children = (
+				27D9656A23397EBD00F4A51C /* SwiftDtoa */,
 				27E3DD461DB6B86000F2872D /* catch */,
 				27298E3F1C00F8A9000CFBA8 /* jsonsl */,
 				277015321D596436008BADD7 /* libb64 */,
@@ -613,6 +624,7 @@
 				276D15481E008E7A00543B1B /* JSON5Tests.cc */,
 				27298E771C01A461000CFBA8 /* PerfTests.cc */,
 				274D824E209A8D01008BB39F /* MutableTests.cc */,
+				27D96572233AB44000F4A51C /* NumericTests.cc */,
 				272E5A5E1BF91DBE00848580 /* ObjCTests.mm */,
 				27AEFAC4210913C500106ED8 /* DeltaTests.cc */,
 				27C8DF09208521B600A99BFC /* HashTreeTests.cc */,
@@ -739,6 +751,8 @@
 				276D15451E007D3000543B1B /* JSON5.hh */,
 				27FE87F11E53E43200C5CF3F /* JSONEncoder.cc */,
 				27FE87F21E53E43200C5CF3F /* JSONEncoder.hh */,
+				27D965662339595700F4A51C /* NumConversion.hh */,
+				27D965672339595700F4A51C /* NumConversion.cc */,
 				2700BB9B217E8C0C00797537 /* ParseDate.cc */,
 				2700BB9A217E8C0C00797537 /* ParseDate.hh */,
 				271507ED2122381E005FE6E8 /* PlatformCompat.hh */,
@@ -820,6 +834,15 @@
 				2734B89A1F8583FF00BE5249 /* MTests.mm */,
 			);
 			path = ObjC;
+			sourceTree = "<group>";
+		};
+		27D9656A23397EBD00F4A51C /* SwiftDtoa */ = {
+			isa = PBXGroup;
+			children = (
+				27D9656B23397EF700F4A51C /* SwiftDtoa.h */,
+				27D9656C23397EF700F4A51C /* SwiftDtoa.cc */,
+			);
+			path = SwiftDtoa;
 			sourceTree = "<group>";
 		};
 		27DE2EE22125FAC600123597 /* Frameworks */ = {
@@ -966,6 +989,7 @@
 				27DE2EBD2125FA1700123597 /* Array.hh in Headers */,
 				27DE2EBE2125FA1700123597 /* DeepIterator.hh in Headers */,
 				27DE2EBF2125FA1700123597 /* MArray.hh in Headers */,
+				27D9656D23397EF700F4A51C /* SwiftDtoa.h in Headers */,
 				27DE2EC02125FA1700123597 /* Dict.hh in Headers */,
 				27DE2EC12125FA1700123597 /* StringTable.hh in Headers */,
 				27DE2EC22125FA1700123597 /* JSONEncoder.hh in Headers */,
@@ -994,6 +1018,7 @@
 				27C59BA4212F898F003C8492 /* SmallVector.hh in Headers */,
 				27DE2ED72125FA1700123597 /* Path.hh in Headers */,
 				27DE2ED82125FA1700123597 /* HeapDict.hh in Headers */,
+				27D965682339595700F4A51C /* NumConversion.hh in Headers */,
 				27DE2ED92125FA1700123597 /* HeapValue.hh in Headers */,
 				27DE2EDA2125FA1700123597 /* FleeceException.hh in Headers */,
 				27DE2EDB2125FA1700123597 /* SharedKeys.hh in Headers */,
@@ -1251,6 +1276,7 @@
 				277F45B4208FDA1800A0D159 /* HashTreeTests.cc in Sources */,
 				27AEFAC5210913C500106ED8 /* DeltaTests.cc in Sources */,
 				27298E781C01A461000CFBA8 /* PerfTests.cc in Sources */,
+				27D96573233AB44000F4A51C /* NumericTests.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1292,11 +1318,13 @@
 				27DE2E9E2125FA1700123597 /* slice.cc in Sources */,
 				27DFAE13219F83AB00DF57EB /* InstanceCounted.cc in Sources */,
 				27DE2E9D2125FA1700123597 /* slice+CoreFoundation.cc in Sources */,
+				27D965692339595700F4A51C /* NumConversion.cc in Sources */,
 				27DE2EEA2125FC5A00123597 /* Writer.cc in Sources */,
 				27DE2E922125FA1700123597 /* varint.cc in Sources */,
 				27DE2EE82125FB2100123597 /* cdecode.c in Sources */,
 				27DE2EE92125FB2100123597 /* cencode.c in Sources */,
 				2700BB9D217E8C0D00797537 /* ParseDate.cc in Sources */,
+				27D9656E23397EF700F4A51C /* SwiftDtoa.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

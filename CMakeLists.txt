@@ -36,6 +36,7 @@ set_base_platform_files(RESULT FLEECE_BASE_PLATFORM_SRC)
 set(FLEECE_BASE_SRC Fleece/Support/Backtrace.cc
                     Fleece/Support/FleeceException.cc
                     Fleece/Support/InstanceCounted.cc
+                    Fleece/Support/NumConversion.cc
                     Fleece/Support/ParseDate.cc
                     Fleece/Support/RefCounted.cc
                     Fleece/Support/Writer.cc
@@ -44,6 +45,7 @@ set(FLEECE_BASE_SRC Fleece/Support/Backtrace.cc
                     Fleece/Support/varint.cc
                     vendor/libb64/cdecode.c
                     vendor/libb64/cencode.c
+                    vendor/SwiftDtoa/SwiftDtoa.cc
                     ${FLEECE_BASE_PLATFORM_SRC})
 
 add_library(FleeceBase    STATIC  ${FLEECE_BASE_SRC})
@@ -77,5 +79,6 @@ foreach(platform Fleece FleeceStatic FleeceBase fleeceTool FleeceTests)
         Experimental
         vendor/libb64
         vendor/jsonsl
+        vendor/SwiftDtoa
     )
 endforeach()
