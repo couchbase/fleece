@@ -35,7 +35,7 @@ namespace fleece {
             static _locale_t kCLocale = _create_locale(LC_ALL, "C");
             return _strtod_l(str, nullptr, kCLocale);
         #else                       // Linux
-            static locale_t kCLocale = newlocale(LC_ALL_MASK, NULL, NULL);
+            static locale_t kCLocale = newlocale(LC_ALL_MASK, "C", NULL);
             return strtod_l(str, nullptr, kCLocale);
         #endif
     }

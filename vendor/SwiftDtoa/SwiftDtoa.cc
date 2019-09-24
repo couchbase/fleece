@@ -1105,7 +1105,7 @@ size_t swift_format_double(double d, char *dest, size_t length)
         swift_decompose_double(d, digits, sizeof(digits), &decimalExponent);
     // People use double to model integers <= 2^53, so we use that
     // as a cutoff for decimal vs. exponential format.
-    if (decimalExponent < -3 || fabs(d) > (2LL<<53)) {      // Jens: Was "0x1.0p53"; changed for MSVC
+    if (decimalExponent < -3 || fabs(d) > (1LL<<53)) {      // Jens: Was "0x1.0p53"; changed for MSVC
         return swift_format_exponential(dest, length, signbit(d),
                  digits, digitCount, decimalExponent);
     } else {
