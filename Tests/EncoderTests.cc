@@ -24,6 +24,7 @@
 #include "Internal.hh"
 #include "jsonsl.h"
 #include "mn_wordlist.h"
+#include "NumConversion.hh"
 #include <iostream>
 #include <float.h>
 
@@ -938,5 +939,52 @@ public:
         REQUIRE(keys[(unsigned)9999].buf == nullptr);
     }
 
-} }
+    TEST_CASE("Locale-free encoding") {
+        // Note this will fail if Linux is missing the French locale,
+        // so make sure it is installed on the machine doing testing
+        
+        char* original = setlocale(LC_ALL, "C");
+        char doubleBuf[32];
+        char floatBuf[32];
+        double testDouble = M_PI;
+        float testFloat = 2.71828f;
+        sprintf(doubleBuf, "%.16g", testDouble);
+        sprintf(floatBuf, "%.7g", testFloat);
+        CHECK((strcmp(doubleBuf, "3.141592653589793")) == 0);
+        CHECK((strcmp(floatBuf, "2.71828")) == 0);
 
+        WriteFloat(testDouble, doubleBuf, 32);
+        WriteFloat(testFloat, floatBuf, 32);
+        CHECK((strcmp(doubleBuf, "3.141592653589793")) == 0);
+        CHECK((strcmp(floatBuf, "2.71828")) == 0);
+
+        double recovered = ParseDouble(doubleBuf);
+        double recovered_f = ParseDouble(floatBuf);
+        CHECK(recovered == M_PI);
+        CHECK(recovered_f == 2.71828);
+
+        setlocale(LC_ALL, "fr_FR");
+        sprintf(doubleBuf, "%.16g", testDouble);
+        sprintf(floatBuf, "%.7g", testFloat);
+        CHECK((strcmp(doubleBuf, "3,141592653589793")) == 0);
+        CHECK((strcmp(floatBuf, "2,71828")) == 0);
+
+        WriteFloat(testDouble, doubleBuf, 32);
+        WriteFloat(testFloat, floatBuf, 32);
+        CHECK((strcmp(doubleBuf, "3.141592653589793")) == 0);
+        CHECK((strcmp(floatBuf, "2.71828")) == 0);
+
+        recovered = strtod(doubleBuf, nullptr);
+        recovered_f = strtod(floatBuf, nullptr);
+        CHECK(recovered != M_PI); // Locale dependent, incorrect result
+        CHECK(recovered_f != 2.71828);
+
+        recovered = ParseDouble(doubleBuf);
+        recovered_f = ParseDouble(floatBuf);
+        CHECK(recovered == M_PI); // Locale independent, correct result
+        CHECK(recovered_f == 2.71828);
+
+        setlocale(LC_ALL, original);
+    }
+
+} }
