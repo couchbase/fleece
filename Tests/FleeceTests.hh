@@ -98,11 +98,11 @@ namespace fleece {
     }
 
     static inline bool DoubleEquals(double left, double right) {
-        return ::abs(left - right) <= DBL_EPSILON;
+        return std::abs(left - right) <= DBL_EPSILON;
     }
 
     static inline bool FloatEquals(float left, float right) {
-        return ::abs(left - right) <= FLT_EPSILON;
+        return std::abs(left - right) <= FLT_EPSILON;
     }
 }
 

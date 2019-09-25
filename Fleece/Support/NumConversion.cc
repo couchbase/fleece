@@ -38,8 +38,8 @@ namespace fleece {
             // Note: Android only supports the following locales, all of which use
             // period, so no problem:  C, POSIX, en_US.  Android API 26 introduces
             // strtod_l, which maybe will be eventually implemented when and if more
-            // locales comin
-            return strtod(str);
+            // locales come in
+            return strtod(str, nullptr);
         #else                       // Linux
             static locale_t kCLocale = newlocale(LC_ALL_MASK, "C", NULL);
             return strtod_l(str, nullptr, kCLocale);
