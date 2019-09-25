@@ -199,9 +199,9 @@ namespace fleece { namespace impl {
             }
             case kFloatTag: {
                 if (_byte[0] & 0x8)
-                    sprintf(str, "%.16g", asDouble());
+                    WriteDouble(asDouble(), str, 32);
                 else
-                    sprintf(str, "%.6g", asFloat());
+                    WriteFloat(asFloat(), str, 32);
                 break;
             }
             default:
