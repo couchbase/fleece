@@ -34,6 +34,12 @@ namespace fleece {
         #elif defined(_MSC_VER)     // Windows
             static _locale_t kCLocale = _create_locale(LC_ALL, "C");
             return _strtod_l(str, nullptr, kCLocale);
+        #elif defined(__ANDROID__) && __ANDROID_API__ < 26
+            // Note: Android only supports the following locales, all of which use
+            // period, so no problem:  C, POSIX, en_US.  Android API 26 introduces
+            // strtod_l, which maybe will be eventually implemented when and if more
+            // locales comin
+            return strtod(str);
         #else                       // Linux
             static locale_t kCLocale = newlocale(LC_ALL_MASK, "C", NULL);
             return strtod_l(str, nullptr, kCLocale);

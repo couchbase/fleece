@@ -95,6 +95,14 @@ namespace fleece {
     static inline std::ostream& operator<< (std::ostream& o, slice s) {
         return dumpSlice(o, s);
     }
+
+    static inline bool DoubleEquals(double left, double right) {
+        return ::abs(left - right) <= DBL_EPSILON;
+    }
+
+    static inline bool FloatEquals(float left, float right) {
+        return ::abs(left - right) <= FLT_EPSILON;
+    }
 }
 
 // This has to come last so that '<<' overrides can be used by Catch.

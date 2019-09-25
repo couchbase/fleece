@@ -981,13 +981,13 @@ public:
 
         recovered = strtod(doubleBuf, nullptr);
         recovered_f = strtod(floatBuf, nullptr);
-        CHECK(recovered != M_PI); // Locale dependent, incorrect result
-        CHECK(recovered_f != 2.71828);
+        CHECK(!DoubleEquals(recovered, M_PI)); // Locale dependent, incorrect result
+        CHECK(!FloatEquals(recovered_f, 2.71828f));
 
         recovered = ParseDouble(doubleBuf);
         recovered_f = ParseDouble(floatBuf);
-        CHECK(recovered == M_PI); // Locale independent, correct result
-        CHECK(recovered_f == 2.71828);
+        CHECK(DoubleEquals(recovered, M_PI)); // Locale independent, correct result
+        CHECK(FloatEquals(recovered_f, 2.71828f));
 
         setlocale(LC_ALL, original);
     }
