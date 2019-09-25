@@ -113,7 +113,21 @@ namespace fleece {
             return *this = r._ref;
         }
 
+        template <typename U>
+        Retained& operator=(const Retained<U> &r) noexcept {
+            return *this = r._ref;
+        }
+
         Retained& operator= (Retained &&r) noexcept {
+            auto oldRef = _ref;
+            _ref = r._ref;
+            r._ref = nullptr;
+            release(oldRef);
+            return *this;
+        }
+
+        template <typename U>
+        Retained& operator= (Retained<U> &&r) noexcept {
             auto oldRef = _ref;
             _ref = r._ref;
             r._ref = nullptr;
