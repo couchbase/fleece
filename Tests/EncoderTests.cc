@@ -963,7 +963,12 @@ public:
         CHECK(recovered == M_PI);
         CHECK(recovered_f == 2.71828);
 
+#ifdef _MSC_VER
+        setlocale(LC_ALL, "fr-FR");
+#else
         setlocale(LC_ALL, "fr_FR");
+#endif
+
         sprintf(doubleBuf, "%.16g", testDouble);
         sprintf(floatBuf, "%.7g", testFloat);
         CHECK((strcmp(doubleBuf, "3,141592653589793")) == 0);
