@@ -959,9 +959,9 @@ public:
         CHECK((strcmp(floatBuf, "2.71828")) == 0);
 
         double recovered = ParseDouble(doubleBuf);
-        double recovered_f = ParseDouble(floatBuf);
-        CHECK(recovered == M_PI);
-        CHECK(recovered_f == 2.71828);
+        float recovered_f = (float)ParseDouble(floatBuf);
+        CHECK(DoubleEquals(recovered, M_PI));
+        CHECK(FloatEquals(recovered_f, 2.71828f));
 
 #ifdef _MSC_VER
         setlocale(LC_ALL, "fr-FR");
@@ -980,12 +980,12 @@ public:
         CHECK((strcmp(floatBuf, "2.71828")) == 0);
 
         recovered = strtod(doubleBuf, nullptr);
-        recovered_f = strtod(floatBuf, nullptr);
+        recovered_f = (float)strtod(floatBuf, nullptr);
         CHECK(!DoubleEquals(recovered, M_PI)); // Locale dependent, incorrect result
         CHECK(!FloatEquals(recovered_f, 2.71828f));
 
         recovered = ParseDouble(doubleBuf);
-        recovered_f = ParseDouble(floatBuf);
+        recovered_f = (float)ParseDouble(floatBuf);
         CHECK(DoubleEquals(recovered, M_PI)); // Locale independent, correct result
         CHECK(FloatEquals(recovered_f, 2.71828f));
 

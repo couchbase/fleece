@@ -24,6 +24,7 @@
 #include "Benchmark.hh"
 #include <ostream>
 #include <cfloat>
+#include <cmath>
 #ifdef _MSC_VER
 #include <windows.h>
 #endif
