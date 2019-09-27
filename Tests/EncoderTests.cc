@@ -943,7 +943,6 @@ public:
         // Note this will fail if Linux is missing the French locale,
         // so make sure it is installed on the machine doing testing
         
-        char* original = setlocale(LC_ALL, "C");
         char doubleBuf[32];
         char floatBuf[32];
         double testDouble = M_PI;
@@ -989,7 +988,7 @@ public:
         CHECK(DoubleEquals(recovered, M_PI)); // Locale independent, correct result
         CHECK(FloatEquals(recovered_f, 2.71828f));
 
-        setlocale(LC_ALL, original);
+        setlocale(LC_ALL, "C");
     }
 
 } }
