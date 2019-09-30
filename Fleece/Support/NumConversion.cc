@@ -20,7 +20,7 @@
 #include "SwiftDtoa.h"
 #include <locale.h>
 #include <stdlib.h>
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) && !defined(__GLIBC__)
 #include <xlocale.h>
 #endif
 
