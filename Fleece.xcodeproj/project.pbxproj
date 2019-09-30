@@ -135,7 +135,7 @@
 		27D965682339595700F4A51C /* NumConversion.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27D965662339595700F4A51C /* NumConversion.hh */; };
 		27D965692339595700F4A51C /* NumConversion.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27D965672339595700F4A51C /* NumConversion.cc */; };
 		27D9656D23397EF700F4A51C /* SwiftDtoa.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D9656B23397EF700F4A51C /* SwiftDtoa.h */; };
-		27D9656E23397EF700F4A51C /* SwiftDtoa.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27D9656C23397EF700F4A51C /* SwiftDtoa.cc */; settings = {COMPILER_FLAGS = "-Wno-implicit-int-conversion -Wno-shadow -Wno-shorten-64-to-32"; }; };
+		27D9656E23397EF700F4A51C /* SwiftDtoa.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27D9656C23397EF700F4A51C /* SwiftDtoa.cc */; settings = {COMPILER_FLAGS = "-Wno-implicit-int-conversion -Wno-shadow -Wno-shorten-64-to-32 -Wno-conversion"; }; };
 		27D96573233AB44000F4A51C /* NumericTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27D96572233AB44000F4A51C /* NumericTests.cc */; };
 		27DE2E922125FA1700123597 /* varint.cc in Sources */ = {isa = PBXBuildFile; fileRef = 270FA2761BF53CEA005DCB13 /* varint.cc */; };
 		27DE2E962125FA1700123597 /* RefCounted.cc in Sources */ = {isa = PBXBuildFile; fileRef = 274D8254209D1764008BB39F /* RefCounted.cc */; };
