@@ -41,6 +41,7 @@ set(FLEECE_BASE_SRC Fleece/Support/Backtrace.cc
                     Fleece/Support/RefCounted.cc
                     Fleece/Support/Writer.cc
                     Fleece/Support/betterassert.cc
+                    Fleece/Support/FLSlice.cc
                     Fleece/Support/slice.cc
                     Fleece/Support/varint.cc
                     vendor/libb64/cdecode.c

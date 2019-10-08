@@ -92,21 +92,24 @@ bool FLSlice_Equal(FLSlice a, FLSlice b);
     differences in length. */
 int FLSlice_Compare(FLSlice, FLSlice);
 
-/** Increments the ref-count of a FLSliceResult. */
-FLSliceResult FLSliceResult_Retain(FLSliceResult);
-
-/** Decrements the ref-count of a FLSliceResult, freeing its memory if it reached zero. */
-void FLSliceResult_Release(FLSliceResult);
-
-/** Frees a FLSliceResult. (Actually it decrements its ref-count, only freeing the memory it
-    points to when the ref-count reaches zero.)
-    (This is identical to FLSliceResult_Release, but kept for compatibility reasons.) */
-static inline void FLSliceResult_Free(FLSliceResult s) {
-    FLSliceResult_Release(s);
-}
+/** Allocates an FLSliceResult of the given size, without initializing the buffer. */
+FLSliceResult FLSliceResult_New(size_t);
 
 /** Allocates an FLSliceResult, copying the given slice. */
 FLSliceResult FLSlice_Copy(FLSlice);
+
+/** Increments the ref-count of a FLSliceResult. */
+static inline FLSliceResult FLSliceResult_Retain(FLSliceResult s) {
+    void _FLBuf_Retain(const void*);
+    _FLBuf_Retain(s.buf);
+    return s;
+}
+
+/** Decrements the ref-count of a FLSliceResult, freeing its memory if it reached zero. */
+static inline void FLSliceResult_Release(FLSliceResult s) {
+    void _FLBuf_Release(const void*);
+    _FLBuf_Release(s.buf);
+}
 
 
 /** @} */

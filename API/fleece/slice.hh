@@ -115,7 +115,7 @@ namespace fleece {
 
         slice copy() const;
 
-        explicit operator std::string() const;
+        explicit operator std::string() const       {return std::string((const char*)buf, size);}
         std::string asString() const                {return (std::string)*this;}
         std::string hexString() const;
         std::string base64String() const;
@@ -266,9 +266,9 @@ namespace fleece {
         explicit alloc_slice(size_t s);
         explicit alloc_slice(pure_slice s);
         alloc_slice(const void* b, size_t s)
-            :alloc_slice(slice(b, s)) { }
+            :alloc_slice(slice(b, s))                       {}
         alloc_slice(const void* start NONNULL, const void* end NONNULL)
-            :alloc_slice(slice(start, end)) {}
+            :alloc_slice(slice(start, end))                 {}
         explicit alloc_slice(const std::string &str)
             :alloc_slice(slice(str)) {}
         explicit alloc_slice(FLSlice s)     :alloc_slice(pure_slice{s.buf, s.size}) { }
@@ -327,8 +327,8 @@ namespace fleece {
         alloc_slice& operator=(const char *str NONNULL)     {*this = (slice)str; return *this;}
         alloc_slice& operator=(const std::string &str)      {*this = (slice)str; return *this;}
 
-        alloc_slice& retain() noexcept;
-        void release() noexcept;
+        alloc_slice& retain() noexcept                      {FLSliceResult_Retain({buf,size}); return *this;}
+        inline void release() noexcept                      {FLSliceResult_Release({buf,size});}
 
         static void retain(slice s) noexcept                {((alloc_slice*)&s)->retain();}
         static void release(slice s) noexcept               {((alloc_slice*)&s)->release();}

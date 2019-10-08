@@ -40,26 +40,9 @@ const FLArray kFLEmptyArray = Array::kEmpty;
 const FLDict kFLEmptyDict   = Dict::kEmpty;
 
 
-bool FLSlice_Equal(FLSlice a, FLSlice b)        {return (slice)a == (slice)b;}
-int FLSlice_Compare(FLSlice a, FLSlice b)       {return ((slice)a).compare((slice)b); }
-
-
 static FLSliceResult toSliceResult(alloc_slice &&s) {
     s.retain();
     return {(void*)s.buf, s.size};
-}
-
-void FLSliceResult_Release(FLSliceResult s) {
-    alloc_slice::release({s.buf, s.size});
-}
-
-FLSliceResult FLSliceResult_Retain(FLSliceResult s) {
-    alloc_slice::retain({s.buf, s.size});
-    return s;
-}
-
-FLSliceResult FLSlice_Copy(FLSlice s) {
-    return toSliceResult(alloc_slice(s));
 }
 
 

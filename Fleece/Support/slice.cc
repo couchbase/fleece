@@ -279,11 +279,6 @@ namespace fleece {
         return s.buf >= buf && s.end() <= end();
     }
 
-    pure_slice::operator std::string() const {
-        return std::string((const char*)buf, size);
-    }
-
-
     std::string pure_slice::hexString() const {
         static const char kDigits[17] = "0123456789abcdef";
         std::string result;
@@ -345,102 +340,25 @@ namespace fleece {
 #pragma mark - ALLOC_SLICE
 
 
-#ifndef NDEBUG
-#if FL_EMBEDDED
-    static constexpr size_t kHeapAlignmentMask = 0x03;
-#else
-    static constexpr size_t kHeapAlignmentMask = 0x07;
-#endif
-    static inline bool isHeapAligned(const void *p) {
-        return ((size_t)p & kHeapAlignmentMask) == 0;
+    static inline pure_slice asSlice(FLSliceResult s) {
+        return {s.buf, s.size};
     }
-#endif
-
-
-// FL_DETECT_COPIES enables a check for unnecessary copying of alloc_slice memory: situations
-// where an alloc_slice gets downcast to a slice, which is then used to construct another
-// alloc_slice. If you can fix the calling code to avoid the downcast, the alloc_slice
-// constructor will just retain instead of copying.
-// This mode is incompatible with sanitizer tools like Clang's Address Sanitizer or valgrind,
-// since it peeks outside the bounds of the input slice, which is very likely to trigger
-// warnings about buffer overruns.
-#ifndef FL_DETECT_COPIES
-#define FL_DETECT_COPIES 0
-#endif
-
-
-    // The heap-allocated buffer that an alloc_slice points to.
-    // It's ref-counted; every alloc_slice manages retaining/releasing its sharedBuffer.
-    struct alloc_slice::sharedBuffer {
-        std::atomic<uint32_t> _refCount {1};
-#if FL_DETECT_COPIES
-        static constexpr uint32_t kMagic = 0xdecade55;
-        uint32_t const _magic {kMagic};
-#endif
-        uint8_t _buf[4];
-
-        inline sharedBuffer* retain() noexcept {
-            assert(isHeapAligned(this));
-            ++_refCount;
-            return this;
-        }
-
-        inline void release() noexcept {
-            assert(isHeapAligned(this));
-            if (--_refCount == 0)
-                delete this;
-        }
-
-        static inline void* operator new(size_t basicSize, size_t bufferSize) {
-            return ::operator new(basicSize - sizeof(sharedBuffer::_buf) + bufferSize);
-        }
-
-        static inline sharedBuffer* newBuffer(size_t size) {
-            return new(size) sharedBuffer;
-        }
-
-        static inline slice newSlice(size_t size) {
-            return {&newBuffer(size)->_buf, size};
-        }
-
-        static inline slice newSlice(pure_slice s) {
-            if (!s.buf)
-                return nullslice;
-#if FL_DETECT_COPIES
-            // Warn if s appears to be the buffer of an existing alloc_slice:
-            if (s.buf && isHeapAligned(s.buf)
-                      && ((size_t)s.buf & 0xFFF) >= 4   // reading another VM page may crash
-                      && ((const uint32_t*)s.buf)[-1] == kMagic) {
-                fprintf(stderr, "$$$$$ Copying existing alloc_slice at {%p, %zu}\n", s.buf, s.size);
-            } 
-#endif
-            auto sb = newBuffer(s.size);
-            memcpy(&sb->_buf, s.buf, s.size);
-            return {&sb->_buf, s.size};
-        }
-
-        static inline void operator delete(void* ptr) {
-            assert(isHeapAligned(ptr));
-            ::operator delete(ptr);
-        }
-    };
 
 
     alloc_slice::alloc_slice(size_t sz)
-    :pure_slice(sharedBuffer::newSlice(sz))
-    { }
+    :pure_slice(asSlice(FLSliceResult_New(sz)))
+    {
+        if (_usuallyFalse(!buf))
+            throw std::bad_alloc();
+    }
 
 
     alloc_slice::alloc_slice(pure_slice s)
-    :pure_slice(sharedBuffer::newSlice(s))
-    { }
-
-    inline alloc_slice::sharedBuffer* alloc_slice::shared() noexcept {
-        return offsetby((sharedBuffer*)buf, -((long long)offsetof(sharedBuffer, _buf)));
+    :pure_slice(asSlice(FLSlice_Copy({s.buf, s.size})))
+    {
+        if (_usuallyFalse(!buf) && s.buf)
+            throw std::bad_alloc();
     }
-
-    alloc_slice& alloc_slice::retain() noexcept     {if (buf) shared()->retain(); return *this;}
-    void alloc_slice::release() noexcept            {if (buf) shared()->release();}
 
 
     alloc_slice::alloc_slice(const alloc_slice& s) noexcept
@@ -484,16 +402,12 @@ namespace fleece {
     }
 
     void alloc_slice::reset(size_t sz) {
-        release();
-        assignFrom(sharedBuffer::newSlice(sz));
+        *this = alloc_slice(sz);
     }
 
     
     alloc_slice& alloc_slice::operator=(pure_slice s) {
-        slice newS = sharedBuffer::newSlice(s);
-        release();
-        assignFrom(newS);
-        return *this;
+        return *this = alloc_slice(s);
     }
 
 
@@ -503,10 +417,9 @@ namespace fleece {
         } else if (buf == nullptr) {
             reset(newSize);
         } else {
-            sharedBuffer* newBuf = sharedBuffer::newBuffer(newSize);
-            memcpy(newBuf->_buf, buf, std::min(size, newSize));
-            release();
-            set(newBuf->_buf, newSize);
+            alloc_slice newSlice(newSize);
+            memcpy((void*)newSlice.buf, buf, std::min(size, newSize));
+            *this = std::move(newSlice);
         }
     }
 
