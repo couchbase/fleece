@@ -16,7 +16,10 @@
 // limitations under the License.
 //
 
-#include "FLSlice.h"
+#include "fleece/FLSlice.h"
+#include <atomic>
+#include <cstddef>
+#include "betterassert.hh"
 
 
 bool FLSlice_Equal(FLSlice a, FLSlice b) {
@@ -83,10 +86,6 @@ namespace fleece {
             free(self);
         }
 
-        static sharedBuffer* fromBuf(const void *buf) {
-            return offsetby((sharedBuffer*)buf, -((long long)offsetof(sharedBuffer, _buf)));
-        }
-
         inline void retain() noexcept {
             assert(isHeapAligned(this));
             ++_refCount;
@@ -98,6 +97,10 @@ namespace fleece {
                 delete this;
         }
     };
+
+    static sharedBuffer* bufferFromBuf(const void *buf) {
+        return (sharedBuffer*)((uint8_t*)buf  - offsetof(sharedBuffer, _buf));
+    }
 
 }
 
@@ -131,19 +134,15 @@ FLSliceResult FLSlice_Copy(FLSlice s) {
 }
 
 
-void _FLBuf_Retain(const void*);
-void _FLBuf_Release(const void*);
-
-
 void _FLBuf_Retain(const void *buf) {
     if (buf)
-        sharedBuffer::fromBuf(buf)->retain();
+        bufferFromBuf(buf)->retain();
 }
 
 
 void _FLBuf_Release(const void *buf) {
     if (buf)
-        sharedBuffer::fromBuf(buf)->release();
+        bufferFromBuf(buf)->release();
 }
 
 

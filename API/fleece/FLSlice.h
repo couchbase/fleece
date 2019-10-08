@@ -98,16 +98,17 @@ FLSliceResult FLSliceResult_New(size_t);
 /** Allocates an FLSliceResult, copying the given slice. */
 FLSliceResult FLSlice_Copy(FLSlice);
 
+void _FLBuf_Retain(const void*);   // internal; do not call
+void _FLBuf_Release(const void*);  // internal; do not call
+
 /** Increments the ref-count of a FLSliceResult. */
 static inline FLSliceResult FLSliceResult_Retain(FLSliceResult s) {
-    void _FLBuf_Retain(const void*);
     _FLBuf_Retain(s.buf);
     return s;
 }
 
 /** Decrements the ref-count of a FLSliceResult, freeing its memory if it reached zero. */
 static inline void FLSliceResult_Release(FLSliceResult s) {
-    void _FLBuf_Release(const void*);
     _FLBuf_Release(s.buf);
 }
 

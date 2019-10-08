@@ -345,6 +345,7 @@
 		274D8255209D1764008BB39F /* RefCounted.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = RefCounted.hh; sourceTree = "<group>"; };
 		2750735D1F4B5F0F003D2CCE /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		275B3595234BE12800FE9CF0 /* FLSlice.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FLSlice.cc; sourceTree = "<group>"; };
+		275B35A2234E4D3C00FE9CF0 /* cmake */ = {isa = PBXFileReference; lastKnownFileType = folder; path = cmake; sourceTree = "<group>"; };
 		275C67DB1BFBA0F4008AA9E7 /* Fleece.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Fleece.md; sourceTree = "<group>"; };
 		275C67DC1BFBA128008AA9E7 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		275CED501D3EF7BE001DE46C /* FleeceException.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FleeceException.cc; sourceTree = "<group>"; };
@@ -530,6 +531,7 @@
 				27298E3E1C00F8A9000CFBA8 /* vendor */,
 				270FA25D1BF53CAD005DCB13 /* Products */,
 				2750735D1F4B5F0F003D2CCE /* CMakeLists.txt */,
+				275B35A2234E4D3C00FE9CF0 /* cmake */,
 				27DE2EE22125FAC600123597 /* Frameworks */,
 			);
 			sourceTree = "<group>";

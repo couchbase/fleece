@@ -8,8 +8,8 @@ _kFLEmptyDict
 
 _FLSlice_Equal
 _FLSlice_Compare
-_FLSliceResult_Retain
-_FLSliceResult_Release
+__FLBuf_Retain
+__FLBuf_Release
 
 _FLDoc_FromResultData
 _FLDoc_FromJSON

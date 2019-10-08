@@ -30,9 +30,9 @@
 #endif // assert_always
 
 
-#ifndef NDEBUG
-
-    #undef assert
+#undef assert
+#ifdef NDEBUG
+    #define assert(e) ((void)0)
+#else
     #define assert(e) assert_always(e)
-
 #endif //NDEBUG
