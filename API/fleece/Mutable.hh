@@ -5,8 +5,8 @@
 //
 
 #pragma once
-#include "fleece/Fleece.hh"
-#include "betterassert.hh"
+#include "Fleece.hh"
+#include <assert.h>
 
 namespace fleece {
 
@@ -36,6 +36,7 @@ namespace fleece {
         void operator= (double v)                   {FLSlot_SetDouble(_slot, v);}
         void operator= (FLString v)                 {FLSlot_SetString(_slot, v);}
         void operator= (const char *v)              {FLSlot_SetString(_slot, slice(v));}
+        void operator= (const std::string &v)       {FLSlot_SetString(_slot, slice(v));}
         void setData(FLSlice v)                     {FLSlot_SetData(_slot, v);}
         void operator= (Value v)                    {FLSlot_SetValue(_slot, v);}
 
@@ -175,6 +176,8 @@ namespace fleece {
         // This enables e.g. `dict["key"_sl] = 17`
         inline keyref<MutableDict,slice> operator[] (slice key)
             {return keyref<MutableDict,slice>(*this, key);}
+        inline keyref<MutableDict,slice> operator[] (const char *key)
+            {return keyref<MutableDict,slice>(*this, slice(key));}
         inline keyref<MutableDict,Key&> operator[] (Key &key)
             {return keyref<MutableDict,Key&>(*this, key);}
 
@@ -190,7 +193,7 @@ namespace fleece {
         friend class Dict;
     };
 
-    
+
     /** Equivalent to Value except that, if it holds a MutableArray/Dict, it will retain the
         reference so it won't be freed. */
     class RetainedValue : public Value {

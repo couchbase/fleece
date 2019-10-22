@@ -20,9 +20,9 @@
 #ifndef _FLEECE_HH
 #define _FLEECE_HH
 #ifndef _FLEECE_H
-#include "fleece/Fleece.h"
+#include "Fleece.h"
 #endif
-#include "fleece/slice.hh"
+#include "slice.hh"
 #include <string>
 
 namespace fleece {
