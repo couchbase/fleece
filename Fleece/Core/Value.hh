@@ -196,8 +196,8 @@ namespace fleece { namespace impl {
         static NSMapTable* createSharedStringsTable() noexcept;
 #endif
 
-        void _retain();
-        void _release();
+        void _retain() const;
+        void _release() const;
 
     protected:
         constexpr Value(internal::tags tag, int tiny, int byte1 = 0)

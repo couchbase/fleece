@@ -420,7 +420,7 @@ namespace fleece { namespace impl {
     template const Value* Value::deref<true>() const;
 
 
-    void Value::_retain()   {HeapValue::retain(this);}
-    void Value::_release()  {HeapValue::release(this);}
+    void Value::_retain() const     {HeapValue::retain(this);}
+    void Value::_release() const    {HeapValue::release(this);}
 
 } }

@@ -187,8 +187,8 @@ namespace fleece {
         enc << "totoro";
         enc << "catbus";
         enc.endArray();
-        alloc_slice data = enc.finish();
-        const Array* fleeceArray = Value::fromData(data)->asArray();
+        auto doc = enc.finishDoc();
+        const Array* fleeceArray = doc->asArray();
 
         CHECK(fleeceArray->asMutable() == nullptr);
 
@@ -577,8 +577,8 @@ namespace fleece {
         }
         if (psk) {psk->save(); psk->transactionEnded();}
 
-        Scope original(data, sk);
-        const Dict* originalDict = Value::fromData(data)->asDict();
+        Retained<Doc> original = new Doc(data, Doc::kTrusted, sk);
+        const Dict* originalDict = original->asDict();
         std::cerr << "Contents:      " << originalDict->toJSON().asString() << "\n";
         std::cerr << "Original data: " << data << "\n\n";
         Value::dump(data, std::cerr);
@@ -726,7 +726,8 @@ namespace fleece {
 
     TEST_CASE("Larger mutable dict", "[Mutable]") {
         auto data = readTestFile("1person.fleece");
-        auto person = Value::fromTrustedData(data)->asDict();
+        auto doc = Doc::fromFleece(data, Doc::kTrusted);
+        auto person = doc->asDict();
 
         std::cerr << "Original data: " << data << "\n";
         std::cerr << "Contents:      " << person->toJSON().asString() << "\n";
@@ -811,7 +812,8 @@ namespace fleece {
             //std::cerr << "Data: " << data << "\n";
 
             // Verify the data is correct:
-            dict = Value::fromData(data)->asDict();
+            auto doc = Doc::fromFleece(data);
+            dict = doc->asDict();
             CHECK(dict->get("fast"_sl)->asInt() == i);
             md = MutableDict::newDict(dict);
         }
@@ -876,7 +878,8 @@ namespace fleece {
             //Value::dump(data, std::cerr);
 
             // Verify the data is correct:
-            dict = Value::fromData(data)->asDict();
+            auto doc = Doc::fromFleece(data);
+            dict = doc->asDict();
             //CHECK(dict->get("fast"_sl)->asInt() == i);
             md = MutableDict::newDict(dict);
         }

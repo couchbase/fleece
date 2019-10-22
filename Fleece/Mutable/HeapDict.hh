@@ -94,7 +94,7 @@ namespace fleece { namespace impl { namespace internal {
             key_t _sourceKey;
             uint32_t _count;
             SharedKeys* _sharedKeys;
-        };
+        }; // end of `iterator`
 
 
     protected:
@@ -114,12 +114,12 @@ namespace fleece { namespace impl { namespace internal {
         HeapCollection* getMutable(slice key, tags ifType);
         bool tooManyAncestors() const;
 
-        uint32_t _count {0};
-        const Dict* _source {nullptr};
-        Retained<SharedKeys> _sharedKeys;
-        keyMap _map;
-        std::deque<alloc_slice> _backingSlices;
-        Retained<HeapArray> _iterable;
+        uint32_t _count {0};                        // Dict's actual count
+        RetainedConst<Dict> _source;                // Original Dict I shadow, if any
+        Retained<SharedKeys> _sharedKeys;           // Namespace of integer keys
+        keyMap _map;                                // Actual storage of key-value pairs
+        std::deque<alloc_slice> _backingSlices;     // Backing storage of key slices
+        Retained<HeapArray> _iterable;              // All key-value pairs in sequence, for iterator
     };
     
 } } }

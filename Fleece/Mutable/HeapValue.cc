@@ -17,6 +17,8 @@
 //
 
 #include "HeapValue.hh"
+#include "Doc.hh"
+#include "FleeceException.hh"
 #include "varint.hh"
 #include <algorithm>
 #include "betterassert.hh"
@@ -139,12 +141,31 @@ namespace fleece { namespace impl { namespace internal {
     }
 
 
-    void HeapValue::retain(const Value *v) {
-        fleece::retain(HeapValue::asHeapValue(v));
+    const Value* HeapValue::retain(const Value *v) {
+        if (internal::HeapValue::isHeapValue(v)) {
+            fleece::retain(HeapValue::asHeapValue(v));
+        } else if (v) {
+            RetainedConst<Doc> doc = Doc::containing(v);
+            if (_usuallyFalse(!doc))
+                FleeceException::_throw(InvalidData,
+                                        "Can't retain immutable Value %p that's not part of a Doc",
+                                        v);
+            fleece::retain(doc.get());
+        }
+        return v;
     }
 
     void HeapValue::release(const Value *v) {
-        fleece::release(HeapValue::asHeapValue(v));
+        if (internal::HeapValue::isHeapValue(v)) {
+            fleece::release(HeapValue::asHeapValue(v));
+        } else if (v) {
+            RetainedConst<Doc> doc = Doc::containing(v);
+            if (_usuallyFalse(!doc))
+                FleeceException::_throw(InvalidData,
+                                        "Can't release immutable Value %p that's not part of a Doc",
+                                        v);
+            fleece::release(doc.get());
+        }
     }
 
 } } }

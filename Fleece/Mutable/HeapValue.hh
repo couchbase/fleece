@@ -48,7 +48,7 @@ namespace fleece { namespace impl {
             static bool isHeapValue(const Value *v)     {return ((size_t)v & 1) != 0;}
             static HeapValue* asHeapValue(const Value*);
 
-            static void retain(const Value *v);
+            static const Value* retain(const Value *v);
             static void release(const Value *v);
 
             void* operator new(size_t size)                 {return ::operator new(size);}
@@ -92,18 +92,6 @@ namespace fleece { namespace impl {
         };
 
     } // end internal namespace
-
-    
-    static inline const Value* retain(const Value *v) {
-        if (internal::HeapValue::isHeapValue(v))
-            internal::HeapValue::retain(v);
-        return v;
-    }
-
-    static inline void release(const Value *v) {
-        if (internal::HeapValue::isHeapValue(v))
-            internal::HeapValue::release(v);
-    }
 
 
     template <class T>

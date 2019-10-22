@@ -208,7 +208,7 @@ bool FLArrayIterator_Next(FLArrayIterator* i) {
 
 static FLMutableArray _newMutableArray(FLArray a, FLCopyFlags flags) noexcept {
     try {
-        return (MutableArray*)retain(MutableArray::newArray(a, CopyFlags(flags)));
+        return (MutableArray*)retain(MutableArray::newArray(a, CopyFlags(flags)).get());
     } catchError(nullptr)
     return nullptr;
 }
@@ -348,7 +348,7 @@ FLValue FLDict_GetWithKey(FLDict d, FLDictKey *k) {
 
 static FLMutableDict _newMutableDict(FLDict d, FLCopyFlags flags) noexcept {
     try {
-        return (MutableDict*)retain(MutableDict::newDict(d, CopyFlags(flags)));
+        return (MutableDict*)retain(MutableDict::newDict(d, CopyFlags(flags)).get());
     } catchError(nullptr)
     return nullptr;
 }

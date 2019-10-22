@@ -7,6 +7,7 @@
 
 #include "FleeceTests.hh"
 #include "MutableHashTree.hh"
+#include "Doc.hh"
 #include "PlatformCompat.hh"
 
 using namespace std;
@@ -21,7 +22,7 @@ public:
     MutableHashTree tree;
     vector<alloc_slice> keys;
     Array values;
-    alloc_slice _valueBuf;
+    Doc _doc;
 
     void createItems(size_t N) {
         Encoder enc;
@@ -29,8 +30,8 @@ public:
         for (size_t i = 0; i < N; i++)
             enc.writeInt(i);
         enc.endArray();
-        _valueBuf = enc.finish();
-        values = Value::fromData(_valueBuf, kFLTrusted).asArray();
+        _doc = enc.finishDoc();
+        values = _doc.asArray();
 
         keys.clear();
         for (size_t i = 0; i < N; i++) {
