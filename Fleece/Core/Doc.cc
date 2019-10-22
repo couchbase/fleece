@@ -260,17 +260,22 @@ namespace fleece { namespace impl {
     }
 
 
-    Doc::Doc(const Scope &parentScope,
-             slice subData,
-             Trust trust) noexcept
-    :Scope(parentScope, subData)
+    Doc::Doc(const Doc *parentDoc, slice subData, Trust trust) noexcept
+    :Scope(*parentDoc, subData)
+    ,_parent(parentDoc)                         // Ensure parent is retained
     {
         init(trust);
     }
 
 
+    Doc::Doc(const Scope &parentScope, slice subData, Trust trust) noexcept
+    :Scope(parentScope, subData)
+    {
+        init(trust);
+    }
+
     void Doc::init(Trust trust) noexcept {
-        if (data()) {
+        if (data() && trust != kDontParse) {
             _root = trust ? Value::fromTrustedData(data()) : Value::fromData(data());
             if (!_root)
                 unregister();
@@ -293,11 +298,11 @@ namespace fleece { namespace impl {
         if (!src)
             return nullptr;
         lock_guard<mutex> lock(sMutex);
-        Doc *scope = (Doc*) _containing(src);
+        const Scope *scope = _containing(src);
         if (!scope)
             return nullptr;
         assert(scope->_isDoc);
-        return RetainedConst<Doc>(scope);
+        return RetainedConst<Doc>((const Doc*)scope);
     }
 
 } }

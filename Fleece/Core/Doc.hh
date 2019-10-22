@@ -70,6 +70,7 @@ namespace fleece { namespace impl {
 #endif
     protected:
         bool                _isDoc {false};             // True if I am a field of a Doc
+        friend class Doc;
     };
 
 
@@ -79,7 +80,8 @@ namespace fleece { namespace impl {
     class Doc : public RefCounted, public Scope {
     public:
         enum Trust {
-            kUntrusted, kTrusted
+            kUntrusted, kTrusted,
+            kDontParse = -1
         };
 
         explicit
@@ -87,6 +89,10 @@ namespace fleece { namespace impl {
             Trust =kUntrusted,
             SharedKeys* =nullptr,
             slice externDest =nullslice) noexcept;
+
+        Doc(const Doc *parentDoc NONNULL,
+            slice subData,
+            Trust =kUntrusted) noexcept;
 
         Doc(const Scope &parentScope,
             slice subData,
@@ -108,6 +114,7 @@ namespace fleece { namespace impl {
         void init(Trust) noexcept;
 
         const Value*        _root {nullptr};            // The root object of the Fleece
+        RetainedConst<Doc>  _parent;
     };
 
 } }
