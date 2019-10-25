@@ -108,7 +108,7 @@ namespace fleece { namespace impl { namespace internal {
         std::vector<ValueSlot> _items;
 
         // The original Array that this is a mutable copy of.
-        const Array* _source {nullptr};
+        RetainedConst<Array> _source;
     };
     
 } } }
