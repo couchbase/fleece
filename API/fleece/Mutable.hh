@@ -221,7 +221,7 @@ namespace fleece {
             return *this;
         }
 
-        RetainedValue& operator= (nullptr_t) {      // disambiguation
+        RetainedValue& operator= (std::nullptr_t) {      // disambiguation
             FLValue_Release(_val);
             _val = nullptr;
             return *this;
