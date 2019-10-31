@@ -1148,7 +1148,7 @@
 		270FA2541BF53CAD005DCB13 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1100;
+				LastUpgradeCheck = 1110;
 				ORGANIZATIONNAME = Couchbase;
 				TargetAttributes = {
 					270FA25B1BF53CAD005DCB13 = {
@@ -1167,11 +1167,11 @@
 			};
 			buildConfigurationList = 270FA2571BF53CAD005DCB13 /* Build configuration list for PBXProject "Fleece" */;
 			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
-				English,
 				en,
+				Base,
 			);
 			mainGroup = 270FA2531BF53CAD005DCB13;
 			productRefGroup = 270FA25D1BF53CAD005DCB13 /* Products */;
