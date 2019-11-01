@@ -33,7 +33,6 @@ function(set_source_files_base)
         Fleece/Support/InstanceCounted.cc
         Fleece/Support/NumConversion.cc
         Fleece/Support/JSON5.cc
-        Fleece/Support/JSONEncoder.cc
         Fleece/Support/LibC++Debug.cc
         Fleece/Support/ParseDate.cc
         Fleece/Support/RefCounted.cc
