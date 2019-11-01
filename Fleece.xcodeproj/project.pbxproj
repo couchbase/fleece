@@ -200,7 +200,6 @@
 		27F25A8F20AA053D00E181FA /* Pointer.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27F25A8D20AA053D00E181FA /* Pointer.hh */; };
 		27F666442017E26700A8ED31 /* SupportTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27F666432017E26700A8ED31 /* SupportTests.cc */; };
 		27F666472017FE7C00A8ED31 /* TempArray.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27F666462017FE7C00A8ED31 /* TempArray.hh */; };
-		27FE87F31E53E43200C5CF3F /* JSONEncoder.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27FE87F11E53E43200C5CF3F /* JSONEncoder.cc */; };
 		27FE87F41E53E43200C5CF3F /* JSONEncoder.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27FE87F21E53E43200C5CF3F /* JSONEncoder.hh */; };
 /* End PBXBuildFile section */
 
@@ -453,7 +452,6 @@
 		27F25A8D20AA053D00E181FA /* Pointer.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Pointer.hh; sourceTree = "<group>"; };
 		27F666432017E26700A8ED31 /* SupportTests.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SupportTests.cc; sourceTree = "<group>"; };
 		27F666462017FE7C00A8ED31 /* TempArray.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = TempArray.hh; sourceTree = "<group>"; };
-		27FE87F11E53E43200C5CF3F /* JSONEncoder.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSONEncoder.cc; sourceTree = "<group>"; };
 		27FE87F21E53E43200C5CF3F /* JSONEncoder.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = JSONEncoder.hh; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -749,7 +747,6 @@
 				27DFAE11219F83AB00DF57EB /* InstanceCounted.cc */,
 				276D15441E007D3000543B1B /* JSON5.cc */,
 				276D15451E007D3000543B1B /* JSON5.hh */,
-				27FE87F11E53E43200C5CF3F /* JSONEncoder.cc */,
 				27FE87F21E53E43200C5CF3F /* JSONEncoder.hh */,
 				27D965662339595700F4A51C /* NumConversion.hh */,
 				27D965672339595700F4A51C /* NumConversion.cc */,
@@ -1243,7 +1240,6 @@
 				27298E801C04E665000CFBA8 /* Encoder.cc in Sources */,
 				27298E3C1C00F812000CFBA8 /* JSONConverter.cc in Sources */,
 				279AC53C1C097941002C80DB /* Value+Dump.cc in Sources */,
-				27FE87F31E53E43200C5CF3F /* JSONEncoder.cc in Sources */,
 				27B802D720DD750E00599DF0 /* NodeRef.cc in Sources */,
 				2797BCAC1C0FBFDE00E5C991 /* StringTable.cc in Sources */,
 				274D8248209A5906008BB39F /* ValueSlot.cc in Sources */,
