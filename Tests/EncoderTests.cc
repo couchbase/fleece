@@ -564,7 +564,7 @@ public:
 
     TEST_CASE_METHOD(EncoderTests, "JSON", "[Encoder]") {
         slice json("{\"\":\"hello\\nt\\\\here\","
-                            "\"\\\"ironic\\\"\":[null,false,true,-100,0,100,123.456,6.02e+23],"
+                            "\"\\\"ironic\\\"\":[null,false,true,-100,0,100,123.456,6.02e+23,5e-06],"
                             "\"foo\":123}");
         JSONConverter j(enc);
         REQUIRE(j.encodeJSON(json));
