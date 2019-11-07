@@ -413,7 +413,7 @@ namespace fleece {
         constexpr slice_NONNULL(const void* b NONNULL, size_t s)    :slice(b, s) {}
         constexpr slice_NONNULL(slice s)                            :slice_NONNULL(s.buf, s.size) {}
         constexpr slice_NONNULL(FLSlice s)                          :slice_NONNULL(s.buf,s.size) {}
-        constexpr slice_NONNULL(const char *str NONNULL)            :slice(str) {}
+        constexpr17 slice_NONNULL(const char *str NONNULL)          :slice(str) {}
         slice_NONNULL(alloc_slice s)                                :slice_NONNULL(s.buf,s.size) {}
         slice_NONNULL(const std::string &str)               :slice_NONNULL(str.data(),str.size()) {}
 #ifdef SLICE_SUPPORTS_STRING_VIEW
