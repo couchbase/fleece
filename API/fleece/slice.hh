@@ -159,6 +159,13 @@ namespace fleece {
             return h;
         }
 
+        static constexpr17 uint32_t hash(const char *str NONNULL) {
+            uint32_t h = 2166136261;
+            while (*str)
+                h = (h ^ uint8_t(*str++)) * 16777619;
+            return h;
+        }
+
         /** Raw memory allocation. Just like malloc but throws on failure. */
         static void* newBytes(size_t sz);
         template <typename T>
@@ -210,7 +217,7 @@ namespace fleece {
         inline constexpr slice(const alloc_slice&);
 
         slice(const std::string& str)               :slice(&str[0], str.length()) {}
-        explicit constexpr slice(const char* str)   :slice(str, str ? strlen(str) : 0) {}
+        constexpr17 slice(const char* str)          :slice(str, _strlen(str)) {}
 #ifdef SLICE_SUPPORTS_STRING_VIEW
         constexpr slice(std::string_view str)       :slice(str.data(), str.length()) {}
 #endif
@@ -258,6 +265,15 @@ namespace fleece {
         explicit slice(NSData* data)                         :pure_slice(data) {}
 #endif
 #endif
+
+        // like strlen but can run at compile time
+        static constexpr17 size_t _strlen(const char *str) {
+            if (!str)
+                return 0;
+            auto c = str;
+            while (*c) ++c;
+            return c - str;
+        }
     };
 
 
@@ -397,6 +413,7 @@ namespace fleece {
         constexpr slice_NONNULL(const void* b NONNULL, size_t s)    :slice(b, s) {}
         constexpr slice_NONNULL(slice s)                            :slice_NONNULL(s.buf, s.size) {}
         constexpr slice_NONNULL(FLSlice s)                          :slice_NONNULL(s.buf,s.size) {}
+        constexpr slice_NONNULL(const char *str NONNULL)            :slice(str) {}
         slice_NONNULL(alloc_slice s)                                :slice_NONNULL(s.buf,s.size) {}
         slice_NONNULL(const std::string &str)               :slice_NONNULL(str.data(),str.size()) {}
 #ifdef SLICE_SUPPORTS_STRING_VIEW

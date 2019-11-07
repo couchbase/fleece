@@ -89,8 +89,7 @@ namespace fleece { namespace impl {
         void writeFloat(float);
         void writeDouble(double);
 
-        void writeString(const std::string&);
-        void writeString(slice s)           {(void)_writeString(s);}
+        void writeString(slice s)                           {(void)_writeString(s);}
 
         void writeDateString(int64_t timestamp, bool asUTC =true);
 
@@ -140,8 +139,6 @@ namespace fleece { namespace impl {
         void endDictionary();
 
         /** Writes a key to the current dictionary. This must be called before adding a value. */
-        void writeKey(const std::string&);
-        /** Writes a key to the current dictionary. This must be called before adding a value. */
         void writeKey(slice);
 
         /** Writes a numeric key (encoded with SharedKeys) to the current dictionary. */
@@ -169,7 +166,6 @@ namespace fleece { namespace impl {
         Encoder& operator<< (unsigned int i)    {writeUInt(i); return *this;}
         Encoder& operator<< (double d)          {writeDouble(d); return *this;}
         Encoder& operator<< (float f)           {writeFloat(f); return *this;}
-        Encoder& operator<< (const std::string &str)   {writeString(str); return *this;}
         Encoder& operator<< (slice s)           {writeString(s); return *this;} // string not data!
         Encoder& operator<< (const Value *v NONNULL)    {writeValue(v); return *this;}
 

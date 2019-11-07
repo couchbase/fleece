@@ -43,7 +43,6 @@ namespace fleece { namespace impl {
         //// Construction from a string: (throws FleeceException with code PathSyntaxError)
 
         Path(slice specifier)                       {addComponents(specifier);}
-        Path(const std::string &specifier)          :Path(slice(specifier)) { }
 
         //// Step-by-step construction:
 

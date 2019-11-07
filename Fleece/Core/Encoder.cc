@@ -361,10 +361,6 @@ namespace fleece { namespace impl {
         }
     }
 
-    void Encoder::writeString(const std::string &s) {
-        _writeString(slice(s));
-    }
-
     void Encoder::writeData(slice s) {
         writeData(kBinaryTag, s);
     }
@@ -580,10 +576,6 @@ namespace fleece { namespace impl {
                 FleeceException::_throw(EncodeError, "not writing a dictionary");
         }
         _blockedOnKey = false;
-    }
-
-    void Encoder::writeKey(const std::string &s) {
-        writeKey(slice(s));
     }
 
     void Encoder::writeKey(slice s) {
