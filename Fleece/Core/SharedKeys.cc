@@ -21,6 +21,14 @@
 #include "FleeceException.hh"
 
 
+#ifdef __APPLE__
+#include <CoreFoundation/CFString.h>
+typedef CFStringRef PlatformString;
+#else
+typedef void* PlatformString;
+#endif
+
+
 #define LOCK(MUTEX)     lock_guard<mutex> _lock(MUTEX)
 
 
@@ -155,7 +163,11 @@ namespace fleece { namespace impl {
         LOCK(_mutex);
         if ((unsigned)key >= _platformStringsByKey.size())
             _platformStringsByKey.resize(key + 1);
+#ifdef __APPLE__
+        _platformStringsByKey[key] = CFRetain(platformKey);
+#else
         _platformStringsByKey[key] = platformKey;
+#endif
     }
 
 
