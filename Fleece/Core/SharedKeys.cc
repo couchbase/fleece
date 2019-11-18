@@ -36,6 +36,15 @@ namespace fleece { namespace impl {
     using namespace std;
 
 
+    SharedKeys::~SharedKeys() {
+    #ifdef __APPLE__
+        for (auto &str : _platformStringsByKey) {
+            if (str)
+                CFRelease(str);
+        }
+    #endif
+    }
+
     key_t::key_t(const Value *v) noexcept {
         if (v->isInteger())
             _int = (int16_t)v->asInt();
