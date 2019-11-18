@@ -116,7 +116,7 @@ namespace fleece { namespace impl {
         PlatformString platformStringForKey(int key) const;
 
     protected:
-        virtual ~SharedKeys() =default;
+        virtual ~SharedKeys();
         virtual bool loadFrom(slice stateData);
 
         /** Determines whether a new string should be added. Default implementation returns true
