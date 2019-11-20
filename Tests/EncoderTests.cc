@@ -574,6 +574,28 @@ public:
         REQUIRE((slice)output == json);
     }
 
+    TEST_CASE_METHOD(EncoderTests, "JSON parse numbers", "[Encoder]") {
+        slice json = "[9223372036854775807, -9223372036854775808, 18446744073709551615, "
+                       "18446744073709551616, 602214076000000000000000, "
+                       "-9999999999999999999]"_sl;
+        alloc_slice data = JSONConverter::convertJSON(json);
+        const Array *root = Value::fromTrustedData(data)->asArray();
+        CHECK(root->get(0)->isInteger());
+        CHECK(root->get(0)->asInt() == INT64_MAX);
+        CHECK(root->get(1)->isInteger());
+        CHECK(root->get(1)->asInt() == INT64_MIN);
+
+        CHECK(root->get(2)->isInteger());
+        CHECK(root->get(2)->asUnsigned() == UINT64_MAX);
+
+        CHECK(!root->get(3)->isInteger());
+        CHECK(root->get(3)->asDouble() == 18446744073709551616.0);
+        CHECK(!root->get(4)->isInteger());
+        CHECK(root->get(4)->asDouble() == 6.02214076e23);
+        CHECK(!root->get(5)->isInteger());
+        CHECK(root->get(5)->asDouble() == -9999999999999999999.0);
+    }
+
     TEST_CASE_METHOD(EncoderTests, "JSONBinary", "[Encoder]") {
         enc.beginArray();
         enc.writeData(slice("not-really-binary"));
@@ -989,6 +1011,62 @@ public:
         CHECK(FloatEquals(recovered_f, 2.71828f));
 
         setlocale(LC_ALL, "C");
+    }
+
+
+    TEST_CASE("ParseInteger unsigned") {
+        constexpr const char* kTestCases[] = {
+            "0", "1", "9", "  99 ", "+12345", "  +12345",
+            "18446744073709551615", // UINT64_MAX
+        };
+
+        uint64_t result;
+        for (const char *str : kTestCases) {
+            INFO("Checking \"" << str << "\"");
+            bool parsed = ParseInteger(str, result);
+            CHECK(parsed);
+            if (parsed)
+                CHECK(result == strtoull(str, nullptr, 10));
+        }
+
+        constexpr const char* kFailCases[] = {
+            "", " ", "+", " +", " + ", "x", " x", "1234x", "1234 x", "123.456", "-17", " + 1234"
+            "18446744073709551616" // UINT64_MAX + 1
+        };
+
+        for (const char *str : kFailCases) {
+            INFO("Checking \"" << str << "\"");
+            CHECK(!ParseInteger(str, result));
+        }
+    }
+
+
+    TEST_CASE("ParseInteger signed") {
+        constexpr const char* kTestCases[] = {
+            "0", "1", "9", "  99 ", "+17",
+            "+0", "-0", "-1", "+12", " -12345",
+             "9223372036854775807",  // INT64_MAX
+            "-9223372036854775808",  // INT64_MIN
+        };
+        int64_t result;
+        for (const char *str : kTestCases) {
+            INFO("Checking \"" << str << "\"");
+            bool parsed = ParseInteger(str, result);
+            CHECK(parsed);
+            if (parsed)
+                CHECK(result == strtoull(str, nullptr, 10));
+        }
+
+        constexpr const char* kFailCases[] = {
+            "", " ", "x", " x", "1234x", "1234 x", "123.456", "18446744073709551616",
+            "-", " - ", "-+", "- 1",
+             "9223372036854775808",  // INT64_MAX + 1
+            "-9223372036854775809"   // INT64_MIN - 1
+        };
+        for (const char *str : kFailCases) {
+            INFO("Checking \"" << str << "\"");
+            CHECK(!ParseInteger(str, result));
+        }
     }
 
 } }

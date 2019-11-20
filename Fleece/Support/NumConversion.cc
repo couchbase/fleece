@@ -18,6 +18,7 @@
 
 #include "NumConversion.hh"
 #include "SwiftDtoa.h"
+#include <ctype.h>
 #include <locale.h>
 #include <stdlib.h>
 #if !defined(_MSC_VER) && !defined(__GLIBC__)
@@ -25,6 +26,57 @@
 #endif
 
 namespace fleece {
+
+    // subroutine that parses only digits
+    static bool _parseUInt(const char *str NONNULL, uint64_t &result, bool allowTrailing) {
+        uint64_t n = 0;
+        if (!isdigit(*str))
+            return false;
+        while (isdigit(*str)) {
+            int digit = (*str++ - '0');
+            if (n > UINT64_MAX / 10)
+                return false;
+            n *= 10;
+            if (n > UINT64_MAX - digit)
+                return false;
+            n += digit;
+        }
+        if (!allowTrailing) {
+            while (isspace(*str))
+                ++str;
+            if (*str != '\0')
+                return false;
+        }
+        result = n;
+        return true;
+    }
+
+    // Unsigned version:
+    bool ParseInteger(const char *str NONNULL, uint64_t &result, bool allowTrailing) {
+        while (isspace(*str))
+            ++str;
+        if (*str == '+')
+            ++str;
+        return _parseUInt(str, result, allowTrailing);
+    }
+
+
+    // Signed version:
+    bool ParseInteger(const char *str NONNULL, int64_t &result, bool allowTrailing) {
+        while (isspace(*str))
+            ++str;
+        bool negative = (*str == '-');
+        if (negative || *str == '+')
+            ++str;
+        uint64_t uresult;
+        if (!_parseUInt(str, uresult, allowTrailing))
+            return false;
+        if (uresult > uint64_t(INT64_MAX) + negative)
+            return false;
+        result = negative ? int64_t(-uresult) : int64_t(uresult);
+        return true;
+    }
+
 
     double ParseDouble(const char *str) noexcept {
         // strtod is locale-aware, so in some locales it will not interpret '.' as a decimal point.

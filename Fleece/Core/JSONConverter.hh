@@ -69,6 +69,7 @@ namespace fleece { namespace impl {
         void gotException(ErrorCode code, const char *what NONNULL, size_t pos) noexcept;
 
     private:
+        void writeDouble(struct jsonsl_state_st *);
         typedef std::map<size_t, uint64_t> startToLengthMap;
 
         Encoder &_encoder;                  // encoder to write to

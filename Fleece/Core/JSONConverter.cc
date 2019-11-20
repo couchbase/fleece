@@ -109,17 +109,41 @@ namespace fleece { namespace impl {
         }
     }
 
+    void JSONConverter::writeDouble(struct jsonsl_state_st *state) {
+        char *start = (char*)&_input[state->pos_begin];
+        _encoder.writeDouble(ParseDouble(start));
+    }
+
     inline void JSONConverter::pop(struct jsonsl_state_st *state) {
         switch (state->type) {
             case JSONSL_T_SPECIAL: {
                 unsigned f = state->special_flags;
                 if (f & JSONSL_SPECIALf_FLOAT) {
-                    char *start = (char*)&_input[state->pos_begin];
-                    _encoder.writeDouble(ParseDouble(start));
+                    writeDouble(state);
                 } else if (f & JSONSL_SPECIALf_UNSIGNED) {
-                    _encoder.writeUInt(state->nelem);
+                    if (_usuallyTrue(state->pos_cur - state->pos_begin < 19)) {
+                        _encoder.writeUInt(state->nelem);
+                    } else {
+                        // Parse super long numbers carefully; go to double on overflow:
+                        char *start = (char*)&_input[state->pos_begin];
+                        uint64_t n;
+                        if (ParseUnsignedInteger(start, n, true))
+                            _encoder.writeUInt(n);
+                        else
+                            writeDouble(state);
+                    }
                 } else if (f & JSONSL_SPECIALf_SIGNED) {
-                    _encoder.writeInt(-(int64_t)state->nelem);
+                    if (_usuallyTrue(state->pos_cur - state->pos_begin < 20)) {
+                        _encoder.writeInt(-state->nelem);
+                    } else {
+                        // Parse super long numbers carefully; go to double on overflow:
+                        char *start = (char*)&_input[state->pos_begin];
+                        int64_t n;
+                        if (ParseInteger(start, n, true))
+                            _encoder.writeInt(n);
+                        else
+                            writeDouble(state);
+                    }
                 } else if (f & JSONSL_SPECIALf_TRUE) {
                     _encoder.writeBool(true);
                 } else if (f & JSONSL_SPECIALf_FALSE) {
