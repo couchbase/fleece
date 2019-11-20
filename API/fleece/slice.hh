@@ -39,10 +39,15 @@ struct __CFData;
 #endif
 
 #if __cplusplus >= 201700L
+    // `constexpr17` is for uses of `constexpr` that are valid in C++17 but not earlier.
     #define constexpr17 constexpr
-    #if __has_include(<string_view>)      // Some compilers claim C++17 but don't have <string_view>
-        #define SLICE_SUPPORTS_STRING_VIEW
+
+    #if __has_include(<string_view>)
         #include <string_view>
+        #define STRING_VIEW std::string_view
+    #else
+        #include <experimental/string_view>
+        #define STRING_VIEW std::experimental::string_view
     #endif
 #else
     #define constexpr17
@@ -58,6 +63,12 @@ namespace fleece {
     struct slice;
     struct alloc_slice;
     struct nullslice_t;
+
+#ifdef STRING_VIEW
+    using string_view = STRING_VIEW; // create typedef with correct namespace
+    #undef STRING_VIEW
+    #define SLICE_SUPPORTS_STRING_VIEW
+#endif
 
 #ifdef __APPLE__
     using CFStringRef = const struct ::__CFString *;
@@ -131,7 +142,7 @@ namespace fleece {
         std::string base64String() const;
 
 #ifdef SLICE_SUPPORTS_STRING_VIEW
-        operator std::string_view() const           {return std::string_view((const char*)buf, size);}
+        operator string_view() const                {return string_view((const char*)buf, size);}
 #endif
 
         /** Copies into a C string buffer of the given size. Result is always NUL-terminated and
@@ -219,7 +230,7 @@ namespace fleece {
         slice(const std::string& str)               :slice(&str[0], str.length()) {}
         constexpr17 slice(const char* str)          :slice(str, _strlen(str)) {}
 #ifdef SLICE_SUPPORTS_STRING_VIEW
-        constexpr slice(std::string_view str)       :slice(str.data(), str.length()) {}
+        constexpr slice(string_view str)            :slice(str.data(), str.length()) {}
 #endif
 
         slice& operator=(pure_slice s)              {set(s.buf, s.size); return *this;}
@@ -326,7 +337,7 @@ namespace fleece {
         }
 
 #ifdef SLICE_SUPPORTS_STRING_VIEW
-        explicit alloc_slice(std::string_view str)          :alloc_slice(slice(str)) {}
+        explicit alloc_slice(string_view str)               :alloc_slice(slice(str)) {}
         explicit alloc_slice(const char *str)               :alloc_slice(slice(str)) {} // disambiguation
 #endif
 
@@ -366,7 +377,7 @@ namespace fleece {
         alloc_slice& operator=(const std::string &str)      {*this = (slice)str; return *this;}
 
 #ifdef SLICE_SUPPORTS_STRING_VIEW
-        alloc_slice& operator=(std::string_view str)        {*this = (slice)str; return *this;}
+        alloc_slice& operator=(string_view str)             {*this = (slice)str; return *this;}
 #endif
 
         alloc_slice& retain() noexcept                      {FLSliceResult_Retain({buf,size}); return *this;}
@@ -417,7 +428,7 @@ namespace fleece {
         slice_NONNULL(alloc_slice s)                                :slice_NONNULL(s.buf,s.size) {}
         slice_NONNULL(const std::string &str)               :slice_NONNULL(str.data(),str.size()) {}
 #ifdef SLICE_SUPPORTS_STRING_VIEW
-        slice_NONNULL(std::string_view str)                 :slice_NONNULL(str.data(),str.size()) {}
+        slice_NONNULL(string_view str)                      :slice_NONNULL(str.data(),str.size()) {}
 #endif
         slice_NONNULL(std::nullptr_t) =delete;
         slice_NONNULL(nullslice_t) =delete;

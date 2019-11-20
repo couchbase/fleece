@@ -74,7 +74,7 @@ namespace fleece {
                 int probes = 1 + n - (int)index;
                 totalProbes += probes;
                 maxProbes = std::max(maxProbes, probes);
-                printf("(%4d) '%.*s'\n", probes, (int)key.size, key.buf);
+                printf("(%4d) '%.*s'\n", probes, FMTSLICE(key));
             } else {
                 printf("--\n");
             }

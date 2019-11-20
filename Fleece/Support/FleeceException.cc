@@ -53,10 +53,12 @@ namespace fleece {
             va_list args;
             va_start(args, what);
             char *msg;
-            vasprintf(&msg, what, args);
+            int len = vasprintf(&msg, what, args);
             va_end(args);
-            message += std::string(": ") + msg;
-            free(msg);
+            if (len >= 0) {
+                message += std::string(": ") + msg;
+                free(msg);
+            }
         }
         throw FleeceException(code, 0, message);
     }
@@ -66,10 +68,13 @@ namespace fleece {
         va_list args;
         va_start(args, what);
         char *msg;
-        vasprintf(&msg, what, args);
+        int len = vasprintf(&msg, what, args);
         va_end(args);
-        auto message = std::string(msg) + ": " + strerror(errno);
-        free(msg);
+        std::string message;
+        if (len >= 0) {
+            message = std::string(msg) + ": " + strerror(errno);
+            free(msg);
+        }
         throw FleeceException(POSIXError, errno, message);
     }
 

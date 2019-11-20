@@ -123,13 +123,16 @@ namespace fleece {
             out << "\n\t";
             char *cstr = nullptr;
             auto frame = getFrame(i);
+            int len;
             if (frame.function) {
-                asprintf(&cstr, "%2d  %-25s %s + %zd",
-                         i, frame.library, unmangle(frame.function), frame.offset);
+                len = asprintf(&cstr, "%2d  %-25s %s + %zd",
+                               i, frame.library, unmangle(frame.function), frame.offset);
             } else {
-                asprintf(&cstr, "%2d  %p", i, _addrs[i]);
+                len = asprintf(&cstr, "%2d  %p", i, _addrs[i]);
             }
-            out << cstr;
+            if (len < 0)
+                return false;
+            out.write(cstr, size_t(len));
             free(cstr);
         }
         return true;
