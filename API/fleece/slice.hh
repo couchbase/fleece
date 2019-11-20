@@ -56,7 +56,7 @@ struct __CFData;
 
 // Utility for using slice with printf-style formatting.
 // Use "%.*" in the format string; then for the corresponding argument put FMTSLICE(theslice).
-#define FMTSLICE(S)    (int)(S).size, (S).buf
+#define FMTSLICE(S)    (int)(S).size, (const char*)(S).buf
 
 
 namespace fleece {

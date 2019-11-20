@@ -78,7 +78,7 @@ bool FLValue_IsDouble(FLValue v)                {return v && v->isDouble();}
 bool FLValue_AsBool(FLValue v)                  {return v && v->asBool();}
 int64_t FLValue_AsInt(FLValue v)                {return v ? v->asInt() : 0;}
 uint64_t FLValue_AsUnsigned(FLValue v)          {return v ? v->asUnsigned() : 0;}
-float FLValue_AsFloat(FLValue v)                {return v ? v->asFloat() : 0.0;}
+float FLValue_AsFloat(FLValue v)                {return v ? v->asFloat() : 0.0f;}
 double FLValue_AsDouble(FLValue v)              {return v ? v->asDouble() : 0.0;}
 FLString FLValue_AsString(FLValue v)            {return v ? (FLString)v->asString() : kFLSliceNull;}
 FLSlice FLValue_AsData(FLValue v)               {return v ? (FLSlice)v->asData() : kFLSliceNull;}
@@ -680,7 +680,7 @@ FLSliceResult FLDoc_GetAllocedData(FLDoc doc) {
 FLSliceResult FLCreateJSONDelta(FLValue old, FLValue nuu) {
     try {
         return toSliceResult(JSONDelta::create(old, nuu));
-    } catch (const std::exception &x) {
+    } catch (const std::exception&) {
         return {};
     }
 }

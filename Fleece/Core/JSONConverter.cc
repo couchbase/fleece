@@ -134,7 +134,7 @@ namespace fleece { namespace impl {
                     }
                 } else if (f & JSONSL_SPECIALf_SIGNED) {
                     if (_usuallyTrue(state->pos_cur - state->pos_begin < 20)) {
-                        _encoder.writeInt(-state->nelem);
+                        _encoder.writeInt(-(int64_t)state->nelem);
                     } else {
                         // Parse super long numbers carefully; go to double on overflow:
                         char *start = (char*)&_input[state->pos_begin];

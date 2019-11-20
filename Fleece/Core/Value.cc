@@ -148,9 +148,9 @@ namespace fleece { namespace impl {
             }
             default:
                 if (isUnsigned())
-                    return asUnsigned();
+                    return (T)asUnsigned();
                 else
-                    return asInt();
+                    return (T)asInt();
         }
     }
 

@@ -34,17 +34,17 @@ namespace fleece {
             return false;
         while (isdigit(*str)) {
             int digit = (*str++ - '0');
-            if (n > UINT64_MAX / 10)
+            if (_usuallyFalse(n > UINT64_MAX / 10))
                 return false;
             n *= 10;
-            if (n > UINT64_MAX - digit)
+            if (_usuallyFalse(n > UINT64_MAX - digit))
                 return false;
             n += digit;
         }
         if (!allowTrailing) {
             while (isspace(*str))
                 ++str;
-            if (*str != '\0')
+            if (_usuallyFalse(*str != '\0'))
                 return false;
         }
         result = n;
@@ -71,9 +71,23 @@ namespace fleece {
         uint64_t uresult;
         if (!_parseUInt(str, uresult, allowTrailing))
             return false;
-        if (uresult > uint64_t(INT64_MAX) + negative)
-            return false;
-        result = negative ? int64_t(-uresult) : int64_t(uresult);
+
+        if (negative) {
+            if (_usuallyTrue(uresult <= uint64_t(INT64_MAX))) {
+                result = -int64_t(uresult);
+            } else if (uresult == uint64_t(INT64_MAX) + 1) {
+                // Special-case the conversion of 9223372036854775808 into -9223372036854775808,
+                // because the normal cast (above) would create a temporary integer overflow that
+                // triggers a runtime Undefined Behavior Sanitizer warning.
+                result = INT64_MIN;
+            } else {
+                return false;
+            }
+        } else {
+            if (_usuallyFalse(uresult > uint64_t(INT64_MAX)))
+                return false;
+            result = int64_t(uresult);
+        }
         return true;
     }
 

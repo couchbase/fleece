@@ -480,12 +480,12 @@ namespace fleece { namespace impl {
                     }
                     lastOldPos = oldPos;
                 }
-                if ((off_t)diff.tellp() + 6 >= nuuStr.size)
+                if ((size_t)diff.tellp() + 6 >= nuuStr.size)
                     return "";          // Patch is too long; give up on using a diff
             }
             correction += patch->length1 - patch->length2;
         }
-        if (oldStr.size > lastOldPos) {
+        if (oldStr.size > size_t(lastOldPos)) {
             // Write a final matching-bytes count:
             diff << (oldStr.size-lastOldPos) << '=';
         }
