@@ -23,6 +23,10 @@
 #include <mutex>
 #include <vector>
 
+#ifdef __APPLE__
+#include <CoreFoundation/CFString.h>
+#endif
+
 
 namespace fleece { namespace impl {
     class Value;
@@ -108,7 +112,11 @@ namespace fleece { namespace impl {
         static const size_t kMaxCount = 2048;               // Max number of keys to store
         static const size_t kDefaultMaxKeyLength = 16;      // Max length of string to store
 
+#ifdef __APPLE__
+        typedef CFStringRef PlatformString;
+#else
         typedef const void* PlatformString;
+#endif
 
         /** Allows an uninterpreted value (like a pointer to a platform String object) to be
             associated with an encoded key. */
@@ -116,7 +124,7 @@ namespace fleece { namespace impl {
         PlatformString platformStringForKey(int key) const;
 
     protected:
-        virtual ~SharedKeys() =default;
+        virtual ~SharedKeys();
         virtual bool loadFrom(slice stateData);
 
         /** Determines whether a new string should be added. Default implementation returns true
