@@ -345,8 +345,11 @@ namespace fleece {
             FLTrust trust =kFLUntrusted,
             SharedKeys sk =nullptr,
             slice externDestination =nullslice) noexcept
-        :_doc(FLDoc_FromResultData(FLSliceResult(fleeceData), trust, sk, externDestination))
-        { }
+        {
+            FLSliceResult res = FLSliceResult(fleeceData);
+            _doc = FLDoc_FromResultData(res, trust, sk, externDestination);
+            FLSliceResult_Free(res);
+        }
 
         static inline Doc fromJSON(slice_NONNULL json, FLError *outError = nullptr);
 
