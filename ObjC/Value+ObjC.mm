@@ -161,7 +161,6 @@ namespace fleece { namespace impl {
                         keyStr = convertString(strSlice);
                         sk->setPlatformStringForKey(encodedKey,
                                                     (__bridge CFStringRef)keyStr);
-                        //TODO: Strings need to be CFRelease'd when the SharedKeys is destructed.
 #if LOG_CACHED_STRINGS
                         fprintf(stderr, "SHAREDKEY[%p] %d --> %s\n", sk, encodedKey, keyStr.UTF8String);
 #endif
