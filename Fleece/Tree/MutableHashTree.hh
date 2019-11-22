@@ -27,7 +27,7 @@ namespace fleece {
         MutableHashTree(const HashTree*);
         ~MutableHashTree();
 
-        MutableHashTree& operator= (MutableHashTree&&);
+        MutableHashTree& operator= (MutableHashTree&&) noexcept;
         MutableHashTree& operator= (const HashTree*);
 
         Value get(slice key) const;

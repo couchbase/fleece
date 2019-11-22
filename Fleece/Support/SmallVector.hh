@@ -32,7 +32,7 @@ namespace fleece {
             assert(_size <= _capacity);
         }
 
-        smallVector& operator=(smallVector &&sv) {
+        smallVector& operator=(smallVector &&sv) noexcept {
             _size = sv._size;
             sv._size = 0;
             _capacity = sv._capacity;

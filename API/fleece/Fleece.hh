@@ -328,7 +328,7 @@ namespace fleece {
         SharedKeys(const SharedKeys &other) noexcept        :_sk(FLSharedKeys_Retain(other._sk)) { }
         SharedKeys(SharedKeys &&other) noexcept             :_sk(other._sk) {other._sk = nullptr;}
         inline SharedKeys& operator= (const SharedKeys &other);
-        inline SharedKeys& operator= (SharedKeys &&other);
+        inline SharedKeys& operator= (SharedKeys &&other) noexcept;
         
     private:
         SharedKeys(FLSharedKeys sk, int)                    :_sk(sk) { }
@@ -357,7 +357,7 @@ namespace fleece {
         Doc(const Doc &other) noexcept              :_doc(FLDoc_Retain(other._doc)) { }
         Doc(Doc &&other) noexcept                   :_doc(other._doc) {other._doc=nullptr; }
         Doc& operator=(const Doc &other);
-        Doc& operator=(Doc &&other);
+        Doc& operator=(Doc &&other) noexcept;
         ~Doc()                                      {FLDoc_Release(_doc);}
 
         slice data() const                          {return FLDoc_GetData(_doc);}
@@ -690,7 +690,7 @@ namespace fleece {
         return *this;
     }
 
-    inline SharedKeys& SharedKeys::operator= (SharedKeys &&other) {
+    inline SharedKeys& SharedKeys::operator= (SharedKeys &&other) noexcept {
         FLSharedKeys_Release(_sk);
         _sk = other._sk;
         other._sk = nullptr;
@@ -709,7 +709,7 @@ namespace fleece {
         return *this;
     }
 
-   inline Doc& Doc::operator=(Doc &&other) {
+   inline Doc& Doc::operator=(Doc &&other) noexcept {
         if (other._doc != _doc) {
             FLDoc_Release(_doc);
             _doc = other._doc;

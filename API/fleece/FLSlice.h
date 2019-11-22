@@ -14,6 +14,13 @@
 
 
 #ifdef __cplusplus
+#define FLAPI noexcept
+#else
+#define FLAPI
+#endif
+
+
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -86,20 +93,20 @@ static inline FLSlice FLStr(const char *str) {
 
 
 /** Equality test of two slices. */
-bool FLSlice_Equal(FLSlice a, FLSlice b);
+bool FLSlice_Equal(FLSlice a, FLSlice b) FLAPI;
 
 /** Lexicographic comparison of two slices; basically like memcmp(), but taking into account
     differences in length. */
-int FLSlice_Compare(FLSlice, FLSlice);
+int FLSlice_Compare(FLSlice, FLSlice) FLAPI;
 
 /** Allocates an FLSliceResult of the given size, without initializing the buffer. */
-FLSliceResult FLSliceResult_New(size_t);
+FLSliceResult FLSliceResult_New(size_t) FLAPI;
 
 /** Allocates an FLSliceResult, copying the given slice. */
-FLSliceResult FLSlice_Copy(FLSlice);
+FLSliceResult FLSlice_Copy(FLSlice) FLAPI;
 
-void _FLBuf_Retain(const void*);   // internal; do not call
-void _FLBuf_Release(const void*);  // internal; do not call
+void _FLBuf_Retain(const void*) FLAPI;   // internal; do not call
+void _FLBuf_Release(const void*) FLAPI;  // internal; do not call
 
 /** Increments the ref-count of a FLSliceResult. */
 static inline FLSliceResult FLSliceResult_Retain(FLSliceResult s) {

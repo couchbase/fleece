@@ -104,35 +104,35 @@ extern "C" {
     /** Creates an FLDoc from Fleece-encoded data that's been returned as a result from
         FLSlice_Copy or other API. The resulting document retains the data, so you don't need to
         worry about it remaining valid. */
-    FLDoc FLDoc_FromResultData(FLSliceResult data, FLTrust, FLSharedKeys, FLSlice externData);
+    FLDoc FLDoc_FromResultData(FLSliceResult data, FLTrust, FLSharedKeys, FLSlice externData) FLAPI;
 
     /** Creates an FLDoc from JSON-encoded data. The data is first encoded into Fleece, and the
         Fleece data is kept by the doc; the input JSON data is no longer needed after this
         function returns. */
-    FLDoc FLDoc_FromJSON(FLSlice json, FLError *outError);
+    FLDoc FLDoc_FromJSON(FLSlice json, FLError *outError) FLAPI;
 
     /** Releases a reference to an FLDoc. This must be called once to free an FLDoc you created. */
-    void FLDoc_Release(FLDoc);
+    void FLDoc_Release(FLDoc) FLAPI;
 
     /** Adds a reference to an FLDoc. This extends its lifespan until at least such time as you
         call FLRelease to remove the reference. */
-    FLDoc FLDoc_Retain(FLDoc);
+    FLDoc FLDoc_Retain(FLDoc) FLAPI;
 
     /** Returns the encoded Fleece data backing the document. */
-    FLSlice FLDoc_GetData(FLDoc);
+    FLSlice FLDoc_GetData(FLDoc) FLAPI;
 
     /** Returns the FLSliceResult data owned by the document, if any, else a null slice. */
-    FLSliceResult FLDoc_GetAllocedData(FLDoc);
+    FLSliceResult FLDoc_GetAllocedData(FLDoc) FLAPI;
 
     /** Returns the root value in the FLDoc, usually an FLDict. */
-    FLValue FLDoc_GetRoot(FLDoc);
+    FLValue FLDoc_GetRoot(FLDoc) FLAPI;
 
     /** Returns the FLSharedKeys used by this FLDoc, as specified when it was created. */
-    FLSharedKeys FLDoc_GetSharedKeys(FLDoc);
+    FLSharedKeys FLDoc_GetSharedKeys(FLDoc) FLAPI;
 
     /** Looks up the Doc containing the Value, or NULL if the Value was created without a Doc.
         Caller must release the FLDoc reference!! */
-    FLDoc FLValue_FindDoc(FLValue);
+    FLDoc FLValue_FindDoc(FLValue) FLAPI;
 
 
     /** @} */
@@ -142,15 +142,15 @@ extern "C" {
     /** Returns a pointer to the root value in the encoded data, or NULL if validation failed.
         The FLValue, and all values found through it, are only valid as long as the encoded data
         remains intact and unchanged. */
-    FLValue FLValue_FromData(FLSlice data, FLTrust);
+    FLValue FLValue_FromData(FLSlice data, FLTrust) FLAPI;
 
     /** Directly converts JSON data to Fleece-encoded data.
         You can then call FLValue_FromData (in kFLTrusted mode) to get the root as a Value. */
-    FLSliceResult FLData_ConvertJSON(FLSlice json, FLError *outError);
+    FLSliceResult FLData_ConvertJSON(FLSlice json, FLError *outError) FLAPI;
 
     /** Produces a human-readable dump of the Value encoded in the data.
         This is only useful if you already know, or want to learn, the encoding format. */
-    FLStringResult FLData_Dump(FLSlice data);
+    FLStringResult FLData_Dump(FLSlice data) FLAPI;
 
 
     /** @} */
@@ -162,16 +162,16 @@ extern "C" {
 
     /** Encodes a Fleece value as JSON (or a JSON fragment.)
         Any Data values will become base64-encoded JSON strings. */
-    FLStringResult FLValue_ToJSON(FLValue);
+    FLStringResult FLValue_ToJSON(FLValue) FLAPI;
 
     /** Encodes a Fleece value as JSON5, a more lenient variant of JSON that allows dictionary
         keys to be unquoted if they're alphanumeric. This tends to be more readable. */
-    FLStringResult FLValue_ToJSON5(FLValue v);
+    FLStringResult FLValue_ToJSON5(FLValue v) FLAPI;
 
     /** Most general Fleece to JSON converter. */
     FLStringResult FLValue_ToJSONX(FLValue v,
                                   bool json5,
-                                  bool canonicalForm);
+                                  bool canonicalForm) FLAPI;
 
     /** Converts valid JSON5 <https://json5.org> to JSON. Among other things, it converts single
         quotes to double, adds missing quotes around dictionary keys, removes trailing commas,
@@ -190,14 +190,14 @@ extern "C" {
     FLStringResult FLJSON5_ToJSON(FLString json5,
                                   FLStringResult *outErrorMessage,
                                   size_t *outErrorPos,
-                                  FLError *outError);
+                                  FLError *outError) FLAPI;
 
     /** \name Debugging Functions
         @{ */
     /** Debugging function that returns a C string of JSON. Does not free the string's memory! */
-    const char* FLDump(FLValue);
+    const char* FLDump(FLValue) FLAPI;
     /** Debugging function that returns a C string of JSON. Does not free the string's memory! */
-    const char* FLDumpData(FLSlice data);
+    const char* FLDumpData(FLSlice data) FLAPI;
 
     /** @} */
 
@@ -246,84 +246,84 @@ extern "C" {
 
     /** Returns the data type of an arbitrary Value.
         (If the parameter is a NULL pointer, returns `kFLUndefined`.) */
-    FLValueType FLValue_GetType(FLValue);
+    FLValueType FLValue_GetType(FLValue) FLAPI;
 
     /** Returns true if the value is non-NULL and represents an integer. */
-    bool FLValue_IsInteger(FLValue);
+    bool FLValue_IsInteger(FLValue) FLAPI;
 
     /** Returns true if the value is non-NULL and represents an integer >= 2^63. Such a value can't
         be represented in C as an `int64_t`, only a `uint64_t`, so you should access it by calling
         `FLValueAsUnsigned`, _not_ FLValueAsInt, which would return  an incorrect (negative)
         value. */
-    bool FLValue_IsUnsigned(FLValue);
+    bool FLValue_IsUnsigned(FLValue) FLAPI;
 
     /** Returns true if the value is non-NULL and represents a 64-bit floating-point number. */
-    bool FLValue_IsDouble(FLValue);
+    bool FLValue_IsDouble(FLValue) FLAPI;
 
     /** Returns a value coerced to boolean. This will be true unless the value is NULL (undefined),
         null, false, or zero. */
-    bool FLValue_AsBool(FLValue);
+    bool FLValue_AsBool(FLValue) FLAPI;
 
     /** Returns a value coerced to an integer. True and false are returned as 1 and 0, and
         floating-point numbers are rounded. All other types are returned as 0.
         @warning  Large 64-bit unsigned integers (2^63 and above) will come out wrong. You can
         check for these by calling `FLValueIsUnsigned`. */
-    int64_t FLValue_AsInt(FLValue);
+    int64_t FLValue_AsInt(FLValue) FLAPI;
 
     /** Returns a value coerced to an unsigned integer.
         This is the same as `FLValueAsInt` except that it _can't_ handle negative numbers, but
         does correctly return large `uint64_t` values of 2^63 and up. */
-    uint64_t FLValue_AsUnsigned(FLValue);
+    uint64_t FLValue_AsUnsigned(FLValue) FLAPI;
 
     /** Returns a value coerced to a 32-bit floating point number.
         True and false are returned as 1.0 and 0.0, and integers are converted to float. All other
         types are returned as 0.0.
         @warning  Large integers (outside approximately +/- 2^23) will lose precision due to the
         limitations of IEEE 32-bit float format. */
-    float FLValue_AsFloat(FLValue);
+    float FLValue_AsFloat(FLValue) FLAPI;
 
     /** Returns a value coerced to a 32-bit floating point number.
         True and false are returned as 1.0 and 0.0, and integers are converted to float. All other
         types are returned as 0.0.
         @warning  Very large integers (outside approximately +/- 2^50) will lose precision due to
         the limitations of IEEE 32-bit float format. */
-    double FLValue_AsDouble(FLValue);
+    double FLValue_AsDouble(FLValue) FLAPI;
 
     /** Returns the exact contents of a string value, or null for all other types. */
-    FLString FLValue_AsString(FLValue);
+    FLString FLValue_AsString(FLValue) FLAPI;
 
     /** Converts a value to a timestamp, in milliseconds since Unix epoch, or INT64_MIN on failure.
         - A string is parsed as ISO-8601 (standard JSON date format).
         - A number is interpreted as a timestamp and returned as-is. */
-    FLTimestamp FLValue_AsTimestamp(FLValue);
+    FLTimestamp FLValue_AsTimestamp(FLValue) FLAPI;
 
     /** Returns the exact contents of a data value, or null for all other types. */
-    FLSlice FLValue_AsData(FLValue);
+    FLSlice FLValue_AsData(FLValue) FLAPI;
 
     /** If a FLValue represents an array, returns it cast to FLArray, else NULL. */
-    FLArray FLValue_AsArray(FLValue);
+    FLArray FLValue_AsArray(FLValue) FLAPI;
 
     /** If a FLValue represents a dictionary, returns it as an FLDict, else NULL. */
-    FLDict FLValue_AsDict(FLValue);
+    FLDict FLValue_AsDict(FLValue) FLAPI;
 
     /** Returns a string representation of any scalar value. Data values are returned in raw form.
         Arrays and dictionaries don't have a representation and will return NULL. */
-    FLStringResult FLValue_ToString(FLValue);
+    FLStringResult FLValue_ToString(FLValue) FLAPI;
 
     /** Compares two values for equality. This is a deep recursive comparison. */
-    bool FLValue_IsEqual(FLValue v1, FLValue v2);
+    bool FLValue_IsEqual(FLValue v1, FLValue v2) FLAPI;
 
     /** \name Ref-counting (mutable values only)
          @{ */
 
     /** If this value is mutable (and thus heap-based) its ref-count is incremented.
         Otherwise, this call does nothing. */
-    FLValue FLValue_Retain(FLValue);
+    FLValue FLValue_Retain(FLValue) FLAPI;
 
     /** If this value is mutable (and thus heap-based) its ref-count is decremented, and if it
         reaches zero the value is freed.
         If the value is not mutable, this call does nothing. */
-    void FLValue_Release(FLValue);
+    void FLValue_Release(FLValue) FLAPI;
 
     static inline FLArray FLArray_Retain(FLArray v)     {FLValue_Retain((FLValue)v); return v;}
     static inline void FLArray_Release(FLArray v)       {FLValue_Release((FLValue)v);}
@@ -339,15 +339,15 @@ extern "C" {
     //////// VALUE SLOT
 
 
-    void FLSlot_SetNull(FLSlot FLNONNULL);             ///< Stores a JSON null into a slot.
-    void FLSlot_SetBool(FLSlot FLNONNULL, bool);       ///< Stores a boolean into a slot.
-    void FLSlot_SetInt(FLSlot FLNONNULL, int64_t);     ///< Stores an integer into a slot.
-    void FLSlot_SetUInt(FLSlot FLNONNULL, uint64_t);   ///< Stores an unsigned integer into a slot.
-    void FLSlot_SetFloat(FLSlot FLNONNULL, float);     ///< Stores a float into a slot.
-    void FLSlot_SetDouble(FLSlot FLNONNULL, double);   ///< Stores a double into a slot.
-    void FLSlot_SetString(FLSlot FLNONNULL, FLString); ///< Stores a string into a slot.
-    void FLSlot_SetData(FLSlot FLNONNULL, FLSlice);    ///< Stores a data blob into a slot.
-    void FLSlot_SetValue(FLSlot FLNONNULL, FLValue);   ///< Stores an FLValue into a slot.
+    void FLSlot_SetNull(FLSlot FLNONNULL) FLAPI;             ///< Stores a JSON null into a slot.
+    void FLSlot_SetBool(FLSlot FLNONNULL, bool) FLAPI;       ///< Stores a boolean into a slot.
+    void FLSlot_SetInt(FLSlot FLNONNULL, int64_t) FLAPI;     ///< Stores an integer into a slot.
+    void FLSlot_SetUInt(FLSlot FLNONNULL, uint64_t) FLAPI;   ///< Stores an unsigned integer into a slot.
+    void FLSlot_SetFloat(FLSlot FLNONNULL, float) FLAPI;     ///< Stores a float into a slot.
+    void FLSlot_SetDouble(FLSlot FLNONNULL, double) FLAPI;   ///< Stores a double into a slot.
+    void FLSlot_SetString(FLSlot FLNONNULL, FLString) FLAPI; ///< Stores a string into a slot.
+    void FLSlot_SetData(FLSlot FLNONNULL, FLSlice) FLAPI;    ///< Stores a data blob into a slot.
+    void FLSlot_SetValue(FLSlot FLNONNULL, FLValue) FLAPI;   ///< Stores an FLValue into a slot.
 
 
     //////// ARRAY
@@ -365,17 +365,17 @@ extern "C" {
      */
 
     /** Returns the number of items in an array, or 0 if the pointer is NULL. */
-    uint32_t FLArray_Count(FLArray);
+    uint32_t FLArray_Count(FLArray) FLAPI;
 
     /** Returns true if an array is empty (or NULL). Depending on the array's representation,
         this can be faster than `FLArray_Count(a) == 0` */
-    bool FLArray_IsEmpty(FLArray);
+    bool FLArray_IsEmpty(FLArray) FLAPI;
 
     /** If the array is mutable, returns it cast to FLMutableArray, else NULL. */
-    FLMutableArray FLArray_AsMutable(FLArray);
+    FLMutableArray FLArray_AsMutable(FLArray) FLAPI;
 
     /** Returns an value at an array index, or NULL if the index is out of range. */
-    FLValue FLArray_Get(FLArray, uint32_t index);
+    FLValue FLArray_Get(FLArray, uint32_t index) FLAPI;
 
     extern const FLArray kFLEmptyArray;
 
@@ -407,19 +407,19 @@ while (NULL != (value = FLArrayIterator_GetValue(&iter))) {
 
     /** Initializes a FLArrayIterator struct to iterate over an array.
         Call FLArrayIteratorGetValue to get the first item, then FLArrayIteratorNext. */
-    void FLArrayIterator_Begin(FLArray, FLArrayIterator* FLNONNULL);
+    void FLArrayIterator_Begin(FLArray, FLArrayIterator* FLNONNULL) FLAPI;
 
     /** Returns the current value being iterated over. */
-    FLValue FLArrayIterator_GetValue(const FLArrayIterator* FLNONNULL);
+    FLValue FLArrayIterator_GetValue(const FLArrayIterator* FLNONNULL) FLAPI;
 
     /** Returns a value in the array at the given offset from the current value. */
-    FLValue FLArrayIterator_GetValueAt(const FLArrayIterator* FLNONNULL, uint32_t offset);
+    FLValue FLArrayIterator_GetValueAt(const FLArrayIterator* FLNONNULL, uint32_t offset) FLAPI;
 
     /** Returns the number of items remaining to be iterated, including the current one. */
-    uint32_t FLArrayIterator_GetCount(const FLArrayIterator* FLNONNULL);
+    uint32_t FLArrayIterator_GetCount(const FLArrayIterator* FLNONNULL) FLAPI;
 
     /** Advances the iterator to the next value, or returns false if at the end. */
-    bool FLArrayIterator_Next(FLArrayIterator* FLNONNULL);
+    bool FLArrayIterator_Next(FLArrayIterator* FLNONNULL) FLAPI;
 
     /** @} */
 
@@ -449,11 +449,11 @@ while (NULL != (value = FLArrayIterator_GetValue(&iter))) {
         also set, immutable values are also copied.
 
         If the source Array is NULL, then NULL is returned. */
-    FLMutableArray FLArray_MutableCopy(FLArray, FLCopyFlags);
+    FLMutableArray FLArray_MutableCopy(FLArray, FLCopyFlags) FLAPI;
 
     /** Creates a new empty mutable Array.
         Its initial ref-count is 1, so a call to FLMutableArray_Free will free it.  */
-    FLMutableArray FLMutableArray_New(void);
+    FLMutableArray FLMutableArray_New(void) FLAPI;
 
     /** Increments the ref-count of a mutable Array. */
     static inline FLMutableArray FLMutableArray_Retain(FLMutableArray d) {
@@ -465,49 +465,49 @@ while (NULL != (value = FLArrayIterator_GetValue(&iter))) {
     }
 
     /** If the Array was created by FLArray_MutableCopy, returns the original source Array. */
-    FLArray FLMutableArray_GetSource(FLMutableArray);
+    FLArray FLMutableArray_GetSource(FLMutableArray) FLAPI;
 
     /** Returns true if the Array has been changed from the source it was copied from. */
-    bool FLMutableArray_IsChanged(FLMutableArray);
+    bool FLMutableArray_IsChanged(FLMutableArray) FLAPI;
 
     /** Lets you store a value into a MutableArray, by returning a \ref FLSlot that you can call
         a function like \ref FLSlot_SetInt on. */
-    FLSlot FLMutableArray_Set(FLMutableArray FLNONNULL, uint32_t index);
+    FLSlot FLMutableArray_Set(FLMutableArray FLNONNULL, uint32_t index) FLAPI;
 
     /** Appends a null value to a MutableArray and returns a \ref FLSlot that you can call
         to store something else in the new value. */
-    FLSlot FLMutableArray_Append(FLMutableArray FLNONNULL);
+    FLSlot FLMutableArray_Append(FLMutableArray FLNONNULL) FLAPI;
 
     /** Inserts a contiguous range of JSON `null` values into the array.
         @param array  The array to operate on.
         @param firstIndex  The zero-based index of the first value to be inserted.
         @param count  The number of items to insert. */
-    void FLMutableArray_Insert(FLMutableArray array, uint32_t firstIndex, uint32_t count);
+    void FLMutableArray_Insert(FLMutableArray array, uint32_t firstIndex, uint32_t count) FLAPI;
 
     /** Removes contiguous items from the array.
         @param array  The array to operate on.
         @param firstIndex  The zero-based index of the first item to remove.
         @param count  The number of items to remove. */
-    void FLMutableArray_Remove(FLMutableArray array, uint32_t firstIndex, uint32_t count);
+    void FLMutableArray_Remove(FLMutableArray array, uint32_t firstIndex, uint32_t count) FLAPI;
 
     /** Changes the size of an array.
         If the new size is larger, the array is padded with JSON `null` values.
         If it's smaller, values are removed from the end. */
-    void FLMutableArray_Resize(FLMutableArray array, uint32_t size);
+    void FLMutableArray_Resize(FLMutableArray array, uint32_t size) FLAPI;
 
     /** Convenience function for getting an array-valued property in mutable form.
         - If the value for the key is not an array, returns NULL.
         - If the value is a mutable array, returns it.
         - If the value is an immutable array, this function makes a mutable copy, assigns the
           copy as the property value, and returns the copy. */
-    FLMutableArray FLMutableArray_GetMutableArray(FLMutableArray, uint32_t index);
+    FLMutableArray FLMutableArray_GetMutableArray(FLMutableArray, uint32_t index) FLAPI;
 
     /** Convenience function for getting an array-valued property in mutable form.
         - If the value for the key is not an array, returns NULL.
         - If the value is a mutable array, returns it.
         - If the value is an immutable array, this function makes a mutable copy, assigns the
           copy as the property value, and returns the copy. */
-    FLMutableDict FLMutableArray_GetMutableDict(FLMutableArray, uint32_t index);
+    FLMutableDict FLMutableArray_GetMutableDict(FLMutableArray, uint32_t index) FLAPI;
 
     /** @} */
 
@@ -520,18 +520,18 @@ while (NULL != (value = FLArrayIterator_GetValue(&iter))) {
         @{ */
 
     /** Returns the number of items in a dictionary, or 0 if the pointer is NULL. */
-    uint32_t FLDict_Count(FLDict);
+    uint32_t FLDict_Count(FLDict) FLAPI;
 
     /** Returns true if a dictionary is empty (or NULL). Depending on the dictionary's
         representation, this can be faster than `FLDict_Count(a) == 0` */
-    bool FLDict_IsEmpty(FLDict);
+    bool FLDict_IsEmpty(FLDict) FLAPI;
 
     /** If the dictionary is mutable, returns it cast to FLMutableDict, else NULL. */
-    FLMutableDict FLDict_AsMutable(FLDict);
+    FLMutableDict FLDict_AsMutable(FLDict) FLAPI;
 
     /** Looks up a key in a dictionary, returning its value.
         Returns NULL if the value is not found or if the dictionary is NULL. */
-    FLValue FLDict_Get(FLDict, FLSlice keyString);
+    FLValue FLDict_Get(FLDict, FLSlice keyString) FLAPI;
 
     extern const FLDict kFLEmptyDict;
 
@@ -566,26 +566,26 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
     /** Initializes a FLDictIterator struct to iterate over a dictionary.
         Call FLDictIterator_GetKey and FLDictIterator_GetValue to get the first item,
         then FLDictIterator_Next. */
-    void FLDictIterator_Begin(FLDict, FLDictIterator* FLNONNULL);
+    void FLDictIterator_Begin(FLDict, FLDictIterator* FLNONNULL) FLAPI;
 
     /** Returns the current key being iterated over. This Value will be a string or an integer. */
-    FLValue FLDictIterator_GetKey(const FLDictIterator* FLNONNULL);
+    FLValue FLDictIterator_GetKey(const FLDictIterator* FLNONNULL) FLAPI;
 
     /** Returns the current key's string value. */
-    FLString FLDictIterator_GetKeyString(const FLDictIterator* FLNONNULL);
+    FLString FLDictIterator_GetKeyString(const FLDictIterator* FLNONNULL) FLAPI;
 
     /** Returns the current value being iterated over. */
-    FLValue FLDictIterator_GetValue(const FLDictIterator* FLNONNULL);
+    FLValue FLDictIterator_GetValue(const FLDictIterator* FLNONNULL) FLAPI;
 
     /** Returns the number of items remaining to be iterated, including the current one. */
-    uint32_t FLDictIterator_GetCount(const FLDictIterator*  FLNONNULL);
+    uint32_t FLDictIterator_GetCount(const FLDictIterator*  FLNONNULL) FLAPI;
 
     /** Advances the iterator to the next value, or returns false if at the end. */
-    bool FLDictIterator_Next(FLDictIterator* FLNONNULL);
+    bool FLDictIterator_Next(FLDictIterator* FLNONNULL) FLAPI;
 
     /** Cleans up after an iterator. Only needed if (a) the dictionary is a delta, and
         (b) you stop iterating before the end (i.e. before FLDictIterator_Next returns false.) */
-    void FLDictIterator_End(FLDictIterator* FLNONNULL);
+    void FLDictIterator_End(FLDictIterator* FLNONNULL) FLAPI;
 
     /** @} */
     /** \name Optimized Keys
@@ -609,14 +609,14 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
         use! (The FLDictKey stores a pointer to the string, but does not copy it.)
         @param string  The key string (UTF-8).
         @return  An initialized FLDictKey struct. */
-    FLDictKey FLDictKey_Init(FLSlice string);
+    FLDictKey FLDictKey_Init(FLSlice string) FLAPI;
 
     /** Returns the string value of the key (which it was initialized with.) */
-    FLString FLDictKey_GetString(const FLDictKey * FLNONNULL);
+    FLString FLDictKey_GetString(const FLDictKey * FLNONNULL) FLAPI;
 
     /** Looks up a key in a dictionary using an FLDictKey. If the key is found, "hint" data will
         be stored inside the FLDictKey that will speed up subsequent lookups. */
-    FLValue FLDict_GetWithKey(FLDict, FLDictKey* FLNONNULL);
+    FLValue FLDict_GetWithKey(FLDict, FLDictKey* FLNONNULL) FLAPI;
 
 
     //////// MUTABLE DICT
@@ -636,11 +636,11 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
         nested mutable Dicts and Arrays are also copied, recursively.
 
         If the source dict is NULL, then NULL is returned. */
-    FLMutableDict FLDict_MutableCopy(FLDict source, FLCopyFlags);
+    FLMutableDict FLDict_MutableCopy(FLDict source, FLCopyFlags) FLAPI;
 
     /** Creates a new empty mutable Dict.
         Its initial ref-count is 1, so a call to FLMutableDict_Free will free it.  */
-    FLMutableDict FLMutableDict_New(void);
+    FLMutableDict FLMutableDict_New(void) FLAPI;
 
     /** Increments the ref-count of a mutable Dict. */
     static inline FLMutableDict FLMutableDict_Retain(FLMutableDict d) {
@@ -653,34 +653,34 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
     }
 
     /** If the Dict was created by FLDict_MutableCopy, returns the original source Dict. */
-    FLDict FLMutableDict_GetSource(FLMutableDict);
+    FLDict FLMutableDict_GetSource(FLMutableDict) FLAPI;
 
     /** Returns true if the Dict has been changed from the source it was copied from. */
-    bool FLMutableDict_IsChanged(FLMutableDict);
+    bool FLMutableDict_IsChanged(FLMutableDict) FLAPI;
 
     /** Returns the Slot storing the key's value, adding a new one if needed (with a null value.)
         To set the value itself, call one of the FLSlot functions, e.g. \ref FLSlot_SetInt. */
-    FLSlot FLMutableDict_Set(FLMutableDict FL_NONNULL, FLString key);
+    FLSlot FLMutableDict_Set(FLMutableDict FL_NONNULL, FLString key) FLAPI;
 
     /** Removes the value for a key. */
-    void FLMutableDict_Remove(FLMutableDict, FLString key);
+    void FLMutableDict_Remove(FLMutableDict, FLString key) FLAPI;
 
     /** Removes all keys and values. */
-    void FLMutableDict_RemoveAll(FLMutableDict);
+    void FLMutableDict_RemoveAll(FLMutableDict) FLAPI;
 
     /** Convenience function for getting an array-valued property in mutable form.
         - If the value for the key is not an array, returns NULL.
         - If the value is a mutable array, returns it.
         - If the value is an immutable array, this function makes a mutable copy, assigns the
           copy as the property value, and returns the copy. */
-    FLMutableArray FLMutableDict_GetMutableArray(FLMutableDict, FLString key);
+    FLMutableArray FLMutableDict_GetMutableArray(FLMutableDict, FLString key) FLAPI;
 
     /** Convenience function for getting a dict-valued property in mutable form.
         - If the value for the key is not a dict, returns NULL.
         - If the value is a mutable dict, returns it.
         - If the value is an immutable dict, this function makes a mutable copy, assigns the
           copy as the property value, and returns the copy. */
-    FLMutableDict FLMutableDict_GetMutableDict(FLMutableDict, FLString key);
+    FLMutableDict FLMutableDict_GetMutableDict(FLMutableDict, FLString key) FLAPI;
 
     /** @} */
 
@@ -701,27 +701,27 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
     /** Creates a FLDeepIterator to iterate over a dictionary.
         Call FLDeepIterator_GetKey and FLDeepIterator_GetValue to get the first item,
         then FLDeepIterator_Next. */
-    FLDeepIterator FLDeepIterator_New(FLValue);
+    FLDeepIterator FLDeepIterator_New(FLValue) FLAPI;
 
-    void FLDeepIterator_Free(FLDeepIterator);
+    void FLDeepIterator_Free(FLDeepIterator) FLAPI;
 
     /** Returns the current value being iterated over. or NULL at the end of iteration. */
-    FLValue FLDeepIterator_GetValue(FLDeepIterator FLNONNULL);
+    FLValue FLDeepIterator_GetValue(FLDeepIterator FLNONNULL) FLAPI;
 
     /** Returns the key of the current value, or an empty slice if not in a dictionary. */
-    FLSlice FLDeepIterator_GetKey(FLDeepIterator FLNONNULL);
+    FLSlice FLDeepIterator_GetKey(FLDeepIterator FLNONNULL) FLAPI;
 
     /** Returns the array index of the current value, or 0 if not in an array. */
-    uint32_t FLDeepIterator_GetIndex(FLDeepIterator FLNONNULL);
+    uint32_t FLDeepIterator_GetIndex(FLDeepIterator FLNONNULL) FLAPI;
 
     /** Returns the current depth in the hierarchy, starting at 1 for the top-level children. */
-    size_t FLDeepIterator_GetDepth(FLDeepIterator FLNONNULL);
+    size_t FLDeepIterator_GetDepth(FLDeepIterator FLNONNULL) FLAPI;
 
     /** Tells the iterator to skip the children of the current value. */
-    void FLDeepIterator_SkipChildren(FLDeepIterator FLNONNULL);
+    void FLDeepIterator_SkipChildren(FLDeepIterator FLNONNULL) FLAPI;
 
     /** Advances the iterator to the next value, or returns false if at the end. */
-    bool FLDeepIterator_Next(FLDeepIterator FLNONNULL);
+    bool FLDeepIterator_Next(FLDeepIterator FLNONNULL) FLAPI;
 
     typedef struct {
         FLSlice key;        ///< Dict key, or kFLSliceNull if none
@@ -731,13 +731,13 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
     /** Returns the path as an array of FLPathComponents. */
     void FLDeepIterator_GetPath(FLDeepIterator FLNONNULL,
                                 FLPathComponent* * FLNONNULL outPath,
-                                size_t* FLNONNULL outDepth);
+                                size_t* FLNONNULL outDepth) FLAPI;
 
     /** Returns the current path in JavaScript format. */
-    FLSliceResult FLDeepIterator_GetPathString(FLDeepIterator FLNONNULL);
+    FLSliceResult FLDeepIterator_GetPathString(FLDeepIterator FLNONNULL) FLAPI;
 
     /** Returns the current path in JSONPointer format (RFC 6901). */
-    FLSliceResult FLDeepIterator_GetJSONPointer(FLDeepIterator FLNONNULL);
+    FLSliceResult FLDeepIterator_GetJSONPointer(FLDeepIterator FLNONNULL) FLAPI;
 
 
     //////// PATH
@@ -765,18 +765,18 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
 #endif
 
     /** Creates a new FLKeyPath object by compiling a path specifier string. */
-    FLKeyPath FLKeyPath_New(FLSlice specifier, FLError *error);
+    FLKeyPath FLKeyPath_New(FLSlice specifier, FLError *error) FLAPI;
 
     /** Frees a compiled FLKeyPath object. (It's ok to pass NULL.) */
-    void FLKeyPath_Free(FLKeyPath);
+    void FLKeyPath_Free(FLKeyPath) FLAPI;
 
     /** Evaluates a compiled key-path for a given Fleece root object. */
-    FLValue FLKeyPath_Eval(FLKeyPath FLNONNULL, FLValue root FLNONNULL);
+    FLValue FLKeyPath_Eval(FLKeyPath FLNONNULL, FLValue root FLNONNULL) FLAPI;
 
     /** Evaluates a key-path from a specifier string, for a given Fleece root object.
         If you only need to evaluate the path once, this is a bit faster than creating an
         FLKeyPath object, evaluating, then freeing it. */
-    FLValue FLKeyPath_EvalOnce(FLSlice specifier, FLValue root FLNONNULL, FLError *error);
+    FLValue FLKeyPath_EvalOnce(FLSlice specifier, FLValue root FLNONNULL, FLError *error) FLAPI;
 
 
     //////// SHARED KEYS
@@ -786,14 +786,14 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
     /** \defgroup FLSharedKeys   Shared Keys
         @{ */
 
-    FLSharedKeys FLSharedKeys_Create(void);
-    FLSharedKeys FLSharedKeys_Retain(FLSharedKeys);
-    void FLSharedKeys_Release(FLSharedKeys);
-    FLSharedKeys FLSharedKeys_CreateFromStateData(FLSlice);
-    FLSliceResult FLSharedKeys_GetStateData(FLSharedKeys FLNONNULL);
-    int FLSharedKeys_Encode(FLSharedKeys FLNONNULL, FLString, bool add);
-    FLString FLSharedKeys_Decode(FLSharedKeys FLNONNULL, int key);
-    unsigned FLSharedKeys_Count(FLSharedKeys FLNONNULL);
+    FLSharedKeys FLSharedKeys_Create(void) FLAPI;
+    FLSharedKeys FLSharedKeys_Retain(FLSharedKeys) FLAPI;
+    void FLSharedKeys_Release(FLSharedKeys) FLAPI;
+    FLSharedKeys FLSharedKeys_CreateFromStateData(FLSlice) FLAPI;
+    FLSliceResult FLSharedKeys_GetStateData(FLSharedKeys FLNONNULL) FLAPI;
+    int FLSharedKeys_Encode(FLSharedKeys FLNONNULL, FLString, bool add) FLAPI;
+    FLString FLSharedKeys_Decode(FLSharedKeys FLNONNULL, int key) FLAPI;
+    unsigned FLSharedKeys_Count(FLSharedKeys FLNONNULL) FLAPI;
 
 
     //////// ENCODER
@@ -825,7 +825,7 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
 
 
     /** Creates a new encoder, for generating Fleece data. Call FLEncoder_Free when done. */
-    FLEncoder FLEncoder_New(void);
+    FLEncoder FLEncoder_New(void) FLAPI;
 
     /** Creates a new encoder, allowing some options to be customized.
         @param format  The output format to generate (Fleece, JSON, or JSON5.)
@@ -836,22 +836,22 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
             of non-repeated strings. (Default is true) */
     FLEncoder FLEncoder_NewWithOptions(FLEncoderFormat format,
                                        size_t reserveSize,
-                                       bool uniqueStrings);
+                                       bool uniqueStrings) FLAPI;
 
     /** Creates a new Fleece encoder that writes to a file, not to memory. */
-    FLEncoder FLEncoder_NewWritingToFile(FILE* FLNONNULL, bool uniqueStrings);
+    FLEncoder FLEncoder_NewWritingToFile(FILE* FLNONNULL, bool uniqueStrings) FLAPI;
 
     /** Frees the space used by an encoder. */
-    void FLEncoder_Free(FLEncoder);
+    void FLEncoder_Free(FLEncoder) FLAPI;
 
     /** Tells the encoder to use a shared-keys mapping when encoding dictionary keys. */
-    void FLEncoder_SetSharedKeys(FLEncoder FLNONNULL, FLSharedKeys);
+    void FLEncoder_SetSharedKeys(FLEncoder FLNONNULL, FLSharedKeys) FLAPI;
 
     /** Associates an arbitrary user-defined value with the encoder. */
-    void FLEncoder_SetExtraInfo(FLEncoder FLNONNULL, void *info);
+    void FLEncoder_SetExtraInfo(FLEncoder FLNONNULL, void *info) FLAPI;
 
     /** Returns the user-defined value associated with the encoder; NULL by default. */
-    void* FLEncoder_GetExtraInfo(FLEncoder FLNONNULL);
+    void* FLEncoder_GetExtraInfo(FLEncoder FLNONNULL) FLAPI;
 
 
     /** Tells the encoder to logically append to the given Fleece document, rather than making a
@@ -869,25 +869,25 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
                     so that when the delta is used the base document can be anywhere in memory,
                     not just immediately preceding the delta document. */
     void FLEncoder_Amend(FLEncoder e FLNONNULL, FLSlice base,
-                         bool reuseStrings, bool externPointers);
+                         bool reuseStrings, bool externPointers) FLAPI;
 
     /** Returns the `base` value passed to FLEncoder_Amend. */
-    FLSlice FLEncoder_GetBase(FLEncoder FLNONNULL);
+    FLSlice FLEncoder_GetBase(FLEncoder FLNONNULL) FLAPI;
 
     /** Tells the encoder not to write the two-byte Fleece trailer at the end of the data.
         This is only useful for certain special purposes. */
-    void FLEncoder_SuppressTrailer(FLEncoder FLNONNULL);
+    void FLEncoder_SuppressTrailer(FLEncoder FLNONNULL) FLAPI;
 
     /** Resets the state of an encoder without freeing it. It can then be reused to encode
         another value. */
-    void FLEncoder_Reset(FLEncoder FLNONNULL);
+    void FLEncoder_Reset(FLEncoder FLNONNULL) FLAPI;
 
     /** Returns the number of bytes encoded so far. */
-    size_t FLEncoder_BytesWritten(FLEncoder FLNONNULL);
+    size_t FLEncoder_BytesWritten(FLEncoder FLNONNULL) FLAPI;
 
     /** Returns the byte offset in the encoded data where the next value will be written.
         (Due to internal buffering, this is not the same as FLEncoder_BytesWritten.) */
-    size_t FLEncoder_GetNextWritePos(FLEncoder FLNONNULL);
+    size_t FLEncoder_GetNextWritePos(FLEncoder FLNONNULL) FLAPI;
 
     /** @} */
     /** \name Writing to the encoder
@@ -900,44 +900,44 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
 
     /** Writes a `null` value to an encoder. (This is an explicitly-stored null, like the JSON
         `null`, not the "undefined" value represented by a NULL FLValue pointer.) */
-    bool FLEncoder_WriteNull(FLEncoder FLNONNULL);
+    bool FLEncoder_WriteNull(FLEncoder FLNONNULL) FLAPI;
 
     /** Writes an `undefined` value to an encoder. (Its value when read will not be a `NULL`
         pointer, but it can be recognized by `FLValue_GetType` returning `kFLUndefined`.)
         @note The only real use for writing undefined values is to represent "holes" in an array.
         An undefined dictionary value should be written simply by skipping the key and value. */
-    bool FLEncoder_WriteUndefined(FLEncoder FLNONNULL);
+    bool FLEncoder_WriteUndefined(FLEncoder FLNONNULL) FLAPI;
 
     /** Writes a boolean value (true or false) to an encoder. */
-    bool FLEncoder_WriteBool(FLEncoder FLNONNULL, bool);
+    bool FLEncoder_WriteBool(FLEncoder FLNONNULL, bool) FLAPI;
 
     /** Writes an integer to an encoder. The parameter is typed as `int64_t` but you can pass any
         integral type (signed or unsigned) except for huge `uint64_t`s.
         The number will be written in a compact form that uses only as many bytes as necessary. */
-    bool FLEncoder_WriteInt(FLEncoder FLNONNULL, int64_t);
+    bool FLEncoder_WriteInt(FLEncoder FLNONNULL, int64_t) FLAPI;
 
     /** Writes an unsigned integer to an encoder.
         @note This function is only really necessary for huge
         64-bit integers greater than or equal to 2^63, which can't be represented as int64_t. */
-    bool FLEncoder_WriteUInt(FLEncoder FLNONNULL, uint64_t);
+    bool FLEncoder_WriteUInt(FLEncoder FLNONNULL, uint64_t) FLAPI;
 
     /** Writes a 32-bit floating point number to an encoder.
         @note As an implementation detail, if the number has no fractional part and can be
         represented exactly as an integer, it'll be encoded as an integer to save space. This is
         transparent to the reader, since if it requests the value as a float it'll be returned
         as floating-point. */
-    bool FLEncoder_WriteFloat(FLEncoder FLNONNULL, float);
+    bool FLEncoder_WriteFloat(FLEncoder FLNONNULL, float) FLAPI;
 
     /** Writes a 64-bit floating point number to an encoder.
         @note As an implementation detail, the number may be encoded as a 32-bit float or even
         as an integer, if this can be done without losing precision. For example, 123.0 will be
         written as an integer, and 123.75 as a float.) */
-    bool FLEncoder_WriteDouble(FLEncoder FLNONNULL, double);
+    bool FLEncoder_WriteDouble(FLEncoder FLNONNULL, double) FLAPI;
 
     /** Writes a string to an encoder. The string must be UTF-8-encoded and must not contain any
         zero bytes.
         @warning Do _not_ use this to write a dictionary key; use FLEncoder_WriteKey instead. */
-    bool FLEncoder_WriteString(FLEncoder FLNONNULL, FLString);
+    bool FLEncoder_WriteString(FLEncoder FLNONNULL, FLString) FLAPI;
 
     /** Writes a timestamp to an encoder, as an ISO-8601 date string.
         @note Since neither Fleece nor JSON have a 'Date' type, the encoded string has no
@@ -946,18 +946,18 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
         @param ts  The timestamp (milliseconds since Unix epoch 1-1-1970).
         @param asUTC  If true, date is written in UTC (GMT); if false, with the local timezone.
         @return  True on success, false on error. */
-    bool FLEncoder_WriteDateString(FLEncoder FLNONNULL encoder, FLTimestamp ts, bool asUTC);
+    bool FLEncoder_WriteDateString(FLEncoder FLNONNULL encoder, FLTimestamp ts, bool asUTC) FLAPI;
 
     /** Writes a binary data value (a blob) to an encoder. This can contain absolutely anything
         including null bytes.
         If the encoder is generating JSON, the blob will be written as a base64-encoded string. */
-    bool FLEncoder_WriteData(FLEncoder FLNONNULL, FLSlice);
+    bool FLEncoder_WriteData(FLEncoder FLNONNULL, FLSlice) FLAPI;
 
     /** Writes raw data directly to the encoded output.
         (This is not the same as FLEncoder_WriteData, which safely encodes a blob.)
         @warning **Do not call this** unless you really know what you're doing ...
         it's quite unsafe, and only used for certain advanced purposes. */
-    bool FLEncoder_WriteRaw(FLEncoder FLNONNULL, FLSlice);
+    bool FLEncoder_WriteRaw(FLEncoder FLNONNULL, FLSlice) FLAPI;
 
 
     /** Begins writing an array value to an encoder. This pushes a new state where each
@@ -965,10 +965,10 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
         @param reserveCount  Number of array elements to reserve space for. If you know the size
             of the array, providing it here speeds up encoding slightly. If you don't know,
             just use zero. */
-    bool FLEncoder_BeginArray(FLEncoder FLNONNULL, size_t reserveCount);
+    bool FLEncoder_BeginArray(FLEncoder FLNONNULL, size_t reserveCount) FLAPI;
 
     /** Ends writing an array value; pops back the previous encoding state. */
-    bool FLEncoder_EndArray(FLEncoder FLNONNULL);
+    bool FLEncoder_EndArray(FLEncoder FLNONNULL) FLAPI;
 
 
     /** Begins writing a dictionary value to an encoder. This pushes a new state where each
@@ -979,53 +979,53 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
         @param reserveCount  Number of dictionary items to reserve space for. If you know the size
             of the dictionary, providing it here speeds up encoding slightly. If you don't know,
             just use zero. */
-    bool FLEncoder_BeginDict(FLEncoder FLNONNULL, size_t reserveCount);
+    bool FLEncoder_BeginDict(FLEncoder FLNONNULL, size_t reserveCount) FLAPI;
 
     /** Specifies the key for the next value to be written to the current dictionary. */
-    bool FLEncoder_WriteKey(FLEncoder FLNONNULL, FLString);
+    bool FLEncoder_WriteKey(FLEncoder FLNONNULL, FLString) FLAPI;
 
     /** Specifies the key for the next value to be written to the current dictionary.
         The key is given as a Value, which must be a string or integer. */
-    bool FLEncoder_WriteKeyValue(FLEncoder FLNONNULL, FLValue FLNONNULL);
+    bool FLEncoder_WriteKeyValue(FLEncoder FLNONNULL, FLValue FLNONNULL) FLAPI;
 
     /** Ends writing a dictionary value; pops back the previous encoding state. */
-    bool FLEncoder_EndDict(FLEncoder FLNONNULL);
+    bool FLEncoder_EndDict(FLEncoder FLNONNULL) FLAPI;
 
 
     /** Writes a Fleece Value to an Encoder. */
-    bool FLEncoder_WriteValue(FLEncoder FLNONNULL, FLValue FLNONNULL);
+    bool FLEncoder_WriteValue(FLEncoder FLNONNULL, FLValue FLNONNULL) FLAPI;
 
 
     /** Parses JSON data and writes the object(s) to the encoder. (This acts as a single write,
         like WriteInt; it's just that the value written is likely to be an entire dictionary of
         array.) */
-    bool FLEncoder_ConvertJSON(FLEncoder FLNONNULL, FLSlice json);
+    bool FLEncoder_ConvertJSON(FLEncoder FLNONNULL, FLSlice json) FLAPI;
 
     /** @} */
     /** \name Finishing up
          @{ */
 
     /** Finishes encoding the current item, and returns its offset in the output data. */
-    size_t FLEncoder_FinishItem(FLEncoder FLNONNULL);
+    size_t FLEncoder_FinishItem(FLEncoder FLNONNULL) FLAPI;
 
     /** Ends encoding; if there has been no error, it returns the encoded Fleece data packaged in
         an FLDoc. (This function does not support JSON encoding.)
         This does not free the FLEncoder; call FLEncoder_Free (or FLEncoder_Reset) next. */
-    FLDoc FLEncoder_FinishDoc(FLEncoder FLNONNULL, FLError*);
+    FLDoc FLEncoder_FinishDoc(FLEncoder FLNONNULL, FLError*) FLAPI;
 
     /** Ends encoding; if there has been no error, it returns the encoded data, else null.
         This does not free the FLEncoder; call FLEncoder_Free (or FLEncoder_Reset) next. */
-    FLSliceResult FLEncoder_Finish(FLEncoder e, FLError *outError);
+    FLSliceResult FLEncoder_Finish(FLEncoder e, FLError *outError) FLAPI;
 
     /** @} */
     /** \name Error handling
          @{ */
 
     /** Returns the error code of an encoder, or NoError (0) if there's no error. */
-    FLError FLEncoder_GetError(FLEncoder FLNONNULL);
+    FLError FLEncoder_GetError(FLEncoder FLNONNULL) FLAPI;
 
     /** Returns the error message of an encoder, or NULL if there's no error. */
-    const char* FLEncoder_GetErrorMessage(FLEncoder FLNONNULL);
+    const char* FLEncoder_GetErrorMessage(FLEncoder FLNONNULL) FLAPI;
 
     /** @} */
     /** @} */
@@ -1051,7 +1051,7 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
         @param nuu  A value that's typically the new/changed state of the `old` data.
         @return  JSON data representing the changes from `old` to `nuu`, or NULL on
                     (extremely unlikely) failure. */
-    FLSliceResult FLCreateJSONDelta(FLValue old, FLValue nuu);
+    FLSliceResult FLCreateJSONDelta(FLValue old, FLValue nuu) FLAPI;
 
     /** Writes JSON that describes the changes to turn the value `old` into `nuu`.
         (The format is documented in Fleece.md, but you should treat it as a black box.)
@@ -1060,7 +1060,7 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
         @param jsonEncoder  An encoder to write the JSON to. Must have been created using
                 `FLEncoder_NewWithOptions`, with JSON or JSON5 format.
         @return  True on success, false on (extremely unlikely) failure. */
-    bool FLEncodeJSONDelta(FLValue old, FLValue nuu, FLEncoder FLNONNULL jsonEncoder);
+    bool FLEncodeJSONDelta(FLValue old, FLValue nuu, FLEncoder FLNONNULL jsonEncoder) FLAPI;
 
 
     /** Applies the JSON data created by `CreateJSONDelta` to the value `old`, which must be equal
@@ -1073,7 +1073,7 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
         @return  The corresponding `nuu` value, encoded as Fleece, or null if an error occurred. */
     FLSliceResult FLApplyJSONDelta(FLValue old,
                                    FLSlice jsonDelta,
-                                   FLError *error);
+                                   FLError *error) FLAPI;
 
     /** Applies the (parsed) JSON data created by `CreateJSONDelta` to the value `old`, which must be
         equal to the `old` value originally passed to `FLCreateJSONDelta`, and writes the corresponding
@@ -1086,7 +1086,7 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
         @return  True on success, false on error; call `FLEncoder_GetError` for details. */
     bool FLEncodeApplyingJSONDelta(FLValue old,
                                    FLSlice jsonDelta,
-                                   FLEncoder encoder);
+                                   FLEncoder encoder) FLAPI;
 
     
     /** @} */

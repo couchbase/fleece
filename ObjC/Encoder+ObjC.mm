@@ -43,7 +43,7 @@ namespace fleece {
 using namespace fleece;
 
 
-bool FLEncoder_WriteNSObject(FLEncoder encoder, id obj) {
+bool FLEncoder_WriteNSObject(FLEncoder encoder, id obj) FLAPI {
     try {
         if (!encoder->hasError()) {
             throwIf(!obj, InvalidData, "Can't encode nil");

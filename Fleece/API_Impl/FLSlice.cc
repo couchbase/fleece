@@ -22,12 +22,12 @@
 #include "betterassert.hh"
 
 
-bool FLSlice_Equal(FLSlice a, FLSlice b) {
+bool FLSlice_Equal(FLSlice a, FLSlice b) FLAPI {
     return a.size==b.size && memcmp(a.buf, b.buf, a.size) == 0;
 }
 
 
-int FLSlice_Compare(FLSlice a, FLSlice b)  {
+int FLSlice_Compare(FLSlice a, FLSlice b) FLAPI {
     // Optimized for speed
     if (a.size == b.size)
         return memcmp(a.buf, b.buf, a.size);
@@ -107,7 +107,7 @@ namespace fleece {
 using namespace fleece;
 
 
-FLSliceResult FLSliceResult_New(size_t size) {
+FLSliceResult FLSliceResult_New(size_t size) FLAPI {
     auto sb = new (size) sharedBuffer;
     if (!sb)
         return {};
@@ -115,7 +115,7 @@ FLSliceResult FLSliceResult_New(size_t size) {
 }
 
 
-FLSliceResult FLSlice_Copy(FLSlice s) {
+FLSliceResult FLSlice_Copy(FLSlice s) FLAPI {
     if (!s.buf)
         return {};
 #if FL_DETECT_COPIES
@@ -134,13 +134,13 @@ FLSliceResult FLSlice_Copy(FLSlice s) {
 }
 
 
-void _FLBuf_Retain(const void *buf) {
+void _FLBuf_Retain(const void *buf) FLAPI {
     if (buf)
         bufferFromBuf(buf)->retain();
 }
 
 
-void _FLBuf_Release(const void *buf) {
+void _FLBuf_Release(const void *buf) FLAPI {
     if (buf)
         bufferFromBuf(buf)->release();
 }

@@ -38,7 +38,7 @@ namespace fleece {
             _root->deleteTree();
     }
 
-    MutableHashTree& MutableHashTree::operator= (MutableHashTree &&other) {
+    MutableHashTree& MutableHashTree::operator= (MutableHashTree &&other) noexcept {
         _imRoot = other._imRoot;
         if (_root)
             _root->deleteTree();

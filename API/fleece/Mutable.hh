@@ -45,7 +45,7 @@ namespace fleece {
         friend class MutableDict;
 
         Slot(FLSlot slot)                           :_slot(slot) { }
-        Slot(Slot&& slot)                           :_slot(slot._slot) { }
+        Slot(Slot&& slot) noexcept                  :_slot(slot._slot) { }
         Slot(const Slot&) =delete;
         Slot& operator=(const Slot&) =delete;
         Slot& operator=(Slot&&) =delete;
@@ -67,7 +67,7 @@ namespace fleece {
         MutableArray()                          :Array() { }
         MutableArray(FLMutableArray a)          :Array((FLArray)FLMutableArray_Retain(a)) { }
         MutableArray(const MutableArray &a)     :Array((FLArray)FLMutableArray_Retain(a)) { }
-        MutableArray(MutableArray &&a)          :Array((FLArray)a) {a._val = nullptr;}
+        MutableArray(MutableArray &&a) noexcept :Array((FLArray)a) {a._val = nullptr;}
         ~MutableArray()                         {FLMutableArray_Release(*this);}
 
         operator FLMutableArray () const        {return (FLMutableArray)_val;}
@@ -79,7 +79,7 @@ namespace fleece {
             return *this;
         }
 
-        MutableArray& operator= (MutableArray &&a) {
+        MutableArray& operator= (MutableArray &&a) noexcept {
             if (a._val != _val) {
                 FLMutableArray_Release(*this);
                 _val = a._val;
@@ -140,7 +140,7 @@ namespace fleece {
         MutableDict()                           :Dict() { }
         MutableDict(FLMutableDict d)            :Dict((FLDict)d) {FLMutableDict_Retain(*this);}
         MutableDict(const MutableDict &d)       :Dict((FLDict)d) {FLMutableDict_Retain(*this);}
-        MutableDict(MutableDict &&d)            :Dict((FLDict)d) {d._val = nullptr;}
+        MutableDict(MutableDict &&d) noexcept   :Dict((FLDict)d) {d._val = nullptr;}
         ~MutableDict()                          {FLMutableDict_Release(*this);}
 
         operator FLMutableDict () const         {return (FLMutableDict)_val;}
@@ -152,7 +152,7 @@ namespace fleece {
             return *this;
         }
 
-        MutableDict& operator= (MutableDict &&d) {
+        MutableDict& operator= (MutableDict &&d) noexcept {
             if (d._val != _val) {
                 FLMutableDict_Release(*this);
                 _val = d._val;
@@ -201,9 +201,9 @@ namespace fleece {
         RetainedValue()                           { }
         RetainedValue(FLValue v)                  :Value(FLValue_Retain(v)) { }
         RetainedValue(const Value &v)             :Value(FLValue_Retain(v)) { }
-        RetainedValue(RetainedValue &&v)          :Value(v) {v._val = nullptr;}
-        RetainedValue(MutableArray &&v)           :Value(v) {v._val = nullptr;}
-        RetainedValue(MutableDict &&v)            :Value(v) {v._val = nullptr;}
+        RetainedValue(RetainedValue &&v) noexcept :Value(v) {v._val = nullptr;}
+        RetainedValue(MutableArray &&v) noexcept  :Value(v) {v._val = nullptr;}
+        RetainedValue(MutableDict &&v) noexcept   :Value(v) {v._val = nullptr;}
         ~RetainedValue()                          {FLValue_Release(_val);}
 
         RetainedValue& operator= (const Value &v) {
@@ -213,7 +213,7 @@ namespace fleece {
             return *this;
         }
 
-        RetainedValue& operator= (RetainedValue &&v) {
+        RetainedValue& operator= (RetainedValue &&v) noexcept {
             if (v._val != _val) {
                 FLValue_Release(_val);
                 _val = v._val;

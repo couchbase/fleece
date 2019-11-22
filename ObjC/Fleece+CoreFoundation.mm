@@ -24,12 +24,12 @@
 NSString* const FLErrorDomain = @"Fleece";
 
 
-NSMapTable* FLCreateSharedStringsTable(void) {
+NSMapTable* FLCreateSharedStringsTable(void) FLAPI {
     return Value::createSharedStringsTable();
 }
 
 
-id FLValue_GetNSObject(FLValue value, NSMapTable* sharedStrings) {
+id FLValue_GetNSObject(FLValue value, NSMapTable* sharedStrings) FLAPI {
     try {
         if (value)
             return value->toNSObject(sharedStrings);
@@ -38,7 +38,7 @@ id FLValue_GetNSObject(FLValue value, NSMapTable* sharedStrings) {
 }
 
 
-FLValue FLDict_GetWithNSString(FLDict dict, NSString* key) {
+FLValue FLDict_GetWithNSString(FLDict dict, NSString* key) FLAPI {
     try {
         if (dict)
             return dict->get(key);
@@ -48,13 +48,13 @@ FLValue FLDict_GetWithNSString(FLDict dict, NSString* key) {
 
 
 NSString* FLDictIterator_GetKeyAsNSString(const FLDictIterator *i,
-                                          __unsafe_unretained NSMapTable *sharedStrings)
+                                          __unsafe_unretained NSMapTable *sharedStrings) FLAPI
 {
     return ((Dict::iterator*)i)->keyToNSString(sharedStrings);
 }
 
 
-NSData* FLEncoder_FinishWithNSData(FLEncoder enc, NSError** outError) {
+NSData* FLEncoder_FinishWithNSData(FLEncoder enc, NSError** outError) FLAPI {
     FLError code;
     FLSliceResult result = FLEncoder_Finish(enc, &code);
     if (result.buf)
@@ -66,17 +66,17 @@ NSData* FLEncoder_FinishWithNSData(FLEncoder enc, NSError** outError) {
 
 
 
-bool FLEncoder_WriteCFObject(FLEncoder encoder, CFTypeRef obj) {
+bool FLEncoder_WriteCFObject(FLEncoder encoder, CFTypeRef obj) FLAPI {
     return FLEncoder_WriteNSObject(encoder, (__bridge id)obj);
 }
 
 
-CFTypeRef FLValue_CopyCFObject(FLValue value) {
+CFTypeRef FLValue_CopyCFObject(FLValue value) FLAPI {
     id obj = FLValue_GetNSObject(value, nullptr);
     return obj ? CFBridgingRetain(obj) : nullptr;
 }
 
 
-FLValue FLDict_GetWithCFString(FLDict dict, CFStringRef key) {
+FLValue FLDict_GetWithCFString(FLDict dict, CFStringRef key) FLAPI {
     return FLDict_GetWithNSString(dict, (__bridge NSString*)key);
 }
