@@ -96,6 +96,12 @@ namespace fleece {
         constexpr pure_slice()                           :buf(nullptr), size(0) {}
         constexpr pure_slice(const void* b, size_t s)    :buf(b), size(s) {}
 
+        constexpr17 pure_slice(const char* str)          :pure_slice(str, _strlen(str)) {}
+        pure_slice(const std::string& str)               :pure_slice(&str[0], str.length()) {}
+#ifdef SLICE_SUPPORTS_STRING_VIEW
+        constexpr pure_slice(string_view str)            :pure_slice(str.data(), str.length()) {}
+#endif
+
         explicit operator bool() const              {return buf != nullptr;}
 
         const void* offset(size_t o) const          {return (uint8_t*)buf + o;}
@@ -213,6 +219,15 @@ namespace fleece {
         void set(const void *b, size_t s)           {const_cast<const void*&>(buf) = b;
                                                      setSize(s);}
         pure_slice& operator=(pure_slice s)         {set(s.buf, s.size); return *this;}
+
+        // like strlen but can run at compile time
+        static constexpr17 size_t _strlen(const char *str) {
+            if (!str)
+                return 0;
+            auto c = str;
+            while (*c) ++c;
+            return c - str;
+        }
     };
 
 
@@ -227,13 +242,12 @@ namespace fleece {
                                                     :slice(start, (uint8_t*)end-(uint8_t*)start){}
         inline constexpr slice(const alloc_slice&);
 
-        slice(const std::string& str)               :slice(&str[0], str.length()) {}
-        constexpr17 slice(const char* str)          :slice(str, _strlen(str)) {}
+        slice(const std::string& str)               :pure_slice(str) {}
+        constexpr17 slice(const char* str)          :pure_slice(str) {}
 #ifdef SLICE_SUPPORTS_STRING_VIEW
-        constexpr slice(string_view str)            :slice(str.data(), str.length()) {}
+        constexpr slice(string_view str)            :pure_slice(str) {}
 #endif
 
-        slice& operator=(pure_slice s)              {set(s.buf, s.size); return *this;}
         slice& operator= (alloc_slice&&) =delete;   // Disallowed: might lead to ptr to freed buf
         slice& operator= (std::nullptr_t) noexcept  {set(nullptr, 0); return *this;}
         inline slice& operator= (nullslice_t) noexcept;
@@ -276,15 +290,6 @@ namespace fleece {
         explicit slice(NSData* data)                         :pure_slice(data) {}
 #endif
 #endif
-
-        // like strlen but can run at compile time
-        static constexpr17 size_t _strlen(const char *str) {
-            if (!str)
-                return 0;
-            auto c = str;
-            while (*c) ++c;
-            return c - str;
-        }
     };
 
 
@@ -313,8 +318,8 @@ namespace fleece {
             :alloc_slice(slice(b, s))                       {}
         alloc_slice(const void* start NONNULL, const void* end NONNULL)
             :alloc_slice(slice(start, end))                 {}
-        explicit alloc_slice(const std::string &str)
-            :alloc_slice(slice(str)) {}
+        explicit alloc_slice(const char *str)               :alloc_slice(slice(str)) {}
+        explicit alloc_slice(const std::string &str)        :alloc_slice(slice(str)) {}
         explicit alloc_slice(FLSlice s)     :alloc_slice(pure_slice{s.buf, s.size}) { }
 
         alloc_slice(FLHeapSlice s)     // FLHeapSlice is known to be an alloc_slice
@@ -338,7 +343,6 @@ namespace fleece {
 
 #ifdef SLICE_SUPPORTS_STRING_VIEW
         explicit alloc_slice(string_view str)               :alloc_slice(slice(str)) {}
-        explicit alloc_slice(const char *str)               :alloc_slice(slice(str)) {} // disambiguation
 #endif
 
         ~alloc_slice()                                      {if (buf) release();}
