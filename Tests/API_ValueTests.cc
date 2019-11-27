@@ -24,6 +24,11 @@ namespace fleece {
         out << "Doc(" << (void*)(FLDoc)doc << ")";
         return out;
     }
+
+    static inline std::ostream& operator<<(std::ostream &out, const fleece::Dict &dict) {
+        out << "Doc(" << (void*)(FLDict)dict << ")";
+        return out;
+    }
 }
 
 #include "FleeceTests.hh"
