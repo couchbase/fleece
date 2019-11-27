@@ -2,32 +2,33 @@ language: cpp
 
 matrix:
   include:
-    - name: Linux GCC 6
+    - name: Linux GCC 7
       os: linux
+      dist: bionic
       addons:
         apt:
-          sources:
-            - ubuntu-toolchain-r-test
           packages:
-            - g++-6
+            - g++-7
       env:
-        - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
     - name: Linux Clang 5
       os: linux
+      dist: bionic
       addons:
         apt:
           packages:
             - clang-5.0
       env:
         - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
-    - name: Linux Clang 3.9
+    - name: Linux Clang 8
       os: linux
+      dist: bionic
       addons:
         apt:
           packages:
-            - clang-3.9
+            - clang-8
       env:
-        - MATRIX_EVAL="CC=clang-3.9 && CXX=clang++-3.9"
+        - MATRIX_EVAL="CC=clang-8 && CXX=clang++-8"
     - name: Mac Clang (Xcode 9)
       os: osx
       osx_image: xcode9
