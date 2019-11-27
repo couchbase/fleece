@@ -38,7 +38,7 @@ struct CaseListReporter : public Catch::ConsoleReporter {
     }
 
     virtual void testCaseStarting( Catch::TestCaseInfo const& _testInfo ) CATCH_OVERRIDE {
-        auto file = _testInfo.lineInfo.file;
+        std::string file = _testInfo.lineInfo.file;
         if (file != _curFile) {
             _curFile = file;
             auto slash = file.rfind('/');
