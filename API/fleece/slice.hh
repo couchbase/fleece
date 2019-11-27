@@ -241,6 +241,7 @@ namespace fleece {
         constexpr slice(const void* start NONNULL, const void* end NONNULL)
                                                     :slice(start, (uint8_t*)end-(uint8_t*)start){}
         inline constexpr slice(const alloc_slice&);
+        inline constexpr slice(const pure_slice&);
 
         slice(const std::string& str)               :pure_slice(str) {}
         constexpr17 slice(const char* str)          :pure_slice(str) {}
@@ -475,6 +476,7 @@ namespace fleece {
     inline constexpr slice::slice(nullslice_t)                     :pure_slice() {}
     inline slice& slice::operator= (nullslice_t) noexcept          {set(nullptr, 0); return *this;}
     inline constexpr slice::slice(const alloc_slice &s)            :pure_slice(s) { }
+    inline constexpr slice::slice(const pure_slice &s)            :pure_slice(s) { }
     inline slice::operator FLSliceResult () const {
         return FLSliceResult(alloc_slice(*this));
     }
