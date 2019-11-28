@@ -179,8 +179,13 @@ namespace fleece {
 
         /** Raw memory allocation. Just like malloc but throws on failure. */
         static void* newBytes(size_t sz);
+
         template <typename T>
-        static T* reallocBytes(T* bytes, size_t newSz);
+        static T* reallocBytes(T* bytes, size_t newSz) {
+            T* newBytes = (T*)::realloc(bytes, newSz);
+            if (!newBytes) throw std::bad_alloc();
+            return newBytes;
+        }
 
 #ifdef __APPLE__
         explicit pure_slice(CFDataRef data) noexcept;

@@ -242,13 +242,6 @@ namespace fleece {
         return result;
     }
 
-    template <typename T>
-    T* pure_slice::reallocBytes(T* bytes, size_t newSz) {
-        T* newBytes = (T*)::realloc(bytes, newSz);
-        if (!newBytes) throw std::bad_alloc();
-        return newBytes;
-    }
-
     slice pure_slice::copy() const {
         if (buf == nullptr)
             return nullslice;
