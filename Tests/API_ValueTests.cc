@@ -26,7 +26,7 @@ namespace fleece {
     }
 
     static inline std::ostream& operator<<(std::ostream &out, const fleece::Dict &dict) {
-        out << "Doc(" << (void*)(FLDict)dict << ")";
+        out << "Dict(" << (void*)(FLDict)dict << ")";
         return out;
     }
 }
