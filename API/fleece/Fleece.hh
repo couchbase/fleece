@@ -263,12 +263,25 @@ namespace fleece {
         property name (but not yet in the middle of a name.) */
     class KeyPath {
     public:
-        KeyPath(slice_NONNULL spec, FLError *err)               :_path(FLKeyPath_New(spec, err)) { }
+        KeyPath(slice_NONNULL spec, FLError *err)       :_path(FLKeyPath_New(spec, err)) { }
         ~KeyPath()                                      {FLKeyPath_Free(_path);}
+
+        KeyPath(KeyPath &&kp)                           :_path(kp._path) {kp._path = nullptr;}
+        KeyPath& operator=(KeyPath &&kp)                {FLKeyPath_Free(_path); _path = kp._path;
+                                                         kp._path = nullptr; return *this;}
+
         explicit operator bool() const                  {return _path != nullptr;}
+
+        Value eval(Value root) const {
+            return FLKeyPath_Eval(_path, root);
+        }
 
         static Value eval(slice_NONNULL specifier, Value root, FLError *error) {
             return FLKeyPath_EvalOnce(specifier, root, error);
+        }
+
+        explicit operator std::string() const {
+            return std::string(alloc_slice(FLKeyPath_ToString(_path)));
         }
 
     private:
