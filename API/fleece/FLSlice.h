@@ -85,9 +85,14 @@ static inline FLSlice FLStr(const char *str) {
 
 // Macro version of FLStr, for use in initializing compile-time constants.
 // STR must be a C string literal. Has zero runtime overhead.
-#ifdef _MSC_VER
-    #define FLSTR(STR) (FLSlice({("" STR), sizeof(("" STR))-1}))
+#if defined(_MSC_VER) && defined(__cplusplus)
+    // The other definition is only valid in C, but accepted by GCC / clang as an extension,
+    // so MSVC needs a C++ specific version of the macro
+    // https://stackoverflow.com/a/28116523/1155387
+    #define FLSTR(STR) (FLSlice {("" STR), sizeof(("" STR))-1})
 #else
+    // Technically the below is not valid C++, it just happens to be accepted by GCC / Clang
+    // This is a compound literal and is only technically valid in C99
     #define FLSTR(STR) ((FLSlice){("" STR), sizeof(("" STR))-1})
 #endif
 
