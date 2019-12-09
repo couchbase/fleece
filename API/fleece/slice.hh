@@ -140,7 +140,10 @@ namespace fleece {
         bool containsAddress(const void *addr) const noexcept FLPURE;
         bool containsAddressRange(pure_slice) const noexcept FLPURE;
 
+        /// Returns new malloc'ed slice containing same data. Call free() on it when done.
         slice copy() const;
+
+        void copyTo(void *dst) const                {memcpy(dst, buf, size);}
 
         explicit operator std::string() const       {return std::string((const char*)buf, size);}
         std::string asString() const                {return (std::string)*this;}
