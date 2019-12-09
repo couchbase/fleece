@@ -109,14 +109,30 @@ namespace fleece {
 #endif
 
 
-    const void* Writer::writeToNewChunk(slice s) {
-        // If we got here, a call to write(s) would not fit in the current chunk
+    void* Writer::_write(const void* dataOrNull, size_t length) {
+        void* result;
+        if (_usuallyTrue(length <= _available.size)) {
+            result = (void*)_available.buf;
+            if (dataOrNull)
+                memcpy((void*)_available.buf, dataOrNull, length);
+            _available.moveStart(length);
+        } else {
+            result = writeToNewChunk(dataOrNull, length);
+        }
+        // No need to add to _length; the length() method compensates.
+        assertLengthCorrect();
+        return result;
+    }
+
+
+    void* Writer::writeToNewChunk(const void* dataOrNull, size_t length) {
+        // If we got here, a call to `write` or `reserveSpace` would not fit in the current chunk
         if (_outputFile) {
             flush();
-            if (s.size > _chunkSize) {
+            if (length > _chunkSize) {
                 freeChunk(_chunks.back());
                 _chunks.clear();
-                addChunk(s.size);
+                addChunk(length);
             }
             _length -= _available.size;
             _available = _chunks[0];
@@ -124,14 +140,14 @@ namespace fleece {
         } else {
             if (_usuallyTrue(_chunkSize <= 64*1024))
                 _chunkSize *= 2;
-            addChunk(std::max(s.size, _chunkSize));
+            addChunk(std::max(length, _chunkSize));
         }
 
         // Now that we have room, write:
-        auto result = _available.buf;
-        if (s.buf)
-            ::memcpy((void*)_available.buf, s.buf, s.size);
-        _available.moveStart(s.size);
+        auto result = (void*)_available.buf;
+        if (dataOrNull)
+            memcpy((void*)_available.buf, dataOrNull, length);
+        _available.moveStart(length);
         return result;
     }
 
@@ -204,17 +220,28 @@ namespace fleece {
     }
 
 
+    void Writer::copyOutputTo(void *dst) const {
+        forEachChunk([&](slice chunk) {
+            chunk.copyTo(dst);
+            dst = offsetby(dst, chunk.size);
+        });
+    }
+
+
+    alloc_slice Writer::copyOutput() const {
+        assert(!_outputFile);
+        alloc_slice output(length());
+        copyOutputTo((void*)output.buf);
+        return output;
+    }
+
+
     alloc_slice Writer::finish() {
         alloc_slice output;
         if (_outputFile) {
             flush();
         } else {
-            output = alloc_slice(length());
-            void* dst = (void*)output.buf;
-            forEachChunk([&](slice chunk) {
-                memcpy(dst, chunk.buf, chunk.size);
-                dst = offsetby(dst, chunk.size);
-            });
+            output = copyOutput();
             reset();
         }
         assertLengthCorrect();
