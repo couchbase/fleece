@@ -62,7 +62,7 @@ namespace fleece {
     class MutableArray : public Array {
     public:
         /** Creates a new, empty mutable array. */
-        static MutableArray newArray()          {return MutableArray(FLMutableArray_New(), true);}
+        static MutableArray newArray()          {return MutableArray(FLMutableArray_New(), false);}
 
         MutableArray()                          :Array() { }
         MutableArray(FLMutableArray a)          :Array((FLArray)FLMutableArray_Retain(a)) { }
@@ -135,7 +135,7 @@ namespace fleece {
         encoded to a new Fleece document. */
     class MutableDict : public Dict {
     public:
-        static MutableDict newDict()            {return MutableDict(FLMutableDict_New(), true);}
+        static MutableDict newDict()            {return MutableDict(FLMutableDict_New(), false);}
 
         MutableDict()                           :Dict() { }
         MutableDict(FLMutableDict d)            :Dict((FLDict)d) {FLMutableDict_Retain(*this);}
@@ -217,6 +217,7 @@ namespace fleece {
             if (v._val != _val) {
                 FLValue_Release(_val);
                 _val = v._val;
+                v._val = nullptr;
             }
             return *this;
         }
@@ -233,10 +234,10 @@ namespace fleece {
     //////// IMPLEMENTATION GUNK:
 
     inline MutableArray Array::mutableCopy(FLCopyFlags flags) const {
-        return MutableArray(FLArray_MutableCopy(*this, flags), true);
+        return MutableArray(FLArray_MutableCopy(*this, flags), false);
     }
     inline MutableDict Dict::mutableCopy(FLCopyFlags flags) const {
-        return MutableDict(FLDict_MutableCopy(*this, flags), true);
+        return MutableDict(FLDict_MutableCopy(*this, flags), false);
     }
 
     inline MutableArray MutableArray::getMutableArray(uint32_t i)
@@ -249,11 +250,11 @@ namespace fleece {
                                                 {return FLMutableDict_GetMutableDict(*this, key);}
 
     inline MutableArray Array::asMutable() const {
-        return MutableArray(FLMutableArray_Retain(FLArray_AsMutable(*this)));
+        return MutableArray(FLArray_AsMutable(*this));
     }
 
     inline MutableDict Dict::asMutable() const {
-        return MutableDict(FLMutableDict_Retain(FLDict_AsMutable(*this)));
+        return MutableDict(FLDict_AsMutable(*this));
     }
 
 }
