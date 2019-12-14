@@ -18,74 +18,90 @@
 
 #pragma once
 
+#include "PlatformCompat.hh"
 #include "fleece/slice.hh"
 #include <algorithm>
 
 namespace fleece {
 
-    /** Internal hash table mapping strings (slices) to offsets (uint32_t). */
+    /** Internal hash table mapping strings (slices) to integers (uint32_t). */
     class StringTable {
     public:
         StringTable(size_t capacity =0);
         ~StringTable();
 
-        using hash_t = uint32_t;
+        using key_t   = slice;
         using value_t = uint32_t;
 
-        static inline hash_t hashCode(slice key) {
-            return std::max(key.hash(), 1u);
+        using entry_t = std::pair<key_t, value_t>;
+
+        enum class hash_t : uint32_t { Empty = 0 };
+
+        static inline hash_t hashCode(key_t key) {
+            return hash_t( std::max(key.hash(), 1u) ); // hashCode must never be zero
         }
 
-        size_t count() const                        {return _count;}
-        size_t tableSize() const                    {return _size;}
+        size_t count() const                            {return _count;}
+        size_t tableSize() const                        {return _size;}
 
         void clear() noexcept;
 
-        value_t* get(slice key) const noexcept      {return get(key, hashCode(key));}
-        value_t* get(slice key, hash_t) const noexcept;
+        /// Looks up an existing key, returning a pointer to its entry (or NULL.)
+        const entry_t* find(key_t key) const noexcept   {return find(key, hashCode(key));}
+        const entry_t* find(key_t key, hash_t) const noexcept;
 
-        using position_t = ssize_t;
-        static constexpr position_t kNoPosition = -1;
+        using insertResult = std::pair<entry_t*, bool>;
 
-        position_t find(slice key) const noexcept   {return find(key, hashCode(key));}
-        position_t find(slice key, hash_t) const noexcept;
+        /// Adds a key and its value, or finds an existing key (and doesn't change it).
+        /// Returns a reference to the entry, and a flag that's true if it's newly added.
+        insertResult insert(key_t key, value_t value)   {return insert(key, value, hashCode(key));}
+        insertResult insert(key_t key, value_t value, hash_t);
 
-        bool exists(position_t pos) const               {return _table.hashes[pos] != 0;}
-        slice keyAt(position_t pos) const               {return _table.keys[pos];}
-        value_t valueAt(position_t pos) const           {return _table.values[pos];}
-        void setValueAt(position_t pos, value_t val)    {_table.values[pos] = val;}
-
-        void add(slice key, value_t value)          {return add(key, hashCode(key), value);}
-        void add(slice, hash_t, value_t);
+        /// Faster version of \ref insert that only inserts new keys.
+        /// MUST NOT be called if the key already exists in the table!
+        void insertOnly(key_t key, value_t value)       {insertOnly(key, value, hashCode(key));}
+        void insertOnly(key_t key, value_t value, hash_t);
 
         void dump() const noexcept;
 
-    private:
-        void _add(slice, hash_t, value_t) noexcept;
+    protected:
+        StringTable(size_t capacity,
+                    size_t initialSize, hash_t *initialHashes, entry_t *initialEntries);
+        inline size_t wrap(size_t i) const              {return i & _sizeMask;}
+        inline size_t indexOfHash(hash_t h) const       {return wrap(size_t(h));}
+        insertResult _insert(hash_t, entry_t) noexcept;
+        void _insertOnly(hash_t, entry_t) noexcept;
         void allocTable(size_t size);
         void grow();
+        void initTable(size_t size, hash_t *hashes, entry_t *entries);
 
-        static const size_t kInitialTableSize = 64;
+        StringTable(const StringTable&) =delete;
+        StringTable& operator=(const StringTable&) =delete;
 
-        size_t _size, _sizeMask;
-        size_t _count;
-        size_t _maxCount;
-        ssize_t _maxDistance;
+        size_t _size;           // Size of the arrays
+        size_t _sizeMask;       // Used for quick modulo: (i & _sizeMask) == (i % _size)
+        size_t _count {0};      // Number of entries
+        size_t _capacity;       // Grow the table when it exceeds this count
+        ssize_t _maxDistance;   // Maximum distance of any entry from its ideal position
+        hash_t*  _hashes;       // Array of hash codes, zero meaning empty
+        entry_t* _entries;      // Array of keys/values, paralleling _hashes
+        bool _allocated {false};// Was table allocated by allocTable?
+    };
 
-        struct table {
-            hash_t*  hashes = nullptr;
-            slice*   keys = nullptr;
-            value_t* values = nullptr;
 
-            void allocate(size_t size);
-            void free() noexcept                        {::free(hashes);}
-        };
 
-        table _table;
+    /** A StringTable with extra space at the end for the initial table, thus saving a malloc
+        if the initial capacity fits into that size. */
+    template <size_t INITIAL_SIZE =32>
+    class PreallocatedStringTable : public StringTable {
+    public:
+        PreallocatedStringTable(size_t capacity =0)
+        :StringTable(capacity, INITIAL_SIZE, _initialHashes, _initialEntries)
+        { }
 
-        hash_t  _initialHashes[kInitialTableSize];
-        slice   _initialKeys[kInitialTableSize];
-        value_t _initialValues[kInitialTableSize];
+    private:
+        hash_t  _initialHashes[INITIAL_SIZE];
+        entry_t _initialEntries[INITIAL_SIZE];
     };
 
 }

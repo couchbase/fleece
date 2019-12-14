@@ -99,9 +99,9 @@ namespace fleece { namespace impl {
 
     bool SharedKeys::_encode(slice str, int &key) const {
         // Is this string already encoded?
-        uint32_t *keyPtr = _table.get(str);
-        if (_usuallyTrue(keyPtr != nullptr)) {
-            key = *keyPtr;
+        auto entry = _table.find(str);
+        if (_usuallyTrue(entry != nullptr)) {
+            key = entry->second;
             return true;
         }
         return false;
@@ -122,6 +122,15 @@ namespace fleece { namespace impl {
         // OK, add to table:
         key = _add(str);
         return true;
+    }
+
+
+    int SharedKeys::_add(slice str) {
+        alloc_slice allocedStr(str);
+        auto id = _count++;
+        _byKey[id] = allocedStr;
+        _table.insertOnly(allocedStr, uint32_t(id));
+        return int(id);
     }
 
 
@@ -172,15 +181,6 @@ namespace fleece { namespace impl {
     }
 
 
-    int SharedKeys::_add(slice str) {
-        alloc_slice allocedStr(str);
-        auto id = _count++;
-        _byKey[id] = allocedStr;
-        _table.add(allocedStr, uint32_t(id));
-        return int(id);
-    }
-
-
     void SharedKeys::revertToCount(size_t toCount) {
         LOCK(_mutex);
         if (toCount >= _count) {
@@ -194,7 +194,7 @@ namespace fleece { namespace impl {
         // StringTable doesn't support removing, so rebuild it:
         _table.clear();
         for (size_t key = 0; key < toCount; ++key)
-            _table.add(_byKey[key], uint32_t(key));
+            _table.insert(_byKey[key], uint32_t(key));
     }
 
 

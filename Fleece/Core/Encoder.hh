@@ -177,6 +177,7 @@ namespace fleece { namespace impl {
         size_t finishItem();
         slice base() const                      {return _base;}
         slice baseUsed() const                  {return _baseMinUsed != 0 ? slice(_baseMinUsed, _base.end()) : slice();}
+        const StringTable& strings() const      {return _strings;}
 
         static bool isIntRepresentable(float n) noexcept;
         static bool isIntRepresentable(double n) noexcept;
@@ -212,8 +213,8 @@ namespace fleece { namespace impl {
         void writeSpecial(uint8_t special);
         void writeInt(uint64_t i, bool isShort, bool isUnsigned);
         void _writeFloat(float);
-        slice writeData(internal::tags, slice s);
-        slice _writeString(slice);
+        const void* writeData(internal::tags, slice s);
+        const void* _writeString(slice);
         void addingKey();
         void addedKey(slice str);
         void sortDict(valueArray &items);
@@ -231,11 +232,13 @@ namespace fleece { namespace impl {
 
         //////// Data members:
 
+        static constexpr size_t kInitialStringTableSize = 32;
+
         Writer _out;                 // Where output is written to
         valueArray *_items;          // Values of currently-open array/dict; == &_stack[_stackDepth-1]
         smallVector<valueArray, kInitialStackSize> _stack; // Stack of open arrays/dicts
         unsigned _stackDepth;        // Current depth of _stack
-        StringTable _strings;        // Maps strings to the offsets where they appear as values
+        PreallocatedStringTable<kInitialStringTableSize> _strings; // Maps strings to the offsets where they appear as values
         Writer _stringStorage;       // Backing store for strings in _strings
         bool _uniqueStrings {true};  // Should strings be uniqued before writing?
         Retained<SharedKeys> _sharedKeys;  // Client-provided key-to-int mapping

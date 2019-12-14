@@ -143,8 +143,8 @@ namespace fleece { namespace impl {
         mutable std::mutex _mutex;
         size_t _count {0};
         mutable std::vector<PlatformString> _platformStringsByKey; // Reverse mapping, int->platform key
+        StringTable _table;                             // Hash table mapping slice->int
         std::array<alloc_slice, kMaxCount> _byKey;      // Reverse mapping, int->slice
-        fleece::StringTable _table;                     // Hash table mapping slice->int
     };
 
 

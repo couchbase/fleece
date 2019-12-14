@@ -272,9 +272,10 @@ namespace fleece { namespace impl {
 
 #pragma mark - STRINGS / DATA:
 
-    // used for strings and binary data. Returns the location where s got written to, which
-    // can be used until the enoding is over. (Unless it's inline, in which case s.buf is nullptr.)
-    slice Encoder::writeData(tags tag, slice s) {
+    // Subroutine for writing strings or binary data. Returns the address of the string in the
+    // output (not the Value; the raw string itself), which can be used until the enoding is over.
+    // (Unless the string is written inline, or directly to file, in which case NULL is returned.)
+    const void* Encoder::writeData(tags tag, slice s) {
         byte *buf;
         if (s.size < kNarrow) {
             // Tiny data (0 or 1 byte) fits inline:
@@ -297,68 +298,57 @@ namespace fleece { namespace impl {
             if (_out.outputFile())
                 buf = nullptr;          // ephemeral if writing to file
         }
-        return slice(buf, s.size);
+        return buf;
     }
 
-    // Returns the location where s got written to, if possible, just like writeData above.
-    slice Encoder::_writeString(slice s) {
-        // Check whether this string's already been written:
-        if (_usuallyTrue(_uniqueStrings && s.size >= kNarrow && s.size <= kMaxSharedStringSize)) {
-            auto hash = StringTable::hashCode(s);
-            StringTable::position_t pos = _strings.find(s, hash);
-            if (pos != StringTable::kNoPosition) {
-                // Write pointer to existing string, as long as the offset's not too large
-                ssize_t offset = _strings.valueAt(pos) - _base.size;
-                if (_items->wide || nextWritePos() - offset <= Pointer::kMaxNarrowOffset - 32) {
-                    writePointer(offset);
-                    if (offset < 0) {
-                        const void *stringVal = &_base[_base.size + offset];
-                        if (stringVal < _baseMinUsed)
-                            _baseMinUsed = stringVal;
-                    }
-    #ifndef NDEBUG
-                    _numSavedStrings++;
-    #endif
-                    return _strings.keyAt(pos);
-                }
-            }
-
-            auto offset = _base.size + nextWritePos();
-            throwIf(offset > 1u<<31, MemoryError, "encoded data too large");
-            slice sWritten = writeData(kStringTag, s);
-#if !FL_EMBEDDED
-            if (!sWritten.buf)
-                sWritten = slice{_stringStorage.write(s), s.size};
-#endif
-            if (sWritten.buf) {
-#if 0
-                if (_strings.count() == 0)
-                    fprintf(stderr, "---- new encoder ----\n");
-                fprintf(stderr, "Caching `%.*s` --> %u\n", (int)sWritten.size, sWritten.buf, offset);
-#endif
-                if (pos == StringTable::kNoPosition) {
-                    // insert string, using the stable slice sWritten as the key:
-                    _strings.add(sWritten, hash, (uint32_t)offset);
-                } else {
-                    // replace offset for string:
-                    _strings.setValueAt(pos, (uint32_t)offset);
-                }
-            }
-            return sWritten;
-
-        } else {
+    // Writes a string, or a pointer to an already-written copy of the same string.
+    // This is the main body of writeString() and writeKey().
+    // Returns the address where s got written to, if possible, just like writeData above.
+    const void* Encoder::_writeString(slice s) {
+        if (!_usuallyTrue(_uniqueStrings && s.size >= kNarrow && s.size <= kMaxSharedStringSize)) {
+            // Not uniquing this string, so just write it:
             return writeData(kStringTag, s);
         }
+
+        // Check whether this string's already been written:
+        StringTable::entry_t *entry;
+        bool isNew;
+        std::tie(entry, isNew) = _strings.insert(s, 0);
+        if (!isNew) {
+            // String exists: Write pointer to it, as long as the offset's not too large:
+            ssize_t offset = entry->second - _base.size;
+            if (_items->wide || nextWritePos() - offset <= Pointer::kMaxNarrowOffset - 32) {
+                writePointer(offset);
+                if (offset < 0) {
+                    const void *stringVal = &_base[_base.size + offset];
+                    if (stringVal < _baseMinUsed)
+                        _baseMinUsed = stringVal;
+                }
+#ifndef NDEBUG
+                _numSavedStrings++;
+#endif
+                return entry->first.buf; // done!
+            }
+        }
+
+        // Write the string to the output:
+        auto offset = _base.size + nextWritePos();
+        throwIf(offset > 1u<<31, MemoryError, "encoded data too large");
+        const void* writtenStr = writeData(kStringTag, s);
+
+        if (!writtenStr) {
+            // Can't use a pointer to the output, so make a copy of the string to keep:
+            writtenStr = _stringStorage.write(s);
+        }
+        // Finally, store the string's offset:
+        *entry = {{writtenStr, s.size}, (uint32_t)offset};
+        return writtenStr;
     }
 
     // Adds a preexisting string to the cache
     void Encoder::cacheString(slice s, size_t offsetInBase) {
-        if (_usuallyTrue(_uniqueStrings && s.size >= kNarrow && s.size <= kMaxSharedStringSize)) {
-            auto pos = _strings.find(s);
-            if (pos == StringTable::kNoPosition) {
-                _strings.add(s, uint32_t(offsetInBase));
-            }
-        }
+        if (_usuallyTrue(_uniqueStrings && s.size >= kNarrow && s.size <= kMaxSharedStringSize))
+            _strings.insert(s, uint32_t(offsetInBase));
     }
 
     void Encoder::writeData(slice s) {
@@ -585,10 +575,10 @@ namespace fleece { namespace impl {
             return;
         }
         addingKey();
-        slice writtenKey = _writeString(s);
-        if (!writtenKey.buf && _copyingCollection)
-            writtenKey = s;         // Workaround for written strings not being kept in memory by the Writer if it's writing to a file
-        addedKey(writtenKey);
+        const void* writtenKey = _writeString(s);
+        if (!writtenKey && _copyingCollection)
+            writtenKey = s.buf;         // Workaround for written strings not being kept in memory by the Writer if it's writing to a file
+        addedKey({writtenKey, s.size});
     }
 
     void Encoder::writeKey(int n) {
