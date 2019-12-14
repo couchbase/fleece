@@ -49,7 +49,9 @@ namespace fleece { namespace impl {
         Scope *scope;           // The Scope
         bool operator< (const memEntry &other) const        {return endOfRange < other.endOfRange;}
     };
-    using memoryMap = vector<memEntry>;
+
+    using memoryMap = smallVector<memEntry, 10>;
+
     static memoryMap *sMemoryMap;
 
     // Mutex for access to `sMemoryMap`
@@ -102,10 +104,8 @@ namespace fleece { namespace impl {
         _dataHash = _data.hash();
 #endif
         lock_guard<mutex> lock(sMutex);
-        if (_usuallyFalse(!sMemoryMap)) {
+        if (_usuallyFalse(!sMemoryMap))
             sMemoryMap = new memoryMap;
-            sMemoryMap->reserve(10);
-        }
         Log("Register   (%p ... %p) --> Scope %p, sk=%p [Now %zu]",
             _data.buf, _data.end(), this, _sk.get(), sMemoryMap->size()+1);
 

@@ -86,8 +86,27 @@ namespace fleece {
             return * new(_grow()) T(std::forward<Args>(args)...);
         }
 
+        void insert(iterator where, T item) {
+            assert(begin() <= where && where <= end());
+            if (_usuallyFalse(_size >= _capacity)) {
+                size_t i = where - &_get(0);
+                _grow();
+                where = &_get(i);
+            } else
+                ++_size;
+            memmove(where+1, where, (uint8_t*)end() - (uint8_t*)(where + 1));
+            *where = std::move(item);
+        }
+
+        void erase(iterator first) {
+            assert(begin() <= first && first < end());
+            first->T::~T();                 // destruct removed item
+            memmove(first, first + 1, (end() - first - 1) * sizeof(T));
+            --_size;
+        }
+
         void erase(iterator first, iterator last) {
-            assert(begin() <= first && first <= last && last <= end());
+            assert(begin() <= first && first < last && last <= end());
             for (auto i = first; i < last; ++i)
                 i->T::~T();                 // destruct removed items
             memmove(first, last, (end() - last) * sizeof(T));
