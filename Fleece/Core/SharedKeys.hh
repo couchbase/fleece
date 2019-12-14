@@ -139,12 +139,12 @@ namespace fleece { namespace impl {
         virtual int _add(slice string);
         slice decodeUnknown(int key) const;
 
-        fleece::StringTable _table;                     // Hash table mapping slice->int
         size_t _maxKeyLength {kDefaultMaxKeyLength};    // Max length of string I will add
         mutable std::mutex _mutex;
         size_t _count {0};
-        std::array<alloc_slice, kMaxCount> _byKey;      // Reverse mapping, int->slice
         mutable std::vector<PlatformString> _platformStringsByKey; // Reverse mapping, int->platform key
+        std::array<alloc_slice, kMaxCount> _byKey;      // Reverse mapping, int->slice
+        fleece::StringTable _table;                     // Hash table mapping slice->int
     };
 
 

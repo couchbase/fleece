@@ -24,9 +24,7 @@
 
 namespace fleece {
 
-    static_assert(sizeof(StringTable::info) == 8, "info isn't packed");
-
-    static const float kMaxLoad = 0.59f;
+    static const float kMaxLoad = 0.9f;
 
     StringTable::StringTable(size_t capacity) {
         _count = 0;
@@ -37,32 +35,120 @@ namespace fleece {
     }
 
     StringTable::~StringTable() {
-        if (_table != _initialTable)
-            ::free(_table);
+        if (_table.hashes != _initialHashes)
+            _table.free();
     }
 
     void StringTable::clear() noexcept {
-        ::memset(_table, 0, _size * sizeof(slot));
+        ::memset(_table.hashes, 0, _size * sizeof(hash_t));
         _count = 0;
+        _maxDistance = 0;
     }
 
-    StringTable::slot& StringTable::find(fleece::slice key, uint32_t hash) const noexcept {
+    StringTable::value_t* StringTable::get(fleece::slice key, hash_t hash) const noexcept {
+        position_t i = find(key, hash);
+        return (i != kNoPosition) ? &_table.values[i] : nullptr;
+    }
+
+    StringTable::position_t StringTable::find(fleece::slice key, hash_t hash) const noexcept {
         assert(key.buf != nullptr);
-        size_t index = hash & (_size - 1);
-        slot *s = &_table[index];
-        if (_usuallyFalse(s->first.buf != nullptr && (s->second.hash != hash || s->first != key))) {
-            slot *end = &_table[_size];
-            do {
-                if (++s >= end)
-                    s = &_table[0];
-            } while (_usuallyFalse(s->first.buf != nullptr && (s->second.hash != hash || s->first != key)));
+        assert(hash != 0);
+        size_t end = (hash + _maxDistance + 1) & _sizeMask;
+        for (size_t i = (hash & _sizeMask); i != end; i = (i + 1) & _sizeMask) {
+            if (_table.hashes[i] == 0)
+                break;
+            else if (_table.hashes[i] == hash && _table.keys[i] == key)
+                return i;
         }
-        if (s->first.buf == nullptr) {
-            s->second.hash = hash;
-        }
-        return *s;
+        //printf("Couldn't find '%.*s'\n", FMTSLICE(key));
+        return kNoPosition;
     }
 
+    void StringTable::add(slice key, hash_t hash, value_t value) {
+        if (++_count > _maxCount)
+            grow();
+        _add(key, hash, value);
+    }
+
+    // subroutine of add() that doesn't bump the count or grow the table. Used in grow().
+    void StringTable::_add(slice key, hash_t hash, value_t value) noexcept {
+        assert(key.buf != nullptr);
+        assert(hash != 0);
+        ssize_t distance = 0;
+        auto maxDistance = _maxDistance;
+        size_t i = hash & _sizeMask;
+        //printf("Adding '%.*s' starting at %zu ...\n", FMTSLICE(key), i);
+        for (; _table.hashes[i] != 0; i = (i + 1) & _sizeMask) {
+            assert(_table.keys[i] != key);
+            assert(distance <= _count);
+            ssize_t itsDistance = i - (_table.hashes[i] & _sizeMask);
+            itsDistance = (itsDistance + _size) & _sizeMask;        // handle wraparound
+            if (itsDistance < distance) {
+                // Robin Hood hashing: Swap new item with less-distant existing item:
+                //printf("    put '%.*s' at %zu (dist=%zd)\n", FMTSLICE(key), i, distance);
+                std::swap(hash,  _table.hashes[i]);
+                std::swap(key,   _table.keys[i]);
+                std::swap(value, _table.values[i]);
+                maxDistance = std::max(distance, maxDistance);
+                distance = itsDistance;
+            }
+            ++distance;
+        }
+
+        _table.hashes[i] = hash;
+        _table.keys[i]   = key;
+        _table.values[i] = value;
+        maxDistance = std::max(distance, maxDistance);
+        _maxDistance = std::max(maxDistance, _maxDistance);
+        //printf("    put '%.*s' at %zu (dist=%zd; max=%zd/%zu; load=%.2f)\n", FMTSLICE(key), i, distance, _maxDistance, _size, _count/double(_size));
+    }
+
+
+    void StringTable::table::allocate(size_t size) {
+        size_t hashesSize = size * sizeof(hash_t),
+               keysSize = size * sizeof(slice),
+               valuesSize = size * sizeof(value_t);
+        void *memory = ::malloc(hashesSize + keysSize + valuesSize);
+        if (!memory)
+            throw std::bad_alloc();
+        hashes = (hash_t*)memory;
+        keys   = (slice*)offsetby(hashes, hashesSize);
+        values = (value_t*)offsetby(keys, keysSize);
+        memset(hashes, 0, hashesSize);
+    }
+
+
+    void StringTable::allocTable(size_t size) {
+        if (size <= kInitialTableSize) {
+            size = kInitialTableSize;
+            _table.hashes = _initialHashes;
+            _table.keys   = _initialKeys;
+            _table.values = _initialValues;
+            ::memset(_initialHashes, 0, sizeof(_initialHashes));
+        } else {
+            _table.allocate(size);
+        }
+        _size = size;
+        _sizeMask = size - 1;
+        _maxDistance = 0;
+        _maxCount = (size_t)(size * kMaxLoad);
+    }
+
+
+    void StringTable::grow() {
+        table oldTable = _table;
+        auto oldSize = _size;
+        allocTable(2 * _size);
+        for (size_t i = 0; i < oldSize; ++i) {
+            if (oldTable.hashes[i])
+                _add(oldTable.keys[i], oldTable.hashes[i], oldTable.values[i]);
+        }
+        if (oldTable.hashes != _initialHashes)
+            oldTable.free();
+    }
+
+
+#if 0
     void StringTable::dump() const noexcept {
         int totalProbes = 0, maxProbes = 0;
         int n = 0;
@@ -82,60 +168,6 @@ namespace fleece {
         }
         printf(">> Average number of probes = %.2f, max = %d", totalProbes/(double)count(), maxProbes);
     }
-
-
-    bool StringTable::_add(fleece::slice key, uint32_t h, const info& n) noexcept {
-        slot &s = find(key, h);
-        if (s.first.buf)
-            return false;
-        else {
-            s.first = key;
-            s.second = n;
-            s.second.hash = h;
-            return true;
-        }
-    }
-
-    void StringTable::addAt(slot& s, slice key, const info& n) noexcept {
-        assert(key.buf != nullptr);
-        assert(s.first.buf == nullptr);
-        s.first = key;
-        auto hash = s.second.hash;
-        s.second = n;
-        s.second.hash = hash;
-        incCount();
-    }
-
-    void StringTable::add(fleece::slice key, const info& n) {
-        if (_add(key, key.hash(), n))
-            incCount();
-    }
-
-    void StringTable::allocTable(size_t size) {
-        slot* table;
-        if (size <= kInitialTableSize) {
-            table = _initialTable;
-            memset(table, 0, sizeof(_initialTable));
-            size = kInitialTableSize;
-        } else {
-            table = (slot*)::calloc(size, sizeof(slot));
-            if (!table)
-                throw std::bad_alloc();
-        }
-        _table = table;
-        _size = size;
-        _maxCount = (size_t)(size * kMaxLoad);
-    }
-
-    void StringTable::grow() {
-        slot *oldTable = _table, *end = &_table[_size];
-        allocTable(2*_size);
-        for (auto s = oldTable; s < end; ++s) {
-            if (s->first.buf != nullptr)
-                _add(s->first, s->second.hash, s->second);
-        }
-        if (oldTable != _initialTable)
-            ::free(oldTable);
-    }
+#endif
 
 }

@@ -19,6 +19,7 @@
 #pragma once
 
 #include "fleece/slice.hh"
+#include <algorithm>
 
 namespace fleece {
 
@@ -28,58 +29,63 @@ namespace fleece {
         StringTable(size_t capacity =0);
         ~StringTable();
 
-        struct info {
-            uint32_t offset;            // Used by clients (Encoder, SharedKeys)
-            uint32_t hash;              // Used by StringTable itself
-        };
+        using hash_t = uint32_t;
+        using value_t = uint32_t;
 
-        typedef std::pair<slice, info> slot;
+        static inline hash_t hashCode(slice key) {
+            return std::max(key.hash(), 1u);
+        }
 
         size_t count() const                        {return _count;}
         size_t tableSize() const                    {return _size;}
 
         void clear() noexcept;
 
-        slot& find(slice key) const noexcept        {return find(key, key.hash());}
+        value_t* get(slice key) const noexcept      {return get(key, hashCode(key));}
+        value_t* get(slice key, hash_t) const noexcept;
 
-        void add(slice, const info&);
+        using position_t = ssize_t;
+        static constexpr position_t kNoPosition = -1;
 
-        void addAt(slot&, slice key, const info&) noexcept;
+        position_t find(slice key) const noexcept   {return find(key, hashCode(key));}
+        position_t find(slice key, hash_t) const noexcept;
 
-        class iterator {
-        public:
-            operator slice () const                 {return _slot->first;}
-            const slice* operator* () const         {return &_slot->first;}
-            const slice* operator-> () const        {return &_slot->first;}
-            info value()                            {return _slot->second;}
-            iterator& operator++ ()                 {++_slot; return *this;}
-            bool operator!= (const iterator &iter)  {return _slot != iter._slot;}
-        private:
-            iterator(const slot *s)                 :_slot(s) { }
+        bool exists(position_t pos) const               {return _table.hashes[pos] != 0;}
+        slice keyAt(position_t pos) const               {return _table.keys[pos];}
+        value_t valueAt(position_t pos) const           {return _table.values[pos];}
+        void setValueAt(position_t pos, value_t val)    {_table.values[pos] = val;}
 
-            const slot *_slot;
-            friend class StringTable;
-        };
-
-        iterator begin() const                      {return iterator(&_table[0]);}
-        iterator end() const                        {return iterator(&_table[_size]);}
+        void add(slice key, value_t value)          {return add(key, hashCode(key), value);}
+        void add(slice, hash_t, value_t);
 
         void dump() const noexcept;
 
     private:
+        void _add(slice, hash_t, value_t) noexcept;
         void allocTable(size_t size);
-        slot& find(fleece::slice key, uint32_t hash) const noexcept;
-        bool _add(slice, uint32_t h, const info&) noexcept;
-        void incCount()                             {if (++_count > _maxCount) grow();}
         void grow();
 
         static const size_t kInitialTableSize = 64;
 
-        slot *_table;
-        size_t _size;
+        size_t _size, _sizeMask;
         size_t _count;
         size_t _maxCount;
-        slot _initialTable[kInitialTableSize];
+        ssize_t _maxDistance;
+
+        struct table {
+            hash_t*  hashes = nullptr;
+            slice*   keys = nullptr;
+            value_t* values = nullptr;
+
+            void allocate(size_t size);
+            void free() noexcept                        {::free(hashes);}
+        };
+
+        table _table;
+
+        hash_t  _initialHashes[kInitialTableSize];
+        slice   _initialKeys[kInitialTableSize];
+        value_t _initialValues[kInitialTableSize];
     };
 
 }

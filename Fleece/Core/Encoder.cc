@@ -40,7 +40,7 @@ namespace fleece { namespace impl {
     Encoder::Encoder(size_t reserveSize)
     :_out(reserveSize),
      _stack(kInitialStackSize),
-     _strings(10)
+     _strings(20)
     {
         init();
     }
@@ -304,10 +304,11 @@ namespace fleece { namespace impl {
     slice Encoder::_writeString(slice s) {
         // Check whether this string's already been written:
         if (_usuallyTrue(_uniqueStrings && s.size >= kNarrow && s.size <= kMaxSharedStringSize)) {
-            auto &entry = _strings.find(s);
-            if (entry.first.buf != nullptr) {
+            auto hash = StringTable::hashCode(s);
+            StringTable::position_t pos = _strings.find(s, hash);
+            if (pos != StringTable::kNoPosition) {
                 // Write pointer to existing string, as long as the offset's not too large
-                ssize_t offset = entry.second.offset - _base.size;
+                ssize_t offset = _strings.valueAt(pos) - _base.size;
                 if (_items->wide || nextWritePos() - offset <= Pointer::kMaxNarrowOffset - 32) {
                     writePointer(offset);
                     if (offset < 0) {
@@ -318,7 +319,7 @@ namespace fleece { namespace impl {
     #ifndef NDEBUG
                     _numSavedStrings++;
     #endif
-                    return entry.first;
+                    return _strings.keyAt(pos);
                 }
             }
 
@@ -335,13 +336,12 @@ namespace fleece { namespace impl {
                     fprintf(stderr, "---- new encoder ----\n");
                 fprintf(stderr, "Caching `%.*s` --> %u\n", (int)sWritten.size, sWritten.buf, offset);
 #endif
-                if (entry.first.buf == nullptr) {
-                    // insert string
-                    StringTable::info i = {(uint32_t)offset};
-                    _strings.addAt(entry, sWritten, i);
+                if (pos == StringTable::kNoPosition) {
+                    // insert string, using the stable slice sWritten as the key:
+                    _strings.add(sWritten, hash, (uint32_t)offset);
                 } else {
-                    // replace string
-                    entry.second.offset = (uint32_t)offset;
+                    // replace offset for string:
+                    _strings.setValueAt(pos, (uint32_t)offset);
                 }
             }
             return sWritten;
@@ -353,10 +353,10 @@ namespace fleece { namespace impl {
 
     // Adds a preexisting string to the cache
     void Encoder::cacheString(slice s, size_t offsetInBase) {
-        if (_usuallyTrue(_uniqueStrings && s.size >= kNarrow && s.size <= kMaxSharedStringSize)) {            auto &entry = _strings.find(s);
-            if (entry.first.buf == nullptr) {
-                StringTable::info i = {(unsigned)offsetInBase};
-                _strings.addAt(entry, s, i);
+        if (_usuallyTrue(_uniqueStrings && s.size >= kNarrow && s.size <= kMaxSharedStringSize)) {
+            auto pos = _strings.find(s);
+            if (pos == StringTable::kNoPosition) {
+                _strings.add(s, uint32_t(offsetInBase));
             }
         }
     }

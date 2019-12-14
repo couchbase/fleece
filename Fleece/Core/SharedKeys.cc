@@ -99,9 +99,9 @@ namespace fleece { namespace impl {
 
     bool SharedKeys::_encode(slice str, int &key) const {
         // Is this string already encoded?
-        auto &slot = _table.find(str);
-        if (_usuallyTrue(slot.first.buf != nullptr)) {
-            key = slot.second.offset;
+        uint32_t *keyPtr = _table.get(str);
+        if (_usuallyTrue(keyPtr != nullptr)) {
+            key = *keyPtr;
             return true;
         }
         return false;
@@ -176,8 +176,7 @@ namespace fleece { namespace impl {
         alloc_slice allocedStr(str);
         auto id = _count++;
         _byKey[id] = allocedStr;
-        StringTable::info info{uint32_t(id)};
-        _table.add(allocedStr, info);
+        _table.add(allocedStr, uint32_t(id));
         return int(id);
     }
 
@@ -195,7 +194,7 @@ namespace fleece { namespace impl {
         // StringTable doesn't support removing, so rebuild it:
         _table.clear();
         for (size_t key = 0; key < toCount; ++key)
-            _table.add(_byKey[key], StringTable::info{uint32_t(key)});
+            _table.add(_byKey[key], uint32_t(key));
     }
 
 

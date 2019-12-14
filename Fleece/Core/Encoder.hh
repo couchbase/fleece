@@ -186,7 +186,7 @@ namespace fleece { namespace impl {
         using byte = uint8_t;
 
         static constexpr size_t kInitialStackSize = 4;
-        static constexpr size_t kInitialCollectionCapacity = 4;
+        static constexpr size_t kInitialCollectionCapacity = 16;
 
         // Stores the pending values to be written to an in-progress array/dict
         class valueArray : public smallVector<Value, kInitialCollectionCapacity> {
