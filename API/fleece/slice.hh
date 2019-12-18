@@ -130,6 +130,8 @@ namespace fleece {
         bool operator!=(const pure_slice &s) const noexcept FLPURE       {return !(*this == s);}
         bool operator<(pure_slice s) const noexcept FLPURE               {return compare(s) < 0;}
         bool operator>(pure_slice s) const noexcept FLPURE               {return compare(s) > 0;}
+        bool operator<=(pure_slice s) const noexcept FLPURE              {return compare(s) <= 0;}
+        bool operator>=(pure_slice s) const noexcept FLPURE              {return compare(s) >= 0;}
 
         bool hasPrefix(pure_slice) const noexcept FLPURE;
         bool hasSuffix(pure_slice) const noexcept FLPURE;
