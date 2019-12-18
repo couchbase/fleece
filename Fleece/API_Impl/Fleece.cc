@@ -361,13 +361,24 @@ FLMutableDict FLMutableDict_GetMutableDict(FLMutableDict d, FLString key) FLAPI 
 //////// SHARED KEYS
 
 
-FLSharedKeys FLSharedKeys_Create()                         FLAPI {return retain(new SharedKeys());}
+FLSharedKeys FLSharedKeys_New()                            FLAPI {return retain(new SharedKeys());}
 FLSharedKeys FLSharedKeys_Retain(FLSharedKeys sk)          FLAPI {return retain(sk);}
 void FLSharedKeys_Release(FLSharedKeys sk)                 FLAPI {release(sk);}
 unsigned FLSharedKeys_Count(FLSharedKeys sk)               FLAPI {return (unsigned)sk->count();}
-FLSharedKeys FLSharedKeys_CreateFromStateData(FLSlice data)FLAPI {return retain(new SharedKeys(data));}
+bool FLSharedKeys_LoadStateData(FLSharedKeys sk, FLSlice d)FLAPI {return sk->loadFrom(d);}
+bool FLSharedKeys_LoadState(FLSharedKeys sk, FLValue s)    FLAPI {return sk->loadFrom(s);}
 FLSliceResult FLSharedKeys_GetStateData(FLSharedKeys sk)   FLAPI {return toSliceResult(sk->stateData());}
 FLString FLSharedKeys_Decode(FLSharedKeys sk, int key)     FLAPI {return sk->decode(key);}
+void FLSharedKeys_RevertToCount(FLSharedKeys sk, unsigned c) FLAPI {sk->revertToCount(c);}
+
+FLSharedKeys FLSharedKeys_NewWithRead(FLSharedKeysReadCallback callback, void *context) FLAPI {
+    return retain(new FLPersistentSharedKeys(callback, context));
+}
+
+void FLSharedKeys_WriteState(FLSharedKeys sk, FLEncoder e) FLAPI {
+    assert_always(e->isFleece());
+    sk->writeState(*e->fleeceEncoder);
+}
 
 int FLSharedKeys_Encode(FLSharedKeys sk, FLString keyStr, bool add) FLAPI {
     int intKey;
@@ -375,6 +386,33 @@ int FLSharedKeys_Encode(FLSharedKeys sk, FLString keyStr, bool add) FLAPI {
         intKey = -1;
     return intKey;
 }
+
+
+FLSharedKeyScope FLSharedKeyScope_WithRange(FLSlice range, FLSharedKeys sk) FLAPI {
+    return (FLSharedKeyScope) new Scope(range, sk);
+}
+
+void FLSharedKeyScope_Free(FLSharedKeyScope scope) {
+    delete (Scope*) scope;
+}
+
+// deprecated
+extern "C" {
+    FLSharedKeys FLSharedKeys_Create() FLAPI;
+    FLSharedKeys FLSharedKeys_CreateFromStateData(FLSlice) FLAPI;
+}
+    
+FLSharedKeys FLSharedKeys_Create() FLAPI {
+    return FLSharedKeys_New();
+}
+
+FLSharedKeys FLSharedKeys_CreateFromStateData(FLSlice data) FLAPI {
+    FLSharedKeys keys = FLSharedKeys_New();
+    if (keys)
+        FLSharedKeys_LoadStateData(keys, data);
+    return keys;
+}
+
 
 
 #pragma mark - SLOTS:
@@ -447,6 +485,10 @@ FLValue FLKeyPath_EvalOnce(FLSlice specifier, FLValue root, FLError *outError) F
         return Path::eval((std::string)(slice)specifier, root);
     } catchError(outError)
     return nullptr;
+}
+
+FLStringResult FLKeyPath_ToString(FLKeyPath path) FLAPI {
+    return toSliceResult(alloc_slice(std::string(*path)));
 }
 
 

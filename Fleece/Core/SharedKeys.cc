@@ -58,14 +58,14 @@ namespace fleece { namespace impl {
 
 
     bool SharedKeys::loadFrom(slice stateData) {
-        const Value *v = Value::fromData(stateData);
-        if (!v)
-            return false;
-        const Array *strs = v->asArray();
-        if (!strs)
-            return false;
+        return loadFrom(Value::fromData(stateData));
+    }
 
-        Array::iterator i(strs);
+
+    bool SharedKeys::loadFrom(const Value *state) {
+        if (!state)
+            return false;
+        Array::iterator i(state->asArray());
         if (i.count() <= count())
             return false;
 
@@ -75,19 +75,24 @@ namespace fleece { namespace impl {
             slice str = i.value()->asString();
             if (!str)
                 return false;
-            SharedKeys::_add(str);
+            _add(str);
         }
         return true;
     }
 
 
-    alloc_slice SharedKeys::stateData() const {
+    void SharedKeys::writeState(Encoder &enc) const {
         auto count = _count;
-        Encoder enc;
         enc.beginArray(count);
         for (size_t key = 0; key < count; ++key)
             enc.writeString(_byKey[key]);
         enc.endArray();
+    }
+
+
+    alloc_slice SharedKeys::stateData() const {
+        Encoder enc;
+        writeState(enc);
         return enc.finish();
     }
 
@@ -119,6 +124,7 @@ namespace fleece { namespace impl {
         // Should this string be encoded?
         if (!couldAdd(str))
             return false;
+        throwIf(!_inTransaction, SharedKeysStateError, "not in transaction");
         // OK, add to table:
         key = _add(str);
         return true;
@@ -202,8 +208,9 @@ namespace fleece { namespace impl {
 #pragma mark - PERSISTENCE:
 
 
-    PersistentSharedKeys::PersistentSharedKeys()
-    { }
+    PersistentSharedKeys::PersistentSharedKeys() {
+        _inTransaction = false;
+    }
 
 
     bool PersistentSharedKeys::refresh() {
@@ -236,9 +243,9 @@ namespace fleece { namespace impl {
 
 
     // Subclass's read() method calls this
-    bool PersistentSharedKeys::loadFrom(slice fleeceData) {
+    bool PersistentSharedKeys::loadFrom(const Value *state) {
         throwIf(changed(), SharedKeysStateError, "can't load when already changed");
-        if (!SharedKeys::loadFrom(fleeceData))
+        if (!SharedKeys::loadFrom(state))
             return false;
         _committedPersistedCount = _persistedCount = count();
         return true;
@@ -256,12 +263,6 @@ namespace fleece { namespace impl {
     void PersistentSharedKeys::revert() {
         revertToCount(_committedPersistedCount);
         _persistedCount = _committedPersistedCount;
-    }
-
-
-    int PersistentSharedKeys::_add(slice str) {
-        throwIf(!_inTransaction, SharedKeysStateError, "not in transaction");
-        return SharedKeys::_add(str);
     }
 
 } }

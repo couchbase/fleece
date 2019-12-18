@@ -138,4 +138,25 @@ namespace fleece { namespace impl {
         } \
         return false;
 
+
+    class FLPersistentSharedKeys : public PersistentSharedKeys {
+    public:
+        FLPersistentSharedKeys(FLSharedKeysReadCallback callback, void *context)
+        :_callback(callback)
+        ,_context(context)
+        { }
+
+        virtual bool read() override {
+            return _callback(_context, this);
+        }
+
+        virtual void write(slice encodedData) override {
+            // this is only called by save(), which we never call.
+            abort();
+        }
+
+    private:
+        FLSharedKeysReadCallback const  _callback;
+        void* const                     _context;
+    };
 } }

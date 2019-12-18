@@ -162,13 +162,24 @@ _FLDeepIterator_GetPath
 _FLDeepIterator_GetPathString
 _FLDeepIterator_GetJSONPointer
 
+_FLSharedKeys_Count
 _FLSharedKeys_Create
 _FLSharedKeys_CreateFromStateData
-_FLSharedKeys_GetStateData
-_FLSharedKeys_Encode
 _FLSharedKeys_Decode
+_FLSharedKeys_Decode
+_FLSharedKeys_Encode
+_FLSharedKeys_GetStateData
+_FLSharedKeys_LoadState
+_FLSharedKeys_LoadStateData
+_FLSharedKeys_New
+_FLSharedKeys_NewWithRead
 _FLSharedKeys_Release
 _FLSharedKeys_Retain
+_FLSharedKeys_RevertToCount
+_FLSharedKeys_WriteState
+
+_FLSharedKeyScope_WithRange
+_FLSharedKeyScope_Free
 
 _FLCreateJSONDelta
 _FLEncodeJSONDelta

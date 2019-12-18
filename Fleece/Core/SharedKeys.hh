@@ -30,6 +30,7 @@
 
 
 namespace fleece { namespace impl {
+    class Encoder;
     class Value;
 
 
@@ -70,8 +71,13 @@ namespace fleece { namespace impl {
     public:
         SharedKeys() { }
         explicit SharedKeys(slice stateData)            {loadFrom(stateData);}
+        explicit SharedKeys(const Value *state)         {loadFrom(state);}
+
+        bool loadFrom(slice stateData);
+        virtual bool loadFrom(const Value *state);
 
         alloc_slice stateData() const;
+        void writeState(Encoder &enc) const;
 
         /** Sets the maximum length of string that can be mapped. (Defaults to 16 bytes.) */
         void setMaxKeyLength(size_t m)          {_maxKeyLength = m;}
@@ -126,7 +132,6 @@ namespace fleece { namespace impl {
 
     protected:
         virtual ~SharedKeys();
-        virtual bool loadFrom(slice stateData);
 
         /** Determines whether a new string should be added. Default implementation returns true
             if the string contains only alphanumeric characters, '_' or '-'. */
@@ -137,12 +142,13 @@ namespace fleece { namespace impl {
 
         bool _encode(slice string, int &key) const;
         bool _encodeAndAdd(slice string, int &key);
-        virtual int _add(slice string);
+        int _add(slice string);
         slice decodeUnknown(int key) const;
 
         size_t _maxKeyLength {kDefaultMaxKeyLength};    // Max length of string I will add
         mutable std::mutex _mutex;
         size_t _count {0};
+        bool _inTransaction {true};                     // (for PersistentSharedKeys)
         mutable std::vector<PlatformString> _platformStringsByKey; // Reverse mapping, int->platform key
         StringTable _table;                             // Hash table mapping slice->int
         std::array<alloc_slice, kMaxCount> _byKey;      // Reverse mapping, int->slice
@@ -158,6 +164,9 @@ namespace fleece { namespace impl {
     class PersistentSharedKeys : public SharedKeys {
     public:
         PersistentSharedKeys();
+
+        bool loadFrom(const Value *state) override;
+        bool loadFrom(slice stateData)              {return SharedKeys::loadFrom(stateData);}
 
         /** Updates state from persistent storage. Not usually necessary. */
         virtual bool refresh() override;
@@ -187,16 +196,10 @@ namespace fleece { namespace impl {
         /** Abstract: Should write the given encoded data to persistent storage. */
         virtual void write(slice encodedData) =0;
 
-        /** Updates state given previously-persisted data. */
-        bool loadFrom(slice fleeceData) override;
-
         std::mutex _refreshMutex;
 
     private:
-        virtual int _add(slice str) override;
-
         size_t _persistedCount {0};             // Number of strings written to storage
         size_t _committedPersistedCount {0};    // Number of strings written to storage & committed
-        bool _inTransaction {false};            // True during a transaction
     };
 } }

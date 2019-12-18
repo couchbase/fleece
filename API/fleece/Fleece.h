@@ -49,6 +49,7 @@ extern "C" {
     typedef struct _FLSlot*        FLSlot;          ///< A reference to a mutable array/dict item
     typedef struct _FLArray*       FLMutableArray;  ///< A reference to a mutable array.
     typedef struct _FLDict*        FLMutableDict;   ///< A reference to a mutable dictionary.
+    typedef struct _FLEncoder*     FLEncoder;       ///< A reference to an encoder.
 #endif
 
 
@@ -778,22 +779,81 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
         FLKeyPath object, evaluating, then freeing it. */
     FLValue FLKeyPath_EvalOnce(FLSlice specifier, FLValue root FLNONNULL, FLError *error) FLAPI;
 
+    /** Returns a path in string form. */
+    FLStringResult FLKeyPath_ToString(FLKeyPath path) FLAPI;
 
     //////// SHARED KEYS
 
 
     /** @} */
     /** \defgroup FLSharedKeys   Shared Keys
-        @{ */
+        @{
+        FLSharedKeys represents a mapping from short strings to small integers in the range
+        [0...2047]. It's used by FLDict to abbreviate dictionary keys. A shared key can be stored in
+        a fixed two bytes and is faster to compare against. However, the same mapping has to be used
+        when encoding and when accessing the Dict.
 
-    FLSharedKeys FLSharedKeys_Create(void) FLAPI;
-    FLSharedKeys FLSharedKeys_Retain(FLSharedKeys) FLAPI;
-    void FLSharedKeys_Release(FLSharedKeys) FLAPI;
-    FLSharedKeys FLSharedKeys_CreateFromStateData(FLSlice) FLAPI;
+        To use shared keys:
+        * Call \ref FLSharedKeys_New to create a new empty mapping.
+        * After creating an FLEncoder, call \ref FLEncoder_SetSharedKeys so dictionary keys will
+          be added to the mapping and written in integer form.
+        * When loading Fleece data, use \ref FLDoc_FromResultData and pass the FLSharedKeys as
+          a parameter.
+        * Save the mapping somewhere by calling \ref FLSharedKeys_GetStateData or
+          \ref FLSharedKeys_WriteState.
+        * You can later reconstitute the mapping by calling \ref FLSharedKeys_LoadStateData
+          or \ref FLSharedKeys_LoadState on a new empty instance.
+        */
+
+    /** Creates a new empty FLSharedKeys object, which must eventually be released. */
+    FLSharedKeys FLSharedKeys_New(void) FLAPI;
+
+    typedef bool (*FLSharedKeysReadCallback)(void *context, FLSharedKeys);
+
+    FLSharedKeys FLSharedKeys_NewWithRead(FLSharedKeysReadCallback,
+                                          void *context) FLAPI;
+
+    /** Returns a data blob containing the current state (all the keys and their integers.) */
     FLSliceResult FLSharedKeys_GetStateData(FLSharedKeys FLNONNULL) FLAPI;
+
+    /** Updates an FLSharedKeys with saved state data created by \ref FLSharedKeys_GetStateData. */
+    bool FLSharedKeys_LoadStateData(FLSharedKeys, FLSlice) FLAPI;
+
+    /** Writes the current state to a Fleece encoder as a single value,
+        which can later be decoded and passed to FLSharedKeys_CreateFromState. */
+    void FLSharedKeys_WriteState(FLSharedKeys, FLEncoder) FLAPI;
+
+    /** Updates an FLSharedKeys object with saved state, a Fleece value previously written by
+        \ref FLSharedKeys_WriteState. */
+    bool FLSharedKeys_LoadState(FLSharedKeys, FLValue) FLAPI;
+
+    /** Maps a key string to a number in the range [0...2047], or returns -1 if it isn't mapped.
+        If the key doesn't already have a mapping, and the `add` flag is true,
+        a new mapping is assigned and returned.
+        However, the `add` flag has no effect if the key is unmappable (is longer than 16 bytes
+        or contains non-identifier characters), or if all available integers have been assigned. */
     int FLSharedKeys_Encode(FLSharedKeys FLNONNULL, FLString, bool add) FLAPI;
+
+    /** Returns the key string that maps to the given integer `key`, else NULL. */
     FLString FLSharedKeys_Decode(FLSharedKeys FLNONNULL, int key) FLAPI;
+
+    /** Returns the number of keys in the mapping. This number increases whenever the mapping
+        is changed, and never decreases. */
     unsigned FLSharedKeys_Count(FLSharedKeys FLNONNULL) FLAPI;
+
+    /** Reverts an FLSharedKeys by "forgetting" any keys added since it had the count `oldCount`. */
+    void FLSharedKeys_RevertToCount(FLSharedKeys FLNONNULL, unsigned oldCount) FLAPI;
+
+    /** Increments the reference count of an FLSharedKeys. */
+    FLSharedKeys FLSharedKeys_Retain(FLSharedKeys) FLAPI;
+
+    /** Decrements the reference count of an FLSharedKeys, freeing it when it reaches zero. */
+    void FLSharedKeys_Release(FLSharedKeys) FLAPI;
+
+
+    typedef struct _FLSharedKeyScope* FLSharedKeyScope;
+    FLSharedKeyScope FLSharedKeyScope_WithRange(FLSlice range, FLSharedKeys) FLAPI;
+    void FLSharedKeyScope_Free(FLSharedKeyScope);
 
 
     //////// ENCODER
@@ -809,9 +869,6 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
         dictionary, you have to call writeKey before writing each value.
      */
 
-#ifndef FL_IMPL
-    typedef struct _FLEncoder*     FLEncoder;       ///< A reference to an encoder.
-#endif
 
     /** \name Setup and configuration
          @{ */

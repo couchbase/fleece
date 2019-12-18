@@ -33,6 +33,7 @@ namespace fleece {
     class KeyPath;
     class SharedKeys;
     class Doc;
+    class Encoder;
 
 
     static inline bool operator== (FLSlice s1, FLSlice s2) {return FLSlice_Equal(s1, s2);}
@@ -330,10 +331,13 @@ namespace fleece {
         SharedKeys(FLSharedKeys sk)                         :_sk(FLSharedKeys_Retain(sk)) { }
         ~SharedKeys()                                       {FLSharedKeys_Release(_sk);}
 
-        static SharedKeys create()                          {return SharedKeys(FLSharedKeys_Create(), 1);}
-        static SharedKeys create(slice state)      {return SharedKeys(FLSharedKeys_CreateFromStateData(state), 1);}
+        static SharedKeys create()                          {return SharedKeys(FLSharedKeys_New(), 1);}
+        bool loadState(slice data)                          {return FLSharedKeys_LoadStateData(_sk, data);}
+        bool loadState(Value state)                         {return FLSharedKeys_LoadState(_sk, state);}
         alloc_slice stateData() const                       {return FLSharedKeys_GetStateData(_sk);}
+        inline void writeState(const Encoder &enc);
         unsigned count() const                              {return FLSharedKeys_Count(_sk);}
+        void revertToCount(unsigned count)                  {FLSharedKeys_RevertToCount(_sk, count);}
         
         operator FLSharedKeys() const                       {return _sk;}
         bool operator== (SharedKeys other) const            {return _sk == other._sk;}
@@ -438,7 +442,7 @@ namespace fleece {
 
         void suppressTrailer()                          {FLEncoder_SuppressTrailer(_enc);}
 
-        operator ::FLEncoder ()                         {return _enc;}
+        operator ::FLEncoder () const                   {return _enc;}
 
         inline bool writeNull();
         inline bool writeUndefined();
@@ -647,6 +651,8 @@ namespace fleece {
     inline slice Dict::iterator::keyString() const {return FLDictIterator_GetKeyString(this);}
     inline Value Dict::iterator::value() const  {return FLDictIterator_GetValue(this);}
     inline bool Dict::iterator::next()          {return FLDictIterator_Next(this);}
+
+    inline void SharedKeys::writeState(const Encoder &enc) {FLSharedKeys_WriteState(_sk, enc);}
 
     inline void Encoder::amend(slice base, bool reuseStrings, bool externPointers)
                                                 {FLEncoder_Amend(_enc, base,
