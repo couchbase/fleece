@@ -141,12 +141,8 @@ namespace fleece { namespace impl {
         /** Writes a key to the current dictionary. This must be called before adding a value. */
         void writeKey(slice);
 
-        /** Writes a numeric key (encoded with SharedKeys) to the current dictionary. */
-        void writeKey(int);
-
-        /** Writes a string Value as a key to the current dictionary. */
-        void writeKey(const Value* NONNULL);
-        void writeKey(const Value* NONNULL, const SharedKeys*);
+        /** Writes a string or int Value as a key to the current dictionary. */
+        void writeKey(const Value* NONNULL, const SharedKeys* =nullptr);
 
         void writeKey(key_t);
 
@@ -226,6 +222,7 @@ namespace fleece { namespace impl {
         void endCollection(internal::tags tag);
         void push(internal::tags tag, size_t reserve);
         inline void pop();
+        void writeKey(int);
         void writeValue(const Value* NONNULL, const WriteValueFunc*);
         void writeValue(const Value* NONNULL, const SharedKeys* &, const WriteValueFunc*);
         const Value* minUsed(const Value *value);
