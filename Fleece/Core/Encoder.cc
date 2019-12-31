@@ -37,6 +37,10 @@
 namespace fleece { namespace impl {
     using namespace internal;
 
+    const slice Encoder::kPreEncodedTrue  = {Value::kTrueValue,  kNarrow};
+    const slice Encoder::kPreEncodedFalse = {Value::kFalseValue, kNarrow};
+    const slice Encoder::kPreEncodedNull  = {Value::kNullValue,  kNarrow};
+
     Encoder::Encoder(size_t reserveSize)
     :_out(reserveSize),
      _stack(kInitialStackSize),
@@ -602,6 +606,7 @@ namespace fleece { namespace impl {
             addedKey(str);
         } else {
             throwIf(!key->isInteger(), InvalidData, "Key must be a string or integer");
+            assert(key->sharedKeys() == _sharedKeys && _sharedKeys != nullptr); //TEMP?
             writeKey((int)key->asInt());
         }
     }

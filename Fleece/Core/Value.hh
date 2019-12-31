@@ -174,6 +174,12 @@ namespace fleece { namespace impl {
 
         void dump(std::ostream&) const;
 
+        /** A static 'true' Value, as a convenience. */
+        static const Value* const kTrueValue;
+
+        /** A static 'false' Value, as a convenience. */
+        static const Value* const kFalseValue;
+
         /** A static 'null' Value, as a convenience.
             (This is not a null pointer, rather a pointer to a Value whose type is kNull.) */
         static const Value* const kNullValue;

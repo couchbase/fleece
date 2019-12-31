@@ -169,6 +169,9 @@ namespace fleece { namespace impl {
         Encoder& operator<< (slice s)           {writeString(s); return *this;} // string not data!
         Encoder& operator<< (const Value *v NONNULL)    {writeValue(v); return *this;}
 
+        //////// Pre-encoded scalar values for convenience:
+
+        static const slice kPreEncodedTrue, kPreEncodedFalse, kPreEncodedNull;
 
         // For advanced use cases only... be careful!
         void suppressTrailer()                  {_trailer = false;}

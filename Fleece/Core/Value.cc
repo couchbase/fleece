@@ -59,10 +59,14 @@ namespace fleece { namespace impl {
 
     EVEN_ALIGNED static constexpr const ConstValue
         kNullInstance           {kSpecialTag, kSpecialValueNull},
-        kUndefinedInstance      {kSpecialTag, kSpecialValueUndefined};
+        kUndefinedInstance      {kSpecialTag, kSpecialValueUndefined},
+        kTrueInstance           {kSpecialTag, kSpecialValueTrue},
+        kFalseInstance          {kSpecialTag, kSpecialValueFalse};
 
     const Value* const Value::kNullValue      = &kNullInstance;
     const Value* const Value::kUndefinedValue = &kUndefinedInstance;
+    const Value* const Value::kTrueValue      = &kTrueInstance;
+    const Value* const Value::kFalseValue     = &kFalseInstance;
 
 
 #pragma mark - TYPE CHECK / CONVERSION:
