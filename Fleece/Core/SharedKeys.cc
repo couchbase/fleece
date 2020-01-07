@@ -19,13 +19,13 @@
 #include "SharedKeys.hh"
 #include "FleeceImpl.hh"
 #include "FleeceException.hh"
-#ifdef TMP_619_LOGGING
-#include "../../../../LiteCore/Support/Logging.hh"
+
+#ifdef __ANDROID__
+#include <android/log.h>
 #include "../../../../LiteCore/Support/StringUtil.hh"
-using namespace litecore;
-#define LiteCoreWarn Warn
+#define AndroidLog __android_log_print
 #else
-#define LiteCoreWarn(x, ...)
+#define AndroidLog(x, y, z, ...)
 #endif
 
 
@@ -101,7 +101,7 @@ namespace fleece { namespace impl {
         auto &slot = _table.find(str);
         if (_usuallyTrue(slot.first.buf != nullptr)) {
             key = slot.second.offset;
-            LiteCoreWarn("SharedKeys 0x%p found %.*s as %d", this, SPLAT(str), key);
+            AndroidLog(3, "CouchbaseLite/Keys", "SharedKeys 0x%p found %.*s as %d", this, SPLAT(str), key);
             return true;
         }
         return false;
@@ -229,7 +229,7 @@ namespace fleece { namespace impl {
         if (_inTransaction) {
             _committedPersistedCount = _persistedCount;
             _inTransaction = false;
-            LiteCoreWarn("SharedKeys 0x%p updated at transaction end (%u)", this, _committedPersistedCount);
+            AndroidLog(3, "CouchbaseLite/Keys", "SharedKeys 0x%p updated at transaction end (%u)", this, _committedPersistedCount);
         }
     }
 
@@ -241,9 +241,9 @@ namespace fleece { namespace impl {
             return false;
         auto currentCount = _persistedCount;
         _committedPersistedCount = _persistedCount = count();
-        LiteCoreWarn("SharedKeys 0x%p loaded from storage (%u)", this, _committedPersistedCount);
+        AndroidLog(3, "CouchbaseLite/Keys", "SharedKeys 0x%p loaded from storage (%u)", this, _committedPersistedCount);
         if(currentCount == 0) {
-            LiteCoreWarn("\t...for the first time");
+            AndroidLog(3, "CouchbaseLite/Keys", "\t...for the first time");
         }
 
         return true;
@@ -254,7 +254,7 @@ namespace fleece { namespace impl {
         if (changed()) {
             write(stateData());     // subclass hook
             _persistedCount = count();
-            LiteCoreWarn("SharedKeys 0x%p saving to disk (%u)", this, _persistedCount);
+            AndroidLog(3, "CouchbaseLite/Keys", "SharedKeys 0x%p saving to disk (%u)", this, _persistedCount);
         }
     }
 
@@ -262,14 +262,14 @@ namespace fleece { namespace impl {
     void PersistentSharedKeys::revert() {
         revertToCount(_committedPersistedCount);
         _persistedCount = _committedPersistedCount;
-        LiteCoreWarn("SharedKeys 0x%p reverted (%u)", this, _persistedCount);
+        AndroidLog(3, "CouchbaseLite/Keys", "SharedKeys 0x%p reverted (%u)", this, _persistedCount);
     }
 
 
     int PersistentSharedKeys::_add(slice str) {
         throwIf(!_inTransaction, SharedKeysStateError, "not in transaction");
         const auto retVal = SharedKeys::_add(str);
-        LiteCoreWarn("SharedKeys 0x%p added shared key %.*s as %d", this, SPLAT(str), retVal);
+        AndroidLog(3, "CouchbaseLite/Keys", "SharedKeys 0x%p added shared key %.*s as %d", this, SPLAT(str), retVal);
         return retVal;
     }
 
