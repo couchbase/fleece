@@ -19,6 +19,9 @@
 #include "SharedKeys.hh"
 #include "FleeceImpl.hh"
 #include "FleeceException.hh"
+#include "../../../../LiteCore/Support/Logging.hh"
+#include "../../../../LiteCore/Support/StringUtil.hh"
+using namespace litecore;
 
 
 #define LOCK(MUTEX)     lock_guard<mutex> _lock(const_cast<mutex&>(MUTEX))
@@ -93,6 +96,7 @@ namespace fleece { namespace impl {
         auto &slot = _table.find(str);
         if (_usuallyTrue(slot.first.buf != nullptr)) {
             key = slot.second.offset;
+            Warn("SharedKeys 0x%p found %.*s as %d", this, SPLAT(str), key);
             return true;
         }
         return false;
@@ -220,6 +224,7 @@ namespace fleece { namespace impl {
         if (_inTransaction) {
             _committedPersistedCount = _persistedCount;
             _inTransaction = false;
+            Warn("SharedKeys 0x%p updated at transaction end (%u)", this, _committedPersistedCount);
         }
     }
 
@@ -229,7 +234,13 @@ namespace fleece { namespace impl {
         throwIf(changed(), SharedKeysStateError, "can't load when already changed");
         if (!SharedKeys::loadFrom(fleeceData))
             return false;
+        auto currentCount = _persistedCount;
         _committedPersistedCount = _persistedCount = count();
+        Warn("SharedKeys 0x%p loaded from storage (%u)", this, _committedPersistedCount);
+        if(currentCount == 0) {
+            Warn("\t...for the first time");
+        }
+
         return true;
     }
 
@@ -238,6 +249,7 @@ namespace fleece { namespace impl {
         if (changed()) {
             write(stateData());     // subclass hook
             _persistedCount = count();
+            Warn("SharedKeys 0x%p saving to disk (%u)", this, _persistedCount);
         }
     }
 
@@ -245,12 +257,15 @@ namespace fleece { namespace impl {
     void PersistentSharedKeys::revert() {
         revertToCount(_committedPersistedCount);
         _persistedCount = _committedPersistedCount;
+        Warn("SharedKeys 0x%p reverted (%u)", this, _persistedCount);
     }
 
 
     int PersistentSharedKeys::_add(slice str) {
         throwIf(!_inTransaction, SharedKeysStateError, "not in transaction");
-        return SharedKeys::_add(str);
+        const auto retVal = SharedKeys::_add(str);
+        Warn("SharedKeys 0x%p added shared key %.*s as %d", this, SPLAT(str), retVal);
+        return retVal;
     }
 
 } }
