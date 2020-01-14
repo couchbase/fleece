@@ -162,11 +162,11 @@ public:
         for (unsigned i = 0; i < length; ++i) {
             auto v = a->get(i);
             if (!v || v->type() != kNumber || v->asUnsigned() != (uint64_t)i) {
-            REQUIRE(v);
-            REQUIRE(v->type() == kNumber);
-            REQUIRE(v->asUnsigned() == (uint64_t)i);
+                REQUIRE(v);
+                REQUIRE(v->type() == kNumber);
+                REQUIRE(v->asUnsigned() == (uint64_t)i);
+            }
         }
-    }
     }
 
     void checkJSONStr(std::string json,
@@ -207,6 +207,10 @@ public:
         REQUIRE(name);
         nameStr = (std::string)name->asString();
         REQUIRE(nameStr == expectedName);
+    }
+
+    void writeKey(int key) {
+        enc.writeKey(key);
     }
 
 };
@@ -455,11 +459,11 @@ public:
         gDisableNecessarySharedKeysCheck = true;
         {
             enc.beginDictionary();
-            enc.writeKey(0);
+            writeKey(0);
             enc.writeInt(23);
-            enc.writeKey(1);
+            writeKey(1);
             enc.writeInt(42);
-            enc.writeKey(2047);
+            writeKey(2047);
             enc.writeInt(-1);
             enc.endDictionary();
             checkOutput("7003 0000 0017 0001 002A 07FF 0FFF 8007");
