@@ -600,43 +600,38 @@ namespace fleece { namespace impl {
     }
 
     void Encoder::writeKey(int n) {
-        throwIf(!_sharedKeys && n != Dict::kMagicParentKey && !gDisableNecessarySharedKeysCheck,
-                EncodeError, "Can't add numeric key without SharedKeys");
+        assert(_sharedKeys || n == Dict::kMagicParentKey || gDisableNecessarySharedKeysCheck);
         addingKey();
         writeInt(n);
         addedKey(nullslice);
     }
 
-    void Encoder::writeKey(const Value *key) {
-        slice str = key->asString();
-        if (str) {
-            int encoded;
-            if (_sharedKeys && _sharedKeys->encodeAndAdd(str, encoded)) {
-                writeKey(encoded);
-                return;
-            }
-            addingKey();
-            writeValue(key, nullptr);
-            addedKey(str);
-        } else {
-            throwIf(!key->isInteger(), InvalidData, "Key must be a string or integer");
-            writeKey((int)key->asInt());
-        }
-    }
-
     void Encoder::writeKey(const Value *key, const SharedKeys *sk) {
         if (key->isInteger()) {
-            throwIf(!sk, EncodeError, "Numeric key given without SharedKeys");
             int intKey = (int)key->asInt();
-            if (sk != _sharedKeys) {
+            if (!sk) {
+                sk = key->sharedKeys();
+                throwIf(!sk, EncodeError, "Numeric key given without SharedKeys");
+            }
+            if (sk == _sharedKeys) {
+                throwIf(sk->isUnknownKey(intKey), InvalidData, "Unrecognized integer key");
+                writeKey(intKey);
+            } else {
                 slice keySlice = sk->decode(intKey);
                 throwIf(!keySlice, InvalidData, "Unrecognized integer key");
                 writeKey(keySlice);
-            } else {
-                writeKey(intKey);
             }
         } else {
-            writeKey(key);
+            slice str = key->asString();
+            throwIf(!str, InvalidData, "Key must be a string or integer");
+            int encoded;
+            if (_sharedKeys && _sharedKeys->encodeAndAdd(str, encoded)) {
+                writeKey(encoded);
+            } else {
+                addingKey();
+                writeValue(key, nullptr);
+                addedKey(str);
+            }
         }
     }
 
