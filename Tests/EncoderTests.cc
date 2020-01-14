@@ -1034,7 +1034,7 @@ public:
             bool parsed = ParseInteger(str, result);
             CHECK(parsed);
             if (parsed)
-                CHECK(result == strtoull(str, nullptr, 10));
+                CHECK(result == strtoll(str, nullptr, 10));
         }
 
         constexpr const char* kFailCases[] = {

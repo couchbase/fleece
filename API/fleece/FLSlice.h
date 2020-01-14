@@ -85,8 +85,8 @@ static inline FLSlice FLStr(const char *str) {
 
 // Macro version of FLStr, for use in initializing compile-time constants.
 // STR must be a C string literal. Has zero runtime overhead.
-#ifdef _MSC_VER
-    #define FLSTR(STR) {("" STR), sizeof(("" STR))-1}
+#ifdef __cplusplus
+    #define FLSTR(STR) (FLSlice {("" STR), sizeof(("" STR))-1})
 #else
     #define FLSTR(STR) ((FLSlice){("" STR), sizeof(("" STR))-1})
 #endif
