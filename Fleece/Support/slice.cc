@@ -57,9 +57,11 @@ namespace fleece {
     __hot int pure_slice::caseEquivalentCompare(pure_slice b) const noexcept {
         size_t minSize = std::min(size, b.size);
         for (size_t i = 0; i < minSize; i++) {
-            int cmp = tolower((*this)[i]) - tolower(b[i]);
-            if (cmp != 0)
-                return cmp;
+            if ((*this)[i] != b[i]) {
+                int cmp = tolower((*this)[i]) - tolower(b[i]);
+                if (cmp != 0)
+                    return cmp;
+            }
         }
         return (int)size - (int)b.size;
     }
