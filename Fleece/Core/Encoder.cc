@@ -239,7 +239,7 @@ namespace fleece { namespace impl {
         } else if (isFloatRepresentable(n)) {
             return _writeFloat((float)n);
         } else {
-            littleEndianDouble swapped = n;
+            endian::littleEndianDouble swapped = n;
             auto buf = placeValue<false>(kFloatTag, 0x08, 2 + sizeof(swapped));
             buf[1] = 0;
             memcpy(&buf[2], &swapped, sizeof(swapped));
@@ -255,7 +255,7 @@ namespace fleece { namespace impl {
     }
 
     void Encoder::_writeFloat(float n) {
-        littleEndianFloat swapped = n;
+        endian::littleEndianFloat swapped = n;
         auto buf = placeValue<false>(kFloatTag, 0, 2 + sizeof(swapped));
         buf[1] = 0;
         memcpy(&buf[2], &swapped, sizeof(swapped));

@@ -24,9 +24,9 @@ namespace fleece { namespace impl { namespace internal {
         template <bool WIDE>
         FLPURE uint32_t offset() const noexcept {
             if (WIDE)
-                return (_dec32(wideBytes()) & ~0xC0000000) << 1;
+                return (endian::dec32(wideBytes()) & ~0xC0000000) << 1;
             else
-                return (_dec16(narrowBytes()) & ~0xC000) << 1;
+                return (endian::dec16(narrowBytes()) & ~0xC000) << 1;
         }
 
         template <bool WIDE>
@@ -58,9 +58,9 @@ namespace fleece { namespace impl { namespace internal {
         template <bool WIDE>
         FLPURE uint32_t legacyOffset() const noexcept {
             if (WIDE)
-                return (_dec32(wideBytes()) & ~0x80000000) << 1;
+                return (endian::dec32(wideBytes()) & ~0x80000000) << 1;
             else
-                return (_dec16(narrowBytes()) & ~0x8000) << 1;
+                return (endian::dec16(narrowBytes()) & ~0x8000) << 1;
         }
 
         const Value* derefExtern(bool wide, const Value *dst) const noexcept;

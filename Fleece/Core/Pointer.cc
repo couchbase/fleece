@@ -35,13 +35,13 @@ namespace fleece { namespace impl { namespace internal {
             throwIf(offset >= 0x4000, InternalError, "offset too large");
             if (external)
                 offset |= 0x4000;
-            setNarrowBytes((uint16_t)_enc16(offset | 0x8000)); // big-endian, high bit set
+            setNarrowBytes(endian::enc16(uint16_t(offset | 0x8000))); // big-endian, high bit set
         } else {
             if (offset >= 0x40000000)
                 FleeceException::_throw(OutOfRange, "data too large");
             if (external)
                 offset |= 0x40000000;
-            setWideBytes((uint32_t)_enc32(offset | 0x80000000));
+            setWideBytes(endian::enc32(uint32_t(offset | 0x80000000)));
         }
     }
 

@@ -18,45 +18,59 @@
 
 #pragma once
 #include "PlatformCompat.hh"
-extern "C" {
-    #define __ENDIAN_SAFE
-    #include "forestdb_endian.h"
-}
+#include "endianness.h"
 
-namespace fleece {
+namespace fleece { namespace endian {
 
-#ifndef _LITTLE_ENDIAN
-    // convert to little endian
-    #define _encLittle64(v) bitswap64(v)
-    #define _decLittle64(v) bitswap64(v)
-    #define _encLittle32(v) bitswap32(v)
-    #define _decLittle32(v) bitswap32(v)
-    #define _encLittle16(v) bitswap16(v)
-    #define _decLittle16(v) bitswap16(v)
+#ifdef __BIG_ENDIAN__
+    FLPURE static inline constexpr uint64_t enc64(uint64_t v) noexcept {return v;}
+    FLPURE static inline constexpr uint64_t dec64(uint64_t v) noexcept {return v;}
+    FLPURE static inline constexpr uint32_t enc32(uint32_t v) noexcept {return v;}
+    FLPURE static inline constexpr uint32_t dec32(uint32_t v) noexcept {return v;}
+    FLPURE static inline constexpr uint16_t enc16(uint16_t v) noexcept {return v;}
+    FLPURE static inline constexpr uint16_t dec16(uint16_t v) noexcept {return v;}
 #else
-    #define _encLittle64(v) (v)
-    #define _decLittle64(v) (v)
-    #define _encLittle32(v) (v)
-    #define _decLittle32(v) (v)
-    #define _encLittle16(v) (v)
-    #define _decLittle16(v) (v)
+    // convert to big endian
+    FLPURE static inline constexpr uint64_t enc64(uint64_t v) noexcept {return bswap64(v);}
+    FLPURE static inline constexpr uint64_t dec64(uint64_t v) noexcept {return bswap64(v);}
+    FLPURE static inline constexpr uint32_t enc32(uint32_t v) noexcept {return bswap32(v);}
+    FLPURE static inline constexpr uint32_t dec32(uint32_t v) noexcept {return bswap32(v);}
+    FLPURE static inline constexpr uint16_t enc16(uint16_t v) noexcept {return bswap16(v);}
+    FLPURE static inline constexpr uint16_t dec16(uint16_t v) noexcept {return bswap16(v);}
+#endif
+
+#ifdef __LITTLE_ENDIAN__
+    FLPURE static inline constexpr uint64_t encLittle64(uint64_t v) noexcept {return v;}
+    FLPURE static inline constexpr uint64_t decLittle64(uint64_t v) noexcept {return v;}
+    FLPURE static inline constexpr uint32_t encLittle32(uint32_t v) noexcept {return v;}
+    FLPURE static inline constexpr uint32_t decLittle32(uint32_t v) noexcept {return v;}
+    FLPURE static inline constexpr uint16_t encLittle16(uint16_t v) noexcept {return v;}
+    FLPURE static inline constexpr uint16_t decLittle16(uint16_t v) noexcept {return v;}
+#else
+    // convert to little endian
+    FLPURE static inline constexpr uint64_t encLittle64(uint64_t v) noexcept {return bswap64(v);}
+    FLPURE static inline constexpr uint64_t decLittle64(uint64_t v) noexcept {return bswap64(v);}
+    FLPURE static inline constexpr uint32_t encLittle32(uint32_t v) noexcept {return bswap32(v);}
+    FLPURE static inline constexpr uint32_t decLittle32(uint32_t v) noexcept {return bswap32(v);}
+    FLPURE static inline constexpr uint16_t encLittle16(uint16_t v) noexcept {return bswap16(v);}
+    FLPURE static inline constexpr uint16_t decLittle16(uint16_t v) noexcept {return bswap16(v);}
 #endif
 
 
     namespace internal {
-        FLPURE inline uint16_t swapLittle(uint16_t n)  {return (uint16_t)_encLittle16(n);}
-        FLPURE inline uint16_t swapBig(uint16_t n)     {return (uint16_t)_enc16(n);}
-        FLPURE inline uint32_t swapLittle(uint32_t n)  {return _encLittle32(n);}
-        FLPURE inline uint32_t swapBig(uint32_t n)     {return _enc32(n);}
-        FLPURE inline uint64_t swapLittle(uint64_t n)  {return _encLittle64(n);}
-        FLPURE inline uint64_t swapBig(uint64_t n)     {return _enc64(n);}
+        FLPURE inline uint16_t constexpr swapLittle(uint16_t n) noexcept {return (uint16_t)encLittle16(n);}
+        FLPURE inline uint16_t constexpr swapBig(uint16_t n)    noexcept {return (uint16_t)enc16(n);}
+        FLPURE inline uint32_t constexpr swapLittle(uint32_t n) noexcept {return encLittle32(n);}
+        FLPURE inline uint32_t constexpr swapBig(uint32_t n)    noexcept {return enc32(n);}
+        FLPURE inline uint64_t constexpr swapLittle(uint64_t n) noexcept {return encLittle64(n);}
+        FLPURE inline uint64_t constexpr swapBig(uint64_t n)    noexcept {return enc64(n);}
 
         template <class INT, INT SWAP(INT)>
         class endian {
         public:
-            endian()                :endian(0) { }
-            endian(INT o)           :_swapped(SWAP(o)) { }
-            FLPURE operator INT () const   {return SWAP(_swapped);}
+            endian() noexcept                       :endian(0) { }
+            endian(INT o) noexcept                  :_swapped(SWAP(o)) { }
+            FLPURE operator INT () const noexcept   {return SWAP(_swapped);}
         private:
             INT _swapped;
         };
@@ -65,15 +79,15 @@ namespace fleece {
         template <class INT, INT SWAP(INT)>
         class endian_unaligned {
         public:
-            endian_unaligned()
+            constexpr endian_unaligned() noexcept
             :endian_unaligned(0)
             { }
-            endian_unaligned(INT o) {
+            constexpr endian_unaligned(INT o) noexcept {
                 o = SWAP(o);
                 memcpy(_bytes, &o, sizeof(o));
             }
-            FLPURE operator INT () const {
-                INT o;
+            FLPURE constexpr operator INT () const noexcept {
+                INT o = 0;
                 memcpy(&o, _bytes, sizeof(o));
                 return SWAP(o);
             }
@@ -81,31 +95,32 @@ namespace fleece {
             uint8_t _bytes[sizeof(INT)];
         };
 
-        FLPURE inline void swapLittle(uint16_t &n) {n = _encLittle16(n);}
-        FLPURE inline void swapBig(uint16_t &n)    {n = (uint16_t)_enc16(n);}
-        FLPURE inline void swapLittle(uint32_t &n) {n = _encLittle32(n);}
-        FLPURE inline void swapBig(uint32_t &n)    {n = _enc32(n);}
-        FLPURE inline void swapLittle(uint64_t &n) {n = _encLittle64(n);}
-        FLPURE inline void swapBig(uint64_t &n)    {n = _enc64(n);}
+        inline void constexpr swapLittle(uint16_t &n) noexcept {n = encLittle16(n);}
+        inline void constexpr swapBig(uint16_t &n)    noexcept {n = (uint16_t)enc16(n);}
+        inline void constexpr swapLittle(uint32_t &n) noexcept {n = encLittle32(n);}
+        inline void constexpr swapBig(uint32_t &n)    noexcept {n = enc32(n);}
+        inline void constexpr swapLittle(uint64_t &n) noexcept {n = encLittle64(n);}
+        inline void constexpr swapBig(uint64_t &n)    noexcept {n = enc64(n);}
 
 
         // Template for opaque endian floating-point value.
         template <typename FLT, typename RAW, void SWAP(RAW&)>
         struct endianFP {
-            endianFP() {}
-            endianFP(FLT f)           {*this = f;}
-            endianFP(RAW raw)         {_swapped.asRaw = raw;}
-            endianFP& operator= (FLT f) {
+            constexpr endianFP() noexcept                 {}
+            constexpr endianFP(FLT f) noexcept            {*this = f;}
+            constexpr endianFP(RAW raw) noexcept          {_swapped.asRaw = raw;}
+
+            constexpr endianFP& operator= (FLT f) noexcept {
                 _swapped.asNumber = f;
                 SWAP(_swapped.asRaw);
                 return *this;
             }
-            FLPURE operator FLT() const {
+            FLPURE constexpr operator FLT() const noexcept {
                 swapped unswap = _swapped;
                 SWAP(unswap.asRaw);
                 return unswap.asNumber;
             }
-            FLPURE RAW raw() {return _swapped.asRaw;}
+            FLPURE constexpr RAW raw() const noexcept {return _swapped.asRaw;}
         protected:
             union swapped {
                 FLT asNumber;
@@ -132,4 +147,4 @@ namespace fleece {
     using littleEndianDouble = internal::endianFP<double, uint64_t, internal::swapLittle>;
     using bigEndianDouble    = internal::endianFP<double, uint64_t, internal::swapBig>;
 
-}
+} }

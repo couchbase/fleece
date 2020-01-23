@@ -184,7 +184,7 @@ namespace fleece { namespace impl {
         } else {
             struct {
                 uint8_t filler = 0;
-                littleEndianFloat le;
+                endian::littleEndianFloat le;
             } data;
             data.le = f;
             setValue(kFloatTag, 0, {(char*)&data.le - 1, sizeof(data.le) + 1});
@@ -198,7 +198,7 @@ namespace fleece { namespace impl {
         } else {
             struct {
                 uint8_t filler = 0;
-                littleEndianDouble le;
+                endian::littleEndianDouble le;
             } data;
             data.le = d;
             setValue(kFloatTag, 8, {(char*)&data.le - 1, sizeof(data.le) + 1});

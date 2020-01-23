@@ -95,12 +95,12 @@ namespace fleece { namespace impl { namespace internal {
 
 
     HeapValue* HeapValue::create(float f) {
-        littleEndianFloat lf(f);
+        endian::littleEndianFloat lf(f);
         return create(kFloatTag, 0, {&lf, sizeof(lf)});
     }
 
     HeapValue* HeapValue::create(double d) {
-        littleEndianDouble ld(d);
+        endian::littleEndianDouble ld(d);
         return create(kFloatTag, 8, {&ld, sizeof(ld)});
     }
 

@@ -21,7 +21,6 @@
 		270FA2801BF53CEA005DCB13 /* Writer.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2721BF53CEA005DCB13 /* Writer.hh */; };
 		270FA2811BF53CEA005DCB13 /* Endian.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2731BF53CEA005DCB13 /* Endian.hh */; };
 		270FA2851BF53CEA005DCB13 /* varint.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2771BF53CEA005DCB13 /* varint.hh */; };
-		270FA2871BF53D32005DCB13 /* forestdb_endian.h in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2861BF53D32005DCB13 /* forestdb_endian.h */; };
 		271507F7212349B8005FE6E8 /* API_ValueTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 271507F6212349B8005FE6E8 /* API_ValueTests.cc */; };
 		27298E3C1C00F812000CFBA8 /* JSONConverter.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27298E3A1C00F812000CFBA8 /* JSONConverter.cc */; };
 		27298E651C00F8A9000CFBA8 /* jsonsl.c in Sources */ = {isa = PBXBuildFile; fileRef = 27298E491C00F8A9000CFBA8 /* jsonsl.c */; settings = {COMPILER_FLAGS = "-Wno-unreachable-code-break"; }; };
@@ -123,7 +122,6 @@
 		27D721801F8E8EEA00AA4458 /* MValue.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8961F8583FF00BE5249 /* MValue.hh */; };
 		27D721811F8E8EEA00AA4458 /* Value.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA26B1BF53CEA005DCB13 /* Value.hh */; };
 		27D721821F8E8EEA00AA4458 /* Endian.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2731BF53CEA005DCB13 /* Endian.hh */; };
-		27D721831F8E8EEA00AA4458 /* forestdb_endian.h in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2861BF53D32005DCB13 /* forestdb_endian.h */; };
 		27D721841F8E8EEA00AA4458 /* MDict+ObjC.h in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8991F8583FF00BE5249 /* MDict+ObjC.h */; };
 		27D721851F8E8EEA00AA4458 /* MCollection.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2734B89B1F8583FF00BE5249 /* MCollection.hh */; };
 		27D721861F8E8EEA00AA4458 /* CaseListReporter.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27E3DD4A1DB6C32400F2872D /* CaseListReporter.hh */; };
@@ -169,7 +167,6 @@
 		27DE2ECA2125FA1700123597 /* Value.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA26B1BF53CEA005DCB13 /* Value.hh */; };
 		27DE2ECB2125FA1700123597 /* Endian.hh in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2731BF53CEA005DCB13 /* Endian.hh */; };
 		27DE2ECC2125FA1700123597 /* HeapArray.hh in Headers */ = {isa = PBXBuildFile; fileRef = 274D824B209A7577008BB39F /* HeapArray.hh */; };
-		27DE2ECD2125FA1700123597 /* forestdb_endian.h in Headers */ = {isa = PBXBuildFile; fileRef = 270FA2861BF53D32005DCB13 /* forestdb_endian.h */; };
 		27DE2ECE2125FA1700123597 /* MDict+ObjC.h in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8991F8583FF00BE5249 /* MDict+ObjC.h */; };
 		27DE2ECF2125FA1700123597 /* FLSlice.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A2F73A21248DA40081927B /* FLSlice.h */; };
 		27DE2ED02125FA1700123597 /* Pointer.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27F25A8D20AA053D00E181FA /* Pointer.hh */; };
@@ -290,7 +287,6 @@
 		270FA2741BF53CEA005DCB13 /* slice.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = slice.cc; sourceTree = "<group>"; };
 		270FA2761BF53CEA005DCB13 /* varint.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = varint.cc; sourceTree = "<group>"; };
 		270FA2771BF53CEA005DCB13 /* varint.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = varint.hh; sourceTree = "<group>"; };
-		270FA2861BF53D32005DCB13 /* forestdb_endian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = forestdb_endian.h; sourceTree = "<group>"; };
 		271507E92122381E005FE6E8 /* Fleece+CoreFoundation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Fleece+CoreFoundation.h"; sourceTree = "<group>"; };
 		271507EA2122381E005FE6E8 /* Fleece.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Fleece.h; sourceTree = "<group>"; };
 		271507EB2122381E005FE6E8 /* Fleece.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Fleece.hh; sourceTree = "<group>"; };
@@ -424,6 +420,7 @@
 		27C8DF09208521B600A99BFC /* HashTreeTests.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = HashTreeTests.cc; sourceTree = "<group>"; };
 		27CA08401F6B0E9400FF8C71 /* Dict.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Dict.hh; sourceTree = "<group>"; };
 		27CA08411F6B0E9400FF8C71 /* Dict.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Dict.cc; sourceTree = "<group>"; };
+		27CD12BB23DA3CCA00A7333C /* endianness.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = endianness.h; sourceTree = "<group>"; };
 		27CEE41920EFE79D00089A85 /* Stopwatch.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Stopwatch.hh; sourceTree = "<group>"; };
 		27CEE44F20F00B4E00089A85 /* Fleece.exp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.exports; path = Fleece.exp; sourceTree = "<group>"; };
 		27D57719212B3032002410BA /* Bitmap.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Bitmap.cc; sourceTree = "<group>"; };
@@ -745,11 +742,11 @@
 				277F45B3208E9A9100A0D159 /* Bitmap.hh */,
 				27D57719212B3032002410BA /* Bitmap.cc */,
 				270FA2731BF53CEA005DCB13 /* Endian.hh */,
+				27CD12BB23DA3CCA00A7333C /* endianness.h */,
 				277A06B120B36D1A00970354 /* FileUtils.cc */,
 				277A06B220B36D1A00970354 /* FileUtils.hh */,
 				275CED501D3EF7BE001DE46C /* FleeceException.cc */,
 				275CED511D3EF7BE001DE46C /* FleeceException.hh */,
-				270FA2861BF53D32005DCB13 /* forestdb_endian.h */,
 				27DFAE10219F83AB00DF57EB /* InstanceCounted.hh */,
 				27DFAE11219F83AB00DF57EB /* InstanceCounted.cc */,
 				276D15441E007D3000543B1B /* JSON5.cc */,
@@ -918,7 +915,6 @@
 				270FA2791BF53CEA005DCB13 /* Value.hh in Headers */,
 				270FA2811BF53CEA005DCB13 /* Endian.hh in Headers */,
 				274D824D209A7577008BB39F /* HeapArray.hh in Headers */,
-				270FA2871BF53D32005DCB13 /* forestdb_endian.h in Headers */,
 				2734B8A21F8583FF00BE5249 /* MDict+ObjC.h in Headers */,
 				27A2F73B21248DA50081927B /* FLSlice.h in Headers */,
 				27F25A8F20AA053D00E181FA /* Pointer.hh in Headers */,
@@ -963,7 +959,6 @@
 				27D721801F8E8EEA00AA4458 /* MValue.hh in Headers */,
 				27D721811F8E8EEA00AA4458 /* Value.hh in Headers */,
 				27D721821F8E8EEA00AA4458 /* Endian.hh in Headers */,
-				27D721831F8E8EEA00AA4458 /* forestdb_endian.h in Headers */,
 				27D721841F8E8EEA00AA4458 /* MDict+ObjC.h in Headers */,
 				27D721851F8E8EEA00AA4458 /* MCollection.hh in Headers */,
 				27D721861F8E8EEA00AA4458 /* CaseListReporter.hh in Headers */,
@@ -1009,7 +1004,6 @@
 				27DE2ECA2125FA1700123597 /* Value.hh in Headers */,
 				27DE2ECB2125FA1700123597 /* Endian.hh in Headers */,
 				27DE2ECC2125FA1700123597 /* HeapArray.hh in Headers */,
-				27DE2ECD2125FA1700123597 /* forestdb_endian.h in Headers */,
 				27DE2ECE2125FA1700123597 /* MDict+ObjC.h in Headers */,
 				27DE2ECF2125FA1700123597 /* FLSlice.h in Headers */,
 				2700BBA2218B949900797537 /* Backtrace.hh in Headers */,

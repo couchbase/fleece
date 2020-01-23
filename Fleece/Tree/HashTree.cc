@@ -73,7 +73,7 @@ namespace fleece {
             assert(_childrenOffset > 0);
         }
 
-        bitmap_t Interior::bitmap() const             {return _decLittle32(_bitmap);}
+        bitmap_t Interior::bitmap() const             {return endian::decLittle32(_bitmap);}
 
         bool Interior::hasChild(unsigned bitNo) const {return asBitmap(bitmap()).containsBit(bitNo);}
         unsigned Interior::childCount() const         {return asBitmap(bitmap()).bitCount();}

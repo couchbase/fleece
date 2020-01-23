@@ -123,7 +123,7 @@ namespace fleece { namespace impl {
                     byteCount &= 0x7;
                 }
                 memcpy(&n, &_byte[1], ++byteCount);
-                return _decLittle64(n);
+                return endian::decLittle64(n);
             }
             case kFloatTag:
                 return (int64_t)asDouble();
@@ -141,11 +141,11 @@ namespace fleece { namespace impl {
         switch (tag()) {
             case kFloatTag: {
                 if (_byte[0] & 0x8) {
-                    littleEndianDouble d;
+                    endian::littleEndianDouble d;
                     memcpy(&d, &_byte[2], sizeof(d));
                     return (T)d;
                 } else {
-                    littleEndianFloat f;
+                    endian::littleEndianFloat f;
                     memcpy(&f, &_byte[2], sizeof(f));
                     return (T)f;
                 }

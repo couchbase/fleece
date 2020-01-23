@@ -125,12 +125,12 @@ bool WriteUVarInt(slice *buf, uint64_t n) {
         if (((int8_t*)src)[length-1] < 0)
             result = -1;                        // sign-extend the result
         memcpy(&result, src, length);
-        return _decLittle64(result);
+        return endian::decLittle64(result);
     }
 
     __hot
     size_t PutIntOfLength(void *buf, int64_t n, bool isUnsigned) {
-        int64_t littlen = _encLittle64(n);
+        int64_t littlen = endian::encLittle64(n);
         memcpy(buf, &littlen, 8);
         size_t size;
         if (isUnsigned) {
