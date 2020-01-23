@@ -24,6 +24,8 @@
 
 namespace fleece {
 
+#pragma mark - UNSIGNED VARINTS:
+
 // Based on varint implementation from the Go language (src/pkg/encoding/binary/varint.go)
 // This file implements "varint" encoding of unsigned 64-bit integers.
 // The encoding is:
@@ -31,6 +33,7 @@ namespace fleece {
 //   least significant bits
 // - the most significant bit (msb) in each output byte indicates if there
 //   is a continuation byte (msb = 1)
+// (This implementation does not support signed integers, which have a more complex encoding.)
 
 
 /** MaxVarintLenN is the maximum length of a varint-encoded N-bit integer. */
@@ -101,7 +104,10 @@ static inline const void* SkipVarInt(const void *buf NONNULL) {
     return p;
 }
 
-//////// Non-varint variable-length int functions:
+
+#pragma mark - VARIABLE LENGTH INTS:
+
+// This is a compact encoding that requires the length to be stored externally.
 
 /** Encodes an integer `n` to `buf` and returns the number of bytes used (1-8).
     if `isUnsigned` is true, the number is treated as unsigned (uint64_t.) */
@@ -112,5 +118,27 @@ inline size_t PutUIntOfLength(void *buf NONNULL, uint64_t n) {return PutIntOfLen
 
 /** Returns a signed integer decoded from `length` bytes starting at `buf`. */
 int64_t GetIntOfLength(const void *buf NONNULL, unsigned length);
+
+
+#pragma mark - COLLATABLE INTS:
+
+// Collatable ints use an encoding that can be compared using memcmp().
+
+static constexpr size_t kMaxCollatableUIntLen64 = 9;
+
+/** Returns the number of bytes needed to encode a specific integer. */
+size_t SizeOfCollatableUInt(uint64_t n);
+
+/** Encodes n as a collatable int, writing it to buf. Returns the number of bytes written. */
+size_t PutCollatableUInt(void *buf, uint64_t n);
+
+/** Encodes a collatable int into buf, and advances buf to the remaining space after it.
+    Returns false if there isn't enough room. */
+bool WriteCollatableUInt(slice *buf NONNULL, uint64_t n);
+
+/** Decodes a collatable int from the bytes in buf, storing it into *n.
+    Returns the number of bytes read, or 0 if the data is invalid (buffer too short or number
+    too long.) */
+size_t GetCollatableUInt(slice buf, uint64_t *n NONNULL);
 
 }

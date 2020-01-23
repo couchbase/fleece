@@ -116,7 +116,11 @@ bool WriteUVarInt(slice *buf, uint64_t n) {
     return true;
 }
 
-    //////// Length-encoded ints:
+
+
+#pragma mark - VARIABLE LENGTH INTS:
+
+    // These just use a variable length little-endian encoding.
 
     __hot
     int64_t GetIntOfLength(const void *src, unsigned length) {
@@ -158,5 +162,61 @@ bool WriteUVarInt(slice *buf, uint64_t n) {
             return size;
         }
     }
+
+
+#pragma mark - COLLATABLE INTS:
+
+
+    // These consist of the number's shortest big-endian representation (no leading 00 bytes),
+    // prefixed by the byte-count of that representation.
+    // Examples:   0x0 --> 00
+    //            0xbc --> 01 bc
+    //          0x1234 --> 02 12 34
+    // Encoded integers can be compared by memcmp() or the equivalent.
+
+    size_t SizeOfCollatableUInt(uint64_t n) {
+        size_t size = 1;
+        while (n != 0) {
+            ++size;
+            n >>= 8;
+        }
+        return size;
+    }
+
+    size_t PutCollatableUInt(void *buf, uint64_t n) {
+        uint8_t *result = (uint8_t*)buf;
+        size_t len = 0;
+        for (auto tmp = n; tmp != 0; tmp >>= 8)
+            ++len;
+        result[0] = uint8_t(len);
+        for (size_t i = len; i > 0; --i) {
+            result[i] = n & 0xFF;
+            n >>= 8;
+        }
+        return len + 1;
+    }
+
+    bool WriteCollatableUInt(slice *buf NONNULL, uint64_t n) {
+        if (buf->size < kMaxCollatableUIntLen64 && buf->size < SizeOfCollatableUInt(n))
+            return false;
+        size_t bytesWritten = PutCollatableUInt((void*)buf->buf, n);
+        buf->moveStart(bytesWritten);
+        return true;
+    }
+
+    size_t GetCollatableUInt(slice buf, uint64_t *n) {
+        if (buf.size == 0)
+            return 0;
+        uint8_t len = buf[0];
+        if (len > 8 || len >= buf.size)
+            return 0;
+        uint64_t result = 0;
+        for (uint8_t i = 1; i <= len; i++)
+            result = (result << 8) | buf[i];
+        *n = result;
+        return len;
+    }
+
+
 
 }
