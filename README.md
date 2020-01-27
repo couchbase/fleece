@@ -14,9 +14,10 @@ __Fleece__ is a binary encoding for semi-structured data. Its data model is a su
 ## What You Get
 
 * Documentation, including
+    * **High-level API guide "[Using Fleece](https://github.com/couchbaselabs/fleece/wiki/Using-Fleece)"**
     * The [design document](Fleece.md), with details on the data format
     * An [example](Example.md) showing the details of the encoding of a specific data structure, and a walkthrough of what happens when a program works with the resulting Fleece objects
-    * [Performance](Performance.md) figures based on the included test suite, including comparisons to JSON parsing using Apple's Foundation framework
+    * Some older [performance](Performance.md) figures based on the included test suite, including comparisons to JSON parsing using Apple's Foundation framework
 * A C++ reference implementation, including:
     * Encoder and decoder/accessors
     * Extensions for converting JSON directly to Fleece or vice versa
