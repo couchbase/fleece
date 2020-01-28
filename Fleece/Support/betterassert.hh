@@ -10,6 +10,7 @@
 // assert() with the usual one. (And vice versa.)
 
 #include <stdexcept>
+#include <cassert>
 
 #ifndef assert_always
     #ifdef _MSC_VER
