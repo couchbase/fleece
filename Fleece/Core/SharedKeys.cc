@@ -28,6 +28,15 @@ namespace fleece { namespace impl {
     using namespace std;
 
 
+    SharedKeys::~SharedKeys() {
+    #ifdef __APPLE__
+        for (auto &str : _platformStringsByKey) {
+            if (str)
+                CFRelease(str);
+        }
+    #endif
+    }
+
     key_t::key_t(const Value *v) noexcept {
         if (v->isInteger())
             _int = (int16_t)v->asInt();
@@ -156,7 +165,12 @@ namespace fleece { namespace impl {
         auto &strings = const_cast<SharedKeys*>(this)->_platformStringsByKey;
         if ((unsigned)key >= _platformStringsByKey.size())
             strings.resize(key + 1);
-        strings[key] = platformKey;
+        
+        #ifdef __APPLE__
+                strings[key] = CFStringCreateCopy(kCFAllocatorDefault, platformKey);
+        #else
+                strings[key] = platformKey;
+        #endif
     }
 
 
