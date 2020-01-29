@@ -7,6 +7,7 @@
 #pragma once
 #include <cstddef> //for size_t
 #include <atomic>
+#include <functional>
 #include <stdint.h>
 
 #ifndef INSTANCECOUNTED_TRACK
@@ -34,6 +35,7 @@ namespace fleece {
 
         /** Logs information to stderr about all live objects. */
         static void dumpInstances();
+        static void dumpInstances(std::function<void(const InstanceCounted*)>);
 
     protected:
         InstanceCounted(size_t offset)              {track(offset);}
@@ -59,7 +61,7 @@ namespace fleece {
         In that situation, InstanceCounted won't be able to determine the exact address of the
         object (due to the weird way C++ MI works), so instead you should use
         InstanceCountedIn<MyClass>, where MyClass is the class you're declaring. For example:
-            class MyClass : public BaseClassWithVirtual, InstanceCounted<MyClass> { ... };
+            class MyClass : public BaseClassWithVirtual, InstanceCountedIn<MyClass> { ... };
         */
     template <class BASE>
     class InstanceCountedIn : public InstanceCounted {

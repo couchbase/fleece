@@ -53,6 +53,10 @@ namespace fleece {
     }
 
     void InstanceCounted::dumpInstances() {
+        dumpInstances(nullptr);
+    }
+
+    void InstanceCounted::dumpInstances(std::function<void(const InstanceCounted*)> callback) {
         char* unmangled = nullptr;
         lock_guard<mutex> lock(sInstancesMutex);
         for (auto entry : sInstances) {
@@ -66,13 +70,23 @@ namespace fleece {
                 name = unmangled;
     #endif
 
-            fprintf(stderr, "    * %s at %p  [", name, address);
-            for (int i=0; i < 4; i++) {
-                if (i > 0)
-                    fprintf(stderr, " ");
-                fprintf(stderr, "%08x", ((uint32_t*)address)[i]);
+            fprintf(stderr, "    * ");
+            if (callback)
+                callback(entry.first);
+            fprintf(stderr, "%s ", name);
+            if (auto rc = dynamic_cast<const RefCounted*>(entry.first); rc)
+                fprintf(stderr, "(refCount=%d) ", rc->refCount());
+            fprintf(stderr, "at %p", address);
+            if (!callback) {
+                fprintf(stderr, "[");
+                for (int i=0; i < 4; i++) {
+                    if (i > 0)
+                        fprintf(stderr, " ");
+                    fprintf(stderr, "%08x", ((uint32_t*)address)[i]);
+                }
+                fprintf(stderr, "]");
             }
-            fprintf(stderr, "]\n");
+            fprintf(stderr, "\n");
         }
         free(unmangled);
     }
