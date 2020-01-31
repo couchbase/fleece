@@ -25,6 +25,7 @@
 #ifdef _MSC_VER
 
     #define NOINLINE                        __declspec(noinline)
+    #define ALWAYS_INLINE                   inline
 	#define LITECORE_UNUSED
     #define __typeof                        decltype
 
@@ -60,7 +61,14 @@
     #endif
 
     #define NOINLINE                        __attribute((noinline))
-    
+
+    #if __has_attribute(always_inline)
+        #define ALWAYS_INLINE               __attribute__((always_inline)) inline
+    #else
+        #define ALWAYS_INLINE               inline
+    #endif
+
+    // Note: GCC also has a `nonnull` attribute, but it works differently (not as well)
     #ifdef __clang__
         #define NONNULL                     __attribute__((nonnull))
     #else
