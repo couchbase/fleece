@@ -7,6 +7,7 @@
 //
 
 #pragma once
+#include "Base.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -93,11 +94,11 @@ static inline FLSlice FLStr(const char *str) {
 
 
 /** Equality test of two slices. */
-bool FLSlice_Equal(FLSlice a, FLSlice b) FLAPI;
+bool FLSlice_Equal(FLSlice a, FLSlice b) FLAPI PURE;
 
 /** Lexicographic comparison of two slices; basically like memcmp(), but taking into account
     differences in length. */
-int FLSlice_Compare(FLSlice, FLSlice) FLAPI;
+int FLSlice_Compare(FLSlice, FLSlice) FLAPI PURE;
 
 /** Allocates an FLSliceResult of the given size, without initializing the buffer. */
 FLSliceResult FLSliceResult_New(size_t) FLAPI;

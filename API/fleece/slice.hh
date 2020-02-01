@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "Base.hh"
+#include "Base.h"
 #include "FLSlice.h"
 #include <stddef.h>
 #include <stdlib.h>
@@ -108,37 +108,37 @@ namespace fleece {
         size_t offsetOf(const void* ptr NONNULL) const {return (uint8_t*)ptr - (uint8_t*)buf;}
         const void* end() const                     {return offset(size);}
 
-        inline slice upTo(const void* pos NONNULL) const;
-        inline slice from(const void* pos NONNULL) const;
-        inline slice upTo(size_t offset) const;
-        inline slice from(size_t offset) const;
+        inline slice upTo(const void* pos NONNULL) const PURE;
+        inline slice from(const void* pos NONNULL) const PURE;
+        inline slice upTo(size_t offset) const PURE;
+        inline slice from(size_t offset) const PURE;
 
         const uint8_t& operator[](size_t i) const   {return ((const uint8_t*)buf)[i];}
-        inline slice operator()(size_t i, size_t n) const;
+        inline slice operator()(size_t i, size_t n) const PURE;
 
-        slice find(pure_slice target) const;
+        slice find(pure_slice target) const noexcept PURE;
         const uint8_t* findByte(uint8_t b) const    {return (const uint8_t*)::memchr(buf, b, size);}
-        const uint8_t* findByteOrEnd(uint8_t byte) const;
-        const uint8_t* findAnyByteOf(pure_slice targetBytes) const;
-        const uint8_t* findByteNotIn(pure_slice targetBytes) const;
+        const uint8_t* findByteOrEnd(uint8_t byte) const noexcept PURE;
+        const uint8_t* findAnyByteOf(pure_slice targetBytes) const noexcept PURE;
+        const uint8_t* findByteNotIn(pure_slice targetBytes) const noexcept PURE;
 
-        int compare(pure_slice) const noexcept;
-        int caseEquivalentCompare(pure_slice) const noexcept;
-        bool caseEquivalent(pure_slice) const noexcept;
+        int compare(pure_slice) const noexcept PURE;
+        int caseEquivalentCompare(pure_slice) const noexcept PURE;
+        bool caseEquivalent(pure_slice) const noexcept PURE;
         bool operator==(const pure_slice &s) const       {return size==s.size &&
                                                                  memcmp(buf, s.buf, size) == 0;}
         bool operator!=(const pure_slice &s) const       {return !(*this == s);}
         bool operator<(pure_slice s) const               {return compare(s) < 0;}
         bool operator>(pure_slice s) const               {return compare(s) > 0;}
 
-        bool hasPrefix(pure_slice) const noexcept;
-        bool hasSuffix(pure_slice) const noexcept;
+        bool hasPrefix(pure_slice) const noexcept PURE;
+        bool hasSuffix(pure_slice) const noexcept PURE;
         bool hasPrefix(uint8_t b) const noexcept        {return size > 0 && (*this)[0] == b;}
         bool hasSuffix(uint8_t b) const noexcept        {return size > 0 && (*this)[size-1] == b;}
-        const void* containsBytes(pure_slice bytes) const noexcept;
+        const void* containsBytes(pure_slice bytes) const noexcept PURE;
 
-        bool containsAddress(const void *addr) const noexcept;
-        bool containsAddressRange(pure_slice) const noexcept;
+        bool containsAddress(const void *addr) const noexcept PURE;
+        bool containsAddressRange(pure_slice) const noexcept PURE;
 
         slice copy() const;
 
@@ -153,12 +153,12 @@ namespace fleece {
 
         /** Copies into a C string buffer of the given size. Result is always NUL-terminated and
             will not overflow the buffer. Returns false if the slice was truncated. */
-        bool toCString(char *buf, size_t bufSize);
+        bool toCString(char *buf, size_t bufSize) const noexcept;
 
         /** Decodes Base64 data from receiver into output. On success returns subrange of output
             where the decoded data is. If output is too small to hold all the decoded data, returns
             a null slice. */
-        slice readBase64Into(pure_slice output) const;
+        slice readBase64Into(pure_slice output) const noexcept;
 
         /** Decodes Base64 data from receiver into a new alloc_slice.
             On failure returns a null slice. */
@@ -168,15 +168,9 @@ namespace fleece {
         #define cString() asString().c_str()        // has to be a macro else dtor called too early
 
         /** Computes a 32-bit FNV-1a hash of the slice's contents. (Not cryptographic!) */
-        uint32_t hash() const {
-            // <https://en.wikipedia.org/wiki/Fowler–Noll–Vo_hash_function#FNV-1a_hash>
-            uint32_t h = 2166136261;
-            for (size_t i = 0; i < size; i++)
-                h = (h ^ (*this)[i]) * 16777619;
-            return h;
-        }
+        uint32_t hash() const noexcept PURE;
 
-        static constexpr17 uint32_t hash(const char *str NONNULL) {
+        static constexpr17 uint32_t hash(const char *str NONNULL) noexcept PURE {
             uint32_t h = 2166136261;
             while (*str)
                 h = (h ^ uint8_t(*str++)) * 16777619;
@@ -271,7 +265,7 @@ namespace fleece {
         bool writeFrom(slice) noexcept;
 
         uint8_t readByte() noexcept;     // returns 0 if slice is empty
-        uint8_t peekByte() const noexcept;     // returns 0 if slice is empty
+        uint8_t peekByte() const noexcept PURE;     // returns 0 if slice is empty
         bool writeByte(uint8_t) noexcept;
         uint64_t readDecimal() noexcept; // reads until it hits a non-digit or the end
         int64_t readSignedDecimal() noexcept;

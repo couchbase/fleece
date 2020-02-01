@@ -31,6 +31,7 @@ namespace fleece { namespace impl {
 #pragma mark - ARRAY::IMPL:
 
 
+    __hot
     Array::impl::impl(const Value* v) noexcept {
         if (_usuallyFalse(v == nullptr)) {
             _first = nullptr;
@@ -67,12 +68,14 @@ namespace fleece { namespace impl {
         }
     }
 
+    __hot
     const Value* Array::impl::deref(const Value *v) const noexcept {
         if (_usuallyFalse(isMutableArray()))
             return ((ValueSlot*)v)->asValue();
         return v->deref(_width == kWide);
     }
 
+    __hot
     const Value* Array::impl::operator[] (unsigned index) const noexcept {
         if (_usuallyFalse(index >= _count))
             return nullptr;
@@ -94,6 +97,7 @@ namespace fleece { namespace impl {
         return ((size_t)v - (size_t)_first) / _width;
     }
 
+    __hot
     void Array::impl::offset(uint32_t n) {
         throwIf(n > _count, OutOfRange, "iterating past end of array");
         _count -= n;

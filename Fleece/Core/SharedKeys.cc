@@ -134,7 +134,7 @@ namespace fleece { namespace impl {
     }
 
 
-    bool SharedKeys::isEligibleToEncode(slice str) const {
+    __hot bool SharedKeys::isEligibleToEncode(slice str) const {
         for (size_t i = 0; i < str.size; ++i)
             if (_usuallyFalse(!isalnum(str[i]) && str[i] != '_' && str[i] != '-'))
                 return false;

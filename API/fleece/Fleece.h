@@ -119,20 +119,20 @@ extern "C" {
     FLDoc FLDoc_Retain(FLDoc) FLAPI;
 
     /** Returns the encoded Fleece data backing the document. */
-    FLSlice FLDoc_GetData(FLDoc) FLAPI;
+    FLSlice FLDoc_GetData(FLDoc) FLAPI PURE;
 
     /** Returns the FLSliceResult data owned by the document, if any, else a null slice. */
-    FLSliceResult FLDoc_GetAllocedData(FLDoc) FLAPI;
+    FLSliceResult FLDoc_GetAllocedData(FLDoc) FLAPI PURE;
 
     /** Returns the root value in the FLDoc, usually an FLDict. */
-    FLValue FLDoc_GetRoot(FLDoc) FLAPI;
+    FLValue FLDoc_GetRoot(FLDoc) FLAPI PURE;
 
     /** Returns the FLSharedKeys used by this FLDoc, as specified when it was created. */
-    FLSharedKeys FLDoc_GetSharedKeys(FLDoc) FLAPI;
+    FLSharedKeys FLDoc_GetSharedKeys(FLDoc) FLAPI PURE;
 
     /** Looks up the Doc containing the Value, or NULL if the Value was created without a Doc.
         Caller must release the FLDoc reference!! */
-    FLDoc FLValue_FindDoc(FLValue) FLAPI;
+    FLDoc FLValue_FindDoc(FLValue) FLAPI PURE;
 
 
     /** @} */
@@ -142,7 +142,7 @@ extern "C" {
     /** Returns a pointer to the root value in the encoded data, or NULL if validation failed.
         The FLValue, and all values found through it, are only valid as long as the encoded data
         remains intact and unchanged. */
-    FLValue FLValue_FromData(FLSlice data, FLTrust) FLAPI;
+    FLValue FLValue_FromData(FLSlice data, FLTrust) FLAPI PURE;
 
     /** Directly converts JSON data to Fleece-encoded data.
         You can then call FLValue_FromData (in kFLTrusted mode) to get the root as a Value. */
@@ -246,72 +246,72 @@ extern "C" {
 
     /** Returns the data type of an arbitrary Value.
         (If the parameter is a NULL pointer, returns `kFLUndefined`.) */
-    FLValueType FLValue_GetType(FLValue) FLAPI;
+    FLValueType FLValue_GetType(FLValue) FLAPI PURE;
 
     /** Returns true if the value is non-NULL and represents an integer. */
-    bool FLValue_IsInteger(FLValue) FLAPI;
+    bool FLValue_IsInteger(FLValue) FLAPI PURE;
 
     /** Returns true if the value is non-NULL and represents an integer >= 2^63. Such a value can't
         be represented in C as an `int64_t`, only a `uint64_t`, so you should access it by calling
         `FLValueAsUnsigned`, _not_ FLValueAsInt, which would return  an incorrect (negative)
         value. */
-    bool FLValue_IsUnsigned(FLValue) FLAPI;
+    bool FLValue_IsUnsigned(FLValue) FLAPI PURE;
 
     /** Returns true if the value is non-NULL and represents a 64-bit floating-point number. */
     bool FLValue_IsDouble(FLValue) FLAPI;
 
     /** Returns a value coerced to boolean. This will be true unless the value is NULL (undefined),
         null, false, or zero. */
-    bool FLValue_AsBool(FLValue) FLAPI;
+    bool FLValue_AsBool(FLValue) FLAPI PURE;
 
     /** Returns a value coerced to an integer. True and false are returned as 1 and 0, and
         floating-point numbers are rounded. All other types are returned as 0.
         @warning  Large 64-bit unsigned integers (2^63 and above) will come out wrong. You can
         check for these by calling `FLValueIsUnsigned`. */
-    int64_t FLValue_AsInt(FLValue) FLAPI;
+    int64_t FLValue_AsInt(FLValue) FLAPI PURE;
 
     /** Returns a value coerced to an unsigned integer.
         This is the same as `FLValueAsInt` except that it _can't_ handle negative numbers, but
         does correctly return large `uint64_t` values of 2^63 and up. */
-    uint64_t FLValue_AsUnsigned(FLValue) FLAPI;
+    uint64_t FLValue_AsUnsigned(FLValue) FLAPI PURE;
 
     /** Returns a value coerced to a 32-bit floating point number.
         True and false are returned as 1.0 and 0.0, and integers are converted to float. All other
         types are returned as 0.0.
         @warning  Large integers (outside approximately +/- 2^23) will lose precision due to the
         limitations of IEEE 32-bit float format. */
-    float FLValue_AsFloat(FLValue) FLAPI;
+    float FLValue_AsFloat(FLValue) FLAPI PURE;
 
     /** Returns a value coerced to a 32-bit floating point number.
         True and false are returned as 1.0 and 0.0, and integers are converted to float. All other
         types are returned as 0.0.
         @warning  Very large integers (outside approximately +/- 2^50) will lose precision due to
         the limitations of IEEE 32-bit float format. */
-    double FLValue_AsDouble(FLValue) FLAPI;
+    double FLValue_AsDouble(FLValue) FLAPI PURE;
 
     /** Returns the exact contents of a string value, or null for all other types. */
-    FLString FLValue_AsString(FLValue) FLAPI;
+    FLString FLValue_AsString(FLValue) FLAPI PURE;
 
     /** Converts a value to a timestamp, in milliseconds since Unix epoch, or INT64_MIN on failure.
         - A string is parsed as ISO-8601 (standard JSON date format).
         - A number is interpreted as a timestamp and returned as-is. */
-    FLTimestamp FLValue_AsTimestamp(FLValue) FLAPI;
+    FLTimestamp FLValue_AsTimestamp(FLValue) FLAPI PURE;
 
     /** Returns the exact contents of a data value, or null for all other types. */
-    FLSlice FLValue_AsData(FLValue) FLAPI;
+    FLSlice FLValue_AsData(FLValue) FLAPI PURE;
 
     /** If a FLValue represents an array, returns it cast to FLArray, else NULL. */
-    FLArray FLValue_AsArray(FLValue) FLAPI;
+    FLArray FLValue_AsArray(FLValue) FLAPI PURE;
 
     /** If a FLValue represents a dictionary, returns it as an FLDict, else NULL. */
-    FLDict FLValue_AsDict(FLValue) FLAPI;
+    FLDict FLValue_AsDict(FLValue) FLAPI PURE;
 
     /** Returns a string representation of any scalar value. Data values are returned in raw form.
         Arrays and dictionaries don't have a representation and will return NULL. */
     FLStringResult FLValue_ToString(FLValue) FLAPI;
 
     /** Compares two values for equality. This is a deep recursive comparison. */
-    bool FLValue_IsEqual(FLValue v1, FLValue v2) FLAPI;
+    bool FLValue_IsEqual(FLValue v1, FLValue v2) FLAPI PURE;
 
     /** \name Ref-counting (mutable values only)
          @{ */
@@ -365,17 +365,17 @@ extern "C" {
      */
 
     /** Returns the number of items in an array, or 0 if the pointer is NULL. */
-    uint32_t FLArray_Count(FLArray) FLAPI;
+    uint32_t FLArray_Count(FLArray) FLAPI PURE;
 
     /** Returns true if an array is empty (or NULL). Depending on the array's representation,
         this can be faster than `FLArray_Count(a) == 0` */
-    bool FLArray_IsEmpty(FLArray) FLAPI;
+    bool FLArray_IsEmpty(FLArray) FLAPI PURE;
 
     /** If the array is mutable, returns it cast to FLMutableArray, else NULL. */
-    FLMutableArray FLArray_AsMutable(FLArray) FLAPI;
+    FLMutableArray FLArray_AsMutable(FLArray) FLAPI PURE;
 
     /** Returns an value at an array index, or NULL if the index is out of range. */
-    FLValue FLArray_Get(FLArray, uint32_t index) FLAPI;
+    FLValue FLArray_Get(FLArray, uint32_t index) FLAPI PURE;
 
     extern const FLArray kFLEmptyArray;
 
@@ -410,13 +410,13 @@ while (NULL != (value = FLArrayIterator_GetValue(&iter))) {
     void FLArrayIterator_Begin(FLArray, FLArrayIterator* FLNONNULL) FLAPI;
 
     /** Returns the current value being iterated over. */
-    FLValue FLArrayIterator_GetValue(const FLArrayIterator* FLNONNULL) FLAPI;
+    FLValue FLArrayIterator_GetValue(const FLArrayIterator* FLNONNULL) FLAPI PURE;
 
     /** Returns a value in the array at the given offset from the current value. */
-    FLValue FLArrayIterator_GetValueAt(const FLArrayIterator* FLNONNULL, uint32_t offset) FLAPI;
+    FLValue FLArrayIterator_GetValueAt(const FLArrayIterator* FLNONNULL, uint32_t offset) FLAPI PURE;
 
     /** Returns the number of items remaining to be iterated, including the current one. */
-    uint32_t FLArrayIterator_GetCount(const FLArrayIterator* FLNONNULL) FLAPI;
+    uint32_t FLArrayIterator_GetCount(const FLArrayIterator* FLNONNULL) FLAPI PURE;
 
     /** Advances the iterator to the next value, or returns false if at the end. */
     bool FLArrayIterator_Next(FLArrayIterator* FLNONNULL) FLAPI;
@@ -520,18 +520,18 @@ while (NULL != (value = FLArrayIterator_GetValue(&iter))) {
         @{ */
 
     /** Returns the number of items in a dictionary, or 0 if the pointer is NULL. */
-    uint32_t FLDict_Count(FLDict) FLAPI;
+    uint32_t FLDict_Count(FLDict) FLAPI PURE;
 
     /** Returns true if a dictionary is empty (or NULL). Depending on the dictionary's
         representation, this can be faster than `FLDict_Count(a) == 0` */
-    bool FLDict_IsEmpty(FLDict) FLAPI;
+    bool FLDict_IsEmpty(FLDict) FLAPI PURE;
 
     /** If the dictionary is mutable, returns it cast to FLMutableDict, else NULL. */
-    FLMutableDict FLDict_AsMutable(FLDict) FLAPI;
+    FLMutableDict FLDict_AsMutable(FLDict) FLAPI PURE;
 
     /** Looks up a key in a dictionary, returning its value.
         Returns NULL if the value is not found or if the dictionary is NULL. */
-    FLValue FLDict_Get(FLDict, FLSlice keyString) FLAPI;
+    FLValue FLDict_Get(FLDict, FLSlice keyString) FLAPI PURE;
 
     extern const FLDict kFLEmptyDict;
 
@@ -569,16 +569,16 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
     void FLDictIterator_Begin(FLDict, FLDictIterator* FLNONNULL) FLAPI;
 
     /** Returns the current key being iterated over. This Value will be a string or an integer. */
-    FLValue FLDictIterator_GetKey(const FLDictIterator* FLNONNULL) FLAPI;
+    FLValue FLDictIterator_GetKey(const FLDictIterator* FLNONNULL) FLAPI PURE;
 
     /** Returns the current key's string value. */
     FLString FLDictIterator_GetKeyString(const FLDictIterator* FLNONNULL) FLAPI;
 
     /** Returns the current value being iterated over. */
-    FLValue FLDictIterator_GetValue(const FLDictIterator* FLNONNULL) FLAPI;
+    FLValue FLDictIterator_GetValue(const FLDictIterator* FLNONNULL) FLAPI PURE;
 
     /** Returns the number of items remaining to be iterated, including the current one. */
-    uint32_t FLDictIterator_GetCount(const FLDictIterator*  FLNONNULL) FLAPI;
+    uint32_t FLDictIterator_GetCount(const FLDictIterator*  FLNONNULL) FLAPI PURE;
 
     /** Advances the iterator to the next value, or returns false if at the end. */
     bool FLDictIterator_Next(FLDictIterator* FLNONNULL) FLAPI;

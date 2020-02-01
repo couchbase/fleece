@@ -53,6 +53,7 @@ namespace fleece { namespace impl {
     template <bool WIDE>
     struct dictImpl : public Array::impl {
 
+        __hot
         dictImpl(const Dict *d) noexcept
         :impl(d)
         { }
@@ -69,6 +70,7 @@ namespace fleece { namespace impl {
         }
 
         template <class KEY>
+        __hot
         const Value* finishGet(const Value *keyFound, KEY &keyToFind) const noexcept {
             if (keyFound) {
                 auto value = deref(next(keyFound));
@@ -81,6 +83,7 @@ namespace fleece { namespace impl {
             }
         }
 
+        __hot
         inline const Value* getUnshared(slice keyToFind) const noexcept {
             auto key = search(keyToFind, [](slice target, const Value *val) {
                 countComparison();
@@ -89,6 +92,7 @@ namespace fleece { namespace impl {
             return finishGet(key, keyToFind);
         }
 
+        __hot
         inline const Value* get(int keyToFind) const noexcept {
             assert(keyToFind >= 0);
             auto key = search(keyToFind, [](int target, const Value *key) {
@@ -98,6 +102,7 @@ namespace fleece { namespace impl {
             return finishGet(key, keyToFind);
         }
 
+        __hot
         inline const Value* get(slice keyToFind, SharedKeys *sharedKeys =nullptr) const noexcept {
             if (!sharedKeys && usesSharedKeys()) {
                 sharedKeys = findSharedKeys();
@@ -109,6 +114,7 @@ namespace fleece { namespace impl {
             return getUnshared(keyToFind);
         }
 
+        __hot
         const Value* get(Dict::key &keyToFind) const noexcept {
             auto sharedKeys = keyToFind._sharedKeys;
             if (!sharedKeys && usesSharedKeys()) {
@@ -145,6 +151,7 @@ namespace fleece { namespace impl {
         }
 
 
+        __hot
         static int compareKeys(slice keyToFind, const Value *key) {
             if (_usuallyTrue(key->isInteger()))
                 return 1;
@@ -152,6 +159,7 @@ namespace fleece { namespace impl {
                 return keyToFind.compare(keyBytes(key));
         }
 
+        __hot
         static int compareKeys(int keyToFind, const Value *key) {
             assert(key->tag() == kShortIntTag || key->tag() == kStringTag
                                               || key->tag() >= kPointerTagFirst);
@@ -165,6 +173,7 @@ namespace fleece { namespace impl {
                 return -1;                                              // string, or ptr to string
         }
 
+        __hot
         static int compareKeys(const Value *keyToFind, const Value *key) {
             if (keyToFind->tag() == kStringTag)
                 return compareKeys(keyBytes(keyToFind), key);
@@ -177,6 +186,7 @@ namespace fleece { namespace impl {
 
         // typical binary search function; returns pointer to the key it finds
         template <class T, class CMP>
+        __hot
         inline const Value* search(T target, CMP comparator) const {
             const Value *begin = _first;
             size_t n = _count;
@@ -196,6 +206,7 @@ namespace fleece { namespace impl {
             return nullptr;
         }
 
+        __hot
         const Value* findKeyByHint(Dict::key &keyToFind) const {
             if (keyToFind._hint < _count) {
                 const Value *key  = offsetby(_first, keyToFind._hint * 2 * kWidth);
@@ -206,6 +217,7 @@ namespace fleece { namespace impl {
         }
 
         // Finds a key in a dictionary via binary search of the UTF-8 key strings.
+        __hot
         const Value* findKeyBySearch(Dict::key &keyToFind) const {
             auto key = search(keyToFind._rawString, [](slice target, const Value *val) {
                 return compareKeys(target, val);
@@ -218,6 +230,7 @@ namespace fleece { namespace impl {
             return key;
         }
 
+        __hot
         bool lookupSharedKey(slice keyToFind, SharedKeys *sharedKeys, int &encoded) const noexcept {
             if (sharedKeys->encode(keyToFind, encoded))
                 return true;
@@ -238,14 +251,17 @@ namespace fleece { namespace impl {
             return false;
         }
 
+        __hot
         static inline slice keyBytes(const Value *key) {
             return deref(key)->getStringBytes();
         }
 
+        __hot
         static inline const Value* next(const Value *v) {
             return v->next<WIDE>();
         }
 
+        __hot
         static inline const Value* deref(const Value *v) {
             return v->deref<WIDE>();
         }
@@ -255,6 +271,7 @@ namespace fleece { namespace impl {
     };
 
 
+    __hot
     static int compareKeys(const Value *keyToFind, const Value *key, bool wide) {
         if (wide)
             return dictImpl<true>::compareKeys(keyToFind, key);
@@ -303,6 +320,7 @@ namespace fleece { namespace impl {
         return countIsZero();
     }
 
+    __hot
     const Value* Dict::get(slice keyToFind) const noexcept {
         if (_usuallyFalse(isMutable()))
             return heapDict()->get(keyToFind);
@@ -312,6 +330,7 @@ namespace fleece { namespace impl {
             return dictImpl<false>(this).get(keyToFind);
     }
 
+    __hot
     const Value* Dict::get(int keyToFind) const noexcept {
         if (_usuallyFalse(isMutable()))
             return heapDict()->get(keyToFind);
@@ -330,6 +349,7 @@ namespace fleece { namespace impl {
             return dictImpl<false>(this).get(keyToFind);
     }
 
+    __hot
     const Value* Dict::get(const key_t &keyToFind) const noexcept {
         if (_usuallyFalse(isMutable()))
             return heapDict()->get(keyToFind);
@@ -339,15 +359,15 @@ namespace fleece { namespace impl {
             return get(keyToFind.asString());
     }
 
-    MutableDict* Dict::asMutable() const {
+    MutableDict* Dict::asMutable() const noexcept {
         return isMutable() ? (MutableDict*)this : nullptr;
     }
 
-    HeapDict* Dict::heapDict() const {
+    HeapDict* Dict::heapDict() const noexcept {
         return (HeapDict*)internal::HeapCollection::asHeapValue(this);
     }
 
-    const Dict* Dict::getParent() const {
+    const Dict* Dict::getParent() const noexcept {
         if (isMutable())
             return heapDict()->source();
         else if (isWideArray())
@@ -356,7 +376,7 @@ namespace fleece { namespace impl {
             return dictImpl<false>(this).getParent();
     }
 
-    bool Dict::isEqualToDict(const Dict* dv) const {
+    bool Dict::isEqualToDict(const Dict* dv) const noexcept {
         Dict::iterator i(this);
         Dict::iterator j(dv);
         if (!this->getParent() && !dv->getParent() && i.count() != j.count())

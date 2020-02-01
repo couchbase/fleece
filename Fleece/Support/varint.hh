@@ -20,7 +20,7 @@
 
 #include <stddef.h>
 #include "fleece/slice.hh"
-#include "fleece/Base.hh"
+#include "fleece/Base.h"
 
 namespace fleece {
 
@@ -52,6 +52,7 @@ size_t _GetUVarInt32(slice buf, uint32_t *n NONNULL); // do not call directly
 /** Decodes a varint from the bytes in buf, storing it into *n.
     Returns the number of bytes read, or 0 if the data is invalid (buffer too short or number
     too long.) */
+__hot
 static inline size_t GetUVarInt(slice buf, uint64_t *n NONNULL) {
     if (_usuallyFalse(buf.size == 0))
         return 0;
@@ -66,6 +67,7 @@ static inline size_t GetUVarInt(slice buf, uint64_t *n NONNULL) {
 /** Decodes a varint from the bytes in buf, storing it into *n.
     Returns the number of bytes read, or 0 if the data is invalid (buffer too short or number
     too long.) */
+__hot
 static inline size_t GetUVarInt32(slice buf, uint32_t *n NONNULL) {
     if (_usuallyFalse(buf.size == 0))
         return 0;
@@ -89,6 +91,7 @@ bool ReadUVarInt32(slice *buf NONNULL, uint32_t *n NONNULL);
 bool WriteUVarInt(slice *buf NONNULL, uint64_t n);
 
 /** Skips a pointer past a varint without decoding it. */
+__hot
 static inline const void* SkipVarInt(const void *buf NONNULL) {
     auto p = (const uint8_t*)buf;
     uint8_t byte;

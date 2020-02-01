@@ -95,7 +95,7 @@ namespace fleece { namespace impl {
     }
 
 
-    void Scope::registr() noexcept {
+    __hot void Scope::registr() noexcept {
         _unregistered.test_and_set();
         if (!_data)
             return;
@@ -134,7 +134,7 @@ namespace fleece { namespace impl {
     }
 
 
-    void Scope::unregister() noexcept {
+    __hot void Scope::unregister() noexcept {
         if (!_unregistered.test_and_set()) {            // this is atomic
 #if DEBUG
             // Assert that the data hasn't been changed since I was created:
@@ -164,7 +164,7 @@ namespace fleece { namespace impl {
     }
 
 
-    static const Value* resolveMutable(const Value *value) {
+    __hot static const Value* resolveMutable(const Value *value) {
         if (_usuallyFalse(value->isMutable())) {
             // Scope doesn't know about mutable Values (they're in the heap), but the mutable
             // Value may be a mutable copy of a Value with scope...
@@ -177,7 +177,7 @@ namespace fleece { namespace impl {
     }
 
 
-    /*static*/ const Scope* Scope::_containing(const Value *src) noexcept {
+    /*static*/ __hot const Scope* Scope::_containing(const Value *src) noexcept {
         // must have sMutex to call this
         if (_usuallyFalse(!sMemoryMap))
             return nullptr;
@@ -191,7 +191,7 @@ namespace fleece { namespace impl {
     }
 
 
-    /*static*/ const Scope* Scope::containing(const Value *v) noexcept {
+    /*static*/ __hot const Scope* Scope::containing(const Value *v) noexcept {
         v = resolveMutable(v);
         if (!v)
             return nullptr;
@@ -200,7 +200,7 @@ namespace fleece { namespace impl {
     }
 
 
-    /*static*/ SharedKeys* Scope::sharedKeys(const Value *v) noexcept {
+    /*static*/ __hot SharedKeys* Scope::sharedKeys(const Value *v) noexcept {
         lock_guard<mutex> lock(sMutex);
         auto scope = _containing(v);
         return scope ? scope->sharedKeys() : nullptr;

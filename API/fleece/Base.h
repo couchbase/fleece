@@ -1,5 +1,5 @@
 //
-// Base.hh
+// Base.h
 //
 // Copyright © 2018 Couchbase. All rights reserved.
 //
@@ -30,3 +30,18 @@
     // GCC does have __attribute__((nonnull)) but it works differently (requires argument numbers)
     #define NONNULL
 #endif
+
+
+#ifndef PURE
+    /* Many functions have no effects except the return value and their
+     * return value depends only on the parameters and/or global variables.
+     * Such a function can be subject to common subexpression elimination
+     * and loop optimization just as an arithmetic operator would be.
+     * These functions should be declared with the attribute pure. */
+#   if defined(__GNUC__) || __has_attribute(__pure__)
+#       define PURE __attribute__((__pure__))
+#   else
+#       define PURE
+#   endif
+#endif /* PURE */
+
