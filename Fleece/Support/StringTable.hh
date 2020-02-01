@@ -37,18 +37,18 @@ namespace fleece {
 
         enum class hash_t : uint32_t { Empty = 0 };
 
-        static inline hash_t hashCode(key_t key) {
+        static inline hash_t hashCode(key_t key) PURE {
             return hash_t( std::max(key.hash(), 1u) ); // hashCode must never be zero
         }
 
-        size_t count() const                            {return _count;}
-        size_t tableSize() const                        {return _size;}
+        size_t count() const PURE                            {return _count;}
+        size_t tableSize() const PURE                        {return _size;}
 
         void clear() noexcept;
 
         /// Looks up an existing key, returning a pointer to its entry (or NULL.)
-        const entry_t* find(key_t key) const noexcept   {return find(key, hashCode(key));}
-        const entry_t* find(key_t key, hash_t) const noexcept;
+        const entry_t* find(key_t key) const noexcept PURE   {return find(key, hashCode(key));}
+        const entry_t* find(key_t key, hash_t) const noexcept PURE;
 
         using insertResult = std::pair<entry_t*, bool>;
 

@@ -18,7 +18,7 @@
 
 #pragma once
 #include "fleece/Fleece.hh"
-#include "fleece/Base.hh"
+#include "fleece/Base.h"
 #include "fleece/slice.hh"
 
 namespace fleece {

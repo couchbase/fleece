@@ -49,7 +49,7 @@ namespace fleece {
 #else
     static constexpr size_t kHeapAlignmentMask = 0x07;
 #endif
-    static inline bool isHeapAligned(const void *p) {
+    LITECORE_UNUSED PURE static inline bool isHeapAligned(const void *p) {
         return ((size_t)p & kHeapAlignmentMask) == 0;
     }
 #endif

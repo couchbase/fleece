@@ -18,7 +18,7 @@
 
 #pragma once
 #include <stdexcept>
-#include "fleece/Base.hh"
+#include "fleece/Base.h"
 
 namespace fleece {
 

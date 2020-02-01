@@ -48,7 +48,7 @@ namespace fleece {
         }
 
         static void testDeref() {
-            uint8_t data[6] = {0x01, 0x02, 0x03, 0x04, 0x80, 0x02};
+            uint8_t data[10] = {0x01, 0x02, 0x03, 0x04, 0x80, 0x02};
             auto start = (const Pointer*)&data[4];
             REQUIRE(start->offset<false>() == 4u);
             auto dst = start->deref<false>();

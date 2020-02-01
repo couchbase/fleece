@@ -41,7 +41,7 @@ namespace fleece {
         return addr >= buf && addr < end();
     } 
 
-    int pure_slice::compare(pure_slice b) const noexcept {
+    __hot int pure_slice::compare(pure_slice b) const noexcept {
         // Optimized for speed
         if (this->size == b.size)
             return memcmp(this->buf, b.buf, this->size);
@@ -54,7 +54,7 @@ namespace fleece {
         }
     }
 
-    int pure_slice::caseEquivalentCompare(pure_slice b) const noexcept {
+    __hot int pure_slice::caseEquivalentCompare(pure_slice b) const noexcept {
         size_t minSize = std::min(size, b.size);
         for (size_t i = 0; i < minSize; i++) {
             int cmp = tolower((*this)[i]) - tolower(b[i]);
@@ -64,7 +64,7 @@ namespace fleece {
         return (int)size - (int)b.size;
     }
 
-    bool pure_slice::caseEquivalent(pure_slice b) const noexcept {
+    __hot bool pure_slice::caseEquivalent(pure_slice b) const noexcept {
         if (size != b.size)
             return false;
         for (size_t i = 0; i < size; i++)
@@ -73,7 +73,7 @@ namespace fleece {
         return true;
     }
 
-    slice slice::read(size_t nBytes) noexcept {
+    __hot slice slice::read(size_t nBytes) noexcept  {
         if (nBytes > size)
             return nullslice;
         slice result(buf, nBytes);
@@ -81,14 +81,14 @@ namespace fleece {
         return result;
     }
 
-    slice slice::readAtMost(size_t nBytes) noexcept {
+    __hot slice slice::readAtMost(size_t nBytes) noexcept {
         nBytes = std::min(nBytes, size);
         slice result(buf, nBytes);
         moveStart(nBytes);
         return result;
     }
 
-    slice slice::readToDelimiter(slice delim) noexcept {
+    __hot slice slice::readToDelimiter(slice delim) noexcept  {
         slice found = find(delim);
         if (!found)
             return nullslice;
@@ -97,7 +97,7 @@ namespace fleece {
         return result;
     }
 
-    slice slice::readToDelimiterOrEnd(slice delim) noexcept {
+    __hot slice slice::readToDelimiterOrEnd(slice delim) noexcept {
         slice found = find(delim);
         if (found) {
             slice result(buf, found.buf);
@@ -110,7 +110,7 @@ namespace fleece {
         }
     }
 
-    slice slice::readBytesInSet(slice set) noexcept {
+    __hot slice slice::readBytesInSet(slice set) noexcept {
         const void *next = findByteNotIn(set);
         if (!next)
             next = end();
@@ -120,7 +120,7 @@ namespace fleece {
     }
 
 
-    bool slice::readInto(slice dst) noexcept {
+    __hot bool slice::readInto(slice dst) noexcept {
         if (dst.size > size)
             return false;
         ::memcpy((void*)dst.buf, buf, dst.size);
@@ -128,7 +128,7 @@ namespace fleece {
         return true;
     }
 
-    bool slice::writeFrom(slice src) noexcept {
+    __hot bool slice::writeFrom(slice src) noexcept {
         if (src.size > size)
             return false;
         ::memcpy((void*)buf, src.buf, src.size);
@@ -136,11 +136,11 @@ namespace fleece {
         return true;
     }
 
-    uint8_t slice::peekByte() const noexcept {
+    __hot uint8_t slice::peekByte() const noexcept {
         return (size > 0) ? (*this)[0] : 0;
     }
 
-    uint8_t slice::readByte() noexcept {
+    __hot uint8_t slice::readByte() noexcept {
         if (size == 0)
             return 0;
         uint8_t result = (*this)[0];
@@ -148,7 +148,7 @@ namespace fleece {
         return result;
     }
 
-    bool slice::writeByte(uint8_t n) noexcept {
+    __hot bool slice::writeByte(uint8_t n) noexcept {
         if (size == 0)
             return false;
         *((char*)buf) = n;
@@ -156,7 +156,7 @@ namespace fleece {
         return true;
     }
 
-    uint64_t slice::readDecimal() noexcept {
+    __hot uint64_t slice::readDecimal() noexcept {
         uint64_t n = 0;
         while (size > 0 && isdigit(*(char*)buf)) {
             n = 10*n + (*(char*)buf - '0');
@@ -165,7 +165,7 @@ namespace fleece {
         return n;
     }
 
-    int64_t slice::readSignedDecimal() noexcept {
+    __hot int64_t slice::readSignedDecimal() noexcept {
         bool negative = (size > 0 && (*this)[0] == '-');
         if (negative)
             moveStart(1);
@@ -175,7 +175,7 @@ namespace fleece {
         return negative ? -(int64_t)n : (int64_t)n;
     }
 
-    bool slice::writeDecimal(uint64_t n) noexcept {
+    __hot bool slice::writeDecimal(uint64_t n) noexcept {
         // Optimized for speed
         size_t len;
         if (n < 10) {
@@ -206,17 +206,17 @@ namespace fleece {
         return 1 + (unsigned)::floor(::log10(n));
     }
 
-    slice pure_slice::find(pure_slice target) const {
+    __hot slice pure_slice::find(pure_slice target) const noexcept {
         auto found = memmem(buf, size, target.buf, target.size);
         return {found, (found ? target.size : 0)};
     }
 
-    const uint8_t* pure_slice::findByteOrEnd(uint8_t byte) const {
+    __hot const uint8_t* pure_slice::findByteOrEnd(uint8_t byte) const noexcept {
         auto result = findByte(byte);
         return result ? result : (const uint8_t*)end();
     }
 
-    const uint8_t* pure_slice::findAnyByteOf(pure_slice targetBytes) const {
+    __hot const uint8_t* pure_slice::findAnyByteOf(pure_slice targetBytes) const noexcept {
         const void* result = nullptr;
         for (size_t i = 0; i < targetBytes.size; ++i) {
             auto r = findByte(targetBytes[i]);
@@ -226,7 +226,7 @@ namespace fleece {
         return (const uint8_t*)result;
     }
 
-    const uint8_t* pure_slice::findByteNotIn(pure_slice targetBytes) const {
+    __hot const uint8_t* pure_slice::findByteNotIn(pure_slice targetBytes) const noexcept {
         for (auto c = (const uint8_t*)buf; c != end(); ++c) {
             if (!targetBytes.findByte(*c))
                 return c;
@@ -282,6 +282,7 @@ namespace fleece {
     std::string pure_slice::hexString() const {
         static const char kDigits[17] = "0123456789abcdef";
         std::string result;
+        result.reserve(2 * size);
         for (size_t i = 0; i < size; i++) {
             uint8_t byte = (*this)[(unsigned)i];
             result += kDigits[byte >> 4];
@@ -291,11 +292,20 @@ namespace fleece {
     }
 
 
-    bool pure_slice::toCString(char *str, size_t bufSize) {
+    bool pure_slice::toCString(char *str, size_t bufSize) const noexcept {
         size_t n = std::min(size, bufSize-1);
         memcpy(str, buf, n);
         str[n] = 0;
         return n == size;
+    }
+
+
+    __hot uint32_t pure_slice::hash() const noexcept {
+        // <https://en.wikipedia.org/wiki/Fowler–Noll–Vo_hash_function#FNV-1a_hash>
+        uint32_t h = 2166136261;
+        for (size_t i = 0; i < size; i++)
+            h = (h ^ (*this)[i]) * 16777619;
+            return h;
     }
 
 
@@ -314,7 +324,7 @@ namespace fleece {
     }
 
 
-    slice pure_slice::readBase64Into(pure_slice output) const {
+    slice pure_slice::readBase64Into(pure_slice output) const noexcept {
         size_t expectedLen = (size + 3) / 4 * 3;
         if (expectedLen > output.size)
             return nullslice;

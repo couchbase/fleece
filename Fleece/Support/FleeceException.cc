@@ -31,7 +31,7 @@
 
 namespace fleece {
 
-    static const char* kErrorNames[] = {
+    static const char* const kErrorNames[] = {
         "",
         "memory error",
         "array/iterator index out of range",
@@ -47,6 +47,7 @@ namespace fleece {
         "unsupported operation",
     };
 
+    __cold
     void FleeceException::_throw(ErrorCode code, const char *what, ...) {
         std::string message = kErrorNames[code];
         if (what) {
@@ -64,6 +65,7 @@ namespace fleece {
     }
 
 
+    __cold
     void FleeceException::_throwErrno(const char *what, ...) {
         va_list args;
         va_start(args, what);
@@ -79,6 +81,7 @@ namespace fleece {
     }
 
 
+    __cold
     ErrorCode FleeceException::getCode(const std::exception &x) noexcept {
         auto fleecex = dynamic_cast<const FleeceException*>(&x);
         if (fleecex)

@@ -25,6 +25,7 @@
 
 namespace fleece {
 
+__hot
 size_t SizeOfVarInt(uint64_t n) {
     size_t size = 1;
     while (n >= 0x80) {
@@ -35,6 +36,7 @@ size_t SizeOfVarInt(uint64_t n) {
 }
 
 
+__hot
 size_t PutUVarInt(void *buf, uint64_t n) {
     uint8_t* dst = (uint8_t*)buf;
     while (n >= 0x80) {
@@ -46,6 +48,7 @@ size_t PutUVarInt(void *buf, uint64_t n) {
 }
 
 
+__hot
 size_t _GetUVarInt(slice buf, uint64_t *n) {
     // NOTE: The public inline function GetUVarInt already decodes 1-byte varints,
     // so if we get here we can assume the varint is at least 2 bytes.
@@ -70,6 +73,7 @@ size_t _GetUVarInt(slice buf, uint64_t *n) {
     return 0; // buffer too short
 }
 
+__hot
 size_t _GetUVarInt32(slice buf, uint32_t *n) {
     uint64_t n64;
     size_t size = _GetUVarInt(buf, &n64);
@@ -80,6 +84,7 @@ size_t _GetUVarInt32(slice buf, uint32_t *n) {
 }
 
 
+__hot
 bool ReadUVarInt(slice *buf, uint64_t *n) {
     if (buf->size == 0)
         return false;
@@ -90,6 +95,7 @@ bool ReadUVarInt(slice *buf, uint64_t *n) {
     return true;
 }
 
+__hot
 bool ReadUVarInt32(slice *buf, uint32_t *n) {
     if (buf->size == 0)
         return false;
@@ -101,6 +107,7 @@ bool ReadUVarInt32(slice *buf, uint32_t *n) {
 }
 
 
+__hot
 bool WriteUVarInt(slice *buf, uint64_t n) {
     if (buf->size < kMaxVarintLen64 && buf->size < SizeOfVarInt(n))
         return false;
@@ -111,6 +118,7 @@ bool WriteUVarInt(slice *buf, uint64_t n) {
 
     //////// Length-encoded ints:
 
+    __hot
     int64_t GetIntOfLength(const void *src, unsigned length) {
         assert(length >= 1 && length <= 8);
         int64_t result = 0;
@@ -120,6 +128,7 @@ bool WriteUVarInt(slice *buf, uint64_t n) {
         return _decLittle64(result);
     }
 
+    __hot
     size_t PutIntOfLength(void *buf, int64_t n, bool isUnsigned) {
         int64_t littlen = _encLittle64(n);
         memcpy(buf, &littlen, 8);

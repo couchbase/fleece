@@ -46,7 +46,7 @@ namespace fleece { namespace impl { namespace internal {
     }
 
 
-    const Value* Pointer::derefExtern(bool wide, const Value *dst) const {
+    const Value* Pointer::derefExtern(bool wide, const Value *dst) const noexcept {
         // Resolve external pointer:
         dst = Doc::resolvePointerFrom(this, dst);
         if (_usuallyTrue(dst != nullptr))

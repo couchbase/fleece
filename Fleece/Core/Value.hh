@@ -78,51 +78,51 @@ namespace fleece { namespace impl {
         static const Value* fromTrustedData(slice s) noexcept;
 
         /** The overall type of a value (JSON types plus Data) */
-        valueType type() const noexcept;
+        valueType type() const noexcept PURE;
 
         /** Compares two Values for equality. */
-        bool isEqual(const Value*) const;
+        bool isEqual(const Value*) const PURE;
 
         //////// Scalar types:
 
         /** Boolean value/conversion. Any value is considered true except false, null, 0. */
-        bool asBool() const noexcept;
+        bool asBool() const noexcept PURE;
 
         /** Integer value/conversion. Float values will be rounded. A true value returns 1.
             Other non-numeric values return 0. */
-        int64_t asInt() const noexcept;
+        int64_t asInt() const noexcept PURE;
 
         /** Integer conversion, expressed as an unsigned type. Use this instead of asInt if
             isUnsigned is true, otherwise large 64-bit numbers may look negative. */
-        uint64_t asUnsigned() const noexcept             {return (uint64_t)asInt();}
+        uint64_t asUnsigned() const noexcept PURE             {return (uint64_t)asInt();}
 
         /** 32-bit float value/conversion. Non-numeric values return 0, as with asInt. */
-        float asFloat() const noexcept      {return asFloatOfType<float>();}
+        float asFloat() const noexcept PURE      {return asFloatOfType<float>();}
 
         /** 64-bit float value/conversion. Non-numeric values return 0, as with asInt. */
-        double asDouble() const noexcept    {return asFloatOfType<double>();}
+        double asDouble() const noexcept PURE    {return asFloatOfType<double>();}
 
         /** Is this value an integer? */
-        bool isInteger() const noexcept     {return tag() <= internal::kIntTag;}
+        bool isInteger() const noexcept PURE     {return tag() <= internal::kIntTag;}
 
         /** Is this value an unsigned integer? (This does _not_ mean it's positive; it means
             that you should treat it as possibly overflowing an int64_t.) */
-        bool isUnsigned() const noexcept    {return tag() == internal::kIntTag && (_byte[0] & 0x08) != 0;}
+        bool isUnsigned() const noexcept PURE    {return tag() == internal::kIntTag && (_byte[0] & 0x08) != 0;}
 
         /** Is this a 64-bit floating-point value? */
-        bool isDouble() const noexcept      {return tag() == internal::kFloatTag && (_byte[0] & 0x8);}
+        bool isDouble() const noexcept PURE      {return tag() == internal::kFloatTag && (_byte[0] & 0x8);}
 
         /** "undefined" is a special subtype of kNull */
-        bool isUndefined() const noexcept   {return _byte[0] == ((internal::kSpecialTag << 4) |
+        bool isUndefined() const noexcept PURE   {return _byte[0] == ((internal::kSpecialTag << 4) |
                                                                 internal::kSpecialValueUndefined);}
 
         //////// Non-scalars:
 
         /** Returns the exact contents of a string. Other types return a null slice. */
-        slice asString() const noexcept;
+        slice asString() const noexcept PURE;
 
         /** Returns the exact contents of a binary data value. Other types return a null slice. */
-        slice asData() const noexcept;
+        slice asData() const noexcept PURE;
 
         typedef int64_t FLTimestamp;
         #define FLTimestampNone INT64_MIN
@@ -130,25 +130,25 @@ namespace fleece { namespace impl {
         /** Converts a value to a timestamp, in milliseconds since Unix epoch, or INT64_MIN on failure.
              - A string is parsed as ISO-8601 (standard JSON date format).
              - A number is interpreted as a timestamp and returned as-is. */
-        FLTimestamp asTimestamp() const noexcept;
+        FLTimestamp asTimestamp() const noexcept PURE;
 
         /** If this value is an array, returns it cast to 'const Array*', else returns nullptr. */
-        const Array* asArray() const noexcept;
+        const Array* asArray() const noexcept PURE;
 
         /** If this value is a dictionary, returns it cast to 'const Dict*', else returns nullptr. */
-        const Dict* asDict() const noexcept;
+        const Dict* asDict() const noexcept PURE;
 
-        static const Array* asArray(const Value *v)     {return v ?v->asArray() : nullptr;}
-        static const Dict*  asDict(const Value *v)      {return v ?v->asDict()  : nullptr;}
+        static const Array* asArray(const Value *v) PURE     {return v ?v->asArray() : nullptr;}
+        static const Dict*  asDict(const Value *v) PURE      {return v ?v->asDict()  : nullptr;}
 
         /** Converts any _non-collection_ type to string form. */
         alloc_slice toString() const;
 
         /** Returns true if this value is a mutable array or dict. */
-        bool isMutable() const              {return ((size_t)this & 1) != 0;}
+        bool isMutable() const PURE              {return ((size_t)this & 1) != 0;}
 
         /** Looks up the SharedKeys from the enclosing Doc (if any.) */
-        SharedKeys* sharedKeys() const noexcept;
+        SharedKeys* sharedKeys() const noexcept PURE;
 
 
         //////// Conversion:
@@ -211,41 +211,41 @@ namespace fleece { namespace impl {
                 (uint8_t)byte1}
         { }
 
-        static const Value* findRoot(slice) noexcept;
-        bool validate(const void* dataStart, const void *dataEnd) const noexcept;
+        static const Value* findRoot(slice) noexcept PURE;
+        bool validate(const void* dataStart, const void *dataEnd) const noexcept PURE;
 
-        internal::tags tag() const noexcept   {return (internal::tags)(_byte[0] >> 4);}
-        unsigned tinyValue() const noexcept   {return _byte[0] & 0x0F;}
+        internal::tags tag() const noexcept PURE   {return (internal::tags)(_byte[0] >> 4);}
+        unsigned tinyValue() const noexcept PURE   {return _byte[0] & 0x0F;}
 
         // numbers:
-        uint16_t shortValue() const noexcept  {return (((uint16_t)_byte[0] << 8) | _byte[1]) & 0x0FFF;}
-        template<typename T> T asFloatOfType() const noexcept;
+        uint16_t shortValue() const noexcept PURE  {return (((uint16_t)_byte[0] << 8) | _byte[1]) & 0x0FFF;}
+        template<typename T> T asFloatOfType() const noexcept PURE;
 
         // strings:
-        slice getStringBytes() const noexcept;
+        slice getStringBytes() const noexcept PURE;
 
         // arrays/dicts:
-        bool isWideArray() const noexcept     {return (_byte[0] & 0x08) != 0;}
-        uint32_t countValue() const noexcept  {return (((uint32_t)_byte[0] << 8) | _byte[1]) & 0x07FF;}
-        bool countIsZero() const noexcept     {return _byte[1] == 0 && (_byte[0] & 0x7) == 0;}
+        bool isWideArray() const noexcept PURE     {return (_byte[0] & 0x08) != 0;}
+        uint32_t countValue() const noexcept PURE  {return (((uint32_t)_byte[0] << 8) | _byte[1]) & 0x07FF;}
+        bool countIsZero() const noexcept PURE     {return _byte[1] == 0 && (_byte[0] & 0x7) == 0;}
 
         // pointers:
 
-        bool isPointer() const noexcept             {return (_byte[0] & 0x80) != 0;}
-        const internal::Pointer* _asPointer() const {return (const internal::Pointer*)this;}
+        bool isPointer() const noexcept PURE             {return (_byte[0] & 0x80) != 0;}
+        const internal::Pointer* _asPointer() const PURE {return (const internal::Pointer*)this;}
 
-        const Value* deref(bool wide) const;
+        const Value* deref(bool wide) const PURE;
 
         template <bool WIDE>
-        const Value* deref() const;
+        const Value* deref() const PURE;
 
-        const Value* next(bool wide) const noexcept
+        const Value* next(bool wide) const noexcept PURE
                                 {return offsetby(this, wide ? internal::kWide : internal::kNarrow);}
         template <bool WIDE>
-        const Value* next() const noexcept       {return next(WIDE);}
+        const Value* next() const noexcept PURE       {return next(WIDE);}
 
         // dump:
-        size_t dataSize() const noexcept;
+        size_t dataSize() const noexcept PURE;
         typedef std::map<size_t, const Value*> mapByAddress;
         void mapAddresses(mapByAddress&) const;
         static void writeByAddress(const mapByAddress &byAddress, slice data, std::ostream &out);
@@ -267,5 +267,17 @@ namespace fleece { namespace impl {
         friend class EncoderTests;
         template <bool WIDE> friend struct dictImpl;
     };
+
+
+    // Some glue needed to make RefCounted<Value> work
+    static inline void release(const Value *val) noexcept {
+        if (val) val->_release();
+    }
+    static inline void copyRef(void *dstPtr, const Value *src) noexcept {
+        auto old = *(const Value**)dstPtr;
+        if (src) src->_retain();
+        *(const Value**)dstPtr = src;
+        if (old) old->_release();
+    }
 
 } }
