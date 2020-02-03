@@ -125,7 +125,9 @@ namespace fleece { namespace impl { namespace internal {
 
 
     ValueSlot& HeapArray::setting(uint32_t index) {
-        assert(index<_items.size());
+#if DEBUG
+        assert_precondition(index<_items.size());
+#endif
         setChanged(true);
         return _items[index];
     }

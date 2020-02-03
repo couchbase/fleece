@@ -90,7 +90,7 @@ namespace fleece { namespace impl {
         _base = base;
         _baseCutoff = nullptr;
         if (base && cutoff > 0 && cutoff < base.size) {
-            assert(cutoff >= 8);
+            assert_precondition(cutoff >= 8);
             _baseCutoff = (char*)base.end() - cutoff;
         }
         _baseMinUsed = _base.end();
@@ -202,7 +202,7 @@ namespace fleece { namespace impl {
 
     template <bool canInline>
     uint8_t* Encoder::placeValue(tags tag, byte param, size_t size) {
-        assert(param <= 0x0F);
+        assert_precondition(param <= 0x0F);
         byte *buf = placeValue<canInline>(size);
         buf[0] = byte((tag << 4) | param);
         return buf;
@@ -586,7 +586,7 @@ namespace fleece { namespace impl {
     }
 
     void Encoder::writeKey(int n) {
-        assert(_sharedKeys || n == Dict::kMagicParentKey || gDisableNecessarySharedKeysCheck);
+        assert_precondition(_sharedKeys || n == Dict::kMagicParentKey || gDisableNecessarySharedKeysCheck);
         addingKey();
         writeInt(n);
         addedKey(nullslice);

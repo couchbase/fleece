@@ -79,7 +79,7 @@ namespace fleece {
         unsigned Interior::childCount() const         {return asBitmap(bitmap()).bitCount();}
 
         const Node* Interior::childAtIndex(int i) const {
-            assert(_childrenOffset > 0);
+            assert_precondition(_childrenOffset > 0);
             return (deref(_childrenOffset, Node) + i)->validate();
         }
 

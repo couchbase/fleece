@@ -656,7 +656,7 @@ FLSliceResult FLCreateJSONDelta(FLValue old, FLValue nuu) FLAPI {
 bool FLEncodeJSONDelta(FLValue old, FLValue nuu, FLEncoder jsonEncoder) FLAPI {
     try {
         JSONEncoder *enc = jsonEncoder->jsonEncoder.get();
-        assert(enc);  //TODO: Support encoding to Fleece
+        precondition(enc);  //TODO: Support encoding to Fleece
         JSONDelta::create(old, nuu, *enc);
         return true;
     } catch (const std::exception &x) {

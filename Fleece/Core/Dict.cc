@@ -94,7 +94,7 @@ namespace fleece { namespace impl {
 
         __hot
         inline const Value* get(int keyToFind) const noexcept {
-            assert(keyToFind >= 0);
+            assert_precondition(keyToFind >= 0);
             auto key = search(keyToFind, [](int target, const Value *key) {
                 countComparison();
                 return compareKeys(target, key);
@@ -106,7 +106,7 @@ namespace fleece { namespace impl {
         inline const Value* get(slice keyToFind, SharedKeys *sharedKeys =nullptr) const noexcept {
             if (!sharedKeys && usesSharedKeys()) {
                 sharedKeys = findSharedKeys();
-                assert(sharedKeys || gDisableNecessarySharedKeysCheck);
+                assert_precondition(sharedKeys || gDisableNecessarySharedKeysCheck);
             }
             int encoded;
             if (sharedKeys && lookupSharedKey(keyToFind, sharedKeys, encoded))
@@ -120,7 +120,7 @@ namespace fleece { namespace impl {
             if (!sharedKeys && usesSharedKeys()) {
                 sharedKeys = findSharedKeys();
                 keyToFind.setSharedKeys(sharedKeys);
-                assert(sharedKeys || gDisableNecessarySharedKeysCheck);
+                assert_precondition(sharedKeys || gDisableNecessarySharedKeysCheck);
             }
             if (_usuallyTrue(sharedKeys != nullptr)) {
                 // Look for a numeric key first:
@@ -161,8 +161,8 @@ namespace fleece { namespace impl {
 
         __hot
         static int compareKeys(int keyToFind, const Value *key) {
-            assert(key->tag() == kShortIntTag || key->tag() == kStringTag
-                                              || key->tag() >= kPointerTagFirst);
+            assert_precondition(key->tag() == kShortIntTag || key->tag() == kStringTag
+                                                           || key->tag() >= kPointerTagFirst);
             // This is optimized using the knowledge that short ints have a tag of 0.
             uint8_t hiByte = key->_byte[0];
             if (_usuallyTrue(hiByte <= 0x07))
@@ -281,7 +281,7 @@ namespace fleece { namespace impl {
 
 
     void Dict::key::setSharedKeys(SharedKeys *sk) {
-        assert(!_sharedKeys);
+        assert_precondition(!_sharedKeys);
         _sharedKeys = retain(sk);
     }
 
@@ -430,7 +430,7 @@ namespace fleece { namespace impl {
     SharedKeys* Dict::iterator::findSharedKeys() const {
         auto sk = Doc::sharedKeys(_a._first);
         _sharedKeys = sk;
-        assert(sk || gDisableNecessarySharedKeysCheck);
+        assert_precondition(sk || gDisableNecessarySharedKeysCheck);
         return sk;
     }
 

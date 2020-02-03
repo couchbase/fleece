@@ -29,7 +29,7 @@ namespace fleece {
     public:
         RefCounted()                            { }
         
-        int refCount() const                    { return _refCount; }
+        int refCount() const PURE                    { return _refCount; }
 
     protected:
         RefCounted(const RefCounted &)          { }
@@ -95,11 +95,11 @@ namespace fleece {
 
         ~Retained()                              {release(_ref);}
 
-        operator T* () const noexcept            {return _ref;}
-        T* operator-> () const noexcept          {return _ref;}
-        T* get() const noexcept                  {return _ref;}
+        operator T* () const noexcept PURE            {return _ref;}
+        T* operator-> () const noexcept PURE          {return _ref;}
+        T* get() const noexcept PURE                  {return _ref;}
 
-        explicit operator bool () const          {return (_ref != nullptr);}
+        explicit operator bool () const PURE          {return (_ref != nullptr);}
 
         Retained& operator=(T *t) noexcept       {copyRef(&_ref, t); return *this;}
 
@@ -146,9 +146,9 @@ namespace fleece {
         RetainedConst(RetainedConst &&r) noexcept       :_ref(r._ref) {r._ref = nullptr;}
         ALWAYS_INLINE ~RetainedConst()                  {release(_ref);}
 
-        operator const T* () const noexcept             {return _ref;}
-        const T* operator-> () const noexcept           {return _ref;}
-        const T* get() const noexcept                   {return _ref;}
+        operator const T* () const noexcept PURE             {return _ref;}
+        const T* operator-> () const noexcept PURE           {return _ref;}
+        const T* get() const noexcept PURE                   {return _ref;}
 
         RetainedConst& operator=(const T *t) noexcept {
             auto oldRef = _ref;

@@ -38,7 +38,7 @@ namespace fleece {
     Writer::Writer(FILE *outputFile)
     :Writer(kDefaultInitialCapacity)
     {
-        assert(outputFile);
+        assert_precondition(outputFile);
         _outputFile = outputFile;
     }
 
@@ -103,7 +103,7 @@ namespace fleece {
             forEachChunk([&](slice chunk) {
                 len += chunk.size;
             });
-            assert(len == length());
+            assert_postcondition(len == length());
         }
     }
 #endif
@@ -223,7 +223,7 @@ namespace fleece {
 
 
     bool Writer::writeOutputToFile(FILE *f) {
-        assert(!_outputFile);
+        assert_precondition(!_outputFile);
         bool result = true;
         forEachChunk([&](slice chunk) {
             if (result && fwrite(chunk.buf, chunk.size, 1, f) < chunk.size)
@@ -256,7 +256,7 @@ namespace fleece {
             write(dst, written);
             free(dst);
         }
-        assert((size_t)written == base64size);
+        assert_postcondition((size_t)written == base64size);
         (void)written;      // suppresses 'unused value' warning in release builds
     }
 

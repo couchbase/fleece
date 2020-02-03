@@ -120,7 +120,7 @@ bool WriteUVarInt(slice *buf, uint64_t n) {
 
     __hot
     int64_t GetIntOfLength(const void *src, unsigned length) {
-        assert(length >= 1 && length <= 8);
+        assert_precondition(length >= 1 && length <= 8);
         int64_t result = 0;
         if (((int8_t*)src)[length-1] < 0)
             result = -1;                        // sign-extend the result

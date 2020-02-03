@@ -8,6 +8,7 @@
 #include "PlatformCompat.hh"
 #include <array>
 #include <stdexcept>
+#include "betterassert.hh"
 
 namespace fleece {
 
@@ -29,7 +30,7 @@ namespace fleece {
                 sv._big = nullptr;
             else
                 memcpy(_small, sv._small, _size * sizeof(T));
-            assert(_size <= _capacity);
+            assert_postcondition(_size <= _capacity);
         }
 
         smallVector& operator=(smallVector &&sv) noexcept {
@@ -45,34 +46,34 @@ namespace fleece {
             return *this;
         }
 
-        size_t size() const                         {return _size;}
-        size_t capacity() const                     {return _capacity;}
-        bool empty() const                          {return _size == 0;}
+        size_t size() const PURE                         {return _size;}
+        size_t capacity() const PURE                     {return _capacity;}
+        bool empty() const PURE                          {return _size == 0;}
         void clear()                                {shrinkTo(0);}
         void reserve(size_t cap)                    {if (cap>_capacity) setCapacity(cap);}
 
-        const T& get(size_t i) const {
-            assert(i < _size);
+        const T& get(size_t i) const PURE {
+            assert_precondition(i < _size);
             return _get(i);
         }
 
-        T& get(size_t i) {
-            assert(i < _size);
+        T& get(size_t i) PURE {
+            assert_precondition(i < _size);
             return _get(i);
         }
 
-        const T& operator[] (size_t i) const        {return get(i);}
-        T& operator[] (size_t i)                    {return get(i);}
-        const T& back() const                       {return get(_size - 1);}
-        T& back()                                   {return get(_size - 1);}
+        const T& operator[] (size_t i) const PURE   {return get(i);}
+        T& operator[] (size_t i) PURE               {return get(i);}
+        const T& back() const PURE                  {return get(_size - 1);}
+        T& back() PURE                              {return get(_size - 1);}
 
         using iterator = T*;
         using const_iterator = const T*;
 
-        iterator begin()                            {return &_get(0);}
-        iterator end()                              {return &_get(_size);}
-        const_iterator begin() const                {return &_get(0);}
-        const_iterator end() const                  {return &_get(_size);}
+        iterator begin() PURE                            {return &_get(0);}
+        iterator end() PURE                              {return &_get(_size);}
+        const_iterator begin() const PURE                {return &_get(0);}
+        const_iterator end() const PURE                  {return &_get(_size);}
 
         T& push_back(const T& t)                    {return * new(_grow()) T(t);}
         T& push_back(T&& t)                         {return * new(_grow()) T(t);}
@@ -87,7 +88,7 @@ namespace fleece {
         }
 
         void insert(iterator where, T item) {
-            assert(begin() <= where && where <= end());
+            assert_precondition(begin() <= where && where <= end());
             if (_usuallyFalse(_size >= _capacity)) {
                 size_t i = where - &_get(0);
                 _grow();
@@ -99,14 +100,14 @@ namespace fleece {
         }
 
         void erase(iterator first) {
-            assert(begin() <= first && first < end());
+            assert_precondition(begin() <= first && first < end());
             first->T::~T();                 // destruct removed item
             memmove(first, first + 1, (end() - first - 1) * sizeof(T));
             --_size;
         }
 
         void erase(iterator first, iterator last) {
-            assert(begin() <= first && first < last && last <= end());
+            assert_precondition(begin() <= first && first < last && last <= end());
             for (auto i = first; i < last; ++i)
                 i->T::~T();                 // destruct removed items
             memmove(first, last, (end() - last) * sizeof(T));
@@ -161,12 +162,12 @@ namespace fleece {
         smallVector(const smallVector&) =delete;
         smallVector& operator=(const smallVector&) =delete;
 
-        T& _get(size_t i) {
+        T& _get(size_t i) PURE {
             T *base = _usuallyFalse(_big != nullptr) ? _big : (T*)&_small;
             return base[i];
         }
 
-        const T& _get(size_t i) const {
+        const T& _get(size_t i) const PURE {
             return const_cast<smallVector*>(this)->_get(i);
         }
 

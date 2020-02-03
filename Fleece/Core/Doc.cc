@@ -86,7 +86,7 @@ namespace fleece { namespace impl {
         // This ctor does _not_ register the data range, because the parent scope already did.
         _unregistered.test_and_set();
         if (subData)
-            assert(parentScope.data().containsAddressRange(subData));
+            assert_precondition(parentScope.data().containsAddressRange(subData));
     }
 
 
@@ -301,7 +301,7 @@ namespace fleece { namespace impl {
         const Scope *scope = _containing(src);
         if (!scope)
             return nullptr;
-        assert(scope->_isDoc);
+        assert_postcondition(scope->_isDoc);
         return RetainedConst<Doc>((const Doc*)scope);
     }
 

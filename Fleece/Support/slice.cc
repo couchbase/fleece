@@ -33,7 +33,7 @@
 namespace fleece {
 
     void slice::setStart(const void *s) noexcept {
-        assert(s <= end());
+        assert_precondition(s <= end());
         set(s, (uint8_t*)end() - (uint8_t*)s);
     }
 
@@ -436,7 +436,7 @@ namespace fleece {
 
     void alloc_slice::append(pure_slice suffix) {
         if (buf)
-            assert(!containsAddress(suffix.buf) && !containsAddress(suffix.end()));
+            assert_precondition(!containsAddress(suffix.buf) && !containsAddress(suffix.end()));
         size_t oldSize = size;
         resize(oldSize + suffix.size);
         memcpy((void*)offset(oldSize), suffix.buf, suffix.size);

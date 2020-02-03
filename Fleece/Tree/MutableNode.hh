@@ -28,19 +28,19 @@ namespace fleece { namespace hashtree {
         MutableNode(unsigned capacity)
         :_capacity(int8_t(capacity))
         {
-            assert(capacity <= kMaxChildren);
+            assert_precondition(capacity <= kMaxChildren);
         }
 
-        bool isLeaf() const     {return _capacity == 0;}
+        bool isLeaf() const PURE     {return _capacity == 0;}
 
-        static void encodeOffset(offset_t &o, size_t curPos) {
-            assert((ssize_t)curPos > o);
+        PURE static void encodeOffset(offset_t &o, size_t curPos) {
+            assert_precondition((ssize_t)curPos > o);
             o = _encLittle32(offset_t(curPos - o));
         }
 
     protected:
-        uint8_t capacity() const {
-            assert(_capacity > 0);
+        uint8_t capacity() const PURE {
+            assert_precondition(_capacity > 0);
             return _capacity;
         }
 
@@ -102,7 +102,7 @@ namespace fleece { namespace hashtree {
 
 
         NodeRef childAtIndex(unsigned index) {
-            assert(index < capacity());
+            assert_precondition(index < capacity());
             return _children[index];
         }
 
@@ -163,7 +163,7 @@ namespace fleece { namespace hashtree {
         // Recursive insertion method. On success returns either 'this', or a new node that
         // replaces 'this'. On failure (i.e. callback returned nullptr) returns nullptr.
         MutableInterior* insert(const Target &target, unsigned shift) {
-            assert(shift + kBitShift < 8*sizeof(hash_t));//FIX: //TODO: Handle hash collisions
+            assert_precondition(shift + kBitShift < 8*sizeof(hash_t));//FIX: //TODO: Handle hash collisions
             unsigned bitNo = childBitNumber(target.hash, shift);
             if (!hasChild(bitNo)) {
                 // No child -- add a leaf:
@@ -210,7 +210,7 @@ namespace fleece { namespace hashtree {
 
 
         bool remove(Target target, unsigned shift) {
-            assert(shift + kBitShift < 8*sizeof(hash_t));
+            assert_precondition(shift + kBitShift < 8*sizeof(hash_t));
             unsigned bitNo = childBitNumber(target.hash, shift);
             if (!hasChild(bitNo))
                 return false;
@@ -366,7 +366,7 @@ namespace fleece { namespace hashtree {
 
 
         MutableInterior* grow() {
-            assert(capacity() < kMaxChildren);
+            assert_precondition(capacity() < kMaxChildren);
             auto replacement = (MutableInterior*)realloc(this,
                                     sizeof(MutableInterior) + (capacity()+1)*sizeof(NodeRef));
             if (!replacement)
@@ -413,7 +413,7 @@ namespace fleece { namespace hashtree {
         }
 
         MutableInterior* _addChild(unsigned bitNo, unsigned childIndex, NodeRef child) {
-            assert(child);
+            assert_precondition(child);
             memmove(&_children[childIndex+1], &_children[childIndex],
                     (capacity() - childIndex - 1)*sizeof(NodeRef));
             _children[childIndex] = child;
@@ -422,7 +422,7 @@ namespace fleece { namespace hashtree {
         }
 
         void removeChild(unsigned bitNo, unsigned childIndex) {
-            assert(childIndex < capacity());
+            assert_precondition(childIndex < capacity());
             memmove(&_children[childIndex], &_children[childIndex+1], (capacity() - childIndex - 1)*sizeof(NodeRef));
             _bitmap.removeBit(bitNo);
         }

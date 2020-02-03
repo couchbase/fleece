@@ -22,6 +22,7 @@
 #include "SmallVector.hh"
 #include <stdio.h>
 #include <vector>
+#include "betterassert.hh"
 
 namespace fleece {
 
@@ -49,7 +50,7 @@ namespace fleece {
         /** Invokes the callback for each range of bytes in the output. */
         template <class T>
         void forEachChunk(T callback) const {
-            assert(!_outputFile);
+            assert_precondition(!_outputFile);
             auto n = _chunks.size();
             for (auto chunk : _chunks) {
                 if (_usuallyFalse(--n == 0)) {

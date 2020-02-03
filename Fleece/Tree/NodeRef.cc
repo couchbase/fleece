@@ -27,36 +27,36 @@ namespace fleece { namespace hashtree {
     }
 
     hash_t NodeRef::hash() const {
-        assert(isLeaf());
+        assert_precondition(isLeaf());
         return isMutable() ? ((MutableLeaf*)_asMutable())->_hash : _asImmutable()->leaf.hash();
     }
 
     Value NodeRef::value() const {
-        assert(isLeaf());
+        assert_precondition(isLeaf());
         return isMutable() ? ((MutableLeaf*)_asMutable())->_value : _asImmutable()->leaf.value();
     }
 
     bool NodeRef::matches(Target target) const {
-        assert(isLeaf());
+        assert_precondition(isLeaf());
         return isMutable() ? ((MutableLeaf*)_asMutable())->matches(target)
                            : _asImmutable()->leaf.matches(target.key);
     }
 
     unsigned NodeRef::childCount() const {
-        assert(!isLeaf());
+        assert_precondition(!isLeaf());
         return isMutable() ? ((MutableInterior*)_asMutable())->childCount()
                            : _asImmutable()->interior.childCount();
     }
 
     NodeRef NodeRef::childAtIndex(unsigned index) const {
-        assert(!isLeaf());
+        assert_precondition(!isLeaf());
         return isMutable() ? ((MutableInterior*)_asMutable())->childAtIndex(index)
                            : _asImmutable()->interior.childAtIndex(index);
     }
 
 
     Node NodeRef::writeTo(Encoder &enc) {
-        assert(!isLeaf());
+        assert_precondition(!isLeaf());
         Node node;
         if (isMutable())
             node.interior = ((MutableInterior*)asMutable())->writeTo(enc);
@@ -66,7 +66,7 @@ namespace fleece { namespace hashtree {
     }
 
     uint32_t NodeRef::writeTo(Encoder &enc, bool writeKey) {
-        assert(isLeaf());
+        assert_precondition(isLeaf());
         if (isMutable())
             return ((MutableLeaf*)asMutable())->writeTo(enc, writeKey);
         else

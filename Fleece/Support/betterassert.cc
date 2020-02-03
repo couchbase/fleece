@@ -23,15 +23,41 @@
 
 namespace fleece {
 
-    void _assert_failed(const char *condition, const char *fn, const char *file, int line) {
+    __cold
+    static const char* filename(const char *file) {
+#ifndef __FILE_NAME__
         const char *slash = strrchr(file, '/');
         if (!slash)
             slash = strrchr(file, '\\');
         if (slash)
             file = slash + 1;
+#endif
+        return file;
+    }
+
+    __cold
+    void _assert_failed(const char *condition, const char *fn, const char *file, int line) {
         char msg[256];
         sprintf(msg, "FAILED ASSERTION `%s` in %s (at %s line %d)",
-                condition, (fn ? fn : ""), file, line);
+                condition, (fn ? fn : ""), filename(file), line);
+        fprintf(stderr, "%s\n", msg);
+        throw assertion_failure(msg);
+    }
+
+    __cold
+    void _precondition_failed(const char *condition, const char *fn, const char *file, int line) {
+        char msg[256];
+        sprintf(msg, "FAILED PRECONDITION: `%s` not true when calling %s (at %s line %d)",
+                condition, (fn ? fn : "?"), filename(file), line);
+        fprintf(stderr, "%s\n", msg);
+        throw std::invalid_argument(msg);
+    }
+
+    __cold
+    void _postcondition_failed(const char *condition, const char *fn, const char *file, int line) {
+        char msg[256];
+        sprintf(msg, "FAILED POSTCONDITION: `%s` not true at end of %s (at %s line %d)",
+                (fn ? fn : "?"), condition, filename(file), line);
         fprintf(stderr, "%s\n", msg);
         throw assertion_failure(msg);
     }

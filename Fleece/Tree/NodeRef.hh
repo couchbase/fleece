@@ -35,32 +35,32 @@ namespace fleece { namespace hashtree {
     class NodeRef {
     public:
         NodeRef()                               :_addr(0) { }
-        NodeRef(MutableNode* n)                 :_addr(size_t(n) | 1) {assert(n);}
+        NodeRef(MutableNode* n)                 :_addr(size_t(n) | 1) {assert_precondition(n);}
         NodeRef(const Node* n)                  :_addr(size_t(n)) {}
         NodeRef(const Leaf* n)                  :_addr(size_t(n)) {}
         NodeRef(const Interior* n)              :_addr(size_t(n)) {}
 
         void reset()                            {_addr = 0;}
 
-        operator bool () const                  {return _addr != 0;}
+        operator bool () const PURE                  {return _addr != 0;}
 
-        bool isMutable() const                  {return (_addr & 1) != 0;}
+        bool isMutable() const PURE                  {return (_addr & 1) != 0;}
 
-        MutableNode* asMutable() const {
+        MutableNode* asMutable() const PURE {
             return isMutable() ? _asMutable() : nullptr;
         }
 
-        const Node* asImmutable() const {
+        const Node* asImmutable() const PURE {
             return isMutable() ? nullptr : _asImmutable();
         }
 
-        bool isLeaf() const;
-        hash_t hash() const;
-        bool matches(Target) const;
-        Value value() const;
+        bool isLeaf() const PURE;
+        hash_t hash() const PURE;
+        bool matches(Target) const PURE;
+        Value value() const PURE;
 
-        unsigned childCount() const;
-        NodeRef childAtIndex(unsigned index) const;
+        unsigned childCount() const PURE;
+        NodeRef childAtIndex(unsigned index) const PURE;
 
         Node writeTo(Encoder &enc);
         uint32_t writeTo(Encoder &enc, bool writeKey);

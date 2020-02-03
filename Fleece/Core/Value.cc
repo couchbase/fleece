@@ -315,7 +315,9 @@ namespace fleece { namespace impl {
 
     
     const Value* Value::fromTrustedData(slice s) noexcept {
-        assert(fromData(s) != nullptr); // validate anyway, in debug builds; abort if invalid
+#ifndef NDEBUG
+        assert_precondition(fromData(s) != nullptr); // validate anyway, in debug builds; abort if invalid
+#endif
         return findRoot(s);
     }
 
@@ -327,7 +329,7 @@ namespace fleece { namespace impl {
     }
 
     const Value* Value::findRoot(slice s) noexcept {
-        assert(((size_t)s.buf & 1) == 0);  // Values must be 2-byte aligned
+        precondition(((size_t)s.buf & 1) == 0);  // Values must be 2-byte aligned
 
         // Reject obviously invalid data (odd address, too short, or odd length)
         if (_usuallyFalse((size_t)s.buf & 1) || _usuallyFalse(s.size < kNarrow)

@@ -22,6 +22,7 @@
 #include <array>
 #include <mutex>
 #include <vector>
+#include "betterassert.hh"
 
 #ifdef __APPLE__
 #include <CoreFoundation/CFString.h>
@@ -36,17 +37,17 @@ namespace fleece { namespace impl {
     class key_t {
     public:
         key_t()                                     { }
-        key_t(slice key)        :_string(key)       {assert(key);}
-        key_t(int key)          :_int((int16_t)key) {assert(key >= 0 && key <= INT16_MAX);}
+        key_t(slice key)        :_string(key)       {assert_precondition(key);}
+        key_t(int key)          :_int((int16_t)key) {assert_precondition(key >= 0 && key <= INT16_MAX);}
 
         key_t(const Value *v) noexcept;
 
-        bool shared() const     {return !_string;}
-        int asInt() const       {assert(shared()); return _int;}
-        slice asString() const  {return _string;}
+        bool shared() const PURE     {return !_string;}
+        int asInt() const PURE       {assert_precondition(shared()); return _int;}
+        slice asString() const PURE  {return _string;}
 
-        bool operator== (const key_t &k) const noexcept;
-        bool operator< (const key_t &k) const noexcept;
+        bool operator== (const key_t &k) const noexcept PURE;
+        bool operator< (const key_t &k) const noexcept PURE;
 
     private:
         slice _string;
@@ -76,7 +77,7 @@ namespace fleece { namespace impl {
         void setMaxKeyLength(size_t m)          {_maxKeyLength = m;}
 
         /** The number of stored keys. */
-        size_t count() const                    {return _count;}
+        size_t count() const PURE                    {return _count;}
 
         /** Maps a string to an integer, or returns false if there is no mapping. */
         bool encode(slice string, int &key) const;
@@ -87,7 +88,7 @@ namespace fleece { namespace impl {
 
         /** Returns true if the string could be added, i.e. there's room, it's not too long,
             and it has only valid characters. */
-        inline bool couldAdd(slice str) const {
+        inline bool couldAdd(slice str) const PURE {
             return count() < kMaxCount && str.size <= _maxKeyLength && isEligibleToEncode(str);
         }
 
@@ -105,7 +106,7 @@ namespace fleece { namespace impl {
             or equal to the new count. (I.e. it truncates the byKey vector.) */
         void revertToCount(size_t count);
 
-        bool isUnknownKey(int key) const                {return (size_t)key >= _count;}
+        bool isUnknownKey(int key) const PURE                {return (size_t)key >= _count;}
 
         virtual bool refresh()                          {return false;}
 
@@ -129,7 +130,7 @@ namespace fleece { namespace impl {
 
         /** Determines whether a new string should be added. Default implementation returns true
             if the string contains only alphanumeric characters, '_' or '-'. */
-        virtual bool isEligibleToEncode(slice str) const;
+        virtual bool isEligibleToEncode(slice str) const PURE;
 
     private:
         friend class PersistentSharedKeys;
@@ -177,7 +178,7 @@ namespace fleece { namespace impl {
         void transactionEnded();
 
         /** Returns true if the table has changed from its persisted state. */
-        bool changed() const                    {return _persistedCount < count();}
+        bool changed() const PURE                    {return _persistedCount < count();}
 
     protected:
         /** Abstract: Should read the persisted data and call loadFrom() with it. */

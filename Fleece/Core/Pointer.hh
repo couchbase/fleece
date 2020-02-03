@@ -6,6 +6,7 @@
 
 #pragma once
 #include "Value.hh"
+#include "betterassert.hh"
 
 namespace fleece { namespace impl { namespace internal {
     using namespace fleece::impl;

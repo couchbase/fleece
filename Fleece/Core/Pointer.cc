@@ -29,7 +29,7 @@ namespace fleece { namespace impl { namespace internal {
     Pointer::Pointer(size_t offset, int width, bool external)
     :Value(kPointerTagFirst, 0)
     {
-        assert((offset & 1) == 0);
+        assert_precondition((offset & 1) == 0);
         offset >>= 1;
         if (width < internal::kWide) {
             throwIf(offset >= 0x4000, InternalError, "offset too large");

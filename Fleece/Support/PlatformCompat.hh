@@ -27,6 +27,7 @@
 
     #define NOINLINE                        __declspec(noinline)
     #define ALWAYS_INLINE                   inline
+    #define ASSUME(cond)                    __assume(cond)
 	#define LITECORE_UNUSED
     #define __typeof                        decltype
 
@@ -55,27 +56,41 @@
 
 #else
 
+    // Suppresses "unused function" warnings
     #ifdef __APPLE__
     #define LITECORE_UNUSED __unused
     #else
     #define LITECORE_UNUSED __attribute__((unused))
     #endif
 
+    // Disables inlining a function
     #define NOINLINE                        __attribute((noinline))
 
+    // Forces function to be inlined
     #if __has_attribute(always_inline)
         #define ALWAYS_INLINE               __attribute__((always_inline)) inline
     #else
         #define ALWAYS_INLINE               inline
     #endif
 
-    // Note: GCC also has a `nonnull` attribute, but it works differently (not as well)
+    // Tells the optimizer it may assume `cond` is true (but does not generate code to evaluate it.)
+    #if __has_builtin(__builtin_assume)
+        #define ASSUME(cond)                __builtin_assume(cond)
+    #else
+        #define ASSUME(cond)                (void(0))
+    #endif
+
+    // Declares that a parameter must not be NULL. The compiler can sometimes detect violations
+    // of this at compile time. The Clang Undefined-Behavior Sanitizer will check at runtime.
     #ifdef __clang__
         #define NONNULL                     __attribute__((nonnull))
     #else
+        // GCC's' `nonnull` works differently (not as well: requires parameter numbers be given)
         #define NONNULL
     #endif
 
+    // Declares this function takes a printf-like format string, and the subsequent args should
+    // be type-checked against it.
     #ifndef __printflike
     #define __printflike(fmtarg, firstvararg) __attribute__((__format__ (__printf__, fmtarg, firstvararg)))
     #endif
@@ -88,6 +103,9 @@
 #endif
 
 
+// Note: Code below adapted from libmdbx source code.
+
+// Applies a specific optimization level to a function, e.g. __optimize("O3") or __optimize("Os")
 #ifndef __optimize
 #   if defined(__OPTIMIZE__)
 #     if defined(__clang__) && !__has_attribute(__optimize__)
@@ -102,11 +120,11 @@
 #   endif
 #endif /* __optimize */
 
+// Marks a function as being a hot-spot. Optimizes it for speed and may move it to a common
+// code section for hot functions.
 #ifndef __hot
 #   if defined(__OPTIMIZE__)
-#       if defined(__e2k__)
-#           define __hot __attribute__((__hot__)) __optimize(3)
-#       elif defined(__clang__) && !__has_attribute(__hot_) \
+#       if defined(__clang__) && !__has_attribute(__hot_) \
         && __has_attribute(__section__) && (defined(__linux__) || defined(__gnu_linux__))
             /* just put frequently used functions in separate section */
 #           define __hot __attribute__((__section__("text.hot"))) __optimize("O3")
@@ -120,11 +138,11 @@
 #   endif
 #endif /* __hot */
 
+// Marks a function as being rarely used (e.g. error handling.) Optimizes it for size and
+// moves it a common code section for cold functions.
 #ifndef __cold
 #   if defined(__OPTIMIZE__)
-#       if defined(__e2k__)
-#           define __cold __attribute__((__cold__)) __optimize(1)
-#       elif defined(__clang__) && !__has_attribute(cold) \
+#       if defined(__clang__) && !__has_attribute(cold) \
         && __has_attribute(__section__) && (defined(__linux__) || defined(__gnu_linux__))
             /* just put infrequently used functions in separate section */
 #           define __cold __attribute__((__section__("text.unlikely"))) __optimize("Os")

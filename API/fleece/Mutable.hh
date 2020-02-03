@@ -6,7 +6,7 @@
 
 #pragma once
 #include "Fleece.hh"
-#include <assert.h>
+#include "betterassert.hh"
 
 namespace fleece {
 
@@ -116,7 +116,7 @@ namespace fleece {
 
         // This enables e.g. `array[10] = 17`
         inline keyref<MutableArray,uint32_t> operator[] (int i) {
-            assert(i >= 0);
+            assert_precondition(i >= 0);
             return keyref<MutableArray,uint32_t>(*this, i);
         }
 

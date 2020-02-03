@@ -62,7 +62,7 @@ namespace fleece {
 
             writeByte((uint8_t)ceil(log2(n)));   // Write the depth first
             writeKeyTree(0, n);
-            assert(_out == output.end());
+            assert_postcondition(_out == output.end());
             return output;
         }
 
