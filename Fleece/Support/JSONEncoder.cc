@@ -82,7 +82,7 @@ namespace fleece { namespace impl {
     }
 
     void JSONEncoder::writeKey(slice s) {
-        assert(s);
+        assert_precondition(s);
         if (_json5 && canBeUnquotedJSON5Key(s)) {
             comma();
             _out.write((char*)s.buf, s.size);

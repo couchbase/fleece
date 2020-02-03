@@ -43,7 +43,6 @@ int FLSlice_Compare(FLSlice a, FLSlice b) FLAPI {
 
 namespace fleece {
 
-#ifndef NDEBUG
 #if FL_EMBEDDED
     static constexpr size_t kHeapAlignmentMask = 0x03;
 #else
@@ -52,7 +51,6 @@ namespace fleece {
     LITECORE_UNUSED PURE static inline bool isHeapAligned(const void *p) {
         return ((size_t)p & kHeapAlignmentMask) == 0;
     }
-#endif
 
 
     // FL_DETECT_COPIES enables a check for unnecessary copying of alloc_slice memory: situations
@@ -82,17 +80,17 @@ namespace fleece {
         }
 
         static inline void operator delete(void *self) {
-            assert(isHeapAligned(self));
+            assert_precondition(isHeapAligned(self));
             free(self);
         }
 
         inline void retain() noexcept {
-            assert(isHeapAligned(this));
+            assert_precondition(isHeapAligned(this));
             ++_refCount;
         }
 
         inline void release() noexcept {
-            assert(isHeapAligned(this));
+            assert_precondition(isHeapAligned(this));
             if (--_refCount == 0)
                 delete this;
         }

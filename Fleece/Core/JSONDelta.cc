@@ -234,7 +234,7 @@ namespace fleece { namespace impl {
 
 
     /*static*/ void JSONDelta::apply(const Value *old, slice jsonDelta, bool isJSON5, Encoder &enc) {
-        assert(jsonDelta);
+        assert_precondition(jsonDelta);
         string json5;
         if (isJSON5) {
             json5 = ConvertJSON5(string(jsonDelta));

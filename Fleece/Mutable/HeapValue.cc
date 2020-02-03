@@ -124,7 +124,7 @@ namespace fleece { namespace impl { namespace internal {
 
 
     HeapValue* HeapValue::create(const Value *v) {
-        assert(v->tag() < kArrayTag);
+        assert_precondition(v->tag() < kArrayTag);
         size_t size = v->dataSize();
         auto hv = new (size - 1) HeapValue();
         memcpy(&hv->_header, v, size);
@@ -136,7 +136,7 @@ namespace fleece { namespace impl { namespace internal {
         if (!isHeapValue(v))
             return nullptr;
         auto ov = (offsetValue*)(size_t(v) & ~1);
-        assert(ov->_pad == 0xFF);
+        assert_postcondition(ov->_pad == 0xFF);
         return (HeapValue*)ov;
     }
 

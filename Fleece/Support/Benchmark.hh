@@ -25,10 +25,10 @@
 class Benchmark {
 public:
     void start()        {_st.reset();}
-    double elapsed()    {return _st.elapsed();}
+    double elapsed() const PURE    {return _st.elapsed();}
     double stop()       {double t = elapsed(); _times.push_back(t); return t;}
 
-    bool empty() const  {return _times.empty();}
+    bool empty() const PURE  {return _times.empty();}
     void sort()         {assert(!empty()); std::sort(_times.begin(), _times.end());}
 
     double median() {

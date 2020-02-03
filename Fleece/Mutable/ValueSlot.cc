@@ -189,7 +189,7 @@ namespace fleece { namespace impl {
             data.le = f;
             setValue(kFloatTag, 0, {(char*)&data.le - 1, sizeof(data.le) + 1});
         }
-        assert(asValue()->asFloat() == f);
+        assert_postcondition(asValue()->asFloat() == f);
     }
 
     void ValueSlot::set(double d) {
@@ -203,7 +203,7 @@ namespace fleece { namespace impl {
             data.le = d;
             setValue(kFloatTag, 8, {(char*)&data.le - 1, sizeof(data.le) + 1});
         }
-        assert(asValue()->asDouble() == d);
+        assert_postcondition(asValue()->asDouble() == d);
     }
 
 

@@ -65,8 +65,8 @@ namespace fleece {
 
 
     __hot const StringTable::entry_t* StringTable::find(key_t key, hash_t hash) const noexcept {
-        assert(key.buf != nullptr);
-        assert(hash != hash_t::Empty);
+        assert_precondition(key.buf != nullptr);
+        assert_precondition(hash != hash_t::Empty);
         size_t end = wrap(size_t(hash) + _maxDistance + 1);
         for (size_t i = indexOfHash(hash); i != end; i = wrap(i + 1)) {
             if (_hashes[i] == hash_t::Empty)
@@ -79,8 +79,8 @@ namespace fleece {
 
 
     __hot StringTable::insertResult StringTable::insert(key_t key, value_t value, hash_t hash) {
-        assert(key);
-        assert(hash != hash_t::Empty);
+        assert_precondition(key);
+        assert_precondition(hash != hash_t::Empty);
 
         if (_usuallyFalse(_count > _capacity))
             grow();
@@ -128,7 +128,7 @@ namespace fleece {
 
 
     __hot void StringTable::insertOnly(key_t key, value_t value, hash_t hash) {
-        assert(!find(key, hash));
+        assert_precondition(!find(key, hash));
         if (_usuallyFalse(++_count > _capacity))
             grow();
         _insertOnly(hash, {key, value});
@@ -138,8 +138,8 @@ namespace fleece {
     // Subroutine of insertOnly() and grow() that doesn't bump count or grow table.
     // This repeats a lot of the logic of insert(), but I decided performance trumps DRY.
     __hot void StringTable::_insertOnly(hash_t hash, entry_t entry) noexcept {
-        assert(entry.first);
-        assert(hash != hash_t::Empty);
+        assert_precondition(entry.first);
+        assert_precondition(hash != hash_t::Empty);
         ssize_t distance = 0;
         auto maxDistance = _maxDistance;
         // Walk along the table looking for an empty space:
