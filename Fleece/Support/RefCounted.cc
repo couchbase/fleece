@@ -23,7 +23,27 @@
 
 namespace fleece {
 
-    static void fail(const RefCounted *obj, const char *what, int refCount) {
+#if !DEBUG
+    __hot void RefCounted::_release() const noexcept {
+        if (--_refCount <= 0)
+            delete this;
+    }
+#endif
+
+
+    __hot void release(const RefCounted *r) noexcept {
+        if (r) r->_release();
+    }
+
+    __hot void copyRef(void* dstPtr, RefCounted *src) noexcept {
+        auto old = *(RefCounted**)dstPtr;
+        *(RefCounted**)dstPtr = retain(src);
+        release(old);
+    }
+
+
+    template <bool THROW =true>
+    __cold static void fail(const RefCounted *obj, const char *what, int refCount) {
         char message[100];
         sprintf(message, "RefCounted object at %p %s while it had an invalid refCount of %d",
              obj, what, refCount);
@@ -32,20 +52,26 @@ namespace fleece {
 #else
         fprintf(stderr, "WARNING: %s\n", message);
 #endif
-        throw std::runtime_error(message);
+        if (THROW)
+            throw std::runtime_error(message);
     }
 
 
     RefCounted::~RefCounted() {
         // Store a garbage value to detect use-after-free
         int32_t oldRef = _refCount.exchange(-9999999);
-        if (oldRef != 0 && oldRef != kCarefulInitialRefCount) {
-            // Detect if the destructor is not called from _release, i.e. the object still has
-            // references. This is probably a direct call to delete, which is illegal.
-            // Or possibly some other thread had a pointer to this object without a proper
-            // reference, and then called retain() on it after this thread's release() set the
-            // ref-count to 0.
-            fail(this, "destructed", oldRef);
+        if (_usuallyFalse(oldRef != 0)) {
+#if DEBUG
+            if (oldRef != kCarefulInitialRefCount)
+#endif
+            {
+                // Detect if the destructor is not called from _release, i.e. the object still has
+                // references. This is probably a direct call to delete, which is illegal.
+                // Or possibly some other thread had a pointer to this object without a proper
+                // reference, and then called retain() on it after this thread's release() set the
+                // ref-count to 0.
+                fail<false>(this, "destructed", oldRef);
+            }
         }
     }
 
@@ -86,5 +112,5 @@ namespace fleece {
         // If the refCount just went to 0, delete the object:
         if (oldRef == 1) delete this;
     }
-    
+
 }

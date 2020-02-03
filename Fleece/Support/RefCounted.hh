@@ -17,6 +17,7 @@
 //
 
 #pragma once
+#include "PlatformCompat.hh"
 #include <atomic>
 
 namespace fleece {
@@ -40,15 +41,14 @@ namespace fleece {
     private:
         template <typename T>
         friend T* retain(T*) noexcept;
-        template <typename T>
-        friend void release(T*) noexcept;
+        friend void release(const RefCounted*) noexcept;
 
 #if DEBUG
         void _retain() const noexcept                 {_careful_retain();}
         void _release() const noexcept                {_careful_release();}
 #else
-        inline void _retain() const noexcept          { ++_refCount; }
-        inline void _release() const noexcept         { if (--_refCount <= 0) delete this; }
+        ALWAYS_INLINE void _retain() const noexcept   { ++_refCount; }
+        void _release() const noexcept;
 #endif
 
         static constexpr int32_t kCarefulInitialRefCount = -6666666;
@@ -66,17 +66,16 @@ namespace fleece {
 
     /** Retains a RefCounted object and returns the object. Does nothing given a null pointer. */
     template <typename REFCOUNTED>
-    inline REFCOUNTED* retain(REFCOUNTED *r) noexcept {
+    ALWAYS_INLINE REFCOUNTED* retain(REFCOUNTED *r) noexcept {
         if (r) r->_retain();
         return r;
     }
 
     /** Releases a RefCounted object. Does nothing given a null pointer. */
-    template <typename REFCOUNTED>
-    inline void release(REFCOUNTED *r) noexcept {
-        if (r) r->_release();
-    }
+    __attribute__((noinline)) void release(const RefCounted *r) noexcept;
 
+    // Used internally by Retained
+    void copyRef(void* dstPtr, RefCounted *src) noexcept;
 
     /** Simple smart pointer that retains the RefCounted instance it holds. */
     template <typename T>
@@ -102,12 +101,7 @@ namespace fleece {
 
         explicit operator bool () const          {return (_ref != nullptr);}
 
-        Retained& operator=(T *t) noexcept {
-            auto oldRef = _ref;
-            _ref = retain(t);
-            release(oldRef);
-            return *this;
-        }
+        Retained& operator=(T *t) noexcept       {copyRef(&_ref, t); return *this;}
 
         Retained& operator=(const Retained &r) noexcept {
             return *this = r._ref;
@@ -150,7 +144,7 @@ namespace fleece {
         RetainedConst(const T *t) noexcept              :_ref(retain(t)) { }
         RetainedConst(const RetainedConst &r) noexcept  :_ref(retain(r._ref)) { }
         RetainedConst(RetainedConst &&r) noexcept       :_ref(r._ref) {r._ref = nullptr;}
-        ~RetainedConst()                                {release(_ref);}
+        ALWAYS_INLINE ~RetainedConst()                  {release(_ref);}
 
         operator const T* () const noexcept             {return _ref;}
         const T* operator-> () const noexcept           {return _ref;}
