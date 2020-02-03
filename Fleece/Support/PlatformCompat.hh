@@ -120,6 +120,14 @@
 #   endif
 #endif /* __optimize */
 
+#if defined(__clang__)
+    #define HOTLEVEL "Ofast"
+    #define COLDLEVEL "Oz"
+#else
+    #define HOTLEVEL "O3"
+    #define COLDLEVEL "Os"
+#endif
+
 // Marks a function as being a hot-spot. Optimizes it for speed and may move it to a common
 // code section for hot functions.
 #ifndef __hot
@@ -127,11 +135,11 @@
 #       if defined(__clang__) && !__has_attribute(__hot_) \
         && __has_attribute(__section__) && (defined(__linux__) || defined(__gnu_linux__))
             /* just put frequently used functions in separate section */
-#           define __hot __attribute__((__section__("text.hot"))) __optimize("O3")
+#           define __hot __attribute__((__section__("text.hot"))) __optimize(HOTLEVEL)
 #       elif defined(__GNUC__) || __has_attribute(__hot__)
-#           define __hot __attribute__((__hot__)) __optimize("O3")
+#           define __hot __attribute__((__hot__)) __optimize(HOTLEVEL)
 #       else
-#           define __hot  __optimize("O3")
+#           define __hot  __optimize(HOTLEVEL)
 #       endif
 #   else
 #       define __hot
@@ -145,11 +153,11 @@
 #       if defined(__clang__) && !__has_attribute(cold) \
         && __has_attribute(__section__) && (defined(__linux__) || defined(__gnu_linux__))
             /* just put infrequently used functions in separate section */
-#           define __cold __attribute__((__section__("text.unlikely"))) __optimize("Os")
+#           define __cold __attribute__((__section__("text.unlikely"))) __optimize(COLDLEVEL)
 #       elif defined(__GNUC__) || __has_attribute(cold)
-#           define __cold __attribute__((__cold__)) __optimize("Os")
+#           define __cold __attribute__((__cold__)) __optimize(COLDLEVEL)
 #       else
-#           define __cold __optimize("Os")
+#           define __cold __optimize(COLDLEVEL)
 #       endif
 #   else
 #       define __cold
