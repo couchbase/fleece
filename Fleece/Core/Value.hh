@@ -242,7 +242,7 @@ namespace fleece { namespace impl {
         const Value* next(bool wide) const noexcept PURE
                                 {return offsetby(this, wide ? internal::kWide : internal::kNarrow);}
         template <bool WIDE>
-        const Value* next() const noexcept PURE       {return next(WIDE);}
+        PURE const Value* next() const noexcept         {return next(WIDE);}
 
         // dump:
         size_t dataSize() const noexcept PURE;

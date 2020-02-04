@@ -72,7 +72,7 @@ namespace fleece {
     }
 
     /** Releases a RefCounted object. Does nothing given a null pointer. */
-    __attribute__((noinline)) void release(const RefCounted *r) noexcept;
+    NOINLINE void release(const RefCounted *r) noexcept;
 
     // Used internally by Retained
     void copyRef(void* dstPtr, RefCounted *src) noexcept;

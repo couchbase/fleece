@@ -17,6 +17,7 @@
 //
 
 #include "FleeceException.hh"
+#include "PlatformCompat.hh"
 #include <errno.h>
 #include <memory>
 #include <stdarg.h>

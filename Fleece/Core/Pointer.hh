@@ -22,7 +22,7 @@ namespace fleece { namespace impl { namespace internal {
 
         // Returns the byte offset
         template <bool WIDE>
-        uint32_t offset() const noexcept PURE {
+        PURE uint32_t offset() const noexcept {
             if (WIDE)
                 return (_dec32(wideBytes()) & ~0xC0000000) << 1;
             else
@@ -56,7 +56,7 @@ namespace fleece { namespace impl { namespace internal {
     private:
         // Byte offset as interpreted prior to the 'extern' flag
         template <bool WIDE>
-        uint32_t legacyOffset() const noexcept PURE {
+        PURE uint32_t legacyOffset() const noexcept {
             if (WIDE)
                 return (_dec32(wideBytes()) & ~0x80000000) << 1;
             else
