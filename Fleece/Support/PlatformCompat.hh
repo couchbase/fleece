@@ -23,6 +23,19 @@
 #include "TargetConditionals.h"
 #endif
 
+#ifndef __has_builtin
+    #define __has_builtin(B)                0
+#endif
+
+#ifndef __has_extension
+    #define __has_extension(X)              0
+#endif
+
+#ifndef __has_feature
+    #define __has_feature(F)                0
+#endif
+
+
 #ifdef _MSC_VER
 
     #define NOINLINE                        __declspec(noinline)
@@ -31,8 +44,6 @@
 	#define LITECORE_UNUSED
     #define __typeof                        decltype
 
-    #define __has_extension(X)              0
-    #define __has_feature(F)                0
     #define __func__                        __FUNCTION__
 
     #include <time.h>
