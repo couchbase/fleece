@@ -17,6 +17,9 @@
 //
 
 #include "Backtrace.hh"
+#include <csignal>
+#include <exception>
+#include <mutex>
 #include <sstream>
 #include <string.h>
 
@@ -82,9 +85,11 @@ namespace fleece {
     { }
 
 
+#ifdef __clang__
     Backtrace::~Backtrace() {
         free(_unmangled);
     }
+#endif
 
 
     Backtrace::frameInfo Backtrace::getFrame(unsigned i) {
@@ -138,13 +143,6 @@ namespace fleece {
         return true;
     }
 
-
-    string Backtrace::toString() {
-        stringstream out;
-        writeTo(out);
-        return out.str();
-    }
-
 }
 
 
@@ -167,9 +165,6 @@ namespace fleece {
     {
         _nAddrs = CaptureStackBackTrace(0, 50, _addrs, nullptr);
     }
-
-
-    Backtrace::~Backtrace() { }
 
 
     bool Backtrace::writeTo(ostream &out) {
@@ -217,6 +212,23 @@ namespace fleece {
     }
 
 
+#else
+    // Windows Store apps cannot get backtraces
+    Backtrace::Backtrace(unsigned skipFrames)   :_skip(skipFrames) { }
+    bool Backtrace::writeTo(std::ostream&)      {return false;}
+#endif
+
+    const char* Backtrace::unmangle(const char *symbol) {
+        return symbol;
+    }
+
+}
+
+#endif // _MSC_VER
+
+
+namespace fleece {
+
     string Backtrace::toString() {
         stringstream out;
         writeTo(out);
@@ -224,13 +236,35 @@ namespace fleece {
     }
 
 
-#else
-    // Windows Store apps cannot get backtraces
-    Backtrace::Backtrace(unsigned skipFrames)   :_skip(skipFrames) { }
-    bool Backtrace::writeTo(std::ostream&)      {return false;}
-    string Backtrace::toString()                {return "";}
-#endif
+    void Backtrace::installTerminateHandler(int andRaise) {
+        static std::once_flag sOnce;
+        call_once(sOnce, [&] {
+            static const int sRaise = andRaise;
+            static const std::terminate_handler sOldHandler = std::set_terminate([] {
+                std::cerr << "\n\n******************** C++ fatal error ********************\n";
+                Backtrace bt(3);
+                auto xp = std::current_exception();
+                if (xp) {
+                    std::cerr << "Uncaught exception:\n\t";
+                    try {
+                        std::rethrow_exception(xp);
+                    } catch(const std::exception& x) {
+                        const char *name = typeid(x).name();
+                        std::cerr << bt.unmangle(name) << ": " <<  x.what() << "\n";
+                    } catch (...) {
+                        std::cerr << "unknown exception type\n";
+                    }
+                }
+                std::cerr << "Backtrace:";
+                bt.writeTo(std::cerr);
+                std::cerr << "\n******************** Now terminating ********************\n";
+                if (sRaise)
+                    std::raise(sRaise);
+                else
+                    sOldHandler();
+                abort();
+            });
+        });
+    }
 
 }
-
-#endif // _MSC_VER
