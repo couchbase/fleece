@@ -75,7 +75,7 @@ namespace fleece {
 #endif
         uint8_t _buf[4];
 
-        static inline void* operator new(size_t basicSize, size_t bufferSize) {
+        static inline void* operator new(size_t basicSize, size_t bufferSize) noexcept {
             return malloc(basicSize - sizeof(sharedBuffer::_buf) + bufferSize);
         }
 
@@ -84,11 +84,13 @@ namespace fleece {
             free(self);
         }
 
+        __hot
         inline void retain() noexcept {
             assert_precondition(isHeapAligned(this));
             ++_refCount;
         }
 
+        __hot
         inline void release() noexcept {
             assert_precondition(isHeapAligned(this));
             if (--_refCount == 0)
@@ -96,7 +98,8 @@ namespace fleece {
         }
     };
 
-    static sharedBuffer* bufferFromBuf(const void *buf) {
+    __hot PURE
+    static sharedBuffer* bufferFromBuf(const void *buf) noexcept {
         return (sharedBuffer*)((uint8_t*)buf  - offsetof(sharedBuffer, _buf));
     }
 
@@ -105,6 +108,7 @@ namespace fleece {
 using namespace fleece;
 
 
+__hot
 FLSliceResult FLSliceResult_New(size_t size) FLAPI {
     auto sb = new (size) sharedBuffer;
     if (!sb)
@@ -113,6 +117,7 @@ FLSliceResult FLSliceResult_New(size_t size) FLAPI {
 }
 
 
+__hot
 FLSliceResult FLSlice_Copy(FLSlice s) FLAPI {
     if (!s.buf)
         return {};
@@ -132,12 +137,14 @@ FLSliceResult FLSlice_Copy(FLSlice s) FLAPI {
 }
 
 
+__hot
 void _FLBuf_Retain(const void *buf) FLAPI {
     if (buf)
         bufferFromBuf(buf)->retain();
 }
 
 
+__hot
 void _FLBuf_Release(const void *buf) FLAPI {
     if (buf)
         bufferFromBuf(buf)->release();

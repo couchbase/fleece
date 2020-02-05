@@ -24,7 +24,7 @@
 
 namespace fleece {
 
-    pure_slice::pure_slice(CFDataRef data)
+    pure_slice::pure_slice(CFDataRef data) noexcept
     :buf(CFDataGetBytePtr(data))
     ,size(CFDataGetLength(data))
     { }

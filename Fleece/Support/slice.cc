@@ -355,6 +355,7 @@ namespace fleece {
     }
 
 
+    __hot
     alloc_slice::alloc_slice(size_t sz)
     :pure_slice(asSlice(FLSliceResult_New(sz)))
     {
@@ -363,6 +364,7 @@ namespace fleece {
     }
 
 
+    __hot
     alloc_slice::alloc_slice(pure_slice s)
     :pure_slice(asSlice(FLSlice_Copy({s.buf, s.size})))
     {
@@ -371,12 +373,7 @@ namespace fleece {
     }
 
 
-    alloc_slice::alloc_slice(const alloc_slice& s) noexcept
-    :pure_slice(s)
-    {
-        retain();
-    }
-
+    __hot
     alloc_slice alloc_slice::nullPaddedString(pure_slice str) {
         // Leave a trailing null byte after the end, so it can be used as a C string
         alloc_slice a(str.size + 1);
@@ -387,8 +384,9 @@ namespace fleece {
     }
 
 
+    __hot
     alloc_slice& alloc_slice::operator=(const alloc_slice& s) noexcept {
-        if (s.buf != buf) {
+        if (_usuallyTrue(s.buf != buf)) {
             release();
             assignFrom(s);
             retain();
@@ -396,8 +394,21 @@ namespace fleece {
         return *this;
     }
 
+
+    __hot
+    alloc_slice& alloc_slice::operator=(alloc_slice&& s) noexcept {
+        if (_usuallyTrue(s.buf != buf)) {
+            release();
+            assignFrom(s);
+            s.set(nullptr, 0);
+        }
+        return *this;
+    }
+
+
+    __hot
     alloc_slice& alloc_slice::operator=(FLHeapSlice s) noexcept {
-        if (s.buf != buf) {
+        if (_usuallyTrue(s.buf != buf)) {
             release();
             assignFrom({s.buf, s.size});
             retain();
@@ -416,6 +427,7 @@ namespace fleece {
     }
 
     
+    __hot
     alloc_slice& alloc_slice::operator=(pure_slice s) {
         return *this = alloc_slice(s);
     }

@@ -77,12 +77,12 @@ namespace fleece {
     
     /** Adds a byte offset to a pointer. */
     template <typename T>
-    inline const T* offsetby(const T *t, ptrdiff_t offset) {
+    PURE inline const T* offsetby(const T *t, ptrdiff_t offset) noexcept {
         return (const T*)((uint8_t*)t + offset);
     }
 
     template <typename T>
-    inline T* offsetby(T *t, ptrdiff_t offset) {
+    PURE inline T* offsetby(T *t, ptrdiff_t offset) noexcept {
         return (T*)((uint8_t*)t + offset);
     }
 
@@ -93,28 +93,28 @@ namespace fleece {
         const void* const buf;
         size_t      const size;
 
-        constexpr pure_slice()                           :buf(nullptr), size(0) {}
-        constexpr pure_slice(const void* b, size_t s)    :buf(b), size(s) {}
+        constexpr pure_slice() noexcept                           :buf(nullptr), size(0) {}
+        constexpr pure_slice(const void* b, size_t s) noexcept    :buf(b), size(s) {}
 
-        constexpr17 pure_slice(const char* str)          :pure_slice(str, _strlen(str)) {}
-        pure_slice(const std::string& str)               :pure_slice(&str[0], str.length()) {}
+        constexpr17 pure_slice(const char* str) noexcept          :pure_slice(str, _strlen(str)) {}
+        pure_slice(const std::string& str) noexcept               :pure_slice(&str[0], str.length()) {}
 #ifdef SLICE_SUPPORTS_STRING_VIEW
-        constexpr pure_slice(string_view str)            :pure_slice(str.data(), str.length()) {}
+        constexpr pure_slice(string_view str) noexcept            :pure_slice(str.data(), str.length()) {}
 #endif
 
-        explicit operator bool() const PURE              {return buf != nullptr;}
+        explicit operator bool() const noexcept PURE              {return buf != nullptr;}
 
-        const void* offset(size_t o) const PURE          {return (uint8_t*)buf + o;}
-        size_t offsetOf(const void* ptr NONNULL) const PURE {return (uint8_t*)ptr - (uint8_t*)buf;}
-        const void* end() const PURE                     {return offset(size);}
+        const void* offset(size_t o) const noexcept PURE          {return (uint8_t*)buf + o;}
+        size_t offsetOf(const void* ptr NONNULL) const noexcept PURE {return (uint8_t*)ptr - (uint8_t*)buf;}
+        const void* end() const noexcept PURE                     {return offset(size);}
 
-        inline slice upTo(const void* pos NONNULL) const PURE;
-        inline slice from(const void* pos NONNULL) const PURE;
-        inline slice upTo(size_t offset) const PURE;
-        inline slice from(size_t offset) const PURE;
+        inline slice upTo(const void* pos NONNULL) const noexcept PURE;
+        inline slice from(const void* pos NONNULL) const noexcept PURE;
+        inline slice upTo(size_t offset) const noexcept PURE;
+        inline slice from(size_t offset) const noexcept PURE;
 
-        const uint8_t& operator[](size_t i) const PURE   {return ((const uint8_t*)buf)[i];}
-        inline slice operator()(size_t i, size_t n) const PURE;
+        const uint8_t& operator[](size_t i) const noexcept PURE   {return ((const uint8_t*)buf)[i];}
+        inline slice operator()(size_t i, size_t n) const noexcept PURE;
 
         slice find(pure_slice target) const noexcept PURE;
         const uint8_t* findByte(uint8_t b) const PURE    {return (const uint8_t*)::memchr(buf, b, size);}
@@ -125,11 +125,11 @@ namespace fleece {
         int compare(pure_slice) const noexcept PURE;
         int caseEquivalentCompare(pure_slice) const noexcept PURE;
         bool caseEquivalent(pure_slice) const noexcept PURE;
-        bool operator==(const pure_slice &s) const PURE       {return size==s.size &&
+        bool operator==(const pure_slice &s) const noexcept PURE       {return size==s.size &&
                                                                  memcmp(buf, s.buf, size) == 0;}
-        bool operator!=(const pure_slice &s) const PURE       {return !(*this == s);}
-        bool operator<(pure_slice s) const PURE               {return compare(s) < 0;}
-        bool operator>(pure_slice s) const PURE               {return compare(s) > 0;}
+        bool operator!=(const pure_slice &s) const noexcept PURE       {return !(*this == s);}
+        bool operator<(pure_slice s) const noexcept PURE               {return compare(s) < 0;}
+        bool operator>(pure_slice s) const noexcept PURE               {return compare(s) > 0;}
 
         bool hasPrefix(pure_slice) const noexcept PURE;
         bool hasSuffix(pure_slice) const noexcept PURE;
@@ -148,7 +148,7 @@ namespace fleece {
         std::string base64String() const;
 
 #ifdef SLICE_SUPPORTS_STRING_VIEW
-        operator string_view() const                {return string_view((const char*)buf, size);}
+        operator string_view() const noexcept                {return string_view((const char*)buf, size);}
 #endif
 
         /** Copies into a C string buffer of the given size. Result is always NUL-terminated and
@@ -183,11 +183,11 @@ namespace fleece {
         static T* reallocBytes(T* bytes, size_t newSz);
 
 #ifdef __APPLE__
-        explicit pure_slice(CFDataRef data);
+        explicit pure_slice(CFDataRef data) noexcept;
         CFStringRef createCFString() const;
         CFDataRef createCFData() const;
 #ifdef __OBJC__
-        explicit pure_slice(NSData* data)                    :pure_slice((__bridge CFDataRef)data) {}
+        explicit pure_slice(NSData* data) noexcept         :pure_slice((__bridge CFDataRef)data) {}
 
         NSData* copiedNSData() const {
             return buf ? [[NSData alloc] initWithBytes: buf length: size] : nil;
@@ -208,14 +208,14 @@ namespace fleece {
 #endif
         
     protected:
-        void setBuf(const void *b NONNULL)          {const_cast<const void*&>(buf) = b;}
-        void setSize(size_t s)                      {const_cast<size_t&>(size) = s;}
-        void set(const void *b, size_t s)           {const_cast<const void*&>(buf) = b;
-                                                     setSize(s);}
-        pure_slice& operator=(pure_slice s)         {set(s.buf, s.size); return *this;}
+        void setBuf(const void *b NONNULL) noexcept          {const_cast<const void*&>(buf) = b;}
+        void setSize(size_t s) noexcept                      {const_cast<size_t&>(size) = s;}
+        void set(const void *b, size_t s) noexcept           {const_cast<const void*&>(buf) = b;
+                                                              setSize(s);}
+        pure_slice& operator=(pure_slice s) noexcept         {set(s.buf, s.size); return *this;}
 
         // like strlen but can run at compile time
-        static constexpr17 size_t _strlen(const char *str) PURE {
+        static constexpr17 size_t _strlen(const char *str) noexcept PURE {
             if (!str)
                 return 0;
             auto c = str;
@@ -228,33 +228,33 @@ namespace fleece {
     /** A simple range of memory. No ownership implied.
         Unlike its parent class pure_slice, this supports operations that change buf or size. */
     struct slice : public pure_slice {
-        constexpr slice()                           :pure_slice() {}
-        constexpr slice(std::nullptr_t)             :pure_slice() {}
-        inline constexpr slice(nullslice_t);
-        constexpr slice(const void* b, size_t s)    :pure_slice(b, s) {}
-        constexpr slice(const void* start NONNULL, const void* end NONNULL)
+        constexpr slice() noexcept                           :pure_slice() {}
+        constexpr slice(std::nullptr_t) noexcept             :pure_slice() {}
+        inline constexpr slice(nullslice_t) noexcept;
+        constexpr slice(const void* b, size_t s) noexcept    :pure_slice(b, s) {}
+        constexpr slice(const void* start NONNULL, const void* end NONNULL) noexcept
                                                     :slice(start, (uint8_t*)end-(uint8_t*)start){}
-        inline constexpr slice(const alloc_slice&);
+        inline constexpr slice(const alloc_slice&) noexcept;
 
-        slice(const std::string& str)               :pure_slice(str) {}
-        constexpr17 slice(const char* str)          :pure_slice(str) {}
+        slice(const std::string& str) noexcept               :pure_slice(str) {}
+        constexpr17 slice(const char* str) noexcept          :pure_slice(str) {}
 #ifdef SLICE_SUPPORTS_STRING_VIEW
-        constexpr slice(string_view str)            :pure_slice(str) {}
+        constexpr slice(string_view str) noexcept            :pure_slice(str) {}
 #endif
 
         slice& operator= (alloc_slice&&) =delete;   // Disallowed: might lead to ptr to freed buf
         slice& operator= (std::nullptr_t) noexcept  {set(nullptr, 0); return *this;}
         inline slice& operator= (nullslice_t) noexcept;
 
-        void setBuf(const void *b NONNULL)          {pure_slice::setBuf(b);}
-        void setSize(size_t s)                      {pure_slice::setSize(s);}
+        void setBuf(const void *b NONNULL) noexcept          {pure_slice::setBuf(b);}
+        void setSize(size_t s) noexcept                      {pure_slice::setSize(s);}
         void shorten(size_t s)                      {assert_precondition(s <= size); setSize(s);}
 
-        void setEnd(const void* e NONNULL)          {setSize((uint8_t*)e - (uint8_t*)buf);}
+        void setEnd(const void* e NONNULL) noexcept          {setSize((uint8_t*)e - (uint8_t*)buf);}
         void setStart(const void* s NONNULL) noexcept;
-        void moveStart(ptrdiff_t delta)             {set(offsetby(buf, delta), size - delta);}
-        bool checkedMoveStart(size_t delta)         {if (size<delta) return false;
-                                                     else {moveStart(delta); return true;}}
+        void moveStart(ptrdiff_t delta) noexcept             {set(offsetby(buf, delta), size - delta);}
+        bool checkedMoveStart(size_t delta) noexcept         {if (size<delta) return false;
+                                                              else {moveStart(delta); return true;}}
         slice read(size_t nBytes) noexcept;
         slice readAtMost(size_t nBytes) noexcept;
         slice readToDelimiter(slice delim) noexcept;
@@ -274,21 +274,21 @@ namespace fleece {
 
         void free() noexcept;
 
-        constexpr slice(const FLSlice &s)           :slice(s.buf, s.size) { }
-        operator FLSlice () const                   {return {buf, size};}
-        inline explicit operator FLSliceResult () const;
+        constexpr slice(const FLSlice &s) noexcept           :slice(s.buf, s.size) { }
+        operator FLSlice () const noexcept                   {return {buf, size};}
+        inline explicit operator FLSliceResult () const noexcept;
 
 #ifdef __APPLE__
-        explicit slice(CFDataRef data)                       :pure_slice(data) {}
+        explicit slice(CFDataRef data) noexcept                       :pure_slice(data) {}
 #ifdef __OBJC__
-        explicit slice(NSData* data)                         :pure_slice(data) {}
+        explicit slice(NSData* data) noexcept                         :pure_slice(data) {}
 #endif
 #endif
     };
 
 
     struct nullslice_t : public slice {
-        constexpr nullslice_t()   :slice() {}
+        constexpr nullslice_t() noexcept   :slice() {}
     };
     
     /** A null/empty slice. (You can also use `nullptr` for this purpose.) */
@@ -296,40 +296,39 @@ namespace fleece {
 
 
     // Literal syntax for slices: "foo"_sl
-    inline constexpr slice operator "" _sl (const char *str NONNULL, size_t length)
+    inline constexpr slice operator "" _sl (const char *str NONNULL, size_t length) noexcept
         {return slice(str, length);}
 
 
 
     /** A slice that owns a ref-counted block of memory. */
     struct alloc_slice : public pure_slice {
-        constexpr alloc_slice()                             {}
-        constexpr alloc_slice(std::nullptr_t)               {}
-        constexpr alloc_slice(nullslice_t)                  {}
+        constexpr alloc_slice() noexcept                             {}
+        constexpr alloc_slice(std::nullptr_t) noexcept               {}
+        constexpr alloc_slice(nullslice_t) noexcept                  {}
         explicit alloc_slice(size_t s);
         explicit alloc_slice(pure_slice s);
-        alloc_slice(const void* b, size_t s)
-            :alloc_slice(slice(b, s))                       {}
+        alloc_slice(const void* b, size_t s)                :alloc_slice(slice(b, s)) {}
         alloc_slice(const void* start NONNULL, const void* end NONNULL)
-            :alloc_slice(slice(start, end))                 {}
+                                                            :alloc_slice(slice(start, end)) {}
         explicit alloc_slice(const char *str)               :alloc_slice(slice(str)) {}
         explicit alloc_slice(const std::string &str)        :alloc_slice(slice(str)) {}
-        explicit alloc_slice(FLSlice s)     :alloc_slice(pure_slice{s.buf, s.size}) { }
+        explicit alloc_slice(FLSlice s)                 :alloc_slice(pure_slice{s.buf, s.size}) { }
 
-        alloc_slice(FLHeapSlice s)     // FLHeapSlice is known to be an alloc_slice
+        alloc_slice(FLHeapSlice s) noexcept     // FLHeapSlice is known to be an alloc_slice
         :pure_slice(s.buf, s.size)
         {
             retain();
         }
 
-        alloc_slice(FLSliceResult &&sr)
+        alloc_slice(FLSliceResult &&sr) noexcept
         :pure_slice(sr.buf, sr.size)
         {
             sr.buf = nullptr;
             sr.size = 0;
         }
 
-        alloc_slice(const FLSliceResult &sr)
+        alloc_slice(const FLSliceResult &sr) noexcept
         :pure_slice(sr.buf, sr.size)
         {
             retain();
@@ -339,20 +338,12 @@ namespace fleece {
         explicit alloc_slice(string_view str)               :alloc_slice(slice(str)) {}
 #endif
 
-        ~alloc_slice()                                      {if (buf) release();}
-        alloc_slice(const alloc_slice&) noexcept;
+        ~alloc_slice() noexcept                             {if (buf) release();}
+        alloc_slice(const alloc_slice &s) noexcept          :pure_slice(s) {retain();}
         alloc_slice& operator=(const alloc_slice&) noexcept;
+        alloc_slice& operator=(alloc_slice&& s) noexcept;
 
-        alloc_slice(alloc_slice&& s) noexcept
-        :pure_slice(s)
-        { s.set(nullptr, 0); }
-
-        alloc_slice& operator=(alloc_slice&& s) noexcept {
-            release();
-            assignFrom(s);
-            s.set(nullptr, 0);
-            return *this;
-        }
+        alloc_slice(alloc_slice&& s) noexcept               :pure_slice(s) {s.set(nullptr, 0);}
 
         /** Creates an alloc_slice that has an extra null (0) byte immediately after the end of the
             data. This allows the contents of the alloc_slice to be used as a C string. */
@@ -363,7 +354,7 @@ namespace fleece {
         alloc_slice& operator= (FLHeapSlice) noexcept;
         alloc_slice& operator= (std::nullptr_t) noexcept    {reset(); return *this;}
 
-        explicit operator bool() const PURE                 {return buf != nullptr;}
+        explicit operator bool() const noexcept PURE        {return buf != nullptr;}
 
         void reset() noexcept;
         void reset(size_t);
@@ -460,16 +451,16 @@ namespace fleece {
 
 
     // Inlines that couldn't be implemented inside the class declaration due to forward references:
-    inline slice pure_slice::upTo(const void* pos) const           {return slice(buf, pos);}
-    inline slice pure_slice::from(const void* pos) const           {return slice(pos, end());}
-    inline slice pure_slice::upTo(size_t off) const                {return slice(buf, off);}
-    inline slice pure_slice::from(size_t off) const                {return slice(offset(off), end());}
-    inline slice pure_slice::operator()(size_t i, size_t n) const  {return slice(offset(i), n);}
+    inline slice pure_slice::upTo(const void* pos) const noexcept           {return slice(buf, pos);}
+    inline slice pure_slice::from(const void* pos) const noexcept           {return slice(pos, end());}
+    inline slice pure_slice::upTo(size_t off) const noexcept                {return slice(buf, off);}
+    inline slice pure_slice::from(size_t off) const noexcept                {return slice(offset(off), end());}
+    inline slice pure_slice::operator()(size_t i, size_t n) const noexcept  {return slice(offset(i), n);}
 
-    inline constexpr slice::slice(nullslice_t)                     :pure_slice() {}
+    inline constexpr slice::slice(nullslice_t) noexcept                     :pure_slice() {}
     inline slice& slice::operator= (nullslice_t) noexcept          {set(nullptr, 0); return *this;}
-    inline constexpr slice::slice(const alloc_slice &s)            :pure_slice(s) { }
-    inline slice::operator FLSliceResult () const {
+    inline constexpr slice::slice(const alloc_slice &s) noexcept            :pure_slice(s) { }
+    inline slice::operator FLSliceResult () const noexcept {
         return FLSliceResult(alloc_slice(*this));
     }
 
