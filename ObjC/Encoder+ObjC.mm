@@ -52,6 +52,8 @@ bool FLEncoder_WriteNSObject(FLEncoder encoder, id obj) FLAPI {
         return true;
     } catch (const std::exception &x) {
         encoder->recordException(x);
+    } catch (NSException* e) {
+        encoder->recordException(FleeceException(EncodeError, 0, e.reason.UTF8String));
     }
     return false;
 }
