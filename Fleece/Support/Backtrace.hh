@@ -5,6 +5,7 @@
 //
 
 #pragma once
+#include <functional>
 #include <string>
 #include <iostream>
 
@@ -36,7 +37,7 @@ namespace fleece {
         /// `andRaise` to a different signal ID such as SIGILL to force a crash.
         ///
         /// Only the first call to this function has any effect; subsequent calls are ignored.
-        static void installTerminateHandler(int andRaise =0);
+        static void installTerminateHandler(std::function<void(const std::string&)> logger);
 
     private:
         static constexpr size_t kMaxAddrs = 50;
@@ -45,6 +46,7 @@ namespace fleece {
         unsigned _nAddrs;
 
         const char* unmangle(const char*);
+        static void writeCrashLog(std::ostream&);
 #ifdef __clang__
         char* _unmangled {nullptr};
         size_t _unmangledLen {0};

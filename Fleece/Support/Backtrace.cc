@@ -236,33 +236,45 @@ namespace fleece {
     }
 
 
-    void Backtrace::installTerminateHandler(int andRaise) {
-        static std::once_flag sOnce;
+    void Backtrace::writeCrashLog(ostream &out) {
+        Backtrace bt(4);
+        auto xp = current_exception();
+        if (xp) {
+            out << "Uncaught exception:\n\t";
+            try {
+                rethrow_exception(xp);
+            } catch(const exception& x) {
+                const char *name = typeid(x).name();
+                out << bt.unmangle(name) << ": " <<  x.what() << "\n";
+            } catch (...) {
+                out << "unknown exception type\n";
+            }
+        }
+        out << "Backtrace:";
+        bt.writeTo(out);
+    }
+
+
+    void Backtrace::installTerminateHandler(function<void(const string&)> logger) {
+        static once_flag sOnce;
         call_once(sOnce, [&] {
-            static const int sRaise = andRaise;
-            static const std::terminate_handler sOldHandler = std::set_terminate([] {
-                std::cerr << "\n\n******************** C++ fatal error ********************\n";
-                Backtrace bt(3);
-                auto xp = std::current_exception();
-                if (xp) {
-                    std::cerr << "Uncaught exception:\n\t";
-                    try {
-                        std::rethrow_exception(xp);
-                    } catch(const std::exception& x) {
-                        const char *name = typeid(x).name();
-                        std::cerr << bt.unmangle(name) << ": " <<  x.what() << "\n";
-                    } catch (...) {
-                        std::cerr << "unknown exception type\n";
-                    }
+            static const auto sLogger = logger;
+            static const terminate_handler sOldHandler = set_terminate([] {
+                // ---- Code below gets called by C++ runtime on an uncaught exception ---
+                if (sLogger) {
+                    stringstream out;
+                    writeCrashLog(out);
+                    sLogger(out.str());
+                } else {
+                    cerr << "\n\n******************** C++ fatal error ********************\n";
+                    writeCrashLog(cerr);
+                    cerr << "\n******************** Now terminating ********************\n";
                 }
-                std::cerr << "Backtrace:";
-                bt.writeTo(std::cerr);
-                std::cerr << "\n******************** Now terminating ********************\n";
-                if (sRaise)
-                    std::raise(sRaise);
-                else
-                    sOldHandler();
+                // Chain to old handler:
+                sOldHandler();
+                // Just in case the old handler doesn't abort:
                 abort();
+                // ---- End of handler ----
             });
         });
     }
