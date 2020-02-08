@@ -42,12 +42,12 @@ namespace fleece { namespace impl {
 
         key_t(const Value *v) noexcept;
 
-        bool shared() const PURE     {return !_string;}
-        int asInt() const PURE       {assert_precondition(shared()); return _int;}
-        slice asString() const PURE  {return _string;}
+        bool shared() const FLPURE     {return !_string;}
+        int asInt() const FLPURE       {assert_precondition(shared()); return _int;}
+        slice asString() const FLPURE  {return _string;}
 
-        bool operator== (const key_t &k) const noexcept PURE;
-        bool operator< (const key_t &k) const noexcept PURE;
+        bool operator== (const key_t &k) const noexcept FLPURE;
+        bool operator< (const key_t &k) const noexcept FLPURE;
 
     private:
         slice _string;
@@ -77,7 +77,7 @@ namespace fleece { namespace impl {
         void setMaxKeyLength(size_t m)          {_maxKeyLength = m;}
 
         /** The number of stored keys. */
-        size_t count() const PURE                    {return _count;}
+        size_t count() const FLPURE                    {return _count;}
 
         /** Maps a string to an integer, or returns false if there is no mapping. */
         bool encode(slice string, int &key) const;
@@ -88,7 +88,7 @@ namespace fleece { namespace impl {
 
         /** Returns true if the string could be added, i.e. there's room, it's not too long,
             and it has only valid characters. */
-        inline bool couldAdd(slice str) const PURE {
+        inline bool couldAdd(slice str) const FLPURE {
             return count() < kMaxCount && str.size <= _maxKeyLength && isEligibleToEncode(str);
         }
 
@@ -106,7 +106,7 @@ namespace fleece { namespace impl {
             or equal to the new count. (I.e. it truncates the byKey vector.) */
         void revertToCount(size_t count);
 
-        bool isUnknownKey(int key) const PURE                {return (size_t)key >= _count;}
+        bool isUnknownKey(int key) const FLPURE                {return (size_t)key >= _count;}
 
         virtual bool refresh()                          {return false;}
 
@@ -130,7 +130,7 @@ namespace fleece { namespace impl {
 
         /** Determines whether a new string should be added. Default implementation returns true
             if the string contains only alphanumeric characters, '_' or '-'. */
-        virtual bool isEligibleToEncode(slice str) const PURE;
+        virtual bool isEligibleToEncode(slice str) const FLPURE;
 
     private:
         friend class PersistentSharedKeys;
@@ -178,7 +178,7 @@ namespace fleece { namespace impl {
         void transactionEnded();
 
         /** Returns true if the table has changed from its persisted state. */
-        bool changed() const PURE                    {return _persistedCount < count();}
+        bool changed() const FLPURE                    {return _persistedCount < count();}
 
     protected:
         /** Abstract: Should read the persisted data and call loadFrom() with it. */

@@ -46,34 +46,34 @@ namespace fleece {
             return *this;
         }
 
-        size_t size() const PURE                         {return _size;}
-        size_t capacity() const PURE                     {return _capacity;}
-        bool empty() const PURE                          {return _size == 0;}
+        size_t size() const FLPURE                         {return _size;}
+        size_t capacity() const FLPURE                     {return _capacity;}
+        bool empty() const FLPURE                          {return _size == 0;}
         void clear()                                {shrinkTo(0);}
         void reserve(size_t cap)                    {if (cap>_capacity) setCapacity(cap);}
 
-        const T& get(size_t i) const PURE {
+        const T& get(size_t i) const FLPURE {
             assert_precondition(i < _size);
             return _get(i);
         }
 
-        T& get(size_t i) PURE {
+        T& get(size_t i) FLPURE {
             assert_precondition(i < _size);
             return _get(i);
         }
 
-        const T& operator[] (size_t i) const PURE   {return get(i);}
-        T& operator[] (size_t i) PURE               {return get(i);}
-        const T& back() const PURE                  {return get(_size - 1);}
-        T& back() PURE                              {return get(_size - 1);}
+        const T& operator[] (size_t i) const FLPURE   {return get(i);}
+        T& operator[] (size_t i) FLPURE               {return get(i);}
+        const T& back() const FLPURE                  {return get(_size - 1);}
+        T& back() FLPURE                              {return get(_size - 1);}
 
         using iterator = T*;
         using const_iterator = const T*;
 
-        iterator begin() PURE                            {return &_get(0);}
-        iterator end() PURE                              {return &_get(_size);}
-        const_iterator begin() const PURE                {return &_get(0);}
-        const_iterator end() const PURE                  {return &_get(_size);}
+        iterator begin() FLPURE                            {return &_get(0);}
+        iterator end() FLPURE                              {return &_get(_size);}
+        const_iterator begin() const FLPURE                {return &_get(0);}
+        const_iterator end() const FLPURE                  {return &_get(_size);}
 
         T& push_back(const T& t)                    {return * new(_grow()) T(t);}
         T& push_back(T&& t)                         {return * new(_grow()) T(t);}
@@ -162,12 +162,12 @@ namespace fleece {
         smallVector(const smallVector&) =delete;
         smallVector& operator=(const smallVector&) =delete;
 
-        T& _get(size_t i) PURE {
+        T& _get(size_t i) FLPURE {
             T *base = _usuallyFalse(_big != nullptr) ? _big : (T*)&_small;
             return base[i];
         }
 
-        const T& _get(size_t i) const PURE {
+        const T& _get(size_t i) const FLPURE {
             return const_cast<smallVector*>(this)->_get(i);
         }
 

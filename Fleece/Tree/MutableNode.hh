@@ -31,15 +31,15 @@ namespace fleece { namespace hashtree {
             assert_precondition(capacity <= kMaxChildren);
         }
 
-        bool isLeaf() const PURE     {return _capacity == 0;}
+        bool isLeaf() const FLPURE     {return _capacity == 0;}
 
-        PURE static void encodeOffset(offset_t &o, size_t curPos) {
+        FLPURE static void encodeOffset(offset_t &o, size_t curPos) {
             assert_precondition((ssize_t)curPos > o);
             o = _encLittle32(offset_t(curPos - o));
         }
 
     protected:
-        uint8_t capacity() const PURE {
+        uint8_t capacity() const FLPURE {
             assert_precondition(_capacity > 0);
             return _capacity;
         }

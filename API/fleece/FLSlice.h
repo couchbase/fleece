@@ -94,11 +94,11 @@ static inline FLSlice FLStr(const char *str) {
 
 
 /** Equality test of two slices. */
-bool FLSlice_Equal(FLSlice a, FLSlice b) FLAPI PURE;
+bool FLSlice_Equal(FLSlice a, FLSlice b) FLAPI FLPURE;
 
 /** Lexicographic comparison of two slices; basically like memcmp(), but taking into account
     differences in length. */
-int FLSlice_Compare(FLSlice, FLSlice) FLAPI PURE;
+int FLSlice_Compare(FLSlice, FLSlice) FLAPI FLPURE;
 
 /** Allocates an FLSliceResult of the given size, without initializing the buffer. */
 FLSliceResult FLSliceResult_New(size_t) FLAPI;

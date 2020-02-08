@@ -77,12 +77,12 @@ namespace fleece {
     
     /** Adds a byte offset to a pointer. */
     template <typename T>
-    PURE inline const T* offsetby(const T *t, ptrdiff_t offset) noexcept {
+    FLPURE inline const T* offsetby(const T *t, ptrdiff_t offset) noexcept {
         return (const T*)((uint8_t*)t + offset);
     }
 
     template <typename T>
-    PURE inline T* offsetby(T *t, ptrdiff_t offset) noexcept {
+    FLPURE inline T* offsetby(T *t, ptrdiff_t offset) noexcept {
         return (T*)((uint8_t*)t + offset);
     }
 
@@ -102,43 +102,43 @@ namespace fleece {
         constexpr pure_slice(string_view str) noexcept            :pure_slice(str.data(), str.length()) {}
 #endif
 
-        explicit operator bool() const noexcept PURE              {return buf != nullptr;}
+        explicit operator bool() const noexcept FLPURE              {return buf != nullptr;}
 
-        const void* offset(size_t o) const noexcept PURE          {return (uint8_t*)buf + o;}
-        size_t offsetOf(const void* ptr NONNULL) const noexcept PURE {return (uint8_t*)ptr - (uint8_t*)buf;}
-        const void* end() const noexcept PURE                     {return offset(size);}
+        const void* offset(size_t o) const noexcept FLPURE          {return (uint8_t*)buf + o;}
+        size_t offsetOf(const void* ptr NONNULL) const noexcept FLPURE {return (uint8_t*)ptr - (uint8_t*)buf;}
+        const void* end() const noexcept FLPURE                     {return offset(size);}
 
-        inline slice upTo(const void* pos NONNULL) const noexcept PURE;
-        inline slice from(const void* pos NONNULL) const noexcept PURE;
-        inline slice upTo(size_t offset) const noexcept PURE;
-        inline slice from(size_t offset) const noexcept PURE;
+        inline slice upTo(const void* pos NONNULL) const noexcept FLPURE;
+        inline slice from(const void* pos NONNULL) const noexcept FLPURE;
+        inline slice upTo(size_t offset) const noexcept FLPURE;
+        inline slice from(size_t offset) const noexcept FLPURE;
 
-        const uint8_t& operator[](size_t i) const noexcept PURE   {return ((const uint8_t*)buf)[i];}
-        inline slice operator()(size_t i, size_t n) const noexcept PURE;
+        const uint8_t& operator[](size_t i) const noexcept FLPURE   {return ((const uint8_t*)buf)[i];}
+        inline slice operator()(size_t i, size_t n) const noexcept FLPURE;
 
-        slice find(pure_slice target) const noexcept PURE;
-        const uint8_t* findByte(uint8_t b) const PURE    {return (const uint8_t*)::memchr(buf, b, size);}
-        const uint8_t* findByteOrEnd(uint8_t byte) const noexcept PURE;
-        const uint8_t* findAnyByteOf(pure_slice targetBytes) const noexcept PURE;
-        const uint8_t* findByteNotIn(pure_slice targetBytes) const noexcept PURE;
+        slice find(pure_slice target) const noexcept FLPURE;
+        const uint8_t* findByte(uint8_t b) const FLPURE    {return (const uint8_t*)::memchr(buf, b, size);}
+        const uint8_t* findByteOrEnd(uint8_t byte) const noexcept FLPURE;
+        const uint8_t* findAnyByteOf(pure_slice targetBytes) const noexcept FLPURE;
+        const uint8_t* findByteNotIn(pure_slice targetBytes) const noexcept FLPURE;
 
-        int compare(pure_slice) const noexcept PURE;
-        int caseEquivalentCompare(pure_slice) const noexcept PURE;
-        bool caseEquivalent(pure_slice) const noexcept PURE;
-        bool operator==(const pure_slice &s) const noexcept PURE       {return size==s.size &&
+        int compare(pure_slice) const noexcept FLPURE;
+        int caseEquivalentCompare(pure_slice) const noexcept FLPURE;
+        bool caseEquivalent(pure_slice) const noexcept FLPURE;
+        bool operator==(const pure_slice &s) const noexcept FLPURE       {return size==s.size &&
                                                                  memcmp(buf, s.buf, size) == 0;}
-        bool operator!=(const pure_slice &s) const noexcept PURE       {return !(*this == s);}
-        bool operator<(pure_slice s) const noexcept PURE               {return compare(s) < 0;}
-        bool operator>(pure_slice s) const noexcept PURE               {return compare(s) > 0;}
+        bool operator!=(const pure_slice &s) const noexcept FLPURE       {return !(*this == s);}
+        bool operator<(pure_slice s) const noexcept FLPURE               {return compare(s) < 0;}
+        bool operator>(pure_slice s) const noexcept FLPURE               {return compare(s) > 0;}
 
-        bool hasPrefix(pure_slice) const noexcept PURE;
-        bool hasSuffix(pure_slice) const noexcept PURE;
-        bool hasPrefix(uint8_t b) const noexcept PURE        {return size > 0 && (*this)[0] == b;}
-        bool hasSuffix(uint8_t b) const noexcept PURE        {return size > 0 && (*this)[size-1] == b;}
-        const void* containsBytes(pure_slice bytes) const noexcept PURE;
+        bool hasPrefix(pure_slice) const noexcept FLPURE;
+        bool hasSuffix(pure_slice) const noexcept FLPURE;
+        bool hasPrefix(uint8_t b) const noexcept FLPURE        {return size > 0 && (*this)[0] == b;}
+        bool hasSuffix(uint8_t b) const noexcept FLPURE        {return size > 0 && (*this)[size-1] == b;}
+        const void* containsBytes(pure_slice bytes) const noexcept FLPURE;
 
-        bool containsAddress(const void *addr) const noexcept PURE;
-        bool containsAddressRange(pure_slice) const noexcept PURE;
+        bool containsAddress(const void *addr) const noexcept FLPURE;
+        bool containsAddressRange(pure_slice) const noexcept FLPURE;
 
         slice copy() const;
 
@@ -168,9 +168,9 @@ namespace fleece {
         #define cString() asString().c_str()        // has to be a macro else dtor called too early
 
         /** Computes a 32-bit FNV-1a hash of the slice's contents. (Not cryptographic!) */
-        uint32_t hash() const noexcept PURE;
+        uint32_t hash() const noexcept FLPURE;
 
-        static constexpr17 uint32_t hash(const char *str NONNULL) noexcept PURE {
+        static constexpr17 uint32_t hash(const char *str NONNULL) noexcept FLPURE {
             uint32_t h = 2166136261;
             while (*str)
                 h = (h ^ uint8_t(*str++)) * 16777619;
@@ -215,7 +215,7 @@ namespace fleece {
         pure_slice& operator=(pure_slice s) noexcept         {set(s.buf, s.size); return *this;}
 
         // like strlen but can run at compile time
-        static constexpr17 size_t _strlen(const char *str) noexcept PURE {
+        static constexpr17 size_t _strlen(const char *str) noexcept FLPURE {
             if (!str)
                 return 0;
             auto c = str;
@@ -265,7 +265,7 @@ namespace fleece {
         bool writeFrom(slice) noexcept;
 
         uint8_t readByte() noexcept;     // returns 0 if slice is empty
-        uint8_t peekByte() const noexcept PURE;     // returns 0 if slice is empty
+        uint8_t peekByte() const noexcept FLPURE;     // returns 0 if slice is empty
         bool writeByte(uint8_t) noexcept;
         uint64_t readDecimal() noexcept; // reads until it hits a non-digit or the end
         int64_t readSignedDecimal() noexcept;
@@ -354,7 +354,7 @@ namespace fleece {
         alloc_slice& operator= (FLHeapSlice) noexcept;
         alloc_slice& operator= (std::nullptr_t) noexcept    {reset(); return *this;}
 
-        explicit operator bool() const noexcept PURE        {return buf != nullptr;}
+        explicit operator bool() const noexcept FLPURE        {return buf != nullptr;}
 
         void reset() noexcept;
         void reset(size_t);

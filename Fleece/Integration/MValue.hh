@@ -85,10 +85,10 @@ namespace fleece {
             return *this;
         }
 
-        Value value() const PURE         {return _value;}
-        bool isEmpty() const PURE        {return !_value && !_native;}
-        bool isMutated() const PURE      {return !_value;}
-        bool hasNative() const PURE      {return _native != nullptr;}
+        Value value() const FLPURE         {return _value;}
+        bool isEmpty() const FLPURE        {return !_value && !_native;}
+        bool isMutated() const FLPURE      {return !_value;}
+        bool hasNative() const FLPURE      {return _native != nullptr;}
 
         Native asNative(const MCollection<Native> *parent) const {
             if (_native || !_value) {

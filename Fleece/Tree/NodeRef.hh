@@ -42,25 +42,25 @@ namespace fleece { namespace hashtree {
 
         void reset()                            {_addr = 0;}
 
-        operator bool () const PURE                  {return _addr != 0;}
+        operator bool () const FLPURE                  {return _addr != 0;}
 
-        bool isMutable() const PURE                  {return (_addr & 1) != 0;}
+        bool isMutable() const FLPURE                  {return (_addr & 1) != 0;}
 
-        MutableNode* asMutable() const PURE {
+        MutableNode* asMutable() const FLPURE {
             return isMutable() ? _asMutable() : nullptr;
         }
 
-        const Node* asImmutable() const PURE {
+        const Node* asImmutable() const FLPURE {
             return isMutable() ? nullptr : _asImmutable();
         }
 
-        bool isLeaf() const PURE;
-        hash_t hash() const PURE;
-        bool matches(Target) const PURE;
-        Value value() const PURE;
+        bool isLeaf() const FLPURE;
+        hash_t hash() const FLPURE;
+        bool matches(Target) const FLPURE;
+        Value value() const FLPURE;
 
-        unsigned childCount() const PURE;
-        NodeRef childAtIndex(unsigned index) const PURE;
+        unsigned childCount() const FLPURE;
+        NodeRef childAtIndex(unsigned index) const FLPURE;
 
         Node writeTo(Encoder &enc);
         uint32_t writeTo(Encoder &enc, bool writeKey);

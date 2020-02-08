@@ -29,18 +29,18 @@ namespace fleece { namespace impl {
     class Dict : public Value {
     public:
         /** The number of items in the dictionary. */
-        uint32_t count() const noexcept PURE;
+        uint32_t count() const noexcept FLPURE;
 
-        bool empty() const noexcept PURE;
+        bool empty() const noexcept FLPURE;
 
         /** Looks up the Value for a string key. */
-        const Value* get(slice keyToFind) const noexcept PURE;
+        const Value* get(slice keyToFind) const noexcept FLPURE;
 
         /** Looks up the Value for an integer (shared) key. */
-        const Value* get(int numericKeyToFind) const noexcept PURE;
+        const Value* get(int numericKeyToFind) const noexcept FLPURE;
 
         /** If this array is mutable, returns the equivalent MutableArray*, else returns nullptr. */
-        MutableDict* asMutable() const noexcept PURE;
+        MutableDict* asMutable() const noexcept FLPURE;
 
 #ifdef __OBJC__
         /** Looks up the Value for a key given as an NSString object. */
@@ -50,7 +50,7 @@ namespace fleece { namespace impl {
         }
 #endif
 
-        bool isEqualToDict(const Dict* NONNULL) const noexcept PURE;
+        bool isEqualToDict(const Dict* NONNULL) const noexcept FLPURE;
 
         /** An empty Dict. */
         static const Dict* const kEmpty;
@@ -65,14 +65,14 @@ namespace fleece { namespace impl {
             iterator(const Dict*, const SharedKeys*) noexcept;
 
             /** Returns the number of _remaining_ items. */
-            uint32_t count() const noexcept PURE                  {return _a._count;}
+            uint32_t count() const noexcept FLPURE                  {return _a._count;}
 
             slice keyString() const noexcept;
-            const Value* key() const noexcept PURE                {return _key;}
-            const Value* value() const noexcept PURE              {return _value;}
+            const Value* key() const noexcept FLPURE                {return _key;}
+            const Value* value() const noexcept FLPURE              {return _value;}
 
             /** Returns false when the iterator reaches the end. */
-            explicit operator bool() const noexcept PURE          {return _key != nullptr;}
+            explicit operator bool() const noexcept FLPURE          {return _key != nullptr;}
 
             /** Steps to the next item. (Throws if there are no more items.) */
             iterator& operator ++();
@@ -80,7 +80,7 @@ namespace fleece { namespace impl {
             /** Steps forward by one or more items. (Throws if stepping past the end.) */
             iterator& operator += (uint32_t);
 
-            const SharedKeys* sharedKeys() const PURE            {return _sharedKeys;}
+            const SharedKeys* sharedKeys() const FLPURE            {return _sharedKeys;}
             key_t keyt() const noexcept;
 
 #ifdef __OBJC__
@@ -142,9 +142,9 @@ namespace fleece { namespace impl {
         constexpr Dict()  :Value(internal::kDictTag, 0, 0) { }
 
     protected:
-        internal::HeapDict* heapDict() const noexcept PURE;
-        uint32_t rawCount() const noexcept PURE;
-        const Dict* getParent() const noexcept PURE;
+        internal::HeapDict* heapDict() const noexcept FLPURE;
+        uint32_t rawCount() const noexcept FLPURE;
+        const Dict* getParent() const noexcept FLPURE;
 
         static bool isMagicParentKey(const Value *v);
         static constexpr int kMagicParentKey = -2048;

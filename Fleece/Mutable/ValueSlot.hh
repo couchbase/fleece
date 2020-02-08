@@ -28,11 +28,11 @@ namespace fleece { namespace impl {
         ValueSlot(ValueSlot &&other) noexcept;
         ValueSlot& operator= (ValueSlot &&other) noexcept;
 
-        bool empty() const PURE                              {return !_isInline && _asValue == nullptr;}
-        explicit operator bool() const PURE                  {return !empty();}
+        bool empty() const FLPURE                              {return !_isInline && _asValue == nullptr;}
+        explicit operator bool() const FLPURE                  {return !empty();}
 
-        const Value* asValue() const PURE;
-        const Value* asValueOrUndefined() const PURE;
+        const Value* asValue() const FLPURE;
+        const Value* asValueOrUndefined() const FLPURE;
 
         // Setters for the various Value types:
         void set(Null);

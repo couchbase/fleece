@@ -42,10 +42,10 @@ namespace fleece { namespace impl {
             static HeapValue* createData(slice s)       {return createStr(internal::kBinaryTag, s);}
             static HeapValue* create(const Value*);
 
-            static const Value* asValue(HeapValue *v) PURE   {return v ? v->asValue() : nullptr;}
-            const Value* asValue() const PURE                {return (const Value*)&_header;}
+            static const Value* asValue(HeapValue *v) FLPURE   {return v ? v->asValue() : nullptr;}
+            const Value* asValue() const FLPURE                {return (const Value*)&_header;}
 
-            static bool isHeapValue(const Value *v) PURE     {return ((size_t)v & 1) != 0;}
+            static bool isHeapValue(const Value *v) FLPURE     {return ((size_t)v & 1) != 0;}
             static HeapValue* asHeapValue(const Value*);
 
             static const Value* retain(const Value *v);
@@ -75,7 +75,7 @@ namespace fleece { namespace impl {
         public:
             static Retained<HeapCollection> mutableCopy(const Value *v, tags ifType);
 
-            bool isChanged() const PURE                          {return _changed;}
+            bool isChanged() const FLPURE                          {return _changed;}
 
         protected:
             HeapCollection(internal::tags tag)

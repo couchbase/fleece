@@ -33,29 +33,29 @@ namespace fleece { namespace impl {
             uint8_t _width;
 
             impl(const Value*) noexcept;
-            const Value* second() const noexcept PURE      {return offsetby(_first, _width);}
-            const Value* firstValue() const noexcept PURE;
-            const Value* deref(const Value*) const noexcept PURE;
-            const Value* operator[] (unsigned index) const noexcept PURE;
-            size_t indexOf(const Value *v) const noexcept PURE;
+            const Value* second() const noexcept FLPURE      {return offsetby(_first, _width);}
+            const Value* firstValue() const noexcept FLPURE;
+            const Value* deref(const Value*) const noexcept FLPURE;
+            const Value* operator[] (unsigned index) const noexcept FLPURE;
+            size_t indexOf(const Value *v) const noexcept FLPURE;
             void offset(uint32_t n);
-            bool isMutableArray() const noexcept PURE      {return _width > 4;}
+            bool isMutableArray() const noexcept FLPURE      {return _width > 4;}
         };
 
     public:
 
         /** The number of items in the array. */
-        uint32_t count() const noexcept PURE;
+        uint32_t count() const noexcept FLPURE;
 
-        bool empty() const noexcept PURE;
+        bool empty() const noexcept FLPURE;
 
         /** Accesses an array item. Returns nullptr for out of range index.
             If you're accessing a lot of items of the same array, it's faster to make an
             iterator and use its sequential or random-access accessors. */
-        const Value* get(uint32_t index) const noexcept PURE;
+        const Value* get(uint32_t index) const noexcept FLPURE;
 
         /** If this array is mutable, returns the equivalent MutableArray*, else returns nullptr. */
-        MutableArray* asMutable() const PURE;
+        MutableArray* asMutable() const FLPURE;
 
         /** An empty Array. */
         static const Array* const kEmpty;
@@ -67,21 +67,21 @@ namespace fleece { namespace impl {
             iterator(const Array* a) noexcept;
 
             /** Returns the number of _remaining_ items. */
-            uint32_t count() const noexcept PURE                  {return _count;}
+            uint32_t count() const noexcept FLPURE                  {return _count;}
 
-            const Value* value() const noexcept PURE              {return _value;}
-            explicit operator const Value* () const noexcept PURE {return _value;}
-            const Value* operator-> () const noexcept PURE        {return _value;}
+            const Value* value() const noexcept FLPURE              {return _value;}
+            explicit operator const Value* () const noexcept FLPURE {return _value;}
+            const Value* operator-> () const noexcept FLPURE        {return _value;}
 
             /** Returns the current item and advances to the next. */
             const Value* read() noexcept                     {auto v = _value; ++(*this); return v;}
 
             /** Random access to items. Index is relative to the current item.
                 This is very fast, faster than array::get(). */
-            const Value* operator[] (unsigned i) const noexcept PURE    {return ((impl&)*this)[i];}
+            const Value* operator[] (unsigned i) const noexcept FLPURE    {return ((impl&)*this)[i];}
 
             /** Returns false when the iterator reaches the end. */
-            explicit operator bool() const noexcept PURE          {return _count > 0;}
+            explicit operator bool() const noexcept FLPURE          {return _count > 0;}
 
             /** Steps to the next item. (Throws if there are no more items.) */
             iterator& operator++();

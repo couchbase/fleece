@@ -23,6 +23,7 @@
 #include "TargetConditionals.h"
 #endif
 
+// Increasingly-standard feature-detection macros, predefined by modern GCC & Clang compilers.
 #ifndef __has_builtin
     #define __has_builtin(B)                0
 #endif
@@ -37,7 +38,6 @@
 
 
 #ifdef _MSC_VER
-
     #define NOINLINE                        __declspec(noinline)
     #define ALWAYS_INLINE                   inline
     #define ASSUME(cond)                    __assume(cond)
@@ -74,10 +74,10 @@
     #define LITECORE_UNUSED __attribute__((unused))
     #endif
 
-    // Disables inlining a function
+    // Disables inlining a function. Use when the space savings are worth more than speed.
     #define NOINLINE                        __attribute((noinline))
 
-    // Forces function to be inlined
+    // Forces function to be inlined. Use with care for speed-critical code.
     #if __has_attribute(always_inline)
         #define ALWAYS_INLINE               __attribute__((always_inline)) inline
     #else
@@ -85,19 +85,13 @@
     #endif
 
     // Tells the optimizer it may assume `cond` is true (but does not generate code to evaluate it.)
+    // A typical use cases is like `ASSUME(x != nullptr)`.
+    // Note: Avoid putting function calls inside it; I've seen cases where those functions appear
+    // inlined at the call site in the optimized code, even though they're not supposed to.)
     #if __has_builtin(__builtin_assume)
         #define ASSUME(cond)                __builtin_assume(cond)
     #else
         #define ASSUME(cond)                (void(0))
-    #endif
-
-    // Declares that a parameter must not be NULL. The compiler can sometimes detect violations
-    // of this at compile time. The Clang Undefined-Behavior Sanitizer will check at runtime.
-    #ifdef __clang__
-        #define NONNULL                     __attribute__((nonnull))
-    #else
-        // GCC's' `nonnull` works differently (not as well: requires parameter numbers be given)
-        #define NONNULL
     #endif
 
     // Declares this function takes a printf-like format string, and the subsequent args should
@@ -108,6 +102,7 @@
 
     #define WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) 0
 
+    // Windows has underscore prefixes before these function names, so define a common name
     #define cbl_strdup strdup
     #define cbl_getcwd getcwd
 
@@ -116,7 +111,8 @@
 
 // Note: Code below adapted from libmdbx source code.
 
-// Applies a specific optimization level to a function, e.g. __optimize("O3") or __optimize("Os")
+// Applies a specific optimization level to a function, e.g. __optimize("O3") or __optimize("Os"),
+// Has no effect in an unoptimized build.
 #ifndef __optimize
 #   if defined(__OPTIMIZE__)
 #     if defined(__clang__) && !__has_attribute(__optimize__)
@@ -140,7 +136,7 @@
 #endif
 
 // Marks a function as being a hot-spot. Optimizes it for speed and may move it to a common
-// code section for hot functions.
+// code section for hot functions. Has no effect in an unoptimized build.
 #ifndef __hot
 #   if defined(__OPTIMIZE__)
 #       if defined(__clang__) && !__has_attribute(__hot_) \
@@ -158,7 +154,7 @@
 #endif /* __hot */
 
 // Marks a function as being rarely used (e.g. error handling.) Optimizes it for size and
-// moves it a common code section for cold functions.
+// moves it to a common code section for cold functions. Has no effect in an unoptimized build.
 #ifndef __cold
 #   if defined(__OPTIMIZE__)
 #       if defined(__clang__) && !__has_attribute(cold) \
@@ -174,4 +170,3 @@
 #       define __cold
 #   endif
 #endif /* __cold */
-

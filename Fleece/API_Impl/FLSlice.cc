@@ -48,7 +48,7 @@ namespace fleece {
 #else
     static constexpr size_t kHeapAlignmentMask = 0x07;
 #endif
-    LITECORE_UNUSED PURE static inline bool isHeapAligned(const void *p) {
+    LITECORE_UNUSED FLPURE static inline bool isHeapAligned(const void *p) {
         return ((size_t)p & kHeapAlignmentMask) == 0;
     }
 
@@ -98,7 +98,7 @@ namespace fleece {
         }
     };
 
-    __hot PURE
+    __hot FLPURE
     static sharedBuffer* bufferFromBuf(const void *buf) noexcept {
         return (sharedBuffer*)((uint8_t*)buf  - offsetof(sharedBuffer, _buf));
     }

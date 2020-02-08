@@ -35,11 +35,11 @@ namespace fleece { namespace impl {
 
         static const Scope* containing(const Value* NONNULL) noexcept;
 
-        slice data() const PURE                      {return _data;}
-        alloc_slice allocedData() const PURE         {return _alloced;}
+        slice data() const FLPURE                      {return _data;}
+        alloc_slice allocedData() const FLPURE         {return _alloced;}
 
-        SharedKeys* sharedKeys() const PURE          {return _sk;}
-        slice externDestination() const PURE         {return _externDestination;}
+        SharedKeys* sharedKeys() const FLPURE          {return _sk;}
+        slice externDestination() const FLPURE         {return _externDestination;}
 
         // For internal use:
 
@@ -103,9 +103,9 @@ namespace fleece { namespace impl {
 
         static RetainedConst<Doc> containing(const Value* NONNULL) noexcept;
 
-        const Value* root() const PURE               {return _root;}
-        const Dict* asDict() const PURE              {return _root ? _root->asDict() : nullptr;}
-        const Array* asArray() const PURE            {return _root ? _root->asArray() : nullptr;}
+        const Value* root() const FLPURE               {return _root;}
+        const Dict* asDict() const FLPURE              {return _root ? _root->asDict() : nullptr;}
+        const Array* asArray() const FLPURE            {return _root ? _root->asArray() : nullptr;}
 
     protected:
         virtual ~Doc() =default;

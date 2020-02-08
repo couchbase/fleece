@@ -18,11 +18,11 @@ namespace fleece { namespace impl { namespace internal {
 
         Pointer(size_t offset, int width, bool external =false);
 
-        bool isExternal() const PURE                 {return (_byte[0] & 0x40) != 0;}
+        bool isExternal() const FLPURE                 {return (_byte[0] & 0x40) != 0;}
 
         // Returns the byte offset
         template <bool WIDE>
-        PURE uint32_t offset() const noexcept {
+        FLPURE uint32_t offset() const noexcept {
             if (WIDE)
                 return (_dec32(wideBytes()) & ~0xC0000000) << 1;
             else
@@ -51,12 +51,12 @@ namespace fleece { namespace impl { namespace internal {
                                   const void* &dataEnd) const noexcept;
 
 
-        bool validate(bool wide, const void *dataStart) const noexcept PURE;
+        bool validate(bool wide, const void *dataStart) const noexcept FLPURE;
 
     private:
         // Byte offset as interpreted prior to the 'extern' flag
         template <bool WIDE>
-        PURE uint32_t legacyOffset() const noexcept {
+        FLPURE uint32_t legacyOffset() const noexcept {
             if (WIDE)
                 return (_dec32(wideBytes()) & ~0x80000000) << 1;
             else
@@ -67,8 +67,8 @@ namespace fleece { namespace impl { namespace internal {
 
         void setNarrowBytes(uint16_t b)             {*(uint16_t*)_byte = b;}
         void setWideBytes(uint32_t b)               {*(uint32_t*)_byte = b;}
-        uint16_t narrowBytes() const PURE                {return *(uint16_t*)_byte;}
-        uint32_t wideBytes() const PURE                  {return *(uint32_t*)_byte;}
+        uint16_t narrowBytes() const FLPURE                {return *(uint16_t*)_byte;}
+        uint32_t wideBytes() const FLPURE                  {return *(uint32_t*)_byte;}
     };
 
 

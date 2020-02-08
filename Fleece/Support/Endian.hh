@@ -44,19 +44,19 @@ namespace fleece {
 
 
     namespace internal {
-        PURE inline uint16_t swapLittle(uint16_t n)  {return (uint16_t)_encLittle16(n);}
-        PURE inline uint16_t swapBig(uint16_t n)     {return (uint16_t)_enc16(n);}
-        PURE inline uint32_t swapLittle(uint32_t n)  {return _encLittle32(n);}
-        PURE inline uint32_t swapBig(uint32_t n)     {return _enc32(n);}
-        PURE inline uint64_t swapLittle(uint64_t n)  {return _encLittle64(n);}
-        PURE inline uint64_t swapBig(uint64_t n)     {return _enc64(n);}
+        FLPURE inline uint16_t swapLittle(uint16_t n)  {return (uint16_t)_encLittle16(n);}
+        FLPURE inline uint16_t swapBig(uint16_t n)     {return (uint16_t)_enc16(n);}
+        FLPURE inline uint32_t swapLittle(uint32_t n)  {return _encLittle32(n);}
+        FLPURE inline uint32_t swapBig(uint32_t n)     {return _enc32(n);}
+        FLPURE inline uint64_t swapLittle(uint64_t n)  {return _encLittle64(n);}
+        FLPURE inline uint64_t swapBig(uint64_t n)     {return _enc64(n);}
 
         template <class INT, INT SWAP(INT)>
         class endian {
         public:
             endian()                :endian(0) { }
             endian(INT o)           :_swapped(SWAP(o)) { }
-            PURE operator INT () const   {return SWAP(_swapped);}
+            FLPURE operator INT () const   {return SWAP(_swapped);}
         private:
             INT _swapped;
         };
@@ -72,7 +72,7 @@ namespace fleece {
                 o = SWAP(o);
                 memcpy(_bytes, &o, sizeof(o));
             }
-            PURE operator INT () const {
+            FLPURE operator INT () const {
                 INT o;
                 memcpy(&o, _bytes, sizeof(o));
                 return SWAP(o);
@@ -81,12 +81,12 @@ namespace fleece {
             uint8_t _bytes[sizeof(INT)];
         };
 
-        PURE inline void swapLittle(uint16_t &n) {n = _encLittle16(n);}
-        PURE inline void swapBig(uint16_t &n)    {n = (uint16_t)_enc16(n);}
-        PURE inline void swapLittle(uint32_t &n) {n = _encLittle32(n);}
-        PURE inline void swapBig(uint32_t &n)    {n = _enc32(n);}
-        PURE inline void swapLittle(uint64_t &n) {n = _encLittle64(n);}
-        PURE inline void swapBig(uint64_t &n)    {n = _enc64(n);}
+        FLPURE inline void swapLittle(uint16_t &n) {n = _encLittle16(n);}
+        FLPURE inline void swapBig(uint16_t &n)    {n = (uint16_t)_enc16(n);}
+        FLPURE inline void swapLittle(uint32_t &n) {n = _encLittle32(n);}
+        FLPURE inline void swapBig(uint32_t &n)    {n = _enc32(n);}
+        FLPURE inline void swapLittle(uint64_t &n) {n = _encLittle64(n);}
+        FLPURE inline void swapBig(uint64_t &n)    {n = _enc64(n);}
 
 
         // Template for opaque endian floating-point value.
@@ -100,12 +100,12 @@ namespace fleece {
                 SWAP(_swapped.asRaw);
                 return *this;
             }
-            PURE operator FLT() const {
+            FLPURE operator FLT() const {
                 swapped unswap = _swapped;
                 SWAP(unswap.asRaw);
                 return unswap.asNumber;
             }
-            PURE RAW raw() {return _swapped.asRaw;}
+            FLPURE RAW raw() {return _swapped.asRaw;}
         protected:
             union swapped {
                 FLT asNumber;
