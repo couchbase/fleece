@@ -27,8 +27,14 @@
 
     #define _usuallyTrue(VAL)               (VAL)
     #define _usuallyFalse(VAL)              (VAL)
+    #ifndef __has_attribute
+    #define __has_attribute(X) 0
+    #endif
 #endif
 
+#ifndef __has_attribute
+#define __has_attribute(X) 0
+#endif
 
 // Declares that a parameter must not be NULL. The compiler can sometimes detect violations
 // of this at compile time, if the parameter value is a literal.
