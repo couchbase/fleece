@@ -38,7 +38,7 @@ struct __CFString;
 struct __CFData;
 #endif
 
-#if __cplusplus >= 201700L
+#if __cplusplus >= 201700L || _MSVC_LANG >= 201700L
     // `constexpr17` is for uses of `constexpr` that are valid in C++17 but not earlier.
     #define constexpr17 constexpr
 
