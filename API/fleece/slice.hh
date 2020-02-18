@@ -153,7 +153,7 @@ namespace fleece {
         std::string base64String() const;
 
 #ifdef SLICE_SUPPORTS_STRING_VIEW
-        operator string_view() const noexcept                {return string_view((const char*)buf, size);}
+        operator string_view() const noexcept STEPTHROUGH                {return string_view((const char*)buf, size);}
 #endif
 
         /** Copies into a C string buffer of the given size. Result is always NUL-terminated and
@@ -239,17 +239,17 @@ namespace fleece {
         Unlike its parent class pure_slice, this supports operations that change buf or size. */
     struct slice : public pure_slice {
         constexpr slice() noexcept                           :pure_slice() {}
-        constexpr slice(std::nullptr_t) noexcept             :pure_slice() {}
+        constexpr slice(std::nullptr_t) noexcept STEPTHROUGH             :pure_slice() {}
         inline constexpr slice(nullslice_t) noexcept;
         constexpr slice(const void* b, size_t s) noexcept    :pure_slice(b, s) {}
         constexpr slice(const void* start NONNULL, const void* end NONNULL) noexcept
                                                     :slice(start, (uint8_t*)end-(uint8_t*)start){}
-        inline constexpr slice(const alloc_slice&) noexcept;
+        inline constexpr slice(const alloc_slice&) noexcept STEPTHROUGH;
 
-        slice(const std::string& str) noexcept               :pure_slice(str) {}
-        constexpr17 slice(const char* str) noexcept          :pure_slice(str) {}
+        slice(const std::string& str) noexcept STEPTHROUGH               :pure_slice(str) {}
+        constexpr17 slice(const char* str) noexcept STEPTHROUGH          :pure_slice(str) {}
 #ifdef SLICE_SUPPORTS_STRING_VIEW
-        constexpr slice(string_view str) noexcept            :pure_slice(str) {}
+        constexpr slice(string_view str) noexcept STEPTHROUGH            :pure_slice(str) {}
 #endif
 
         slice& operator= (alloc_slice&&) =delete;   // Disallowed: might lead to ptr to freed buf
@@ -284,8 +284,8 @@ namespace fleece {
 
         void free() noexcept;
 
-        constexpr slice(const FLSlice &s) noexcept           :slice(s.buf, s.size) { }
-        operator FLSlice () const noexcept                   {return {buf, size};}
+        constexpr slice(const FLSlice &s) noexcept STEPTHROUGH           :slice(s.buf, s.size) { }
+        operator FLSlice () const noexcept STEPTHROUGH                   {return {buf, size};}
         inline explicit operator FLSliceResult () const noexcept;
 
 #ifdef __APPLE__
@@ -314,8 +314,8 @@ namespace fleece {
     /** A slice that owns a ref-counted block of memory. */
     struct alloc_slice : public pure_slice {
         constexpr alloc_slice() noexcept                             {}
-        constexpr alloc_slice(std::nullptr_t) noexcept               {}
-        constexpr alloc_slice(nullslice_t) noexcept                  {}
+        constexpr alloc_slice(std::nullptr_t) noexcept STEPTHROUGH               {}
+        constexpr alloc_slice(nullslice_t) noexcept STEPTHROUGH                  {}
         explicit alloc_slice(size_t s);
         explicit alloc_slice(pure_slice s);
         alloc_slice(const void* b, size_t s)                :alloc_slice(slice(b, s)) {}
@@ -325,20 +325,20 @@ namespace fleece {
         explicit alloc_slice(const std::string &str)        :alloc_slice(slice(str)) {}
         explicit alloc_slice(FLSlice s)                 :alloc_slice(pure_slice{s.buf, s.size}) { }
 
-        alloc_slice(FLHeapSlice s) noexcept     // FLHeapSlice is known to be an alloc_slice
+        alloc_slice(FLHeapSlice s) noexcept STEPTHROUGH     // FLHeapSlice is known to be an alloc_slice
         :pure_slice(s.buf, s.size)
         {
             retain();
         }
 
-        alloc_slice(FLSliceResult &&sr) noexcept
+        alloc_slice(FLSliceResult &&sr) noexcept STEPTHROUGH
         :pure_slice(sr.buf, sr.size)
         {
             sr.buf = nullptr;
             sr.size = 0;
         }
 
-        alloc_slice(const FLSliceResult &sr) noexcept
+        alloc_slice(const FLSliceResult &sr) noexcept STEPTHROUGH
         :pure_slice(sr.buf, sr.size)
         {
             retain();
@@ -349,7 +349,7 @@ namespace fleece {
 #endif
 
         ~alloc_slice() noexcept                             {if (buf) release();}
-        alloc_slice(const alloc_slice &s) noexcept          :pure_slice(s) {retain();}
+        alloc_slice(const alloc_slice &s) noexcept STEPTHROUGH          :pure_slice(s) {retain();}
         alloc_slice& operator=(const alloc_slice&) noexcept;
         alloc_slice& operator=(alloc_slice&& s) noexcept;
 

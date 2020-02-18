@@ -95,8 +95,8 @@ namespace fleece {
 
         ~Retained()                              {release(_ref);}
 
-        operator T* () const noexcept FLPURE            {return _ref;}
-        T* operator-> () const noexcept FLPURE          {return _ref;}
+        operator T* () const noexcept FLPURE STEPTHROUGH            {return _ref;}
+        T* operator-> () const noexcept FLPURE STEPTHROUGH          {return _ref;}
         T* get() const noexcept FLPURE                  {return _ref;}
 
         explicit operator bool () const FLPURE          {return (_ref != nullptr);}
@@ -146,8 +146,8 @@ namespace fleece {
         RetainedConst(RetainedConst &&r) noexcept       :_ref(r._ref) {r._ref = nullptr;}
         ALWAYS_INLINE ~RetainedConst()                  {release(_ref);}
 
-        operator const T* () const noexcept FLPURE             {return _ref;}
-        const T* operator-> () const noexcept FLPURE           {return _ref;}
+        operator const T* () const noexcept FLPURE  STEPTHROUGH            {return _ref;}
+        const T* operator-> () const noexcept FLPURE STEPTHROUGH           {return _ref;}
         const T* get() const noexcept FLPURE                   {return _ref;}
 
         RetainedConst& operator=(const T *t) noexcept {

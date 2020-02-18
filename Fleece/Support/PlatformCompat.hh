@@ -109,6 +109,16 @@
 #endif
 
 
+// Used for functions that are annoying to step into in the debugger, like RefCounted's operator->
+// or slice constructors. Suppressing debug info for those functions means the debugger will
+// continue through them when stepping in.
+#if __has_attribute(nodebug)
+    #define STEPTHROUGH __attribute((nodebug))
+#else
+    #define STEPTHROUGH
+#endif
+
+
 // Note: Code below adapted from libmdbx source code.
 
 // Applies a specific optimization level to a function, e.g. __optimize("O3") or __optimize("Os"),
