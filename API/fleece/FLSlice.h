@@ -15,9 +15,10 @@
 
 
 #ifdef __cplusplus
-#define FLAPI noexcept
+    #define FLAPI noexcept
+    namespace fleece { struct alloc_slice; }
 #else
-#define FLAPI
+    #define FLAPI
 #endif
 
 
@@ -47,7 +48,7 @@ typedef struct FLSliceResult {
     size_t size;
 
 #ifdef __cplusplus
-    explicit operator FLSlice () const {return {buf, size};}
+    explicit operator FLSlice () const FLAPI {return {buf, size};}
 #endif
 } FLSliceResult;
 
@@ -57,8 +58,10 @@ typedef struct FLSliceResult {
     You can just treat it like FLSlice. */
 #ifdef __cplusplus
     struct FLHeapSlice : public FLSlice {
-        FLHeapSlice()                           {buf = nullptr; size = 0;}
-        FLHeapSlice(const void *b, size_t s)    {buf = b; size = s;}
+        FLHeapSlice() FLAPI                           {buf = nullptr; size = 0;}
+    private:
+        FLHeapSlice(const void *b, size_t s) FLAPI    {buf = b; size = s;}
+        friend struct fleece::alloc_slice;
     };
 #else
     typedef FLSlice FLHeapSlice;
@@ -78,8 +81,9 @@ typedef FLSliceResult FLStringResult;
 
 
 /** Returns a slice pointing to the contents of a C string.
+    It's OK to pass NULL; this returns an empty slice.
     (Performance is O(n) with the length of the string, since it has to call `strlen`.) */
-static inline FLSlice FLStr(const char *str) {
+static inline FLSlice FLStr(const char *str) FLAPI {
     FLSlice foo = { str, str ? strlen(str) : 0 };
     return foo;
 }
@@ -110,13 +114,13 @@ void _FLBuf_Retain(const void*) FLAPI;   // internal; do not call
 void _FLBuf_Release(const void*) FLAPI;  // internal; do not call
 
 /** Increments the ref-count of a FLSliceResult. */
-static inline FLSliceResult FLSliceResult_Retain(FLSliceResult s) {
+static inline FLSliceResult FLSliceResult_Retain(FLSliceResult s) FLAPI {
     _FLBuf_Retain(s.buf);
     return s;
 }
 
 /** Decrements the ref-count of a FLSliceResult, freeing its memory if it reached zero. */
-static inline void FLSliceResult_Release(FLSliceResult s) {
+static inline void FLSliceResult_Release(FLSliceResult s) FLAPI {
     _FLBuf_Release(s.buf);
 }
 
