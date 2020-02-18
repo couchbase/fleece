@@ -33,7 +33,7 @@ namespace fleece { namespace hashtree {
 
         bool isLeaf() const FLPURE     {return _capacity == 0;}
 
-        FLPURE static void encodeOffset(offset_t &o, size_t curPos) {
+        static void encodeOffset(offset_t &o, size_t curPos) {
             assert_precondition((ssize_t)curPos > o);
             o = endian::encLittle32(offset_t(curPos - o));
         }
