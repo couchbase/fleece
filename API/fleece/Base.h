@@ -47,13 +47,54 @@
 #endif
 
 
-// "Many functions have no effects except the return value, and their
-//  return value depends only on the parameters and/or global variables.
-//  Such a function can be subject to common subexpression elimination
-//  and loop optimization just as an arithmetic operator would be.
-//  These functions should be declared with the attribute pure." -- GCC manual
+// FLPURE functions are _read-only_. They cannot write to memory (in a way that's detectable),
+// and they cannot access volatile data or do I/O.
+//
+// Calling an FLPURE function twice in a row with the same arguments must return the same result.
+//
+// "Many functions have no effects except the return value, and their return value depends only on
+//  the parameters and/or global variables. Such a function can be subject to common subexpression
+//  elimination and loop optimization just as an arithmetic operator would be. These functions
+//  should be declared with the attribute pure."
+// "The pure attribute prohibits a function from modifying the state of the program that is
+//  observable by means other than inspecting the function’s return value. However, functions
+//  declared with the pure attribute can safely read any non-volatile objects, and modify the value
+//  of objects in a way that does not affect their return value or the observable state of the
+//  program." -- GCC manual
 #if defined(__GNUC__) || __has_attribute(__pure__)
     #define FLPURE                      __attribute__((__pure__))
 #else
     #define FLPURE
 #endif
+
+// FLCONST is even stricter than FLPURE. The function cannot access memory at all (except for
+// reading immutable values like constants.) The return value can only depend on the parameters.
+//
+// Calling an FLCONST function with the same arguments must _always_ return the same result.
+//
+// "Calls to functions whose return value is not affected by changes to the observable state of the
+//  program and that have no observable effects on such state other than to return a value may lend
+//  themselves to optimizations such as common subexpression elimination. Declaring such functions
+//  with the const attribute allows GCC to avoid emitting some calls in repeated invocations of the
+//  function with the same argument values."
+// "Note that a function that has pointer arguments and examines the data pointed to must not be
+//  declared const if the pointed-to data might change between successive invocations of the
+//  function.
+// "In general, since a function cannot distinguish data that might change from data that cannot,
+//  const functions should never take pointer or, in C++, reference arguments. Likewise, a function
+//  that calls a non-const function usually must not be const itself." -- GCC manual
+#if defined(__GNUC__) || __has_attribute(__const__)
+    #define FLCONST                     __attribute__((__const__))
+#else
+    #define FLCONST
+#endif
+
+
+// `constexpr17` is for uses of `constexpr` that are valid in C++17 but not earlier.
+#ifdef __cplusplus
+    #if __cplusplus >= 201700L || _MSVC_LANG >= 201700L
+        #define constexpr17 constexpr
+    #else
+        #define constexpr17
+    #endif
+#endif // __cplusplus
