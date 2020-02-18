@@ -28,6 +28,8 @@ namespace fleece {
     class StringTable {
     public:
         StringTable(size_t capacity =0);
+        StringTable(const StringTable&);
+        StringTable& operator=(const StringTable&);
         ~StringTable();
 
         using key_t   = slice;
@@ -74,9 +76,6 @@ namespace fleece {
         void allocTable(size_t size);
         void grow();
         void initTable(size_t size, hash_t *hashes, entry_t *entries);
-
-        StringTable(const StringTable&) =delete;
-        StringTable& operator=(const StringTable&) =delete;
 
         size_t _size;           // Size of the arrays
         size_t _sizeMask;       // Used for quick modulo: (i & _sizeMask) == (i % _size)

@@ -51,6 +51,30 @@ namespace fleece {
     }
 
 
+    StringTable::StringTable(const StringTable &s) {
+        *this = s;
+    }
+
+
+    StringTable& StringTable::operator=(const StringTable &s) {
+        if (_allocated) {
+            free(_hashes);
+            _hashes = nullptr;
+        }
+        _entries = nullptr;
+        _allocated = false;
+
+        allocTable(s._size);
+        
+        _count = s._count;
+        _maxDistance = s._maxDistance;
+        memcpy(_hashes, s._hashes, _count * sizeof(hash_t));
+        memcpy(_entries, s._entries, _count * sizeof(entry_t));
+
+        return *this;
+    }
+
+
     StringTable::~StringTable() {
         if (_allocated)
             free(_hashes);
