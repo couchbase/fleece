@@ -224,8 +224,10 @@ TEST_CASE("API MutableDict", "[API]") {
     d.set("foo"_sl, "bar");
     REQUIRE(d.get("foo"_sl));
     CHECK(d.get("foo"_sl).asString() == "bar"_sl);
+    CHECK(d.count() == 1);
 
     d.set("x"_sl) = 1234;
+    CHECK(d.count() == 2);
     CHECK(d.toJSONString() == "{\"foo\":\"bar\",\"x\":1234}");
     REQUIRE(d.get("x"_sl));
     CHECK(d.get("x"_sl).asInt() == 1234);

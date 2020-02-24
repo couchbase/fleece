@@ -6,6 +6,7 @@
 
 #pragma once
 #include "HeapValue.hh"
+#include "NanTagged.hh"
 
 namespace fleece { namespace impl {
     namespace internal {
@@ -18,7 +19,7 @@ namespace fleece { namespace impl {
         or as an inline copy (if it's small enough.) */
     class ValueSlot {
     public:
-        ValueSlot() { }
+        ValueSlot();
         ValueSlot(Null);
         ~ValueSlot();
         ValueSlot(internal::HeapCollection *md);
@@ -28,7 +29,7 @@ namespace fleece { namespace impl {
         ValueSlot(ValueSlot &&other) noexcept;
         ValueSlot& operator= (ValueSlot &&other) noexcept;
 
-        bool empty() const FLPURE                              {return !_isInline && _asValue == nullptr;}
+        bool empty() const FLPURE                              {return _slot.isPointer() && _slot.pointerValue() == nullptr;}
         explicit operator bool() const FLPURE                  {return !empty();}
 
         const Value* asValue() const FLPURE;
@@ -72,15 +73,9 @@ namespace fleece { namespace impl {
         template <class INT> void setInt(INT, bool isUnsigned);
         void _setStringOrData(internal::tags valueTag, slice);
 
-        union {
-            uint8_t             _inlineData[sizeof(void*)];
-            const Value*        _asValue {nullptr};
-        };
+        static const auto kInlineCapacity = NanTagged<Value>::kInlineCapacity;
 
-        uint8_t _moreInlineData[sizeof(void*) - 1];
-        bool _isInline {false};
-
-        static constexpr size_t kInlineCapacity = sizeof(ValueSlot::_inlineData) + sizeof(ValueSlot::_moreInlineData);
+        NanTagged<Value> _slot;
     };
 
 } }
