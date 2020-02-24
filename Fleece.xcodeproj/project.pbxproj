@@ -295,6 +295,7 @@
 		271507EE2122381E005FE6E8 /* slice.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = slice.hh; sourceTree = "<group>"; };
 		271507EF21223A02005FE6E8 /* Base.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Base.h; sourceTree = "<group>"; };
 		271507F6212349B8005FE6E8 /* API_ValueTests.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = API_ValueTests.cc; sourceTree = "<group>"; };
+		272946BD2404513B00F6B737 /* NanTagged.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = NanTagged.hh; sourceTree = "<group>"; };
 		27298E3A1C00F812000CFBA8 /* JSONConverter.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSONConverter.cc; sourceTree = "<group>"; };
 		27298E491C00F8A9000CFBA8 /* jsonsl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jsonsl.c; sourceTree = "<group>"; };
 		27298E4A1C00F8A9000CFBA8 /* jsonsl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = jsonsl.h; sourceTree = "<group>"; };
@@ -777,6 +778,7 @@
 				273483F71DDA59B900B27A8C /* Fleece.pch */,
 				27CEE44F20F00B4E00089A85 /* Fleece.exp */,
 				27AEFAC721091A8C00106ED8 /* diff_match_patch.hh */,
+				272946BD2404513B00F6B737 /* NanTagged.hh */,
 			);
 			path = Support;
 			sourceTree = "<group>";
@@ -1258,24 +1260,24 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				27393C941FEC30E300FBFE59 /* FleeceTestsMain.cc in Sources */,
-				272E5A5D1BF800A100848580 /* EncoderTests.cc in Sources */,
-				271507F7212349B8005FE6E8 /* API_ValueTests.cc in Sources */,
 				27F25A8420A6560A00E181FA /* LibC++Debug.cc in Sources */,
+				27393C941FEC30E300FBFE59 /* FleeceTestsMain.cc in Sources */,
+				27F666442017E26700A8ED31 /* SupportTests.cc in Sources */,
+				276D15491E008E7A00543B1B /* JSON5Tests.cc in Sources */,
+				27D96573233AB44000F4A51C /* NumericTests.cc in Sources */,
 				272E5A521BF7FE7100848580 /* FleeceTests.cc in Sources */,
 				278163B91CE6BB8C00B94E32 /* C_Test.c in Sources */,
-				27F666442017E26700A8ED31 /* SupportTests.cc in Sources */,
 				279AC52B1C07776A002C80DB /* ValueTests.cc in Sources */,
-				27CEE41A20EFE92E00089A85 /* KeyTree.cc in Sources */,
+				272E5A5D1BF800A100848580 /* EncoderTests.cc in Sources */,
 				27E3DD531DB7DB1C00F2872D /* SharedKeysTests.cc in Sources */,
-				276D15491E008E7A00543B1B /* JSON5Tests.cc in Sources */,
-				272E5A5F1BF91DBE00848580 /* ObjCTests.mm in Sources */,
-				2734B8A71F85842300BE5249 /* MTests.mm in Sources */,
-				274D824F209A8D01008BB39F /* MutableTests.cc in Sources */,
-				277F45B4208FDA1800A0D159 /* HashTreeTests.cc in Sources */,
 				27AEFAC5210913C500106ED8 /* DeltaTests.cc in Sources */,
+				274D824F209A8D01008BB39F /* MutableTests.cc in Sources */,
+				271507F7212349B8005FE6E8 /* API_ValueTests.cc in Sources */,
 				27298E781C01A461000CFBA8 /* PerfTests.cc in Sources */,
-				27D96573233AB44000F4A51C /* NumericTests.cc in Sources */,
+				2734B8A71F85842300BE5249 /* MTests.mm in Sources */,
+				272E5A5F1BF91DBE00848580 /* ObjCTests.mm in Sources */,
+				277F45B4208FDA1800A0D159 /* HashTreeTests.cc in Sources */,
+				27CEE41A20EFE92E00089A85 /* KeyTree.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
