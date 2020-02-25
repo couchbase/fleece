@@ -28,18 +28,23 @@ namespace fleece { namespace impl {
     using namespace internal;
 
 
+    static_assert(sizeof(ValueSlot) == 8);
+
+
     ValueSlot::ValueSlot()
-    :_slot(nullptr)
+    :_pointer(0)
     { }
 
 
     ValueSlot::ValueSlot(Null)
-    :_slot({(kSpecialTag << 4) | kSpecialValueNull})
-    { }
+    :_pointerTag(0xFF)
+    {
+        _inline[0] = ((kSpecialTag << 4) | kSpecialValueNull);
+    }
 
 
     ValueSlot::ValueSlot(HeapCollection *md)
-    :_slot( retain(md)->asValue() )
+    :_pointer( uint64_t(retain(md)->asValue()) )
     { }
 
 
@@ -50,83 +55,60 @@ namespace fleece { namespace impl {
 
     ValueSlot& ValueSlot::operator= (const ValueSlot &other) noexcept {
         releaseValue();
-        _slot = other._slot;
-        if (_slot.isPointer())
-            retain(_slot.pointerValue());
+        _pointer = other._pointer;
+        if (isPointer())
+            retain(pointer());
         return *this;
     }
 
 
     ValueSlot::ValueSlot(ValueSlot &&other) noexcept {
-        _slot = other._slot;
-        other._slot = nullptr;
+        _pointer = other._pointer;
+        other._pointer = 0;
     }
 
+
     ValueSlot& ValueSlot::operator= (ValueSlot &&other) noexcept {
-        release(_slot.asPointer());
-        _slot = other._slot;
-        other._slot = nullptr;
+        release(asPointer());
+        _pointer = other._pointer;
+        other._pointer = 0;
         return *this;
     }
 
 
 
     ValueSlot::~ValueSlot() {
-        if (_slot.isPointer())
-            release(_slot.pointerValue());
-    }
-
-
-    Retained<HeapCollection> HeapCollection::mutableCopy(const Value *v, tags ifType) {
-        if (!v || v->tag() != ifType)
-            return nullptr;
-        if (v->isMutable())
-            return (HeapCollection*)asHeapValue(v);
-        switch (ifType) {
-            case kArrayTag: return new HeapArray((const Array*)v);
-            case kDictTag:  return new HeapDict((const Dict*)v);
-            default:        return nullptr;
-        }
+        if (isPointer())
+            release(pointer());
     }
 
 
     void ValueSlot::releaseValue() {
-        if (_slot.isPointer()) {
-            release(_slot.pointerValue());
-            _slot = nullptr;
+        if (isPointer()) {
+            release(pointer());
+            _pointer = 0;
         }
     }
 
 
-    const Value* ValueSlot::asValue() const {
-        return _slot.isPointer() ? _slot.pointerValue() : _slot.inlinePointer();
-    }
-
     const Value* ValueSlot::asValueOrUndefined() const {
-        if (_slot.isInline())
-            return (const Value*)_slot.inlineBytes().buf;
-        else if (_slot.asPointer())
-            return _slot.asPointer();
-        else
-            return Value::kUndefinedValue;
-    }
-
-    HeapCollection* ValueSlot::asMutableCollection() const {
-        const Value *ptr = _slot.asPointer();
-        if (ptr && ptr->isMutable())
-            return (HeapCollection*)HeapValue::asHeapValue(ptr);
-        return nullptr;
+        return _pointer ? asValue() : Value::kUndefinedValue;
     }
 
 
-    static inline FLPURE uint8_t tagByte(internal::tags t, int tiny) {
-        return uint8_t((t << 4) | tiny);
+    void ValueSlot::setPointer(const Value *v) {
+        if (_usuallyFalse(v == pointer()))
+            return;
+        releaseValue();
+        _pointer = uint64_t(size_t(retain(v)));
+        assert(isPointer());
     }
 
 
     void ValueSlot::setInline(internal::tags valueTag, int tiny) {
         releaseValue();
-        _slot.setInline({tagByte(valueTag, tiny)});
+        _pointerTag = 0xFF;
+        _inline[0] = uint8_t((valueTag << 4) | tiny);
     }
 
     void ValueSlot::set(Null) {
@@ -139,34 +121,25 @@ namespace fleece { namespace impl {
     }
 
 
-    void ValueSlot::set(int i)       {setInt(i, false);}
-    void ValueSlot::set(unsigned i)  {setInt(i, true);}
-    void ValueSlot::set(int64_t i)   {setInt(i, false);}
-    void ValueSlot::set(uint64_t i)  {setInt(i, true);}
+    void ValueSlot::set(int i)       {setInt(i);}
+    void ValueSlot::set(unsigned i)  {setInt(i);}
+    void ValueSlot::set(int64_t i)   {setInt(i);}
+    void ValueSlot::set(uint64_t i)  {setInt(i);}
 
-#ifdef _MSC_VER
-#pragma warning(push)
-// unary minus operator applied to unsigned type, result still unsigned
-// short circuited by isUnsigned
-#pragma warning(disable : 4146)
-#endif
 
     template <class INT>
-    void ValueSlot::setInt(INT i, bool isUnsigned) {
-        if (i < 2048 && (isUnsigned || -i < 2048)) {
-            _slot.setInline({tagByte(kShortIntTag, (i >> 8) & 0x0F),  (uint8_t)(i & 0xFF)});
+    void ValueSlot::setInt(INT i) {
+        if (i < 2048 && (!numeric_limits<INT>::is_signed || -i < 2048)) {
+            setInline(kShortIntTag, (i >> 8) & 0x0F);
+            _inline[1] = (uint8_t)(i & 0xFF);
         } else {
             uint8_t buf[8];
-            auto size = PutIntOfLength(buf, i, isUnsigned);
+            auto size = PutIntOfLength(buf, i, !numeric_limits<INT>::is_signed);
             setValue(kIntTag,
-                     (int)(size-1) | (isUnsigned ? 0x08 : 0),
+                     (int)(size-1) | (numeric_limits<INT>::is_signed ? 0 : 0x08),
                      {buf, size});
         }
     }
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 
     void ValueSlot::set(float f) {
@@ -187,63 +160,61 @@ namespace fleece { namespace impl {
         if (Encoder::isIntRepresentable(d)) {
             set((int64_t)d);
         } else {
-            struct {
-                uint8_t filler = 0;
-                endian::littleEndianDouble le;
-            } data;
-            data.le = d;
-            setValue(kFloatTag, 8, {(char*)&data.le - 1, sizeof(data.le) + 1});
+            setPointer(HeapValue::create(d)->asValue());
         }
         assert_postcondition(asValue()->asDouble() == d);
     }
 
 
     void ValueSlot::setValue(const Value *v) {
-        if (_slot.isPointer()) {
-            if (v == _slot.pointerValue())
-                return;
-            release(_slot.pointerValue());
-        }
         if (v && v->tag() < kArrayTag) {
             auto size = v->dataSize();
             if (size <= kInlineCapacity) {
                 // Copy value inline if it's small enough
-                _slot.setInline(slice(v, size));
+                releaseValue();
+                _pointerTag = 0xFF;
+                memcpy(&_inline, v, size);
                 return;
             }
         }
         // else point to it
-        _slot.setPointer(retain(v));
+        setPointer(v);
     }
 
 
     void ValueSlot::setValue(tags valueTag, int tiny, slice bytes) {
         if (1 + bytes.size <= kInlineCapacity) {
             setInline(valueTag, tiny);
-            memcpy(offsetby(_slot.inlinePointer(), 1), bytes.buf, bytes.size);
+            memcpy(&_inline[1], bytes.buf, bytes.size);
         } else {
-            releaseValue();
-            _slot.setPointer( retain(HeapValue::create(valueTag, tiny, bytes)->asValue()) );
+            setPointer(HeapValue::create(valueTag, tiny, bytes)->asValue());
         }
     }
 
 
-    void ValueSlot::_setStringOrData(tags valueTag, slice s) {
+    void ValueSlot::setStringOrData(tags valueTag, slice s) {
         if (s.size + 1 <= kInlineCapacity) {
             // Short strings can go inline:
             setInline(valueTag, (int)s.size);
-            memcpy(offsetby(_slot.inlinePointer(), 1), s.buf, s.size);
+            memcpy(&_inline[1], s.buf, s.size);
         } else {
-            releaseValue();
-            _slot.setPointer( retain(HeapValue::createStr(valueTag, s)->asValue()) );
+            setPointer(HeapValue::createStr(valueTag, s)->asValue());
         }
+    }
+
+
+    HeapCollection* ValueSlot::asMutableCollection() const {
+        const Value *ptr = asPointer();
+        if (ptr && ptr->isMutable())
+            return (HeapCollection*)HeapValue::asHeapValue(ptr);
+        return nullptr;
     }
 
 
     HeapCollection* ValueSlot::makeMutable(tags ifType) {
-        if (_slot.isInline())
+        if (isInline())
             return nullptr;
-        Retained<HeapCollection> mval = HeapCollection::mutableCopy(_slot.pointerValue(), ifType);
+        Retained<HeapCollection> mval = HeapCollection::mutableCopy(pointer(), ifType);
         if (mval)
             set(mval->asValue());
         return mval;
@@ -251,8 +222,8 @@ namespace fleece { namespace impl {
 
 
     void ValueSlot::copyValue(CopyFlags flags) {
-        const Value *value = _slot.asPointer();
-        if (_slot.isPointer() && value && ((flags & kCopyImmutables) || value->isMutable())) {
+        const Value *value = asPointer();
+        if (value && ((flags & kCopyImmutables) || value->isMutable())) {
             bool recurse = (flags & kDeepCopy);
             Retained<HeapCollection> copy;
             switch (value->tag()) {
