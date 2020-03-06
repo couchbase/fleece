@@ -185,4 +185,11 @@ namespace fleece {
     }
 
 
+    // make_retained<T>(...) is equivalent to make_unique and make_shared
+    template<class T, class... _Args>
+    static inline Retained<T>
+    make_retained(_Args&&... __args) {
+        return Retained<T>(new T(std::forward<_Args>(__args)...));
+    }
+
 }
