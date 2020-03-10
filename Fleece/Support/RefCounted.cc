@@ -17,9 +17,14 @@
 //
 
 #include "RefCounted.hh"
+#include "Backtrace.hh"
 #include <stdexcept>
 #include <stdio.h>
 #include <stdlib.h>
+
+#ifdef _MSC_VER
+#include "asprintf.h"
+#endif
 
 namespace fleece {
 
@@ -44,18 +49,24 @@ namespace fleece {
     }
 
 
-    template <bool THROW =true>
-    __cold static void fail(const RefCounted *obj, const char *what, int refCount) {
-        char message[100];
-        sprintf(message, "RefCounted object at %p %s while it had an invalid refCount of %d",
-             obj, what, refCount);
+    __cold static void fail(const RefCounted *obj, const char *what, int refCount,
+                            bool andThrow =true)
+    {
+        char *message;
+        asprintf(&message,
+                 "RefCounted object <%s @ %p> %s while it had an invalid refCount of %d (0x%x)",
+                 Unmangle(typeid(*obj)).c_str(), obj, what, refCount, refCount);
 #ifdef WarnError
         WarnError("%s", message);
 #else
         fprintf(stderr, "WARNING: %s\n", message);
 #endif
-        if (THROW)
-            throw std::runtime_error(message);
+        if (andThrow) {
+            std::string str(message);
+            free(message);
+            throw std::runtime_error(str);
+        }
+        free(message);
     }
 
 
@@ -72,7 +83,7 @@ namespace fleece {
                 // Or possibly some other thread had a pointer to this object without a proper
                 // reference, and then called retain() on it after this thread's release() set the
                 // ref-count to 0.
-                fail<false>(this, "destructed", oldRef);
+                fail(this, "destructed", oldRef, false);
             }
         }
     }

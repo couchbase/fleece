@@ -8,6 +8,7 @@
 #include <functional>
 #include <string>
 #include <iostream>
+#include <typeinfo>
 
 namespace fleece {
 
@@ -52,5 +53,9 @@ namespace fleece {
         size_t _unmangledLen {0};
 #endif
     };
+
+
+    /// Attempts to return the unmangled name of the type. (If it fails, returns the mangled name.)
+    std::string Unmangle(const std::type_info&);
 
 }

@@ -120,6 +120,23 @@ namespace fleece {
     }
 
 
+    std::string Unmangle(const std::type_info &type) {
+        const char *name = type.name();
+#ifdef __clang__
+        int status;
+        size_t unmangledLen;
+        char *unmangled = abi::__cxa_demangle(name, nullptr, &unmangledLen, &status);
+        if (unmangled && status == 0) {
+            string result = unmangled;
+            free(unmangled);
+            return result;
+        }
+        free(unmangled);
+#endif
+        return string(name);
+    }
+
+
     bool Backtrace::writeTo(ostream &out) {
         if (_skip >= _nAddrs)
             return false;
@@ -220,6 +237,11 @@ namespace fleece {
 
     const char* Backtrace::unmangle(const char *symbol) {
         return symbol;
+    }
+
+
+    std::string Unmangle(const std::type_info &type) {
+        return string(type.name());
     }
 
 }
