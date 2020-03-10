@@ -273,11 +273,12 @@ namespace fleece { namespace impl {
     static inline void release(const Value *val) noexcept {
         if (val) val->_release();
     }
-    static inline void copyRef(void *dstPtr, const Value *src) noexcept {
-        auto old = *(const Value**)dstPtr;
-        if (src) src->_retain();
-        *(const Value**)dstPtr = src;
-        if (old) old->_release();
+
+    static inline void moveRef(const Value *old, const Value *nuu) noexcept {
+        if (_usuallyTrue(nuu != old)) {
+            if (nuu) nuu->_retain();
+            if (old) old->_release();
+        }
     }
 
 } }

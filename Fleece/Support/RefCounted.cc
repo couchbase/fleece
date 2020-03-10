@@ -35,10 +35,12 @@ namespace fleece {
         if (r) r->_release();
     }
 
-    __hot void copyRef(void* dstPtr, RefCounted *src) noexcept {
-        auto old = *(RefCounted**)dstPtr;
-        *(RefCounted**)dstPtr = retain(src);
-        release(old);
+    
+    __hot void moveRef(RefCounted* old, RefCounted *nuu) noexcept {
+        if (_usuallyTrue(nuu != old)) {
+            if (nuu) nuu->_retain();
+            if (old) old->_release();
+        }
     }
 
 
