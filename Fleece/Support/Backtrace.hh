@@ -5,7 +5,7 @@
 //
 
 #pragma once
-#include <functional>
+#include "Function.hh"
 #include <string>
 #include <iostream>
 #include <typeinfo>
@@ -38,7 +38,7 @@ namespace fleece {
         /// `andRaise` to a different signal ID such as SIGILL to force a crash.
         ///
         /// Only the first call to this function has any effect; subsequent calls are ignored.
-        static void installTerminateHandler(std::function<void(const std::string&)> logger);
+        static void installTerminateHandler(Function<void(const std::string&)> logger);
 
     private:
         static constexpr size_t kMaxAddrs = 50;

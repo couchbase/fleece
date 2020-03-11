@@ -6,8 +6,8 @@
 
 #pragma once
 #include "HashTree.hh"
+#include "Function.hh"
 #include "fleece/slice.hh"
-#include <functional>
 #include <memory>
 
 namespace fleece {
@@ -39,7 +39,7 @@ namespace fleece {
 
         bool isChanged() const                  {return _root != nullptr;}
 
-        using InsertCallback = std::function<Value(Value)>;
+        using InsertCallback = Function<Value(Value)>;
 
         void set(slice key, Value);
         bool insert(slice key, InsertCallback);

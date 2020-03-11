@@ -5,9 +5,9 @@
 //
 
 #pragma once
+#include "Function.hh"
 #include <cstddef> //for size_t
 #include <atomic>
-#include <functional>
 #include <stdint.h>
 
 #ifndef INSTANCECOUNTED_TRACK
@@ -35,7 +35,7 @@ namespace fleece {
 
         /** Logs information to stderr about all live objects. */
         static void dumpInstances();
-        static void dumpInstances(std::function<void(const InstanceCounted*)>);
+        static void dumpInstances(Function<void(const InstanceCounted*)>);
 
     protected:
         InstanceCounted(size_t offset)              {track(offset);}

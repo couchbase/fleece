@@ -56,7 +56,7 @@ namespace fleece {
         dumpInstances(nullptr);
     }
 
-    void InstanceCounted::dumpInstances(std::function<void(const InstanceCounted*)> callback) {
+    void InstanceCounted::dumpInstances(Function<void(const InstanceCounted*)> callback) {
         char* unmangled = nullptr;
         lock_guard<mutex> lock(sInstancesMutex);
         for (auto entry : sInstances) {
