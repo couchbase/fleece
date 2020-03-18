@@ -120,8 +120,7 @@ namespace fleece {
     }
 
 
-    std::string Unmangle(const std::type_info &type) {
-        const char *name = type.name();
+    std::string Unmangle(const char *name NONNULL) {
 #ifdef __clang__
         int status;
         size_t unmangledLen;
@@ -134,6 +133,16 @@ namespace fleece {
         free(unmangled);
 #endif
         return string(name);
+    }
+
+
+    std::string FunctionName(const void *pc) {
+        Dl_info info = {};
+        dladdr(pc, &info);
+        if (info.dli_sname)
+            return Unmangle(info.dli_sname);
+        else
+            return "";
     }
 
 
@@ -240,8 +249,8 @@ namespace fleece {
     }
 
 
-    std::string Unmangle(const std::type_info &type) {
-        return string(type.name());
+    std::string Unmangle(const char *name) {
+        return string(name);
     }
 
 }
@@ -250,6 +259,10 @@ namespace fleece {
 
 
 namespace fleece {
+
+    std::string Unmangle(const std::type_info &type) {
+        return Unmangle(type.name());
+    }
 
     string Backtrace::toString() {
         stringstream out;

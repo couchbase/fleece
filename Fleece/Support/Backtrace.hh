@@ -6,6 +6,7 @@
 
 #pragma once
 #include "Function.hh"
+#include "PlatformCompat.hh"
 #include <string>
 #include <iostream>
 #include <typeinfo>
@@ -57,5 +58,12 @@ namespace fleece {
 
     /// Attempts to return the unmangled name of the type. (If it fails, returns the mangled name.)
     std::string Unmangle(const std::type_info&);
+
+    /// Attempts to unmangle a name. (If it fails, returns the input string unaltered.)
+    std::string Unmangle(const char *name NONNULL);
+
+    /// Returns the name of the function at the given address, or an empty string if none.
+    /// The name will be unmangled, if possible.
+    std::string FunctionName(const void *pc);
 
 }
