@@ -56,7 +56,8 @@ namespace fleece { namespace impl { namespace internal {
         if (!wide) {
             // Find the Scope I'm in and check if the legacy destination is within that scope too:
             dst = offsetby(this, -(ptrdiff_t)legacyOffset<false>());
-            if (Scope::containing(this)->data().containsAddress(dst))
+            auto scope = Scope::containing(this);
+            if (scope && scope->data().containsAddress(dst))
                 return dst;
         }
 
