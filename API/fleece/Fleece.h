@@ -772,7 +772,7 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
     void FLKeyPath_Free(FLKeyPath) FLAPI;
 
     /** Evaluates a compiled key-path for a given Fleece root object. */
-    FLValue FLKeyPath_Eval(FLKeyPath FLNONNULL, FLValue root FLNONNULL) FLAPI;
+    FLValue FLKeyPath_Eval(FLKeyPath FLNONNULL, FLValue root) FLAPI;
 
     /** Evaluates a key-path from a specifier string, for a given Fleece root object.
         If you only need to evaluate the path once, this is a bit faster than creating an
@@ -781,6 +781,9 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
 
     /** Returns a path in string form. */
     FLStringResult FLKeyPath_ToString(FLKeyPath path) FLAPI;
+
+    /** Equality test. */
+    bool FLKeyPath_Equals(FLKeyPath path1, FLKeyPath path2) FLAPI;
 
     //////// SHARED KEYS
 

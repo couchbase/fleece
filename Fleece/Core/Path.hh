@@ -51,6 +51,9 @@ namespace fleece { namespace impl {
         void addIndex(int index);
         void addComponents(slice components);
 
+        bool operator== (const Path&) const;
+        bool operator!= (const Path& other) const      {return !(*this == other);}
+
         Path& operator += (const Path&);
         void drop(size_t numToDropFromStart);
 
@@ -66,7 +69,7 @@ namespace fleece { namespace impl {
 
         //// Evaluation:
 
-        const Value* eval(const Value *root NONNULL) const noexcept;
+        const Value* eval(const Value *root) const noexcept;
 
         /** One-shot evaluation; faster if you're only doing it once */
         static const Value* eval(slice specifier,
@@ -100,6 +103,7 @@ namespace fleece { namespace impl {
             Element(slice property);
             Element(int32_t arrayIndex)             :_index(arrayIndex) { }
             Element(const Element &e);
+            bool operator== (const Element &e) const;
             bool isKey() const                      {return _key != nullptr;}
             Dict::key& key() const                  {return *_key;}
             slice keyStr() const                    {return _key ? _key->string() : slice();}
@@ -108,6 +112,7 @@ namespace fleece { namespace impl {
             const Value* eval(const Value* NONNULL) const noexcept;
             static const Value* eval(char token, slice property, int32_t index,
                                      const Value *item NONNULL) noexcept;
+
         private:
             static const Value* getFromArray(const Value* NONNULL, int32_t index) noexcept;
 

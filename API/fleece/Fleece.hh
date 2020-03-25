@@ -285,6 +285,8 @@ namespace fleece {
             return std::string(alloc_slice(FLKeyPath_ToString(_path)));
         }
 
+        bool operator== (const KeyPath &kp) const       {return FLKeyPath_Equals(_path, kp._path);}
+
     private:
         KeyPath(const KeyPath&) =delete;
         KeyPath& operator=(const KeyPath&) =delete;

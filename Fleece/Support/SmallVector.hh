@@ -46,8 +46,22 @@ namespace fleece {
             return *this;
         }
 
+        template <size_t M>
+        bool operator== (const smallVector<T,M> &v) const {
+            if (_size != v._size)
+                return false;
+            auto vi = v.begin();
+            for (auto &e : *this) {
+                if (!(e == *vi))
+                    return false;
+                ++vi;
+            }
+            return true;
+        }
+
         size_t size() const FLPURE                         {return _size;}
         size_t capacity() const FLPURE                     {return _capacity;}
+
         bool empty() const FLPURE                          {return _size == 0;}
         void clear()                                {shrinkTo(0);}
         void reserve(size_t cap)                    {if (cap>_capacity) setCapacity(cap);}
