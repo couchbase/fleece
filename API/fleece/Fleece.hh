@@ -206,12 +206,12 @@ namespace fleece {
         /** An efficient key for a Dict. */
         class Key {
         public:
-            // Warning: the input string's memory MUST remain valid for as long as the Key is in
-            // use! (The Key stores a pointer to the string, but does not copy it.)
             explicit Key(slice_NONNULL string);
-            inline slice_NONNULL string() const;
-            operator slice_NONNULL() const              {return string();}
+            explicit Key(alloc_slice string);
+            inline const alloc_slice& string() const    {return _str;}
+            operator const alloc_slice&() const         {return _str;}
         private:
+            alloc_slice _str;
             FLDictKey _key;
             friend class Dict;
         };
@@ -645,8 +645,8 @@ namespace fleece {
     inline Value Dict::get(slice_NONNULL key) const   {return FLDict_Get(*this, key);}
     inline Value Dict::get(Dict::Key &key) const{return FLDict_GetWithKey(*this, &key._key);}
 
-    inline Dict::Key::Key(slice_NONNULL s)            :_key(FLDictKey_Init(s)) { }
-    inline slice_NONNULL Dict::Key::string() const   {return FLDictKey_GetString(&_key);}
+    inline Dict::Key::Key(alloc_slice s)        :_str(std::move(s)), _key(FLDictKey_Init(_str)) { }
+    inline Dict::Key::Key(slice_NONNULL s)      :Key(alloc_slice(s)) { }
 
     inline Dict::iterator::iterator(Dict d)     {FLDictIterator_Begin(d, this);}
     inline Value Dict::iterator::key() const    {return FLDictIterator_GetKey(this);}
