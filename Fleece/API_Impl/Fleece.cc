@@ -491,6 +491,10 @@ FLStringResult FLKeyPath_ToString(FLKeyPath path) FLAPI {
     return toSliceResult(alloc_slice(std::string(*path)));
 }
 
+bool FLKeyPath_Equals(FLKeyPath path1, FLKeyPath path2) FLAPI {
+    return *path1 == *path2;
+}
+
 
 #pragma mark - ENCODER:
 
