@@ -14,8 +14,9 @@ namespace fleece {
     class keyref : public Value {
     public:
         keyref(Collection &coll, Key key)           :Value(coll.get(key)), _coll(coll), _key(key) { }
-            template <class T>
-        void operator= (T value)                    {_coll.set(_key, value);}
+        void operator= (const keyref &ref)          {_coll.set(_key, ref);}
+        template <class T>
+        void operator= (const T &value)             {_coll.set(_key, value);}
         void remove()                               {_coll.remove(_key);}
     private:
         Collection _coll;
@@ -39,6 +40,7 @@ namespace fleece {
         void operator= (const std::string &v)       {FLSlot_SetString(_slot, slice(v));}
         void setData(FLSlice v)                     {FLSlot_SetData(_slot, v);}
         void operator= (Value v)                    {FLSlot_SetValue(_slot, v);}
+        void operator= (nullptr_t)                  {FLSlot_SetValue(_slot, nullptr);}
 
     private:
         friend class MutableArray;
@@ -119,6 +121,9 @@ namespace fleece {
             assert_precondition(i >= 0);
             return keyref<MutableArray,uint32_t>(*this, i);
         }
+
+        inline Value operator[] (int index) const {return get(index);} // const version
+
 
         inline MutableArray getMutableArray(uint32_t i);
         inline MutableDict getMutableDict(uint32_t i);
