@@ -87,6 +87,7 @@ FLDict FLValue_AsDict(FLValue v)           FLAPI {return v ? v->asDict() : nullp
 FLTimestamp FLValue_AsTimestamp(FLValue v) FLAPI {return v ? v->asTimestamp() : FLTimestampNone;}
 FLValue FLValue_Retain(FLValue v)          FLAPI {return retain(v);}
 void FLValue_Release(FLValue v)            FLAPI {release(v);}
+bool FLValue_IsMutable(FLValue v)          FLAPI {return v && v->isMutable();}
 
 
 FLDoc FLValue_FindDoc(FLValue v) FLAPI {

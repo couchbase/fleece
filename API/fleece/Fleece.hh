@@ -56,6 +56,7 @@ namespace fleece {
         inline bool isInteger() const;
         inline bool isUnsigned() const;
         inline bool isDouble() const;
+        inline bool isMutable() const;
 
         inline bool asBool() const;
         inline int64_t asInt() const;
@@ -607,6 +608,7 @@ namespace fleece {
     inline bool Value::isInteger() const        {return FLValue_IsInteger(_val);}
     inline bool Value::isUnsigned() const       {return FLValue_IsUnsigned(_val);}
     inline bool Value::isDouble() const         {return FLValue_IsDouble(_val);}
+    inline bool Value::isMutable() const        {return FLValue_IsMutable(_val);}
 
     inline bool Value::asBool() const           {return FLValue_AsBool(_val);}
     inline int64_t Value::asInt() const         {return FLValue_AsInt(_val);}

@@ -314,6 +314,9 @@ extern "C" {
     /** Compares two values for equality. This is a deep recursive comparison. */
     bool FLValue_IsEqual(FLValue v1, FLValue v2) FLAPI FLPURE;
 
+    /** Returns true if the value is mutable. */
+    bool FLValue_IsMutable(FLValue) FLAPI FLPURE;
+
     /** \name Ref-counting (mutable values only)
          @{ */
 
