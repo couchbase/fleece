@@ -72,11 +72,9 @@ namespace fleece {
         inline std::string asstring() const             {return asString().asString();}
 
         inline alloc_slice toString() const;
-        inline alloc_slice toJSON() const;
-        inline alloc_slice toJSON5() const;
-
-        inline alloc_slice toJSON(bool json5 =false, bool canonical =false);
-        inline std::string toJSONString()               {return std::string(toJSON());}
+        inline alloc_slice toJSON(bool json5 =false, bool canonical =false) const;
+        inline std::string toJSONString() const         {return std::string(toJSON());}
+        inline alloc_slice toJSON5() const              {return toJSON(true);}
 
         explicit operator bool() const                  {return _val != nullptr;}
         bool operator! () const                         {return _val == nullptr;}
@@ -622,10 +620,8 @@ namespace fleece {
     inline Dict Value::asDict() const           {return FLValue_AsDict(_val);}
 
     inline alloc_slice Value::toString() const {return FLValue_ToString(_val);}
-    inline alloc_slice Value::toJSON() const {return FLValue_ToJSON(_val);}
-    inline alloc_slice Value::toJSON5() const{return FLValue_ToJSON5(_val);}
 
-    inline alloc_slice Value::toJSON(bool json5, bool canonical) {
+    inline alloc_slice Value::toJSON(bool json5, bool canonical) const {
         return FLValue_ToJSONX(_val, json5, canonical);
     }
 
