@@ -788,6 +788,12 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
     /** Equality test. */
     bool FLKeyPath_Equals(FLKeyPath path1, FLKeyPath path2) FLAPI;
 
+    /** Returns an element of a path, either a key or an array index. */
+    bool FLKeyPath_GetElement(FLKeyPath FLNONNULL,
+                              size_t i,
+                              FLSlice *outDictKey FLNONNULL,
+                              int32_t *outArrayIndex FLNONNULL) FLAPI;
+
     //////// SHARED KEYS
 
 

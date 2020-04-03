@@ -496,6 +496,15 @@ bool FLKeyPath_Equals(FLKeyPath path1, FLKeyPath path2) FLAPI {
     return *path1 == *path2;
 }
 
+bool FLKeyPath_GetElement(FLKeyPath path, size_t i, FLSlice *outKey, int32_t *outIndex) FLAPI {
+    if (i >= path->size())
+        return false;
+    auto &element = (*path)[i];
+    *outKey = element.keyStr();
+    *outIndex = element.index();
+    return true;
+}
+
 
 #pragma mark - ENCODER:
 

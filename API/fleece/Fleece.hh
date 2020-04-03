@@ -275,6 +275,7 @@ namespace fleece {
         KeyPath(const KeyPath &kp)                      :KeyPath(std::string(kp), nullptr) { }
 
         explicit operator bool() const                  {return _path != nullptr;}
+        operator FLKeyPath() const                      {return _path;}
 
         Value eval(Value root) const {
             return FLKeyPath_Eval(_path, root);
@@ -289,7 +290,6 @@ namespace fleece {
         }
 
         bool operator== (const KeyPath &kp) const       {return FLKeyPath_Equals(_path, kp._path);}
-
     private:
         KeyPath& operator=(const KeyPath&) =delete;
         friend class Value;
