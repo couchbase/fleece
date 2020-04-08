@@ -303,9 +303,11 @@ namespace fleece {
     __hot uint32_t pure_slice::hash() const noexcept {
         // <https://en.wikipedia.org/wiki/Fowler–Noll–Vo_hash_function#FNV-1a_hash>
         uint32_t h = 2166136261;
-        for (size_t i = 0; i < size; i++)
+        for (size_t i = 0; i < size; i++) {
             h = (h ^ (*this)[i]) * 16777619;
-            return h;
+	}
+            
+	return h;
     }
 
 
