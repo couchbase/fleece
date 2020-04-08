@@ -56,7 +56,7 @@ namespace fleece { namespace impl {
     }
 
 
-    static void snapToUTF8Character(long &pos, size_t &length, slice str);
+    static void snapToUTF8Character(size_t &pos, size_t &length, slice str);
 
 
 #pragma mark - CREATING DELTAS:
@@ -445,10 +445,10 @@ namespace fleece { namespace impl {
 
         // Iterate over the diffs, writing the encoded form to the output stream:
         stringstream diff;
-        long lastOldPos = 0, correction = 0;
+        size_t lastOldPos = 0, correction = 0;
         for (auto patch = patches.begin(); patch != patches.end(); ++patch) {
-            long oldPos = patch->start1 + correction;   // position in oldStr
-            long nuuPos = patch->start2;                // position in nuuStr
+            size_t oldPos = patch->start1 + correction;   // position in oldStr
+            size_t nuuPos = patch->start2;                // position in nuuStr
             auto &diffs = patch->diffs;
             for (auto cur_diff = diffs.begin(); cur_diff != diffs.end(); ++cur_diff) {
                 auto length = cur_diff->text.length();
@@ -539,7 +539,7 @@ namespace fleece { namespace impl {
 
     // Given a byte range (`pos`, `length`) in the slice `str`, if either end of the range falls
     // in the middle of a UTF-8 multibyte character, push it _outwards_ to include the entire char.
-    static void snapToUTF8Character(long &pos, size_t &length, slice str) {
+    static void snapToUTF8Character(size_t &pos, size_t &length, slice str) {
         while (isUTF8Continuation(str[pos])) {
             --pos;
             throwIf(pos < 0, InvalidData, "Invalid UTF-8 at start of a string");

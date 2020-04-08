@@ -34,7 +34,7 @@
     #define _read read
 #else
     #include <io.h>
-    #include <windows.h>
+	#pragma warning(disable : 4267) // Loss of precision when using _read and _write
 #endif
 
 #ifndef _MSC_VER
@@ -80,5 +80,9 @@ namespace fleece {
     }
 
 }
+
+#ifdef _MSC_VER
+#pragma warning(default : 4267)
+#endif
 
 #endif // FL_HAVE_FILESYSTEM

@@ -116,6 +116,11 @@
 
 #include "SwiftDtoa.h"                      //Jens: Edited path
 
+#ifdef _MSC_VER								//Jim: Disabled compiler warnings
+// '~': zero extending 'uint32_t' to 'uint64_t' of greater size
+#pragma warning(disable: 4319)
+#endif
+
 namespace fleece {                          //Jens: Added namespace
 
 
@@ -2413,3 +2418,7 @@ static void intervalContainingPowerOf10_Float80(int p, swift_uint192_t *lower, s
 #endif
 
 }                        //Jens: End namespace
+
+#ifdef _MSC_VER								//Jim: Restore compiler warnings
+#pragma warning(default: 4319)
+#endif

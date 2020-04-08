@@ -294,7 +294,7 @@ static void inject_local_tz(DateTime* p)
     // Let's hope this works on UWP since Microsoft has removed the
     // tzset and _tzset functions from UWP
     static std::once_flag once;
-    std::call_once(once, [] { tzset(); });
+    std::call_once(once, [] { _tzset(); });
 #endif
     
     // In order to consider DST, among other date time oddities,
