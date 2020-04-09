@@ -81,6 +81,20 @@ namespace fleece {
         return result;
     }
 
+    __hot bool pure_slice::operator==(const pure_slice &s) const noexcept {
+        if(size != s.size) {
+            return false;
+        }
+
+        if(buf == nullptr || s.buf == nullptr) {
+            // Passing null to memcmp is a no-no, so if either one is null
+            // they must both be null to be considered equal
+            return buf == s.buf;
+        }
+
+        return memcmp(buf, s.buf, size);
+    }
+
     __hot slice slice::readAtMost(size_t nBytes) noexcept {
         nBytes = std::min(nBytes, size);
         slice result(buf, nBytes);
