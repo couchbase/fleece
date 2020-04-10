@@ -37,8 +37,8 @@ namespace fleece {
 
     __cold
     void _assert_failed(const char *condition, const char *fn, const char *file, int line) {
-        char msg[256];
-        sprintf(msg, "FAILED ASSERTION `%s` in %s (at %s line %d)",
+        char *msg;
+        asprintf(&msg, "FAILED ASSERTION `%s` in %s (at %s line %d)",
                 condition, (fn ? fn : ""), filename(file), line);
         fprintf(stderr, "%s\n", msg);
         throw assertion_failure(msg);
@@ -46,8 +46,8 @@ namespace fleece {
 
     __cold
     void _precondition_failed(const char *condition, const char *fn, const char *file, int line) {
-        char msg[256];
-        sprintf(msg, "FAILED PRECONDITION: `%s` not true when calling %s (at %s line %d)",
+        char *msg;
+        asprintf(&msg, "FAILED PRECONDITION: `%s` not true when calling %s (at %s line %d)",
                 condition, (fn ? fn : "?"), filename(file), line);
         fprintf(stderr, "%s\n", msg);
         throw std::invalid_argument(msg);
@@ -55,8 +55,8 @@ namespace fleece {
 
     __cold
     void _postcondition_failed(const char *condition, const char *fn, const char *file, int line) {
-        char msg[256];
-        sprintf(msg, "FAILED POSTCONDITION: `%s` not true at end of %s (at %s line %d)",
+        char *msg;
+        asprintf(&msg, "FAILED POSTCONDITION: `%s` not true at end of %s (at %s line %d)",
                 (fn ? fn : "?"), condition, filename(file), line);
         fprintf(stderr, "%s\n", msg);
         throw assertion_failure(msg);
