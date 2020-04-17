@@ -38,10 +38,8 @@ struct __CFString;
 struct __CFData;
 #endif
 
+// Figure out whether and how string_view is available
 #if __cplusplus >= 201700L || _MSVC_LANG >= 201700L
-    // `constexpr17` is for uses of `constexpr` that are valid in C++17 but not earlier.
-    #define constexpr17 constexpr
-
     #if __has_include(<string_view>)
         #include <string_view>
         #define STRING_VIEW std::string_view
@@ -49,8 +47,6 @@ struct __CFData;
         #include <experimental/string_view>
         #define STRING_VIEW std::experimental::string_view
     #endif
-#else
-    #define constexpr17
 #endif
 
 
@@ -77,12 +73,12 @@ namespace fleece {
     
     /** Adds a byte offset to a pointer. */
     template <typename T>
-    FLPURE inline const T* offsetby(const T *t, ptrdiff_t offset) noexcept {
+    FLCONST constexpr17 inline const T* offsetby(const T *t, ptrdiff_t offset) noexcept {
         return (const T*)((uint8_t*)t + offset);
     }
 
     template <typename T>
-    FLPURE inline T* offsetby(T *t, ptrdiff_t offset) noexcept {
+    FLCONST constexpr17 inline T* offsetby(T *t, ptrdiff_t offset) noexcept {
         return (T*)((uint8_t*)t + offset);
     }
 

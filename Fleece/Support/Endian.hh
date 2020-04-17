@@ -23,47 +23,47 @@
 namespace fleece { namespace endian {
 
 #ifdef __BIG_ENDIAN__
-    FLPURE static inline uint64_t enc64(uint64_t v) noexcept {return v;}
-    FLPURE static inline uint64_t dec64(uint64_t v) noexcept {return v;}
-    FLPURE static inline uint32_t enc32(uint32_t v) noexcept {return v;}
-    FLPURE static inline uint32_t dec32(uint32_t v) noexcept {return v;}
-    FLPURE static inline uint16_t enc16(uint16_t v) noexcept {return v;}
-    FLPURE static inline uint16_t dec16(uint16_t v) noexcept {return v;}
+    FLCONST static inline uint64_t enc64(uint64_t v) noexcept {return v;}
+    FLCONST static inline uint64_t dec64(uint64_t v) noexcept {return v;}
+    FLCONST static inline uint32_t enc32(uint32_t v) noexcept {return v;}
+    FLCONST static inline uint32_t dec32(uint32_t v) noexcept {return v;}
+    FLCONST static inline uint16_t enc16(uint16_t v) noexcept {return v;}
+    FLCONST static inline uint16_t dec16(uint16_t v) noexcept {return v;}
 #else
     // convert to big endian
-    FLPURE static inline uint64_t enc64(uint64_t v) noexcept {return bswap64(v);}
-    FLPURE static inline uint64_t dec64(uint64_t v) noexcept {return bswap64(v);}
-    FLPURE static inline uint32_t enc32(uint32_t v) noexcept {return bswap32(v);}
-    FLPURE static inline uint32_t dec32(uint32_t v) noexcept {return bswap32(v);}
-    FLPURE static inline uint16_t enc16(uint16_t v) noexcept {return bswap16(v);}
-    FLPURE static inline uint16_t dec16(uint16_t v) noexcept {return bswap16(v);}
+    FLCONST static inline uint64_t enc64(uint64_t v) noexcept {return bswap64(v);}
+    FLCONST static inline uint64_t dec64(uint64_t v) noexcept {return bswap64(v);}
+    FLCONST static inline uint32_t enc32(uint32_t v) noexcept {return bswap32(v);}
+    FLCONST static inline uint32_t dec32(uint32_t v) noexcept {return bswap32(v);}
+    FLCONST static inline uint16_t enc16(uint16_t v) noexcept {return bswap16(v);}
+    FLCONST static inline uint16_t dec16(uint16_t v) noexcept {return bswap16(v);}
 #endif
 
 #ifdef __LITTLE_ENDIAN__
-    FLPURE static inline uint64_t encLittle64(uint64_t v) noexcept {return v;}
-    FLPURE static inline uint64_t decLittle64(uint64_t v) noexcept {return v;}
-    FLPURE static inline uint32_t encLittle32(uint32_t v) noexcept {return v;}
-    FLPURE static inline uint32_t decLittle32(uint32_t v) noexcept {return v;}
-    FLPURE static inline uint16_t encLittle16(uint16_t v) noexcept {return v;}
-    FLPURE static inline uint16_t decLittle16(uint16_t v) noexcept {return v;}
+    FLCONST static inline uint64_t encLittle64(uint64_t v) noexcept {return v;}
+    FLCONST static inline uint64_t decLittle64(uint64_t v) noexcept {return v;}
+    FLCONST static inline uint32_t encLittle32(uint32_t v) noexcept {return v;}
+    FLCONST static inline uint32_t decLittle32(uint32_t v) noexcept {return v;}
+    FLCONST static inline uint16_t encLittle16(uint16_t v) noexcept {return v;}
+    FLCONST static inline uint16_t decLittle16(uint16_t v) noexcept {return v;}
 #else
     // convert to little endian
-    FLPURE static inline uint64_t encLittle64(uint64_t v) noexcept {return bswap64(v);}
-    FLPURE static inline uint64_t decLittle64(uint64_t v) noexcept {return bswap64(v);}
-    FLPURE static inline uint32_t encLittle32(uint32_t v) noexcept {return bswap32(v);}
-    FLPURE static inline uint32_t decLittle32(uint32_t v) noexcept {return bswap32(v);}
-    FLPURE static inline uint16_t encLittle16(uint16_t v) noexcept {return bswap16(v);}
-    FLPURE static inline uint16_t decLittle16(uint16_t v) noexcept {return bswap16(v);}
+    FLCONST static inline uint64_t encLittle64(uint64_t v) noexcept {return bswap64(v);}
+    FLCONST static inline uint64_t decLittle64(uint64_t v) noexcept {return bswap64(v);}
+    FLCONST static inline uint32_t encLittle32(uint32_t v) noexcept {return bswap32(v);}
+    FLCONST static inline uint32_t decLittle32(uint32_t v) noexcept {return bswap32(v);}
+    FLCONST static inline uint16_t encLittle16(uint16_t v) noexcept {return bswap16(v);}
+    FLCONST static inline uint16_t decLittle16(uint16_t v) noexcept {return bswap16(v);}
 #endif
 
 
     namespace internal {
-        FLPURE inline uint16_t swapLittle(uint16_t n) noexcept {return (uint16_t)encLittle16(n);}
-        FLPURE inline uint16_t swapBig(uint16_t n)    noexcept {return (uint16_t)enc16(n);}
-        FLPURE inline uint32_t swapLittle(uint32_t n) noexcept {return encLittle32(n);}
-        FLPURE inline uint32_t swapBig(uint32_t n)    noexcept {return enc32(n);}
-        FLPURE inline uint64_t swapLittle(uint64_t n) noexcept {return encLittle64(n);}
-        FLPURE inline uint64_t swapBig(uint64_t n)    noexcept {return enc64(n);}
+        FLCONST inline uint16_t swapLittle(uint16_t n) noexcept {return (uint16_t)encLittle16(n);}
+        FLCONST inline uint16_t swapBig(uint16_t n)    noexcept {return (uint16_t)enc16(n);}
+        FLCONST inline uint32_t swapLittle(uint32_t n) noexcept {return encLittle32(n);}
+        FLCONST inline uint32_t swapBig(uint32_t n)    noexcept {return enc32(n);}
+        FLCONST inline uint64_t swapLittle(uint64_t n) noexcept {return encLittle64(n);}
+        FLCONST inline uint64_t swapBig(uint64_t n)    noexcept {return enc64(n);}
 
         template <class INT, INT SWAP(INT)>
         class endian {
