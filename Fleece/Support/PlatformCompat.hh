@@ -19,23 +19,9 @@
 #pragma once
 #include "fleece/Base.h"
 #ifdef __APPLE__
-#include <sys/cdefs.h>
-#include "TargetConditionals.h"
+    #include <sys/cdefs.h>
+    #include "TargetConditionals.h"
 #endif
-
-// Increasingly-standard feature-detection macros, predefined by modern GCC & Clang compilers.
-#ifndef __has_builtin
-    #define __has_builtin(B)                0
-#endif
-
-#ifndef __has_extension
-    #define __has_extension(X)              0
-#endif
-
-#ifndef __has_feature
-    #define __has_feature(F)                0
-#endif
-
 
 #ifdef _MSC_VER
     #define NOINLINE                        __declspec(noinline)
