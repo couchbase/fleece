@@ -432,6 +432,8 @@ namespace fleece {
         { }
 
         explicit Encoder(FLEncoder enc)                 :_enc(enc) { }
+        Encoder(Encoder&& enc)                          :_enc(enc._enc) {enc._enc = nullptr;}
+
 
         void detach()                                   {_enc = nullptr;}
         

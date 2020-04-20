@@ -175,7 +175,7 @@ namespace fleece {
         void setNull(slice key)                 {set(key) = nullValue;}
 
         template <class T>
-        void set(slice key, T v)             {set(key) = v;}
+        void set(slice key, T v)                {set(key) = v;}
 
 
         // This enables e.g. `dict["key"_sl] = 17`
