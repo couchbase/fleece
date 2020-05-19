@@ -178,8 +178,10 @@ namespace fleece { namespace impl {
         slice baseUsed() const                  {return _baseMinUsed != 0 ? slice(_baseMinUsed, _base.end()) : slice();}
         const StringTable& strings() const      {return _strings;}
 
+#if 0
         static bool isIntRepresentable(float n) noexcept;
         static bool isIntRepresentable(double n) noexcept;
+#endif
         static bool isFloatRepresentable(double n) noexcept;
 
     private:
