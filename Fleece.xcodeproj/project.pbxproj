@@ -1406,21 +1406,21 @@
 			};
 			name = Release;
 		};
-		27744AB521372EB000399DCA /* Debug-EE */ = {
+		27744AB521372EB000399DCA /* Debug_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 2776AA45208A6C5A004ACE85 /* Project_Debug.xcconfig */;
 			buildSettings = {
 			};
-			name = "Debug-EE";
+			name = Debug_EE;
 		};
-		27744AB621372EB000399DCA /* Debug-EE */ = {
+		27744AB621372EB000399DCA /* Debug_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 2776AA48208A6CED004ACE85 /* FleeceStaticLib.xcconfig */;
 			buildSettings = {
 			};
-			name = "Debug-EE";
+			name = Debug_EE;
 		};
-		27744AB721372EB000399DCA /* Debug-EE */ = {
+		27744AB721372EB000399DCA /* Debug_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27F25A8220A6559800E181FA /* FleeceMutableObjC.xcconfig */;
 			buildSettings = {
@@ -1429,37 +1429,37 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "macosx iphoneos iphonesimulator appletvos appletvsimulator";
 			};
-			name = "Debug-EE";
+			name = Debug_EE;
 		};
-		27744AB821372EB000399DCA /* Debug-EE */ = {
+		27744AB821372EB000399DCA /* Debug_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 2776AA49208A6E01004ACE85 /* FleeceTest.xcconfig */;
 			buildSettings = {
 			};
-			name = "Debug-EE";
+			name = Debug_EE;
 		};
-		27744AB921372EB000399DCA /* Debug-EE */ = {
+		27744AB921372EB000399DCA /* Debug_EE */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PRODUCT_NAME = fleece;
 			};
-			name = "Debug-EE";
+			name = Debug_EE;
 		};
-		27744ABA21372EB800399DCA /* Release-EE */ = {
+		27744ABA21372EB800399DCA /* Release_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 2776AA46208A6C5A004ACE85 /* Project_Release.xcconfig */;
 			buildSettings = {
 			};
-			name = "Release-EE";
+			name = Release_EE;
 		};
-		27744ABB21372EB800399DCA /* Release-EE */ = {
+		27744ABB21372EB800399DCA /* Release_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 2776AA48208A6CED004ACE85 /* FleeceStaticLib.xcconfig */;
 			buildSettings = {
 			};
-			name = "Release-EE";
+			name = Release_EE;
 		};
-		27744ABC21372EB800399DCA /* Release-EE */ = {
+		27744ABC21372EB800399DCA /* Release_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27F25A8220A6559800E181FA /* FleeceMutableObjC.xcconfig */;
 			buildSettings = {
@@ -1468,49 +1468,49 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "macosx iphoneos iphonesimulator appletvos appletvsimulator";
 			};
-			name = "Release-EE";
+			name = Release_EE;
 		};
-		27744ABD21372EB800399DCA /* Release-EE */ = {
+		27744ABD21372EB800399DCA /* Release_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 2776AA49208A6E01004ACE85 /* FleeceTest.xcconfig */;
 			buildSettings = {
 			};
-			name = "Release-EE";
+			name = Release_EE;
 		};
-		27744ABE21372EB800399DCA /* Release-EE */ = {
+		27744ABE21372EB800399DCA /* Release_EE */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PRODUCT_NAME = fleece;
 			};
-			name = "Release-EE";
+			name = Release_EE;
 		};
-		27744AD82137452300399DCA /* Debug-EE */ = {
+		27744AD82137452300399DCA /* Debug_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27744AE5213F0E6A00399DCA /* FleeceBase.xcconfig */;
 			buildSettings = {
 			};
-			name = "Debug-EE";
+			name = Debug_EE;
 		};
-		27744AD92137452300399DCA /* Release-EE */ = {
+		27744AD92137452300399DCA /* Release_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27744AE5213F0E6A00399DCA /* FleeceBase.xcconfig */;
 			buildSettings = {
 			};
-			name = "Release-EE";
+			name = Release_EE;
 		};
-		27744ADA2137452300399DCA /* Debug-EE */ = {
+		27744ADA2137452300399DCA /* Debug_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27C4CEAA2127729D00470DE9 /* FleeceDylib.xcconfig */;
 			buildSettings = {
 			};
-			name = "Debug-EE";
+			name = Debug_EE;
 		};
-		27744ADB2137452300399DCA /* Release-EE */ = {
+		27744ADB2137452300399DCA /* Release_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27C4CEB02127781300470DE9 /* FleeceDylib_Release.xcconfig */;
 			buildSettings = {
 			};
-			name = "Release-EE";
+			name = Release_EE;
 		};
 		279AC5361C096872002C80DB /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -1579,9 +1579,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				270FA2651BF53CAD005DCB13 /* Debug */,
-				27744AB521372EB000399DCA /* Debug-EE */,
+				27744AB521372EB000399DCA /* Debug_EE */,
 				270FA2661BF53CAD005DCB13 /* Release */,
-				27744ABA21372EB800399DCA /* Release-EE */,
+				27744ABA21372EB800399DCA /* Release_EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -1590,9 +1590,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				270FA2681BF53CAD005DCB13 /* Debug */,
-				27744AB621372EB000399DCA /* Debug-EE */,
+				27744AB621372EB000399DCA /* Debug_EE */,
 				270FA2691BF53CAD005DCB13 /* Release */,
-				27744ABB21372EB800399DCA /* Release-EE */,
+				27744ABB21372EB800399DCA /* Release_EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -1601,9 +1601,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				272E5A501BF7FE5600848580 /* Debug */,
-				27744AB821372EB000399DCA /* Debug-EE */,
+				27744AB821372EB000399DCA /* Debug_EE */,
 				272E5A511BF7FE5600848580 /* Release */,
-				27744ABD21372EB800399DCA /* Release-EE */,
+				27744ABD21372EB800399DCA /* Release_EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -1612,9 +1612,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				279AC5361C096872002C80DB /* Debug */,
-				27744AB921372EB000399DCA /* Debug-EE */,
+				27744AB921372EB000399DCA /* Debug_EE */,
 				279AC5371C096872002C80DB /* Release */,
-				27744ABE21372EB800399DCA /* Release-EE */,
+				27744ABE21372EB800399DCA /* Release_EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -1624,8 +1624,8 @@
 			buildConfigurations = (
 				27C4CEA42127719D00470DE9 /* Debug */,
 				27C4CEA52127719D00470DE9 /* Release */,
-				27744ADA2137452300399DCA /* Debug-EE */,
-				27744ADB2137452300399DCA /* Release-EE */,
+				27744ADA2137452300399DCA /* Debug_EE */,
+				27744ADB2137452300399DCA /* Release_EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -1634,9 +1634,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				27D7218E1F8E8EEA00AA4458 /* Debug */,
-				27744AB721372EB000399DCA /* Debug-EE */,
+				27744AB721372EB000399DCA /* Debug_EE */,
 				27D7218F1F8E8EEA00AA4458 /* Release */,
-				27744ABC21372EB800399DCA /* Release-EE */,
+				27744ABC21372EB800399DCA /* Release_EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -1646,8 +1646,8 @@
 			buildConfigurations = (
 				27DE2EDD2125FA1700123597 /* Debug */,
 				27DE2EDE2125FA1700123597 /* Release */,
-				27744AD82137452300399DCA /* Debug-EE */,
-				27744AD92137452300399DCA /* Release-EE */,
+				27744AD82137452300399DCA /* Debug_EE */,
+				27744AD92137452300399DCA /* Release_EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
