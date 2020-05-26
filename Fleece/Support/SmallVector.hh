@@ -52,7 +52,11 @@ namespace fleece {
         }
 
         template <size_t M>
-        bool operator== (const smallVector<T,M> &v) const FLPURE {
+        bool operator== (const smallVector<T,M> &v) const
+#if defined(__clang__) || !defined(__GNUC__) || __GNUC__ > 6
+        FLPURE  /* for some reason GCC 6 does not like this attribute here*/
+#endif
+        {
             if (_size != v._size)
                 return false;
             auto vi = v.begin();
@@ -65,7 +69,11 @@ namespace fleece {
         }
 
         template <size_t M>
-        bool operator!= (const smallVector<T,M> &v) const FLPURE {
+        bool operator!= (const smallVector<T,M> &v) const
+#if defined(__clang__) || !defined(__GNUC__) || __GNUC__ > 6
+        FLPURE  /* for some reason GCC 6 does not like this attribute here*/
+#endif
+        {
             return !( *this == v);
         }
 
