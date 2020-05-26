@@ -40,7 +40,7 @@ namespace fleece {
         void operator= (const std::string &v)       {FLSlot_SetString(_slot, slice(v));}
         void setData(slice v)                       {FLSlot_SetData(_slot, v);}
         void operator= (Value v)                    {FLSlot_SetValue(_slot, v);}
-        void operator= (nullptr_t)                  {FLSlot_SetValue(_slot, nullptr);}
+        void operator= (std::nullptr_t)             {FLSlot_SetValue(_slot, nullptr);}
 
     private:
         friend class MutableArray;
