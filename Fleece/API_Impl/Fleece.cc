@@ -54,8 +54,12 @@ FLValue FLValue_FromData(FLSlice data, FLTrust trust) FLAPI {
 const char* FLDump(FLValue v) FLAPI {
     FLStringResult json = FLValue_ToJSON(v);
     auto cstr = (char*)malloc(json.size + 1);
-    memcpy(cstr, json.buf, json.size);
-    cstr[json.size] = 0;
+    if (cstr != nullptr) {
+        if (json.buf != nullptr) {
+          memcpy(cstr, json.buf, json.size);
+        }
+        cstr[json.size] = 0;
+    }
     return cstr;
 }
 

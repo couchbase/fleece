@@ -122,7 +122,7 @@ namespace fleece {
         int caseEquivalentCompare(pure_slice) const noexcept FLPURE;
         bool caseEquivalent(pure_slice) const noexcept FLPURE;
         bool operator==(const pure_slice &s) const noexcept FLPURE       {return size==s.size &&
-                                                                 memcmp(buf, s.buf, size) == 0;}
+                                                                          (size == 0 || memcmp(buf, s.buf, size) == 0);}
         bool operator!=(const pure_slice &s) const noexcept FLPURE       {return !(*this == s);}
         bool operator<(pure_slice s) const noexcept FLPURE               {return compare(s) < 0;}
         bool operator>(pure_slice s) const noexcept FLPURE               {return compare(s) > 0;}
