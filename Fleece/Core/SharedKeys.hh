@@ -77,7 +77,7 @@ namespace fleece { namespace impl {
         void setMaxKeyLength(size_t m)          {_maxKeyLength = m;}
 
         /** The number of stored keys. */
-        size_t count() const FLPURE                    {return _count;}
+        size_t count() const FLPURE;
 
         /** Maps a string to an integer, or returns false if there is no mapping. */
         bool encode(slice string, int &key) const;
@@ -93,11 +93,7 @@ namespace fleece { namespace impl {
         }
 
         /** Decodes an integer back to a string. */
-        slice decode(int key) const {
-            if (_usuallyFalse(isUnknownKey(key)))
-                return decodeUnknown(key);
-            return _byKey[key];
-        }
+        slice decode(int key) const;
 
         /** A vector whose indices are encoded keys and values are the strings. */
         std::vector<alloc_slice> byKey() const;
@@ -106,7 +102,7 @@ namespace fleece { namespace impl {
             or equal to the new count. (I.e. it truncates the byKey vector.) */
         void revertToCount(size_t count);
 
-        bool isUnknownKey(int key) const FLPURE                {return (size_t)key >= _count;}
+        bool isUnknownKey(int key) const FLPURE;
 
         virtual bool refresh()                          {return false;}
 
@@ -138,11 +134,12 @@ namespace fleece { namespace impl {
         bool _encode(slice string, int &key) const;
         bool _encodeAndAdd(slice string, int &key);
         virtual int _add(slice string);
+        bool _isUnknownKey(int key) const FLPURE        {return (size_t)key >= _count;}
         slice decodeUnknown(int key) const;
 
         size_t _maxKeyLength {kDefaultMaxKeyLength};    // Max length of string I will add
         mutable std::mutex _mutex;
-        size_t _count {0};
+        unsigned _count {0};
         mutable std::vector<PlatformString> _platformStringsByKey; // Reverse mapping, int->platform key
         StringTable _table;                             // Hash table mapping slice->int
         std::array<alloc_slice, kMaxCount> _byKey;      // Reverse mapping, int->slice
