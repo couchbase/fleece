@@ -173,7 +173,7 @@ namespace fleece {
         uint32_t hash() const noexcept FLPURE       {return FLSlice_Hash(*this);}
 
         /// Copies my contents to memory starting at `dst`, using `memcpy`.
-        void copyTo(void *dst) const noexcept       {if (size > 0) ::memcpy(dst, buf, size);}
+        void copyTo(void *dst) const noexcept       {FLMemCpy(dst, buf, size);}
 
         /// Returns new malloc'ed slice containing same data. Call free() on it when done.
         inline slice copy() const;
@@ -597,8 +597,7 @@ namespace fleece {
 
     inline bool pure_slice::toCString(char *str, size_t bufSize) const noexcept {
         size_t n = std::min(size, bufSize-1);
-        if (n > 0)
-            ::memcpy(str, buf, n);
+        FLMemCpy(str, buf, n);
         str[n] = 0;
         return n == size;
     }
@@ -737,7 +736,7 @@ namespace fleece {
         if (buf == nullptr)
             return nullslice;
         void* copied = newBytes(size);
-        ::memcpy(copied, buf, size);
+        FLMemCpy(copied, buf, size);
         return slice(copied, size);
     }
 
@@ -851,7 +850,7 @@ namespace fleece {
             // We don't realloc the current buffer; that would affect other alloc_slice objects
             // sharing the buffer, and possibly confuse them. Instead, alloc a new buffer & copy.
             alloc_slice newSlice(newSize);
-            ::memcpy((void*)newSlice.buf, buf, std::min(size, newSize));
+            FLMemCpy((void*)newSlice.buf, buf, std::min(size, newSize));
             *this = std::move(newSlice);
         }
     }
@@ -874,7 +873,7 @@ namespace fleece {
             src = source.buf;
         }
 
-        ::memcpy((void*)offset(dstOff), src, source.size);
+        ::memcpy((void*)offset(dstOff), src, source.size);  // already checked source.size > 0
     }
 
 
