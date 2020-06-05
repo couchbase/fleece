@@ -65,10 +65,12 @@ const char* FLDumpData(FLSlice data) FLAPI {
 
 
 FLValueType FLValue_GetType(FLValue v) FLAPI {
-    if (_usuallyFalse(v == NULL || v->isUndefined()))
+    if (_usuallyFalse(v == NULL))
         return kFLUndefined;
-    else
-        return (FLValueType)v->type();
+    auto type = (FLValueType)v->type();
+    if (_usuallyFalse(type == kFLNull) && v->isUndefined())
+        type = kFLUndefined;
+    return type;
 }
 
 
@@ -108,6 +110,22 @@ FLSliceResult FLValue_ToString(FLValue v) FLAPI {
         } catchError(nullptr)
     }
     return {nullptr, 0};
+}
+
+
+FLValue FLValue_NewString(FLString str) FLAPI {
+    try {
+        return retain(internal::HeapValue::create(str))->asValue();
+    } catchError(nullptr)
+    return nullptr;
+}
+
+
+FLValue FLValue_NewData(FLSlice data) FLAPI {
+    try {
+        return retain(internal::HeapValue::createData(data))->asValue();
+    } catchError(nullptr)
+    return nullptr;
 }
 
 

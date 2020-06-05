@@ -334,7 +334,17 @@ extern "C" {
     static inline FLDict FLDict_Retain(FLDict v)        {FLValue_Retain((FLValue)v); return v;}
     static inline void FLDict_Release(FLDict v)         {FLValue_Release((FLValue)v);}
 
+    /** @} */
 
+    /** Allocates a string value on the heap. This is rarely needed -- usually you'd just add a string
+        to a mutable Array or Dict directly using \ref FLSlot_SetString. */
+    FLValue FLValue_NewString(FLString) FLAPI;
+
+    /** Allocates a data/blob value on the heap. This is rarely needed -- usually you'd just add data
+        to a mutable Array or Dict directly using \ref FLSlot_SetData. */
+    FLValue FLValue_NewData(FLSlice) FLAPI;
+
+    /** A constant null value (not a NULL pointer!) */
     extern const FLValue kFLNullValue;
 
     /** @} */
@@ -832,7 +842,7 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
     bool FLSharedKeys_LoadStateData(FLSharedKeys, FLSlice) FLAPI;
 
     /** Writes the current state to a Fleece encoder as a single value,
-        which can later be decoded and passed to FLSharedKeys_CreateFromState. */
+        which can later be decoded and passed to \ref FLSharedKeys_LoadState. */
     void FLSharedKeys_WriteState(FLSharedKeys, FLEncoder) FLAPI;
 
     /** Updates an FLSharedKeys object with saved state, a Fleece value previously written by
