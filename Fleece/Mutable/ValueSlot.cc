@@ -48,8 +48,11 @@ namespace fleece { namespace impl {
     { }
 
 
-    ValueSlot::ValueSlot(const ValueSlot &other) noexcept {
-        *this = other; // invoke operator=, below
+    ValueSlot::ValueSlot(const ValueSlot &other) noexcept
+    :_pointer(other._pointer)
+    {
+        if (isPointer())
+            retain(pointer());
     }
 
 
