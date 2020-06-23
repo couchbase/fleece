@@ -37,7 +37,7 @@
     #include <unwind.h>     // _Unwind_Backtrace(), etc.
 #endif
 
-#ifdef __clang__
+#ifdef _LIBCPP_VERSION
     #include <cxxabi.h>     // abi::__cxa_demangle()
 #endif
 
@@ -85,7 +85,7 @@ namespace fleece {
     { }
 
 
-#ifdef __clang__
+#ifdef _LIBCPP_VERSION
     Backtrace::~Backtrace() {
         free(_unmangled);
     }
@@ -110,7 +110,7 @@ namespace fleece {
 
 
     const char* Backtrace::unmangle(const char *function) {
-#ifdef __clang__
+#ifdef _LIBCPP_VERSION
         int status;
         _unmangled = abi::__cxa_demangle(function, _unmangled, &_unmangledLen, &status);
         if (_unmangled && status == 0)
