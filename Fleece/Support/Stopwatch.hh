@@ -67,10 +67,15 @@ public:
             _start = clock::now();
     }
 
-    double elapsed() const {
+    duration elapsedDuration() const {
         duration e = _total;
         if (_running)
             e += clock::now() - _start;
+        return e;
+    }
+
+    double elapsed() const {
+        duration e = elapsedDuration();
         return std::chrono::duration_cast<seconds>(e).count();
     }
 
