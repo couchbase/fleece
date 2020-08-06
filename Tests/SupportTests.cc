@@ -18,10 +18,12 @@
 
 #include "FleeceTests.hh"
 #include "FleeceImpl.hh"
+#include "ConcurrentMap.hh"
 #include "Bitmap.hh"
 #include "TempArray.hh"
 #include "sliceIO.hh"
 #include <iostream>
+#include <future>
 
 using namespace std;
 
@@ -109,4 +111,90 @@ TEST_CASE("Bitmap") {
     CHECK(!b.empty());
     CHECK(b.bitCount() == 13);
     CHECK(b.indexOfBit(8) == 4);
+}
+
+
+TEST_CASE("ConcurrentMap basic", "[ConcurrentMap]") {
+    ConcurrentMap map(2048);
+    cout << "table size = " << map.tableSize() << ", capacity = " << map.capacity() << '\n';
+    CHECK(map.count() == 0);
+    CHECK(map.capacity() >= 2048);
+
+    CHECK(map.find("apple").key == nullptr);
+    auto apple = map.insert("apple", 0x4667e);
+    CHECK(apple.keySlice() == "apple"_sl);
+    CHECK(apple.value == 0x4667e);
+
+    auto found = map.find("apple");
+    CHECK(found.key == apple.key);
+    CHECK(found.value == apple.value);
+
+    // second insert should return the original value:
+    found = map.insert("apple", 0xdeadbeef);
+    CHECK(found.key == apple.key);
+    CHECK(found.value == apple.value);
+
+    for (int pass = 1; pass <= 2; ++pass) { // insert on 1st pass, read on 2nd
+        for (int i = 0; i < 2046; ++i) {
+            char keybuf[10];
+            sprintf(keybuf, "k-%04d", i);
+            auto result = (pass == 1) ? map.insert(keybuf, i) : map.find(keybuf);
+            CHECK(result.keySlice() == keybuf);
+            CHECK(result.value == i);
+        }
+    }
+    
+    cout << "max probes = " << map.maxProbes() << '\n';
+    map.dump();
+}
+
+
+TEST_CASE("ConcurrentMap concurrency", "[ConcurrentMap]") {
+    static constexpr size_t kSize = 1000000;
+    ConcurrentMap map(kSize + 100);
+    cout << "table size = " << map.tableSize() << ", capacity = " << map.capacity() << '\n';
+    CHECK(map.count() == 0);
+    CHECK(map.capacity() >= kSize);
+
+    vector<string> keys;
+    for (int i = 0; i < kSize; i++) {
+        char keybuf[10];
+        sprintf(keybuf, "k-%d", i);
+        keys.push_back(keybuf);
+    }
+
+    auto reader = [&](int step) {
+        size_t index = random() % kSize;
+        for (int n = 0; n < kSize; n++) {
+            auto e = map.find(keys[index].c_str());
+            if (e.key) {
+                assert(e.keySlice() == keys[index].c_str());
+                assert(e.value == index);
+            }
+            index = (index + step) % kSize;
+        }
+    };
+
+    auto writer = [&](int step) { // step must be coprime with kSize
+        unsigned index = (unsigned)random() % kSize;
+        for (int n = 0; n < kSize; n++) {
+            auto e = map.insert(keys[index].c_str(), index);
+            assert(e.keySlice() == keys[index].c_str());
+            assert(e.value == index);
+            index = (index + step) % kSize;
+        }
+    };
+
+    auto f1 = async(reader, 7);
+    auto f2 = async(reader, 53);
+    auto f3 = async(writer, 23);
+    auto f4 = async(writer, 91);
+
+    f1.wait();
+    f2.wait();
+    f3.wait();
+    f4.wait();
+
+    CHECK(map.count() == kSize);
+    cout << "max probes = " << map.maxProbes() << '\n';
 }

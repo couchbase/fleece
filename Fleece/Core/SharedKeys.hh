@@ -18,7 +18,7 @@
 
 #pragma once
 #include "RefCounted.hh"
-#include "StringTable.hh"
+#include "ConcurrentMap.hh"
 #include <array>
 #include <mutex>
 #include <vector>
@@ -68,8 +68,8 @@ namespace fleece { namespace impl {
         NOTE: This class is now thread-safe. */
     class SharedKeys : public RefCounted {
     public:
-        SharedKeys() { }
-        explicit SharedKeys(slice stateData)            {loadFrom(stateData);}
+        SharedKeys();
+        explicit SharedKeys(slice stateData)            :SharedKeys() {loadFrom(stateData);}
 
         alloc_slice stateData() const;
 
@@ -96,7 +96,7 @@ namespace fleece { namespace impl {
         slice decode(int key) const;
 
         /** A vector whose indices are encoded keys and values are the strings. */
-        std::vector<alloc_slice> byKey() const;
+        std::vector<slice> byKey() const;
 
         /** Reverts the mapping to an earlier state by removing the mappings with keys greater than
             or equal to the new count. (I.e. it truncates the byKey vector.) */
@@ -131,7 +131,6 @@ namespace fleece { namespace impl {
     private:
         friend class PersistentSharedKeys;
 
-        bool _encode(slice string, int &key) const;
         bool _encodeAndAdd(slice string, int &key);
         virtual int _add(slice string);
         bool _isUnknownKey(int key) const FLPURE        {return (size_t)key >= _count;}
@@ -141,8 +140,8 @@ namespace fleece { namespace impl {
         mutable std::mutex _mutex;
         unsigned _count {0};
         mutable std::vector<PlatformString> _platformStringsByKey; // Reverse mapping, int->platform key
-        StringTable _table;                             // Hash table mapping slice->int
-        std::array<alloc_slice, kMaxCount> _byKey;      // Reverse mapping, int->slice
+        ConcurrentMap _table;                             // Hash table mapping slice->int
+        std::array<slice, kMaxCount> _byKey;      // Reverse mapping, int->slice
     };
 
 

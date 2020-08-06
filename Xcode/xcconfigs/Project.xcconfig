@@ -4,7 +4,7 @@
 
 #include "XcodeWarnings.xcconfig"
 
-WARNING_CFLAGS = $(WARNING_CFLAGS) -Wno-unknown-warning-option  // ignore unknown warning flags
+WARNING_CFLAGS = $(WARNING_CFLAGS) -Wno-unknown-warning-option -Wno-atomic-implicit-seq-cst  // ignore unknown warning flags
 CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = NO     // jsonsl calls strcpy
 CLANG_WARN_DOCUMENTATION_COMMENTS = NO
 CLANG_WARN__EXIT_TIME_DESTRUCTORS = NO

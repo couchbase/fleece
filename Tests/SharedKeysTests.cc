@@ -76,7 +76,7 @@ TEST_CASE("encode", "[SharedKeys]") {
     CHECK( sk->encodeAndAdd("zero"_sl, key));
     CHECK(key == 0);
     CHECK(sk->count() == 5);
-    CHECK(sk->byKey() == (std::vector<alloc_slice>{alloc_slice("zero"), alloc_slice("one"), alloc_slice("two"), alloc_slice("three"), alloc_slice("four")}));
+    CHECK(sk->byKey() == (std::vector<slice>{"zero", "one", "two", "three", "four"}));
 }
 
 
@@ -115,7 +115,7 @@ TEST_CASE("revertToCount", "[SharedKeys]") {
     CHECK(sk->count() == 3);
     CHECK(sk->decode(3) == nullslice);
     CHECK(sk->decode(4) == nullslice);
-    CHECK(sk->byKey() == (std::vector<alloc_slice>{alloc_slice("zero"), alloc_slice("one"), alloc_slice("two")}));
+    CHECK(sk->byKey() == (std::vector<slice>{"zero", "one", "two"}));
     CHECK( sk->encodeAndAdd("zero"_sl, key));
     CHECK(key == 0);
     CHECK( sk->encodeAndAdd("three"_sl, key));
@@ -123,11 +123,11 @@ TEST_CASE("revertToCount", "[SharedKeys]") {
 
     sk->revertToCount(3); // no-op
     CHECK(sk->count() == 3);
-    CHECK(sk->byKey() == (std::vector<alloc_slice>{alloc_slice("zero"), alloc_slice("one"), alloc_slice("two")}));
+    CHECK(sk->byKey() == (std::vector<slice>{"zero", "one", "two"}));
 
     sk->revertToCount(0);
     CHECK(sk->count() == 0);
-    CHECK(sk->byKey() == (std::vector<alloc_slice>{}));
+    CHECK(sk->byKey() == (std::vector<slice>{}));
     CHECK( sk->encodeAndAdd("three"_sl, key));
     CHECK(key == 0);
 }
@@ -360,7 +360,7 @@ TEST_CASE("encoding", "[SharedKeys]") {
     enc.endDictionary();
     Retained<Doc> doc = enc.finishDoc();
 
-    REQUIRE(sk->byKey() == (vector<alloc_slice>{alloc_slice("type"), alloc_slice("mass"), alloc_slice("_attachments")}));
+    REQUIRE(sk->byKey() == (vector<slice>{"type", "mass", "_attachments"}));
 
     //Value::dump(encoded, cerr);
     REQUIRE(doc->data().hexString() == "46616e696d616c00280077be9f1a2fdd5e404d7468756d626e61696c2e6a70675678787878787800700200003800800e800870030000801b000180190002800b8007");

@@ -28,6 +28,11 @@ namespace fleece { namespace impl {
     using namespace std;
 
 
+    SharedKeys::SharedKeys()
+    :_table(2047)
+    { }
+
+
     SharedKeys::~SharedKeys() {
     #ifdef __APPLE__
         for (auto &str : _platformStringsByKey) {
@@ -100,15 +105,10 @@ namespace fleece { namespace impl {
 
 
     bool SharedKeys::encode(slice str, int &key) const {
-        LOCK(_mutex);
-        return _encode(str, key);
-    }
-
-    bool SharedKeys::_encode(slice str, int &key) const {
         // Is this string already encoded?
         auto entry = _table.find(str);
-        if (_usuallyTrue(entry != nullptr)) {
-            key = entry->second;
+        if (_usuallyTrue(entry.key != nullptr)) {
+            key = entry.value;
             return true;
         }
         return false;
@@ -116,15 +116,13 @@ namespace fleece { namespace impl {
 
 
     bool SharedKeys::encodeAndAdd(slice str, int &key) {
-        LOCK(_mutex);
-        return _encodeAndAdd(str, key);
-    }
-
-    bool SharedKeys::_encodeAndAdd(slice str, int &key) {
-        if (_encode(str, key))
+        if (encode(str, key))
             return true;
         // Should this string be encoded?
-        if (_count >= kMaxCount || str.size > _maxKeyLength || !isEligibleToEncode(str))
+        if (str.size > _maxKeyLength || !isEligibleToEncode(str))
+            return false;
+        LOCK(_mutex);
+        if (_count >= kMaxCount)
             return false;
         // OK, add to table:
         key = _add(str);
@@ -133,10 +131,9 @@ namespace fleece { namespace impl {
 
 
     int SharedKeys::_add(slice str) {
-        alloc_slice allocedStr(str);
         auto id = _count++;
-        _byKey[id] = allocedStr;
-        _table.insertOnly(allocedStr, uint32_t(id));
+        auto entry = _table.insert(str, uint32_t(id));
+        _byKey[id] = entry.keySlice();
         return int(id);
     }
 
@@ -157,31 +154,29 @@ namespace fleece { namespace impl {
 
     /** Decodes an integer back to a string. */
     slice SharedKeys::decode(int key) const {
-        {
-            LOCK(_mutex);
-            if (_usuallyTrue(!_isUnknownKey(key)))
-                return _byKey[key];
-        }
-        return decodeUnknown(key);
+        throwIf(key < 0, InvalidData, "key must be non-negative");
+        if (_usuallyFalse(key >= kMaxCount))
+            return nullslice;
+        slice str = _byKey[key];
+        if (_usuallyFalse(!str))
+            return decodeUnknown(key);
+        return str;
     }
 
 
     slice SharedKeys::decodeUnknown(int key) const {
-        throwIf(key < 0, InvalidData, "key must be non-negative");
         // Unrecognized key -- if not in a transaction, try reloading
         const_cast<SharedKeys*>(this)->refresh();
 
         // Retry after refreshing:
         LOCK(_mutex);
-        if (_isUnknownKey(key))
-            return nullslice;
         return _byKey[key];
     }
 
 
-    vector<alloc_slice> SharedKeys::byKey() const {
+    vector<slice> SharedKeys::byKey() const {
         LOCK(_mutex);
-        return vector<alloc_slice>(&_byKey[0], &_byKey[_count]);
+        return vector<slice>(&_byKey[0], &_byKey[_count]);
     }
 
 
@@ -219,9 +214,12 @@ namespace fleece { namespace impl {
         _count = unsigned(toCount);
 
         // StringTable doesn't support removing, so rebuild it:
-        _table.clear();
-        for (size_t key = 0; key < toCount; ++key)
-            _table.insert(_byKey[key], uint32_t(key));
+        ConcurrentMap table(2047);
+        for (size_t key = 0; key < toCount; ++key) {
+            auto entry = table.insert(_byKey[key], uint32_t(key));
+            _byKey[key] = entry.keySlice();
+        }
+        _table = move(table);
     }
 
 
