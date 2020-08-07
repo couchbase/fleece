@@ -80,6 +80,8 @@
 		279AC5341C096872002C80DB /* fleece_tool.cc in Sources */ = {isa = PBXBuildFile; fileRef = 279AC5331C096872002C80DB /* fleece_tool.cc */; };
 		279AC5381C096B5C002C80DB /* libfleeceStatic.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 270FA25C1BF53CAD005DCB13 /* libfleeceStatic.a */; };
 		279AC53C1C097941002C80DB /* Value+Dump.cc in Sources */ = {isa = PBXBuildFile; fileRef = 279AC53B1C097941002C80DB /* Value+Dump.cc */; };
+		27A0E3DF24DCD86900380563 /* ConcurrentArena.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27A0E3DD24DCD86900380563 /* ConcurrentArena.hh */; };
+		27A0E3E024DCD86900380563 /* ConcurrentArena.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27A0E3DE24DCD86900380563 /* ConcurrentArena.cc */; };
 		27A2F73B21248DA50081927B /* FLSlice.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A2F73A21248DA40081927B /* FLSlice.h */; };
 		27A924CF1D9C32E800086206 /* Path.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27A924CD1D9C32E800086206 /* Path.cc */; };
 		27A924D01D9C32E800086206 /* Path.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27A924CE1D9C32E800086206 /* Path.hh */; };
@@ -396,6 +398,8 @@
 		279AC5311C096872002C80DB /* fleece */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = fleece; sourceTree = BUILT_PRODUCTS_DIR; };
 		279AC5331C096872002C80DB /* fleece_tool.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = fleece_tool.cc; sourceTree = "<group>"; };
 		279AC53B1C097941002C80DB /* Value+Dump.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "Value+Dump.cc"; sourceTree = "<group>"; };
+		27A0E3DD24DCD86900380563 /* ConcurrentArena.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ConcurrentArena.hh; sourceTree = "<group>"; };
+		27A0E3DE24DCD86900380563 /* ConcurrentArena.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ConcurrentArena.cc; sourceTree = "<group>"; };
 		27A2F73A21248DA40081927B /* FLSlice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FLSlice.h; sourceTree = "<group>"; };
 		27A924CD1D9C32E800086206 /* Path.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Path.cc; sourceTree = "<group>"; };
 		27A924CE1D9C32E800086206 /* Path.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Path.hh; sourceTree = "<group>"; };
@@ -745,6 +749,8 @@
 				2746DD3B1D931BE9000517BC /* Benchmark.hh */,
 				277F45B3208E9A9100A0D159 /* Bitmap.hh */,
 				27D57719212B3032002410BA /* Bitmap.cc */,
+				27A0E3DD24DCD86900380563 /* ConcurrentArena.hh */,
+				27A0E3DE24DCD86900380563 /* ConcurrentArena.cc */,
 				2779BA0E24CB4A4900BCEA8F /* ConcurrentMap.hh */,
 				2779BA0F24CB4A4900BCEA8F /* ConcurrentMap.cc */,
 				270FA2731BF53CEA005DCB13 /* Endian.hh */,
@@ -919,6 +925,7 @@
 				2734B89F1F8583FF00BE5249 /* MValue.hh in Headers */,
 				27C4CEBB2127976900470DE9 /* betterassert.hh in Headers */,
 				270FA2791BF53CEA005DCB13 /* Value.hh in Headers */,
+				27A0E3DF24DCD86900380563 /* ConcurrentArena.hh in Headers */,
 				270FA2811BF53CEA005DCB13 /* Endian.hh in Headers */,
 				274D824D209A7577008BB39F /* HeapArray.hh in Headers */,
 				2734B8A21F8583FF00BE5249 /* MDict+ObjC.h in Headers */,
@@ -1237,6 +1244,7 @@
 				27A924CF1D9C32E800086206 /* Path.cc in Sources */,
 				274D824C209A7577008BB39F /* HeapArray.cc in Sources */,
 				2734B8B11F870FB400BE5249 /* MContext.cc in Sources */,
+				27A0E3E024DCD86900380563 /* ConcurrentArena.cc in Sources */,
 				275CED521D3EF7BE001DE46C /* FleeceException.cc in Sources */,
 				278163B51CE69CA800B94E32 /* Fleece.cc in Sources */,
 				27AEFAC221090FF400106ED8 /* JSONDelta.cc in Sources */,

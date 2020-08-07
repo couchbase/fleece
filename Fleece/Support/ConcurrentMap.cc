@@ -17,6 +17,7 @@
 //
 
 #include "ConcurrentMap.hh"
+#include <cmath>
 
 using namespace std;
 
@@ -27,17 +28,22 @@ namespace fleece {
     static constexpr size_t kMinInitialSize = 16;
 
     // How full the table is allowed to get before it grows.
-    // (Robin Hood hashing allows higher loads than regular hashing...)
     static constexpr float kMaxLoad = 0.6f;
 
 
-    ConcurrentMap::ConcurrentMap(size_t capacity) {
-        for (_size = kMinInitialSize; _size * kMaxLoad < capacity; _size *= 2)
+    ConcurrentMap::ConcurrentMap(int capacity, int stringCapacity) {
+        precondition(capacity <= kMaxCapacity);
+        int size;
+        for (size = kMinInitialSize; size * kMaxLoad < capacity; size *= 2)
             ;
-        _capacity = size_t(_size * kMaxLoad);
-        _sizeMask = _size - 1;
-        _entries = new entry_t[_size];
-        memset(_entries, 0, _size * sizeof(entry_t));
+        _capacity = int(floor(size * kMaxLoad));
+        _sizeMask = size - 1;
+        _entries = make_unique<Entry[]>(size);
+        memset(_entries.get(), 0, size * sizeof(Entry));
+
+        if (stringCapacity == 0)
+            stringCapacity = 17 * _capacity;
+        _keys = ConcurrentArena(min(stringCapacity, int(kMaxStringCapacity)));
     }
 
 
@@ -47,104 +53,118 @@ namespace fleece {
 
 
     ConcurrentMap& ConcurrentMap::operator=(ConcurrentMap &&map) {
-        delete [] _entries;
-        _size = map._size;
         _sizeMask = map._sizeMask;
-        _count = map._count;
+        _count = map._count.load();
         _capacity = map._capacity;
-        _entries = map._entries;
+        _entries = move(map._entries);
         _keys = move(map._keys);
         map._entries = nullptr;
         return *this;
     }
 
 
-    ConcurrentMap::~ConcurrentMap() {
-        delete [] _entries;
+    bool ConcurrentMap::Entry::compareAndSwap(Entry expected, Entry swapWith) {
+        // https://gcc.gnu.org/onlinedocs/gcc-4.1.1/gcc/Atomic-Builtins.html
+        static_assert(sizeof(Entry) == 4);
+        return __sync_bool_compare_and_swap_4(&asInt32(), expected.asInt32(), swapWith.asInt32());
     }
 
 
-    __hot ConcurrentMap::entry_t ConcurrentMap::find(slice key, hash_t hash) const noexcept {
+    __hot
+    static inline bool equalKeys(const char *keyPtr, slice key) {
+        return memcmp(keyPtr, key.buf, key.size) == 0 && keyPtr[key.size] == 0;
+    }
+
+
+    __hot
+    ConcurrentMap::result ConcurrentMap::find(slice key, hash_t hash) const noexcept {
         assert_precondition(key);
-        for (size_t i = indexOfHash(hash); true; i = wrap(i + 1)) {
-            entry_t current = _entries[i];
-            if (current.key == nullptr)
+        for (int i = indexOfHash(hash); true; i = wrap(i + 1)) {
+            Entry current = _entries[i];
+            if (current.keyOffset == 0)
                 return {};
-            else if (current.hash == hash && current.hasKey(key))
-                return current;
+            else if (auto keyPtr = entryKey(current); equalKeys(keyPtr, key))
+                return {slice(keyPtr, key.size), current.value};
         }
     }
 
 
-    bool ConcurrentMap::entry_t::hasKey(slice keySlice) const {
-        return memcmp(key, keySlice.buf, keySlice.size) == 0 && key[keySlice.size] == 0;
-    }
-
-
-    bool ConcurrentMap::entry_t::cas(entry_t expected, entry_t swapWith) {
-        // https://gcc.gnu.org/onlinedocs/gcc-4.1.1/gcc/Atomic-Builtins.html
-        return __sync_bool_compare_and_swap_16(&as128(),
-                                               expected.as128(), swapWith.as128());
-    }
-
-
-    ConcurrentMap::entry_t ConcurrentMap::insert(slice key, value_t value, hash_t hash) {
+    ConcurrentMap::result ConcurrentMap::insert(slice key, value_t value, hash_t hash) {
         assert_precondition(key);
-        alloc_slice allocedKey;
-        size_t i = indexOfHash(hash);
+        const char *allocedKey = nullptr;
+        int i = indexOfHash(hash);
         while (true) {
-            entry_t current = _entries[i];
-            if (current.key == nullptr) {
-                if (!allocedKey)
-                    allocedKey = alloc_slice::nullPaddedString(key);
-                entry_t newEntry = {(const char*)allocedKey.buf, value, hash};
-                if (_entries[i].cas(current, newEntry)) {
-                    lock_guard<mutex> lock(_keysMutex);
+            Entry current = _entries[i];
+            if (current.keyOffset == 0) {
+                // Found an empty entry to store the key in. First allocate the string:
+                if (!allocedKey) {
                     if (_count >= _capacity)
-                        return {};          // Overflow!
-                    ++_count;
-                    _keys.push_back(move(allocedKey));
-                    return newEntry;
-                } else {
-                    continue; // retry at same index
+                        return {};          // Hash table overflow
+                    allocedKey = allocKey(key);
+                    if (!allocedKey)
+                        return {};          // Key-strings overflow
                 }
-            } else if (current.hash == hash && current.hasKey(key)) {
-                return current;
+                Entry newEntry = {uint16_t(_keys.toOffset(allocedKey) + 1), value};
+                // Try to store my new entry, if another thread didn't beat me to it:
+                if (_entries[i].compareAndSwap(current, newEntry)) {
+                    // Success!
+                    ++_count;
+                    return {slice(allocedKey, key.size), value};
+                } else {
+                    // I was beaten to it; retry (at the same index, in case CAS was false positive)
+                    continue;
+                }
+            } else if (auto keyPtr = entryKey(current); equalKeys(keyPtr, key)) {
+                // Key already exists in table. Deallocate any string I allocated:
+                freeKey(allocedKey);
+                return {slice(keyPtr, key.size), current.value};
             }
             i = wrap(i + 1);
         }
     }
 
 
-    size_t ConcurrentMap::maxProbes() const {
-        size_t maxp = 0;
-        for (size_t i = 0; i < _size; i++) {
-            if (auto e = _entries[i]; e.key != nullptr) {
-                size_t bestIndex = indexOfHash(e.hash);
-                if (bestIndex > i)
-                    bestIndex -= _size;
-                maxp = max(maxp, i - bestIndex);
-            }
+    const char* ConcurrentMap::allocKey(slice key) {
+        auto result = (char*)_keys.alloc(key.size + 1);
+        if (result) {
+            memcpy(result, key.buf, key.size);
+            result[key.size] = 0;
         }
-        return maxp;
+        return result;
     }
 
 
+    bool ConcurrentMap::freeKey(const char *allocedKey) {
+        return allocedKey == nullptr || _keys.free((void*)allocedKey, strlen(allocedKey) + 1);
+    }
+
+    __cold
     void ConcurrentMap::dump() const {
-        for (size_t i = 0; i < _size; i++) {
-            if (auto e = _entries[i]; e.key != nullptr) {
-                size_t bestIndex = indexOfHash(e.hash);
-                printf("%6zu: %-10s = %08x [%5zu]", i, e.key, e.hash, bestIndex);
+        int size = tableSize();
+        int realCount = 0, totalDistance = 0, maxDistance = 0;
+        for (int i = 0; i < size; i++) {
+            if (auto e = _entries[i]; e.keyOffset != 0) {
+                ++realCount;
+                auto keyPtr = entryKey(e);
+                hash_t hash = hashCode(slice(keyPtr));
+                int bestIndex = indexOfHash(hash);
+                printf("%6d: %-10s = %08x [%5d]", i, keyPtr, hash, bestIndex);
                 if (i != bestIndex) {
                     if (bestIndex > i)
-                        bestIndex -= _size;
-                    printf(" +%lu", i - bestIndex);
+                        bestIndex -= size;
+                    auto distance = i - bestIndex;
+                    printf(" +%d", distance);
+                    totalDistance += distance;
+                    maxDistance = max(maxDistance, distance);
                 }
                 printf("\n");
             } else {
-                printf("%6zu\n", i);
+                printf("%6d\n", i);
             }
         }
+        printf("Occupancy = %d / %d (%.0f%%)\n", realCount, size, realCount/double(size)*100.0);
+        printf("Average probes = %.1f, max probes = %d\n",
+               1.0 + (totalDistance / (double)realCount), maxDistance);
     }
 
 }

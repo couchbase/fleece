@@ -116,42 +116,50 @@ TEST_CASE("Bitmap") {
 
 TEST_CASE("ConcurrentMap basic", "[ConcurrentMap]") {
     ConcurrentMap map(2048);
-    cout << "table size = " << map.tableSize() << ", capacity = " << map.capacity() << '\n';
+    cout << "table size = " << map.tableSize() << ", capacity = " << map.capacity()
+         << ", strings capacity = " << map.stringBytesCapacity() << '\n';
     CHECK(map.count() == 0);
     CHECK(map.capacity() >= 2048);
+    CHECK(map.stringBytesCount() == 0);
+    CHECK(map.stringBytesCapacity() >= 2048 * 16);
 
     CHECK(map.find("apple").key == nullptr);
-    auto apple = map.insert("apple", 0x4667e);
-    CHECK(apple.keySlice() == "apple"_sl);
-    CHECK(apple.value == 0x4667e);
+    auto apple = map.insert("apple", 0x4667);
+    CHECK(apple.key == "apple"_sl);
+    CHECK(apple.value == 0x4667);
 
     auto found = map.find("apple");
     CHECK(found.key == apple.key);
     CHECK(found.value == apple.value);
 
     // second insert should return the original value:
-    found = map.insert("apple", 0xdeadbeef);
+    found = map.insert("apple", 0xdead);
     CHECK(found.key == apple.key);
     CHECK(found.value == apple.value);
 
     for (int pass = 1; pass <= 2; ++pass) { // insert on 1st pass, read on 2nd
-        for (int i = 0; i < 2046; ++i) {
+        for (uint16_t i = 0; i < 2046; ++i) {
             char keybuf[10];
             sprintf(keybuf, "k-%04d", i);
             auto result = (pass == 1) ? map.insert(keybuf, i) : map.find(keybuf);
-            CHECK(result.keySlice() == keybuf);
+            CHECK(result.key == keybuf);
             CHECK(result.value == i);
         }
     }
-    
-    cout << "max probes = " << map.maxProbes() << '\n';
+
+    cout << "Afterwards: count = " << map.count()
+         << ", string bytes used = " << map.stringBytesCount() << '\n';
+
+    CHECK(map.count() == 2047);
+    CHECK(map.stringBytesCount() > 0);
+
     map.dump();
 }
 
 
 TEST_CASE("ConcurrentMap concurrency", "[ConcurrentMap]") {
-    static constexpr size_t kSize = 1000000;
-    ConcurrentMap map(kSize + 100);
+    static constexpr size_t kSize = 8000;
+    ConcurrentMap map(kSize);
     cout << "table size = " << map.tableSize() << ", capacity = " << map.capacity() << '\n';
     CHECK(map.count() == 0);
     CHECK(map.capacity() >= kSize);
@@ -159,7 +167,7 @@ TEST_CASE("ConcurrentMap concurrency", "[ConcurrentMap]") {
     vector<string> keys;
     for (int i = 0; i < kSize; i++) {
         char keybuf[10];
-        sprintf(keybuf, "k-%d", i);
+        sprintf(keybuf, "k-%x", i);
         keys.push_back(keybuf);
     }
 
@@ -168,7 +176,7 @@ TEST_CASE("ConcurrentMap concurrency", "[ConcurrentMap]") {
         for (int n = 0; n < kSize; n++) {
             auto e = map.find(keys[index].c_str());
             if (e.key) {
-                assert(e.keySlice() == keys[index].c_str());
+                assert(e.key == keys[index].c_str());
                 assert(e.value == index);
             }
             index = (index + step) % kSize;
@@ -178,9 +186,10 @@ TEST_CASE("ConcurrentMap concurrency", "[ConcurrentMap]") {
     auto writer = [&](int step) { // step must be coprime with kSize
         unsigned index = (unsigned)random() % kSize;
         for (int n = 0; n < kSize; n++) {
-            auto e = map.insert(keys[index].c_str(), index);
-            assert(e.keySlice() == keys[index].c_str());
-            assert(e.value == index);
+            auto value = uint16_t(index & 0xFFFF);
+            auto e = map.insert(keys[index].c_str(), value);
+            assert(e.key == keys[index].c_str());
+            assert(e.value == value);
             index = (index + step) % kSize;
         }
     };
@@ -196,5 +205,4 @@ TEST_CASE("ConcurrentMap concurrency", "[ConcurrentMap]") {
     f4.wait();
 
     CHECK(map.count() == kSize);
-    cout << "max probes = " << map.maxProbes() << '\n';
 }

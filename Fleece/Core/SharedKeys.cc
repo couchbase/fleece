@@ -86,7 +86,9 @@ namespace fleece { namespace impl {
             slice str = i.value()->asString();
             if (!str)
                 return false;
-            SharedKeys::_add(str);
+            int key;
+            if (!SharedKeys::_add(str, key))
+                return false;
         }
         return true;
     }
@@ -107,7 +109,7 @@ namespace fleece { namespace impl {
     bool SharedKeys::encode(slice str, int &key) const {
         // Is this string already encoded?
         auto entry = _table.find(str);
-        if (_usuallyTrue(entry.key != nullptr)) {
+        if (_usuallyTrue(entry.key != nullslice)) {
             key = entry.value;
             return true;
         }
@@ -125,16 +127,23 @@ namespace fleece { namespace impl {
         if (_count >= kMaxCount)
             return false;
         // OK, add to table:
-        key = _add(str);
-        return true;
+        return _add(str, key);
     }
 
 
-    int SharedKeys::_add(slice str) {
-        auto id = _count++;
-        auto entry = _table.insert(str, uint32_t(id));
-        _byKey[id] = entry.keySlice();
-        return int(id);
+    bool SharedKeys::_add(slice str, int &key) {
+        auto value = uint16_t(_count);
+        auto entry = _table.insert(str, value);
+        if (!entry.key)
+            return false; // failed
+
+        if (entry.value == value) {
+            // new key:
+            _byKey[value] = entry.key;
+            ++_count;
+        }
+        key = entry.value;
+        return true;
     }
 
 
@@ -216,8 +225,8 @@ namespace fleece { namespace impl {
         // StringTable doesn't support removing, so rebuild it:
         ConcurrentMap table(2047);
         for (size_t key = 0; key < toCount; ++key) {
-            auto entry = table.insert(_byKey[key], uint32_t(key));
-            _byKey[key] = entry.keySlice();
+            auto entry = table.insert(_byKey[key], uint16_t(key));
+            _byKey[key] = entry.key;
         }
         _table = move(table);
     }
@@ -284,9 +293,9 @@ namespace fleece { namespace impl {
     }
 
 
-    int PersistentSharedKeys::_add(slice str) {
+    bool PersistentSharedKeys::_add(slice str, int &key) {
         throwIf(!_inTransaction, SharedKeysStateError, "not in transaction");
-        return SharedKeys::_add(str);
+        return SharedKeys::_add(str, key);
     }
 
 } }

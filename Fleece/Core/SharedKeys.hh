@@ -132,7 +132,7 @@ namespace fleece { namespace impl {
         friend class PersistentSharedKeys;
 
         bool _encodeAndAdd(slice string, int &key);
-        virtual int _add(slice string);
+        virtual bool _add(slice string, int &key);
         bool _isUnknownKey(int key) const FLPURE        {return (size_t)key >= _count;}
         slice decodeUnknown(int key) const;
 
@@ -189,7 +189,7 @@ namespace fleece { namespace impl {
         std::mutex _refreshMutex;
 
     private:
-        virtual int _add(slice str) override;
+        virtual bool _add(slice str, int &key) override;
 
         size_t _persistedCount {0};             // Number of strings written to storage
         size_t _committedPersistedCount {0};    // Number of strings written to storage & committed

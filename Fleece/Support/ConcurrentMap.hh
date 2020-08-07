@@ -5,65 +5,85 @@
 //
 
 #pragma once
-#include "PlatformCompat.hh"
+#include "ConcurrentArena.hh"
 #include "fleece/slice.hh"
-#include <mutex>
-#include <string>
-#include <vector>
+#include <atomic>
+#include <memory>
 
 namespace fleece {
 
+    /** An (almost-)lockless concurrent hash table that maps strings to 32-bit ints.
+        Does not support deletion. Intended for use by SharedKeys. */
     class ConcurrentMap {
         public:
-        ConcurrentMap(size_t capacity);
+        static constexpr int kMaxCapacity = 0x7FFF;
+        static constexpr int kMaxStringCapacity = 0x10000;
+
+        ConcurrentMap(int capacity, int stringCapacity =0);
+
+        // Move cannot be concurrent with find or insert calls!
         ConcurrentMap(ConcurrentMap&&);
         ConcurrentMap& operator=(ConcurrentMap&&);
-        ~ConcurrentMap();
 
-        using value_t = uint32_t;
+        using value_t = uint16_t;
 
-        enum class hash_t : uint32_t { Empty = 0 };
+        enum class hash_t : uint32_t { };
 
+        /** Computes the hash code of a key. This code can be passed to alternate versions of the
+            `find` and `insert` methods, to avoid hashing the same key multiple times. */
+        static inline hash_t hashCode(slice key) FLPURE {return hash_t( key.hash() );}
 
-        struct entry_t {
-            const char *key;
-            value_t value;
-            hash_t  hash = hash_t::Empty;
+        int count() const FLPURE                     {return _count;}
+        int capacity() const FLPURE                  {return _capacity;}
+        int tableSize() const FLPURE                 {return _sizeMask + 1;}
+        int stringBytesCapacity() const FLPURE       {return (int)_keys.capacity();}
+        int stringBytesCount() const FLPURE          {return (int)_keys.allocated();}
 
-            slice keySlice() const                      {return slice(key, strlen(key));}
-            bool hasKey(slice key) const FLPURE;
-            __int128& as128() {return *(__int128*)this;}
-            bool cas(entry_t expected, entry_t swapWith);
+        struct result {
+            slice key;
+            uint16_t value;
         };
 
-        static inline hash_t hashCode(slice key) FLPURE {
-            return hash_t( key.hash() );
-        }
+        /** Looks up the key. Returns the value, as well as the key in memory owned by the map.
+            If the key is not found, returns a result with an empty slice for the key. */
+        result find(slice key) const noexcept FLPURE    {return find(key, hashCode(key));}
+        result find(slice key, hash_t) const noexcept FLPURE;
 
-        size_t count() const FLPURE                     {return _count;}
-        size_t capacity() const FLPURE                  {return _capacity;}
-        size_t tableSize() const FLPURE                 {return _size;}
+        /** Inserts a value for a key. Returns the value, as well as a new copy of the key in memory owned
+            by the map.
+            If the key already exists, the existing value is not changed, and the existing value is
+            returned as well as the managed copy of the key (as from `find`.)
+            If the hash table or key storage is full and the key can't be inserted, returns an empty
+            slice. */
+        result insert(slice key, value_t value)         {return insert(key, value, hashCode(key));}
+        result insert(slice key, value_t value, hash_t);
 
-        entry_t find(slice key) const noexcept FLPURE   {return find(key, hashCode(key));}
-        entry_t find(slice key, hash_t) const noexcept FLPURE;
-
-        entry_t insert(slice key, value_t value)   {return insert(key, value, hashCode(key));}
-        entry_t insert(slice key, value_t value, hash_t);
-
-        size_t maxProbes() const;
         void dump() const;
 
     private:
-        inline size_t wrap(size_t i) const              {return i & _sizeMask;}
-        inline size_t indexOfHash(hash_t h) const       {return wrap(size_t(h));}
+        struct Entry {
+            uint16_t keyOffset;               // 1 + offset of key in _keys, or 0 if empty
+            uint16_t value;                   // value of key
 
-        size_t _size;           // Size of the table, always a power of 2
-        size_t _sizeMask;       // _size-1, used for quick modulo: (i & _sizeMask) == (i % _size)
-        size_t _count {0};
-        size_t _capacity;
-        entry_t* _entries {nullptr};      // Array of keys/values
-        std::vector<alloc_slice> _keys;  // heap-allocated keys
-        std::mutex _keysMutex;
+            uint32_t& asInt32()                 {return *(uint32_t*)this;}
+            bool compareAndSwap(Entry expected, Entry swapWith);
+        };
+
+        inline int wrap(int i) const            {return i & _sizeMask;}
+        inline int indexOfHash(hash_t h) const  {return wrap(int(h));}
+        const char* allocKey(slice key);
+        bool freeKey(const char *allocedKey);
+
+        const char* entryKey(Entry entry) const {
+            assert(entry.keyOffset > 0);
+            return (const char*)_keys.toPointer(entry.keyOffset - 1);
+        }
+
+        int                      _sizeMask;   // table size - 1; used for quick modulo via AND
+        int                      _capacity;   // Max number of entries
+        std::atomic<int>         _count {0};  // Current number of entries
+        std::unique_ptr<Entry[]> _entries;    // The table: array of key/value pairs
+        ConcurrentArena          _keys;       // Key storage
     };
 
 }
