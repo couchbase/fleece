@@ -38,12 +38,17 @@ namespace fleece {
             ;
         _capacity = int(floor(size * kMaxLoad));
         _sizeMask = size - 1;
-        _entries = make_unique<Entry[]>(size);
-        memset(_entries.get(), 0, size * sizeof(Entry));
 
         if (stringCapacity == 0)
             stringCapacity = 17 * _capacity;
-        _keys = ConcurrentArena(min(stringCapacity, int(kMaxStringCapacity)));
+        stringCapacity = min(stringCapacity, int(kMaxStringCapacity));
+        size_t tableSize = size * sizeof(Entry);
+        
+        _heap = ConcurrentArena(tableSize + stringCapacity);
+        _entries = ConcurrentArenaAllocator<Entry, true>(_heap).allocate(size);
+        _keysOffset = tableSize;
+        
+        assert(_heap.available() == stringCapacity);
     }
 
 
@@ -54,12 +59,21 @@ namespace fleece {
 
     ConcurrentMap& ConcurrentMap::operator=(ConcurrentMap &&map) {
         _sizeMask = map._sizeMask;
-        _count = map._count.load();
         _capacity = map._capacity;
-        _entries = move(map._entries);
-        _keys = move(map._keys);
-        map._entries = nullptr;
+        _count = map._count.load();
+        _entries = map._entries;
+        _heap = move(map._heap);
         return *this;
+    }
+
+
+    int ConcurrentMap::stringBytesCapacity() const {
+        return int(_heap.capacity() - _keysOffset);
+    }
+
+
+    int ConcurrentMap::stringBytesCount() const {
+        return int(_heap.allocated() - _keysOffset);
     }
 
 
@@ -77,13 +91,28 @@ namespace fleece {
 
 
     __hot
+    inline uint16_t ConcurrentMap::keyToOffset(const char *allocedKey) const {
+        auto off = _heap.toOffset(allocedKey);
+        assert(off >= _keysOffset && off < _keysOffset + 65535);
+        return uint16_t(off - _keysOffset + 1);
+    }
+
+
+    __hot
+    inline const char* ConcurrentMap::offsetToKey(uint16_t offset) const {
+        assert(offset > 0);
+        return (const char*)_heap.toPointer(_keysOffset + offset - 1);
+    }
+
+
+    __hot
     ConcurrentMap::result ConcurrentMap::find(slice key, hash_t hash) const noexcept {
         assert_precondition(key);
         for (int i = indexOfHash(hash); true; i = wrap(i + 1)) {
             Entry current = _entries[i];
             if (current.keyOffset == 0)
                 return {};
-            else if (auto keyPtr = entryKey(current); equalKeys(keyPtr, key))
+            else if (auto keyPtr = offsetToKey(current.keyOffset); equalKeys(keyPtr, key))
                 return {slice(keyPtr, key.size), current.value};
         }
     }
@@ -104,17 +133,18 @@ namespace fleece {
                     if (!allocedKey)
                         return {};          // Key-strings overflow
                 }
-                Entry newEntry = {uint16_t(_keys.toOffset(allocedKey) + 1), value};
+                Entry newEntry = {keyToOffset(allocedKey), value};
                 // Try to store my new entry, if another thread didn't beat me to it:
                 if (_entries[i].compareAndSwap(current, newEntry)) {
                     // Success!
                     ++_count;
+                    assert(_count <= _capacity);//TEMP
                     return {slice(allocedKey, key.size), value};
                 } else {
                     // I was beaten to it; retry (at the same index, in case CAS was false positive)
                     continue;
                 }
-            } else if (auto keyPtr = entryKey(current); equalKeys(keyPtr, key)) {
+            } else if (auto keyPtr = offsetToKey(current.keyOffset); equalKeys(keyPtr, key)) {
                 // Key already exists in table. Deallocate any string I allocated:
                 freeKey(allocedKey);
                 return {slice(keyPtr, key.size), current.value};
@@ -125,7 +155,7 @@ namespace fleece {
 
 
     const char* ConcurrentMap::allocKey(slice key) {
-        auto result = (char*)_keys.alloc(key.size + 1);
+        auto result = (char*)_heap.alloc(key.size + 1);
         if (result) {
             memcpy(result, key.buf, key.size);
             result[key.size] = 0;
@@ -135,7 +165,7 @@ namespace fleece {
 
 
     bool ConcurrentMap::freeKey(const char *allocedKey) {
-        return allocedKey == nullptr || _keys.free((void*)allocedKey, strlen(allocedKey) + 1);
+        return allocedKey == nullptr || _heap.free((void*)allocedKey, strlen(allocedKey) + 1);
     }
 
     __cold
@@ -145,7 +175,7 @@ namespace fleece {
         for (int i = 0; i < size; i++) {
             if (auto e = _entries[i]; e.keyOffset != 0) {
                 ++realCount;
-                auto keyPtr = entryKey(e);
+                auto keyPtr = offsetToKey(e.keyOffset);
                 hash_t hash = hashCode(slice(keyPtr));
                 int bestIndex = indexOfHash(hash);
                 printf("%6d: %-10s = %08x [%5d]", i, keyPtr, hash, bestIndex);

@@ -61,6 +61,15 @@ namespace fleece {
     }
 
 
+    __hot
+    void* ConcurrentArena::calloc(size_t size) {
+        auto block = alloc(size);
+        if (_usuallyTrue(block != nullptr))
+            memset(block, 0, size);
+        return block;
+    }
+
+
     bool ConcurrentArena::free(void *block, size_t size) {
         uint8_t *nextBlock = (uint8_t*)block + size;
         uint8_t *newNext = (uint8_t*)block;

@@ -163,6 +163,7 @@ TEST_CASE("ConcurrentMap concurrency", "[ConcurrentMap]") {
     cout << "table size = " << map.tableSize() << ", capacity = " << map.capacity() << '\n';
     CHECK(map.count() == 0);
     CHECK(map.capacity() >= kSize);
+    CHECK(map.stringBytesCapacity() >= 65535);
 
     vector<string> keys;
     for (int i = 0; i < kSize; i++) {
@@ -188,6 +189,7 @@ TEST_CASE("ConcurrentMap concurrency", "[ConcurrentMap]") {
         for (int n = 0; n < kSize; n++) {
             auto value = uint16_t(index & 0xFFFF);
             auto e = map.insert(keys[index].c_str(), value);
+            assert(e.key != nullslice);
             assert(e.key == keys[index].c_str());
             assert(e.value == value);
             index = (index + step) % kSize;

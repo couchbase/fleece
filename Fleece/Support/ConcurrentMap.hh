@@ -36,8 +36,8 @@ namespace fleece {
         int count() const FLPURE                     {return _count;}
         int capacity() const FLPURE                  {return _capacity;}
         int tableSize() const FLPURE                 {return _sizeMask + 1;}
-        int stringBytesCapacity() const FLPURE       {return (int)_keys.capacity();}
-        int stringBytesCount() const FLPURE          {return (int)_keys.allocated();}
+        int stringBytesCapacity() const FLPURE;
+        int stringBytesCount() const FLPURE;
 
         struct result {
             slice key;
@@ -62,7 +62,7 @@ namespace fleece {
 
     private:
         struct Entry {
-            uint16_t keyOffset;               // 1 + offset of key in _keys, or 0 if empty
+            uint16_t keyOffset;               // 1 + offset of key from _keysOffset, or 0 if empty
             uint16_t value;                   // value of key
 
             uint32_t& asInt32()                 {return *(uint32_t*)this;}
@@ -74,16 +74,15 @@ namespace fleece {
         const char* allocKey(slice key);
         bool freeKey(const char *allocedKey);
 
-        const char* entryKey(Entry entry) const {
-            assert(entry.keyOffset > 0);
-            return (const char*)_keys.toPointer(entry.keyOffset - 1);
-        }
+        inline uint16_t keyToOffset(const char *allocedKey) const FLPURE;
+        inline const char* offsetToKey(uint16_t offset) const FLPURE;
 
-        int                      _sizeMask;   // table size - 1; used for quick modulo via AND
-        int                      _capacity;   // Max number of entries
-        std::atomic<int>         _count {0};  // Current number of entries
-        std::unique_ptr<Entry[]> _entries;    // The table: array of key/value pairs
-        ConcurrentArena          _keys;       // Key storage
+        int                 _sizeMask;   // table size - 1; used for quick modulo via AND
+        int                 _capacity;   // Max number of entries
+        std::atomic<int>    _count {0};  // Current number of entries
+        ConcurrentArena     _heap;       // Storage for entries + keys
+        Entry*              _entries;    // The table: array of key/value pairs
+        size_t              _keysOffset; // Start of key storage
     };
 
 }
