@@ -17,6 +17,7 @@
 //
 
 #include "ConcurrentArena.hh"
+#include <string.h>
 
 using namespace std;
 
