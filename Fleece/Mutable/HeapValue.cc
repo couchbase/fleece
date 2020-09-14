@@ -17,6 +17,8 @@
 //
 
 #include "HeapValue.hh"
+#include "HeapArray.hh"
+#include "HeapDict.hh"
 #include "Doc.hh"
 #include "FleeceException.hh"
 #include "varint.hh"
@@ -95,13 +97,21 @@ namespace fleece { namespace impl { namespace internal {
 
 
     HeapValue* HeapValue::create(float f) {
-        endian::littleEndianFloat lf(f);
-        return create(kFloatTag, 0, {&lf, sizeof(lf)});
+        struct {
+            uint8_t filler = 0;
+            endian::littleEndianFloat le;
+        } data;
+        data.le = f;
+        return create(kFloatTag, 0, {(char*)&data.le - 1, sizeof(data.le) + 1});
     }
 
     HeapValue* HeapValue::create(double d) {
-        endian::littleEndianDouble ld(d);
-        return create(kFloatTag, 8, {&ld, sizeof(ld)});
+        struct {
+            uint8_t filler = 0;
+            endian::littleEndianDouble le;
+        } data;
+        data.le = d;
+        return create(kFloatTag, 8, {(char*)&data.le - 1, sizeof(data.le) + 1});
     }
 
 
@@ -165,6 +175,19 @@ namespace fleece { namespace impl { namespace internal {
                                         "Can't release immutable Value %p that's not part of a Doc",
                                         v);
             fleece::release(doc.get());
+        }
+    }
+
+
+    Retained<HeapCollection> HeapCollection::mutableCopy(const Value *v, tags ifType) {
+        if (!v || v->tag() != ifType)
+            return nullptr;
+        if (v->isMutable())
+            return (HeapCollection*)asHeapValue(v);
+        switch (ifType) {
+            case kArrayTag: return new HeapArray((const Array*)v);
+            case kDictTag:  return new HeapDict((const Dict*)v);
+            default:        return nullptr;
         }
     }
 

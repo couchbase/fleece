@@ -65,10 +65,12 @@ const char* FLDumpData(FLSlice data) FLAPI {
 
 
 FLValueType FLValue_GetType(FLValue v) FLAPI {
-    if (_usuallyFalse(v == NULL || v->isUndefined()))
+    if (_usuallyFalse(v == NULL))
         return kFLUndefined;
-    else
-        return (FLValueType)v->type();
+    auto type = (FLValueType)v->type();
+    if (_usuallyFalse(type == kFLNull) && v->isUndefined())
+        type = kFLUndefined;
+    return type;
 }
 
 
@@ -87,6 +89,7 @@ FLDict FLValue_AsDict(FLValue v)           FLAPI {return v ? v->asDict() : nullp
 FLTimestamp FLValue_AsTimestamp(FLValue v) FLAPI {return v ? v->asTimestamp() : FLTimestampNone;}
 FLValue FLValue_Retain(FLValue v)          FLAPI {return retain(v);}
 void FLValue_Release(FLValue v)            FLAPI {release(v);}
+bool FLValue_IsMutable(FLValue v)          FLAPI {return v && v->isMutable();}
 
 
 FLDoc FLValue_FindDoc(FLValue v) FLAPI {
@@ -107,6 +110,22 @@ FLSliceResult FLValue_ToString(FLValue v) FLAPI {
         } catchError(nullptr)
     }
     return {nullptr, 0};
+}
+
+
+FLValue FLValue_NewString(FLString str) FLAPI {
+    try {
+        return retain(internal::HeapValue::create(str))->asValue();
+    } catchError(nullptr)
+    return nullptr;
+}
+
+
+FLValue FLValue_NewData(FLSlice data) FLAPI {
+    try {
+        return retain(internal::HeapValue::createData(data))->asValue();
+    } catchError(nullptr)
+    return nullptr;
 }
 
 
@@ -489,6 +508,19 @@ FLValue FLKeyPath_EvalOnce(FLSlice specifier, FLValue root, FLError *outError) F
 
 FLStringResult FLKeyPath_ToString(FLKeyPath path) FLAPI {
     return toSliceResult(alloc_slice(std::string(*path)));
+}
+
+bool FLKeyPath_Equals(FLKeyPath path1, FLKeyPath path2) FLAPI {
+    return *path1 == *path2;
+}
+
+bool FLKeyPath_GetElement(FLKeyPath path, size_t i, FLSlice *outKey, int32_t *outIndex) FLAPI {
+    if (i >= path->size())
+        return false;
+    auto &element = (*path)[i];
+    *outKey = element.keyStr();
+    *outIndex = element.index();
+    return true;
 }
 
 

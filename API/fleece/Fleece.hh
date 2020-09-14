@@ -56,6 +56,7 @@ namespace fleece {
         inline bool isInteger() const;
         inline bool isUnsigned() const;
         inline bool isDouble() const;
+        inline bool isMutable() const;
 
         inline bool asBool() const;
         inline int64_t asInt() const;
@@ -71,11 +72,9 @@ namespace fleece {
         inline std::string asstring() const             {return asString().asString();}
 
         inline alloc_slice toString() const;
-        inline alloc_slice toJSON() const;
-        inline alloc_slice toJSON5() const;
-
-        inline alloc_slice toJSON(bool json5 =false, bool canonical =false);
-        inline std::string toJSONString()               {return std::string(toJSON());}
+        inline alloc_slice toJSON(bool json5 =false, bool canonical =false) const;
+        inline std::string toJSONString() const         {return std::string(toJSON());}
+        inline alloc_slice toJSON5() const              {return toJSON(true);}
 
         explicit operator bool() const                  {return _val != nullptr;}
         bool operator! () const                         {return _val == nullptr;}
@@ -206,12 +205,12 @@ namespace fleece {
         /** An efficient key for a Dict. */
         class Key {
         public:
-            // Warning: the input string's memory MUST remain valid for as long as the Key is in
-            // use! (The Key stores a pointer to the string, but does not copy it.)
             explicit Key(slice_NONNULL string);
-            inline slice_NONNULL string() const;
-            operator slice_NONNULL() const              {return string();}
+            explicit Key(alloc_slice string);
+            inline const alloc_slice& string() const    {return _str;}
+            operator const alloc_slice&() const         {return _str;}
         private:
+            alloc_slice _str;
             FLDictKey _key;
             friend class Dict;
         };
@@ -271,7 +270,10 @@ namespace fleece {
         KeyPath& operator=(KeyPath &&kp)                {FLKeyPath_Free(_path); _path = kp._path;
                                                          kp._path = nullptr; return *this;}
 
+        KeyPath(const KeyPath &kp)                      :KeyPath(std::string(kp), nullptr) { }
+
         explicit operator bool() const                  {return _path != nullptr;}
+        operator FLKeyPath() const                      {return _path;}
 
         Value eval(Value root) const {
             return FLKeyPath_Eval(_path, root);
@@ -285,8 +287,8 @@ namespace fleece {
             return std::string(alloc_slice(FLKeyPath_ToString(_path)));
         }
 
+        bool operator== (const KeyPath &kp) const       {return FLKeyPath_Equals(_path, kp._path);}
     private:
-        KeyPath(const KeyPath&) =delete;
         KeyPath& operator=(const KeyPath&) =delete;
         friend class Value;
 
@@ -430,6 +432,8 @@ namespace fleece {
         { }
 
         explicit Encoder(FLEncoder enc)                 :_enc(enc) { }
+        Encoder(Encoder&& enc)                          :_enc(enc._enc) {enc._enc = nullptr;}
+
 
         void detach()                                   {_enc = nullptr;}
         
@@ -604,6 +608,7 @@ namespace fleece {
     inline bool Value::isInteger() const        {return FLValue_IsInteger(_val);}
     inline bool Value::isUnsigned() const       {return FLValue_IsUnsigned(_val);}
     inline bool Value::isDouble() const         {return FLValue_IsDouble(_val);}
+    inline bool Value::isMutable() const        {return FLValue_IsMutable(_val);}
 
     inline bool Value::asBool() const           {return FLValue_AsBool(_val);}
     inline int64_t Value::asInt() const         {return FLValue_AsInt(_val);}
@@ -617,10 +622,8 @@ namespace fleece {
     inline Dict Value::asDict() const           {return FLValue_AsDict(_val);}
 
     inline alloc_slice Value::toString() const {return FLValue_ToString(_val);}
-    inline alloc_slice Value::toJSON() const {return FLValue_ToJSON(_val);}
-    inline alloc_slice Value::toJSON5() const{return FLValue_ToJSON5(_val);}
 
-    inline alloc_slice Value::toJSON(bool json5, bool canonical) {
+    inline alloc_slice Value::toJSON(bool json5, bool canonical) const {
         return FLValue_ToJSONX(_val, json5, canonical);
     }
 
@@ -643,8 +646,8 @@ namespace fleece {
     inline Value Dict::get(slice_NONNULL key) const   {return FLDict_Get(*this, key);}
     inline Value Dict::get(Dict::Key &key) const{return FLDict_GetWithKey(*this, &key._key);}
 
-    inline Dict::Key::Key(slice_NONNULL s)            :_key(FLDictKey_Init(s)) { }
-    inline slice_NONNULL Dict::Key::string() const   {return FLDictKey_GetString(&_key);}
+    inline Dict::Key::Key(alloc_slice s)        :_str(std::move(s)), _key(FLDictKey_Init(_str)) { }
+    inline Dict::Key::Key(slice_NONNULL s)      :Key(alloc_slice(s)) { }
 
     inline Dict::iterator::iterator(Dict d)     {FLDictIterator_Begin(d, this);}
     inline Value Dict::iterator::key() const    {return FLDictIterator_GetKey(this);}

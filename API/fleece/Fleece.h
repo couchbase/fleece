@@ -314,6 +314,9 @@ extern "C" {
     /** Compares two values for equality. This is a deep recursive comparison. */
     bool FLValue_IsEqual(FLValue v1, FLValue v2) FLAPI FLPURE;
 
+    /** Returns true if the value is mutable. */
+    bool FLValue_IsMutable(FLValue) FLAPI FLPURE;
+
     /** \name Ref-counting (mutable values only)
          @{ */
 
@@ -331,7 +334,17 @@ extern "C" {
     static inline FLDict FLDict_Retain(FLDict v)        {FLValue_Retain((FLValue)v); return v;}
     static inline void FLDict_Release(FLDict v)         {FLValue_Release((FLValue)v);}
 
+    /** @} */
 
+    /** Allocates a string value on the heap. This is rarely needed -- usually you'd just add a string
+        to a mutable Array or Dict directly using \ref FLSlot_SetString. */
+    FLValue FLValue_NewString(FLString) FLAPI;
+
+    /** Allocates a data/blob value on the heap. This is rarely needed -- usually you'd just add data
+        to a mutable Array or Dict directly using \ref FLSlot_SetData. */
+    FLValue FLValue_NewData(FLSlice) FLAPI;
+
+    /** A constant null value (not a NULL pointer!) */
     extern const FLValue kFLNullValue;
 
     /** @} */
@@ -772,7 +785,7 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
     void FLKeyPath_Free(FLKeyPath) FLAPI;
 
     /** Evaluates a compiled key-path for a given Fleece root object. */
-    FLValue FLKeyPath_Eval(FLKeyPath FLNONNULL, FLValue root FLNONNULL) FLAPI;
+    FLValue FLKeyPath_Eval(FLKeyPath FLNONNULL, FLValue root) FLAPI;
 
     /** Evaluates a key-path from a specifier string, for a given Fleece root object.
         If you only need to evaluate the path once, this is a bit faster than creating an
@@ -781,6 +794,15 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
 
     /** Returns a path in string form. */
     FLStringResult FLKeyPath_ToString(FLKeyPath path) FLAPI;
+
+    /** Equality test. */
+    bool FLKeyPath_Equals(FLKeyPath path1, FLKeyPath path2) FLAPI;
+
+    /** Returns an element of a path, either a key or an array index. */
+    bool FLKeyPath_GetElement(FLKeyPath FLNONNULL,
+                              size_t i,
+                              FLSlice *outDictKey FLNONNULL,
+                              int32_t *outArrayIndex FLNONNULL) FLAPI;
 
     //////// SHARED KEYS
 
@@ -820,7 +842,7 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
     bool FLSharedKeys_LoadStateData(FLSharedKeys, FLSlice) FLAPI;
 
     /** Writes the current state to a Fleece encoder as a single value,
-        which can later be decoded and passed to FLSharedKeys_CreateFromState. */
+        which can later be decoded and passed to \ref FLSharedKeys_LoadState. */
     void FLSharedKeys_WriteState(FLSharedKeys, FLEncoder) FLAPI;
 
     /** Updates an FLSharedKeys object with saved state, a Fleece value previously written by

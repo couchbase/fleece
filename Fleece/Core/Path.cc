@@ -62,6 +62,11 @@ namespace fleece { namespace impl {
     }
 
 
+    bool Path::operator== (const Path &other) const {
+        return _path == other._path;
+    }
+
+
 #pragma mark - ENCODING:
 
 
@@ -284,6 +289,11 @@ namespace fleece { namespace impl {
     {
         if (other._key)
             _key.reset(new Dict::key(_keyBuf));
+    }
+
+
+    bool Path::Element::operator== (const Element &e) const {
+        return _key ? (_key == e._key) : (_index == e._index);
     }
 
 

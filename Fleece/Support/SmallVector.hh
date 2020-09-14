@@ -6,19 +6,24 @@
 
 #pragma once
 #include "PlatformCompat.hh"
-#include <array>
 #include <stdexcept>
 #include "betterassert.hh"
 
 namespace fleece {
 
+    /// Similar to std::vector but optimized for small sizes. The first N items are stored inside the
+    /// object itself. This makes the object larger, but avoids heap allocation. Once it grows larger
+    /// than n items, it will switch to using a heap block like a vector.
+    /// \warning This class cuts a few corners, which slightly limits what types you can use it with.
+    ///         Items are moved with memcpy, not a move constructor, which will break those rare classes
+    ///        that need special attention when moved.
     template <class T, size_t N>
     class smallVector {
     public:
-        smallVector()                               { }
-        ~smallVector()                              {clear(); free(_big);}
+        smallVector()                                   { }
+        ~smallVector()                                  {clear(); free(_big);}
 
-        smallVector(size_t size)                    :smallVector() {resize(size);}
+        smallVector(size_t size)                        :smallVector() {resize(size);}
 
         smallVector(smallVector &&sv)
         :_size(sv._size)
@@ -46,11 +51,38 @@ namespace fleece {
             return *this;
         }
 
-        size_t size() const FLPURE                         {return _size;}
-        size_t capacity() const FLPURE                     {return _capacity;}
-        bool empty() const FLPURE                          {return _size == 0;}
-        void clear()                                {shrinkTo(0);}
-        void reserve(size_t cap)                    {if (cap>_capacity) setCapacity(cap);}
+        template <size_t M>
+        bool operator== (const smallVector<T,M> &v) const
+#if defined(__clang__) || !defined(__GNUC__) || __GNUC__ > 6
+        FLPURE  /* for some reason GCC 6 does not like this attribute here*/
+#endif
+        {
+            if (_size != v._size)
+                return false;
+            auto vi = v.begin();
+            for (auto &e : *this) {
+                if (!(e == *vi))
+                    return false;
+                ++vi;
+            }
+            return true;
+        }
+
+        template <size_t M>
+        bool operator!= (const smallVector<T,M> &v) const
+#if defined(__clang__) || !defined(__GNUC__) || __GNUC__ > 6
+        FLPURE  /* for some reason GCC 6 does not like this attribute here*/
+#endif
+        {
+            return !( *this == v);
+        }
+
+        size_t size() const FLPURE                      {return _size;}
+        size_t capacity() const FLPURE                  {return _capacity;}
+
+        bool empty() const FLPURE                       {return _size == 0;}
+        void clear()                                    {shrinkTo(0);}
+        void reserve(size_t cap)                        {if (cap>_capacity) setCapacity(cap);}
 
         const T& get(size_t i) const FLPURE {
             assert_precondition(i < _size);
@@ -62,25 +94,25 @@ namespace fleece {
             return _get(i);
         }
 
-        const T& operator[] (size_t i) const FLPURE   {return get(i);}
-        T& operator[] (size_t i) FLPURE               {return get(i);}
-        const T& back() const FLPURE                  {return get(_size - 1);}
-        T& back() FLPURE                              {return get(_size - 1);}
+        const T& operator[] (size_t i) const FLPURE     {return get(i);}
+        T& operator[] (size_t i) FLPURE                 {return get(i);}
+        const T& back() const FLPURE                    {return get(_size - 1);}
+        T& back() FLPURE                                {return get(_size - 1);}
 
         using iterator = T*;
         using const_iterator = const T*;
 
-        iterator begin() FLPURE                            {return &_get(0);}
-        iterator end() FLPURE                              {return &_get(_size);}
-        const_iterator begin() const FLPURE                {return &_get(0);}
-        const_iterator end() const FLPURE                  {return &_get(_size);}
+        iterator begin() FLPURE                         {return &_get(0);}
+        iterator end() FLPURE                           {return &_get(_size);}
+        const_iterator begin() const FLPURE             {return &_get(0);}
+        const_iterator end() const FLPURE               {return &_get(_size);}
 
-        T& push_back(const T& t)                    {return * new(_grow()) T(t);}
-        T& push_back(T&& t)                         {return * new(_grow()) T(t);}
+        T& push_back(const T& t)                        {return * new(_grow()) T(t);}
+        T& push_back(T&& t)                             {return * new(_grow()) T(std::move(t));}
 
-        void* push_back()                           {return _grow();}
+        void* push_back()                               {return _grow();}
 
-        void pop_back()                             {get(_size - 1).~T(); --_size;}
+        void pop_back()                                 {get(_size - 1).~T(); --_size;}
 
         template <class... Args>
         T& emplace_back(Args&&... args) {
@@ -190,10 +222,10 @@ namespace fleece {
 
         struct baseType { T t[N]; };
 
-        uint32_t _size {0};
-        uint32_t _capacity {N};
-        char _small[sizeof(baseType)];   // really T[N], but avoids calling constructor
-        T* _big {nullptr};
+        uint32_t _size {0};                 // Current item count
+        uint32_t _capacity {N};             // Max count without growing
+        char     _small[sizeof(baseType)];  // Internal storage, used when _size <= N
+        T*       _big {nullptr};            // External storage, used when _size > N
     };
 
 }

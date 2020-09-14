@@ -28,113 +28,90 @@ namespace fleece { namespace impl {
     using namespace internal;
 
 
+    static_assert(sizeof(ValueSlot) == 8);
+
+
+    ValueSlot::ValueSlot()
+    :_pointer(0)
+    { }
+
+
     ValueSlot::ValueSlot(Null)
-    :_inlineData{(kSpecialTag << 4) | kSpecialValueNull}
-    ,_isInline(true)
+    :_pointerTag(0xFF)
     {
-        static_assert(sizeof(ValueSlot) == 2*sizeof(void*), "ValueSlot is wrong size");
-        static_assert(offsetof(ValueSlot, _inlineData) + ValueSlot::kInlineCapacity
-                        == offsetof(ValueSlot, _isInline), "kInlineCapacity is wrong");
+        _inline[0] = ((kSpecialTag << 4) | kSpecialValueNull);
     }
 
 
     ValueSlot::ValueSlot(HeapCollection *md)
-    :_asValue( retain(md)->asValue() )
+    :_pointer( uint64_t(retain(md)->asValue()) )
     { }
 
 
-
-    ValueSlot::ValueSlot(const ValueSlot &other) noexcept {
-        *this = other; // invoke operator=, below
+    ValueSlot::ValueSlot(const ValueSlot &other) noexcept
+    :_pointer(other._pointer)
+    {
+        if (isPointer())
+            retain(pointer());
     }
 
 
     ValueSlot& ValueSlot::operator= (const ValueSlot &other) noexcept {
         releaseValue();
-        _isInline = other._isInline;
-        if (_isInline)
-            memcpy(&_inlineData, &other._inlineData, kInlineCapacity);
-        else
-            _asValue = retain(other._asValue);
+        _pointer = other._pointer;
+        if (isPointer())
+            retain(pointer());
         return *this;
     }
 
 
     ValueSlot::ValueSlot(ValueSlot &&other) noexcept {
-        _isInline = other._isInline;
-        if (_isInline) {
-            memcpy(&_inlineData, &other._inlineData, kInlineCapacity);
-        } else {
-            _asValue = other._asValue;
-            other._asValue = nullptr;
-        }
+        _pointer = other._pointer;
+        other._pointer = 0;
     }
 
+
     ValueSlot& ValueSlot::operator= (ValueSlot &&other) noexcept {
-        releaseValue();
-        _isInline = other._isInline;
-        if (_isInline) {
-            memcpy(&_inlineData, &other._inlineData, kInlineCapacity);
-        } else {
-            _asValue = other._asValue;
-            other._asValue = nullptr;
-        }
+        release(asPointer());
+        _pointer = other._pointer;
+        other._pointer = 0;
         return *this;
     }
 
 
 
     ValueSlot::~ValueSlot() {
-        if (!_isInline)
-            release(_asValue);
-    }
-
-
-    Retained<HeapCollection> HeapCollection::mutableCopy(const Value *v, tags ifType) {
-        if (!v || v->tag() != ifType)
-            return nullptr;
-        if (v->isMutable())
-            return (HeapCollection*)asHeapValue(v);
-        switch (ifType) {
-            case kArrayTag: return new HeapArray((const Array*)v);
-            case kDictTag:  return new HeapDict((const Dict*)v);
-            default:        return nullptr;
-        }
+        if (isPointer())
+            release(pointer());
     }
 
 
     void ValueSlot::releaseValue() {
-        if (!_isInline) {
-            release(_asValue);
-            _asValue = nullptr;
+        if (isPointer()) {
+            release(pointer());
+            _pointer = 0;
         }
     }
 
 
-    const Value* ValueSlot::asValue() const {
-        return _isInline ? (const Value*)&_inlineData : _asValue;
-    }
-
     const Value* ValueSlot::asValueOrUndefined() const {
-        if (_isInline)
-            return (const Value*)&_inlineData;
-        else if (_asValue)
-            return _asValue;
-        else
-            return Value::kUndefinedValue;
+        return _pointer ? asValue() : Value::kUndefinedValue;
     }
 
-    HeapCollection* ValueSlot::asMutableCollection() const {
-        if (!_isInline && _asValue && _asValue->isMutable())
-            return (HeapCollection*)HeapValue::asHeapValue(_asValue);
-        return nullptr;
+
+    void ValueSlot::setPointer(const Value *v) {
+        if (_usuallyFalse(v == pointer()))
+            return;
+        releaseValue();
+        _pointer = uint64_t(size_t(retain(v)));
+        assert(isPointer());
     }
 
 
     void ValueSlot::setInline(internal::tags valueTag, int tiny) {
         releaseValue();
-        _isInline = true;
-        _inlineData[0] = uint8_t((valueTag << 4) | tiny);
+        _pointerTag = 0xFF;
+        _inline[0] = uint8_t((valueTag << 4) | tiny);
     }
 
     void ValueSlot::set(Null) {
@@ -147,35 +124,25 @@ namespace fleece { namespace impl {
     }
 
 
-    void ValueSlot::set(int i)       {setInt(i, false);}
-    void ValueSlot::set(unsigned i)  {setInt(i, true);}
-    void ValueSlot::set(int64_t i)   {setInt(i, false);}
-    void ValueSlot::set(uint64_t i)  {setInt(i, true);}
+    void ValueSlot::set(int i)       {setInt(i);}
+    void ValueSlot::set(unsigned i)  {setInt(i);}
+    void ValueSlot::set(int64_t i)   {setInt(i);}
+    void ValueSlot::set(uint64_t i)  {setInt(i);}
 
-#ifdef _MSC_VER
-#pragma warning(push)
-// unary minus operator applied to unsigned type, result still unsigned
-// short circuited by isUnsigned
-#pragma warning(disable : 4146)
-#endif
 
     template <class INT>
-    void ValueSlot::setInt(INT i, bool isUnsigned) {
-        if (i < 2048 && (isUnsigned || -i < 2048)) {
+    void ValueSlot::setInt(INT i) {
+        if (i < 2048 && (!numeric_limits<INT>::is_signed || -i < 2048)) {
             setInline(kShortIntTag, (i >> 8) & 0x0F);
-            _inlineData[1] = (uint8_t)(i & 0xFF);
+            _inline[1] = (uint8_t)(i & 0xFF);
         } else {
             uint8_t buf[8];
-            auto size = PutIntOfLength(buf, i, isUnsigned);
+            auto size = PutIntOfLength(buf, i, !numeric_limits<INT>::is_signed);
             setValue(kIntTag,
-                     (int)(size-1) | (isUnsigned ? 0x08 : 0),
+                     (int)(size-1) | (numeric_limits<INT>::is_signed ? 0 : 0x08),
                      {buf, size});
         }
     }
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 
     void ValueSlot::set(float f) {
@@ -196,68 +163,61 @@ namespace fleece { namespace impl {
         if (Encoder::isIntRepresentable(d)) {
             set((int64_t)d);
         } else {
-            struct {
-                uint8_t filler = 0;
-                endian::littleEndianDouble le;
-            } data;
-            data.le = d;
-            setValue(kFloatTag, 8, {(char*)&data.le - 1, sizeof(data.le) + 1});
+            setPointer(HeapValue::create(d)->asValue());
         }
         assert_postcondition(asValue()->asDouble() == d);
     }
 
 
     void ValueSlot::setValue(const Value *v) {
-        if (!_isInline) {
-            if (v == _asValue)
-                return;
-            release(_asValue);
-        }
         if (v && v->tag() < kArrayTag) {
             auto size = v->dataSize();
             if (size <= kInlineCapacity) {
                 // Copy value inline if it's small enough
-                _isInline = true;
-                memcpy(&_inlineData, v, size);
+                releaseValue();
+                _pointerTag = 0xFF;
+                memcpy(&_inline, v, size);
                 return;
             }
         }
         // else point to it
-        _isInline = false;
-        _asValue = retain(v);
+        setPointer(v);
     }
 
 
     void ValueSlot::setValue(tags valueTag, int tiny, slice bytes) {
-        releaseValue();
         if (1 + bytes.size <= kInlineCapacity) {
-            _inlineData[0] = uint8_t((valueTag << 4) | tiny);
-            memcpy(&_inlineData[1], bytes.buf, bytes.size);
-            _isInline = true;
+            setInline(valueTag, tiny);
+            memcpy(&_inline[1], bytes.buf, bytes.size);
         } else {
-            _asValue = retain(HeapValue::create(valueTag, tiny, bytes)->asValue());
-            _isInline = false;
+            setPointer(HeapValue::create(valueTag, tiny, bytes)->asValue());
         }
     }
 
 
-    void ValueSlot::_setStringOrData(tags valueTag, slice s) {
+    void ValueSlot::setStringOrData(tags valueTag, slice s) {
         if (s.size + 1 <= kInlineCapacity) {
             // Short strings can go inline:
             setInline(valueTag, (int)s.size);
-            memcpy(&_inlineData[1], s.buf, s.size);
+            memcpy(&_inline[1], s.buf, s.size);
         } else {
-            releaseValue();
-            _asValue = retain(HeapValue::createStr(valueTag, s)->asValue());
-            _isInline = false;
+            setPointer(HeapValue::createStr(valueTag, s)->asValue());
         }
+    }
+
+
+    HeapCollection* ValueSlot::asMutableCollection() const {
+        const Value *ptr = asPointer();
+        if (ptr && ptr->isMutable())
+            return (HeapCollection*)HeapValue::asHeapValue(ptr);
+        return nullptr;
     }
 
 
     HeapCollection* ValueSlot::makeMutable(tags ifType) {
-        if (_isInline)
+        if (isInline())
             return nullptr;
-        Retained<HeapCollection> mval = HeapCollection::mutableCopy(_asValue, ifType);
+        Retained<HeapCollection> mval = HeapCollection::mutableCopy(pointer(), ifType);
         if (mval)
             set(mval->asValue());
         return mval;
@@ -265,29 +225,28 @@ namespace fleece { namespace impl {
 
 
     void ValueSlot::copyValue(CopyFlags flags) {
-        if (!_isInline && _asValue && ((flags & kCopyImmutables) || _asValue->isMutable())) {
+        const Value *value = asPointer();
+        if (value && ((flags & kCopyImmutables) || value->isMutable())) {
             bool recurse = (flags & kDeepCopy);
-            HeapCollection *copy;
-            switch (_asValue->tag()) {
+            Retained<HeapCollection> copy;
+            switch (value->tag()) {
                 case kArrayTag:
-                    copy = new HeapArray((Array*)_asValue);
+                    copy = new HeapArray((Array*)value);
                     if (recurse)
-                        ((HeapArray*)copy)->copyChildren(flags);
+                        ((HeapArray*)copy.get())->copyChildren(flags);
                     set(copy->asValue());
                     break;
                 case kDictTag:
-                    assert(_asValue->tag() == kDictTag);
-                    copy = new HeapDict((Dict*)_asValue);
+                    copy = new HeapDict((Dict*)value);
                     if (recurse)
-                        ((HeapDict*)copy)->copyChildren(flags);
+                        ((HeapDict*)copy.get())->copyChildren(flags);
                     set(copy->asValue());
                     break;
                 case kStringTag:
-                    set(_asValue->asString());
+                    set(value->asString());
                     break;
                 case kFloatTag:
-                    // doubles are not stored inline in 32-bit builds [issue #50]
-                    set(_asValue->asDouble());
+                    set(value->asDouble());
                     break;
                 default:
                     assert(false);

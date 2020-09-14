@@ -14,8 +14,9 @@ namespace fleece {
     class keyref : public Value {
     public:
         keyref(Collection &coll, Key key)           :Value(coll.get(key)), _coll(coll), _key(key) { }
-            template <class T>
-        void operator= (T value)                    {_coll.set(_key, value);}
+        void operator= (const keyref &ref)          {_coll.set(_key, ref);}
+        template <class T>
+        void operator= (const T &value)             {_coll.set(_key, value);}
         void remove()                               {_coll.remove(_key);}
     private:
         Collection _coll;
@@ -34,11 +35,12 @@ namespace fleece {
         void operator= (uint64_t v)                 {FLSlot_SetUInt(_slot, v);}
         void operator= (float v)                    {FLSlot_SetFloat(_slot, v);}
         void operator= (double v)                   {FLSlot_SetDouble(_slot, v);}
-        void operator= (FLString v)                 {FLSlot_SetString(_slot, v);}
+        void operator= (slice v)                    {FLSlot_SetString(_slot, v);}
         void operator= (const char *v)              {FLSlot_SetString(_slot, slice(v));}
         void operator= (const std::string &v)       {FLSlot_SetString(_slot, slice(v));}
-        void setData(FLSlice v)                     {FLSlot_SetData(_slot, v);}
+        void setData(slice v)                       {FLSlot_SetData(_slot, v);}
         void operator= (Value v)                    {FLSlot_SetValue(_slot, v);}
+        void operator= (std::nullptr_t)             {FLSlot_SetValue(_slot, nullptr);}
 
     private:
         friend class MutableArray;
@@ -120,6 +122,9 @@ namespace fleece {
             return keyref<MutableArray,uint32_t>(*this, i);
         }
 
+        inline Value operator[] (int index) const {return get(index);} // const version
+
+
         inline MutableArray getMutableArray(uint32_t i);
         inline MutableDict getMutableDict(uint32_t i);
 
@@ -164,13 +169,13 @@ namespace fleece {
         Dict source() const                     {return FLMutableDict_GetSource(*this);}
         bool isChanged() const                  {return FLMutableDict_IsChanged(*this);}
 
-        void remove(FLString key)               {FLMutableDict_Remove(*this, key);}
+        void remove(slice key)                  {FLMutableDict_Remove(*this, key);}
 
-        Slot set(FLString key)                  {return FLMutableDict_Set(*this, key);}
-        void setNull(FLString key)              {set(key) = nullValue;}
+        Slot set(slice key)                     {return FLMutableDict_Set(*this, key);}
+        void setNull(slice key)                 {set(key) = nullValue;}
 
         template <class T>
-        void set(FLString key, T v)             {set(key) = v;}
+        void set(slice key, T v)                {set(key) = v;}
 
 
         // This enables e.g. `dict["key"_sl] = 17`
@@ -184,8 +189,8 @@ namespace fleece {
         inline Value operator[] (slice key) const       {return Dict::get(key);}
         inline Value operator[] (const char *key) const {return Dict::get(key);}
 
-        inline MutableArray getMutableArray(FLString key);
-        inline MutableDict getMutableDict(FLString key);
+        inline MutableArray getMutableArray(slice key);
+        inline MutableDict getMutableDict(slice key);
 
     private:
         MutableDict(FLMutableDict d, bool)      :Dict((FLDict)d) {}
@@ -244,9 +249,9 @@ namespace fleece {
                                                 {return FLMutableArray_GetMutableArray(*this, i);}
     inline MutableDict MutableArray::getMutableDict(uint32_t i)
                                                 {return FLMutableArray_GetMutableDict(*this, i);}
-    inline MutableArray MutableDict::getMutableArray(FLString key)
+    inline MutableArray MutableDict::getMutableArray(slice key)
                                                 {return FLMutableDict_GetMutableArray(*this, key);}
-    inline MutableDict MutableDict::getMutableDict(FLString key)
+    inline MutableDict MutableDict::getMutableDict(slice key)
                                                 {return FLMutableDict_GetMutableDict(*this, key);}
 
     inline MutableArray Array::asMutable() const {
