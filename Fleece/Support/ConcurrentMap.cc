@@ -20,6 +20,11 @@
 #include <algorithm>
 #include <cmath>
 
+#if defined(_WIN32) || defined(_WIN64)
+#include <Windows.h>
+#endif
+
+
 using namespace std;
 
 namespace fleece {
@@ -30,6 +35,20 @@ namespace fleece {
 
     // How full the table is allowed to get before it grows.
     static constexpr float kMaxLoad = 0.6f;
+
+
+    // Atomic test-and-set primitive:
+    // If `*value == oldValue`, stores `newValue` and returns true. Else returns false.
+    static inline bool atomicCompareAndSwap(uint32_t *value, uint32_t oldValue, uint32_t newValue) {
+#if defined(_WIN32) || defined(_WIN64)
+        // https://docs.microsoft.com/en-us/windows/win32/api/winnt/nf-winnt-interlockedcompareexchange
+        return InterlockedCompareExchange(value, newValue, oldValue) == oldValue;
+#else
+        // https://gcc.gnu.org/onlinedocs/gcc-4.1.1/gcc/Atomic-Builtins.html  (also in Clang)
+        return __sync_bool_compare_and_swap(value, oldValue, newValue);
+#endif
+    }
+
 
 
     ConcurrentMap::ConcurrentMap(int capacity, int stringCapacity) {
@@ -79,9 +98,7 @@ namespace fleece {
 
 
     bool ConcurrentMap::Entry::compareAndSwap(Entry expected, Entry swapWith) {
-        // https://gcc.gnu.org/onlinedocs/gcc-4.1.1/gcc/Atomic-Builtins.html
-        static_assert(sizeof(Entry) == 4);
-        return __sync_bool_compare_and_swap_4(&asInt32(), expected.asInt32(), swapWith.asInt32());
+        return atomicCompareAndSwap(&asInt32(), expected.asInt32(), swapWith.asInt32());
     }
 
 
