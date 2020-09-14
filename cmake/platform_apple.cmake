@@ -74,16 +74,12 @@ function(setup_build)
     )
 
     target_link_libraries(
-        Fleece
+        FleeceStatic INTERFACE
         "-framework CoreFoundation"
         "-framework Foundation"
     )
 endfunction()
 
 function(setup_test_build)
-    target_link_libraries(
-        FleeceTests
-        "-framework CoreFoundation"
-        "-framework Foundation"
-    )
+    
 endfunction()

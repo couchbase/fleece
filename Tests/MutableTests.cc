@@ -131,6 +131,7 @@ namespace fleece {
         CHECK(ma->get(3)->type() == kBoolean);
         CHECK(ma->get(3)->asBool() == false);
 
+#if 0 // Enable again if this feature becomes an option
         // Check that FP values are stored as ints when possible:
         ma->set(0, (float)12345);
         CHECK(ma->get(0)->isInteger());
@@ -138,6 +139,7 @@ namespace fleece {
         ma->set(0, (double)12345);
         CHECK(ma->get(0)->isInteger());
         CHECK(ma->get(0)->asInt() == 12345);
+#endif
     }
 
 

@@ -10,20 +10,6 @@
 
 namespace fleece {
 
-    template <class Collection, class Key>
-    class keyref : public Value {
-    public:
-        keyref(Collection &coll, Key key)           :Value(coll.get(key)), _coll(coll), _key(key) { }
-        void operator= (const keyref &ref)          {_coll.set(_key, ref);}
-        template <class T>
-        void operator= (const T &value)             {_coll.set(_key, value);}
-        void remove()                               {_coll.remove(_key);}
-    private:
-        Collection _coll;
-        Key _key;
-    };
-
-
     class Slot {
     public:
         void setNull()                              {FLSlot_SetNull(_slot);}
@@ -42,6 +28,8 @@ namespace fleece {
         void operator= (Value v)                    {FLSlot_SetValue(_slot, v);}
         void operator= (std::nullptr_t)             {FLSlot_SetValue(_slot, nullptr);}
 
+        operator FLSlot()                           {return _slot;}
+
     private:
         friend class MutableArray;
         friend class MutableDict;
@@ -55,6 +43,23 @@ namespace fleece {
         void operator= (const void*) = delete; // Explicitly disallow other pointer types!
 
         FLSlot const _slot;
+    };
+
+
+    template <class Collection, class Key>
+    class keyref : public Value {
+    public:
+        keyref(Collection &coll, Key key)           :Value(coll.get(key)), _coll(coll), _key(key) { }
+            template <class T>
+        void operator= (const keyref &ref)          {_coll.set(_key, ref);}
+            template <class T>
+        void operator= (const T &value)             {_coll.set(_key, value);}
+        void remove()                               {_coll.remove(_key);}
+
+        operator FLSlot()                           {return _coll.set(_key);}
+    private:
+        Collection _coll;
+        Key _key;
     };
 
 

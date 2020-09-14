@@ -234,9 +234,12 @@ namespace fleece { namespace impl {
 
     void Encoder::writeDouble(double n) {
         throwIf(std::isnan(n), InvalidData, "Can't write NaN");
+#if 0 // Perhaps an option in the future?
         if (isIntRepresentable(n)) {
             return writeInt((int64_t)n);
-        } else if (isFloatRepresentable(n)) {
+        } else
+#endif
+        if (isFloatRepresentable(n)) {
             return _writeFloat((float)n);
         } else {
             endian::littleEndianDouble swapped = n;
@@ -248,9 +251,11 @@ namespace fleece { namespace impl {
 
     void Encoder::writeFloat(float n) {
         throwIf(std::isnan(n), InvalidData, "Can't write NaN");
+#if 0 // Perhaps an option in the future?
         if (isIntRepresentable(n))
             writeInt((int32_t)n);
         else
+#endif
             _writeFloat(n);
     }
 
@@ -261,6 +266,7 @@ namespace fleece { namespace impl {
         memcpy(&buf[2], &swapped, sizeof(swapped));
     }
 
+#if 0
     bool Encoder::isIntRepresentable(float n) noexcept {
         return (n <= INT32_MAX && n >= INT32_MIN && n == floorf(n));
     }
@@ -268,6 +274,7 @@ namespace fleece { namespace impl {
     bool Encoder::isIntRepresentable(double n) noexcept {
         return (n <= INT64_MAX && n >= INT64_MIN && n == floor(n));
     }
+#endif
 
     bool Encoder::isFloatRepresentable(double n) noexcept {
         return (fabs(n) <= FLT_MAX && n == (float)n);

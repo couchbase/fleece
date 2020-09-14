@@ -5,6 +5,31 @@
 //
 
 #pragma once
+#ifndef FLEECE_BASE_H
+    #define FLEECE_BASE_H
+#else
+    #error "Compiler is not honoring #pragma once"
+#endif
+
+// The __has_xxx() macros are only(?) implemented by Clang. (Except GCC has __has_attribute...)
+// Define them to return 0 on other compilers.
+
+#ifndef __has_attribute
+    #define __has_attribute(x) 0
+#endif
+
+#ifndef __has_builtin
+    #define __has_builtin(x) 0
+#endif
+
+#ifndef __has_feature
+    #define __has_feature(x) 0
+#endif
+
+#ifndef __has_extension
+    #define __has_extension(x) 0
+#endif
+
 
 // https://clang.llvm.org/docs/AttributeReference.html
 // https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html
@@ -27,13 +52,6 @@
 
     #define _usuallyTrue(VAL)               (VAL)
     #define _usuallyFalse(VAL)              (VAL)
-    #ifndef __has_attribute
-    #define __has_attribute(X) 0
-    #endif
-#endif
-
-#ifndef __has_attribute
-#define __has_attribute(X) 0
 #endif
 
 // Declares that a parameter must not be NULL. The compiler can sometimes detect violations

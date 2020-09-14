@@ -27,7 +27,10 @@ function(set_test_source_files)
 endfunction()
 
 function(setup_build)
-    # No-op
+    target_link_libraries(
+        FleeceStatic INTERFACE
+	dl
+    )
 endfunction()
 
 function(setup_test_build)

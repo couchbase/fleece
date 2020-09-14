@@ -17,7 +17,7 @@ namespace fleece {
     class Backtrace {
     public:
         explicit Backtrace(unsigned skipFrames =0);
-#ifdef __clang__
+#ifdef _LIBCPP_VERSION
         ~Backtrace();
 #endif
 

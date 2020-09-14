@@ -39,13 +39,9 @@ struct __CFData;
 #endif
 
 // Figure out whether and how string_view is available
-#if __cplusplus >= 201700L || _MSVC_LANG >= 201700L
+#ifdef __has_include
     #if __has_include(<string_view>)
-        #include <string_view>
-        #define STRING_VIEW std::string_view
-    #else
-        #include <experimental/string_view>
-        #define STRING_VIEW std::experimental::string_view
+        #define SLICE_SUPPORTS_STRING_VIEW
     #endif
 #endif
 
@@ -60,10 +56,8 @@ namespace fleece {
     struct alloc_slice;
     struct nullslice_t;
 
-#ifdef STRING_VIEW
-    using string_view = STRING_VIEW; // create typedef with correct namespace
-    #undef STRING_VIEW
-    #define SLICE_SUPPORTS_STRING_VIEW
+#ifdef SLICE_SUPPORTS_STRING_VIEW
+    using string_view = std::string_view; // create typedef with correct namespace
 #endif
 
 #ifdef __APPLE__

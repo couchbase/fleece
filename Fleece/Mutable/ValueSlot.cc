@@ -146,9 +146,12 @@ namespace fleece { namespace impl {
 
 
     void ValueSlot::set(float f) {
+#if 0 // Perhaps an option in the future?
         if (Encoder::isIntRepresentable(f)) {
             set((int32_t)f);
-        } else {
+        } else
+#endif
+        {
             struct {
                 uint8_t filler = 0;
                 endian::littleEndianFloat le;
@@ -160,9 +163,12 @@ namespace fleece { namespace impl {
     }
 
     void ValueSlot::set(double d) {
+#if 0 // Perhaps an option in the future?
         if (Encoder::isIntRepresentable(d)) {
             set((int64_t)d);
-        } else {
+        } else
+#endif
+        {
             setPointer(HeapValue::create(d)->asValue());
         }
         assert_postcondition(asValue()->asDouble() == d);
