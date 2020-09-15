@@ -21,6 +21,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef _MSC_VER
+#include "asprintf.h"
+#endif
+
 namespace fleece {
 
     __cold
