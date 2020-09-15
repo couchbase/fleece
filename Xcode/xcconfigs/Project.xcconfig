@@ -23,7 +23,7 @@ HEADER_SEARCH_PATHS                                = API   // allows for #includ
 IPHONEOS_DEPLOYMENT_TARGET                         = 8.0
 MACOSX_DEPLOYMENT_TARGET                           = 10.9
 TVOS_DEPLOYMENT_TARGET                             = 9.0
-ONLY_ACTIVE_ARCH                                   = NO
+ONLY_ACTIVE_ARCH                                   = YES
 SKIP_INSTALL                                       = YES
 SUPPORTED_PLATFORMS                                = macosx iphoneos iphonesimulator appletvos appletvsimulator
 

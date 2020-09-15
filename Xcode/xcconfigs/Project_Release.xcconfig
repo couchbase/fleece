@@ -9,6 +9,7 @@
 
 ENABLE_NS_ASSERTIONS         = NO
 ENABLE_TESTABILITY           = NO
+ONLY_ACTIVE_ARCH             = NO
 GCC_PREPROCESSOR_DEFINITIONS = $(inherited) NDEBUG=1
 GCC_OPTIMIZATION_LEVEL       = fast
 LLVM_LTO                     = YES
