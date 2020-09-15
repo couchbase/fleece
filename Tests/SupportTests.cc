@@ -113,12 +113,34 @@ TEST_CASE("Bitmap") {
 }
 
 
+static Function<char()> charFn(char c) {
+    return [=]() {
+        return c;
+    };
+}
+
+TEST_CASE("Function minimal") {
+    Function<char(void)> fn;
+    CHECK(!fn);
+
+    fn = charFn(123);
+    CHECK(fn);
+    CHECK(fn() == 123);
+
+    auto fn2(move(fn));
+    CHECK(fn2() == 123);
+    //CHECK(!fn);
+}
+
+
 static Function<double(double)> add(double n) {
     // Return a lambda that captures a string, to make sure copying works correctly.
     // And add some doubles to capture, to increase the lambda's size.
     double a = 1, b = 2;
     return [=](double n2) {
         if (a > b) return 0.0;
+        fputs(".", stderr);
+        if (n2 > 1000) abort();
         return n + n2;
     };
 }
@@ -131,13 +153,9 @@ TEST_CASE("Function with primitive types") {
     CHECK(fn);
     CHECK(fn(1) == 101);
 
-    auto fn2(fn);
+    auto fn2(move(fn));
     CHECK(fn2(200) == 300);
-    CHECK(fn(1000) == 1100);
-
-    auto fn3(std::move(fn));
-    CHECK(fn3(23) == 123);
-    CHECK(!fn);
+    //CHECK(!fn);
 }
 
 
@@ -159,11 +177,7 @@ TEST_CASE("Function with non-primitive types") {
     CHECK(fn);
     CHECK(fn("World") == "Hello World");
 
-    auto fn2(fn);
+    auto fn2(move(fn));
     CHECK(fn2("Mom") == "Hello Mom");
-    CHECK(fn("World") == "Hello World");
-
-    auto fn3(std::move(fn));
-    CHECK(fn3("Baby") == "Hello Baby");
-    CHECK(!fn);
+    //CHECK(!fn);
 }

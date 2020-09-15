@@ -18,6 +18,8 @@
 //
 
 #pragma once
+
+#if __cplusplus >= 201700L || _MSVC_LANG >= 201700L
 #include <any>
 #include <memory>
 #include <type_traits>
@@ -48,8 +50,8 @@ namespace fleece {
         Function(std::nullptr_t) noexcept               { }
         Function(Function &&other) noexcept             {*this = std::move(other);}
 
-        Function(const Function &other) noexcept =default;
-        Function& operator= (const Function &other) noexcept =default;
+        Function(const Function &other) =delete;
+        Function& operator= (const Function &other) =delete;
 
         Function& operator= (Function &&other) noexcept {
             _storage = std::move(other._storage);
@@ -57,6 +59,7 @@ namespace fleece {
             _receiver = other._receiver;
             // Make `other` fail fast if called again:
             other._trampoline = nullptr;
+            other._receiver = 0;
             return *this;
         }
 
@@ -79,9 +82,22 @@ namespace fleece {
 
         using TrampolinePtr = Ret (*)(intptr_t callable, Params ...);
 
-        std::shared_ptr<std::any> _storage;              // The lambda object is stored as an 'any'
+        std::unique_ptr<std::any> _storage;              // The lambda object is stored as an 'any'
         intptr_t                  _receiver {0};         // Type-erased ptr to the lambda object
         TrampolinePtr             _trampoline {nullptr}; // C function ptr; lambda's entry point
-    };
 
+        // TODO: It would be nice to avoid storing the lambda on the heap (in _storage.)
+        // Unfortunately, _receiver points into the storage, so when copying/moving _storage,
+        // it's unclear how to copy _receiver, because it might or might not need to be moved.
+    };
 }
+
+#else
+
+#include <functional>
+namespace fleece {
+    // w/o C++17, just make Function an alias for std::function
+    template <typename T> using Function = std::function<T>;
+}
+
+#endif // __cplusplus

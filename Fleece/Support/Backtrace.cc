@@ -293,7 +293,7 @@ namespace fleece {
     void Backtrace::installTerminateHandler(Function<void(const string&)> logger) {
         static once_flag sOnce;
         call_once(sOnce, [&] {
-            static auto const sLogger = logger;
+            static auto const sLogger = move(logger);
             static terminate_handler const sOldHandler = set_terminate([] {
                 // ---- Code below gets called by C++ runtime on an uncaught exception ---
                 if (sLogger) {
