@@ -19,7 +19,7 @@
 
 #pragma once
 
-#if __cplusplus >= 201700L || _MSVC_LANG >= 201700L
+#if __has_include(<any>)
 #include <any>
 #include <memory>
 #include <type_traits>
@@ -93,11 +93,11 @@ namespace fleece {
 }
 
 #else
+// w/o C++17, just make Function an alias for std::function
 
 #include <functional>
 namespace fleece {
-    // w/o C++17, just make Function an alias for std::function
     template <typename T> using Function = std::function<T>;
 }
 
-#endif // __cplusplus
+#endif // __has_include(<any>)
