@@ -209,6 +209,7 @@ namespace fleece {
             explicit Key(alloc_slice string);
             inline const alloc_slice& string() const    {return _str;}
             operator const alloc_slice&() const         {return _str;}
+            operator slice_NONNULL() const              {return _str;}
         private:
             alloc_slice _str;
             FLDictKey _key;
