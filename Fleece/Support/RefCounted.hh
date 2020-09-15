@@ -19,6 +19,7 @@
 #pragma once
 #include "PlatformCompat.hh"
 #include <atomic>
+#include <utility>
 
 namespace fleece {
 

@@ -121,7 +121,7 @@ namespace fleece {
 
 
     std::string Unmangle(const char *name NONNULL) {
-#ifdef __clang__
+#ifdef _LIBCPP_VERSION
         int status;
         size_t unmangledLen;
         char *unmangled = abi::__cxa_demangle(name, nullptr, &unmangledLen, &status);
