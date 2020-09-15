@@ -132,7 +132,7 @@ namespace fleece { namespace impl {
 
     template <class INT>
     void ValueSlot::setInt(INT i) {
-        if (i < 2048 && (!numeric_limits<INT>::is_signed || -i < 2048)) {
+        if (i < 2048 && (!numeric_limits<INT>::is_signed || -int(i) < 2048)) {
             setInline(kShortIntTag, (i >> 8) & 0x0F);
             _inlineVal[1] = (uint8_t)(i & 0xFF);
         } else {
@@ -168,7 +168,9 @@ namespace fleece { namespace impl {
             set((int64_t)d);
         } else
 #endif
-        {
+        if (Encoder::isFloatRepresentable(d)) {
+            set((float)d);
+        } else {
             setPointer(HeapValue::create(d)->asValue());
         }
         assert_postcondition(asValue()->asDouble() == d);

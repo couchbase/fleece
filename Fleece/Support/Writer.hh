@@ -74,8 +74,8 @@ namespace fleece {
 
         /// Reserves `maxLength` bytes of space and passes a pointer to the callback.
         /// The callback must write _up to_ `maxLength` bytes, then return the byte count written.
-        template <class CALLBACK>
-        void* write(size_t maxLength, CALLBACK callback) {
+        template <class T>
+        void* write(size_t maxLength, T callback) {
             auto dst = (uint8_t*)reserveSpace(maxLength);
             size_t usedLength = callback(dst);
             _available.moveStart((ssize_t)usedLength - (ssize_t)maxLength);
