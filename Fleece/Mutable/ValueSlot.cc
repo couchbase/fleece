@@ -39,7 +39,7 @@ namespace fleece { namespace impl {
     ValueSlot::ValueSlot(Null)
     :_pointerTag(0xFF)
     {
-        _inline[0] = ((kSpecialTag << 4) | kSpecialValueNull);
+        _inlineVal[0] = ((kSpecialTag << 4) | kSpecialValueNull);
     }
 
 
@@ -111,7 +111,7 @@ namespace fleece { namespace impl {
     void ValueSlot::setInline(internal::tags valueTag, int tiny) {
         releaseValue();
         _pointerTag = 0xFF;
-        _inline[0] = uint8_t((valueTag << 4) | tiny);
+        _inlineVal[0] = uint8_t((valueTag << 4) | tiny);
     }
 
     void ValueSlot::set(Null) {
@@ -134,7 +134,7 @@ namespace fleece { namespace impl {
     void ValueSlot::setInt(INT i) {
         if (i < 2048 && (!numeric_limits<INT>::is_signed || -i < 2048)) {
             setInline(kShortIntTag, (i >> 8) & 0x0F);
-            _inline[1] = (uint8_t)(i & 0xFF);
+            _inlineVal[1] = (uint8_t)(i & 0xFF);
         } else {
             uint8_t buf[8];
             auto size = PutIntOfLength(buf, i, !numeric_limits<INT>::is_signed);
@@ -182,7 +182,7 @@ namespace fleece { namespace impl {
                 // Copy value inline if it's small enough
                 releaseValue();
                 _pointerTag = 0xFF;
-                memcpy(&_inline, v, size);
+                memcpy(&_inlineVal, v, size);
                 return;
             }
         }
@@ -194,7 +194,7 @@ namespace fleece { namespace impl {
     void ValueSlot::setValue(tags valueTag, int tiny, slice bytes) {
         if (1 + bytes.size <= kInlineCapacity) {
             setInline(valueTag, tiny);
-            memcpy(&_inline[1], bytes.buf, bytes.size);
+            memcpy(&_inlineVal[1], bytes.buf, bytes.size);
         } else {
             setPointer(HeapValue::create(valueTag, tiny, bytes)->asValue());
         }
@@ -205,7 +205,7 @@ namespace fleece { namespace impl {
         if (s.size + 1 <= kInlineCapacity) {
             // Short strings can go inline:
             setInline(valueTag, (int)s.size);
-            memcpy(&_inline[1], s.buf, s.size);
+            memcpy(&_inlineVal[1], s.buf, s.size);
         } else {
             setPointer(HeapValue::createStr(valueTag, s)->asValue());
         }

@@ -73,7 +73,7 @@ namespace fleece { namespace impl {
         bool isInline() const noexcept FLPURE           {return !isPointer();}
         const Value* pointer() const noexcept FLPURE    {return (const Value*)_pointer;}
         const Value* asPointer() const noexcept FLPURE  {return (isPointer() ? pointer() : nullptr);}
-        const Value* inlinePointer() const noexcept FLPURE {return (const Value*)&_inline;}
+        const Value* inlinePointer() const noexcept FLPURE {return (const Value*)&_inlineVal;}
         void setPointer(const Value*);
         void setInline(internal::tags valueTag, int tiny);
 
@@ -106,7 +106,7 @@ namespace fleece { namespace impl {
 #ifdef __BIG_ENDIAN__
                 uint8_t _pointerTag;                    // Tag, lines up with MSB of _pointer
 #endif
-                uint8_t _inline[kInlineCapacity];       // Inline Value representation
+                uint8_t _inlineVal[kInlineCapacity];    // Inline Value representation
 #ifdef __LITTLE_ENDIAN__
                 uint8_t _pointerTag;
 #endif
