@@ -24,7 +24,9 @@
 namespace fleece {
 
     /** Simple thread-safe ref-counting implementation.
-        Note: The ref-count starts at 0, so you must call retain() on an instance, or assign it
+        `RefCounted` objects should be managed by \ref Retained smart-pointers:
+        `Retained<Foo> foo = new Foo(...)` or `auto foo = make_retained<Foo>(...)`.
+        \note The ref-count starts at 0, so you must call retain() on an instance, or assign it
         to a Retained, right after constructing it. */
     class RefCounted {
     public:
@@ -36,7 +38,7 @@ namespace fleece {
         RefCounted(const RefCounted &)          { }
 
         /** Destructor is accessible only so that it can be overridden.
-            Never call delete, only release! Overrides should be made protected or private. */
+            **Never call `delete`**, only `release`! Overrides should be made protected or private. */
         virtual ~RefCounted();
 
     private:
@@ -66,14 +68,18 @@ namespace fleece {
     };
 
 
-    /** Retains a RefCounted object and returns the object. Does nothing given a null pointer. */
+    /** Retains a RefCounted object and returns the object. Does nothing given a null pointer.
+        \warning Manual retain/release is error prone. This function is intended mostly for interfacing
+        with C code that can't use \ref Retained. */
     template <typename REFCOUNTED>
     ALWAYS_INLINE REFCOUNTED* retain(REFCOUNTED *r) noexcept {
         if (r) r->_retain();
         return r;
     }
 
-    /** Releases a RefCounted object. Does nothing given a null pointer. */
+    /** Releases a RefCounted object. Does nothing given a null pointer.
+        \warning Manual retain/release is error prone. This function is intended mostly for interfacing
+        with C code that can't use \ref Retained. */
     NOINLINE void release(const RefCounted *r) noexcept;
 
     // Used internally by Retained. Retains nuu and releases old.
@@ -83,31 +89,29 @@ namespace fleece {
     template <typename T>
     class Retained {
     public:
-        Retained() noexcept                      :_ref(nullptr) { }
-        Retained(T *t) noexcept                  :_ref(retain(t)) { }
+        Retained() noexcept                             :_ref(nullptr) { }
+        Retained(T *t) noexcept                         :_ref(retain(t)) { }
 
-        Retained(const Retained &r) noexcept     :_ref(retain(r._ref)) { }
-        Retained(Retained &&r) noexcept          :_ref(r._ref) {r._ref = nullptr;}
-
-        template <typename U>
-        Retained(const Retained<U> &r) noexcept  :_ref(retain(r._ref)) { }
+        Retained(const Retained &r) noexcept            :_ref(retain(r._ref)) { }
+        Retained(Retained &&r) noexcept                 :_ref(r._ref) {r._ref = nullptr;}
 
         template <typename U>
-        Retained(Retained<U> &&r) noexcept       :_ref(r._ref) {r._ref = nullptr;}
+        Retained(const Retained<U> &r) noexcept         :_ref(retain(r._ref)) { }
 
-        ~Retained()                              {release(_ref);}
+        template <typename U>
+        Retained(Retained<U> &&r) noexcept              :_ref(r._ref) {r._ref = nullptr;}
 
-        operator T* () const noexcept FLPURE STEPTHROUGH            {return _ref;}
-        T* operator-> () const noexcept FLPURE STEPTHROUGH          {return _ref;}
+        ~Retained()                                     {release(_ref);}
+
+        operator T* () const noexcept FLPURE STEPOVER   {return _ref;}
+        T* operator-> () const noexcept FLPURE STEPOVER {return _ref;}
         T* get() const noexcept FLPURE                  {return _ref;}
 
         explicit operator bool () const FLPURE          {return (_ref != nullptr);}
 
-        Retained& operator=(T *t) noexcept       {moveRef(_ref, t); _ref = t; return *this;}
+        Retained& operator=(T *t) noexcept              {moveRef(_ref, t); _ref = t; return *this;}
 
-        Retained& operator=(const Retained &r) noexcept {
-            return *this = r._ref;
-        }
+        Retained& operator=(const Retained &r) noexcept {return *this = r._ref;}
 
         template <typename U>
         Retained& operator=(const Retained<U> &r) noexcept {
@@ -142,15 +146,15 @@ namespace fleece {
     template <typename T>
     class RetainedConst {
     public:
-        RetainedConst() noexcept                        :_ref(nullptr) { }
-        RetainedConst(const T *t) noexcept              :_ref(retain(t)) { }
-        RetainedConst(const RetainedConst &r) noexcept  :_ref(retain(r._ref)) { }
-        RetainedConst(RetainedConst &&r) noexcept       :_ref(r._ref) {r._ref = nullptr;}
-        ALWAYS_INLINE ~RetainedConst()                  {release(_ref);}
+        RetainedConst() noexcept                                :_ref(nullptr) { }
+        RetainedConst(const T *t) noexcept                      :_ref(retain(t)) { }
+        RetainedConst(const RetainedConst &r) noexcept          :_ref(retain(r._ref)) { }
+        RetainedConst(RetainedConst &&r) noexcept               :_ref(r._ref) {r._ref = nullptr;}
+        ALWAYS_INLINE ~RetainedConst()                          {release(_ref);}
 
-        operator const T* () const noexcept FLPURE  STEPTHROUGH            {return _ref;}
-        const T* operator-> () const noexcept FLPURE STEPTHROUGH           {return _ref;}
-        const T* get() const noexcept FLPURE                   {return _ref;}
+        operator const T* () const noexcept FLPURE  STEPOVER    {return _ref;}
+        const T* operator-> () const noexcept FLPURE STEPOVER   {return _ref;}
+        const T* get() const noexcept FLPURE                    {return _ref;}
 
         RetainedConst& operator=(const T *t) noexcept {
             auto oldRef = _ref;
@@ -176,18 +180,21 @@ namespace fleece {
     };
 
 
+    /// Wraps a `RefCounted` pointer in a `Retained`, bumping its refcount.
     template <typename REFCOUNTED>
     inline Retained<REFCOUNTED> retained(REFCOUNTED *r) noexcept {
         return Retained<REFCOUNTED>(r);
     }
 
+    /// Wraps a `const RefCounted` pointer in a `RetainedConst`, bumping its refcount.
     template <typename REFCOUNTED>
     inline RetainedConst<REFCOUNTED> retained(const REFCOUNTED *r) noexcept {
         return RetainedConst<REFCOUNTED>(r);
     }
 
 
-    // make_retained<T>(...) is equivalent to make_unique and make_shared
+    /// make_retained<T>(...) is equivalent to `std::make_unique` and `std::make_shared`.
+    /// It constructs a new RefCounted object, passing params to the constructor, returning a `Retained`.
     template<class T, class... _Args>
     static inline Retained<T>
     make_retained(_Args&&... __args) {

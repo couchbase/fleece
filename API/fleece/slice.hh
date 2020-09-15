@@ -143,7 +143,7 @@ namespace fleece {
         std::string base64String() const;
 
 #ifdef SLICE_SUPPORTS_STRING_VIEW
-        operator string_view() const noexcept STEPTHROUGH                {return string_view((const char*)buf, size);}
+        operator string_view() const noexcept STEPOVER {return string_view((const char*)buf, size);}
 #endif
 
         /** Copies into a C string buffer of the given size. Result is always NUL-terminated and
@@ -163,7 +163,15 @@ namespace fleece {
         #define cString() asString().c_str()        // has to be a macro else dtor called too early
 
         /** Computes a 32-bit FNV-1a hash of the slice's contents. (Not cryptographic!) */
-        uint32_t hash() const noexcept FLPURE;
+        __hot constexpr17 uint32_t hash() const noexcept FLPURE {
+            // <https://en.wikipedia.org/wiki/Fowler–Noll–Vo_hash_function#FNV-1a_hash>
+            uint32_t h = 2166136261;
+            auto bytes = (const uint8_t*)buf;
+            for (size_t i = 0; i < size; i++) {
+                h = (h ^ bytes[i]) * 16777619;
+            }
+            return h;
+        }
 
         static constexpr17 uint32_t hash(const char *str NONNULL) noexcept FLPURE {
             uint32_t h = 2166136261;
@@ -228,18 +236,18 @@ namespace fleece {
     /** A simple range of memory. No ownership implied.
         Unlike its parent class pure_slice, this supports operations that change buf or size. */
     struct slice : public pure_slice {
-        constexpr slice() noexcept                           :pure_slice() {}
-        constexpr slice(std::nullptr_t) noexcept STEPTHROUGH             :pure_slice() {}
-        inline constexpr slice(nullslice_t) noexcept;
-        constexpr slice(const void* b, size_t s) noexcept    :pure_slice(b, s) {}
-        constexpr slice(const void* start NONNULL, const void* end NONNULL) noexcept
+        constexpr slice() noexcept STEPOVER                           :pure_slice() {}
+        constexpr slice(std::nullptr_t) noexcept STEPOVER             :pure_slice() {}
+        inline constexpr slice(nullslice_t) noexcept STEPOVER;
+        constexpr slice(const void* b, size_t s) noexcept STEPOVER    :pure_slice(b, s) {}
+        constexpr slice(const void* start NONNULL, const void* end NONNULL) noexcept STEPOVER
                                                     :slice(start, (uint8_t*)end-(uint8_t*)start){}
-        inline constexpr slice(const alloc_slice&) noexcept STEPTHROUGH;
+        inline constexpr slice(const alloc_slice&) noexcept STEPOVER;
 
-        slice(const std::string& str) noexcept STEPTHROUGH               :pure_slice(str) {}
-        constexpr17 slice(const char* str) noexcept STEPTHROUGH          :pure_slice(str) {}
+        slice(const std::string& str) noexcept STEPOVER               :pure_slice(str) {}
+        constexpr17 slice(const char* str) noexcept STEPOVER          :pure_slice(str) {}
 #ifdef SLICE_SUPPORTS_STRING_VIEW
-        constexpr slice(string_view str) noexcept STEPTHROUGH            :pure_slice(str) {}
+        constexpr slice(string_view str) noexcept STEPOVER            :pure_slice(str) {}
 #endif
 
         slice& operator= (alloc_slice&&) =delete;   // Disallowed: might lead to ptr to freed buf
@@ -274,8 +282,8 @@ namespace fleece {
 
         void free() noexcept;
 
-        constexpr slice(const FLSlice &s) noexcept STEPTHROUGH           :slice(s.buf, s.size) { }
-        operator FLSlice () const noexcept STEPTHROUGH                   {return {buf, size};}
+        constexpr slice(const FLSlice &s) noexcept STEPOVER           :slice(s.buf, s.size) { }
+        operator FLSlice () const noexcept STEPOVER                   {return {buf, size};}
         inline explicit operator FLSliceResult () const noexcept;
 
 #ifdef __APPLE__
@@ -303,9 +311,9 @@ namespace fleece {
 
     /** A slice that owns a ref-counted block of memory. */
     struct alloc_slice : public pure_slice {
-        constexpr alloc_slice() noexcept                             {}
-        constexpr alloc_slice(std::nullptr_t) noexcept STEPTHROUGH               {}
-        constexpr alloc_slice(nullslice_t) noexcept STEPTHROUGH                  {}
+        constexpr alloc_slice() noexcept STEPOVER                             {}
+        constexpr alloc_slice(std::nullptr_t) noexcept STEPOVER               {}
+        constexpr alloc_slice(nullslice_t) noexcept STEPOVER                  {}
         explicit alloc_slice(size_t s);
         explicit alloc_slice(pure_slice s);
         alloc_slice(const void* b, size_t s)                :alloc_slice(slice(b, s)) {}
@@ -315,35 +323,35 @@ namespace fleece {
         explicit alloc_slice(const std::string &str)        :alloc_slice(slice(str)) {}
         explicit alloc_slice(FLSlice s)                 :alloc_slice(pure_slice{s.buf, s.size}) { }
 
-        alloc_slice(FLHeapSlice s) noexcept STEPTHROUGH     // FLHeapSlice is known to be an alloc_slice
+        alloc_slice(FLHeapSlice s) noexcept STEPOVER     // FLHeapSlice is known to be an alloc_slice
         :pure_slice(s.buf, s.size)
         {
             retain();
         }
 
-        alloc_slice(FLSliceResult &&sr) noexcept STEPTHROUGH
+        alloc_slice(FLSliceResult &&sr) noexcept STEPOVER
         :pure_slice(sr.buf, sr.size)
         {
             sr.buf = nullptr;
             sr.size = 0;
         }
 
-        alloc_slice(const FLSliceResult &sr) noexcept STEPTHROUGH
+        alloc_slice(const FLSliceResult &sr) noexcept STEPOVER
         :pure_slice(sr.buf, sr.size)
         {
             retain();
         }
 
 #ifdef SLICE_SUPPORTS_STRING_VIEW
-        explicit alloc_slice(string_view str)               :alloc_slice(slice(str)) {}
+        explicit alloc_slice(string_view str) STEPOVER      :alloc_slice(slice(str)) {}
 #endif
 
-        ~alloc_slice() noexcept                             {if (buf) release();}
-        alloc_slice(const alloc_slice &s) noexcept STEPTHROUGH          :pure_slice(s) {retain();}
-        alloc_slice& operator=(const alloc_slice&) noexcept;
-        alloc_slice& operator=(alloc_slice&& s) noexcept;
+        ~alloc_slice() noexcept STEPOVER                             {if (buf) release();}
+        alloc_slice(const alloc_slice &s) noexcept STEPOVER          :pure_slice(s) {retain();}
+        alloc_slice& operator=(const alloc_slice&) noexcept STEPOVER;
+        alloc_slice& operator=(alloc_slice&& s) noexcept STEPOVER;
 
-        alloc_slice(alloc_slice&& s) noexcept               :pure_slice(s) {s.set(nullptr, 0);}
+        alloc_slice(alloc_slice&& s) noexcept STEPOVER           :pure_slice(s) {s.set(nullptr, 0);}
 
         /** Creates an alloc_slice that has an extra null (0) byte immediately after the end of the
             data. This allows the contents of the alloc_slice to be used as a C string. */

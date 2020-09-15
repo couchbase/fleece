@@ -347,11 +347,16 @@ extern "C" {
     /** A constant null value (not a NULL pointer!) */
     extern const FLValue kFLNullValue;
 
-    /** @} */
-
 
     //////// VALUE SLOT
 
+
+    /** @} */
+    /** \defgroup Slots   Value Slots
+        @{
+         An `FLSlot` is a temporary reference to an element of a mutable Array/Dict.
+         Its only purpose is to let you store a value into it, using the functions below.
+     */
 
     void FLSlot_SetNull(FLSlot FLNONNULL) FLAPI;             ///< Stores a JSON null into a slot.
     void FLSlot_SetBool(FLSlot FLNONNULL, bool) FLAPI;       ///< Stores a boolean into a slot.
