@@ -27,6 +27,7 @@
 #ifndef _MSC_VER
 #include <unistd.h>
 #endif
+#include "betterassert.hh"
 
 // Catch's REQUIRE is too slow for perf testing
 #undef REQUIRE
@@ -50,6 +51,7 @@ using namespace fleece::impl;
 
 
 TEST_CASE("GetUVarint performance", "[.Perf]") {
+    assert(false); // This test should not be run with a debug build!
     static constexpr int kNRounds = 10000000;
     Benchmark bench;
     uint8_t buf[100];
@@ -76,6 +78,7 @@ TEST_CASE("GetUVarint performance", "[.Perf]") {
 }
 
 TEST_CASE("Perf Convert1000People", "[.Perf]") {
+    assert(false); // This test should not be run with a debug build!
     static const int kSamples = 500;
 
     std::vector<double> elapsedTimes;
@@ -110,6 +113,7 @@ TEST_CASE("Perf Convert1000People", "[.Perf]") {
 }
 
 TEST_CASE("Perf LoadFleece", "[.Perf]") {
+    assert(false); // This test should not be run with a debug build!
     static const int kIterations = 1000;
     auto doc = readTestFile("1000people.fleece");
 
@@ -142,6 +146,7 @@ TEST_CASE("Perf LoadFleece", "[.Perf]") {
 }
 
 static void testFindPersonByIndex(int sort) {
+    assert(false); // This test should not be run with a debug build!
     int kSamples = 500;
     int kIterations = 10000;
     Benchmark bench;
@@ -178,6 +183,7 @@ TEST_CASE("Perf FindPersonByIndexSorted", "[.Perf]")      {testFindPersonByIndex
 TEST_CASE("Perf FindPersonByIndexKeyed", "[.Perf]")       {testFindPersonByIndex(2);}
 
 TEST_CASE("Perf LoadPeople", "[.Perf]") {
+    assert(false); // This test should not be run with a debug build!
     for (int shareKeys = false; shareKeys <= true; ++shareKeys) {
         int kSamples = 50;
         int kIterations = 1000;
@@ -209,10 +215,10 @@ TEST_CASE("Perf LoadPeople", "[.Perf]") {
 
         fprintf(stderr, "Looking up 1000 people (with%s shared keys)...\n", (shareKeys ? "" : "out"));
         for (int i = 0; i < kSamples; i++) {
+            auto doc = retained(new Doc(data, Doc::kTrusted, sk));
             bench.start();
 
             for (int j = 0; j < kIterations; j++) {
-                auto doc = retained(new Doc(data, Doc::kTrusted, sk));
                 auto root = doc->root()->asArray();
                 for (Array::iterator iter(root); iter; ++iter) {
                     const Dict *person = iter->asDict();
@@ -232,6 +238,7 @@ TEST_CASE("Perf LoadPeople", "[.Perf]") {
 
 
 TEST_CASE("Perf DictSearch", "[.Perf]") {
+    assert(false); // This test should not be run with a debug build!
     static const int kSamples = 500000;
 
     // Convert JSON array into a dictionary keyed by _id:

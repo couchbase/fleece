@@ -18,11 +18,13 @@
 
 #include "FleeceTests.hh"
 #include "FleeceImpl.hh"
+#include "ConcurrentMap.hh"
 #include "Bitmap.hh"
 #include "Function.hh"
 #include "TempArray.hh"
 #include "sliceIO.hh"
 #include <iostream>
+#include <future>
 
 using namespace std;
 
@@ -180,4 +182,100 @@ TEST_CASE("Function with non-primitive types") {
     auto fn2(move(fn));
     CHECK(fn2("Mom") == "Hello Mom");
     //CHECK(!fn);
+}
+
+
+TEST_CASE("ConcurrentMap basic", "[ConcurrentMap]") {
+    ConcurrentMap map(2048);
+    cout << "table size = " << map.tableSize() << ", capacity = " << map.capacity()
+         << ", strings capacity = " << map.stringBytesCapacity() << '\n';
+    CHECK(map.count() == 0);
+    CHECK(map.capacity() >= 2048);
+    CHECK(map.stringBytesCount() == 0);
+    CHECK(map.stringBytesCapacity() >= 2048 * 16);
+
+    CHECK(map.find("apple").key == nullptr);
+    auto apple = map.insert("apple", 0x4667);
+    CHECK(apple.key == "apple"_sl);
+    CHECK(apple.value == 0x4667);
+
+    auto found = map.find("apple");
+    CHECK(found.key == apple.key);
+    CHECK(found.value == apple.value);
+
+    // second insert should return the original value:
+    found = map.insert("apple", 0xdead);
+    CHECK(found.key == apple.key);
+    CHECK(found.value == apple.value);
+
+    for (int pass = 1; pass <= 2; ++pass) { // insert on 1st pass, read on 2nd
+        for (uint16_t i = 0; i < 2046; ++i) {
+            char keybuf[10];
+            sprintf(keybuf, "k-%04d", i);
+            auto result = (pass == 1) ? map.insert(keybuf, i) : map.find(keybuf);
+            CHECK(result.key == keybuf);
+            CHECK(result.value == i);
+        }
+    }
+
+    cout << "Afterwards: count = " << map.count()
+         << ", string bytes used = " << map.stringBytesCount() << '\n';
+
+    CHECK(map.count() == 2047);
+    CHECK(map.stringBytesCount() > 0);
+
+    map.dump();
+}
+
+
+TEST_CASE("ConcurrentMap concurrency", "[ConcurrentMap]") {
+    static constexpr size_t kSize = 8000;
+    ConcurrentMap map(kSize);
+    cout << "table size = " << map.tableSize() << ", capacity = " << map.capacity() << '\n';
+    CHECK(map.count() == 0);
+    CHECK(map.capacity() >= kSize);
+    CHECK(map.stringBytesCapacity() >= 65535);
+
+    vector<string> keys;
+    for (int i = 0; i < kSize; i++) {
+        char keybuf[10];
+        sprintf(keybuf, "k-%x", i);
+        keys.push_back(keybuf);
+    }
+
+    auto reader = [&](int step) {
+        size_t index = random() % kSize;
+        for (int n = 0; n < kSize; n++) {
+            auto e = map.find(keys[index].c_str());
+            if (e.key) {
+                assert(e.key == keys[index].c_str());
+                assert(e.value == index);
+            }
+            index = (index + step) % kSize;
+        }
+    };
+
+    auto writer = [&](int step) { // step must be coprime with kSize
+        unsigned index = (unsigned)random() % kSize;
+        for (int n = 0; n < kSize; n++) {
+            auto value = uint16_t(index & 0xFFFF);
+            auto e = map.insert(keys[index].c_str(), value);
+            assert(e.key != nullslice);
+            assert(e.key == keys[index].c_str());
+            assert(e.value == value);
+            index = (index + step) % kSize;
+        }
+    };
+
+    auto f1 = async(reader, 7);
+    auto f2 = async(reader, 53);
+    auto f3 = async(writer, 23);
+    auto f4 = async(writer, 91);
+
+    f1.wait();
+    f2.wait();
+    f3.wait();
+    f4.wait();
+
+    CHECK(map.count() == kSize);
 }

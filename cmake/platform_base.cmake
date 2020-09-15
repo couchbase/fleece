@@ -29,6 +29,8 @@ function(set_source_files_base)
         Fleece/Support/Backtrace.cc
         Fleece/Support/betterassert.cc
         Fleece/Support/Bitmap.cc
+        Fleece/Support/ConcurrentArena.cc
+        Fleece/Support/ConcurrentMap.cc
         Fleece/Support/FileUtils.cc
         Fleece/Support/FleeceException.cc
         Fleece/Support/InstanceCounted.cc
