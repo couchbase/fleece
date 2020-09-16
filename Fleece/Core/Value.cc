@@ -429,4 +429,17 @@ namespace fleece { namespace impl {
     void Value::_retain() const     {HeapValue::retain(this);}
     void Value::_release() const    {HeapValue::release(this);}
 
+    void release(const Value *val) noexcept {
+        HeapValue::release(val);
+    }
+
+    void assignRef(const Value* &holder, const Value *newValue) noexcept {
+        const Value *oldValue = holder;
+        if (_usuallyTrue(newValue != oldValue)) {
+            HeapValue::retain(newValue);
+            holder = newValue;
+            HeapValue::release(oldValue);
+        }
+    }
+
 } }

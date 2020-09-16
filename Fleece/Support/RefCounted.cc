@@ -41,10 +41,12 @@ namespace fleece {
     }
 
     
-    __hot void moveRef(RefCounted* old, RefCounted *nuu) noexcept {
-        if (_usuallyTrue(nuu != old)) {
-            if (nuu) nuu->_retain();
-            if (old) old->_release();
+    __hot void assignRef(RefCounted* &holder, RefCounted *newValue) noexcept {
+        RefCounted *oldValue = holder;
+        if (_usuallyTrue(newValue != oldValue)) {
+            if (newValue) newValue->_retain();
+            holder = newValue;
+            if (oldValue) oldValue->_release();
         }
     }
 

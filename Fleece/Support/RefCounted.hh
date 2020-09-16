@@ -45,7 +45,7 @@ namespace fleece {
         template <typename T>
         friend T* retain(T*) noexcept;
         friend void release(const RefCounted*) noexcept;
-        friend void moveRef(RefCounted* dst, RefCounted *src) noexcept;
+        friend void assignRef(RefCounted* &dst, RefCounted *src) noexcept;
 
 #if DEBUG
         void _retain() const noexcept                 {_careful_retain();}
@@ -82,8 +82,16 @@ namespace fleece {
         with C code that can't use \ref Retained. */
     NOINLINE void release(const RefCounted *r) noexcept;
 
-    // Used internally by Retained. Retains nuu and releases old.
-    void moveRef(RefCounted* old, RefCounted *nuu) noexcept;
+    
+    // Used internally by Retained's operator=. Marked noinline to prevent code bloat.
+    NOINLINE void assignRef(RefCounted* &holder, RefCounted *newValue) noexcept;
+
+    // Makes `assignRef` polymorphic with RefCounted subclasses.
+    template <typename T>
+    static inline void assignRef(T* &holder, RefCounted *newValue) noexcept {
+        assignRef((RefCounted*&)holder, newValue);
+    }
+
 
     /** Simple smart pointer that retains the RefCounted instance it holds. */
     template <typename T>
@@ -109,7 +117,7 @@ namespace fleece {
 
         explicit operator bool () const FLPURE          {return (_ref != nullptr);}
 
-        Retained& operator=(T *t) noexcept              {moveRef(_ref, t); _ref = t; return *this;}
+        Retained& operator=(T *t) noexcept              {assignRef(_ref, t); return *this;}
 
         Retained& operator=(const Retained &r) noexcept {return *this = r._ref;}
 

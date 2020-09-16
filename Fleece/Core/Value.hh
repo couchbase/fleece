@@ -269,16 +269,14 @@ namespace fleece { namespace impl {
     };
 
 
-    // Some glue needed to make RefCounted<Value> work
-    static inline void release(const Value *val) noexcept {
-        if (val) val->_release();
-    }
+    // Some glue needed to make RefCounted<Value> work (see RefCounted.hh)
+    void release(const Value *val) noexcept;
 
-    static inline void moveRef(const Value *old, const Value *nuu) noexcept {
-        if (_usuallyTrue(nuu != old)) {
-            if (nuu) nuu->_retain();
-            if (old) old->_release();
-        }
+    NOINLINE void assignRef(const Value* &holder, const Value *newValue) noexcept;
+
+    template <typename T>
+    static inline void assignRef(T* &holder, const Value *newValue) noexcept {
+        assignRef((const Value*&)holder, newValue);
     }
 
 } }
