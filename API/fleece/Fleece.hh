@@ -335,10 +335,7 @@ namespace fleece {
         ~SharedKeys()                                       {FLSharedKeys_Release(_sk);}
 
         static SharedKeys create()                          {return SharedKeys(FLSharedKeys_New(), 1);}
-        static SharedKeys create(slice state) {
-            auto sk = create();
-            return sk.loadState(state) ? sk : SharedKeys();
-        }
+        static inline SharedKeys create(slice state);
         bool loadState(slice data)                          {return FLSharedKeys_LoadStateData(_sk, data);}
         bool loadState(Value state)                         {return FLSharedKeys_LoadState(_sk, state);}
         alloc_slice stateData() const                       {return FLSharedKeys_GetStateData(_sk);}
@@ -708,6 +705,12 @@ namespace fleece {
                                  slice jsonDelta,
                                  Encoder &encoder) {
         return FLEncodeApplyingJSONDelta(old, jsonDelta, encoder);
+    }
+
+    inline SharedKeys SharedKeys::create(slice state) {
+        auto sk = create();
+        sk.loadState(state);
+        return sk;
     }
 
     inline SharedKeys& SharedKeys::operator= (const SharedKeys &other) {

@@ -73,6 +73,8 @@ namespace fleece { namespace impl {
         explicit SharedKeys(slice stateData)            :SharedKeys() {loadFrom(stateData);}
         explicit SharedKeys(const Value *state)         :SharedKeys() {loadFrom(state);}
 
+        /** Updates the keys from stored state data.
+            @return  True if more keys were added, false if not. */
         bool loadFrom(slice stateData);
         virtual bool loadFrom(const Value *state);
 
