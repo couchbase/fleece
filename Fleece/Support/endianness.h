@@ -66,7 +66,7 @@
      defined(__ARMEL__) || defined(__THUMBEL__) || defined(__AARCH64EL__) || \
      defined(_MIPSEL) || defined(__MIPSEL) || defined(__MIPSEL__) || \
      defined(_M_IX86) || defined(_M_X64) || defined(_M_IA64) || /* msvc for intel processors */ \
-     defined(_M_ARM) /* msvc code on arm executes in little endian mode */
+     defined(_M_ARM) ||  defined(_M_ARM64) /* msvc code on arm executes in little endian mode */
 #    define __LITTLE_ENDIAN__
 #  endif
 #endif
@@ -114,7 +114,6 @@
 
 /* Defines network - host byte swaps as needed depending upon platform endianness */
 // note that network order is big endian)
-
 #if defined(__LITTLE_ENDIAN__)
 #  define ntoh16(x)     bswap16((x))
 #  define hton16(x)     bswap16((x))
@@ -130,7 +129,7 @@
 #  define ntoh64(x)     (x)
 #  define hton64(x)     (x)
 #  else
-#    warning "UNKNOWN Platform / endianness; network / host byte swaps not defined."
+#   pragma message ("warning: UNKNOWN Platform / endianness; network / host byte swaps not defined.")
 #endif
 
 
