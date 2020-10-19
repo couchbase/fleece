@@ -54,6 +54,7 @@ namespace fleece {
         void operator= (const keyref &ref)          {_coll.set(_key, ref);}
             template <class T>
         void operator= (const T &value)             {_coll.set(_key, value);}
+        void setData(slice value)                   {_coll.set(_key).setData(value);}
         void remove()                               {_coll.remove(_key);}
 
         operator FLSlot()                           {return _coll.set(_key);}
