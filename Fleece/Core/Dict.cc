@@ -406,35 +406,35 @@ namespace fleece { namespace impl {
 #pragma mark - DICT::ITERATOR:
 
 
-    Dict::iterator::iterator(const Dict* d) noexcept
-    :iterator(d, nullptr)
+    DictIterator::DictIterator(const Dict* d) noexcept
+    :DictIterator(d, nullptr)
     { }
 
-    Dict::iterator::iterator(const Dict* d, const SharedKeys *sk) noexcept
+    DictIterator::DictIterator(const Dict* d, const SharedKeys *sk) noexcept
     :_a(d), _sharedKeys(sk)
     {
         readKV();
         if (_usuallyFalse(_key && Dict::isMagicParentKey(_key))) {
-            _parent.reset( new iterator(_value->asDict()) );
+            _parent.reset( new DictIterator(_value->asDict()) );
             ++(*this);
         }
     }
 
-    Dict::iterator::iterator(const Dict* d, bool) noexcept
+    DictIterator::DictIterator(const Dict* d, bool) noexcept
     :_a(d)
     {
         readKV();
         // skips the parent check, so it will iterate the raw contents
     }
 
-    SharedKeys* Dict::iterator::findSharedKeys() const {
+    SharedKeys* DictIterator::findSharedKeys() const {
         auto sk = Doc::sharedKeys(_a._first);
         _sharedKeys = sk;
         assert_precondition(sk || gDisableNecessarySharedKeysCheck);
         return sk;
     }
 
-    slice Dict::iterator::keyString() const noexcept {
+    slice DictIterator::keyString() const noexcept {
         slice keyStr = _key->asString();
         if (!keyStr && _key->isInteger()) {
             auto sk = _sharedKeys ? _sharedKeys : findSharedKeys();
@@ -445,14 +445,14 @@ namespace fleece { namespace impl {
         return keyStr;
     }
 
-    key_t Dict::iterator::keyt() const noexcept {
+    key_t DictIterator::keyt() const noexcept {
         if (_key->isInteger())
             return (int)_key->asInt();
         else
             return _key->asString();
     }
 
-    Dict::iterator& Dict::iterator::operator++() {
+    DictIterator& DictIterator::operator++() {
         do {
             if (_keyCmp >= 0)
                 ++(*_parent);
@@ -466,7 +466,7 @@ namespace fleece { namespace impl {
         return *this;
     }
 
-    Dict::iterator& Dict::iterator::operator += (uint32_t n) {
+    DictIterator& DictIterator::operator += (uint32_t n) {
         throwIf(n > _a._count, OutOfRange, "iterating past end of dict");
         _a._count -= n;
         _a._first = offsetby(_a._first, 2*_a._width*n);
@@ -474,7 +474,7 @@ namespace fleece { namespace impl {
         return *this;
     }
 
-    void Dict::iterator::readKV() noexcept {
+    void DictIterator::readKV() noexcept {
         if (_usuallyTrue(_a._count)) {
             _key   = _a.deref(_a._first);
             _value = _a.deref(_a.second());

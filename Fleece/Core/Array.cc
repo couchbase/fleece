@@ -142,18 +142,18 @@ namespace fleece { namespace impl {
 #pragma mark - ARRAY::ITERATOR:
     
 
-    Array::iterator::iterator(const Array *a) noexcept
+    ArrayIterator::ArrayIterator(const Array *a) noexcept
     :impl(a),
      _value(firstValue())
     { }
 
-    Array::iterator& Array::iterator::operator++() {
+    ArrayIterator& ArrayIterator::operator++() {
         offset(1);
         _value = firstValue();
         return *this;
     }
 
-    Array::iterator& Array::iterator::operator += (uint32_t n) {
+    ArrayIterator& ArrayIterator::operator += (uint32_t n) {
         offset(n);
         _value = firstValue();
         return *this;

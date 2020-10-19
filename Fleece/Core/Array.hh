@@ -24,6 +24,7 @@ namespace fleece { namespace impl {
 
     class Dict;
     class MutableArray;
+    class ArrayIterator;
 
     /** A Value that's an array. */
     class Array : public Value {
@@ -60,44 +61,9 @@ namespace fleece { namespace impl {
         /** An empty Array. */
         static const Array* const kEmpty;
 
-        /** A stack-based array iterator */
-        class iterator : private impl {
-        public:
-            /** Constructs an iterator. It's OK if the Array pointer is null. */
-            iterator(const Array* a) noexcept;
+        using iterator = ArrayIterator;
 
-            /** Returns the number of _remaining_ items. */
-            uint32_t count() const noexcept FLPURE                  {return _count;}
-
-            const Value* value() const noexcept FLPURE              {return _value;}
-            explicit operator const Value* () const noexcept FLPURE {return _value;}
-            const Value* operator-> () const noexcept FLPURE        {return _value;}
-
-            /** Returns the current item and advances to the next. */
-            const Value* read() noexcept                     {auto v = _value; ++(*this); return v;}
-
-            /** Random access to items. Index is relative to the current item.
-                This is very fast, faster than array::get(). */
-            const Value* operator[] (unsigned i) const noexcept FLPURE    {return ((impl&)*this)[i];}
-
-            /** Returns false when the iterator reaches the end. */
-            explicit operator bool() const noexcept FLPURE          {return _count > 0;}
-
-            /** Steps to the next item. (Throws if there are no more items.) */
-            iterator& operator++();
-
-            /** Steps forward by one or more items. (Throws if stepping past the end.) */
-            iterator& operator += (uint32_t);
-
-        private:
-            const Value* rawValue() noexcept                 {return _first;}
-
-            const Value *_value;
-            
-            friend class Value;
-        };
-
-        iterator begin() const noexcept                      {return iterator(this);}
+        inline iterator begin() const noexcept;
 
         constexpr Array()  :Value(internal::kArrayTag, 0, 0) { }
 
@@ -106,9 +72,52 @@ namespace fleece { namespace impl {
 
     private:
         friend class Value;
+        friend class ArrayIterator;
         friend class Dict;
+        friend class DictIterator;
         template <bool WIDE> friend struct dictImpl;
         friend class internal::HeapArray;
     };
+
+
+    /** A stack-based array iterator */
+    class ArrayIterator : private Array::impl {
+    public:
+        /** Constructs an iterator. It's OK if the Array pointer is null. */
+        ArrayIterator(const Array* a) noexcept;
+
+        /** Returns the number of _remaining_ items. */
+        uint32_t count() const noexcept FLPURE                  {return _count;}
+
+        const Value* value() const noexcept FLPURE              {return _value;}
+        explicit operator const Value* () const noexcept FLPURE {return _value;}
+        const Value* operator-> () const noexcept FLPURE        {return _value;}
+
+        /** Returns the current item and advances to the next. */
+        const Value* read() noexcept                     {auto v = _value; ++(*this); return v;}
+
+        /** Random access to items. Index is relative to the current item.
+            This is very fast, faster than array::get(). */
+        const Value* operator[] (unsigned i) const noexcept FLPURE    {return ((impl&)*this)[i];}
+
+        /** Returns false when the iterator reaches the end. */
+        explicit operator bool() const noexcept FLPURE          {return _count > 0;}
+
+        /** Steps to the next item. (Throws if there are no more items.) */
+        ArrayIterator& operator++();
+
+        /** Steps forward by one or more items. (Throws if stepping past the end.) */
+        ArrayIterator& operator += (uint32_t);
+
+    private:
+        const Value* rawValue() noexcept                 {return _first;}
+
+        const Value *_value;
+
+        friend class Value;
+    };
+
+
+    inline ArrayIterator Array::begin() const noexcept {return iterator(this);}
 
 } }

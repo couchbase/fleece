@@ -314,13 +314,13 @@ bool FLDictIterator_Next(FLDictIterator* i) FLAPI {
         ++iter;                 // throws if iterating past end
         if (iter)
             return true;
-        iter.~iterator();
+        iter.~DictIterator();
     } catchError(nullptr)
     return false;
 }
 
 void FLDictIterator_End(FLDictIterator* i) FLAPI {
-    ((Dict::iterator*)i)->~iterator();
+    ((Dict::iterator*)i)->~DictIterator();
 }
 
 

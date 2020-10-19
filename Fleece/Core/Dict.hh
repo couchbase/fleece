@@ -21,6 +21,7 @@
 
 namespace fleece { namespace impl {
 
+    class DictIterator;
     class MutableDict;
     class SharedKeys;
     class key_t;
@@ -55,56 +56,9 @@ namespace fleece { namespace impl {
         /** An empty Dict. */
         static const Dict* const kEmpty;
 
-        /** A stack-based dictionary iterator */
-        class iterator {
-        public:
-            /** Constructs an iterator. It's OK for the Dict to be null. */
-            iterator(const Dict*) noexcept;
+        using iterator = DictIterator;
 
-            /** Constructs an iterator on a Dict using shared keys. It's OK for the Dict to be null. */
-            iterator(const Dict*, const SharedKeys*) noexcept;
-
-            /** Returns the number of _remaining_ items. */
-            uint32_t count() const noexcept FLPURE                  {return _a._count;}
-
-            slice keyString() const noexcept;
-            const Value* key() const noexcept FLPURE                {return _key;}
-            const Value* value() const noexcept FLPURE              {return _value;}
-
-            /** Returns false when the iterator reaches the end. */
-            explicit operator bool() const noexcept FLPURE          {return _key != nullptr;}
-
-            /** Steps to the next item. (Throws if there are no more items.) */
-            iterator& operator ++();
-
-            /** Steps forward by one or more items. (Throws if stepping past the end.) */
-            iterator& operator += (uint32_t);
-
-            const SharedKeys* sharedKeys() const FLPURE            {return _sharedKeys;}
-            key_t keyt() const noexcept;
-
-#ifdef __OBJC__
-            NSString* keyToNSString(NSMapTable *sharedStrings) const;
-#endif
-
-        private:
-            iterator(const Dict* d, bool) noexcept;     // for Value::dump() only
-            void readKV() noexcept;
-            const Value* rawKey() noexcept             {return _a._first;}
-            const Value* rawValue() noexcept           {return _a.second();}
-            SharedKeys* findSharedKeys() const;
-
-            Array::impl _a;
-            const Value *_key, *_value;
-            mutable const SharedKeys *_sharedKeys {nullptr};
-            std::unique_ptr<iterator> _parent;
-            int _keyCmp {-1};
-
-            friend class Value;
-            friend class Encoder;
-        };
-
-        iterator begin() const noexcept                      {return iterator(this);}
+        inline iterator begin() const noexcept;
 
         /** An abstracted key for dictionaries. It will cache the key's shared int value, and it
             will cache the index at which the key was last found, which speeds up succssive
@@ -150,9 +104,63 @@ namespace fleece { namespace impl {
         static constexpr int kMagicParentKey = -2048;
 
         template <bool WIDE> friend struct dictImpl;
+        friend class DictIterator;
         friend class Value;
         friend class Encoder;
         friend class internal::HeapDict;
     };
+
+
+    /** A stack-based dictionary iterator */
+    class DictIterator {
+    public:
+        /** Constructs an iterator. It's OK for the Dict to be null. */
+        DictIterator(const Dict*) noexcept;
+
+        /** Constructs an iterator on a Dict using shared keys. It's OK for the Dict to be null. */
+        DictIterator(const Dict*, const SharedKeys*) noexcept;
+
+        /** Returns the number of _remaining_ items. */
+        uint32_t count() const noexcept FLPURE                  {return _a._count;}
+
+        slice keyString() const noexcept;
+        const Value* key() const noexcept FLPURE                {return _key;}
+        const Value* value() const noexcept FLPURE              {return _value;}
+
+        /** Returns false when the iterator reaches the end. */
+        explicit operator bool() const noexcept FLPURE          {return _key != nullptr;}
+
+        /** Steps to the next item. (Throws if there are no more items.) */
+        DictIterator& operator ++();
+
+        /** Steps forward by one or more items. (Throws if stepping past the end.) */
+        DictIterator& operator += (uint32_t);
+
+        const SharedKeys* sharedKeys() const FLPURE            {return _sharedKeys;}
+        key_t keyt() const noexcept;
+
+#ifdef __OBJC__
+        NSString* keyToNSString(NSMapTable *sharedStrings) const;
+#endif
+
+    private:
+        DictIterator(const Dict* d, bool) noexcept;     // for Value::dump() only
+        void readKV() noexcept;
+        const Value* rawKey() noexcept             {return _a._first;}
+        const Value* rawValue() noexcept           {return _a.second();}
+        SharedKeys* findSharedKeys() const;
+
+        Array::impl _a;
+        const Value *_key, *_value;
+        mutable const SharedKeys *_sharedKeys {nullptr};
+        std::unique_ptr<DictIterator> _parent;
+        int _keyCmp {-1};
+
+        friend class Value;
+        friend class Encoder;
+    };
+
+
+    inline Dict::iterator Dict::begin() const noexcept    {return iterator(this);}
 
 } }
