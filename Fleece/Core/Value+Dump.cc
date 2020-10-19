@@ -43,16 +43,16 @@ namespace fleece { namespace impl {
             }
             case kBinaryTag:
                 // TODO: show data
-                out << "Binary[";
-                out << std::string(toJSON());
+                out << "Binary[0x";
+                out << asData().hexString();
                 out << "]";
                 break;
             case kArrayTag: {
-                out << "Array[" << asArray()->count() << "]";
+                out << "Array";
                 break;
             }
             case kDictTag: {
-                out << "Dict[" << asDict()->rawCount() << "]";
+                out << "Dict";
                 break;
             }
             default: { // Pointer:
@@ -77,9 +77,9 @@ namespace fleece { namespace impl {
                     ptr->deref(wide)->writeDumpBrief(out, base, true);
                 char buf[32];
                 if (offset >= 0)
-                    sprintf(buf, " (@%04llx)", offset);
+                    sprintf(buf, " @%04llx", offset);
                 else
-                    sprintf(buf, " (@-%04llx)", -offset);
+                    sprintf(buf, " @-%04llx", -offset);
                 out << buf;
                 if (legacy)
                     out << " [legacy ptr]";
@@ -88,8 +88,7 @@ namespace fleece { namespace impl {
         }
     }
 
-    // writes an ASCII dump of this value and its contained values (NOT following pointers).
-    size_t Value::dump(std::ostream &out, bool wide, int indent, const void *base) const {
+    size_t Value::dumpHex(std::ostream &out, bool wide, const void *base) const {
         ssize_t pos = _byte - (uint8_t*)base;
         char buf[64];
         sprintf(buf, "%s%04zx: %02x %02x",
@@ -106,28 +105,62 @@ namespace fleece { namespace impl {
             out << "       ";
         }
         out << ": ";
+        return size;
+    }
 
+    // writes an ASCII dump of this value and its contained values (NOT following pointers).
+    size_t Value::dump(std::ostream &out, bool wide, int indent, const void *base) const {
+        auto size = dumpHex(out, wide, base);
         while (indent-- > 0)
             out << "  ";
-        writeDumpBrief(out, base, (size > 2));
+        writeDumpBrief(out, base, wide);
+        int n = 0;
         switch (tag()) {
             case kArrayTag: {
-                out << ":\n";
+                out << " [";
                 for (auto i = asArray()->begin(); i; ++i) {
+                    if (n++ > 0) out << ',';
+                    out << '\n';
                     size += i.rawValue()->dump(out, isWideArray(), 1, base);
                 }
+                out << " ]";
                 break;
             }
             case kDictTag: {
-                out << ":\n";
+                out << " {";
                 for (Dict::iterator i(asDict(), true); i; ++i) {
-                    size += i.rawKey()  ->dump(out, isWideArray(), 1, base);
+                    if (n++ > 0) out << ',';
+                    out << '\n';
+                    if (auto key = i.rawKey(); key->isInteger()) {
+                        size += key->dumpHex(out, isWideArray(), base);
+                        size += (size & 1);
+                        if (key->asInt() == -2048) {
+                            // A -2048 key is a special case that means "parent Dict"
+                            out << "  <parent>";
+                        } else {
+#ifdef NDEBUG
+                            slice keyStr = i.keyString();
+#else
+                            bool oldCheck = gDisableNecessarySharedKeysCheck;
+                            gDisableNecessarySharedKeysCheck = true;
+                            slice keyStr = i.keyString();
+                            gDisableNecessarySharedKeysCheck = oldCheck;
+#endif
+                            if (keyStr)
+                                out << "  \"" << std::string(keyStr) << '"';
+                            else
+                                out << "  SharedKeys[" << key->asInt() << "]";
+                        }
+                    } else {
+                        size += key->dump(out, isWideArray(), 1, base);
+                    }
+                    out << ":\n";
                     size += i.rawValue()->dump(out, isWideArray(), 2, base);
                 }
+                out << " }";
                 break;
             }
             default:
-                out << "\n";
                 break;
         }
         return size + (size & 1);
@@ -185,6 +218,7 @@ namespace fleece { namespace impl {
             if (i.first > pos)
                 out << "  {skip " << std::hex << (i.first - pos) << std::dec << "}\n";
             pos = i.first + i.second->dump(out, false, 0, data.buf);
+            out << '\n';
         }
     }
 

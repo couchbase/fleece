@@ -250,6 +250,7 @@ namespace fleece { namespace impl {
         void mapAddresses(mapByAddress&) const;
         static void writeByAddress(const mapByAddress &byAddress, slice data, std::ostream &out);
         size_t dump(std::ostream &out, bool wide, int indent, const void *base) const;
+        size_t dumpHex(std::ostream &out, bool wide, const void *base) const;
         void writeDumpBrief(std::ostream &out, const void *base, bool wide =false) const;
 
         //////// Here's the data:
