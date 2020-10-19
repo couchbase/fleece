@@ -178,6 +178,10 @@ namespace fleece { namespace impl {
         slice baseUsed() const                  {return _baseMinUsed != 0 ? slice(_baseMinUsed, _base.end()) : slice();}
         const StringTable& strings() const      {return _strings;}
 
+        enum class PreWrittenValue : ssize_t { none = 0 };
+        PreWrittenValue lastValueWritten() const;   // Opaque reference to last thing written
+        void writeValueAgain(PreWrittenValue);         // Writes pointer to an already-written value
+
 #if 0
         static bool isIntRepresentable(float n) noexcept;
         static bool isIntRepresentable(double n) noexcept;

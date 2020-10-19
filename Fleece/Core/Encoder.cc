@@ -162,6 +162,20 @@ namespace fleece { namespace impl {
         return _out.length();
     }
 
+    // Returns an opaque reference to the last value written, but not if it's inline.
+    Encoder::PreWrittenValue Encoder::lastValueWritten() const {
+        if (!_items->empty())
+            if (auto ptr = _items->back()._asPointer(); ptr->isPointer())
+                return PreWrittenValue(ptr->offset<true>() - _base.size);
+        return PreWrittenValue::none;
+    }
+
+    // Writes a pointer to an already-written value, allowing it to appear twice without overhead.
+    void Encoder::writeValueAgain(PreWrittenValue pos) {
+        throwIf(pos == PreWrittenValue::none, EncodeError, "Can't rewrite an inline Value");
+        writePointer(ssize_t(pos));
+    }
+
 
 #pragma mark - WRITING:
 

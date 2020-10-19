@@ -51,6 +51,7 @@ public:
     void endEncoding() {
         enc.end();
         result = enc.finish();
+        REQUIRE(result);
         enc.reset();
     }
 
@@ -877,6 +878,37 @@ public:
         REQUIRE(num->type() == kNumber);
         CHECK(num->asInt() == 17);
     }
+
+
+    TEST_CASE_METHOD(EncoderTests, "Rewriting Values", "[Encoder]") {
+        CHECK(enc.lastValueWritten() == Encoder::PreWrittenValue::none);    // no values yet
+        enc.beginArray();
+        enc.beginDictionary();
+        enc.writeKey("foo");
+        enc.writeInt(17);
+        CHECK(enc.lastValueWritten() == Encoder::PreWrittenValue::none);    // it's inline
+        enc.endDictionary();
+        Encoder::PreWrittenValue wroteDict1 = enc.lastValueWritten();
+        REQUIRE(wroteDict1 != Encoder::PreWrittenValue::none);
+        enc.beginDictionary();
+        enc.writeKey("prev");
+        enc.writeValueAgain(wroteDict1);
+        enc.endDictionary();
+        enc.endArray();
+
+        checkOutput("4366 6F6F 7001 8003 0011 4470 7265 7600 7001 8004 8008 6002 800A 8005 8003");
+        Value::dump(result, std::cerr);
+        auto root = Value::fromData(result);
+        REQUIRE(root);
+        std::cerr << "JSON: " << root->toJSONString() << "\n";
+        CHECK(root->toJSONString() == "[{\"foo\":17},{\"prev\":{\"foo\":17}}]");
+        auto dict1 = root->asArray()->get(0);
+        auto dict2 = root->asArray()->get(1)->asDict()->get("prev");
+        std::cerr << "root[0]      = " << (void*)dict1 << "\n";
+        std::cerr << "root[1].prev = " << (void*)dict2 << "\n";
+        CHECK(dict1 == dict2);
+    }
+
 
 #pragma mark - KEY TREE:
 
