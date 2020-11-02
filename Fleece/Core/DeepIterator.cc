@@ -55,6 +55,8 @@ namespace fleece { namespace impl {
             } else {
                 // End of array/dict, so start another one:
                 _value = nullptr;
+                if (_stack.empty())
+                    return; // end of iteration
                 while (_stack.front().second == nullptr) {
                     // end of a level of hierarchy; pop the path, or stop if it's empty:
                     if (_path.empty())
