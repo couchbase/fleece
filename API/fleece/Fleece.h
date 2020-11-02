@@ -489,6 +489,9 @@ while (NULL != (value = FLArrayIterator_GetValue(&iter))) {
     /** Returns true if the Array has been changed from the source it was copied from. */
     bool FLMutableArray_IsChanged(FLMutableArray) FLAPI;
 
+    /** Sets or clears the mutable Array's "changed" flag. */
+    void FLMutableArray_SetChanged(FLMutableArray, bool) FLAPI;
+
     /** Lets you store a value into a MutableArray, by returning a \ref FLSlot that you can call
         a function like \ref FLSlot_SetInt on. */
     FLSlot FLMutableArray_Set(FLMutableArray FLNONNULL, uint32_t index) FLAPI;
@@ -676,6 +679,9 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
 
     /** Returns true if the Dict has been changed from the source it was copied from. */
     bool FLMutableDict_IsChanged(FLMutableDict) FLAPI;
+
+    /** Sets or clears the mutable Dict's "changed" flag. */
+    void FLMutableDict_SetChanged(FLMutableDict, bool) FLAPI;
 
     /** Returns the Slot storing the key's value, adding a new one if needed (with a null value.)
         To set the value itself, call one of the FLSlot functions, e.g. \ref FLSlot_SetInt. */

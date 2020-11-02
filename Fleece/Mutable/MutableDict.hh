@@ -26,6 +26,7 @@ namespace fleece { namespace impl {
 
         const Dict* source() const                          {return heapDict()->_source;}
         bool isChanged() const                              {return heapDict()->isChanged();}
+        void setChanged(bool changed)                       {heapDict()->setChanged(changed);}
 
         const Value* get(slice keyToFind) const noexcept    {return heapDict()->get(keyToFind);}
 

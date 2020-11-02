@@ -242,6 +242,7 @@ FLMutableArray FLArray_MutableCopy(FLArray a, FLCopyFlags flags) FLAPI {
 FLMutableArray FLArray_AsMutable(FLArray a)         FLAPI {return a ? a->asMutable() : nullptr;}
 FLArray FLMutableArray_GetSource(FLMutableArray a)  FLAPI {return a ? a->source() : nullptr;}
 bool FLMutableArray_IsChanged(FLMutableArray a)     FLAPI {return a && a->isChanged();}
+void FLMutableArray_SetChanged(FLMutableArray a, bool c)       FLAPI {if (a) a->setChanged(c);}
 void FLMutableArray_Resize(FLMutableArray a, uint32_t size)    FLAPI {a->resize(size);}
 
 FLSlot FLMutableArray_Set(FLMutableArray a, uint32_t index)    FLAPI {return &a->setting(index);}
@@ -362,6 +363,7 @@ FLMutableDict FLDict_MutableCopy(FLDict d, FLCopyFlags flags) FLAPI {
 FLMutableDict FLDict_AsMutable(FLDict d)           FLAPI {return d ? d->asMutable() : nullptr;}
 FLDict FLMutableDict_GetSource(FLMutableDict d)    FLAPI {return d ? d->source() : nullptr;}
 bool FLMutableDict_IsChanged(FLMutableDict d)      FLAPI {return d && d->isChanged();}
+void FLMutableDict_SetChanged(FLMutableDict d, bool c)   FLAPI {if (d) d->setChanged(c);}
 
 FLSlot FLMutableDict_Set(FLMutableDict d, FLString k)    FLAPI {return &d->setting(k);}
 
