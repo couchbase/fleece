@@ -1089,12 +1089,12 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
     /** Returns an opaque reference to the last complete value written to the encoder, if possible.
         Fails (returning 0) if nothing has been written, or if the value is inline and can't be
         referenced this way -- that only happens with small scalars or empty collections. */
-    ssize_t FLEncoder_LastValueWritten(FLEncoder e);
+    intptr_t FLEncoder_LastValueWritten(FLEncoder e);
 
     /** Writes another reference (a "pointer") to an already-written value, given a reference previously
         returned from \ref FLEncoder_LastValueWritten. The effect is exactly the same as if you wrote the
         entire value again, except that the size of the encoded data only grows by 4 bytes. */
-    void FLEncoder_WriteValueAgain(FLEncoder e, ssize_t preWrittenValue);
+    void FLEncoder_WriteValueAgain(FLEncoder e, intptr_t preWrittenValue);
 
 
     /** Parses JSON data and writes the object(s) to the encoder. (This acts as a single write,
