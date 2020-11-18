@@ -275,6 +275,7 @@ namespace fleece {
         uint8_t readByte() noexcept;     // returns 0 if slice is empty
         uint8_t peekByte() const noexcept FLPURE;     // returns 0 if slice is empty
         bool writeByte(uint8_t) noexcept;
+        uint64_t readHex() noexcept; // reads until it hits a non-digit or the end
         uint64_t readDecimal() noexcept; // reads until it hits a non-digit or the end
         int64_t readSignedDecimal() noexcept;
         bool writeDecimal(uint64_t) noexcept;

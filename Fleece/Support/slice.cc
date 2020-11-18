@@ -32,6 +32,20 @@
 
 namespace fleece {
 
+    static int _digittoint(char ch) {
+        int d = ch - '0';
+        if ((unsigned) d < 10)
+            return d;
+        d = ch - 'a';
+        if ((unsigned) d < 6)
+            return d + 10;
+        d = ch - 'A';
+        if ((unsigned) d < 6)
+            return d + 10;
+        return -1;
+    }
+
+
     void slice::setStart(const void *s) noexcept {
         assert_precondition(s <= end());
         set(s, (uint8_t*)end() - (uint8_t*)s);
@@ -162,6 +176,18 @@ namespace fleece {
         uint64_t n = 0;
         while (size > 0 && isdigit(*(char*)buf)) {
             n = 10*n + (*(char*)buf - '0');
+            moveStart(1);
+        }
+        return n;
+    }
+
+    uint64_t slice::readHex() noexcept {
+        uint64_t n = 0;
+        while (size > 0) {
+            int digit = _digittoint(*(char*)buf);
+            if (digit < 0)
+                break;
+            n = (n <<4 ) + digit;
             moveStart(1);
         }
         return n;
