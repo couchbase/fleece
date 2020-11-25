@@ -45,6 +45,11 @@ namespace fleece {
         return -1;
     }
 
+    static inline char _hexDigit(int n) {
+        static constexpr const char kDigits[] = "0123456789abcdef";
+        return kDigits[n];
+    }
+
 
     void slice::setStart(const void *s) noexcept {
         assert_precondition(s <= end());
@@ -177,6 +182,8 @@ namespace fleece {
         while (size > 0 && isdigit(*(char*)buf)) {
             n = 10*n + (*(char*)buf - '0');
             moveStart(1);
+            if (n > UINT64_MAX/10)
+                break;          // Next digit would overflow uint64_t
         }
         return n;
     }
@@ -189,6 +196,8 @@ namespace fleece {
                 break;
             n = (n <<4 ) + digit;
             moveStart(1);
+            if (n > UINT64_MAX/16)
+                break;          // Next digit would overflow uint64_t
         }
         return n;
     }
@@ -224,6 +233,22 @@ namespace fleece {
                 return false;
             ::memcpy((void*)buf, dst, len);
         }
+        moveStart(len);
+        return true;
+    }
+
+    bool slice::writeHex(uint64_t n) noexcept {
+        char temp[16]; // max length is 16 hex digits
+        char *dst = &temp[16];
+        size_t len = 0;
+        do {
+            *(--dst) = _hexDigit(n & 0x0F);
+            n >>= 4;
+            len++;
+        } while (n > 0);
+        if (size < len)
+            return false;
+        ::memcpy((void*)buf, dst, len);
         moveStart(len);
         return true;
     }
