@@ -134,7 +134,7 @@
 
 
 //! Convert 32-bit float from host to network byte order
-static inline float htonf(float f) {
+static inline float _htonf(float f) {
 #ifdef __cplusplus
     static_assert(sizeof(float) == sizeof(uint32_t), "Unexpected float format");
     uint32_t val = hton32(*(reinterpret_cast<const uint32_t *>(&f)));
@@ -144,10 +144,11 @@ static inline float htonf(float f) {
     return *((float *)(&val));
 #endif
 }
-#define ntohf(x)   htonf((x))
+#define ntohf(x)   _htonf((x))
+#define htonf(x)   _htonf((x))
 
 //! Convert 64-bit double from host to network byte order
-static inline double htond(double f) {
+static inline double _htond(double f) {
 #ifdef __cplusplus
     static_assert(sizeof(double) == sizeof(uint64_t), "Unexpected double format");
     uint64_t val = hton64(*(reinterpret_cast<const uint64_t *>(&f)));
@@ -157,7 +158,8 @@ static inline double htond(double f) {
     return *((double *)(&val));
 #endif
 }
-#define ntohd(x)   htond((x))
+#define ntohd(x)   _htond((x))
+#define htond(x)   _htond((x))
 
 #endif //_ENDIANNESS_H
 
