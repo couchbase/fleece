@@ -71,7 +71,11 @@
 #include <math.h>
 #include <time.h>
 #include <mutex>
+#include <map>
+#include <algorithm>
+#include <cctype>
 #include "PlatformCompat.hh"
+using namespace std;
 
 typedef uint8_t u8;
 typedef int64_t sqlite3_int64;
@@ -80,23 +84,6 @@ typedef int64_t sqlite3_int64;
 #define sqlite3Isspace isspace
 
 #define LONG_MONTHS 0x15AA          // 1 bits for months with 31 days
-
-
-/*
- ** A structure for holding a single date and time.
- */
-typedef struct DateTime DateTime;
-struct DateTime {
-    sqlite3_int64 iJD; /* The julian day number times 86400000 */
-    int Y, M, D;       /* Year, month, and day */
-    int h, m;          /* Hour and minutes */
-    int tz;            /* Timezone offset in minutes */
-    double s;          /* Seconds */
-    char validYMD;     /* True (1) if Y,M,D are valid */
-    char validHMS;     /* True (1) if h,m,s are valid */
-    char validJD;      /* True (1) if iJD is valid */
-    char validTZ;      /* True (1) if tz is valid */
-};
 
 
 /*
@@ -164,7 +151,7 @@ end_getDigits:
  **
  ** A missing specifier is not considered an error.
  */
-static int parseTimezone(const char *zDate, DateTime *p){
+static int parseTimezone(const char *zDate, fleece::DateTime *p){
     int sgn = 0;
     int nHr, nMn;
     int c;
@@ -213,7 +200,7 @@ zulu_time:
  **
  ** Return 1 if there is a parsing error and 0 on success.
  */
-static int parseHhMmSs(const char *zDate, DateTime *p){
+static int parseHhMmSs(const char *zDate, fleece::DateTime *p){
     int h, m, s;
     double ms = 0.0;
     if( getDigits(zDate, 2, 0, 24, ':', &h, 2, 0, 59, 0, &m)!=2 ){
@@ -254,7 +241,7 @@ static int parseHhMmSs(const char *zDate, DateTime *p){
  **
  ** Reference:  Meeus page 61
  */
-static void computeJD(DateTime *p){
+static void computeJD(fleece::DateTime *p){
     int Y, M, D, A, B, X1, X2;
 
     if( p->validJD ) return;
@@ -288,7 +275,7 @@ static void computeJD(DateTime *p){
     }
 }
 
-static void inject_local_tz(DateTime* p)
+static void inject_local_tz(fleece::DateTime* p)
 {
 #if !defined(_MSC_VER) || WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
     // Let's hope this works on UWP since Microsoft has removed the
@@ -345,7 +332,7 @@ static void inject_local_tz(DateTime* p)
  ** on success and 1 if the input string is not a well-formed
  ** date.
  */
-static int parseYyyyMmDd(const char *zDate, DateTime *p){
+static int parseYyyyMmDd(const char *zDate, fleece::DateTime *p, bool doJD){
     int Y, M, D, neg;
 
     if( zDate[0]=='-' ){
@@ -370,11 +357,15 @@ static int parseYyyyMmDd(const char *zDate, DateTime *p){
         }
     }
     zDate += 10;
-    while( sqlite3Isspace(*zDate) || 'T'==*(u8*)zDate ){ zDate++; }
+    while( sqlite3Isspace(*zDate) || 'T'==*(u8*)zDate ) {
+        // N1QL behavior, if even one T is present, then the resulting format should be 'T', not ' '
+        if(*zDate == 'T' || !p->separator) p->separator = *zDate;
+        zDate++;
+    }
     if( parseHhMmSs(zDate, p)==0 ){
         /* We got the time */
     }else if( *zDate==0 ){
-        p->validHMS = 1;
+        p->validHMS = 0;
         p->h = p->m = 0;
         p->s = 0.0;
         p->validTZ = 0;
@@ -386,10 +377,12 @@ static int parseYyyyMmDd(const char *zDate, DateTime *p){
     p->Y = neg ? -Y : Y;
     p->M = M;
     p->D = D;
-    if( p->validTZ ){
-        computeJD(p);
-    } else {
-        inject_local_tz(p);
+    if(doJD) {
+        if( p->validTZ ){
+            computeJD(p);
+        } else {
+            inject_local_tz(p);
+        }
     }
     return 0;
 }
@@ -398,18 +391,110 @@ static int parseYyyyMmDd(const char *zDate, DateTime *p){
 #pragma mark END OF SQLITE CODE
 #pragma mark -
 
+static size_t offset_to_str(int offset, char* buf) {
+    if(offset == 0) {
+        buf[0] = 'Z';
+        return 1;
+    }
+
+    const int hours = std::abs(offset) / 60;
+    const int minutes = std::abs(offset) % 60;
+    if(offset < 0) {
+        sprintf(buf, "-%02d:%02d", hours, minutes);
+    } else {
+        sprintf(buf, "+%02d:%02d", hours, minutes);
+    }
+
+    return 6;
+}
+
 
 namespace fleece {
+    static map<string, DateComponent> dateComponentMap = {
+        { "millennium", kDateComponentMillennium },
+        { "century", kDateComponentCentury },
+        { "decade", kDateComponentDecade },
+        { "year", kDateComponentYear },
+        { "quarter", kDateComponentQuarter },
+        { "month", kDateComponentMonth },
+        { "week", kDateComponentWeek },
+        { "day", kDateComponentDay },
+        { "hour", kDateComponentHour },
+        { "minute", kDateComponentMinute },
+        { "second", kDateComponentSecond },
+        { "millisecond", kDateComponentMillisecond }
+    };
+
+    DateTime ParseISO8601DateRaw(const char* zDate) {
+        DateTime x {0, 0, 0, 0, 0, 0, 0, 0.0, 0, 0, 0, 0, 0};
+        if(parseYyyyMmDd(zDate,&x,false)) {
+            parseHhMmSs(zDate, &x);
+        }
+        
+        return x;
+    }
+
+    DateTime ParseISO8601DateRaw(slice date) {
+        DateTime x {0, 0, 0, 0, 0, 0, 0, 0.0, 0, 0, 0, 0, 0};
+        auto cstr = static_cast<char*>(malloc(date.size + 1));
+        if (!cstr)
+            return x;
+
+        memcpy(cstr, date.buf, date.size);
+        cstr[date.size] = 0;
+        auto retVal = ParseISO8601DateRaw(cstr);
+        free(cstr);
+        return retVal;
+    }
+
+    int64_t ToMillis(DateTime& dt, bool no_tz) {
+        if(!dt.validHMS) {
+            dt.h = dt.m = 0;
+            dt.s = 0.0;
+            dt.validHMS = 1;
+        }
+
+        if(!no_tz && !dt.validTZ) {
+            inject_local_tz(&dt);
+        } 
+
+        computeJD(&dt);
+        return dt.iJD - 210866760000000;
+    }
+
+    DateTime FromMillis(int64_t time) {
+        // Split out the milliseconds from the timestamp:
+        time_t secs = time_t(time / 1000);
+        int millis = time % 1000;
+
+        struct tm timebuf;
+        struct tm* result = gmtime_r(&secs, &timebuf);
+        return {
+            0,
+            timebuf.tm_year + 1900,
+            timebuf.tm_mon + 1,
+            timebuf.tm_mday,
+            timebuf.tm_hour,
+            timebuf.tm_min,
+            0,
+            (double)timebuf.tm_sec + millis / 1000.0,
+            1,
+            1,
+            0,
+            1
+        };
+    }
+
 
     int64_t ParseISO8601Date(const char* zDate) {
         DateTime x;
-        if (parseYyyyMmDd(zDate,&x))
+        if (parseYyyyMmDd(zDate,&x,true))
             return kInvalidDate;
-        computeJD(&x);
-        return x.iJD - 210866760000000;
+        
+        return ToMillis(x);
     }
 
-    int64_t ParseISO8601Date(fleece::slice date) {
+    int64_t ParseISO8601Date(slice date) {
         auto cstr = (char*)malloc(date.size + 1);
         if (!cstr)
             return kInvalidDate;
@@ -420,7 +505,23 @@ namespace fleece {
         return timestamp;
     }
 
-    slice FormatISO8601Date(char buf[], int64_t time, bool asUTC) {
+    DateComponent ParseDateComponent(slice component) {
+        string componentStr(component);
+
+        // Warning, tolower on negative char is UB so first convert to unsigned.  It doesn't matter
+        // if the result is nonsense since we are just using it as a lookup key
+        transform(componentStr.begin(), componentStr.end(), componentStr.begin(), 
+            [](unsigned char c){ return std::tolower(c); });
+        const auto entry = dateComponentMap.find(componentStr);
+        if(entry == dateComponentMap.end()) {
+            return kDateComponentInvalid;
+        }
+
+        return entry->second;
+    }
+
+
+    slice FormatISO8601Date(char buf[], int64_t time, bool asUTC, const DateTime* format) {
         if (time == kInvalidDate) {
             *buf = 0;
             return nullslice;
@@ -433,31 +534,115 @@ namespace fleece {
         // Format it, up to the seconds:
         struct tm timebuf;
         struct tm* result = asUTC ? gmtime_r(&secs, &timebuf) : localtime_r(&secs, &timebuf);
-        size_t len = strftime(buf, kFormattedISO8601DateMaxSize, "%FT%T", result);
-
-        // Write the milliseconds:
-        if (millis > 0) {
-            size_t n = sprintf(buf + len, ".%03d", millis);
-            len += n;
+        size_t len = 0;
+        bool ymd = true;
+        bool hms = true;
+        bool zone = true;
+        char separator = 'T';
+        if(format) {
+            ymd = format->validYMD;
+            hms = format->validHMS;
+            zone = format->validTZ;
+            separator = format->separator;
         }
 
-        // Write the time-zone:
-        char *tz = buf + len;
-        if (asUTC) {
-            strcpy(tz, "Z");
-            ++len;
-        } else {
-            size_t added = strftime(tz, 6, "%z", &timebuf);
+        if(ymd) {
+           len += strftime(buf, kFormattedISO8601DateMaxSize, "%F", result);
+        }
 
-            // It would be nice to use tm_gmtoff but that's not available everywhere...
-            if(strncmp("0000", tz + 1, 4) == 0) {
-                strcpy(tz, "Z");
-                ++len;
-            } else {
-                len += added;
+        if(hms) {
+            if(ymd) {
+                buf[len] = separator;
+                len++;
+            }
+
+            len += strftime(buf + len, kFormattedISO8601DateMaxSize - len, "%T", result);
+
+            // Write the milliseconds:
+            if (millis > 0) {
+                len += sprintf(buf + len, ".%03d", millis);
+            }
+
+            if(zone) {
+                // Write the time-zone:
+                char *tz = buf + len;
+                if (asUTC) {
+                    strcpy(tz, "Z");
+                    ++len;
+                } else {
+                    size_t added = strftime(tz, 6, "%z", &timebuf);
+
+                    // It would be nice to use tm_gmtoff but that's not available everywhere...
+                    if(strncmp("0000", tz + 1, 4) == 0) {
+                        strcpy(tz, "Z");
+                        ++len;
+                    } else {
+                        len += added;
+                    }
+                }
             }
         }
+
         return {buf, len};
     }
+
+    slice FormatISO8601Date(char buf[], int64_t time, int offset, const DateTime* format) {
+        if (time == kInvalidDate) {
+            *buf = 0;
+            return nullslice;
+        }
+
+        time += offset * 60 * 1000;
+        
+        // Split out the milliseconds from the timestamp:
+        time_t secs = time_t(time / 1000);
+        int millis = time % 1000;
+
+        // Format it, up to the seconds:
+        struct tm timebuf;
+        struct tm* result = gmtime_r(&secs, &timebuf);
+        if(result == nullptr) {
+            return nullslice;
+        }
+
+        size_t len = 0;
+        bool ymd = true;
+        bool hms = true;
+        bool zone = true;
+        char separator = 'T';
+        if(format) {
+            ymd = format->validYMD;
+            hms = format->validHMS;
+            zone = format->validTZ;
+            separator = format->separator;
+        }
+
+        if(ymd) {
+           len += strftime(buf, kFormattedISO8601DateMaxSize, "%F", result);
+        }
+
+        if(hms) {
+            if(ymd) {
+                buf[len] = format->separator;
+                len++;
+            }
+
+            len += strftime(buf + len, kFormattedISO8601DateMaxSize - len, "%T", result);
+
+            // Write the milliseconds:
+            if (millis > 0) {
+                len += sprintf(buf + len, ".%03d", millis);
+            }
+
+            if(zone) {
+                // Write the time-zone:
+                char *tz = buf + len;
+                len += offset_to_str(offset, tz);
+            }
+        }
+  
+        return {buf, len};
+    }
+
 
 }
