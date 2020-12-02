@@ -81,5 +81,11 @@ foreach(platform Fleece FleeceStatic FleeceBase fleeceTool FleeceTests)
         vendor/libb64
         vendor/jsonsl
         vendor/SwiftDtoa
+        vendor/date/include
+    )
+
+    target_compile_definitions(
+        ${platform} PRIVATE
+        HAS_UNCAUGHT_EXCEPTIONS # date.h use std::uncaught_exceptions instead of std::uncaught_exception
     )
 endforeach()

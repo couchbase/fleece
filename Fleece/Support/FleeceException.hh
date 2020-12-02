@@ -58,6 +58,6 @@ namespace fleece {
     };
 
     #define throwIf(BAD, ERROR, MESSAGE) \
-        if (_usuallyTrue(!(BAD))) ; else FleeceException::_throw(ERROR, MESSAGE)
+        if (_usuallyTrue(!(BAD))) ; else fleece::FleeceException::_throw(ERROR, MESSAGE)
 
 }

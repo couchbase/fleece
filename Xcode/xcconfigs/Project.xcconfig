@@ -17,7 +17,7 @@ GCC_TREAT_WARNINGS_AS_ERRORS                       = YES
 CLANG_STATIC_ANALYZER_MODE = shallow
 
 
-HEADER_SEARCH_PATHS                                = API   // allows for #include <fleece/Fleece.h>
+HEADER_SEARCH_PATHS                                = API $(SRCROOT)/vendor/date/include   // allows for #include <fleece/Fleece.h>
 
 
 IPHONEOS_DEPLOYMENT_TARGET                         = 8.0

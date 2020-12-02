@@ -32,13 +32,6 @@
 
     #define __func__                        __FUNCTION__
 
-    #include <time.h>
-
-    #define gmtime_r(a, b)                  (gmtime_s(b, a) == 0 ? b : NULL)
-    #define localtime_r(a, b)               (localtime_s(b, a) == 0 ? b : NULL)
-
-    #define timegm                          _mkgmtime
-
     #include <BaseTsd.h>
     typedef SSIZE_T ssize_t;
 

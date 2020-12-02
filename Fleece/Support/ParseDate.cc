@@ -64,6 +64,8 @@
  */
 
 #include "ParseDate.hh"
+#include "date/date.h"
+#include "FleeceException.hh"
 
 #include <stdint.h>
 #include <stdarg.h>
@@ -71,7 +73,18 @@
 #include <math.h>
 #include <time.h>
 #include <mutex>
-#include "PlatformCompat.hh"
+#include <chrono>
+#include <sstream>
+#include <iomanip>
+
+#ifdef WIN32
+#include <Windows.h>
+#endif
+
+using namespace std;
+using namespace std::chrono;
+using namespace std::chrono_literals;
+using namespace date;
 
 typedef uint8_t u8;
 typedef int64_t sqlite3_int64;
@@ -288,24 +301,8 @@ static void computeJD(DateTime *p){
     }
 }
 
-static void inject_local_tz(DateTime* p)
-{
-#if defined(_MSC_VER) && WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
-    // Let's hope this works on UWP since Microsoft has removed the
-    // tzset and _tzset functions from UWP
-    static std::once_flag once;
-    std::call_once(once, [] { _tzset(); });
-#elif !defined(_MSC_VER)
-    static std::once_flag once;
-    std::call_once(once, [] { tzset(); });
-#endif  
-    // In order to consider DST, among other date time oddities,
-    // a tm of the passed date must be constructed to mktime can
-    // be used.  However this has the caveat that since this is
-    // coming from a string with no time zone, it will never be
-    // clear if the "before" or "after" DST is desired in the case
-    // of a rollback of clocks in which an hour is repeated.  Moral
-    // of the story:  USE TIME ZONES IN YOUR DATE STRINGS!
+// Convert DateTime to tm WITHOUT calling mktime (possibly invalid until then)
+static inline struct tm FromDate(DateTime* p) {
     struct tm local_time {};
     local_time.tm_sec = (int)p->s;
     local_time.tm_min = p->m;
@@ -314,25 +311,16 @@ static void inject_local_tz(DateTime* p)
     local_time.tm_mon = p->M - 1;
     local_time.tm_year = p->Y - 1900;
     local_time.tm_isdst = -1;
-    
-    time_t rawtime = mktime(&local_time);
-    
-    // Convert that raw time_t to GMT
-    struct tm gbuf;
-    gmtime_r(&rawtime, &gbuf);
-    
-    // Caveat: Undefined behavior during ambigiuous times (e.g. during a repeated
-    // hour at the end of daylight savings time)
-    time_t gmt = mktime(&gbuf);
-    auto diff = difftime(rawtime, gmt);
-    if(local_time.tm_isdst > 0) {
-        // mktime uses GMT, but we want UTC which is unaffected
-        // by DST
-        diff += 3600;
-    }
-    
+
+    return local_time;
+}
+
+static void inject_local_tz(DateTime* p)
+{
+    struct tm local_time = FromDate(p);
+    auto offset = floor<minutes>(-fleece::GetLocalTZOffset(&local_time, false));
     p->validTZ = 1;
-    p->tz = (int)(diff / 60.0);
+    p->tz = (int)offset.count();
 }
 
 /*
@@ -427,39 +415,106 @@ namespace fleece {
             *buf = 0;
             return nullslice;
         }
-        
-        // Split out the milliseconds from the timestamp:
-        time_t secs = time_t(time / 1000);
-        int millis = time % 1000;
 
-        // Format it, up to the seconds:
-        struct tm timebuf;
-        struct tm* result = asUTC ? gmtime_r(&secs, &timebuf) : localtime_r(&secs, &timebuf);
-        size_t len = strftime(buf, kFormattedISO8601DateMaxSize, "%FT%T", result);
-
-        // Write the milliseconds:
-        if (millis > 0) {
-            size_t n = sprintf(buf + len, ".%03d", millis);
-            len += n;
-        }
-
-        // Write the time-zone:
-        char *tz = buf + len;
-        if (asUTC) {
-            strcpy(tz, "Z");
-            ++len;
-        } else {
-            size_t added = strftime(tz, 6, "%z", &timebuf);
-
-            // It would be nice to use tm_gmtoff but that's not available everywhere...
-            if(strncmp("0000", tz + 1, 4) == 0) {
-                strcpy(tz, "Z");
-                ++len;
+        stringstream timestream;
+        auto tp = local_time<milliseconds>(milliseconds(time));
+        auto totalSec = floor<seconds>(tp);
+        auto totalMs = floor<milliseconds>(tp);
+        struct tm tmpTime = FromTimestamp(totalSec.time_since_epoch());
+        auto offset = GetLocalTZOffset(&tmpTime, true);
+        if(asUTC || offset == 0min) {
+            if(totalSec == totalMs) {
+                timestream << format("%FT%TZ", floor<seconds>(tp));
             } else {
-                len += added;
+                timestream << format("%FT%TZ", floor<milliseconds>(tp));
             }
+        } else {
+            tp += offset;
+            auto h = duration_cast<hours>(offset);
+            auto m = offset - h;
+            timestream.fill('0');
+            if(totalSec == totalMs) {
+                timestream << format("%FT%T", floor<seconds>(tp));
+            } else {
+                timestream << format("%FT%T", floor<milliseconds>(tp));
+            }
+               
+            timestream << setw(3) << std::internal << showpos << h.count() << ':'
+                << noshowpos << setw(2) << (int)abs(m.count());
         }
-        return {buf, len};
+        
+        memcpy(buf, timestream.str().c_str(), timestream.str().size());
+        return {buf, timestream.str().length()};
+    }
+
+    struct tm FromTimestamp(seconds timestamp) {
+        local_seconds tp { timestamp };
+        auto dp = floor<days>(tp);
+        year_month_day ymd { dp };
+        auto hhmmss = make_time(tp - dp);
+
+        struct tm local_time {};
+        local_time.tm_sec = (int)hhmmss.seconds().count();
+        local_time.tm_min = (int)hhmmss.minutes().count();
+        local_time.tm_hour = (int)hhmmss.hours().count();
+        local_time.tm_mday = (int)static_cast<unsigned>(ymd.day());
+        local_time.tm_mon = (int)static_cast<unsigned>(ymd.month()) - 1;
+        local_time.tm_year = static_cast<int>(ymd.year()) - 1900;
+        local_time.tm_isdst = -1;
+
+        return local_time;
+    }
+
+    seconds GetLocalTZOffset(struct tm* localtime, bool input_utc) {
+        // This method is annoyingly delicate, and warrants lots of explanation
+
+        // First, call tzset so that the needed information is populated
+        // by the C runtime
+#if !defined(_MSC_VER) || WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
+        // Let's hope this works on UWP since Microsoft has removed the
+        // tzset and _tzset functions from UWP
+        static std::once_flag once;
+        std::call_once(once, []
+        {
+#ifdef _MSC_VER
+            _tzset();
+#else
+            tzset();
+#endif
+        });
+#endif
+
+        // Find the system time zone's offset from UTC
+        // Windows -> _get_timezone
+        // Others -> global timezone variable
+        //      https://linux.die.net/man/3/tzset (System V-like / XSI)
+        //      http://www.unix.org/version3/apis/t_9.html (Unix v3)
+#ifdef WIN32
+        long s;
+        throwIf(_get_timezone(&s) != 0, fleece::InternalError, "Unable to query local system time zone");
+        auto offset = seconds(s);
+#elif defined(__DARWIN_UNIX03) || defined(__ANDROID__) || defined(_XOPEN_SOURCE) || defined(_SVID_SOURCE)
+        auto offset = seconds(timezone);
+#else
+        #error Unimplemented GetLocalTZOffset
+#endif
+
+        // Apply the timezone offset first to get the proper time
+        // in the current timezone (no-op if local time was passed)
+        if(input_utc) {
+            localtime->tm_sec -= offset.count();
+        }
+
+        // In order to consider DST, mktime needs to be called.
+        // However this has the caveat that it will never be
+        // clear if the "before" or "after" DST is desired in the case
+        // of a rollback of clocks in which an hour is repeated.  Moral
+        // of the story:  USE TIME ZONES IN YOUR DATE STRINGS!
+        if(mktime(localtime) != -1) {
+            offset += hours(localtime->tm_isdst);
+        }
+
+        return offset;
     }
 
 }
