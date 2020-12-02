@@ -151,16 +151,24 @@ namespace fleece { namespace impl { namespace internal {
     }
 
 
+    static bool isHardwiredValue(const Value *v) {
+        return v == Value::kNullValue || v == Value::kUndefinedValue
+            || v == Value::kTrueValue || v == Value::kFalseValue
+            || v == Array::kEmpty || v == Dict::kEmpty;
+    }
+
+
     const Value* HeapValue::retain(const Value *v) {
         if (internal::HeapValue::isHeapValue(v)) {
             fleece::retain(HeapValue::asHeapValue(v));
         } else if (v) {
             RetainedConst<Doc> doc = Doc::containing(v);
-            if (_usuallyFalse(!doc))
+            if (_usuallyTrue(doc != nullptr))
+                fleece::retain(doc.get());
+            else if (!isHardwiredValue(v))
                 FleeceException::_throw(InvalidData,
                                         "Can't retain immutable Value %p that's not part of a Doc",
                                         v);
-            fleece::retain(doc.get());
         }
         return v;
     }
@@ -170,11 +178,12 @@ namespace fleece { namespace impl { namespace internal {
             fleece::release(HeapValue::asHeapValue(v));
         } else if (v) {
             RetainedConst<Doc> doc = Doc::containing(v);
-            if (_usuallyFalse(!doc))
+            if (_usuallyTrue(doc != nullptr))
+                fleece::release(doc.get());
+            else if (!isHardwiredValue(v))
                 FleeceException::_throw(InvalidData,
                                         "Can't release immutable Value %p that's not part of a Doc",
                                         v);
-            fleece::release(doc.get());
         }
     }
 
