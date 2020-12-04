@@ -20,14 +20,11 @@
 #include "encode.h"
 #include "decode.h"
 #include <algorithm>
-#include <math.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstdlib>
 #include <atomic>
-#include <string.h>
-#include <stdio.h>
-#ifdef _MSC_VER
-#include "memmem.h"
-#endif
+#include <cstring>
+#include <cstdio>
 #include "betterassert.hh"
 
 namespace fleece {
@@ -207,8 +204,14 @@ namespace fleece {
     }
 
     __hot slice pure_slice::find(pure_slice target) const noexcept {
-        auto found = memmem(buf, size, target.buf, target.size);
-        return {found, (found ? target.size : 0)};
+        char* src = (char *)buf;
+        char* search = (char *)target.buf;
+        char* found = std::search(src, src + size, search, search + target.size);
+        if(found == src + size) {
+            return nullslice;
+        }
+
+        return {found, target.size};
     }
 
     __hot const uint8_t* pure_slice::findByteOrEnd(uint8_t byte) const noexcept {
@@ -272,7 +275,10 @@ namespace fleece {
     }
 
     const void* pure_slice::containsBytes(pure_slice s) const noexcept {
-        return memmem(buf, size, s.buf, s.size);
+        char* src = (char *)buf;
+        char* search = (char *)s.buf;
+        char* found = std::search(src, src + size, search, search + s.size);
+        return found == src + size ? nullptr : found;
     }
 
     bool pure_slice::containsAddressRange(pure_slice s) const noexcept {

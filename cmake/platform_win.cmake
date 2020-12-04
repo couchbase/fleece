@@ -11,7 +11,6 @@ function(set_source_files)
     set(
         ${WIN_SSS_RESULT}
         ${BASE_SRC_FILES}
-        MSVC/memmem.cc
         MSVC/vasprintf-msvc.c
         MSVC/asprintf.c
         PARENT_SCOPE
