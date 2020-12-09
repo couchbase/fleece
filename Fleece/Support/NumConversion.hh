@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <cinttypes>
 #include <typeinfo>
+#include <limits>
 
 namespace fleece {
 
