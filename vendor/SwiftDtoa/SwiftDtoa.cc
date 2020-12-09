@@ -557,12 +557,12 @@ int swift_decompose_double(double d,
     clearIntegerPart128(&t0, fractionBits);
     while (isLessThan128x128(d0, t0)) {
         *digit_p++ = nextDigit;
-        int d = fourDigits / 100; // top 2 digits
-        *digit_p++ = d / 10;
-        *digit_p++ = d % 10;
-        d = fourDigits % 100; // bottom 2 digits
-        *digit_p++ = d / 10;
-        nextDigit = d % 10;
+        int d2 = fourDigits / 100; // top 2 digits
+        *digit_p++ = d2 / 10;
+        *digit_p++ = d2 % 10;
+        d2 = fourDigits % 100; // bottom 2 digits
+        *digit_p++ = d2 / 10;
+        nextDigit = d2 % 10;
         t = t0;
         delta = d0;
         multiply128xi32(&d0, 10000);
@@ -922,12 +922,12 @@ int swift_decompose_float80(long double d,
     t0.high &= fixedPointMaskHigh;
     while (isLessThan192x192(d0, t0)) {
         *digit_p++ = nextDigit;
-        int d = fourDigits / 100;
-        *digit_p++ = d / 10;
-        *digit_p++ = d % 10;
-        d = fourDigits % 100;
-        *digit_p++ = d / 10;
-        nextDigit = d % 10;
+        int d2 = fourDigits / 100;
+        *digit_p++ = d2 / 10;
+        *digit_p++ = d2 % 10;
+        d2 = fourDigits % 100;
+        *digit_p++ = d2 / 10;
+        nextDigit = d2 % 10;
         t = t0;
         delta = d0;
         multiply192xi32(&d0, 10000);
@@ -1520,6 +1520,13 @@ static int isLessThan128x128(swift_uint128_t lhs, swift_uint128_t rhs) {
                                 && (lhs.low < rhs.low)))))));
 }
 
+#ifdef _MSC_VER
+// Not going to alter third party code
+// Warning	C4319	'~': zero extending 'uint32_t' to 'uint64_t' of greater size
+#pragma warning(push)
+#pragma warning(disable: 4319)
+#endif
+
 // Subtract 128-bit values in a 32-bit environment
 static void subtract128x128(swift_uint128_t *lhs, swift_uint128_t rhs) {
     uint64_t t = (uint64_t)lhs->low + (~rhs.low) + 1;
@@ -1531,6 +1538,10 @@ static void subtract128x128(swift_uint128_t *lhs, swift_uint128_t rhs) {
     t = (t >> 32) + lhs->high + (~rhs.high);
     lhs->high = (uint32_t)t;
 }
+#endif
+
+#ifdef _MSC_VER
+#pragma warning(pop)
 #endif
 
 // Shift a 128-bit integer right, rounding down.

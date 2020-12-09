@@ -156,3 +156,10 @@
 #       define __cold
 #   endif
 #endif /* __cold */
+
+// Platform independent string substitutions
+#if defined(__linux__)
+#define PRIms "ld"
+#else
+#define PRIms "lld"
+#endif

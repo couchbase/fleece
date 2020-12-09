@@ -9,6 +9,7 @@
 #include "MutableHashTree.hh"
 #include "Doc.hh"
 #include "PlatformCompat.hh"
+#include <set>
 
 using namespace std;
 using namespace fleece;

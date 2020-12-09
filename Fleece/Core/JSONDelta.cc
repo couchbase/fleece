@@ -24,6 +24,7 @@
 #include "FleeceException.hh"
 #include "TempArray.hh"
 #include "diff_match_patch.hh"
+#include "NumConversion.hh"
 #include <sstream>
 #include <unordered_set>
 #include "betterassert.hh"
@@ -453,8 +454,8 @@ namespace fleece { namespace impl {
             for (auto cur_diff = diffs.begin(); cur_diff != diffs.end(); ++cur_diff) {
                 auto length = cur_diff->text.length();
                 if (cur_diff->operation == diff_match_patch<string>::EQUAL) {
-                    oldPos += length;
-                    nuuPos += length;
+                    oldPos += narrow_cast<long>(length);
+                    nuuPos += narrow_cast<long>(length);
                 } else {
                     // Don't break up a UTF-8 multibyte character:
                     if (cur_diff->operation == diff_match_patch<string>::DELETE)
@@ -470,13 +471,13 @@ namespace fleece { namespace impl {
                     if (cur_diff->operation == diff_match_patch<string>::DELETE) {
                         // Write the number of deleted bytes:
                         diff << length << '-';
-                        oldPos += length;
+                        oldPos += narrow_cast<long>(length);
                     } else /* INSERT */ {
                         // Write an insertion, both the count and the bytes:
                         diff << length << '+';
                         diff.write((const char*)&nuuStr[nuuPos], length);
                         diff << '|';
-                        nuuPos += length;
+                        nuuPos += narrow_cast<long>(length);
                     }
                     lastOldPos = oldPos;
                 }

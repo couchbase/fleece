@@ -178,7 +178,7 @@ TEST_CASE("Perf FindPersonByIndexSorted", "[.Perf]")      {testFindPersonByIndex
 TEST_CASE("Perf FindPersonByIndexKeyed", "[.Perf]")       {testFindPersonByIndex(2);}
 
 TEST_CASE("Perf LoadPeople", "[.Perf]") {
-    for (int shareKeys = false; shareKeys <= true; ++shareKeys) {
+    for (int shareKeys = 0; shareKeys <= 1; ++shareKeys) {
         int kSamples = 50;
         int kIterations = 1000;
         Benchmark bench;
