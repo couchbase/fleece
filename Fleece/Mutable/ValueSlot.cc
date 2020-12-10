@@ -100,6 +100,7 @@ namespace fleece { namespace impl {
 
 
     void ValueSlot::setPointer(const Value *v) {
+        precondition(v != nullptr);
         if (_usuallyFalse(v == pointer()))
             return;
         releaseValue();
