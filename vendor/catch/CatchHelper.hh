@@ -15,12 +15,14 @@
 // class must take a boolean parameter, and the test case will be run twice, once on an object
 // that's been constructed with a 'false' parameter, and once with 'true'.
 
+
+
 namespace Catch {
     template<typename C>
-    class NWayMethodTestCase : public SharedImpl<ITestCase> {
+    class NWayMethodTestInvoker : public ITestInvoker {
 
     public:
-        NWayMethodTestCase( void (C::*method)() ) : m_method( method ) {}
+        NWayMethodTestInvoker( void (C::*method)() ) : m_method( method ) {}
 
         virtual void invoke() const {
             {
@@ -32,52 +34,19 @@ namespace Catch {
         }
 
     private:
-        virtual ~NWayMethodTestCase() {}
-
         void (C::*m_method)();
-    };
-
-
-    struct NWayAutoReg {
-
-        NWayAutoReg
-        (   TestFunction function,
-         SourceLineInfo const& lineInfo,
-         NameAndDesc const& nameAndDesc );
-
-        template<typename C>
-        NWayAutoReg
-        (   void (C::*method)(),
-         char const* className,
-         NameAndDesc const& nameAndDesc,
-         SourceLineInfo const& lineInfo ) {
-
-            registerTestCase
-                (   new NWayMethodTestCase<C>( method ),
-                     className,
-                     nameAndDesc,
-                     lineInfo );
-        }
-
-        ~NWayAutoReg() { }
-
-    private:
-        NWayAutoReg( NWayAutoReg const& );
-        void operator= ( NWayAutoReg const& );
     };
 }
 
 #define N_WAY_TEST_CASE_METHOD2( TestName, ClassName, ... )\
     namespace{ \
-        struct TestName : ClassName{ \
+        struct TestName : INTERNAL_CATCH_REMOVE_PARENS(ClassName) { \
             TestName(int opt) :ClassName(opt) { } \
             void test(); \
         }; \
-        Catch::NWayAutoReg INTERNAL_CATCH_UNIQUE_NAME( autoRegistrar ) ( &TestName::test, #ClassName, Catch::NameAndDesc( __VA_ARGS__ ), CATCH_INTERNAL_LINEINFO ); \
+        Catch::AutoReg INTERNAL_CATCH_UNIQUE_NAME( autoRegistrar ) ( new Catch::NWayMethodTestInvoker( &TestName::test ), CATCH_INTERNAL_LINEINFO, #ClassName, Catch::NameAndTags{ __VA_ARGS__ } ); \
     } \
     void TestName::test()
+
 #define N_WAY_TEST_CASE_METHOD( ClassName, ... ) \
     N_WAY_TEST_CASE_METHOD2( INTERNAL_CATCH_UNIQUE_NAME( ____C_A_T_C_H____T_E_S_T____ ), ClassName, __VA_ARGS__ )
-
-
-

@@ -19,8 +19,11 @@
 
 #pragma once
 #include "fleece/slice.hh"
+#include <chrono>
+#include <ctime>
 
 namespace fleece {
+    using namespace std::chrono;
 
     static constexpr int64_t kInvalidDate = INT64_MIN;
 
@@ -43,5 +46,22 @@ namespace fleece {
         @return  The formatted string (points to `buf`). */
     slice FormatISO8601Date(char buf[], int64_t timestamp, bool asUTC);
 
+    /** Creates a tm out of a timestamp, but it will not be fully valid until
+        passed through mktime.
+        @param timestamp  The timestamp to use
+        @return  The populated tm struct (dst value will be unset)
+    */
+    struct tm FromTimestamp(seconds timestamp);
+
+    /** Calculates the timezone offset from UTC given a reference date.
+        This function does its best to be daylight savings time aware.
+        Note that some platforms (notably Windows) cannot handle dates
+        before the epoch.  In these cases, DST is disregarded.
+        @param time  The time to calculate the time zone offset for
+        @param input_utc  If true, the input time is in UTC, and will be
+                          Converted to local time before considering DST
+        @return  The time elapsed since 1/1/1970 as a duration
+    */
+    seconds GetLocalTZOffset(struct tm* time, bool input_utc);
 }
 

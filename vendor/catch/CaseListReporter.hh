@@ -27,7 +27,7 @@ struct CaseListReporter : public Catch::ConsoleReporter {
         stream.flush();
     }
 
-    virtual ~CaseListReporter() CATCH_OVERRIDE {
+    virtual ~CaseListReporter() override {
         auto now = time(nullptr);
         stream << "ENDED TESTS IN " << (now - _start) << "sec, AT " << ctime(&now);
         stream.flush();
@@ -37,8 +37,8 @@ struct CaseListReporter : public Catch::ConsoleReporter {
         return "Logs a line for every test case";
     }
 
-    virtual void testCaseStarting( Catch::TestCaseInfo const& _testInfo ) CATCH_OVERRIDE {
-        auto file = _testInfo.lineInfo.file;
+    virtual void testCaseStarting( Catch::TestCaseInfo const& _testInfo ) override {
+        std::string file = _testInfo.lineInfo.file;
         if (file != _curFile) {
             _curFile = file;
             auto slash = file.rfind('/');
@@ -51,13 +51,13 @@ struct CaseListReporter : public Catch::ConsoleReporter {
         ConsoleReporter::testCaseStarting(_testInfo);
         _stopwatch.reset();
     }
-    virtual void testCaseEnded( Catch::TestCaseStats const& _testCaseStats ) CATCH_OVERRIDE {
+    virtual void testCaseEnded( Catch::TestCaseStats const& _testCaseStats ) override {
         stream << "\t    [" << _stopwatch.elapsed() << " sec]\n";
         stream.flush();
         ConsoleReporter::testCaseEnded(_testCaseStats);
     }
 
-    virtual void sectionStarting( Catch::SectionInfo const& _sectionInfo ) CATCH_OVERRIDE {
+    virtual void sectionStarting( Catch::SectionInfo const& _sectionInfo ) override {
         if (_firstSection)
             _firstSection = false;
         else {
@@ -70,13 +70,13 @@ struct CaseListReporter : public Catch::ConsoleReporter {
         ConsoleReporter::sectionStarting(_sectionInfo);
     }
 
-    void sectionEnded( Catch::SectionStats const& sectionStats ) CATCH_OVERRIDE {
+    void sectionEnded( Catch::SectionStats const& sectionStats ) override {
         --_sectionNesting;
         ConsoleReporter::sectionEnded(sectionStats);
     }
 
 #ifdef CASE_LIST_BACKTRACE
-    virtual bool assertionEnded( Catch::AssertionStats const& stats ) CATCH_OVERRIDE {
+    virtual bool assertionEnded( Catch::AssertionStats const& stats ) override {
         if (stats.assertionResult.getResultType() == Catch::ResultWas::FatalErrorCondition) {
             std::cerr << "\n\n********** CRASH: "
                       << stats.assertionResult.getMessage()
@@ -96,4 +96,4 @@ struct CaseListReporter : public Catch::ConsoleReporter {
     fleece::Stopwatch _stopwatch;
 };
 
-REGISTER_REPORTER( "list", CaseListReporter )
+CATCH_REGISTER_REPORTER("list", CaseListReporter )

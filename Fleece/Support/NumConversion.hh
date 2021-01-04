@@ -6,8 +6,18 @@
 
 #pragma once
 #include "PlatformCompat.hh"
-#include <stddef.h>
-#include <stdint.h>
+
+#if __has_include("Error.hh")
+#include "Error.hh"
+#else
+#include "FleeceException.hh"
+#endif
+
+#include <cstddef>
+#include <cstdint>
+#include <cinttypes>
+#include <typeinfo>
+#include <limits>
 
 namespace fleece {
 
@@ -44,5 +54,54 @@ namespace fleece {
 
     /// Alternative syntax for formatting a 64-bit-floating point number to a string.
     static inline size_t WriteDouble(double n, char *dst, size_t c)  {return WriteFloat(n, dst, c);}
+
+    #if DEBUG
+        template<typename Out, typename In>
+        static Out narrow_cast (In val) {
+            static_assert(::std::is_arithmetic<In>::value && ::std::is_arithmetic<Out>::value, "Only numeric types are valid for narrow_cast");
+            if(sizeof(In) <= sizeof(Out) && ::std::is_signed<In>::value == ::std::is_signed<Out>::value) {
+                return (Out)val;
+            }
+
+            // Comparing an unsigned number against a signed minimum causes issues, at least on Windows,
+            // but if the output is signed and the input is unsigned then there is never a case where
+            // the input could underflow the output.  The reverse situation does not appear to be true.
+            // the input could underflow the output.  The reverse situation does not appear to be true.
+            bool min_ok = std::is_signed<Out>::value && !std::is_signed<In>::value;
+
+#ifdef Assert
+            if(::std::is_floating_point<In>::value) {
+                Assert(val >= std::numeric_limits<Out>::min() && val <= ::std::numeric_limits<Out>::max(), 
+                    "Invalid narrow_cast %g -> %s", (double)val, typeid(Out).name());
+            } else if(::std::is_signed<In>::value) {
+                Assert((min_ok || val >= std::numeric_limits<Out>::min()) && val <= ::std::numeric_limits<Out>::max(), 
+                    "Invalid narrow_cast %" PRIi64 " -> %s", (int64_t)val, typeid(Out).name());
+            } else {
+                Assert((min_ok || val >= std::numeric_limits<Out>::min()) && val <= ::std::numeric_limits<Out>::max(), 
+                    "Invalid narrow_cast %" PRIu64 " -> %s", (uint64_t)val, typeid(Out).name());
+            }
+#else
+            char message[256];
+            if(::std::is_floating_point<In>::value) {
+                sprintf(message, "Invalid narrow_cast %g -> %s", (double)val, typeid(Out).name());
+                throwIf(val < std::numeric_limits<Out>::min() || val > std::numeric_limits<Out>::max(), InternalError, message);
+            } else if(::std::is_signed<In>::value) {
+                sprintf(message, "Invalid narrow_cast %" PRIi64 " -> %s", (int64_t)val, typeid(Out).name());
+                throwIf((!min_ok && val < std::numeric_limits<Out>::min()) || val > std::numeric_limits<Out>::max(),
+                    InternalError, message);
+            } else {
+                sprintf(message, "Invalid narrow_cast %" PRIu64 " -> %s", (uint64_t)val, typeid(Out).name());
+                throwIf((!min_ok && val < std::numeric_limits<Out>::min()) || val > std::numeric_limits<Out>::max(),
+                    InternalError, message);
+            }
+#endif
+            return (Out)val;
+        }
+    #else
+        template<typename Out, typename In>
+        static inline Out narrow_cast(In val) {
+            return static_cast<Out>(val);
+        }
+    #endif
 
 }

@@ -184,7 +184,7 @@ TEST_CASE("Perf FindPersonByIndexKeyed", "[.Perf]")       {testFindPersonByIndex
 
 TEST_CASE("Perf LoadPeople", "[.Perf]") {
     assert(false); // This test should not be run with a debug build!
-    for (int shareKeys = false; shareKeys <= true; ++shareKeys) {
+    for (int shareKeys = 0; shareKeys <= 1; ++shareKeys) {
         int kSamples = 50;
         int kIterations = 1000;
         Benchmark bench;

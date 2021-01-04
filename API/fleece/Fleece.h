@@ -1135,7 +1135,6 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
     //////// JSON DELTA COMPRESSION
 
 
-    /** @} */
     /** \defgroup delta   Delta Compression
      @{
         These functions implement a fairly-efficient "delta" encoding that encapsulates the changes

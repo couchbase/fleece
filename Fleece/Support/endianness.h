@@ -66,7 +66,7 @@
      defined(__ARMEL__) || defined(__THUMBEL__) || defined(__AARCH64EL__) || \
      defined(_MIPSEL) || defined(__MIPSEL) || defined(__MIPSEL__) || \
      defined(_M_IX86) || defined(_M_X64) || defined(_M_IA64) || /* msvc for intel processors */ \
-     defined(_M_ARM) /* msvc code on arm executes in little endian mode */
+     defined(_M_ARM) ||  defined(_M_ARM64) /* msvc code on arm executes in little endian mode */
 #    define __LITTLE_ENDIAN__
 #  endif
 #endif
@@ -114,7 +114,6 @@
 
 /* Defines network - host byte swaps as needed depending upon platform endianness */
 // note that network order is big endian)
-
 #if defined(__LITTLE_ENDIAN__)
 #  define ntoh16(x)     bswap16((x))
 #  define hton16(x)     bswap16((x))
@@ -130,12 +129,12 @@
 #  define ntoh64(x)     (x)
 #  define hton64(x)     (x)
 #  else
-#    warning "UNKNOWN Platform / endianness; network / host byte swaps not defined."
+#   pragma message ("warning: UNKNOWN Platform / endianness; network / host byte swaps not defined.")
 #endif
 
 
 //! Convert 32-bit float from host to network byte order
-static inline float htonf(float f) {
+static inline float _htonf(float f) {
 #ifdef __cplusplus
     static_assert(sizeof(float) == sizeof(uint32_t), "Unexpected float format");
     uint32_t val = hton32(*(reinterpret_cast<const uint32_t *>(&f)));
@@ -145,10 +144,11 @@ static inline float htonf(float f) {
     return *((float *)(&val));
 #endif
 }
-#define ntohf(x)   htonf((x))
+#define ntohf(x)   _htonf((x))
+#define htonf(x)   _htonf((x))
 
 //! Convert 64-bit double from host to network byte order
-static inline double htond(double f) {
+static inline double _htond(double f) {
 #ifdef __cplusplus
     static_assert(sizeof(double) == sizeof(uint64_t), "Unexpected double format");
     uint64_t val = hton64(*(reinterpret_cast<const uint64_t *>(&f)));
@@ -158,7 +158,8 @@ static inline double htond(double f) {
     return *((double *)(&val));
 #endif
 }
-#define ntohd(x)   htond((x))
+#define ntohd(x)   _htond((x))
+#define htond(x)   _htond((x))
 
 #endif //_ENDIANNESS_H
 
