@@ -953,13 +953,13 @@ public:
         float testFloat = 2.71828f;
         sprintf(doubleBuf, "%.16g", testDouble);
         sprintf(floatBuf, "%.7g", testFloat);
-        CHECK((strcmp(doubleBuf, "3.141592653589793")) == 0);
-        CHECK((strcmp(floatBuf, "2.71828")) == 0);
+        CHECK(strcmp(doubleBuf, "3.141592653589793") == 0);
+        CHECK(strcmp(floatBuf, "2.71828") == 0);
 
         WriteFloat(testDouble, doubleBuf, 32);
         WriteFloat(testFloat, floatBuf, 32);
-        CHECK((strcmp(doubleBuf, "3.141592653589793")) == 0);
-        CHECK((strcmp(floatBuf, "2.71828")) == 0);
+        CHECK(strcmp(doubleBuf, "3.141592653589793") == 0);
+        CHECK(strcmp(floatBuf, "2.71828") == 0);
 
         double recovered = ParseDouble(doubleBuf);
         float recovered_f = (float)ParseDouble(floatBuf);
@@ -974,13 +974,13 @@ public:
 
         sprintf(doubleBuf, "%.16g", testDouble);
         sprintf(floatBuf, "%.7g", testFloat);
-        CHECK((strcmp(doubleBuf, "3,141592653589793")) == 0);
-        CHECK((strcmp(floatBuf, "2,71828")) == 0);
+        CHECK(strcmp(doubleBuf, "3,141592653589793") == 0);
+        CHECK(strcmp(floatBuf, "2,71828") == 0);
 
         WriteFloat(testDouble, doubleBuf, 32);
         WriteFloat(testFloat, floatBuf, 32);
-        CHECK((strcmp(doubleBuf, "3.141592653589793")) == 0);
-        CHECK((strcmp(floatBuf, "2.71828")) == 0);
+        CHECK(strcmp(doubleBuf, "3.141592653589793") == 0);
+        CHECK(strcmp(floatBuf, "2.71828") == 0);
 
         recovered = strtod(doubleBuf, nullptr);
         recovered_f = (float)strtod(floatBuf, nullptr);

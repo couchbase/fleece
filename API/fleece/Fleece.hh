@@ -25,6 +25,14 @@
 #include "slice.hh"
 #include <string>
 
+// NOTE: These cannot be namespaced or Catch will fail to find them on certain platforms
+// despite using the namespace before including the header...
+static inline bool operator== (FLSlice s1, FLSlice s2) {return FLSlice_Equal(s1, s2);}
+static inline bool operator!= (FLSlice s1, FLSlice s2) {return !(s1 == s2);}
+
+static inline bool operator== (FLSliceResult sr, FLSlice s) {return (FLSlice)sr == s;}
+static inline bool operator!= (FLSliceResult sr, FLSlice s) {return !(sr ==s);}
+
 namespace fleece {
     class Array;
     class Dict;
@@ -35,11 +43,6 @@ namespace fleece {
     class Doc;
 
 
-    static inline bool operator== (FLSlice s1, FLSlice s2) {return FLSlice_Equal(s1, s2);}
-    static inline bool operator!= (FLSlice s1, FLSlice s2) {return !(s1 == s2);}
-
-    static inline bool operator== (FLSliceResult sr, FLSlice s) {return (FLSlice)sr == s;}
-    static inline bool operator!= (FLSliceResult sr, FLSlice s) {return !(sr ==s);}
 
 
     /** A Fleece data value. Its subclasses are Array and Dict; Value itself is for scalars. */
