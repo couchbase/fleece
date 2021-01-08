@@ -150,7 +150,7 @@ namespace fleece { namespace impl { namespace internal {
                 FleeceException::_throw(InvalidData,
                                         "Can't retain immutable Value %p that's not part of a Doc",
                                         v);
-            fleece::retain(doc.get());
+            fleece::retain(move(doc));
         }
         return v;
     }
