@@ -33,7 +33,13 @@
 // We did not mean to shout.
 
 #ifndef HAS_STRING_VIEW
-#  if __cplusplus >= 201703 || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)
+#  if defined(__has_include)
+#    if __has_include(<string_view>)
+#      define HAS_STRING_VIEW 1
+#    else
+#      define HAS_STRING_VIEW 0
+#    endif
+#  elif __cplusplus >= 201703 || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)
 #    define HAS_STRING_VIEW 1
 #  else
 #    define HAS_STRING_VIEW 0
