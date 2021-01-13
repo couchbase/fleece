@@ -239,7 +239,7 @@ namespace fleece {
         void setBuf(const void *b NONNULL) noexcept          {pure_slice::setBuf(b);}
         void setSize(size_t s) noexcept                      {pure_slice::setSize(s);}
         void shorten(size_t s)                               {assert_precondition(s <= size); setSize(s);}
-        void clear()                                         { memset((void *)buf, 0, size); }
+        void wipe()                                          {memset((void *)buf, 0, size);}
 
         void setEnd(const void* e NONNULL) noexcept          {setSize((uint8_t*)e - (uint8_t*)buf);}
         void setStart(const void* s NONNULL) noexcept;
@@ -351,7 +351,7 @@ namespace fleece {
         void reset(size_t);
         void resize(size_t newSize);
         void append(pure_slice);
-        void clear() { memset((void *)buf, 0, size); }
+        void wipe()                                         {memset((void *)buf, 0, size);}
 
         // disambiguation:
         alloc_slice& operator=(const char *str NONNULL)     {*this = (slice)str; return *this;}
