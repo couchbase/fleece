@@ -1,6 +1,4 @@
-[![Travis build Status](https://travis-ci.org/couchbaselabs/fleece.svg?branch=master)](https://travis-ci.org/couchbaselabs/fleece)
-[![Appveyor build Status](https://ci.appveyor.com/api/projects/status/github/couchbaselabs/fleece?svg=true)](https://ci.appveyor.com/project/borrrden/fleece)
-
+![Build and Test](https://github.com/couchbaselabs/fleece/workflows/Build%20and%20Test/badge.svg)
 
 # Fleece
 

@@ -20,9 +20,9 @@ CLANG_STATIC_ANALYZER_MODE = shallow
 HEADER_SEARCH_PATHS                                = API $(SRCROOT)/vendor/date/include   // allows for #include <fleece/Fleece.h>
 
 
-IPHONEOS_DEPLOYMENT_TARGET                         = 8.0
-MACOSX_DEPLOYMENT_TARGET                           = 10.9
-TVOS_DEPLOYMENT_TARGET                             = 9.0
+IPHONEOS_DEPLOYMENT_TARGET                         =  9.0
+MACOSX_DEPLOYMENT_TARGET                           = 10.12
+TVOS_DEPLOYMENT_TARGET                             =  9.0
 ONLY_ACTIVE_ARCH                                   = YES
 SKIP_INSTALL                                       = YES
 SUPPORTED_PLATFORMS                                = macosx iphoneos iphonesimulator appletvos appletvsimulator
@@ -53,7 +53,5 @@ GCC_ENABLE_CPP_EXCEPTIONS                          = YES
 GCC_ENABLE_CPP_RTTI                                = YES
 GCC_ENABLE_OBJC_EXCEPTIONS                         = YES
 GCC_NO_COMMON_BLOCKS                               = YES
-GCC_PREFIX_HEADER                                  = Fleece/Support/Fleece.pch
-GCC_PRECOMPILE_PREFIX_HEADER                       = YES
 
 COMBINE_HIDPI_IMAGES                               = YES    // Stop Xcode from complaining

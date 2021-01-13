@@ -24,7 +24,7 @@
 extern "C" {
 #endif
 
-    /** \defgroup CF    CoreFoundation and Objective-C Helpers
+    /** \defgroup CF    Fleece CoreFoundation and Objective-C Helpers
         @{ */
 
     /** Writes a Core Foundation (or Objective-C) object to an Encoder.

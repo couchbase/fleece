@@ -52,4 +52,8 @@ function(setup_test_build)
         -D_USE_MATH_DEFINES     # Define math constants like PI
         -DNOMINMAX              # Get rid of pesky Windows macros for min and max
     )
+    target_compile_options(
+        FleeceTests PRIVATE
+        "/utf-8"                # Some source files have UTF-8 literals
+    )
 endfunction()

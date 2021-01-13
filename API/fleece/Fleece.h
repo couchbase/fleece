@@ -39,7 +39,7 @@ extern "C" {
 
     //////// BASIC TYPES
 
-    /** \defgroup types    Basic data types
+    /** \defgroup types    Basic Fleece Data Types
         @{ */
 
 #ifndef FL_IMPL
@@ -156,7 +156,7 @@ extern "C" {
 
     /** @} */
     /** @} */
-    /** \defgroup json   Converting To JSON
+    /** \defgroup json   Converting Fleece To JSON
      @{
         These are convenience functions that directly return JSON-encoded output.
         For more control over the encoding, use an FLEncoder. */
@@ -207,7 +207,7 @@ extern "C" {
 
 
     /** @} */
-    /** \defgroup FLValue   Value Accessors
+    /** \defgroup FLValue   Fleece Value Accessors
          @{
         The core Fleece data type is FLValue: a reference to a value in Fleece-encoded data.
         An FLValue can represent any JSON type (plus binary data).
@@ -373,7 +373,7 @@ extern "C" {
 
 
     /** @} */
-    /** \defgroup FLArray   Arrays
+    /** \defgroup FLArray   Fleece Arrays
         @{
         FLArray is a "subclass" of FLValue, representing values that are arrays. It's always OK to
         pass an FLArray to a function parameter expecting an FLValue, even though the compiler
@@ -538,7 +538,7 @@ while (NULL != (value = FLArrayIterator_GetValue(&iter))) {
 
 
     /** @} */
-    /** \defgroup FLDict   Dictionaries
+    /** \defgroup FLDict   Fleece Dictionaries
         @{ */
 
     /** Returns the number of items in a dictionary, or 0 if the pointer is NULL. */
@@ -714,7 +714,7 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
 
 
     /** @} */
-    /** \defgroup FLDeepIterator   Deep Iterator
+    /** \defgroup FLDeepIterator   Fleece Deep Iterator
         @{
         A deep iterator traverses every value contained in a dictionary, in depth-first order.
         You can skip any nested collection by calling FLDeepIterator_SkipChildren. */
@@ -769,7 +769,7 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
 
 
     /** @} */
-    /** \defgroup FLKeyPath   Paths
+    /** \defgroup FLKeyPath   Fleece Paths
         @{
      An FLKeyPath Describes a location in a Fleece object tree, as a path from the root that follows
      dictionary properties and array elements.
@@ -893,7 +893,7 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
 
 
     /** @} */
-    /** \defgroup FLEncoder   Encoder
+    /** \defgroup FLEncoder   Fleece Encoders
         @{
         An FLEncoder generates encoded Fleece or JSON data. It's sort of a structured output stream,
         with nesting. There are functions for writing every type of scalar value, and for beginning
@@ -1135,7 +1135,7 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
     //////// JSON DELTA COMPRESSION
 
 
-    /** \defgroup delta   Delta Compression
+    /** \defgroup delta   Fleece Delta Compression
      @{
         These functions implement a fairly-efficient "delta" encoding that encapsulates the changes
         needed to transform one Fleece value into another. The delta is expressed in JSON form.

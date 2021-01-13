@@ -312,7 +312,6 @@
 		272E5A5E1BF91DBE00848580 /* ObjCTests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ObjCTests.mm; sourceTree = "<group>"; };
 		272E5A601BF91F6C00848580 /* slice+CoreFoundation.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "slice+CoreFoundation.cc"; sourceTree = "<group>"; };
 		272E5A671BFA7C3100848580 /* Internal.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Internal.hh; sourceTree = "<group>"; };
-		273483F71DDA59B900B27A8C /* Fleece.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Fleece.pch; sourceTree = "<group>"; };
 		2734B8951F8583FF00BE5249 /* MArray.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = MArray.hh; sourceTree = "<group>"; };
 		2734B8961F8583FF00BE5249 /* MValue.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = MValue.hh; sourceTree = "<group>"; };
 		2734B8971F8583FF00BE5249 /* MArray+ObjC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MArray+ObjC.h"; sourceTree = "<group>"; };
@@ -788,7 +787,6 @@
 				270FA2721BF53CEA005DCB13 /* Writer.hh */,
 				2776AA2F2088FEC3004ACE85 /* function_ref.hh */,
 				27F25A8320A6560900E181FA /* LibC++Debug.cc */,
-				273483F71DDA59B900B27A8C /* Fleece.pch */,
 				27CEE44F20F00B4E00089A85 /* Fleece.exp */,
 				27AEFAC721091A8C00106ED8 /* diff_match_patch.hh */,
 			);
@@ -1158,7 +1156,7 @@
 		270FA2541BF53CAD005DCB13 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1200;
+				LastUpgradeCheck = 1230;
 				ORGANIZATIONNAME = Couchbase;
 				TargetAttributes = {
 					270FA25B1BF53CAD005DCB13 = {

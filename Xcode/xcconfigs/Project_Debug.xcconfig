@@ -7,6 +7,7 @@
 
 #include "Project.xcconfig"
 
+ONLY_ACTIVE_ARCH             = YES          // speeds up builds
 GCC_DYNAMIC_NO_PIC           = NO
 GCC_OPTIMIZATION_LEVEL       = 0
 GCC_PREPROCESSOR_DEFINITIONS = $(inherited) DEBUG=1
