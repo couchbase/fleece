@@ -87,5 +87,6 @@ foreach(platform Fleece FleeceStatic FleeceBase fleeceTool FleeceTests)
     target_compile_definitions(
         ${platform} PRIVATE
         HAS_UNCAUGHT_EXCEPTIONS # date.h use std::uncaught_exceptions instead of std::uncaught_exception
+        __STDC_FORMAT_MACROS # To use PRIx64 and friends for formatting variable size types in printf
     )
 endforeach()
