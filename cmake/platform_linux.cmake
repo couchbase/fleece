@@ -1,5 +1,4 @@
 include("${CMAKE_CURRENT_LIST_DIR}/platform_base.cmake")
-include(CheckSymbolExists)
 
 function(set_source_files)
     set(oneValueArgs RESULT)
