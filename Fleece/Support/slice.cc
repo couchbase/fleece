@@ -28,7 +28,7 @@
 #include "betterassert.hh"
 
 #if !defined(_MSC_VER) && !defined(__APPLE__) && !defined(__STDC_LIB_EXT1__)
-errno_t memset_s(void* ptr, __unused rsize_t max, int c, rsize_t count) {
+int memset_s(void* ptr, __unused rsize_t max, int c, rsize_t count) {
     // Note, this is not standards compliant.  It is specifically tailored for this
     // file alone in which it is only ever called with max == count (via FleeceZeroMemory).
     // If this is going to be used more broadly, it should be edited to comply with C11.
