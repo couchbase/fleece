@@ -28,7 +28,14 @@
 #include "betterassert.hh"
 
 #if !defined(_MSC_VER) && !defined(__APPLE__) && !defined(__STDC_LIB_EXT1__)
-int memset_s(void* ptr, __unused rsize_t max, int c, rsize_t count) {
+
+#ifndef _RSIZE_T
+#define _RSIZE_T
+#define RSIZE_MAX (SIZE_MAX >> 1)
+typedef __SIZE_TYPE__ rsize_t;
+#endif
+
+int memset_s(void* ptr, LITECORE_UNUSED rsize_t max, int c, rsize_t count) {
     // Note, this is not standards compliant.  It is specifically tailored for this
     // file alone in which it is only ever called with max == count (via FleeceZeroMemory).
     // If this is going to be used more broadly, it should be edited to comply with C11.
