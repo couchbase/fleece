@@ -1,4 +1,5 @@
 include("${CMAKE_CURRENT_LIST_DIR}/platform_base.cmake")
+include(CheckSymbolExists)
 
 function(set_source_files)
     set(oneValueArgs RESULT)
@@ -29,7 +30,12 @@ endfunction()
 function(setup_build)
     target_link_libraries(
         FleeceStatic INTERFACE
-	dl
+	    dl
+    )
+
+    target_compile_definitions(
+        FleeceStatic PRIVATE
+        __STDC_WANT_LIB_EXT1__=1 # For memset_s
     )
 endfunction()
 
