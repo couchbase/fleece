@@ -42,6 +42,7 @@ function(setup_build)
         target_compile_definitions(
             ${target} PRIVATE
             -D_CRT_SECURE_NO_WARNINGS
+            -DNOMINMAX
         )
     endforeach()
 endfunction()
