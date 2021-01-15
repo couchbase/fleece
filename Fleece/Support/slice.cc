@@ -31,8 +31,11 @@
 
 #ifndef _RSIZE_T
 #define _RSIZE_T
-#define RSIZE_MAX (SIZE_MAX >> 1)
 typedef __SIZE_TYPE__ rsize_t;
+#endif
+
+#ifndef RSIZE_MAX
+#define RSIZE_MAX (SIZE_MAX >> 1)
 #endif
 
 int memset_s(void* ptr, LITECORE_UNUSED rsize_t max, int c, rsize_t count) {
