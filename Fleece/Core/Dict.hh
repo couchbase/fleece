@@ -18,6 +18,7 @@
 
 #pragma once
 #include "Array.hh"
+#include <memory>
 
 namespace fleece { namespace impl {
 
