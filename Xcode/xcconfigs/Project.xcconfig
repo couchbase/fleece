@@ -55,3 +55,6 @@ GCC_ENABLE_OBJC_EXCEPTIONS                         = YES
 GCC_NO_COMMON_BLOCKS                               = YES
 
 COMBINE_HIDPI_IMAGES                               = YES    // Stop Xcode from complaining
+
+// Make memset_s available
+GCC_PREPROCESSOR_DEFINITIONS = $(inherited) __STDC_WANT_LIB_EXT1__=1

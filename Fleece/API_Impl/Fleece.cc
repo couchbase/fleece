@@ -226,7 +226,7 @@ bool FLArrayIterator_Next(FLArrayIterator* i) FLAPI {
 
 static FLMutableArray _newMutableArray(FLArray a, FLCopyFlags flags) noexcept {
     try {
-        return (MutableArray*)retain(MutableArray::newArray(a, CopyFlags(flags)).get());
+        return (MutableArray*)retain(MutableArray::newArray(a, CopyFlags(flags)));
     } catchError(nullptr)
     return nullptr;
 }
@@ -347,7 +347,7 @@ FLValue FLDict_GetWithKey(FLDict d, FLDictKey *k) FLAPI {
 
 static FLMutableDict _newMutableDict(FLDict d, FLCopyFlags flags) noexcept {
     try {
-        return (MutableDict*)retain(MutableDict::newDict(d, CopyFlags(flags)).get());
+        return (MutableDict*)retain(MutableDict::newDict(d, CopyFlags(flags)));
     } catchError(nullptr)
     return nullptr;
 }
@@ -671,7 +671,7 @@ FLDoc FLEncoder_FinishDoc(FLEncoder e, FLError *outError) FLAPI {
     if (e->fleeceEncoder) {
         if (!e->hasError()) {
             try {
-                return retain(e->fleeceEncoder->finishDoc().get());       // finish() can throw
+                return retain(e->fleeceEncoder->finishDoc());       // finish() can throw
             } catch (const std::exception &x) {
                 e->recordException(x);
             }
@@ -712,7 +712,7 @@ FLDoc FLDoc_FromResultData(FLSliceResult data, FLTrust trust, FLSharedKeys sk, F
 
 FLDoc FLDoc_FromJSON(FLSlice json, FLError *outError) FLAPI {
     try {
-        return retain(Doc::fromJSON(json).get());
+        return retain(Doc::fromJSON(json));
     } catchError(outError);
     return nullptr;
 }

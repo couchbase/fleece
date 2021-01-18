@@ -27,6 +27,43 @@
 #include <cstdio>
 #include "betterassert.hh"
 
+#if !defined(_MSC_VER) && !defined(__APPLE__) && !defined(__STDC_LIB_EXT1__)
+
+#ifndef _RSIZE_T
+#define _RSIZE_T
+typedef __SIZE_TYPE__ rsize_t;
+#endif
+
+#ifndef RSIZE_MAX
+#define RSIZE_MAX (SIZE_MAX >> 1)
+#endif
+
+int memset_s(void* ptr, LITECORE_UNUSED rsize_t max, int c, rsize_t count) {
+    // Note, this is not standards compliant.  It is specifically tailored for this
+    // file alone in which it is only ever called with max == count (via FleeceZeroMemory).
+    // If this is going to be used more broadly, it should be edited to comply with C11.
+    // Ideally, it would not be here at all but some platforms are missing it.
+    if(!ptr || count > RSIZE_MAX) {
+        return EINVAL;
+    }
+    
+    volatile unsigned char* p = (unsigned char *)ptr;
+    while(count--) {
+        *p++ = (unsigned char)c;
+    }
+    
+    return 0;
+}
+#endif
+
+#ifdef _MSC_VER
+#include <Windows.h>
+#define FleeceZeroMemory SecureZeroMemory
+#else
+#define FleeceZeroMemory(dest, count) memset_s(dest, count, 0, count)
+#endif
+
+
 namespace fleece {
 
     static int _digittoint(char ch) {
@@ -47,6 +84,14 @@ namespace fleece {
         return kDigits[n];
     }
 
+
+    void slice::wipe() noexcept {
+        if(!buf) {
+            return;
+        }
+        
+        FleeceZeroMemory((void *)buf, size);
+    }
 
     void slice::setStart(const void *s) noexcept {
         assert_precondition(s <= end());
@@ -495,6 +540,14 @@ namespace fleece {
         size_t oldSize = size;
         resize(oldSize + suffix.size);
         memcpy((void*)offset(oldSize), suffix.buf, suffix.size);
+    }
+
+    void alloc_slice::wipe() noexcept {
+        if(!buf) {
+            return;
+        }
+        
+        FleeceZeroMemory((void *)buf, size);
     }
 
 }

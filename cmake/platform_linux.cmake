@@ -29,7 +29,12 @@ endfunction()
 function(setup_build)
     target_link_libraries(
         FleeceStatic INTERFACE
-	dl
+	    dl
+    )
+
+    target_compile_definitions(
+        FleeceStatic PRIVATE
+        __STDC_WANT_LIB_EXT1__=1 # For memset_s
     )
 endfunction()
 

@@ -78,6 +78,11 @@ function(setup_build)
         "-framework CoreFoundation"
         "-framework Foundation"
     )
+
+    target_compile_definitions(
+        FleeceStatic PUBLIC
+        -D__STDC_WANT_LIB_EXT1__=1 # For memset_s
+    )
 endfunction()
 
 function(setup_test_build)

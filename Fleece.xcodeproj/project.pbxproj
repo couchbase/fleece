@@ -1222,7 +1222,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = "/bin/sh -e";
-			shellScript = "cd $SRCROOT\ndoxygen Documentation/Doxyfile\ndoxygen Documentation/Doxyfile_C++\n";
+			shellScript = "if which doxygen >/dev/null\nthen\n  cd $SRCROOT\n  doxygen Documentation/Doxyfile\n  doxygen Documentation/Doxyfile_C++\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
