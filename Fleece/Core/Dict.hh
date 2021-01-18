@@ -157,6 +157,7 @@ namespace fleece { namespace impl {
         int _keyCmp {-1};
 
         friend class Value;
+        friend class ValueDumper;
         friend class Encoder;
     };
 

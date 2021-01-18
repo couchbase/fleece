@@ -8,7 +8,7 @@
 #include "Function.hh"
 #include "PlatformCompat.hh"
 #include <string>
-#include <iostream>
+#include <iosfwd>
 #include <typeinfo>
 
 namespace fleece {

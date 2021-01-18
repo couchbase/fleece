@@ -166,33 +166,54 @@ namespace fleece { namespace impl {
         return size + (size & 1);
     }
 
-    void Value::dump(std::ostream &out) const {
-        mapByAddress byAddress;
-        mapAddresses(byAddress);
-        writeByAddress(byAddress, slice(this, dataSize()), out);
-    }
 
-    // Recursively adds addresses of v and its children to byAddress map
-    void Value::mapAddresses(mapByAddress &byAddress) const {
-        byAddress[(size_t)this] = this;
-        switch (type()) {
-            case kArray:
-                for (auto iter = asArray()->begin(); iter; ++iter) {
-                    if (iter.rawValue()->isPointer())
-                        iter.value()->mapAddresses(byAddress);
-                }
-                break;
-            case kDict:
-                for (Dict::iterator iter(asDict(), true); iter; ++iter) {
-                    if (iter.rawKey()->isPointer())
-                        iter.key()->mapAddresses(byAddress);
-                    if (iter.rawValue()->isPointer())
-                        iter.value()->mapAddresses(byAddress);
-                }
-                break;
-            default:
-                break;
+    class ValueDumper {
+    public:
+        explicit ValueDumper(const Value *value) {
+            mapAddresses(value);
         }
+
+        // Recursively adds addresses of `value` and its children to `_byAddress` map
+        void mapAddresses(const Value *value) {
+            _byAddress[(size_t)value] = value;
+            switch (value->type()) {
+                case kArray:
+                    for (auto iter = value->asArray()->begin(); iter; ++iter) {
+                        if (iter.rawValue()->isPointer())
+                            mapAddresses(iter.value());
+                    }
+                    break;
+                case kDict:
+                    for (Dict::iterator iter(value->asDict(), true); iter; ++iter) {
+                        if (iter.rawKey()->isPointer())
+                            mapAddresses(iter.key());
+                        if (iter.rawValue()->isPointer())
+                            mapAddresses(iter.value());
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        // Dumps the collected values, ordered by address:
+        void writeByAddress(slice data, std::ostream &out) {
+            size_t pos = (size_t)data.buf;
+            for (auto &i : _byAddress) {
+                if (i.first > pos)
+                    out << "  {skip " << std::hex << (i.first - pos) << std::dec << "}\n";
+                pos = i.first + i.second->dump(out, false, 0, data.buf);
+                out << '\n';
+            }
+        }
+
+    private:
+        std::map<size_t, const Value*> _byAddress;
+    };
+
+
+    void Value::dump(std::ostream &out) const {
+        ValueDumper(this).writeByAddress(slice(this, dataSize()), out);
     }
 
     bool Value::dump(slice data, std::ostream &out) {
@@ -200,26 +221,14 @@ namespace fleece { namespace impl {
         if (!root)
             return false;
         // Walk the tree and collect every value with its address:
-        mapByAddress byAddress;
-        root->mapAddresses(byAddress);
+        ValueDumper d(root);
 
         // add the root pointer explicitly (`root` has been derefed already)
         auto actualRoot = (const Value*)offsetby(data.buf, data.size - internal::kNarrow);
         if (actualRoot != root)
-            actualRoot->mapAddresses(byAddress);
-        writeByAddress(byAddress, data, out);
+            d.mapAddresses(actualRoot);
+        d.writeByAddress(data, out);
         return true;
-    }
-
-    void Value::writeByAddress(const mapByAddress &byAddress, slice data, std::ostream &out) {
-        // Dump them ordered by address:
-        size_t pos = (size_t)data.buf;
-        for (auto &i : byAddress) {
-            if (i.first > pos)
-                out << "  {skip " << std::hex << (i.first - pos) << std::dec << "}\n";
-            pos = i.first + i.second->dump(out, false, 0, data.buf);
-            out << '\n';
-        }
     }
 
     std::string Value::dump(slice data) {

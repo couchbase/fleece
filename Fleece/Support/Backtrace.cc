@@ -19,6 +19,7 @@
 #include "Backtrace.hh"
 #include <csignal>
 #include <exception>
+#include <iostream>
 #include <mutex>
 #include <sstream>
 #include <string.h>

@@ -9,8 +9,7 @@
 #include "ValueSlot.hh"
 #include "SharedKeys.hh"
 #include <deque>
-#include <unordered_map>
-#include <memory>
+#include <map>
 
 namespace fleece { namespace impl {
     class Encoder;

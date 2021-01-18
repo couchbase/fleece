@@ -9,6 +9,7 @@
 #include "MutableHashTree.hh"
 #include "Doc.hh"
 #include "PlatformCompat.hh"
+#include <iostream>
 #include <set>
 
 using namespace std;

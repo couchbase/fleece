@@ -27,6 +27,7 @@
 #include "DeepIterator.hh"
 #include "SharedKeys.hh"
 #include "Doc.hh"
+#include <iostream>
 #include <sstream>
 
 #undef NOMINMAX

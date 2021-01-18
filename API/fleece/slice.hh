@@ -24,7 +24,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <string>
-#include <memory>
 #include "betterassert.hh"
 
 #ifdef __OBJC__

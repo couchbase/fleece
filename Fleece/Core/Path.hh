@@ -20,10 +20,9 @@
 #include "Dict.hh"
 #include "SmallVector.hh"
 #include "function_ref.hh"
-#include <iostream>
+#include <iosfwd>
 #include <memory>
 #include <string>
-#include <functional>
 
 namespace fleece { namespace impl {
     class SharedKeys;

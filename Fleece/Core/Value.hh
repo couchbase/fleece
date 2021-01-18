@@ -21,8 +21,8 @@
 #include "FleeceException.hh"
 #include "fleece/slice.hh"
 #include "Endian.hh"
+#include <iosfwd>
 #include <stdint.h>
-#include <map>
 #ifdef __OBJC__
 #import <Foundation/NSMapTable.h>
 #endif
@@ -246,9 +246,6 @@ namespace fleece { namespace impl {
 
         // dump:
         size_t dataSize() const noexcept FLPURE;
-        typedef std::map<size_t, const Value*> mapByAddress;
-        void mapAddresses(mapByAddress&) const;
-        static void writeByAddress(const mapByAddress &byAddress, slice data, std::ostream &out);
         size_t dump(std::ostream &out, bool wide, int indent, const void *base) const;
         size_t dumpHex(std::ostream &out, bool wide, const void *base) const;
         void writeDumpBrief(std::ostream &out, const void *base, bool wide =false) const;
@@ -266,6 +263,7 @@ namespace fleece { namespace impl {
         friend class Encoder;
         friend class ValueTests;
         friend class EncoderTests;
+        friend class ValueDumper;
         template <bool WIDE> friend struct dictImpl;
     };
 

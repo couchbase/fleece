@@ -115,6 +115,7 @@ namespace fleece { namespace impl {
         const Value *_value;
 
         friend class Value;
+        friend class ValueDumper;
     };
 
 

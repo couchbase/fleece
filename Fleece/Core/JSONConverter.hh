@@ -22,7 +22,6 @@
 #include "Doc.hh"
 #include "FleeceException.hh"
 #include "fleece/slice.hh"
-#include <map>
 
 extern "C" {
     struct jsonsl_state_st;
@@ -70,7 +69,6 @@ namespace fleece { namespace impl {
 
     private:
         void writeDouble(struct jsonsl_state_st *);
-        typedef std::map<size_t, uint64_t> startToLengthMap;
 
         Encoder &_encoder;                  // encoder to write to
         struct jsonsl_st * _jsn {nullptr};  // JSON parser

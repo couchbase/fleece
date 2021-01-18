@@ -21,6 +21,7 @@
 #include "MutableArray.hh"
 #include "MutableDict.hh"
 #include "Doc.hh"
+#include <iostream>
 
 namespace fleece {
     using namespace fleece::impl;

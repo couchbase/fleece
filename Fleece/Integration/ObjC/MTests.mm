@@ -22,6 +22,7 @@
 #include "MDict+ObjC.h"
 #include "MRoot.hh"
 #include "FleeceDocument.h"
+#include <iostream>
 
 using namespace fleece;
 
