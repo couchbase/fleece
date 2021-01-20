@@ -318,7 +318,7 @@ static inline struct tm FromDate(DateTime* p) {
 static void inject_local_tz(DateTime* p)
 {
     struct tm local_time = FromDate(p);
-    auto offset = floor<minutes>(-fleece::GetLocalTZOffset(&local_time, false));
+    auto offset = floor<minutes>(fleece::GetLocalTZOffset(&local_time, false));
     p->validTZ = 1;
     p->tz = (int)offset.count();
 }
