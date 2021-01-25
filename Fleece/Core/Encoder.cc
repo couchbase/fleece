@@ -78,8 +78,10 @@ namespace fleece { namespace impl {
             _items->clear();
         _out.reset();
         _strings.clear();
+        _stringStorage.reset();
         _writingKey = _blockedOnKey = false;
         resetStack();
+        setBase(nullslice);
     }
 
     void Encoder::setSharedKeys(SharedKeys *s) {
@@ -87,7 +89,9 @@ namespace fleece { namespace impl {
     }
 
     void Encoder::setBase(slice base, bool markExternPointers, size_t cutoff) {
+        throwIf(_base && base, EncodeError, "There's already a base");
         _base = base;
+        _ownedBase = nullslice;
         _baseCutoff = nullptr;
         if (base && cutoff > 0 && cutoff < base.size) {
             assert_precondition(cutoff >= 8);
@@ -166,14 +170,33 @@ namespace fleece { namespace impl {
     Encoder::PreWrittenValue Encoder::lastValueWritten() const {
         if (!_items->empty())
             if (auto ptr = _items->back()._asPointer(); ptr->isPointer())
-                return PreWrittenValue(ptr->offset<true>() - _base.size);
+                return PreWrittenValue(ptr->offset<true>());
         return PreWrittenValue::none;
     }
 
     // Writes a pointer to an already-written value, allowing it to appear twice without overhead.
     void Encoder::writeValueAgain(PreWrittenValue pos) {
         throwIf(pos == PreWrittenValue::none, EncodeError, "Can't rewrite an inline Value");
-        writePointer(ssize_t(pos));
+        writePointer(ssize_t(pos) - _base.size);
+    }
+
+
+    alloc_slice Encoder::snip() {
+        throwIf(_base, EncodeError, "Can't snip when there's already a base");
+        // Find the last value that was written:
+        auto pos = lastValueWritten();
+        if (pos == PreWrittenValue::none)
+            return nullslice;
+
+        // Write a pointer to it, to form the top of the snipped document:
+        auto offset = _out.length() - ssize_t(pos);
+        new (_out.reserveSpace(kNarrow)) Pointer(offset, kNarrow);
+
+        // Collect what's been written so far and return a copy:
+        alloc_slice result = _out.finish();
+        setBase(result, true);
+        _ownedBase = result;
+        return result;
     }
 
 
@@ -359,13 +382,11 @@ namespace fleece { namespace impl {
         // Write the string to the output:
         auto offset = _base.size + nextWritePos();
         throwIf(offset > 1u<<31, MemoryError, "encoded data too large");
-        const void* writtenStr = writeData(kStringTag, s);
+        writeData(kStringTag, s);
 
-        if (!writtenStr) {
-            // Can't use a pointer to the output, so make a copy of the string to keep:
-            writtenStr = _stringStorage.write(s);
-        }
-        // Finally, store the string's offset:
+        // Store a copy of the string, since _out won't necessarily keep it around (if it's
+        // writing to a file, or if the caller calls snip()), and the offset:
+        const void* writtenStr = _stringStorage.write(s);
         *entry = {{writtenStr, s.size}, (uint32_t)offset};
         return writtenStr;
     }

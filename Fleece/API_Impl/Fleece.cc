@@ -661,6 +661,13 @@ void* FLEncoder_GetExtraInfo(FLEncoder e) FLAPI {
     return e->extraInfo;
 }
 
+FLSliceResult FLEncoder_Snip(FLEncoder e) {
+    if (e->isFleece())
+        return FLSliceResult(e->fleeceEncoder->snip());
+    else
+        return {};
+}
+
 size_t FLEncoder_FinishItem(FLEncoder e) FLAPI {
     if (e->isFleece())
         return e->fleeceEncoder->finishItem();

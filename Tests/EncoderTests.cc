@@ -911,6 +911,44 @@ public:
     }
 
 
+    TEST_CASE_METHOD(EncoderTests, "Snip", "[Encoder]") {
+        enc.beginArray();
+        enc.beginDictionary();
+        enc.writeKey("part");
+        enc.writeInt(1);
+        enc.writeKey("name");
+        enc.writeString("Snip Test");
+        enc.endDictionary();
+        alloc_slice part1 = enc.snip();
+
+        REQUIRE(part1);
+        auto val1 = Value::fromData(part1);
+        REQUIRE(val1);
+        std::cerr << "--Part 1--\n";
+        Value::dump(part1, std::cerr);
+        CHECK(val1->toJSONString() == R"({"name":"Snip Test","part":1})");
+
+        enc.beginDictionary();
+        enc.writeKey("part");
+        enc.writeInt(2);
+        enc.writeKey("name");
+        enc.writeString("Snip Test");
+        enc.endDictionary();
+        enc.endArray();
+        endEncoding();
+        REQUIRE(result);
+
+        Retained<Doc> doc = new Doc(result, Doc::kUntrusted, nullptr, part1);
+        CHECK(doc->root()->toJSONString() == R"([{"name":"Snip Test","part":1},{"name":"Snip Test","part":2}])");
+        std::cerr << "--Part 2--\n";
+        Value::dump(result, std::cerr);
+
+        // Make sure the string "Snip Test" was encoded only once:
+        CHECK(doc->root()->asArray()->get(0)->asDict()->get("name") ==
+              doc->root()->asArray()->get(1)->asDict()->get("name"));
+    }
+
+
 #pragma mark - KEY TREE:
 
     TEST_CASE_METHOD(EncoderTests, "KeyTree", "[Encoder]") {

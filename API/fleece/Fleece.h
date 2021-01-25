@@ -1097,6 +1097,13 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
     void FLEncoder_WriteValueAgain(FLEncoder e, intptr_t preWrittenValue);
 
 
+    /** Returns the data written so far as a standalone Fleece document, whose root is the last
+        value written. You can continue writing, and the final output returned by \ref finish will
+        consist of everything after this point. That second part can be used in the future by loading it
+        as an `FLDoc` with the first part as its `extern` reference. */
+    FLSliceResult FLEncoder_Snip(FLEncoder e);
+
+
     /** Parses JSON data and writes the object(s) to the encoder. (This acts as a single write,
         like WriteInt; it's just that the value written is likely to be an entire dictionary of
         array.) */

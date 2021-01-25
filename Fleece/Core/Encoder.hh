@@ -182,6 +182,12 @@ namespace fleece { namespace impl {
         PreWrittenValue lastValueWritten() const;   // Opaque reference to last thing written
         void writeValueAgain(PreWrittenValue);         // Writes pointer to an already-written value
 
+        /** Returns the data written so far as a standalone Fleece document, whose root is the last
+            value written. You can continue writing, and the final output returned by \ref finish will
+            consist of everything after this point. It can be used in the future by loading it with the
+            first part as its `extern` reference. */
+        alloc_slice snip();
+
 #if 0
         static bool isIntRepresentable(float n) noexcept;
         static bool isIntRepresentable(double n) noexcept;
@@ -249,6 +255,7 @@ namespace fleece { namespace impl {
         bool _uniqueStrings {true};  // Should strings be uniqued before writing?
         Retained<SharedKeys> _sharedKeys;  // Client-provided key-to-int mapping
         slice _base;                 // Base Fleece data being appended to (if any)
+        alloc_slice _ownedBase;      // If I allocated _base, it's stored here too to retain it
         const void* _baseCutoff {0}; // Lowest addr in _base that I can write a ptr to
         const void* _baseMinUsed {0};// Lowest addr in _base I've written a ptr to
         int _copyingCollection {0};  // Nonzero inside writeValue when writing array/dict

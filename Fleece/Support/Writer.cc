@@ -87,6 +87,10 @@ namespace fleece {
             _chunks.erase(_chunks.begin(), _chunks.end() - 1);
         }
         _available = _chunks[0];
+#if DEBUG
+        // We will reuse the buffer, but it's invalid so fill it with garbage for troubleshooting:
+        memset((void*)_available.buf, 0xdd, _available.size);
+#endif
     }
 
 
