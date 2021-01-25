@@ -244,11 +244,7 @@ namespace fleece { namespace impl {
         template <bool WIDE>
         FLPURE const Value* next() const noexcept         {return next(WIDE);}
 
-        // dump:
         size_t dataSize() const noexcept FLPURE;
-        size_t dump(std::ostream &out, bool wide, int indent, const void *base) const;
-        size_t dumpHex(std::ostream &out, bool wide, const void *base) const;
-        void writeDumpBrief(std::ostream &out, const void *base, bool wide =false) const;
 
         //////// Here's the data:
 
