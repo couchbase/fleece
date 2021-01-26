@@ -57,3 +57,5 @@ GCC_PREFIX_HEADER                                  = Fleece/Support/Fleece.pch
 GCC_PRECOMPILE_PREFIX_HEADER                       = YES
 
 COMBINE_HIDPI_IMAGES                               = YES    // Stop Xcode from complaining
+
+SUPPORTS_MACCATALYST                               = YES
