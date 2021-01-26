@@ -1098,7 +1098,7 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
 
 
     /** Returns the data written so far as a standalone Fleece document, whose root is the last
-        value written. You can continue writing, and the final output returned by \ref finish will
+        value written. You can continue writing, and the final output returned by \ref FLEncoder_Finish will
         consist of everything after this point. That second part can be used in the future by loading it
         as an `FLDoc` with the first part as its `extern` reference. */
     FLSliceResult FLEncoder_Snip(FLEncoder e);
