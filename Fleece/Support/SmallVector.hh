@@ -52,9 +52,9 @@ namespace fleece {
             _size = sv._size;
             _isBig = (_size > N);
             if (_isBig)
-                new (&_variant) big_t(std::move(sv.big()));
+                new (&_variant) big_t(std::move(sv._big()));
             else
-                new (&_variant) small_t(std::move(sv.small()));
+                new (&_variant) small_t(std::move(sv._small()));
             return *this;
         }
 
@@ -91,7 +91,7 @@ namespace fleece {
 
         uint32_t capacity() const FLPURE {
             if (_isBig)
-                return big().capacity();
+                return _big().capacity();
             else
                 return N;
         }
@@ -178,16 +178,16 @@ namespace fleece {
                 throw std::logic_error("capacity smaller than size");
             if (cap <= N) {
                 if (_isBig) {
-                    big_t tempBig = std::move(big());
+                    big_t tempBig = std::move(_big());
                     new (&_variant) small_t(tempBig.base(), _size);
                     _isBig = false;
                 }
             } else {
                 uint32_t newCap = rangeCheck(cap);
                 if (_isBig) {
-                    big().setCapacity(newCap, _size);
+                    _big().setCapacity(newCap, _size);
                 } else {
-                    big_t newBig(newCap, small().base(), _size);
+                    big_t newBig(newCap, _small().base(), _size);
                     new (&_variant) big_t(std::move(newBig));
                     _isBig = true;
                 }
@@ -202,7 +202,7 @@ namespace fleece {
         }
 
         T& _get(size_t i) FLPURE {
-            T *base = _isBig ? big().base() : small().base();
+            T *base = _isBig ? _big().base() : _small().base();
             return base[i];
         }
 
@@ -294,10 +294,10 @@ namespace fleece {
         };
 
 
-        small_t& small() {assert(!_isBig); return *(small_t*)&_variant;}
-        big_t&   big()   {assert(_isBig); return *(big_t*)&_variant;}
-        const small_t& small() const {return const_cast<smallVector*>(this)->small();}
-        const big_t&   big()   const {return const_cast<smallVector*>(this)->big();}
+        small_t& _small() {assert(!_isBig); return *(small_t*)&_variant;}
+        big_t&   _big()   {assert(_isBig); return *(big_t*)&_variant;}
+        const small_t& _small() const {return const_cast<smallVector*>(this)->_small();}
+        const big_t&   _big()   const {return const_cast<smallVector*>(this)->_big();}
 
         static constexpr size_t variantSize = std::max(sizeof(small_t), sizeof(big_t));
 
