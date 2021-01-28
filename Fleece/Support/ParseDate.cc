@@ -318,7 +318,7 @@ static inline struct tm FromDate(DateTime* p) {
 static void inject_local_tz(DateTime* p)
 {
     struct tm local_time = FromDate(p);
-    auto offset = floor<minutes>(-fleece::GetLocalTZOffset(&local_time, false));
+    auto offset = floor<minutes>(fleece::GetLocalTZOffset(&local_time, false));
     p->validTZ = 1;
     p->tz = (int)offset.count();
 }
@@ -439,7 +439,7 @@ namespace fleece {
                 timestream << format("%FT%T", floor<milliseconds>(tp));
             }
                
-            timestream << setw(3) << std::internal << showpos << h.count() << ':'
+            timestream << setw(3) << std::internal << showpos << h.count()
                 << noshowpos << setw(2) << (int)abs(m.count());
         }
         
@@ -489,12 +489,15 @@ namespace fleece {
         // Others -> global timezone variable
         //      https://linux.die.net/man/3/tzset (System V-like / XSI)
         //      http://www.unix.org/version3/apis/t_9.html (Unix v3)
+        //
+        // NOTE: These values are the opposite of what you would expect, being defined
+        // as seconds WEST of GMT (so UTC-8 would be 28,800, not -28,800)
 #ifdef WIN32
         long s;
         throwIf(_get_timezone(&s) != 0, fleece::InternalError, "Unable to query local system time zone");
-        auto offset = seconds(s);
+        auto offset = seconds(-s);
 #elif defined(__DARWIN_UNIX03) || defined(__ANDROID__) || defined(_XOPEN_SOURCE) || defined(_SVID_SOURCE)
-        auto offset = seconds(timezone);
+        auto offset = seconds(-timezone);
 #else
         #error Unimplemented GetLocalTZOffset
 #endif
