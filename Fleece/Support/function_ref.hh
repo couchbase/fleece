@@ -38,6 +38,7 @@
 #pragma once
 #include <stdint.h>
 #include <type_traits>
+#include <utility>
 
 namespace fleece {
 

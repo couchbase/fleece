@@ -21,6 +21,7 @@
 #include "PlatformCompat.hh"
 #include "fleece/slice.hh"
 #include <algorithm>
+#include <utility>
 
 namespace fleece {
 

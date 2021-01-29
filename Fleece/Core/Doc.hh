@@ -8,6 +8,8 @@
 #include "RefCounted.hh"
 #include "Value.hh"
 #include "fleece/slice.hh"
+#include <atomic>
+#include <utility>
 
 namespace fleece { namespace impl {
     class SharedKeys;

@@ -9,6 +9,7 @@
 #include "catch.hpp"
 #include "Stopwatch.hh"
 #include <chrono>
+#include <iostream>
 #include <time.h>
 
 #ifdef CASE_LIST_BACKTRACE

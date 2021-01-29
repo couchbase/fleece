@@ -12,6 +12,7 @@
 #include <memory>
 #include <vector>
 #include <deque>
+#include <utility>
 
 namespace fleece { namespace impl {
     class SharedKeys;

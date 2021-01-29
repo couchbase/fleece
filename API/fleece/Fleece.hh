@@ -24,6 +24,7 @@
 #endif
 #include "slice.hh"
 #include <string>
+#include <utility>
 
 // NOTE: These cannot be namespaced or Catch will fail to find them on certain platforms
 // despite using the namespace before including the header...

@@ -24,6 +24,7 @@
 #include "DeepIterator.hh"
 #include "Doc.hh"
 #include "FleeceException.hh"
+#include <memory>
 
 using namespace fleece;
 using namespace fleece::impl;

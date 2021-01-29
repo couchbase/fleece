@@ -18,6 +18,8 @@
 
 #pragma once
 #include "Stopwatch.hh"
+#include <algorithm>
+#include <utility>
 #include <vector>
 #include "betterassert.hh"
 

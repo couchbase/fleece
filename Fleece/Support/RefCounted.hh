@@ -18,6 +18,7 @@
 
 #pragma once
 #include "PlatformCompat.hh"
+#include <algorithm>
 #include <atomic>
 #include <utility>
 
