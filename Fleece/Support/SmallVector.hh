@@ -6,8 +6,10 @@
 
 #pragma once
 #include "PlatformCompat.hh"
+#include <algorithm>
 #include <memory>
 #include <stdexcept>
+#include <utility>
 #include "betterassert.hh"
 
 namespace fleece {
