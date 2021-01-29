@@ -278,8 +278,9 @@ namespace fleece {
         uint64_t readHex() noexcept; // reads until it hits a non-digit or the end
         uint64_t readDecimal() noexcept; // reads until it hits a non-digit or the end
         int64_t readSignedDecimal() noexcept;
-        bool writeHex(uint64_t) noexcept;
-        bool writeDecimal(uint64_t) noexcept;
+        bool writeHex(slice src) noexcept;  // writes hex representation of `src` into my buf
+        bool writeHex(uint64_t) noexcept;   // writes hex integer into my buf
+        bool writeDecimal(uint64_t) noexcept;   // writes decimal integer into my buf
         static unsigned sizeOfDecimal(uint64_t) noexcept;
 
         void free() noexcept;

@@ -279,6 +279,18 @@ namespace fleece {
         return true;
     }
 
+    bool slice::writeHex(slice src) noexcept {
+        if (_usuallyFalse(size < 2 * src.size))
+            return false;
+        auto dst = (char*)buf;
+        for (size_t i = 0; i < src.size; ++i) {
+            *dst++ = _hexDigit(src[i] >> 4);
+            *dst++ = _hexDigit(src[i] & 0x0F);
+        }
+        setStart(dst);
+        return true;
+    }
+
     bool slice::writeHex(uint64_t n) noexcept {
         char temp[16]; // max length is 16 hex digits
         char *dst = &temp[16];
