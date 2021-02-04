@@ -41,6 +41,7 @@
 		2734B8AD1F859AEC00BE5249 /* FleeceDocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 2734B8AB1F859AEC00BE5249 /* FleeceDocument.h */; };
 		2734B8B11F870FB400BE5249 /* MContext.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2734B8B01F870FB400BE5249 /* MContext.cc */; };
 		27393C941FEC30E300FBFE59 /* FleeceTestsMain.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27393C931FEC30E300FBFE59 /* FleeceTestsMain.cc */; };
+		2739970925C9D2DD000C1C1B /* Delimiter.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2739970825C9D2DD000C1C1B /* Delimiter.hh */; };
 		274D8244209A3A77008BB39F /* HeapDict.cc in Sources */ = {isa = PBXBuildFile; fileRef = 274D8242209A3A77008BB39F /* HeapDict.cc */; };
 		274D8245209A3A77008BB39F /* HeapDict.hh in Headers */ = {isa = PBXBuildFile; fileRef = 274D8243209A3A77008BB39F /* HeapDict.hh */; };
 		274D8248209A5906008BB39F /* ValueSlot.cc in Sources */ = {isa = PBXBuildFile; fileRef = 274D8246209A5906008BB39F /* ValueSlot.cc */; };
@@ -327,6 +328,7 @@
 		2734B8B01F870FB400BE5249 /* MContext.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MContext.cc; sourceTree = "<group>"; };
 		2734B8B21F8BE11200BE5249 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		27393C931FEC30E300FBFE59 /* FleeceTestsMain.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FleeceTestsMain.cc; sourceTree = "<group>"; };
+		2739970825C9D2DD000C1C1B /* Delimiter.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Delimiter.hh; sourceTree = "<group>"; };
 		2744B36424197176005A194D /* Function.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Function.hh; sourceTree = "<group>"; };
 		2746DD3B1D931BE9000517BC /* Benchmark.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Benchmark.hh; sourceTree = "<group>"; };
 		2747D9841CFB9BC300C48211 /* 1person.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = 1person.json; sourceTree = "<group>"; };
@@ -753,6 +755,7 @@
 				27A0E3DE24DCD86900380563 /* ConcurrentArena.cc */,
 				2779BA0E24CB4A4900BCEA8F /* ConcurrentMap.hh */,
 				2779BA0F24CB4A4900BCEA8F /* ConcurrentMap.cc */,
+				2739970825C9D2DD000C1C1B /* Delimiter.hh */,
 				270FA2731BF53CEA005DCB13 /* Endian.hh */,
 				27CD12BB23DA3CCA00A7333C /* endianness.h */,
 				277A06B120B36D1A00970354 /* FileUtils.cc */,
@@ -1002,6 +1005,7 @@
 				27DE2EBD2125FA1700123597 /* Array.hh in Headers */,
 				27DE2EBE2125FA1700123597 /* DeepIterator.hh in Headers */,
 				27DE2EBF2125FA1700123597 /* MArray.hh in Headers */,
+				2739970925C9D2DD000C1C1B /* Delimiter.hh in Headers */,
 				2779BA1024CB4A4900BCEA8F /* ConcurrentMap.hh in Headers */,
 				27D9656D23397EF700F4A51C /* SwiftDtoa.h in Headers */,
 				27DE2EC02125FA1700123597 /* Dict.hh in Headers */,
