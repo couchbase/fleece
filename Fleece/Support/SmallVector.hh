@@ -26,23 +26,45 @@ namespace fleece {
     template <class T, size_t N>
     class smallVector {
     public:
-        smallVector() noexcept                          { }
-        ~smallVector()                                  {clear(); assert(!_isBig);}
+        static constexpr size_t max_size = (1ul<<31) - 1;
 
+        smallVector() noexcept                          :_isBig(false), _size(0) { }
         smallVector(size_t size)                        :smallVector() {resize(size);}
 
-        smallVector(const smallVector &sv)              {*this = sv;}
-        smallVector(smallVector &&sv) noexcept          {*this = std::move(sv);}
+        template <size_t M>
+        smallVector(const smallVector<T,M> &sv)         :smallVector(sv.begin(), sv.end()) { }
+        smallVector(const smallVector &sv)              :smallVector(sv.begin(), sv.end()) { }
+
+        smallVector(smallVector &&sv) noexcept
+        :_size(sv._size)
+        ,_isBig(sv._isBig)
+        {
+            if (_isBig)
+                new (&_variant) big_t(std::move(sv._big()));
+            else
+                new (&_variant) small_t(std::move(sv._small()));
+            sv._size = 0;
+        }
 
         template <class ITER>
-        smallVector(ITER b, ITER e) {
+        smallVector(ITER b, ITER e)
+        :smallVector()
+        {
             setCapacity(e - b);
             while (b != e)
                 heedless_push_back(*b++);
         }
 
+        ~smallVector() {
+            if (_size > 0) {
+                auto item = begin();
+                for (auto i = 0; i < _size; ++i)
+                (item++)->T::~T();
+            }
+        }
+
         smallVector& operator=(const smallVector &sv) {
-            clear();
+            erase(begin(), end());
             setCapacity(sv.size());
             for (const auto &val : sv)
                 heedless_push_back(val);
@@ -52,11 +74,12 @@ namespace fleece {
         smallVector& operator=(smallVector &&sv) noexcept {
             clear();
             _size = sv._size;
-            _isBig = (_size > N);
+            _isBig = sv._isBig;
             if (_isBig)
                 new (&_variant) big_t(std::move(sv._big()));
             else
                 new (&_variant) small_t(std::move(sv._small()));
+            sv._size = 0;
             return *this;
         }
 
@@ -145,17 +168,15 @@ namespace fleece {
         }
 
         void erase(iterator first) {
-            assert_precondition(begin() <= first && first < end());
-            first->T::~T();                 // destruct removed item
-            memmove(first, first + 1, (end() - first - 1) * kItemSize);
-            --_size;
+            erase(first, first+1);
         }
 
         void erase(iterator first, iterator last) {
             assert_precondition(begin() <= first && first < last && last <= end());
             for (auto i = first; i < last; ++i)
                 i->T::~T();                 // destruct removed items
-            memmove(first, last, (end() - last) * kItemSize);
+            if (last != end())
+                memmove(first, last, (end() - last) * kItemSize);
             _size -= last - first;
         }
 
@@ -198,7 +219,7 @@ namespace fleece {
 
     private:
         static uint32_t rangeCheck(size_t n) {
-            if (_usuallyFalse(n > UINT32_MAX))
+            if (_usuallyFalse(n > max_size))
                 throw std::domain_error("smallVector size/capacity too large");
             return uint32_t(n);
         }
@@ -304,8 +325,8 @@ namespace fleece {
         static constexpr size_t variantSize = std::max(sizeof(small_t), sizeof(big_t));
 
         alignas(void*) uint8_t _variant[variantSize];   // Storage for either a small_t or a big_t
-        uint32_t               _size {0};               // Current item count
-        bool                   _isBig {false};          // True if _storage contains a big_t
+        uint32_t               _size  :31;              // Current item count
+        bool                   _isBig : 1;              // True if _storage contains a big_t
     };
 
 }

@@ -279,3 +279,42 @@ TEST_CASE("ConcurrentMap concurrency", "[ConcurrentMap]") {
 
     CHECK(map.count() == kSize);
 }
+
+
+TEST_CASE("SmallVector, small", "[SmallVector]") {
+    smallVector<alloc_slice,2> movedStrings;
+    {
+        smallVector<alloc_slice,2> strings;
+        strings.emplace_back("string 1"_sl);
+        strings.emplace_back("string 2"_sl);
+        auto moveConstructedStrings(std::move(strings));
+        CHECK(moveConstructedStrings.size() == 2);
+        CHECK(moveConstructedStrings[0] == "string 1"_sl);
+        CHECK(moveConstructedStrings[1] == "string 2"_sl);
+        movedStrings = std::move(moveConstructedStrings);
+    }
+    CHECK(movedStrings.size() == 2);
+    CHECK(movedStrings[0] == "string 1"_sl);
+    CHECK(movedStrings[1] == "string 2"_sl);
+}
+
+
+TEST_CASE("SmallVector, big", "[SmallVector]") {
+    smallVector<alloc_slice,2> movedStrings;
+    {
+        smallVector<alloc_slice,2> strings;
+        strings.emplace_back("string 1"_sl);
+        strings.emplace_back("string 2"_sl);
+        strings.emplace_back("string 3"_sl);
+        auto moveConstructedStrings(std::move(strings));
+        CHECK(moveConstructedStrings.size() == 3);
+        CHECK(moveConstructedStrings[0] == "string 1"_sl);
+        CHECK(moveConstructedStrings[1] == "string 2"_sl);
+        CHECK(moveConstructedStrings[2] == "string 3"_sl);
+        movedStrings = std::move(moveConstructedStrings);
+    }
+    CHECK(movedStrings.size() == 3);
+    CHECK(movedStrings[0] == "string 1"_sl);
+    CHECK(movedStrings[1] == "string 2"_sl);
+    CHECK(movedStrings[2] == "string 3"_sl);
+}
