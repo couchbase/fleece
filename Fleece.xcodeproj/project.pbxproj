@@ -42,6 +42,7 @@
 		2734B8B11F870FB400BE5249 /* MContext.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2734B8B01F870FB400BE5249 /* MContext.cc */; };
 		27393C941FEC30E300FBFE59 /* FleeceTestsMain.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27393C931FEC30E300FBFE59 /* FleeceTestsMain.cc */; };
 		2739970925C9D2DD000C1C1B /* Delimiter.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2739970825C9D2DD000C1C1B /* Delimiter.hh */; };
+		2739971725CDBD8E000C1C1B /* SmallVectorBase.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2739971625CDBD8E000C1C1B /* SmallVectorBase.hh */; };
 		274D8244209A3A77008BB39F /* HeapDict.cc in Sources */ = {isa = PBXBuildFile; fileRef = 274D8242209A3A77008BB39F /* HeapDict.cc */; };
 		274D8245209A3A77008BB39F /* HeapDict.hh in Headers */ = {isa = PBXBuildFile; fileRef = 274D8243209A3A77008BB39F /* HeapDict.hh */; };
 		274D8248209A5906008BB39F /* ValueSlot.cc in Sources */ = {isa = PBXBuildFile; fileRef = 274D8246209A5906008BB39F /* ValueSlot.cc */; };
@@ -329,6 +330,7 @@
 		2734B8B21F8BE11200BE5249 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		27393C931FEC30E300FBFE59 /* FleeceTestsMain.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FleeceTestsMain.cc; sourceTree = "<group>"; };
 		2739970825C9D2DD000C1C1B /* Delimiter.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Delimiter.hh; sourceTree = "<group>"; };
+		2739971625CDBD8E000C1C1B /* SmallVectorBase.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SmallVectorBase.hh; sourceTree = "<group>"; };
 		2744B36424197176005A194D /* Function.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Function.hh; sourceTree = "<group>"; };
 		2746DD3B1D931BE9000517BC /* Benchmark.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Benchmark.hh; sourceTree = "<group>"; };
 		2747D9841CFB9BC300C48211 /* 1person.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = 1person.json; sourceTree = "<group>"; };
@@ -780,6 +782,7 @@
 				2776AA762093C982004ACE85 /* sliceIO.cc */,
 				2776AA772093C982004ACE85 /* sliceIO.hh */,
 				27C59BA2212F898F003C8492 /* SmallVector.hh */,
+				2739971625CDBD8E000C1C1B /* SmallVectorBase.hh */,
 				2797BCAA1C0FBFDE00E5C991 /* StringTable.cc */,
 				2797BCAB1C0FBFDE00E5C991 /* StringTable.hh */,
 				27CEE41920EFE79D00089A85 /* Stopwatch.hh */,
@@ -1029,6 +1032,7 @@
 				27DE2ED12125FA1700123597 /* ValueSlot.hh in Headers */,
 				27DE2ED22125FA1700123597 /* MCollection.hh in Headers */,
 				27DE2ED32125FA1700123597 /* CaseListReporter.hh in Headers */,
+				2739971725CDBD8E000C1C1B /* SmallVectorBase.hh in Headers */,
 				27DE2ED42125FA1700123597 /* Writer.hh in Headers */,
 				27DE2ED52125FA1700123597 /* Encoder.hh in Headers */,
 				27DE2ED62125FA1700123597 /* MutableHashTree.hh in Headers */,

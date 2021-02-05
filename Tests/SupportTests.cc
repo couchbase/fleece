@@ -224,7 +224,7 @@ TEST_CASE("ConcurrentMap basic", "[ConcurrentMap]") {
     CHECK(map.count() == 2047);
     CHECK(map.stringBytesCount() > 0);
 
-    map.dump();
+    //map.dump();
 }
 
 
@@ -287,6 +287,10 @@ TEST_CASE("SmallVector, small", "[SmallVector]") {
         smallVector<alloc_slice,2> strings;
         strings.emplace_back("string 1"_sl);
         strings.emplace_back("string 2"_sl);
+        CHECK(strings.size() == 2);
+        CHECK(strings[0] == "string 1"_sl);
+        CHECK(strings[1] == "string 2"_sl);
+
         auto moveConstructedStrings(std::move(strings));
         CHECK(moveConstructedStrings.size() == 2);
         CHECK(moveConstructedStrings[0] == "string 1"_sl);
@@ -306,6 +310,10 @@ TEST_CASE("SmallVector, big", "[SmallVector]") {
         strings.emplace_back("string 1"_sl);
         strings.emplace_back("string 2"_sl);
         strings.emplace_back("string 3"_sl);
+        CHECK(strings.size() == 3);
+        CHECK(strings[0] == "string 1"_sl);
+        CHECK(strings[1] == "string 2"_sl);
+        CHECK(strings[2] == "string 3"_sl);
         auto moveConstructedStrings(std::move(strings));
         CHECK(moveConstructedStrings.size() == 3);
         CHECK(moveConstructedStrings[0] == "string 1"_sl);
