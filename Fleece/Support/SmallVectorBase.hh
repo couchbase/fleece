@@ -23,8 +23,9 @@ namespace fleece {
 
     // Non-template base class of smallVector<T,N>. As much code as possible is put here so that it
     // can be shared between all smallVector template instantiations.
-    class smallVectorBase {
+    class alignas(void*) smallVectorBase {
     public:
+        size_t capacity() const FLPURE                  {return _capacity;}
         size_t size() const FLPURE                      {return _size;}
         bool empty() const FLPURE                       {return _size == 0;}
 
@@ -32,7 +33,13 @@ namespace fleece {
         static constexpr size_t max_size = (1ul<<31) - 1;
 
     protected:
-        smallVectorBase() noexcept                      :_isBig(false), _size(0) { }
+        smallVectorBase() noexcept                      { }
+        smallVectorBase(uint32_t cap) noexcept          :_isBig(false), _size(0), _capacity(cap) { }
+
+        ~smallVectorBase() {
+            if (_isBig)
+                ::free(_dataPointer);
+        }
 
 
         // Throws if size/capacity is too big, and returns cast to uint32_t
@@ -44,93 +51,90 @@ namespace fleece {
 
 
         // Pointer to first item
-        void* _begin() FLPURE {
-            return _isBig ? _big().begin() : _small().begin();
-        }
+        void* _begin() FLPURE                       {return _isBig ? _dataPointer : _inlineData;}
+        const void* _begin() const FLPURE           {return _isBig ? _dataPointer : _inlineData;}
 
 
         // Moves `sv` to myself.
-        void _moveFrom(smallVectorBase &&sv, size_t instanceSize) {
+        void _moveFrom(smallVectorBase &&sv, size_t instanceSize) noexcept {
             ::memcpy(this, &sv, instanceSize);
             std::move(sv).release();
         }
 
 
-        // Clears a moved-from instance so destructor will be a no-op
-        void release() && {
+        // Clears a moved-from instance, so destructor will be a no-op
+        void release() && noexcept {
             _size = 0;
-            if (_isBig)
-                _big().release();
+            _dataPointer = nullptr;
         }
 
 
-        uint32_t _bigCapacity() const FLPURE {
-            assert_precondition(_isBig);
-            return const_cast<smallVectorBase*>(this)->_big().capacity();
-        }
-
-
-        // Adjusts capacity, possibly switching between big/small storage.
-        void _setCapacity(size_t cap, size_t itemSize, bool embiggen) {
+        // Increases capacity, switching to external storage.
+        void _embiggen(size_t cap, size_t itemSize) {
             precondition(cap >= _size);
-            if (embiggen) {
-                uint32_t newCap = rangeCheck(cap);
-                if (_isBig) {
-                    _big().setCapacity(newCap, _size, itemSize);
-                } else {
-                    big_t newBig(newCap, _small().begin(), _size, itemSize);
-                    new (&_variant) big_t(std::move(newBig));
-                    _isBig = true;
-                }
-            } else {
-                if (_isBig) {
-                    big_t oldBig = std::move(_big());
-                    new (&_variant) small_t(oldBig.begin(), _size, itemSize);
-                    _isBig = false;
-                }
+            uint32_t newCap = rangeCheck(cap);
+            void *pointer = _isBig ? _dataPointer : nullptr;
+            pointer = ::realloc(pointer, newCap * itemSize);
+            if (_usuallyFalse(!pointer))
+                throw std::bad_alloc();
+            if (!_isBig) {
+                if (_size > 0)
+                    ::memcpy(pointer, _inlineData, _size * itemSize);
+                _isBig = true;
             }
+            _dataPointer = pointer;
+            _capacity = newCap;
         }
 
 
-        // Increments size & returns pointer to (uninitialized) new final item.
-        void* _growByOne(uint32_t capacity, size_t itemSize) {
+        // Reduces capacity, switching from external to inline storage.
+        void _emsmallen(uint32_t newCap, size_t itemSize) {
+            assert_precondition(_isBig);
+            void *pointer = _dataPointer;
+            if (_size > 0)
+                ::memcpy(_inlineData, pointer, _size * itemSize);
+            ::free(pointer);
+            _isBig = false;
+            _capacity = newCap;
+        }
+
+
+        // Increases size & returns pointer to (uninitialized) first new item.
+        void* _growTo(uint32_t newSize, size_t itemSize) {
             auto oldSize = _size;
-            if (_usuallyTrue(oldSize < capacity))
-                ++_size;
-            else
-                _growTo(oldSize + 1, capacity, itemSize);
+            assert_precondition(newSize >= oldSize);
+            if (_usuallyFalse(newSize > _capacity)) {
+                // Compute new capacity: grow by 50% until big enough.
+                rangeCheck(newSize);
+                uint32_t newCapacity;
+                if (oldSize == 0) {
+                    newCapacity = newSize;
+                } else if (newSize >= (max_size / 3) * 2) {
+                    newCapacity = max_size;         // (adding 50% would overflow max_size)
+                } else {
+                    newCapacity = _capacity;
+                    do {
+                        newCapacity += newCapacity / 2;
+                    } while (newCapacity < newSize);
+                }
+                _embiggen(newCapacity, itemSize);
+            }
+            _size = newSize;
             return offsetby(_begin(), oldSize * itemSize);
         }
 
 
-        void _growTo(uint32_t newSize, uint32_t capacity, size_t itemSize) {
-            assert_precondition(newSize >= _size);
-            if (_usuallyFalse(newSize > capacity)) {
-                // Compute new capacity: grow by 50% until big enough.
-                if (newSize < (max_size / 3) * 2) {
-                    do {
-                        capacity += capacity / 2;
-                    } while (capacity < newSize);
-                } else {
-                    capacity = max_size;
-                }
-                _setCapacity(capacity, itemSize, true);
-            }
-            _size = newSize;
-        }
-
-
         // Inserts space for a new item at `where` and returns a pointer to it.
-        void* _insertOne(void *where, uint32_t capacity, size_t itemSize) {
+        void* _insertOne(void *where, size_t itemSize) {
             auto begin = (uint8_t*)_begin();
-            if (_usuallyFalse(_size >= capacity)) {
-                // [calling grow() will reallocate storage, so save & restore `where`]
+            if (_usuallyTrue(_size < _capacity)) {
+                ++_size;
+            } else {
+                // [calling _growTo() will reallocate storage, so save & restore `where`]
                 size_t offset = (uint8_t*)where - begin;
-                _growByOne(capacity, itemSize);
+                _growTo(_size + 1, itemSize);
                 begin = (uint8_t*)_begin();
                 where = begin + offset;
-            } else {
-                ++_size;
             }
             _moveItems((uint8_t*)where + itemSize,
                        where,
@@ -140,75 +144,23 @@ namespace fleece {
 
 
         // Moves the items in the range [srcStart..srcEnd) to dst
-        static void _moveItems(void *dst, void *srcStart, void *srcEnd) {
+        static void _moveItems(void *dst, void *srcStart, void *srcEnd) noexcept {
             assert(srcStart <= srcEnd);
             auto n = (uint8_t*)srcEnd - (uint8_t*)srcStart;
             if (n > 0)
                 ::memmove(dst, srcStart, n);
         }
 
+    protected:
+        static constexpr size_t kBaseInlineCap = sizeof(void*);
 
-        //---- STORAGE:  This class uses a custom smart union similar to C++17's `variant`.
-
-
-        // Small variant, with inline buffer
-        class small_t {
-        public:
-            small_t(void *items, uint32_t size, size_t itemSize) noexcept {
-                ::memmove(_buffer, items, size * itemSize);
-            }
-
-            void* begin() noexcept FLPURE               {return _buffer;}
-
-        protected:
-            uint8_t _buffer[1];
+        uint32_t    _size;                      // Current item count
+        uint32_t    _capacity :31;              // Current max size before I have to realloc
+        bool        _isBig    : 1;              // True if storage is heap-allocated
+        union {
+            void*   _dataPointer;               // Malloced pointer to data (when _isBig)
+            uint8_t _inlineData[kBaseInlineCap];// Data starts here (when !_isBig)
         };
-
-
-        // Large variant, with heap-allocated buffer
-        class big_t {
-        public:
-            big_t(uint32_t capacity, size_t itemSize)
-            :_buffer(std::make_unique<uint8_t[]>(capacity * itemSize))
-            ,_capacity(capacity)
-            { }
-
-            big_t(uint32_t capacity, void *items, uint32_t size, size_t itemSize)
-            :big_t(capacity, itemSize)
-            {
-                ::memmove(_buffer.get(), items, size * itemSize);
-            }
-
-            big_t(big_t &&other) noexcept = default;
-
-            void release() noexcept                     {_buffer.release();}
-
-            void* begin() noexcept FLPURE               {return _buffer.get();}
-
-            uint32_t capacity() const noexcept FLPURE   {return _capacity;}
-
-            void setCapacity(uint32_t newCapacity, uint32_t size, size_t itemSize) {
-                assert_precondition(newCapacity >= size && _capacity >= size);
-                //OPT: Would be more optimal to use `realloc`, as it can resize in place
-                auto newBytes = std::make_unique<uint8_t[]>(newCapacity * itemSize);
-                ::memmove(newBytes.get(), _buffer.get(), size * itemSize);
-                _buffer = std::move(newBytes);
-                _capacity = newCapacity;
-            }
-
-        private:
-            std::unique_ptr<uint8_t[]>  _buffer;
-            uint32_t                    _capacity = 0;
-        };
-
-
-        small_t& _small()       {assert(!_isBig); return *(small_t*)&_variant;}
-        big_t&   _big()         {assert(_isBig); return *(big_t*)&_variant;}
-
-
-        uint32_t               _size;           // Current item count
-        bool                   _isBig;          // True if _storage contains a big_t
-        alignas(void*) uint8_t _variant[sizeof(big_t)];  // Start of storage for either a small_t or a big_t
     };
 
 }

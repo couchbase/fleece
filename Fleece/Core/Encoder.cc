@@ -213,7 +213,7 @@ namespace fleece { namespace impl {
                 _blockedOnKey = _writingKey = true;
         }
 
-        return (byte*) _items->push_back();
+        return (uint8_t*) _items->push_back_new();
     }
 
     // Writes blank space for a Value of the given size and returns a pointer to it.

@@ -23,14 +23,14 @@ namespace fleece {
     public:
         static constexpr size_t max_size = (1ul<<31) - 1;
 
-        smallVector() noexcept                          { }
-        smallVector(size_t size)                        {resize(size);}
+        smallVector() noexcept                          :smallVectorBase(N) { }
+        smallVector(size_t size)                        :smallVector() {resize(size);}
 
         template <size_t M>
         smallVector(const smallVector<T,M> &sv)         :smallVector(sv.begin(), sv.end()) { }
         smallVector(const smallVector &sv)              :smallVector(sv.begin(), sv.end()) { }
 
-        smallVector(smallVector &&sv) noexcept          {_moveFrom(std::move(sv), sizeof(*this));}
+        smallVector(smallVector &&sv) noexcept          :smallVectorBase() {_moveFrom(std::move(sv), sizeof(*this));}
 
         template <class ITER>
         smallVector(ITER b, ITER e)
@@ -38,7 +38,7 @@ namespace fleece {
         {
             setCapacity(e - b);
             while (b != e)
-                heedless_push_back(*b++);
+                heedlessPushBack(*b++);
         }
 
         ~smallVector() {
@@ -49,17 +49,18 @@ namespace fleece {
             }
         }
 
-        smallVector& operator=(const smallVector &sv) {
-            erase(begin(), end());
-            setCapacity(sv.size());
-            for (const auto &val : sv)
-                heedless_push_back(val);
-            return *this;
-        }
-
         smallVector& operator=(smallVector &&sv) noexcept {
             clear();
             _moveFrom(std::move(sv), sizeof(*this));
+            return *this;
+        }
+
+        template <size_t M>
+        smallVector& operator=(const smallVector<T,M> &sv) {
+            erase(begin(), end());
+            setCapacity(sv.size());
+            for (const auto &val : sv)
+                heedlessPushBack(val);
             return *this;
         }
 
@@ -90,9 +91,7 @@ namespace fleece {
         }
 
         void clear()                                    {shrinkTo(0);}
-        void reserve(size_t cap)                        {if (cap>capacity()) setCapacity(cap);}
-
-        uint32_t capacity() const FLPURE                {return _isBig ? _bigCapacity() : N;}
+        void reserve(size_t cap)                        {if (cap>_capacity) setCapacity(cap);}
 
         const T& get(size_t i) const FLPURE {
             assert_precondition(i < _size);
@@ -129,7 +128,7 @@ namespace fleece {
 
         void insert(iterator where, T item) {
             assert_precondition(begin() <= where && where <= end());
-            void *dst = _insertOne(where, capacity(), kItemSize);
+            void *dst = _insertOne(where, kItemSize);
             *(T*)dst = std::move(item);
         }
 
@@ -146,12 +145,11 @@ namespace fleece {
         }
 
         void resize(size_t sz) {
-            auto s = _size;
-            if (sz > s) {
+            auto oldSize = _size;
+            if (sz > oldSize) {
                 uint32_t newSize = rangeCheck(sz);
-                _growTo(newSize, capacity(), kItemSize);
-                auto i = &_get(s);
-                for (; s < newSize; ++s)
+                auto i = (iterator)_growTo(newSize, kItemSize);
+                for (; oldSize < newSize; ++oldSize)
                     (void) new (i++) T();       // default-construct new items
             } else {
                 shrinkTo(sz);
@@ -159,7 +157,12 @@ namespace fleece {
         }
 
         void setCapacity(size_t cap) {
-            _setCapacity(cap, kItemSize, cap > N);
+            if (cap != _capacity) {
+                if (cap > N)
+                    _embiggen(cap, kItemSize);
+                else if (_capacity != N)
+                    _emsmallen(N, kItemSize);
+            }
         }
 
         // Appends space for a new item but does not construct it.
@@ -170,11 +173,11 @@ namespace fleece {
 
     private:
         T& _get(size_t i) FLPURE                {return ((T*)_begin())[i];}
-        const T& _get(size_t i) const FLPURE    {return const_cast<smallVector*>(this)->_get(i);}
+        const T& _get(size_t i) const FLPURE    {return ((T*)_begin())[i];}
 
-        T* grow()                               {return (T*)_growByOne(capacity(), kItemSize);}
-        T* heedlessGrow()                       {assert(_size < capacity()); return &_get(_size++);}
-        T& heedless_push_back(const T& t)       {return * new(heedlessGrow()) T(t);}
+        T* grow()                               {return (T*)_growTo(_size + 1, kItemSize);}
+        T* heedlessGrow()                       {assert(_size < _capacity); return &_get(_size++);}
+        T& heedlessPushBack(const T& t)         {return * new(heedlessGrow()) T(t);}
 
         void shrinkTo(size_t sz) {
             if (sz < _size) {
@@ -184,7 +187,7 @@ namespace fleece {
                 _size = (uint32_t)sz;
 
                 if (_isBig && sz <= N)
-                    setCapacity(N);
+                    _emsmallen(N, kItemSize);
             }
         }
 
@@ -192,10 +195,10 @@ namespace fleece {
         // The size of one vector item, taking into account alignment.
         static constexpr size_t kItemSize = ((sizeof(T) + alignof(T) - 1) / alignof(T)) * alignof(T);
 
-        static constexpr size_t variantSize = std::max(N * kItemSize, sizeof(big_t));
+        static constexpr size_t kInlineCap = std::max(N * kItemSize, kBaseInlineCap);
 
-        // Enough extra space to hold an array T[N].
-        uint8_t _restOfVariant[variantSize - sizeof(_variant)];
+        // Enough extra space to hold an inline array T[N].
+        uint8_t _padding[kInlineCap - kBaseInlineCap];
     };
 
 }
