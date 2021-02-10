@@ -642,7 +642,9 @@ namespace fleece { namespace impl {
                 throwIf(!sk, EncodeError, "Numeric key given without SharedKeys");
             }
             if (sk == _sharedKeys) {
-                throwIf(sk->isUnknownKey(intKey), InvalidData, "Unrecognized integer key");
+                if (sk->isUnknownKey(intKey)) {
+                    throwIf(!sk->decode(intKey), InvalidData, "Unrecognized integer key");
+                }
                 writeKey(intKey);
             } else {
                 slice keySlice = sk->decode(intKey);
