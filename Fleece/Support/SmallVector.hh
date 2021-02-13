@@ -128,8 +128,18 @@ namespace fleece {
 
         void insert(iterator where, T item) {
             assert_precondition(begin() <= where && where <= end());
-            void *dst = _insertOne(where, kItemSize);
+            void *dst = _insert(where, 1, kItemSize);
             *(T*)dst = std::move(item);
+        }
+
+        template <class ITER>
+        void insert(iterator where, ITER b, ITER e) {
+            assert_precondition(begin() <= where && where <= end());
+            auto n = e - b;
+            assert_precondition(n >= 0 && n <= max_size);
+            T *dst = (T*)_insert(where, uint32_t(n), kItemSize);
+            while (b != e)
+                *dst++ = *b++;
         }
 
         void erase(iterator first) {

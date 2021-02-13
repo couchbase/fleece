@@ -120,25 +120,25 @@ namespace fleece {
                 _embiggen(newCapacity, itemSize);
             }
             _size = newSize;
-            return offsetby(_begin(), oldSize * itemSize);
+            return (uint8_t*)_begin() + oldSize * itemSize;
         }
 
 
-        // Inserts space for a new item at `where` and returns a pointer to it.
-        void* _insertOne(void *where, size_t itemSize) {
+        // Inserts space for `nItems` new items at `where` and returns a pointer to it.
+        void* _insert(void *where, uint32_t nItems, size_t itemSize) {
             auto begin = (uint8_t*)_begin();
-            if (_usuallyTrue(_size < _capacity)) {
-                ++_size;
+            if (_size + nItems <= _capacity) {
+                _size += nItems;
             } else {
                 // [calling _growTo() will reallocate storage, so save & restore `where`]
                 size_t offset = (uint8_t*)where - begin;
-                _growTo(_size + 1, itemSize);
+                _growTo(_size + nItems, itemSize);
                 begin = (uint8_t*)_begin();
                 where = begin + offset;
             }
-            _moveItems((uint8_t*)where + itemSize,
+            _moveItems((uint8_t*)where + nItems * itemSize,
                        where,
-                       begin + (_size - 1) * itemSize);
+                       begin + (_size - nItems) * itemSize);
             return where;
         }
 
