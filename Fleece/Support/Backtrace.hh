@@ -7,29 +7,49 @@
 #pragma once
 #include "Function.hh"
 #include "PlatformCompat.hh"
-#include <string>
 #include <iosfwd>
+#include <memory>
+#include <string>
 #include <typeinfo>
+#include <vector>
 
 namespace fleece {
 
-    /** Captures a backtrace of the current thread, and converts it to human-readable form. */
+    /** Captures a backtrace of the current thread, and can convert it to human-readable form. */
     class Backtrace {
     public:
-        explicit Backtrace(unsigned skipFrames =0);
-#ifdef _LIBCPP_VERSION
-        ~Backtrace();
-#endif
+        /// Captures a backtrace and returns a shared pointer to the instance.
+        static std::shared_ptr<Backtrace> capture(unsigned skipFrames =0, unsigned maxFrames =50);
 
-        bool writeTo(std::ostream&);
-        std::string toString();
+        /// Captures a backtrace, unless maxFrames is zero.
+        /// @param skipFrames  Number of frames to skip at top of stack
+        /// @param maxFrames  Maximum number of frames to capture
+        explicit Backtrace(unsigned skipFrames =0, unsigned maxFrames =50);
+
+        /// Removes frames from the top of the stack.
+        void skip(unsigned nFrames);
+
+        /// Writes the human-readable backtrace to a stream.
+        bool writeTo(std::ostream&) const;
+
+        /// Returns the human-readable backtrace.
+        std::string toString() const;
+
+        // Direct access to stack frames:
 
         struct frameInfo {
-            size_t pc, offset;
-            const char *library, *function;
+            const void* pc;         ///< Program counter
+            size_t offset;          ///< Byte offset of pc in function
+            const char *function;   ///< Name of (nearest) known function
+            const char *library;    ///< Name of dynamic library containing the function
         };
 
-        frameInfo getFrame(unsigned);
+        /// The number of stack frames captured.
+        unsigned size() const                   {return (unsigned)_addrs.size();}
+
+        /// Returns info about a stack frame. 0 is the top.
+        frameInfo getFrame(unsigned) const;
+        frameInfo operator[] (unsigned i)       {return getFrame(i);}
 
         /// Installs a C++ terminate_handler that will log a backtrace and info about any uncaught
         /// exception. By default it then calls the preexisting terminate_handler, which usually
@@ -42,17 +62,11 @@ namespace fleece {
         static void installTerminateHandler(Function<void(const std::string&)> logger);
 
     private:
-        static constexpr size_t kMaxAddrs = 50;
-        unsigned const _skip;
-        void* _addrs[kMaxAddrs];
-        unsigned _nAddrs;
-
-        const char* unmangle(const char*);
+        void _capture(unsigned skipFrames =0, unsigned maxFrames =50);
+        char* printFrame(unsigned i) const;
         static void writeCrashLog(std::ostream&);
-#ifdef __clang__
-        char* _unmangled {nullptr};
-        size_t _unmangledLen {0};
-#endif
+
+        std::vector<void*> _addrs;          // Array of PCs in backtrace, top first
     };
 
 

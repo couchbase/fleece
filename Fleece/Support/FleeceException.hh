@@ -19,8 +19,10 @@
 #pragma once
 #include <stdexcept>
 #include "fleece/Base.h"
+#include <memory>
 
 namespace fleece {
+    class Backtrace;
 
     // Error codes -- keep these in sync with the public FLError enum in Fleece.h!
     typedef enum {
@@ -42,11 +44,7 @@ namespace fleece {
     class FleeceException : public std::runtime_error {
     public:
 
-        FleeceException(ErrorCode code_, int errno_, const std::string &what)
-        :std::runtime_error(what)
-        ,code(code_)
-        ,err_no(errno_)
-        { }
+        FleeceException(ErrorCode code_, int errno_, const std::string &what);
 
         [[noreturn]] static void _throw(ErrorCode code, const char *what, ...);
         [[noreturn]] static void _throwErrno(const char *what, ...);
@@ -55,6 +53,7 @@ namespace fleece {
 
         const ErrorCode code;
         const int err_no {0};
+        std::shared_ptr<Backtrace> backtrace;
     };
 
     #define throwIf(BAD, ERROR, MESSAGE) \

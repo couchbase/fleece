@@ -23,6 +23,7 @@
 #include <mutex>
 #include <sstream>
 #include <string.h>
+#include "betterassert.hh"
 
 
 #ifndef _MSC_VER
@@ -80,27 +81,27 @@ namespace fleece {
 #endif
 
 
-    Backtrace::Backtrace(unsigned skip)
-    :_skip(skip + 1)    // skip the constructor frame itself
-    ,_nAddrs(backtrace(_addrs, kMaxAddrs))
-    { }
-
-
+    static char* unmangle(const char *function) {
 #ifdef _LIBCPP_VERSION
-    Backtrace::~Backtrace() {
-        free(_unmangled);
-    }
+        int status;
+        size_t unmangledLen;
+        char *unmangled = abi::__cxa_demangle(function, nullptr, &unmangledLen, &status);
+        if (unmangled && status == 0)
+            return unmangled;
+        free(unmangled);
 #endif
+        return (char*)function;
+    }
 
 
-    Backtrace::frameInfo Backtrace::getFrame(unsigned i) {
+    Backtrace::frameInfo Backtrace::getFrame(unsigned i) const {
+        precondition(i < _addrs.size());
         frameInfo frame = { };
-        // On Android, use dladdr() to get info about the PC address:
         Dl_info info;
         if (dladdr(_addrs[i], &info)) {
-            frame.pc = (size_t)_addrs[i];
+            frame.pc = _addrs[i];
+            frame.offset = (size_t)frame.pc - (size_t)info.dli_saddr;
             frame.function = info.dli_sname;
-            frame.offset = frame.pc - (size_t)info.dli_saddr;
             frame.library = info.dli_fname;
             const char *slash = strrchr(frame.library, '/');
             if (slash)
@@ -110,30 +111,66 @@ namespace fleece {
     }
 
 
-    const char* Backtrace::unmangle(const char *function) {
-#ifdef _LIBCPP_VERSION
-        int status;
-        _unmangled = abi::__cxa_demangle(function, _unmangled, &_unmangledLen, &status);
-        if (_unmangled && status == 0)
-            function = _unmangled;
-#endif
-        return function;
+    // If any of these strings occur in a backtrace, suppress further frames.
+    static constexpr const char* kTerminalFunctions[] = {
+        "_C_A_T_C_H____T_E_S_T_",
+        "Catch::TestInvokerAsFunction::invoke() const",
+        "litecore::actor::Scheduler::task(unsigned)",
+        "litecore::actor::GCDMailbox::safelyCall",
+    };
+
+    static constexpr struct {const char *old, *nuu;} kAbbreviations[] = {
+        {"(anonymous namespace)",   "(anon)"},
+        {"std::__1::",              "std::"},
+        {"std::basic_string<char, std::char_traits<char>, std::allocator<char> >",
+                                    "std::string"},
+    };
+
+
+    static void replace(std::string &str, string_view oldStr, string_view newStr) {
+        string::size_type pos = 0;
+        while (string::npos != (pos = str.find(oldStr, pos))) {
+            str.replace(pos, oldStr.size(), newStr);
+            pos += newStr.size();
+        }
     }
 
 
-    std::string Unmangle(const char *name NONNULL) {
-#ifdef _LIBCPP_VERSION
-        int status;
-        size_t unmangledLen;
-        char *unmangled = abi::__cxa_demangle(name, nullptr, &unmangledLen, &status);
-        if (unmangled && status == 0) {
-            string result = unmangled;
-            free(unmangled);
-            return result;
+    bool Backtrace::writeTo(ostream &out) const {
+        for (int i = 0; i < _addrs.size(); ++i) {
+            if (i > 0)
+                out << '\n';
+            out << '\t';
+            char *cstr = nullptr;
+            auto frame = getFrame(i);
+            int len;
+            bool stop = false;
+            if (frame.function) {
+                string name = Unmangle(frame.function);
+                // Stop when we hit a unit test, or other known functions:
+                for (auto fn : kTerminalFunctions) {
+                    if (name.find(fn) != string::npos)
+                        stop = true;
+                }
+                // Abbreviate some C++ verbosity:
+                for (auto &abbrev : kAbbreviations)
+                    replace(name, abbrev.old, abbrev.nuu);
+                len = asprintf(&cstr, "%2d  %-25s %s + %zd",
+                               i, frame.library, name.c_str(), frame.offset);
+            } else {
+                len = asprintf(&cstr, "%2d  %p", i, _addrs[i]);
+            }
+            if (len < 0)
+                return false;
+            out.write(cstr, size_t(len));
+            free(cstr);
+
+            if (stop) {
+                out << "\n\t ... (" << (_addrs.size() - i - 1) << " more suppressed) ...";
+                break;
+            }
         }
-        free(unmangled);
-#endif
-        return string(name);
+        return true;
     }
 
 
@@ -144,30 +181,6 @@ namespace fleece {
             return Unmangle(info.dli_sname);
         else
             return "";
-    }
-
-
-    bool Backtrace::writeTo(ostream &out) {
-        if (_skip >= _nAddrs)
-            return false;
-
-        for (int i = _skip; i < _nAddrs; ++i) {
-            out << "\n\t";
-            char *cstr = nullptr;
-            auto frame = getFrame(i);
-            int len;
-            if (frame.function) {
-                len = asprintf(&cstr, "%2d  %-25s %s + %zd",
-                               i, frame.library, unmangle(frame.function), frame.offset);
-            } else {
-                len = asprintf(&cstr, "%2d  %p", i, _addrs[i]);
-            }
-            if (len < 0)
-                return false;
-            out.write(cstr, size_t(len));
-            free(cstr);
-        }
-        return true;
     }
 
 }
@@ -187,14 +200,12 @@ namespace fleece {
 
 #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
 
-    Backtrace::Backtrace(unsigned skip)
-    :_skip(skip + 1)    // skip the constructor frame itself
-    {
-        _nAddrs = CaptureStackBackTrace(0, 50, _addrs, nullptr);
+    static inline int backtrace(void** buffer, size_t max) {
+        return CaptureStackBackTrace(0, max, buffer, nullptr)
     }
 
 
-    bool Backtrace::writeTo(ostream &out) {
+    bool Backtrace::writeTo(ostream &out) const {
         const auto process = GetCurrentProcess();
         SYMBOL_INFO *symbol = nullptr;
         IMAGEHLP_LINE64 *line = nullptr;
@@ -212,8 +223,10 @@ namespace fleece {
             goto exit;
         line->SizeOfStruct = sizeof(IMAGEHLP_LINE64);
 
-        for (unsigned i = _skip + 1; i < _nAddrs; i++) {
-            out << "\r\n\t";
+        for (unsigned i = _skip + 1; i < _addrs.size(); i++) {
+            if (i > 0)
+                out << "\r\n";
+            out << '\t';
             const auto address = (DWORD64)_addrs[i];
             SymFromAddr(process, address, nullptr, symbol);
             char* cstr = nullptr;
@@ -238,20 +251,15 @@ namespace fleece {
         return success;
     }
 
-
 #else
     // Windows Store apps cannot get backtraces
-    Backtrace::Backtrace(unsigned skipFrames)   :_skip(skipFrames) { }
-    bool Backtrace::writeTo(std::ostream&)      {return false;}
+    static inline int backtrace(void** buffer, size_t max) {return 0;}
+    bool Backtrace::writeTo(std::ostream&) const  {return false;}
 #endif
 
-    const char* Backtrace::unmangle(const char *symbol) {
-        return symbol;
-    }
 
-
-    std::string Unmangle(const char *name) {
-        return string(name);
+    static char* unmangle(const char *function) {
+        return (char*)function;
     }
 
 }
@@ -259,13 +267,53 @@ namespace fleece {
 #endif // _MSC_VER
 
 
+#pragma mark - COMMON CODE:
+
+
 namespace fleece {
+
+
+    std::string Unmangle(const char *name NONNULL) {
+        auto unmangled = unmangle(name);
+        std::string result = unmangled;
+        if (unmangled != name)
+            free(unmangled);
+        return result;
+    }
+
 
     std::string Unmangle(const std::type_info &type) {
         return Unmangle(type.name());
     }
 
-    string Backtrace::toString() {
+
+    shared_ptr<Backtrace> Backtrace::capture(unsigned skipFrames, unsigned maxFrames) {
+        // (By capturing afterwards, we avoid the (many) stack frames associated with make_shared)
+        auto bt = make_shared<Backtrace>(0, 0);
+        bt->_capture(skipFrames + 1, maxFrames);
+        return bt;
+    }
+
+    Backtrace::Backtrace(unsigned skipFrames, unsigned maxFrames) {
+        if (maxFrames > 0)
+            capture(skipFrames + 1, maxFrames);
+    }
+
+
+    void Backtrace::_capture(unsigned skipFrames, unsigned maxFrames) {
+        _addrs.resize(++skipFrames + maxFrames);        // skip this frame
+        auto n = backtrace(&_addrs[0], skipFrames + maxFrames);
+        _addrs.resize(n);
+        skip(skipFrames);
+    }
+
+
+    void Backtrace::skip(unsigned nFrames) {
+        _addrs.erase(_addrs.begin(), _addrs.begin() + min(size_t(nFrames), _addrs.size()));
+    }
+
+
+    string Backtrace::toString() const {
         stringstream out;
         writeTo(out);
         return out.str();
@@ -281,7 +329,10 @@ namespace fleece {
                 rethrow_exception(xp);
             } catch(const exception& x) {
                 const char *name = typeid(x).name();
-                out << bt.unmangle(name) << ": " <<  x.what() << "\n";
+                char *unmangled = unmangle(name);
+                out << unmangled << ": " <<  x.what() << "\n";
+                if (unmangled != name)
+                    free(unmangled);
             } catch (...) {
                 out << "unknown exception type\n";
             }

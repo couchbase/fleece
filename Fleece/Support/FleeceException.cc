@@ -18,6 +18,7 @@
 
 #include "FleeceException.hh"
 #include "PlatformCompat.hh"
+#include "Backtrace.hh"
 #include <errno.h>
 #include <memory>
 #include <stdarg.h>
@@ -47,6 +48,15 @@ namespace fleece {
         "POSIX error",
         "unsupported operation",
     };
+
+
+    FleeceException::FleeceException(ErrorCode code_, int errno_, const std::string &what)
+    :std::runtime_error(what)
+    ,code(code_)
+    ,err_no(errno_)
+    ,backtrace(Backtrace::capture(2))
+    { }
+
 
     __cold
     void FleeceException::_throw(ErrorCode code, const char *what, ...) {

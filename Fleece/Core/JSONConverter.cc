@@ -62,8 +62,11 @@ namespace fleece { namespace impl {
             return "Unexpected C++ exception";
         else if (_jsonError == kErrTruncatedJSON)
             return "Truncated JSON";
-        else
-            return jsonsl_strerror((jsonsl_error_t)_jsonError);
+        else {
+            _errorMessage = std::string("JSON parse error: ") +
+                                    jsonsl_strerror((jsonsl_error_t)_jsonError);
+            return _errorMessage.c_str();
+        }
     }
 
 
