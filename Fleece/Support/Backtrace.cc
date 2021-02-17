@@ -39,8 +39,9 @@
     #include <unwind.h>     // _Unwind_Backtrace(), etc.
 #endif
 
-#ifdef _LIBCPP_VERSION
+#if defined(_LIBCPP_VERSION) || defined(__ANDROID__)
     #include <cxxabi.h>     // abi::__cxa_demangle()
+    #define HAVE_UNMANGLE
 #endif
 
 
@@ -82,7 +83,7 @@ namespace fleece {
 
 
     static char* unmangle(const char *function) {
-#ifdef _LIBCPP_VERSION
+#ifdef HAVE_UNMANGLE
         int status;
         size_t unmangledLen;
         char *unmangled = abi::__cxa_demangle(function, nullptr, &unmangledLen, &status);
@@ -211,6 +212,9 @@ namespace fleece {
         IMAGEHLP_LINE64 *line = nullptr;
         bool success = false;
         SymInitialize(process, nullptr, TRUE);
+        DWORD symOptions = SymGetOptions();
+        symOptions |= SYMOPT_LOAD_LINES | SYMOPT_UNDNAME;
+        SymSetOptions(symOptions);
 
         symbol = (SYMBOL_INFO*)malloc(sizeof(SYMBOL_INFO)+1023 * sizeof(TCHAR));
         if (!symbol)
