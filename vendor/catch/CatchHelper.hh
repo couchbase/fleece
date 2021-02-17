@@ -11,6 +11,29 @@
 #include "catch.hpp"
 
 
+
+
+#pragma mark - EXTRA ASSERTION MACROS
+
+
+// `CHECKED` evaluates its parameter, asserts that it's not false/0/null, and returns it.
+// Like `CHECK`, failure does _not_ abort the current test.
+#define CHECKED(EXPR) _CHECKED(EXPR, "Failed " #EXPR)
+
+// `REQUIRED` evaluates its parameter, asserts that it's not false/0/null, and returns it.
+// Like `REQUIRE`, failure aborts the current test.
+#define REQUIRED(EXPR) _REQUIRED(EXPR, "Failed " #EXPR)
+
+template <class T>
+inline T _CHECKED(T &&value, const char *expr) {if (!value) FAIL_CHECK(expr); return value; }
+template <class T>
+inline T _REQUIRED(T &&value, const char *expr) {if (!value) FAIL(expr); return value; }
+
+
+
+#pragma mark - N-WAY TEST METHODS
+
+
 // N_WAY_TEST_CASE_METHOD is like TEST_CASE_METHOD, except the constructor of the test
 // class must take a boolean parameter, and the test case will be run twice, once on an object
 // that's been constructed with a 'false' parameter, and once with 'true'.
