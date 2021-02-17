@@ -201,7 +201,7 @@ namespace fleece {
 #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
 
     static inline int backtrace(void** buffer, size_t max) {
-        return CaptureStackBackTrace(0, max, buffer, nullptr)
+        return (int)CaptureStackBackTrace(0, (DWORD)max, buffer, nullptr);
     }
 
 
@@ -223,7 +223,7 @@ namespace fleece {
             goto exit;
         line->SizeOfStruct = sizeof(IMAGEHLP_LINE64);
 
-        for (unsigned i = _skip + 1; i < _addrs.size(); i++) {
+        for (unsigned i = 0; i < _addrs.size(); i++) {
             if (i > 0)
                 out << "\r\n";
             out << '\t';
