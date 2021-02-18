@@ -28,8 +28,13 @@ endfunction()
 
 function(setup_build)
     target_link_libraries(
+        FleeceBase INTERFACE
+        dl
+    )
+
+    target_link_libraries(
         FleeceStatic INTERFACE
-	    dl
+        dl
     )
 
     target_compile_definitions(
