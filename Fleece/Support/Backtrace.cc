@@ -23,6 +23,7 @@
 #include <mutex>
 #include <sstream>
 #include <string.h>
+#include <algorithm>
 #include "betterassert.hh"
 
 
