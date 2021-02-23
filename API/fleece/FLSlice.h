@@ -117,6 +117,15 @@ bool FLSlice_Equal(FLSlice a, FLSlice b) FLAPI FLPURE;
     differences in length. */
 int FLSlice_Compare(FLSlice, FLSlice) FLAPI FLPURE;
 
+/** Copies a slice to a buffer, adding a trailing zero byte to make it a valid C string.
+    If there is not enough capacity the slice will be truncated, but the trailing zero byte is
+    always written.
+    @param s  The FLSlice to copy.
+    @param buffer  Where to copy the bytes. At least `capacity` bytes must be available.
+    @param capacity  The maximum number of bytes to copy (including the trailing 0.)
+    @return  True if the entire slice was copied, false if it was truncated. */
+bool FLSlice_ToCString(FLSlice s, char* buffer NONNULL, size_t capacity) FLAPI;
+
 /** Allocates an FLSliceResult of the given size, without initializing the buffer. */
 FLSliceResult FLSliceResult_New(size_t) FLAPI;
 

@@ -8,6 +8,7 @@ _kFLEmptyDict
 
 _FLSlice_Equal
 _FLSlice_Compare
+_FLSlice_ToCString
 __FLBuf_Retain
 __FLBuf_Release
 

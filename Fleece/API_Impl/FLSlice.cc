@@ -22,12 +22,12 @@
 #include "betterassert.hh"
 
 
-bool FLSlice_Equal(FLSlice a, FLSlice b) FLAPI {
+bool FLSlice_Equal(FLSlice a, FLSlice b) noexcept {
     return a.size==b.size && memcmp(a.buf, b.buf, a.size) == 0;
 }
 
 
-int FLSlice_Compare(FLSlice a, FLSlice b) FLAPI {
+int FLSlice_Compare(FLSlice a, FLSlice b) noexcept {
     // Optimized for speed
     if (a.size == b.size)
         return memcmp(a.buf, b.buf, a.size);
@@ -38,6 +38,16 @@ int FLSlice_Compare(FLSlice a, FLSlice b) FLAPI {
         int result = memcmp(a.buf, b.buf, b.size);
         return result ? result : 1;
     }
+}
+
+
+bool FLSlice_ToCString(FLSlice s, char* buffer, size_t capacity) noexcept {
+    precondition(capacity > 0);
+    size_t n = std::min(s.size, capacity - 1);
+    if (n > 0)
+        memcpy(buffer, s.buf, n);
+    buffer[n] = '\0';
+    return (n == s.size);
 }
 
 
@@ -109,7 +119,7 @@ using namespace fleece;
 
 
 __hot
-FLSliceResult FLSliceResult_New(size_t size) FLAPI {
+FLSliceResult FLSliceResult_New(size_t size) noexcept {
     auto sb = new (size) sharedBuffer;
     if (!sb)
         return {};
@@ -118,7 +128,7 @@ FLSliceResult FLSliceResult_New(size_t size) FLAPI {
 
 
 __hot
-FLSliceResult FLSlice_Copy(FLSlice s) FLAPI {
+FLSliceResult FLSlice_Copy(FLSlice s) noexcept {
     if (!s.buf)
         return {};
 #if FL_DETECT_COPIES
@@ -138,14 +148,14 @@ FLSliceResult FLSlice_Copy(FLSlice s) FLAPI {
 
 
 __hot
-void _FLBuf_Retain(const void *buf) FLAPI {
+void _FLBuf_Retain(const void *buf) noexcept {
     if (buf)
         bufferFromBuf(buf)->retain();
 }
 
 
 __hot
-void _FLBuf_Release(const void *buf) FLAPI {
+void _FLBuf_Release(const void *buf) noexcept {
     if (buf)
         bufferFromBuf(buf)->release();
 }
