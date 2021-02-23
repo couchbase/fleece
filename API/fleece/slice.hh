@@ -66,18 +66,23 @@ namespace fleece {
     
     /** Adds a byte offset to a pointer. */
     template <typename T>
-    FLCONST constexpr17 inline const T* offsetby(const T *t, ptrdiff_t offset) noexcept {
+    FLCONST constexpr14 inline const T* offsetby(const T *t, ptrdiff_t offset) noexcept {
         return (const T*)((uint8_t*)t + offset);
     }
 
     template <typename T>
-    FLCONST constexpr17 inline T* offsetby(T *t, ptrdiff_t offset) noexcept {
+    FLCONST constexpr14 inline T* offsetby(T *t, ptrdiff_t offset) noexcept {
         return (T*)((uint8_t*)t + offset);
     }
 
 
+#pragma mark - PURE_SLICE:
+
+
     /** A simple range of memory. No ownership implied.
-        The memory range (buf and size) is immutable; the `slice` subclass changes this. */
+        The memory range (buf and size) is immutable; the `slice` subclass changes this.
+        \note Generally one doesn't use this class directly, rather \ref slice or \ref alloc_slice.
+              `pure_slice` mostly exists to factor out their common API.*/
     struct pure_slice {
         const void* const buf;
         size_t      const size;
@@ -85,7 +90,7 @@ namespace fleece {
         constexpr pure_slice() noexcept                           :buf(nullptr), size(0) {}
         constexpr pure_slice(const void* b, size_t s) noexcept    :buf(b), size(s) {}
 
-        constexpr17 pure_slice(const char* str) noexcept          :pure_slice(str, _strlen(str)) {}
+        constexpr pure_slice(const char* str) noexcept            :pure_slice(str, _strlen(str)) {}
         pure_slice(const std::string& str) noexcept               :pure_slice(&str[0], str.length()) {}
 #ifdef SLICE_SUPPORTS_STRING_VIEW
         constexpr pure_slice(string_view str) noexcept            :pure_slice(str.data(), str.length()) {}
@@ -162,7 +167,7 @@ namespace fleece {
         #define cString() asString().c_str()        // has to be a macro else dtor called too early
 
         /** Computes a 32-bit FNV-1a hash of the slice's contents. (Not cryptographic!) */
-        __hot constexpr17 uint32_t hash() const noexcept FLPURE {
+        __hot constexpr14 uint32_t hash() const noexcept FLPURE {
             // <https://en.wikipedia.org/wiki/Fowler–Noll–Vo_hash_function#FNV-1a_hash>
             uint32_t h = 2166136261;
             auto bytes = (const uint8_t*)buf;
@@ -172,7 +177,7 @@ namespace fleece {
             return h;
         }
 
-        static constexpr17 uint32_t hash(const char *str NONNULL) noexcept FLPURE {
+        static constexpr14 uint32_t hash(const char *str NONNULL) noexcept FLPURE {
             uint32_t h = 2166136261;
             while (*str)
                 h = (h ^ uint8_t(*str++)) * 16777619;
@@ -222,14 +227,22 @@ namespace fleece {
         pure_slice& operator=(pure_slice s) noexcept         {set(s.buf, s.size); return *this;}
 
         // like strlen but can run at compile time
-        static constexpr17 size_t _strlen(const char *str) noexcept FLPURE {
+        static constexpr size_t _strlen(const char *str) noexcept FLPURE {
+#if __cplusplus >= 201400L || _MSVC_LANG >= 201400L
             if (!str)
                 return 0;
             auto c = str;
             while (*c) ++c;
             return c - str;
+#else
+            // (In C++11 constexpr functions could not contain loops, so use recursion instead)
+            return (str && *str) ? (1 + _strlen(str+1)) : 0;
+#endif
         }
     };
+
+
+#pragma mark - SLICE:
 
 
     /** A simple range of memory. No ownership implied.
@@ -244,7 +257,7 @@ namespace fleece {
         inline constexpr slice(const alloc_slice&) noexcept STEPOVER;
 
         slice(const std::string& str) noexcept STEPOVER               :pure_slice(str) {}
-        constexpr17 slice(const char* str) noexcept STEPOVER          :pure_slice(str) {}
+        constexpr slice(const char* str) noexcept STEPOVER            :pure_slice(str) {}
 #ifdef SLICE_SUPPORTS_STRING_VIEW
         constexpr slice(string_view str) noexcept STEPOVER            :pure_slice(str) {}
 #endif
@@ -310,6 +323,8 @@ namespace fleece {
     inline constexpr slice operator "" _sl (const char *str NONNULL, size_t length) noexcept
         {return slice(str, length);}
 
+
+#pragma mark - ALLOC_SLICE:
 
 
     /** A slice that owns a ref-counted block of memory. */
@@ -425,7 +440,7 @@ namespace fleece {
         constexpr slice_NONNULL(const void* b NONNULL, size_t s)    :slice(b, s) {}
         constexpr slice_NONNULL(slice s)                            :slice_NONNULL(s.buf, s.size) {}
         constexpr slice_NONNULL(FLSlice s)                          :slice_NONNULL(s.buf,s.size) {}
-        constexpr17 slice_NONNULL(const char *str NONNULL)          :slice(str) {}
+        constexpr slice_NONNULL(const char *str NONNULL)            :slice(str) {}
         slice_NONNULL(alloc_slice s)                                :slice_NONNULL(s.buf,s.size) {}
         slice_NONNULL(const std::string &str)               :slice_NONNULL(str.data(),str.size()) {}
 #ifdef SLICE_SUPPORTS_STRING_VIEW
@@ -455,8 +470,9 @@ namespace fleece {
 #endif
 
 
-    /** Functor class for hashing the contents of a slice (using the djb2 hash algorithm.)
-        Suitable for use with std::unordered_map. */
+    /** Functor class for hashing the contents of a slice (using the FNV-1a hash algorithm.)
+        Suitable for use with std::unordered_map.
+        \note The below declarations of `std::hash` usually make it unnecessary to use this. */
     struct sliceHash {
         std::size_t operator() (pure_slice const& s) const {return s.hash();}
     };
@@ -479,6 +495,7 @@ namespace fleece {
 }
 
 namespace std {
+    // Declare the default hash function for `slice` and `alloc_slice`:
     template<> struct hash<fleece::slice> {
         std::size_t operator() (fleece::pure_slice const& s) const {return s.hash();}
     };

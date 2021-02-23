@@ -15,6 +15,7 @@
 
 
 #ifdef __cplusplus
+    #include <string>
     #define FLAPI noexcept
     namespace fleece { struct alloc_slice; }
 #else
@@ -36,19 +37,29 @@ extern "C" {
 typedef struct FLSlice {
     const void *buf;
     size_t size;
+
+#ifdef __cplusplus
+    explicit operator bool() const noexcept FLPURE  {return buf != nullptr;}
+    explicit operator std::string() const           {return std::string((char*)buf, size);}
+#endif
 } FLSlice;
 
 
-/** A block of memory returned from an API call. The caller takes ownership, and must call
-    FLSlice_Release (or FLSlice_Free) when done. The heap block may be shared with other users,
-    so it must not be modified.
-    (This is equivalent to the C++ class `alloc_slice`.) */
+/** A heap-allocated block of memory returned from an API call.
+    The caller takes ownership, and must call \ref FLSliceResult_Release when done with it.
+    \warning The contents of the block must not be modified, since others may be using it.
+    \note This is equivalent to the C++ class `alloc_slice`. In C++ the easiest way to deal with
+        a `FLSliceResult` return value is to construct an `alloc_slice` from it, which will
+        adopt the reference, and release it in its destructor. For example:
+        `alloc_slice foo( CopyFoo() );` */
 typedef struct FLSliceResult {
     const void *buf;
     size_t size;
 
 #ifdef __cplusplus
-    explicit operator FLSlice () const FLAPI {return {buf, size};}
+    explicit operator bool() const noexcept FLPURE  {return buf != nullptr;}
+    explicit operator FLSlice () const              {return {buf, size};}
+    inline explicit operator std::string() const;
 #endif
 } FLSliceResult;
 
@@ -58,9 +69,9 @@ typedef struct FLSliceResult {
     You can just treat it like FLSlice. */
 #ifdef __cplusplus
     struct FLHeapSlice : public FLSlice {
-        FLHeapSlice() FLAPI                           {buf = nullptr; size = 0;}
+        constexpr FLHeapSlice() noexcept                           :FLSlice{nullptr, 0} { }
     private:
-        FLHeapSlice(const void *b, size_t s) FLAPI    {buf = b; size = s;}
+        constexpr FLHeapSlice(const void *b, size_t s) noexcept    :FLSlice{b, s} { }
         friend struct fleece::alloc_slice;
     };
 #else
@@ -68,6 +79,7 @@ typedef struct FLSliceResult {
 #endif
 
 
+// Aliases used to indicate that a slice is expected to contain UTF-8 data.
 typedef FLSlice FLString;
 typedef FLSliceResult FLStringResult;
 
@@ -82,14 +94,15 @@ typedef FLSliceResult FLStringResult;
 
 /** Returns a slice pointing to the contents of a C string.
     It's OK to pass NULL; this returns an empty slice.
-    (Performance is O(n) with the length of the string, since it has to call `strlen`.) */
+    \note If the string is a literal, it's more efficient to use \ref FLSTR instead.
+    \note Performance is O(n) with the length of the string, since it has to call `strlen`. */
 static inline FLSlice FLStr(const char *str) FLAPI {
     FLSlice foo = { str, str ? strlen(str) : 0 };
     return foo;
 }
 
-// Macro version of FLStr, for use in initializing compile-time constants.
-// STR must be a C string literal. Has zero runtime overhead.
+/// Macro version of \ref FLStr, for use in initializing compile-time constants.
+/// `STR` must be a C string literal. Has zero runtime overhead.
 #ifdef __cplusplus
     #define FLSTR(STR) (FLSlice {("" STR), sizeof(("" STR))-1})
 #else
@@ -128,5 +141,12 @@ static inline void FLSliceResult_Release(FLSliceResult s) FLAPI {
 /** @} */
 
 #ifdef __cplusplus
+
+    FLSliceResult::operator std::string () const {
+        auto str = std::string((char*)buf, size);
+        FLSliceResult_Release(*this);
+        return str;
+    }
+
 }
 #endif

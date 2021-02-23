@@ -108,11 +108,13 @@
 #endif
 
 
-// `constexpr17` is for uses of `constexpr` that are valid in C++17 but not earlier.
+// `constexpr14` is for uses of `constexpr` that are valid in C++14 but not earlier.
+// In constexpr functions this includes `if`, `for`, `while` statements; or multiple `return`s.
+// The macro expands to `constexpr` in C++14 or later, otherwise to nothing.
 #ifdef __cplusplus
-    #if __cplusplus >= 201700L || _MSVC_LANG >= 201700L
-        #define constexpr17 constexpr
+    #if __cplusplus >= 201400L || _MSVC_LANG >= 201400L
+        #define constexpr14 constexpr
     #else
-        #define constexpr17
+        #define constexpr14
     #endif
 #endif // __cplusplus
