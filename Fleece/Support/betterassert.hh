@@ -12,6 +12,7 @@
 // `assert_always()`, `precondition()`, and `postcondition()` do basically the same thing:
 // if the boolean parameter is false, they log a message (to stderr) and throw an exception.
 // They just throw different exceptions with different messages.
+// Or if exceptions were disabled when betterassert.cc was compiled, they call std::terminate.
 //
 // * `precondition()` should be used at the start of a function/method to test its parameters
 //   or initial state.
@@ -27,23 +28,29 @@
 
 #ifndef assert_always
     #include "PlatformCompat.hh"
-    #include <stdexcept>
+    #ifdef __cpp_exceptions
+        #include <stdexcept>
+    #else
+        #define _assert_failed _assert_failed_nox
+        #define _precondition_failed _precondition_failed_nox
+        #define _postcondition_failed _postcondition_failed_nox
+    #endif
 
     #ifdef _MSC_VER
         // MSVC has `__FUNCSIG__` for the function signature
         #define assert_always(e) ((void) (_usuallyTrue(!!(e)) ? ((void)0) : fleece::_assert_failed (#e, __FUNCSIG__, __FILE__, __LINE__)))
-        #define precondition(e) ((void)  (_usuallyTrue(!!(e)) ? ((void)0) : fleece::_precondition_failed (#e, __FUNCSIG__, __FILE__, __LINE__)))
-        #define postcondition(e) ((void) (_usuallyTrue(!!(e)) ? ((void)0) : fleece::_postcondition_failed (#e, __FUNCSIG__, __FILE__, __LINE__)))
+        #define precondition(e) ((void)  (_usuallyTrue(!!(e)) ? ((void)0) : ::fleece::_precondition_failed (#e, __FUNCSIG__, __FILE__, __LINE__)))
+        #define postcondition(e) ((void) (_usuallyTrue(!!(e)) ? ((void)0) : ::fleece::_postcondition_failed (#e, __FUNCSIG__, __FILE__, __LINE__)))
     #elif defined(__FILE_NAME__)
         // Clang has `__FILE_NAME__` for the filename w/o path
-        #define assert_always(e) ((void) (_usuallyTrue(!!(e)) ? ((void)0) : fleece::_assert_failed (#e, __PRETTY_FUNCTION__, __FILE_NAME__, __LINE__)))
-        #define precondition(e) ((void)  (_usuallyTrue(!!(e)) ? ((void)0) : fleece::_precondition_failed (#e, __PRETTY_FUNCTION__, __FILE_NAME__, __LINE__)))
-        #define postcondition(e) ((void) (_usuallyTrue(!!(e)) ? ((void)0) : fleece::_postcondition_failed (#e, __PRETTY_FUNCTION__, __FILE_NAME__, __LINE__)))
+        #define assert_always(e) ((void) (_usuallyTrue(!!(e)) ? ((void)0) : ::fleece::_assert_failed (#e, __PRETTY_FUNCTION__, __FILE_NAME__, __LINE__)))
+        #define precondition(e) ((void)  (_usuallyTrue(!!(e)) ? ((void)0) : ::fleece::_precondition_failed (#e, __PRETTY_FUNCTION__, __FILE_NAME__, __LINE__)))
+        #define postcondition(e) ((void) (_usuallyTrue(!!(e)) ? ((void)0) : ::fleece::_postcondition_failed (#e, __PRETTY_FUNCTION__, __FILE_NAME__, __LINE__)))
     #else
         // GCC/default: use `__PRETTY_FUNCTION__` and `__FILE__`
-        #define assert_always(e) ((void) (_usuallyTrue(!!(e)) ? ((void)0) : fleece::_assert_failed (#e, __PRETTY_FUNCTION__, __FILE__, __LINE__)))
-        #define precondition(e) ((void)  (_usuallyTrue(!!(e)) ? ((void)0) : fleece::_precondition_failed (#e, __PRETTY_FUNCTION__, __FILE__, __LINE__)))
-        #define postcondition(e) ((void) (_usuallyTrue(!!(e)) ? ((void)0) : fleece::_postcondition_failed (#e, __PRETTY_FUNCTION__, __FILE__, __LINE__)))
+        #define assert_always(e) ((void) (_usuallyTrue(!!(e)) ? ((void)0) : ::fleece::_assert_failed (#e, __PRETTY_FUNCTION__, __FILE__, __LINE__)))
+        #define precondition(e) ((void)  (_usuallyTrue(!!(e)) ? ((void)0) : ::fleece::_precondition_failed (#e, __PRETTY_FUNCTION__, __FILE__, __LINE__)))
+        #define postcondition(e) ((void) (_usuallyTrue(!!(e)) ? ((void)0) : ::fleece::_postcondition_failed (#e, __PRETTY_FUNCTION__, __FILE__, __LINE__)))
     #endif
 
     namespace fleece {
@@ -54,10 +61,12 @@
         [[noreturn]] NOINLINE void _postcondition_failed(const char *condition, const char *fn,
                                                          const char *file, int line);
 
-        class assertion_failure : public std::logic_error {
-        public:
-            assertion_failure(const char *what) :logic_error(what) { }
-        };
+        #ifdef __cpp_exceptions
+            class assertion_failure : public std::logic_error {
+            public:
+                assertion_failure(const char *what) :logic_error(what) { }
+            };
+        #endif
     }
 #endif // assert_always
 

@@ -192,7 +192,7 @@ namespace fleece {
         template <typename T>
         static T* reallocBytes(T* bytes, size_t newSz) {
             T* newBytes = (T*)::realloc(bytes, newSz);
-            if (!newBytes) throw std::bad_alloc();
+            if (_usuallyFalse(!newBytes)) failBadAlloc();
             return newBytes;
         }
 
@@ -241,6 +241,9 @@ namespace fleece {
             return (str && *str) ? (1 + _strlen(str+1)) : 0;
 #endif
         }
+
+        // Throws std::bad_alloc, or if exceptions are disabled calls std::terminate()
+        [[noreturn]] static void failBadAlloc();
     };
 
 
