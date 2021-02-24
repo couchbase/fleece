@@ -22,6 +22,7 @@
 #include <mutex>
 #include <stdlib.h>
 #include <stdio.h>
+#include <typeinfo>
 
 #if defined(__clang__) // For __cxa_demangle
 #include <cxxabi.h>

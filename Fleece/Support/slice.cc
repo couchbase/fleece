@@ -351,7 +351,7 @@ namespace fleece {
     /** Raw memory allocation. Just like malloc but throws on failure. */
     void* pure_slice::newBytes(size_t sz) {
         void* result = ::malloc(sz);
-        if (!result) throw std::bad_alloc();
+        if (_usuallyFalse(!result)) failBadAlloc();
         return result;
     }
 
@@ -455,12 +455,22 @@ namespace fleece {
     }
 
 
+    [[noreturn]] void pure_slice::failBadAlloc() {
+#ifdef x__cpp_exceptions
+        throw std::bad_alloc();
+#else
+        fprintf(stderr, "*** FATAL ERROR: heap allocation failed (fleece/slice.cc) ***\n");
+        std::terminate();
+#endif
+    }
+
+
     __hot
     alloc_slice::alloc_slice(size_t sz)
     :pure_slice(asSlice(FLSliceResult_New(sz)))
     {
         if (_usuallyFalse(!buf))
-            throw std::bad_alloc();
+            failBadAlloc();
     }
 
 
@@ -469,7 +479,7 @@ namespace fleece {
     :pure_slice(asSlice(FLSlice_Copy({s.buf, s.size})))
     {
         if (_usuallyFalse(!buf) && s.buf)
-            throw std::bad_alloc();
+            failBadAlloc();
     }
 
 
