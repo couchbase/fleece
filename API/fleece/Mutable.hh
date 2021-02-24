@@ -5,6 +5,8 @@
 //
 
 #pragma once
+#ifndef _FLEECE_MUTABLE_HH
+#define _FLEECE_MUTABLE_HH
 #include "Fleece.hh"
 #include "betterassert.hh"
 
@@ -269,3 +271,5 @@ namespace fleece {
     }
 
 }
+
+#endif // _FLEECE_MUTABLE_HH

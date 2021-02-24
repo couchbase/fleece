@@ -6,10 +6,7 @@
 
 #pragma once
 #ifndef FLEECE_BASE_H
-    #define FLEECE_BASE_H
-#else
-    #error "Compiler is not honoring #pragma once"
-#endif
+#define FLEECE_BASE_H
 
 // The __has_xxx() macros are only(?) implemented by Clang. (Except GCC has __has_attribute...)
 // Define them to return 0 on other compilers.
@@ -118,3 +115,7 @@
         #define constexpr14
     #endif
 #endif // __cplusplus
+
+#else // FLEECE_BASE_H
+    #warn "Compiler is not honoring #pragma once"
+#endif
