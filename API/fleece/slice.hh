@@ -17,6 +17,8 @@
 //
 
 #pragma once
+#ifndef _FLEECE_SLICE_HH
+#define _FLEECE_SLICE_HH
 
 #include "Base.h"
 #include "FLSlice.h"
@@ -503,3 +505,5 @@ namespace std {
         std::size_t operator() (fleece::pure_slice const& s) const {return s.hash();}
     };
 }
+
+#endif // _FLEECE_SLICE_HH

@@ -7,6 +7,9 @@
 //
 
 #pragma once
+#ifndef _FLSLICE_H
+#define _FLSLICE_H
+
 #include "Base.h"
 #include <stdbool.h>
 #include <stdint.h>
@@ -159,3 +162,5 @@ static inline void FLSliceResult_Release(FLSliceResult s) FLAPI {
 
 }
 #endif
+
+#endif // _FLSLICE_H
