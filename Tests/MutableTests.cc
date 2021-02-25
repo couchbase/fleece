@@ -672,11 +672,13 @@ namespace fleece {
     }
 
     TEST_CASE("Encoding mutable dict with shared keys", "[Mutable][SharedKeys]") {
-        testEncodingMutableDictWithSharedKeys(retained(new SharedKeys));
+        auto sk = make_retained<SharedKeys>();
+        testEncodingMutableDictWithSharedKeys(sk);
     }
 
     TEST_CASE("Encoding mutable dict with persistent shared keys", "[Mutable][SharedKeys]") {
-        testEncodingMutableDictWithSharedKeys(retained(new FakePersistentSharedKeys));
+        auto sk = make_retained<FakePersistentSharedKeys>();
+        testEncodingMutableDictWithSharedKeys(sk);
     }
 
 

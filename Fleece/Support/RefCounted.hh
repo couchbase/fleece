@@ -103,31 +103,29 @@ namespace fleece {
         Retained() noexcept                             :_ref(nullptr) { }
         Retained(T *t) noexcept                         :_ref(retain(t)) { }
 
-        Retained(const Retained &r) noexcept     :_ref(retain(r._ref)) { }
-        Retained(Retained &&r) noexcept          :_ref(std::move(r).detach()) { }
+        Retained(const Retained &r) noexcept            :_ref(retain(r._ref)) { }
+        Retained(Retained &&r) noexcept                 :_ref(std::move(r).detach()) { }
 
         template <typename U>
         Retained(const Retained<U> &r) noexcept         :_ref(retain(r._ref)) { }
 
         template <typename U>
-        Retained(Retained<U> &&r) noexcept       :_ref(std::move(r).detach()) { }
+        Retained(Retained<U> &&r) noexcept              :_ref(std::move(r).detach()) { }
 
         ~Retained()                                     {release(_ref);}
 
-        operator T* () const noexcept FLPURE STEPOVER     {return _ref;}
-        T* operator-> () const noexcept FLPURE STEPOVER   {return _ref;}
-        T* get() const noexcept FLPURE           {return _ref;}
+        operator T* () const & noexcept FLPURE STEPOVER {return _ref;}
+        T* operator-> () const noexcept FLPURE STEPOVER {return _ref;}
+        T* get() const noexcept FLPURE STEPOVER         {return _ref;}
 
-        explicit operator bool () const FLPURE   {return (_ref != nullptr);}
+        explicit operator bool () const FLPURE          {return (_ref != nullptr);}
 
         Retained& operator=(T *t) noexcept              {assignRef(_ref, t); return *this;}
 
         Retained& operator=(const Retained &r) noexcept {return *this = r._ref;}
 
         template <typename U>
-        Retained& operator=(const Retained<U> &r) noexcept {
-            return *this = r._ref;
-        }
+        Retained& operator=(const Retained<U> &r) noexcept {return *this = r._ref;}
 
         Retained& operator= (Retained &&r) noexcept {
             // Unexpectedly, the simplest & most efficient way to implement this is by simply
@@ -153,6 +151,31 @@ namespace fleece {
 
         T* detach() && noexcept                  {auto r = _ref; _ref = nullptr; return r;}
 
+        // The operator below is often a dangerous mistake, so it's deliberately made impossible.
+        // It happens in these sorts of contexts, where it can produce a dangling pointer to a
+        // deleted object:
+        //      Retained<Foo> createFoo();
+        //      ...
+        //      Foo *foo = createFoo();     // ☠️
+        // or:
+        //      return createFoo();         // ☠️
+        //
+        // However, it _is_ valid if you're passing the Retained r-value as a function parameter,
+        // since it will not be released until after the function returns:
+        //      void handleFoo(Foo*);
+        //      ...
+        //      handleFoo( createFoo() );           // Would be OK, but prohibited due to the above
+        // In this case you can use an explicit `get()` to work around the prohibition:
+        //      handleFoo( createFoo().get() );     // OK!
+        // ...or promote it to an l-value:
+        //      Retained<Foo> foo = createFoo();
+        //      handleFoo(foo);                     // OK!
+        // ...or change `handleFoo`s parameter to Retained:
+        //      void handleFoo(Retained<Foo>);
+        //      ...
+        //      handleFoo( createFoo() );           // OK!
+        operator T* () const && =delete; // see above^
+
     private:
         template <class U> friend class Retained;
 
@@ -168,11 +191,13 @@ namespace fleece {
         RetainedConst(const T *t) noexcept              :_ref(retain(t)) { }
         RetainedConst(const RetainedConst &r) noexcept  :_ref(retain(r._ref)) { }
         RetainedConst(RetainedConst &&r) noexcept       :_ref(std::move(r).detach()) { }
+        RetainedConst(const Retained<T> &r) noexcept    :_ref(retain(r._ref)) { }
+        RetainedConst(Retained<T> &&r) noexcept         :_ref(std::move(r).detach()) { }
         ALWAYS_INLINE ~RetainedConst()                  {release(_ref);}
 
-        operator const T* () const noexcept FLPURE STEPOVER      {return _ref;}
-        const T* operator-> () const noexcept FLPURE STEPOVER    {return _ref;}
-        const T* get() const noexcept FLPURE            {return _ref;}
+        operator const T* () const & noexcept FLPURE STEPOVER   {return _ref;}
+        const T* operator-> () const noexcept FLPURE STEPOVER   {return _ref;}
+        const T* get() const noexcept FLPURE STEPOVER           {return _ref;}
 
         RetainedConst& operator=(const T *t) noexcept {
             auto oldRef = _ref;
@@ -191,6 +216,8 @@ namespace fleece {
         }
 
         const T* detach() && noexcept                   {auto r = _ref; _ref = nullptr; return r;}
+
+        operator const T* () const && =delete; // Usually a mistake; see above under Retained
 
     private:
         const T *_ref;
