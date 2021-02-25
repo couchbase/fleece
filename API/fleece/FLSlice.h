@@ -153,14 +153,20 @@ static inline void FLSliceResult_Release(FLSliceResult s) FLAPI {
 /** @} */
 
 #ifdef __cplusplus
+}
+
+    FLPURE static inline bool operator== (FLSlice s1, FLSlice s2) {return FLSlice_Equal(s1, s2);}
+    FLPURE static inline bool operator!= (FLSlice s1, FLSlice s2) {return !(s1 == s2);}
+
+    FLPURE static inline bool operator== (FLSliceResult sr, FLSlice s) {return (FLSlice)sr == s;}
+    FLPURE static inline bool operator!= (FLSliceResult sr, FLSlice s) {return !(sr ==s);}
+
 
     FLSliceResult::operator std::string () const {
         auto str = std::string((char*)buf, size);
         FLSliceResult_Release(*this);
         return str;
     }
-
-}
 #endif
 
 #endif // _FLSLICE_H
