@@ -154,22 +154,12 @@ namespace fleece {
         explicit operator std::string() const       {return std::string((const char*)buf, size);}
         std::string asString() const                {return (std::string)*this;}
         std::string hexString() const;
-        std::string base64String() const;
 
         operator FLSlice () const noexcept          {return {buf, size};}
 
         /** Copies into a C string buffer of the given size. Result is always NUL-terminated and
             will not overflow the buffer. Returns false if the slice was truncated. */
         bool toCString(char *buf, size_t bufSize) const noexcept;
-
-        /** Decodes Base64 data from receiver into output. On success returns subrange of output
-            where the decoded data is. If output is too small to hold all the decoded data, returns
-            a null slice. */
-        slice readBase64Into(pure_slice output) const noexcept;
-
-        /** Decodes Base64 data from receiver into a new alloc_slice.
-            On failure returns a null slice. */
-        alloc_slice decodeBase64() const;
 
         #define hexCString() hexString().c_str()    // has to be a macro else dtor called too early
         #define cString() asString().c_str()        // has to be a macro else dtor called too early
