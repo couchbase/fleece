@@ -27,6 +27,7 @@ function(set_source_files_base)
         Fleece/Mutable/HeapValue.cc
         Fleece/Mutable/ValueSlot.cc
         Fleece/Support/Backtrace.cc
+        Fleece/Support/Base64.cc
         Fleece/Support/betterassert.cc
         Fleece/Support/Bitmap.cc
         Fleece/Support/ConcurrentArena.cc
