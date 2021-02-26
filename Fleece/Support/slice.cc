@@ -19,6 +19,7 @@
 #define __STDC_WANT_LIB_EXT1__ 1
 
 #include "fleece/slice.hh"
+#include "wyhash.h"
 #include <algorithm>
 #include <atomic>
 #include <cmath>
@@ -66,6 +67,11 @@ namespace fleece {
         memcpy(str, buf, n);
         str[n] = 0;
         return n == size;
+    }
+
+
+    __hot uint32_t pure_slice::hash() const noexcept {
+        return (uint32_t) wyhash(buf, size, 0, _wyp);
     }
 
 
