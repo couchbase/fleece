@@ -185,6 +185,33 @@ TEST_CASE("Function with non-primitive types") {
 }
 
 
+TEST_CASE("Hash distribution") {
+    static constexpr int kSize = 4096, kNKeys = 2048;
+    int bucket[kSize] = {0};
+    for (int i = 0; i < kNKeys; ++i) {
+        char keybuf[10];
+        sprintf(keybuf, "k-%04d", i);
+        int hash = slice(keybuf).hash();
+        int index = hash & (kSize-1);
+        ++bucket[index];
+    }
+
+    int hist[kSize] = {0};
+    for (int i = 0; i < kSize; ++i) {
+        ++hist[bucket[i]];
+    }
+    int total = 0;
+    for (int i = kSize - 1; i >= 0; --i) {
+        if (hist[i] > 0 || total > 0) {
+            cout << hist[i] << " buckets have " << i << " keys\n";
+            total += i * hist[i];
+            CHECK(i <= 7);
+        }
+    }
+    CHECK(total == kNKeys);
+}
+
+
 TEST_CASE("ConcurrentMap basic", "[ConcurrentMap]") {
     ConcurrentMap map(2048);
     cout << "table size = " << map.tableSize() << ", capacity = " << map.capacity()

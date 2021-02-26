@@ -164,23 +164,8 @@ namespace fleece {
         #define hexCString() hexString().c_str()    // has to be a macro else dtor called too early
         #define cString() asString().c_str()        // has to be a macro else dtor called too early
 
-        /** Computes a 32-bit FNV-1a hash of the slice's contents. (Not cryptographic!) */
-        __hot constexpr14 uint32_t hash() const noexcept FLPURE {
-            // <https://en.wikipedia.org/wiki/Fowler–Noll–Vo_hash_function#FNV-1a_hash>
-            uint32_t h = 2166136261;
-            auto bytes = (const uint8_t*)buf;
-            for (size_t i = 0; i < size; i++) {
-                h = (h ^ bytes[i]) * 16777619;
-            }
-            return h;
-        }
-
-        static constexpr14 uint32_t hash(const char *str NONNULL) noexcept FLPURE {
-            uint32_t h = 2166136261;
-            while (*str)
-                h = (h ^ uint8_t(*str++)) * 16777619;
-            return h;
-        }
+        /** Computes a 32-bit non-cryptographic hash of the slice's contents. */
+        uint32_t hash() const noexcept FLPURE;
 
         /** Raw memory allocation. Just like malloc but throws or terminates on failure. */
         RETURNS_NONNULL

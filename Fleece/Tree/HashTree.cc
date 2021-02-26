@@ -37,6 +37,18 @@ namespace fleece {
 
     namespace hashtree {
 
+
+        FLPURE hash_t ComputeHash(slice s) noexcept {
+            // FNV-1a hash function.
+            // <https://en.wikipedia.org/wiki/Fowler–Noll–Vo_hash_function#FNV-1a_hash>
+            auto byte = (const uint8_t*)s.buf;
+            uint32_t h = 2166136261;
+            for (size_t i = 0; i < s.size; i++, byte++) {
+                h = (h ^ *byte) * 16777619;
+            }
+            return h;
+        }
+
         void Leaf::validate() const {
             assert(_keyOffset > 0);
             assert(_valueOffset > 0);
@@ -180,7 +192,7 @@ namespace fleece {
 
     Value HashTree::get(slice key) const {
         auto root = rootNode();
-        auto leaf = root->findNearest(key.hash());
+        auto leaf = root->findNearest(ComputeHash(key));
         if (leaf && leaf->keyString() == key)
             return leaf->value();
         return nullptr;

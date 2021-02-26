@@ -18,7 +18,7 @@ namespace fleece { namespace hashtree {
     // Specifies an insertion/deletion
     struct Target {
         explicit Target(slice k, MutableHashTree::InsertCallback *callback =nullptr)
-        :key(k), hash(k.hash()), insertCallback(callback)
+        :key(k), hash(ComputeHash(k)), insertCallback(callback)
         { }
 
         bool operator== (const Target &b) const {
