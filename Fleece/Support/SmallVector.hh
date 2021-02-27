@@ -55,6 +55,10 @@ namespace fleece {
             return *this;
         }
 
+        smallVector& operator=(const smallVector &sv) noexcept {
+            return operator=<N>(sv);
+        }
+
         template <size_t M>
         smallVector& operator=(const smallVector<T,M> &sv) {
             erase(begin(), end());
@@ -147,8 +151,10 @@ namespace fleece {
         }
 
         void erase(iterator first, iterator last) {
-            assert_precondition(begin() <= first && first < last && last <= end());
-            for (auto i = first; i < last; ++i)
+            assert_precondition(begin() <= first && first <= last && last <= end());
+            if (first == last)
+                return;
+            for (auto i = first; i != last; ++i)
                 i->T::~T();                 // destruct removed items
             _moveItems(first, last, end());
             _size -= last - first;

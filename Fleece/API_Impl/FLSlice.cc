@@ -17,6 +17,7 @@
 //
 
 #include "fleece/FLSlice.h"
+#include <algorithm>
 #include <atomic>
 #include <cstddef>
 #include "betterassert.hh"

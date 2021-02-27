@@ -86,6 +86,9 @@ namespace fleece {
             _capacity = newCap;
         }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+// Seems like GCC gets confused about the union type, potentially...
 
         // Reduces capacity, switching from external to inline storage.
         void _emsmallen(uint32_t newCap, size_t itemSize) {
@@ -98,6 +101,7 @@ namespace fleece {
             _capacity = newCap;
         }
 
+#pragma GCC diagnostic pop
 
         // Increases size & returns pointer to (uninitialized) first new item.
         void* _growTo(uint32_t newSize, size_t itemSize) {
