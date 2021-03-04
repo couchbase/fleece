@@ -165,7 +165,7 @@ namespace fleece {
         #define cString() asString().c_str()        // has to be a macro else dtor called too early
 
         /** Computes a 32-bit non-cryptographic hash of the slice's contents. */
-        uint32_t hash() const noexcept FLPURE;
+        uint32_t hash() const noexcept FLPURE       {return FLSlice_Hash(*this);}
 
         /** Raw memory allocation. Just like malloc but throws or terminates on failure. */
         RETURNS_NONNULL

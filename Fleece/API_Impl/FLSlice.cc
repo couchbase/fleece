@@ -17,6 +17,7 @@
 //
 
 #include "fleece/FLSlice.h"
+#include "wyhash.h"
 #include <algorithm>
 #include <atomic>
 #include <cstddef>
@@ -49,6 +50,11 @@ bool FLSlice_ToCString(FLSlice s, char* buffer, size_t capacity) noexcept {
         memcpy(buffer, s.buf, n);
     buffer[n] = '\0';
     return (n == s.size);
+}
+
+
+__hot uint32_t FLSlice_Hash(FLSlice s) noexcept {
+    return (uint32_t) wyhash(s.buf, s.size, 0, _wyp);
 }
 
 
