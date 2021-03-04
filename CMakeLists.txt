@@ -83,10 +83,11 @@ foreach(platform Fleece FleeceStatic FleeceBase fleeceTool FleeceTests)
         Fleece/Support
         Fleece/Tree
         Experimental
-        vendor/libb64
-        vendor/jsonsl
-        vendor/SwiftDtoa
         vendor/date/include
+        vendor/jsonsl
+        vendor/libb64
+        vendor/SwiftDtoa
+        vendor/wyhash
     )
 
     target_compile_definitions(

@@ -120,6 +120,9 @@ bool FLSlice_Equal(FLSlice a, FLSlice b) FLAPI FLPURE;
     differences in length. */
 int FLSlice_Compare(FLSlice, FLSlice) FLAPI FLPURE;
 
+/** Computes a 32-bit hash of a slice's data, suitable for use in hash tables. */
+uint32_t FLSlice_Hash(FLSlice s) FLAPI FLPURE;
+
 /** Copies a slice to a buffer, adding a trailing zero byte to make it a valid C string.
     If there is not enough capacity the slice will be truncated, but the trailing zero byte is
     always written.
