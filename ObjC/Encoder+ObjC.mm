@@ -25,7 +25,7 @@ using namespace fleece::impl;
 
 
 @interface NSObject (FleeceInternal)
-- (void) encodeTo: (FLEncoderImpl*) enc;
+- (void) fl_encodeTo: (FLEncoderImpl*)enc;
 @end
 
 
@@ -62,13 +62,13 @@ bool FLEncoder_WriteNSObject(FLEncoder encoder, id obj) FLAPI {
 
 @implementation NSObject (Fleece)
 - (void) fl_encodeToFLEncoder: (FLEncoder)enc {
-    [self encodeTo: enc];
+    [self fl_encodeTo: enc];
 }
 @end
 
 
 @implementation NSObject (FleeceInternal)
-- (void) encodeTo: (FLEncoderImpl*) enc {
+- (void) fl_encodeTo: (FLEncoderImpl*)enc {
     // Default implementation -- object doesn't implement Fleece encoding at all.
     NSString* msg = [NSString stringWithFormat: @"Objects of class %@ cannot be encoded",
                      [self class]];
@@ -79,14 +79,14 @@ bool FLEncoder_WriteNSObject(FLEncoder encoder, id obj) FLAPI {
 
 
 @implementation NSNull (Fleece)
-- (void) encodeTo:(FLEncoderImpl *)enc {
+- (void) fl_encodeTo: (FLEncoderImpl*)enc {
     ENCODER_DO(enc, writeNull());
 }
 
 @end
 
 @implementation NSNumber (Fleece)
-- (void) encodeTo:(FLEncoderImpl *)enc {
+- (void) fl_encodeTo: (FLEncoderImpl*)enc {
     switch (self.objCType[0]) {
         case 'b':
             ENCODER_DO(enc, writeBool(self.boolValue));
@@ -119,7 +119,7 @@ bool FLEncoder_WriteNSObject(FLEncoder encoder, id obj) FLAPI {
 @end
 
 @implementation NSString (Fleece)
-- (void) encodeTo:(FLEncoderImpl *)enc {
+- (void) fl_encodeTo: (FLEncoderImpl*)enc {
     nsstring_slice s(self);
     ENCODER_DO(enc, writeString(s));
 }
@@ -127,7 +127,7 @@ bool FLEncoder_WriteNSObject(FLEncoder encoder, id obj) FLAPI {
 @end
 
 @implementation NSData (Fleece)
-- (void) encodeTo:(FLEncoderImpl *)enc {
+- (void) fl_encodeTo: (FLEncoderImpl*)enc {
     ENCODER_DO(enc, writeData(slice(self)));
 }
 
@@ -142,10 +142,10 @@ bool FLEncoder_WriteNSObject(FLEncoder encoder, id obj) FLAPI {
     FLEncoder_EndArray(enc);
 }
 
-- (void) encodeTo:(FLEncoderImpl *)enc {
+- (void) fl_encodeTo: (FLEncoderImpl*)enc {
     ENCODER_DO(enc, beginArray((uint32_t)self.count));
     for (NSString* item in self) {
-        [item encodeTo: enc];
+        [item fl_encodeTo: enc];
     }
     ENCODER_DO(enc, endArray());
 }
@@ -164,13 +164,13 @@ bool FLEncoder_WriteNSObject(FLEncoder encoder, id obj) FLAPI {
     FLEncoder_EndDict(enc);
 }
 
-- (void) encodeTo:(FLEncoderImpl *)enc {
+- (void) fl_encodeTo: (FLEncoderImpl*)enc {
     ENCODER_DO(enc, beginDictionary((uint32_t)self.count));
     [self enumerateKeysAndObjectsUsingBlock:^(__unsafe_unretained id key,
                                               __unsafe_unretained id value, BOOL *stop) {
         nsstring_slice slice(key);
         ENCODER_DO(enc, writeKey(slice));
-        [value encodeTo: enc];
+        [value fl_encodeTo: enc];
     }];
     ENCODER_DO(enc, endDictionary());
 }
