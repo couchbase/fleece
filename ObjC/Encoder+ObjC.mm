@@ -25,7 +25,7 @@ using namespace fleece::impl;
 
 
 @interface NSObject (FleeceInternal)
-- (void) fl_encodeTo: (Encoder*)enc;
+- (void) encodeTo: (FLEncoderImpl*) enc;
 @end
 
 
@@ -59,73 +59,78 @@ bool FLEncoder_WriteNSObject(FLEncoder encoder, id obj) FLAPI {
 }
 
 
+
 @implementation NSObject (Fleece)
 - (void) fl_encodeToFLEncoder: (FLEncoder)enc {
-    // Fall back to the internal fl_encodeTo:, which takes a raw C++ Encoder*.
-    [self fl_encodeTo: ((FLEncoderImpl*)enc)->fleeceEncoder.get()];
+    [self encodeTo: enc];
 }
 @end
 
 
 @implementation NSObject (FleeceInternal)
-- (void) fl_encodeTo: (Encoder*)enc {
+- (void) encodeTo: (FLEncoderImpl*) enc {
     // Default implementation -- object doesn't implement Fleece encoding at all.
     NSString* msg = [NSString stringWithFormat: @"Objects of class %@ cannot be encoded",
                      [self class]];
     FleeceException::_throw(EncodeError, "%s", msg.UTF8String);
 }
+
 @end
 
 
 @implementation NSNull (Fleece)
-- (void) fl_encodeTo: (Encoder*)enc {
-    enc->writeNull();
+- (void) encodeTo:(FLEncoderImpl *)enc {
+    ENCODER_DO(enc, writeNull());
 }
+
 @end
 
 @implementation NSNumber (Fleece)
-- (void) fl_encodeTo: (Encoder*)enc {
+- (void) encodeTo:(FLEncoderImpl *)enc {
     switch (self.objCType[0]) {
         case 'b':
-            enc->writeBool(self.boolValue);
+            ENCODER_DO(enc, writeBool(self.boolValue));
             break;
         case 'c':
             // The only way to tell whether an NSNumber with 'char' type is a boolean is to
             // compare it against the singleton kCFBoolean objects:
             if (self == (id)kCFBooleanTrue)
-                enc->writeBool(true);
+                ENCODER_DO(enc, writeBool(true));
             else if (self == (id)kCFBooleanFalse)
-                enc->writeBool(false);
+                ENCODER_DO(enc, writeBool(false));
             else
-                enc->writeInt(self.charValue);
+                ENCODER_DO(enc, writeInt(self.charValue));
             break;
         case 'f':
-            enc->writeFloat(self.floatValue);
+            ENCODER_DO(enc, writeFloat(self.floatValue));
             break;
         case 'd':
-            enc->writeDouble(self.doubleValue);
+            ENCODER_DO(enc, writeDouble(self.doubleValue));
             break;
         case 'Q':
-            enc->writeUInt(self.unsignedLongLongValue);
+            ENCODER_DO(enc, writeUInt(self.unsignedLongLongValue));
             break;
         default:
-            enc->writeInt(self.longLongValue);
+            ENCODER_DO(enc, writeInt(self.longLongValue));
             break;
     }
 }
+
 @end
 
 @implementation NSString (Fleece)
-- (void) fl_encodeTo: (Encoder*)enc {
+- (void) encodeTo:(FLEncoderImpl *)enc {
     nsstring_slice s(self);
-    enc->writeString(s);
+    ENCODER_DO(enc, writeString(s));
 }
+
 @end
 
 @implementation NSData (Fleece)
-- (void) fl_encodeTo: (Encoder*)enc {
-    enc->writeData(slice(self));
+- (void) encodeTo:(FLEncoderImpl *)enc {
+    ENCODER_DO(enc, writeData(slice(self)));
 }
+
 @end
 
 @implementation NSArray (Fleece)
@@ -137,13 +142,14 @@ bool FLEncoder_WriteNSObject(FLEncoder encoder, id obj) FLAPI {
     FLEncoder_EndArray(enc);
 }
 
-- (void) fl_encodeTo: (Encoder*)enc {
-    enc->beginArray((uint32_t)self.count);
+- (void) encodeTo:(FLEncoderImpl *)enc {
+    ENCODER_DO(enc, beginArray((uint32_t)self.count));
     for (NSString* item in self) {
-        [item fl_encodeTo: enc];
+        [item encodeTo: enc];
     }
-    enc->endArray();
+    ENCODER_DO(enc, endArray());
 }
+
 @end
 
 @implementation NSDictionary (Fleece)
@@ -158,14 +164,15 @@ bool FLEncoder_WriteNSObject(FLEncoder encoder, id obj) FLAPI {
     FLEncoder_EndDict(enc);
 }
 
-- (void) fl_encodeTo: (Encoder*)enc {
-    enc->beginDictionary((uint32_t)self.count);
+- (void) encodeTo:(FLEncoderImpl *)enc {
+    ENCODER_DO(enc, beginDictionary((uint32_t)self.count));
     [self enumerateKeysAndObjectsUsingBlock:^(__unsafe_unretained id key,
                                               __unsafe_unretained id value, BOOL *stop) {
         nsstring_slice slice(key);
-        enc->writeKey(slice);
-        [value fl_encodeTo: enc];
+        ENCODER_DO(enc, writeKey(slice));
+        [value encodeTo: enc];
     }];
-    enc->endDictionary();
+    ENCODER_DO(enc, endDictionary());
 }
+
 @end
