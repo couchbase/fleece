@@ -708,6 +708,11 @@ FLSliceResult FLEncoder_Finish(FLEncoder e, FLError *outError) FLAPI {
     e->reset();
     return {nullptr, 0};
 }
+    
+    
+bool FLEncoder_isFleece(FLEncoder e) FLAPI {
+    return e->isFleece();
+}
 
 
 #pragma mark - DOCUMENTS

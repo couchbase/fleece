@@ -1135,6 +1135,9 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
     /** Returns the error message of an encoder, or NULL if there's no error. */
     const char* FLEncoder_GetErrorMessage(FLEncoder FLNONNULL) FLAPI;
 
+    /** Returns whether the encoder is fleece or not*/
+    bool FLEncoder_isFleece(FLEncoder FLNONNULL) FLAPI;
+
     /** @} */
     /** @} */
 
