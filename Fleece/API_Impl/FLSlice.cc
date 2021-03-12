@@ -17,11 +17,18 @@
 //
 
 #include "fleece/FLSlice.h"
-#include "wyhash.h"
 #include <algorithm>
 #include <atomic>
 #include <cstddef>
 #include "betterassert.hh"
+
+// Both headers declare a `wyrand()` function, so use namespaces to prevent collision.
+namespace fleece::wyhash {
+    #include "wyhash.h"
+}
+namespace fleece::wyhash32 {
+    #include "wyhash32.h"
+}
 
 
 bool FLSlice_Equal(FLSlice a, FLSlice b) noexcept {
@@ -54,7 +61,14 @@ bool FLSlice_ToCString(FLSlice s, char* buffer, size_t capacity) noexcept {
 
 
 __hot uint32_t FLSlice_Hash(FLSlice s) noexcept {
-    return (uint32_t) wyhash(s.buf, s.size, 0, _wyp);
+    // I don't know for sure, but I'm assuming it's best to use wyhash on 64-bit CPUs,
+    // and wyhash32 in 32-bit.
+    if (sizeof(void*) >= 8) {
+        return (uint32_t) fleece::wyhash::wyhash(s.buf, s.size, 0, fleece::wyhash::_wyp);
+    } else {
+        static constexpr unsigned kSeed = 0x91BAC172;
+        return fleece::wyhash32::wyhash32(s.buf, s.size, kSeed);
+    }
 }
 
 
