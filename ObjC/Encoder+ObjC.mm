@@ -24,11 +24,6 @@
 using namespace fleece::impl;
 
 
-@interface NSObject (FleeceInternal)
-- (void) fl_encodeToFLEncoder: (FLEncoder)enc;
-@end
-
-
 namespace fleece {
 
     void Encoder::writeObjC(__unsafe_unretained id obj) {
@@ -59,15 +54,7 @@ bool FLEncoder_WriteNSObject(FLEncoder encoder, id obj) FLAPI {
 }
 
 
-
 @implementation NSObject (Fleece)
-- (void) fl_encodeToFLEncoder: (FLEncoder)enc {
-    [self fl_encodeToFLEncoder: enc];
-}
-@end
-
-
-@implementation NSObject (FleeceInternal)
 - (void) fl_encodeToFLEncoder: (FLEncoder)enc {
     // Default implementation -- object doesn't implement Fleece encoding at all.
     NSString* msg = [NSString stringWithFormat: @"Objects of class %@ cannot be encoded",
@@ -80,7 +67,7 @@ bool FLEncoder_WriteNSObject(FLEncoder encoder, id obj) FLAPI {
 
 @implementation NSNull (Fleece)
 - (void) fl_encodeToFLEncoder: (FLEncoder)enc {
-    ENCODER_DO(enc, writeNull());
+    FLEncoder_WriteNull(enc);
 }
 
 @end
@@ -89,29 +76,29 @@ bool FLEncoder_WriteNSObject(FLEncoder encoder, id obj) FLAPI {
 - (void) fl_encodeToFLEncoder: (FLEncoder)enc {
     switch (self.objCType[0]) {
         case 'b':
-            ENCODER_DO(enc, writeBool(self.boolValue));
+            FLEncoder_WriteBool(enc, self.boolValue);
             break;
         case 'c':
             // The only way to tell whether an NSNumber with 'char' type is a boolean is to
             // compare it against the singleton kCFBoolean objects:
             if (self == (id)kCFBooleanTrue)
-                ENCODER_DO(enc, writeBool(true));
+                FLEncoder_WriteBool(enc, true);
             else if (self == (id)kCFBooleanFalse)
-                ENCODER_DO(enc, writeBool(false));
+                FLEncoder_WriteBool(enc, false);
             else
-                ENCODER_DO(enc, writeInt(self.charValue));
+                FLEncoder_WriteInt(enc, self.charValue);
             break;
         case 'f':
-            ENCODER_DO(enc, writeFloat(self.floatValue));
+            FLEncoder_WriteFloat(enc, self.floatValue);
             break;
         case 'd':
-            ENCODER_DO(enc, writeDouble(self.doubleValue));
+            FLEncoder_WriteDouble(enc, self.doubleValue);
             break;
         case 'Q':
-            ENCODER_DO(enc, writeUInt(self.unsignedLongLongValue));
+            FLEncoder_WriteUInt(enc, self.unsignedLongLongValue);
             break;
         default:
-            ENCODER_DO(enc, writeInt(self.longLongValue));
+            FLEncoder_WriteInt(enc, self.longLongValue);
             break;
     }
 }
@@ -121,39 +108,39 @@ bool FLEncoder_WriteNSObject(FLEncoder encoder, id obj) FLAPI {
 @implementation NSString (Fleece)
 - (void) fl_encodeToFLEncoder: (FLEncoder)enc {
     nsstring_slice s(self);
-    ENCODER_DO(enc, writeString(s));
+    FLEncoder_WriteString(enc, s);
 }
 
 @end
 
 @implementation NSData (Fleece)
 - (void) fl_encodeToFLEncoder: (FLEncoder)enc {
-    ENCODER_DO(enc, writeData(slice(self)));
+    FLEncoder_WriteData(enc, slice(self));
 }
 
 @end
 
 @implementation NSArray (Fleece)
 - (void) fl_encodeToFLEncoder: (FLEncoder)enc {
-    ENCODER_DO(enc, beginArray((uint32_t)self.count));
-    for (NSString* item in self) {
+    FLEncoder_BeginArray(enc, (uint32_t)self.count);
+    for (id item in self) {
         [item fl_encodeToFLEncoder: enc];
     }
-    ENCODER_DO(enc, endArray());
+    FLEncoder_EndArray(enc);
 }
 
 @end
 
 @implementation NSDictionary (Fleece)
 - (void) fl_encodeToFLEncoder: (FLEncoder)enc {
-    ENCODER_DO(enc, beginDictionary((uint32_t)self.count));
+    FLEncoder_BeginDict(enc, (uint32_t)self.count);
     [self enumerateKeysAndObjectsUsingBlock:^(__unsafe_unretained id key,
                                               __unsafe_unretained id value, BOOL *stop) {
         nsstring_slice slice(key);
-        ENCODER_DO(enc, writeKey(slice));
+        FLEncoder_WriteKey(enc, slice);
         [value fl_encodeToFLEncoder: enc];
     }];
-    ENCODER_DO(enc, endDictionary());
+    FLEncoder_EndDict(enc);
 }
 
 @end
