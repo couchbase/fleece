@@ -1,8 +1,10 @@
 # wyhash
 
-`wyhash32.h` is copied from [the wyhash GitHub repo][1], commit  091ad2a from 2020-04-25.
+`wyhash.h` and `wyhash32.h` were copied from [the wyhash GitHub repo][1], commit  091ad2a from 2020-04-25.
 
-The only local change is the addition of a cast to `unsigned` in line 21, to avoid a compiler warning.
+The only local changes are
+* a cast to `unsigned` in line 21 of `wyhash32.h`, to avoid a compiler warning.
+* adding `>0` in line 89 of `whyash.h`, to avoid a warning in 32-bit builds.
 
 ## What is it?
 
