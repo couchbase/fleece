@@ -258,6 +258,8 @@ namespace fleece {
         constexpr slice(const char* str) noexcept STEPOVER            :pure_slice(str) {}
 
         slice& operator= (alloc_slice&&) =delete;   // Disallowed: might lead to ptr to freed buf
+        slice& operator= (const alloc_slice &s) noexcept    {return *this = slice(s);}
+        slice& operator= (FLHeapSlice s) noexcept           {set(s.buf, s.size); return *this;} // disambiguation
         slice& operator= (std::nullptr_t) noexcept          {set(nullptr, 0); return *this;}
         inline slice& operator= (nullslice_t) noexcept;
 
