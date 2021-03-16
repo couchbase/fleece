@@ -31,7 +31,7 @@ namespace fleece {
         to a Retained, right after constructing it. */
     class RefCounted {
     public:
-        RefCounted()                            { }
+        RefCounted()                            =default;
         
         int refCount() const FLPURE             {return _refCount;}
 

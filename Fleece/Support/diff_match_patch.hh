@@ -119,7 +119,7 @@ class diff_match_patch {
      * @param text The text being applied.
      */
     Diff(Operation _operation, const string_t &_text) : operation(_operation), text(_text) {}
-    Diff() {}
+    Diff() =default;
 
     /**
      * Display a human-readable version of this Diff.
@@ -634,7 +634,7 @@ class diff_match_patch {
    */
  protected:
   struct LinePtr : std::pair<typename string_t::const_pointer, size_t> {
-    LinePtr() {}
+    LinePtr() =default;
     LinePtr(typename string_t::const_pointer p, size_t n) : std::pair<typename string_t::const_pointer, size_t>(p, n) {}
     bool operator<(const LinePtr& p) const
       { return this->second < p.second? true : this->second > p.second? false : string_t::traits_type::compare(this->first, p.first, this->second) < 0; }

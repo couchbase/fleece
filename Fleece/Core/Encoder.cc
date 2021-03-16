@@ -58,8 +58,7 @@ namespace fleece { namespace impl {
         init();
     }
 
-    Encoder::~Encoder() {
-    }
+    Encoder::~Encoder() =default;
 
     void Encoder::init() {
         // Initial state has a placeholder collection on the stack, which will contain the real
