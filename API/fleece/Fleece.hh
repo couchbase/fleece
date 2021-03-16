@@ -42,7 +42,7 @@ namespace fleece {
     /** A Fleece data value. Its subclasses are Array and Dict; Value itself is for scalars. */
     class Value {
     public:
-        Value()                                         { }
+        Value()                                         =default;
         Value(FLValue v)                                :_val(v) { }
         operator FLValue() const                        {return _val;}
 
@@ -156,7 +156,7 @@ namespace fleece {
             inline bool operator!= (const iterator&)    {return value() != nullptr;}
             inline Value operator[] (unsigned n) const  {return FLArrayIterator_GetValueAt(this,n);}
         private:
-            iterator() { }
+            iterator() =default;
             friend class Array;
         };
 
@@ -236,7 +236,7 @@ namespace fleece {
                                     {return FLDictIterator_GetKeyAsNSString(this, sharedStrings);}
 #endif
         private:
-            iterator() { }
+            iterator() =default;
             friend class Dict;
         };
 
@@ -577,7 +577,7 @@ namespace fleece {
     class AllocedDict : public Dict, alloc_slice {
     public:
         AllocedDict()
-        { }
+        =default;
 
         explicit AllocedDict(const alloc_slice &s)
         :Dict(FLValue_AsDict(FLValue_FromData(s, kFLUntrusted)))

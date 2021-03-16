@@ -211,7 +211,7 @@ namespace fleece {
         reference so it won't be freed. */
     class RetainedValue : public Value {
     public:
-        RetainedValue()                           { }
+        RetainedValue()                           =default;
         RetainedValue(FLValue v)                  :Value(FLValue_Retain(v)) { }
         RetainedValue(const Value &v)             :Value(FLValue_Retain(v)) { }
         RetainedValue(RetainedValue &&v) noexcept :Value(v) {v._val = nullptr;}

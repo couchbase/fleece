@@ -203,7 +203,7 @@ namespace fleece { namespace impl {
         // Stores the pending values to be written to an in-progress array/dict
         class valueArray : public smallVector<Value, kInitialCollectionCapacity> {
         public:
-            valueArray()                    { }
+            valueArray()                    =default;
             void reset(internal::tags t)    {tag = t; wide = false; keys.clear();}
             
             internal::tags tag;
