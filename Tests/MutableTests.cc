@@ -821,8 +821,7 @@ namespace fleece {
             md = MutableDict::newDict(dict);
         }
 
-        std::cout << "Are you kidding me?" << std::endl;
-        std::cout << "data is now " << data.size << " bytes\n";
+        std::cout << "data is now " << data.size << " bytes" << std::endl;
         dict->dump(std::cout);
         std::cout << "\n";
     }
