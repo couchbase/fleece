@@ -809,7 +809,7 @@ namespace fleece {
 
             // Look at how the data size changes:
             if (data.size < dataSize)
-                std::cout << i << ": data went from " << dataSize << " to " << data.size << " bytes\n";
+                std::cout << i << ": data went from " << dataSize << " to " << data.size << " bytes" << std::endl;
             dataSize = data.size;
             CHECK(dataSize < kMaxDataSize);
             //std::cout << "Data: " << data << "\n";
@@ -823,7 +823,7 @@ namespace fleece {
 
         std::cout << "data is now " << data.size << " bytes" << std::endl;
         dict->dump(std::cout);
-        std::cout << "\n";
+        std::cout << std::endl;
     }
 
 

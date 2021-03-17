@@ -81,15 +81,15 @@ namespace fleece { namespace impl {
             for (auto &i : _byAddress) {
                 if (!pos) {
                     if (i.first < 0)
-                        _out << "--begin extern data\n";
+                        _out << "--begin extern data" << std::endl;
                 } else {
                     if (*pos <= 0 && i.first >= 0)
-                        _out << "--end extern data\n";
+                        _out << "--end extern data" << std::endl;
                     else if (i.first > *pos)
-                        _out << "{skip " << std::hex << (i.first - *pos) << std::dec << "}\n";
+                        _out << "{skip " << std::hex << (i.first - *pos) << std::dec << "}" << std::endl;
                 }
                 pos = i.first + dump(i.second, false, 0);
-                _out << '\n';
+                _out << std::endl;
             }
         }
 
