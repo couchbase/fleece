@@ -789,7 +789,6 @@ namespace fleece {
         const Dict *dict = nullptr;
 
         for (int i = 0; i < 1000; ++i) {
-            std::cout << "Iteration #" << i + 1 << std::endl;
             // Change a key:
             md->set("fast"_sl, i);
 
@@ -807,7 +806,6 @@ namespace fleece {
             slice dataUsed = enc.baseUsed();
             data = alloc_slice(dataUsed);
             data.append(data2);
-            std::cout << "Iteration #" << i + 1 << " middle" << std::endl;
 
             // Look at how the data size changes:
             if (data.size < dataSize)
@@ -821,9 +819,9 @@ namespace fleece {
             dict = doc->asDict();
             CHECK(dict->get("fast"_sl)->asInt() == i);
             md = MutableDict::newDict(dict);
-            std::cout << "Iteration #" << i + 1 << " done" << std::endl;
         }
 
+        std::cout << "Are you kidding me?" << std::endl;
         std::cout << "data is now " << data.size << " bytes\n";
         dict->dump(std::cout);
         std::cout << "\n";
