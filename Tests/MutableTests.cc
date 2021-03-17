@@ -108,7 +108,7 @@ namespace fleece {
         {
             MutableArray::iterator i(ma);
             for (int n = 0; n < kSize; ++n) {
-                std::cerr << "Item " << n << ": " << (void*)i.value() << "\n";
+                std::cout << "Item " << n << ": " << (void*)i.value() << "\n";
                 CHECK(i);
                 CHECK(i.value() != nullptr);
                 CHECK(i.value()->type() == kExpectedTypes[n]);
@@ -345,7 +345,7 @@ namespace fleece {
             bool found[9] = { };
             MutableDict::iterator i(md);
             for (int n = 0; n < 9; ++n) {
-                std::cerr << "Item " << n << ": " << i.keyString() << " = " << (void*)i.value() << "\n";
+                std::cout << "Item " << n << ": " << i.keyString() << " = " << (void*)i.value() << "\n";
                 CHECK(i);
                 slice key = i.keyString();
                 auto j = std::find(&kExpectedKeys[0], &kExpectedKeys[9], key) - &kExpectedKeys[0];
@@ -407,7 +407,7 @@ namespace fleece {
             bool found[9] = { };
             Dict::iterator i(d);
             for (int n = 0; n < 9; ++n) {
-                std::cerr << "Item " << n << ": " << i.keyString() << " = " << (void*)i.value() << "\n";
+                std::cout << "Item " << n << ": " << i.keyString() << " = " << (void*)i.value() << "\n";
                 CHECK(i);
                 slice key = i.keyString();
                 auto j = std::find(&kExpectedKeys[0], &kExpectedKeys[9], key) - &kExpectedKeys[0];
@@ -528,9 +528,9 @@ namespace fleece {
             enc.endArray();
             data = enc.finish();
         }
-        std::cerr << "Original data: " << data << "\n";
+        std::cout << "Original data: " << data << "\n";
         const Array* fleeceArray = Value::fromData(data)->asArray();
-        std::cerr << "Contents:      " << fleeceArray->toJSON().asString() << "\n";
+        std::cout << "Contents:      " << fleeceArray->toJSON().asString() << "\n";
 
         Encoder enc2;
         enc2.setBase(data);
@@ -539,12 +539,12 @@ namespace fleece {
         enc2 << fleeceArray->get(0);
         enc2.endArray();
         alloc_slice data2 = enc2.finish();
-        std::cerr << "Delta:         " << data2 << "\n";
+        std::cout << "Delta:         " << data2 << "\n";
         REQUIRE(data2.size == 8);      // may change slightly with changes to implementation
 
         data.append(data2);
         const Array* newArray = Value::fromData(data)->asArray();
-        std::cerr << "Contents:      " << newArray->toJSON().asString() << "\n";
+        std::cout << "Contents:      " << newArray->toJSON().asString() << "\n";
     }
 
 
@@ -582,9 +582,9 @@ namespace fleece {
 
         Retained<Doc> original = new Doc(data, Doc::kTrusted, sk);
         const Dict* originalDict = original->asDict();
-        std::cerr << "Contents:      " << originalDict->toJSON().asString() << "\n";
-        std::cerr << "Original data: " << data << "\n\n";
-        Value::dump(data, std::cerr);
+        std::cout << "Contents:      " << originalDict->toJSON().asString() << "\n";
+        std::cout << "Original data: " << data << "\n\n";
+        Value::dump(data, std::cout);
 
         Retained<MutableDict> update = MutableDict::newDict(originalDict);
         CHECK(update->count() == 5);
@@ -641,8 +641,8 @@ namespace fleece {
         combinedData.append(delta);
         Scope combined(combinedData, sk);
         const Dict* newDict = Value::fromData(combinedData)->asDict();
-        std::cerr << "Delta:         " << delta << "\n\n";
-        Value::dump(combinedData, std::cerr);
+        std::cout << "Delta:         " << delta << "\n\n";
+        Value::dump(combinedData, std::cout);
 
         CHECK(newDict->get("Name"_sl)->asString() == "totoro"_sl);
         CHECK(newDict->get("zFriend"_sl)->asString() == "catbus"_sl);
@@ -664,7 +664,7 @@ namespace fleece {
         //CHECK(newDict->rawCount() == 4);
         CHECK(newDict->count() == 5);
 
-        std::cerr << "\nContents:      " << newDict->toJSON().asString() << "\n";
+        std::cout << "\nContents:      " << newDict->toJSON().asString() << "\n";
     }
 
     TEST_CASE("Encoding mutable dict", "[Mutable]") {
@@ -732,9 +732,9 @@ namespace fleece {
         auto doc = Doc::fromFleece(data, Doc::kTrusted);
         auto person = doc->asDict();
 
-        std::cerr << "Original data: " << data << "\n";
-        std::cerr << "Contents:      " << person->toJSON().asString() << "\n";
-        Value::dump(data, std::cerr);
+        std::cout << "Original data: " << data << "\n";
+        std::cout << "Contents:      " << person->toJSON().asString() << "\n";
+        Value::dump(data, std::cout);
 
         Retained<MutableDict> mp = MutableDict::newDict(person);
         mp->set("age"_sl, 31);
@@ -753,9 +753,9 @@ namespace fleece {
         alloc_slice combined(data);
         combined.append(data2);
         const Dict* newDict = Value::fromData(combined)->asDict();
-        std::cerr << "\n\nContents:      " << newDict->toJSON().asString() << "\n";
-        std::cerr << "Delta:         " << data2 << "\n\n";
-        Value::dump(combined, std::cerr);
+        std::cout << "\n\nContents:      " << newDict->toJSON().asString() << "\n";
+        std::cout << "Delta:         " << data2 << "\n\n";
+        Value::dump(combined, std::cout);
     }
 
 
@@ -774,7 +774,7 @@ namespace fleece {
 
         Retained<Doc> newDoc = new Doc(data2, Doc::kTrusted, nullptr, doc->data());
         const Dict* newDict = newDoc->asDict();
-        std::cerr << "Contents:      " << newDict->toJSON().asString() << "\n";
+        std::cout << "Contents:      " << newDict->toJSON().asString() << "\n";
 
         CHECK(newDict->get("age"_sl)->asInt() == 666);
     }
@@ -809,10 +809,10 @@ namespace fleece {
 
             // Look at how the data size changes:
             if (data.size < dataSize)
-                std::cerr << i << ": data went from " << dataSize << " to " << data.size << " bytes\n";
+                std::cout << i << ": data went from " << dataSize << " to " << data.size << " bytes\n";
             dataSize = data.size;
             CHECK(dataSize < kMaxDataSize);
-            //std::cerr << "Data: " << data << "\n";
+            //std::cout << "Data: " << data << "\n";
 
             // Verify the data is correct:
             auto doc = Doc::fromFleece(data);
@@ -821,9 +821,9 @@ namespace fleece {
             md = MutableDict::newDict(dict);
         }
 
-        std::cerr << "data is now " << data.size << " bytes\n";
-        dict->dump(std::cerr);
-        std::cerr << "\n";
+        std::cout << "data is now " << data.size << " bytes\n";
+        dict->dump(std::cout);
+        std::cout << "\n";
     }
 
 
@@ -852,7 +852,7 @@ namespace fleece {
             } while (random() % 2 == 0);
             prop->set("i"_sl, i);
 
-            //std::cerr << i << ": " << md->toJSONString() << "\n";
+            //std::cout << i << ": " << md->toJSONString() << "\n";
 
             // Encode changes as a delta:
             Encoder enc;
@@ -873,12 +873,12 @@ namespace fleece {
 
             // Look at how the data size changes:
 //            if (data.size < dataSize)
-//                std::cerr << i << ": data went from " << dataSize << " to " << data.size << " bytes\n";
+//                std::cout << i << ": data went from " << dataSize << " to " << data.size << " bytes\n";
             dataSize = data.size;
             maxDataSize = std::max(maxDataSize, dataSize);
             //CHECK(dataSize < kMaxDataSize);
-            //std::cerr << "Data: " << data << "\n";
-            //Value::dump(data, std::cerr);
+            //std::cout << "Data: " << data << "\n";
+            //Value::dump(data, std::cout);
 
             // Verify the data is correct:
             auto doc = Doc::fromFleece(data);
@@ -887,14 +887,14 @@ namespace fleece {
             md = MutableDict::newDict(dict);
         }
 
-        std::cerr << "data is now " << data.size << " bytes; max was " << maxDataSize << "\n";
-        //dict->dump(std::cerr);
-        //std::cerr << "\n";
+        std::cout << "data is now " << data.size << " bytes; max was " << maxDataSize << "\n";
+        //dict->dump(std::cout);
+        //std::cout << "\n";
 
         Encoder enc;
         enc.writeValue(dict);
         alloc_slice packedData = enc.finish();
-        std::cerr << "(Packed data would be " << packedData.size << " bytes)\n";
+        std::cout << "(Packed data would be " << packedData.size << " bytes)\n";
     }
 
 }
