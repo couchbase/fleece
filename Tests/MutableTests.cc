@@ -822,7 +822,12 @@ namespace fleece {
         }
 
         std::cout << "data is now " << data.size << " bytes" << std::endl;
-        dict->dump(std::cout);
+        if(getenv("CI") != nullptr) {
+
+            // WEIRD: This line chokes GitHub actions
+            dict->dump(std::cout);
+        }
+
         std::cout << std::endl;
     }
 
