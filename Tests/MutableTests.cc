@@ -789,6 +789,7 @@ namespace fleece {
         const Dict *dict = nullptr;
 
         for (int i = 0; i < 1000; ++i) {
+            std::cout << "Iteration #" << i + 1 << std::endl;
             // Change a key:
             md->set("fast"_sl, i);
 
