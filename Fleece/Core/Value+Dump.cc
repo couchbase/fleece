@@ -201,7 +201,7 @@ namespace fleece { namespace impl {
                     _out << " [";
                     for (auto i = value->asArray()->begin(); i; ++i) {
                         if (n++ > 0) _out << ',';
-                        _out << '\n';
+                        _out << std::endl;
                         size += dump(i.rawValue(), value->isWideArray(), 1);
                     }
                     _out << " ]";
@@ -211,7 +211,7 @@ namespace fleece { namespace impl {
                     _out << " {";
                     for (Dict::iterator i(value->asDict(), true); i; ++i) {
                         if (n++ > 0) _out << ',';
-                        _out << '\n';
+                        _out << std::endl;
                         if (auto key = i.rawKey(); key->isInteger()) {
                             size += dumpHex(key, value->isWideArray());
                             size += (size & 1);
@@ -235,7 +235,7 @@ namespace fleece { namespace impl {
                         } else {
                             size += dump(key, value->isWideArray(), 1);
                         }
-                        _out << ":\n";
+                        _out << ":" << std::endl;
                         size += dump(i.rawValue(), value->isWideArray(), 2);
                     }
                     _out << " }";
@@ -252,7 +252,7 @@ namespace fleece { namespace impl {
 
 
     void Value::dump(std::ostream &out) const {
-        //ValueDumper(this, slice(this, dataSize()), out).writeByAddress();
+        ValueDumper(this, slice(this, dataSize()), out).writeByAddress();
     }
 
 
