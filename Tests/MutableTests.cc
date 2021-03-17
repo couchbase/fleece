@@ -807,6 +807,7 @@ namespace fleece {
             slice dataUsed = enc.baseUsed();
             data = alloc_slice(dataUsed);
             data.append(data2);
+            std::cout << "Iteration #" << i + 1 << " middle" << std::endl;
 
             // Look at how the data size changes:
             if (data.size < dataSize)
@@ -820,6 +821,7 @@ namespace fleece {
             dict = doc->asDict();
             CHECK(dict->get("fast"_sl)->asInt() == i);
             md = MutableDict::newDict(dict);
+            std::cout << "Iteration #" << i + 1 << " done" << std::endl;
         }
 
         std::cout << "data is now " << data.size << " bytes\n";
