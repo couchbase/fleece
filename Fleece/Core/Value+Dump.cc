@@ -252,7 +252,7 @@ namespace fleece { namespace impl {
 
 
     void Value::dump(std::ostream &out) const {
-        ValueDumper(this, slice(this, dataSize()), out).writeByAddress();
+        //ValueDumper(this, slice(this, dataSize()), out).writeByAddress();
     }
 
 
