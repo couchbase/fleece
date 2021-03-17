@@ -822,10 +822,12 @@ namespace fleece {
         }
 
         std::cout << "data is now " << data.size << " bytes" << std::endl;
-        if(getenv("CI") != nullptr) {
+        if(getenv("GITHUB_ACTIONS") == nullptr) {
 
             // WEIRD: This line chokes GitHub actions
             dict->dump(std::cout);
+        } else {
+            std::cout << "Running on GH Actions, skipping dict dump...";
         }
 
         std::cout << std::endl;
