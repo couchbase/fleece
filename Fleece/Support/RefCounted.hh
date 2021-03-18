@@ -149,6 +149,8 @@ namespace fleece {
             return *this;
         }
 
+        /// Converts a Retained into a raw pointer with a +1 reference that must be released.
+        /// Used in C++ functions that bridge to C and return C references.
         T* detach() && noexcept                  {auto r = _ref; _ref = nullptr; return r;}
 
         // The operator below is often a dangerous mistake, so it's deliberately made impossible.
@@ -178,6 +180,10 @@ namespace fleece {
 
     private:
         template <class U> friend class Retained;
+        template <class U> friend class RetainedConst;
+        template <class U> friend Retained<U> adopt(U*) noexcept;
+
+        Retained(T *t, bool) noexcept                   :_ref(t) { } // private no-retain ctor
 
         T *_ref;
     };
@@ -215,6 +221,17 @@ namespace fleece {
             return *this;
         }
 
+        template <typename U>
+        RetainedConst& operator=(const Retained<U> &r) noexcept {
+            return *this = r._ref;
+        }
+
+        template <typename U>
+        RetainedConst& operator= (Retained<U> &&r) noexcept {
+            std::swap(_ref, r._ref);
+            return *this;
+        }
+
         const T* detach() && noexcept                   {auto r = _ref; _ref = nullptr; return r;}
 
         operator const T* () const && =delete; // Usually a mistake; see above under Retained
@@ -235,6 +252,15 @@ namespace fleece {
     inline RetainedConst<REFCOUNTED> retained(const REFCOUNTED *r) noexcept {
         return RetainedConst<REFCOUNTED>(r);
     }
+
+    /** Converts a raw pointer with a +1 reference into a Retained object.
+        This has no effect on the object's ref-count; the existing +1 ref will be released when the
+        Retained destructs. */
+    template <typename REFCOUNTED>
+    inline Retained<REFCOUNTED> adopt(REFCOUNTED *r) noexcept {
+        return Retained<REFCOUNTED>(r, false);
+    }
+
 
 
     /** make_retained<T>(...) is equivalent to `std::make_unique` and `std::make_shared`.
