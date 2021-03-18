@@ -8,7 +8,7 @@
 #ifndef _FLEECE_MUTABLE_HH
 #define _FLEECE_MUTABLE_HH
 #include "Fleece.hh"
-#include "betterassert.hh"
+#include <cassert>
 
 namespace fleece {
 
@@ -126,7 +126,7 @@ namespace fleece {
 
         // This enables e.g. `array[10] = 17`
         inline keyref<MutableArray,uint32_t> operator[] (int i) {
-            assert_precondition(i >= 0);
+            assert(i >= 0);
             return keyref<MutableArray,uint32_t>(*this, i);
         }
 
