@@ -79,8 +79,6 @@
     #define __printflike(fmtarg, firstvararg) __attribute__((__format__ (__printf__, fmtarg, firstvararg)))
     #endif
 
-    #define WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) 0
-
     // Windows has underscore prefixes before these function names, so define a common name
     #define cbl_strdup strdup
     #define cbl_getcwd getcwd

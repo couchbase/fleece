@@ -164,3 +164,7 @@
 #       define __cold
 #   endif
 #endif /* __cold */
+
+#ifndef _MSC_VER
+    #define WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) 0
+#endif
