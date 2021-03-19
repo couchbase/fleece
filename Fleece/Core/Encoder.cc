@@ -40,6 +40,7 @@ namespace fleece { namespace impl {
     const slice Encoder::kPreEncodedTrue  = {Value::kTrueValue,  kNarrow};
     const slice Encoder::kPreEncodedFalse = {Value::kFalseValue, kNarrow};
     const slice Encoder::kPreEncodedNull  = {Value::kNullValue,  kNarrow};
+    const slice Encoder::kPreEncodedEmptyDict = {Dict::kEmpty,   kNarrow};
 
     Encoder::Encoder(size_t reserveSize)
     :_out(reserveSize),

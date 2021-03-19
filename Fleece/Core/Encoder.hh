@@ -167,7 +167,7 @@ namespace fleece { namespace impl {
 
         //////// Pre-encoded scalar values for convenience:
 
-        static const slice kPreEncodedTrue, kPreEncodedFalse, kPreEncodedNull;
+        static const slice kPreEncodedTrue, kPreEncodedFalse, kPreEncodedNull, kPreEncodedEmptyDict;
 
         // For advanced use cases only... be careful!
         void suppressTrailer()                  {_trailer = false;}
