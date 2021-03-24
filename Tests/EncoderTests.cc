@@ -26,6 +26,7 @@
 #include "mn_wordlist.h"
 #include "NumConversion.hh"
 #include <iostream>
+#include "fleece/Fleece.hh"
 #include <float.h>
 
 #ifndef _MSC_VER
@@ -1120,6 +1121,15 @@ public:
             INFO("Checking \"" << str << "\"");
             CHECK(!ParseInteger(str, result));
         }
+    }
+
+    TEST_CASE("Truncated JSON") {
+        // https://issues.couchbase.com/browse/CBL-1763
+        fleece::Encoder enc;
+        REQUIRE(!FLEncoder_ConvertJSON(enc, "{"_sl));
+        CHECK(enc.error() == kFLJSONError);
+        std::string msg = enc.errorMessage();
+        CHECK(msg == "Truncated JSON");
     }
 
 } }
