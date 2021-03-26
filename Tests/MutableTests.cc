@@ -88,8 +88,10 @@ namespace fleece {
         ma->set(9, float(M_PI));
         ma->set(10, M_PI);
         ma->set(11, std::numeric_limits<uint64_t>::max());
-        ma->set(12, 0x100000000LL);
-        ma->set(13, 0x100000000ULL);
+        int64_t x = 0x100000000LL;
+        uint64_t y = 0x100000000ULL;
+        ma->set(12, x); //0x100000000LL);
+        ma->set(13, y); //0x100000000ULL);
         ma->set(14, std::numeric_limits<int64_t>::min());
         ma->set(15, 9223372036854775807LL);
         ma->set(16, -9223372036854775807LL);
