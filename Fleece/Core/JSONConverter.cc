@@ -87,6 +87,7 @@ namespace fleece { namespace impl {
         if (_jsn->level > 0 && !_jsonError) {
             // Input is valid JSON so far, but truncated:
             _jsonError = kErrTruncatedJSON;
+            _errorCode = JSONError;
             _errorPos = json.size;
         }
         jsonsl_reset(_jsn);
