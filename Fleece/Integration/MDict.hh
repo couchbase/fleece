@@ -64,6 +64,7 @@ namespace fleece {
             MCollection::initAsCopyOf(d, isMutable);
             _dict = d._dict;
             _map = d._map;
+            _newKeys = d._newKeys;
             _count = d._count;
         }
 
@@ -137,8 +138,9 @@ namespace fleece {
                 return true;
             MCollection::mutate();
             _map.clear();
+            _newKeys.clear();
             for (Dict::iterator i(_dict); i; ++i)
-                _map.emplace(i.keyString(), MValue::empty);
+                _setInMap(i.keyString(), MValue::empty);
             _count = 0;
             return true;
         }

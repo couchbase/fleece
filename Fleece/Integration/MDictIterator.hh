@@ -55,6 +55,7 @@ namespace fleece {
                     return *_mvalue;
                 // Fleece Dict iterator doesn't have an MValue, so add the key/value to the _map:
                 auto i = const_cast<MDict&>(_dict)._setInMap(_key, MValue(_dictIter.value()));
+                _key = i->first;
                 _mvalue = &i->second;
                 return *_mvalue;
             }
