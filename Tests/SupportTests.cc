@@ -185,6 +185,36 @@ TEST_CASE("Function with non-primitive types") {
 }
 
 
+TEST_CASE("Hash distribution") {
+    static constexpr int kSize = 4096, kNKeys = 2048;
+    int bucket[kSize] = {0};
+    for (int i = 0; i < kNKeys; ++i) {
+        char keybuf[10];
+        sprintf(keybuf, "k-%04d", i);
+        int hash = slice(keybuf).hash();
+        int index = hash & (kSize-1);
+        ++bucket[index];
+    }
+
+    int hist[kSize] = {0};
+    for (int i = 0; i < kSize; ++i) {
+        ++hist[bucket[i]];
+    }
+    int total = 0;
+    for (int i = kSize - 1; i >= 0; --i) {
+        if (hist[i] > 0 || total > 0) {
+            cout << hist[i] << " buckets have " << i << " keys\n";
+            total += i * hist[i];
+            CHECK(i <= 7);
+        }
+    }
+    CHECK(total == kNKeys);
+}
+
+
+#pragma mark - CONCURRENT MAP:
+
+
 TEST_CASE("ConcurrentMap basic", "[ConcurrentMap]") {
     ConcurrentMap map(2048);
     cout << "table size = " << map.tableSize() << ", capacity = " << map.capacity()
@@ -208,6 +238,11 @@ TEST_CASE("ConcurrentMap basic", "[ConcurrentMap]") {
     CHECK(found.key == apple.key);
     CHECK(found.value == apple.value);
 
+    // nonexistent key:
+    found = map.find("durian");
+    CHECK(!found.key);
+    CHECK(!map.remove("durian"));
+
     for (int pass = 1; pass <= 2; ++pass) { // insert on 1st pass, read on 2nd
         for (uint16_t i = 0; i < 2046; ++i) {
             char keybuf[10];
@@ -218,10 +253,15 @@ TEST_CASE("ConcurrentMap basic", "[ConcurrentMap]") {
         }
     }
 
+    // now remove a key:
+    CHECK(map.remove("apple"));
+    found = map.find("apple");
+    CHECK(!found.key);
+
     cout << "Afterwards: count = " << map.count()
          << ", string bytes used = " << map.stringBytesCount() << '\n';
 
-    CHECK(map.count() == 2047);
+    CHECK(map.count() == 2046);
     CHECK(map.stringBytesCount() > 0);
 
     //map.dump();
@@ -243,9 +283,12 @@ TEST_CASE("ConcurrentMap concurrency", "[ConcurrentMap]") {
         keys.push_back(keybuf);
     }
 
+    // Note: cannot use CHECK or REQUIRE in lambdas below because the Catch test framework is not
+    //       thread-safe :(  Thus `assert` is used instead.
+
     auto reader = [&](int step) {
         size_t index = random() % kSize;
-        for (int n = 0; n < kSize; n++) {
+        for (int n = 0; n < 2 * kSize; n++) {
             auto e = map.find(keys[index].c_str());
             if (e.key) {
                 assert(e.key == keys[index].c_str());
@@ -256,13 +299,19 @@ TEST_CASE("ConcurrentMap concurrency", "[ConcurrentMap]") {
     };
 
     auto writer = [&](int step) { // step must be coprime with kSize
-        unsigned index = (unsigned)random() % kSize;
+        unsigned const startIndex = (unsigned)random() % kSize;
+        auto index = startIndex;
         for (int n = 0; n < kSize; n++) {
             auto value = uint16_t(index & 0xFFFF);
             auto e = map.insert(keys[index].c_str(), value);
             assert(e.key != nullslice);
             assert(e.key == keys[index].c_str());
             assert(e.value == value);
+            index = (index + step) % kSize;
+        }
+        index = startIndex;
+        for (int n = 0; n < kSize; n++) {
+            map.remove(keys[index].c_str());
             index = (index + step) % kSize;
         }
     };
@@ -277,8 +326,11 @@ TEST_CASE("ConcurrentMap concurrency", "[ConcurrentMap]") {
     f3.wait();
     f4.wait();
 
-    CHECK(map.count() == kSize);
+    CHECK(map.count() == 0);
 }
+
+
+#pragma mark - SMALLVECTOR:
 
 
 TEST_CASE("SmallVector, small", "[SmallVector]") {

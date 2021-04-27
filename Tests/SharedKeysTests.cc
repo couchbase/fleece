@@ -337,6 +337,51 @@ TEST_CASE("basic persistence", "[SharedKeys]") {
 }
 
 
+TEST_CASE("preserve existing keys on abort", "[SharedKeys]") {
+    // Issue CBL-1707: "Keys in SharedKeys were reverted and released while they are still in used"
+    Client::reset();
+    Client client1;
+    MockPersistentSharedKeys sk1(client1);
+    int key;
+
+    // Create stable keys
+    client1.begin();
+    sk1.transactionBegan();
+    REQUIRE(sk1.encodeAndAdd("zero"_sl, key));
+    CHECK(key == 0);
+    REQUIRE(sk1.encodeAndAdd("one"_sl, key));
+    CHECK(key == 1);
+    slice zeroString = sk1.decode(0);
+    CHECK(zeroString == "zero"_sl);
+    slice oneString = sk1.decode(1);
+    CHECK(oneString == "one"_sl);
+
+    // and commit them
+    sk1.save();
+    client1.end(true);
+    sk1.transactionEnded();
+
+    // create unstable keys
+    client1.begin();
+    sk1.transactionBegan();
+    REQUIRE(sk1.encodeAndAdd("Zorro"_sl, key));
+    CHECK(key == 2);
+    REQUIRE(sk1.encodeAndAdd("Oona"_sl, key));
+    CHECK(key == 3);
+
+    // Client aborts, obliterating the unstable keys:
+    sk1.revert();
+    client1.end(false);
+    sk1.transactionEnded();
+
+    // Check that the stable key strings still exist at the same addresses:
+    CHECK(zeroString == "zero"_sl);
+    CHECK(oneString == "one"_sl);
+    CHECK(sk1.decode(0).buf == zeroString.buf);
+    CHECK(sk1.decode(1).buf == oneString.buf);
+}
+
+
 #pragma mark - TESTING WITH ENCODERS:
 
 
