@@ -17,6 +17,7 @@
 #include "fleece/Fleece.h"
 #include "JSON5.hh"
 #include "ParseDate.hh"
+#include "Builder.hh"
 #include "betterassert.hh"
 #include <chrono>
 
@@ -806,6 +807,41 @@ FLSliceResult FLEncoder_Finish(FLEncoder e, FLError * FL_NULLABLE outError) FLAP
     e->reset();
     return {nullptr, 0};
 }
+
+
+#pragma mark - BUILDER
+
+
+    FLValue FLValue_NewWithFormat(const char *format, ...) {
+        va_list args;
+        va_start(args, format);
+        auto result = FLValue_NewWithFormatV(format, args);
+        va_end(args);
+        return result;
+    }
+
+    FLValue FLValue_NewWithFormatV(const char *format, va_list args) {
+        return std::move(builder::VBuild(format, args)).detach();
+    }
+
+    void FLMutableArray_UpdateWithFormat(FLMutableArray array, const char *format, ...) {
+        va_list args;
+        va_start(args, format);
+        FLValue_UpdateWithFormatV(array, format, args);
+        va_end(args);
+    }
+
+    void FLMutableDict_UpdateWithFormat(FLMutableDict dict, const char *format, ...) {
+        va_list args;
+        va_start(args, format);
+        FLValue_UpdateWithFormatV(dict, format, args);
+        va_end(args);
+    }
+
+    void FLValue_UpdateWithFormatV(FLValue v, const char *format, va_list args) {
+        assert(FLValue_IsMutable(v));
+        builder::VPut(const_cast<Value*>(v), format, args);
+    }
 
 
 #pragma mark - DOCUMENTS

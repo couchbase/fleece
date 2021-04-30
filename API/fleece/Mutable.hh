@@ -86,6 +86,12 @@ namespace fleece {
         /** Creates a new, empty mutable array. */
         static MutableArray newArray()          {return MutableArray(FLMutableArray_New(), false);}
 
+        /** Creates a mutable array with values in it, based on a JSON-like format string.
+            Argument values can be substituted into it.
+            See the documentation of the "Fleece Formatted Value Builder" in FLMutable.h. */
+        static inline MutableArray newWithFormat(const char *format, ...) __printflike(1, 2);
+        static inline MutableArray newWithFormatV(const char *format, va_list args);
+
         MutableArray()                          :Array() { }
         MutableArray(FLMutableArray FL_NULLABLE a) :Array((FLArray)FLMutableArray_Retain(a)) { }
         MutableArray(const MutableArray &a)     :Array((FLArray)FLMutableArray_Retain(a)) { }
@@ -147,6 +153,11 @@ namespace fleece {
         inline MutableArray getMutableArray(uint32_t i);
         inline MutableDict getMutableDict(uint32_t i);
 
+        /** Like \ref newWithFormat, except it operates on an existing mutable array.
+            (Pre-existing properties not appearing in the format string are preserved.) */
+        inline void updateWithFormat(const char* format, ...) __printflike(2, 3);
+        inline void updateWithFormatV(const char* format, va_list);
+
     private:
         MutableArray(FLMutableArray FL_NULLABLE a, bool)     :Array((FLArray)a) {}
         friend class RetainedValue;
@@ -161,6 +172,12 @@ namespace fleece {
     class MutableDict : public Dict {
     public:
         static MutableDict newDict()            {return MutableDict(FLMutableDict_New(), false);}
+
+        /** Creates a mutable dict with values in it, based on a JSON-like format string.
+            Argument values can be substituted into it.
+            See the documentation of the "Fleece Formatted Value Builder" in FLMutable.h. */
+        static inline MutableDict newWithFormat(const char *format, ...) __printflike(1, 2);
+        static inline MutableDict newWithFormatV(const char *format, va_list args);
 
         MutableDict()                           :Dict() { }
         MutableDict(FLMutableDict FL_NULLABLE d):Dict((FLDict)d) {FLMutableDict_Retain(*this);}
@@ -211,6 +228,11 @@ namespace fleece {
 
         inline MutableArray getMutableArray(slice key);
         inline MutableDict getMutableDict(slice key);
+
+        /** Like \ref newWithFormat, except it operates on an existing mutable dict.
+            (Pre-existing properties not appearing in the format string are preserved.) */
+        inline void updateWithFormat(const char* format, ...) __printflike(2, 3);
+        inline void updateWithFormatV(const char* format, va_list);
 
     private:
         MutableDict(FLMutableDict FL_NULLABLE d, bool)      :Dict((FLDict)d) {}
@@ -362,6 +384,53 @@ namespace fleece {
 
     inline MutableDict Dict::asMutable() const {
         return MutableDict(FLDict_AsMutable(*this));
+    }
+
+    MutableArray MutableArray::newWithFormat(const char *format, ...) {
+        va_list args;
+        va_start(args, format);
+        auto result = newWithFormatV(format, args);
+        va_end(args);
+        return result;
+    }
+
+    MutableArray MutableArray::newWithFormatV(const char *format, va_list args) {
+        return MutableArray(FLArray_AsMutable(FLValue_AsArray(FLValue_NewWithFormatV(format, args))));
+    }
+
+    void MutableArray::updateWithFormat(const char* format, ...) {
+        va_list args;
+        va_start(args, format);
+        updateWithFormatV(format, args);
+        va_end(args);
+    }
+
+    void MutableArray::updateWithFormatV(const char* format, va_list args) {
+        FLValue_UpdateWithFormatV(*this, format, args);
+    }
+
+
+    MutableDict MutableDict::newWithFormat(const char *format, ...) {
+        va_list args;
+        va_start(args, format);
+        auto result = newWithFormatV(format, args);
+        va_end(args);
+        return result;
+    }
+
+    MutableDict MutableDict::newWithFormatV(const char *format, va_list args) {
+        return MutableDict(FLDict_AsMutable(FLValue_AsDict(FLValue_NewWithFormatV(format, args))));
+    }
+
+    void MutableDict::updateWithFormat(const char* format, ...) {
+        va_list args;
+        va_start(args, format);
+        updateWithFormatV(format, args);
+        va_end(args);
+    }
+
+    void MutableDict::updateWithFormatV(const char* format, va_list args) {
+        FLValue_UpdateWithFormatV(*this, format, args);
     }
 
 }
