@@ -14,7 +14,7 @@
 #import "Encoder.hh"
 #import "Fleece+ImplGlue.hh"
 #import "FleeceException.hh"
-#import "Fleece+CoreFoundation.h"
+#import "fleece/Fleece+CoreFoundation.h"
 
 using namespace fleece::impl;
 
