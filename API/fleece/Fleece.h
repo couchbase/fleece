@@ -368,6 +368,14 @@ extern "C" {
     void FLSlot_SetData(FLSlot FLNONNULL, FLSlice) FLAPI;    ///< Stores a data blob into a slot.
     void FLSlot_SetValue(FLSlot FLNONNULL, FLValue) FLAPI;   ///< Stores an FLValue into a slot.
 
+    static inline void FLSlot_SetArray(FLSlot NONNULL slot, FLArray array) {
+        FLSlot_SetValue(slot, (FLValue)array);
+    }
+
+    static inline void FLSlot_SetDict(FLSlot NONNULL slot, FLDict dict) {
+        FLSlot_SetValue(slot, (FLValue)dict);
+    }
+
 
     //////// ARRAY
 
