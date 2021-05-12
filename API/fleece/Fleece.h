@@ -518,6 +518,10 @@ while (NULL != (value = FLArrayIterator_GetValue(&iter))) {
     static inline void FLMutableArray_SetData(FLMutableArray NONNULL, uint32_t index, FLSlice);
     /// Stores a Fleece value into an array.
     static inline void FLMutableArray_SetValue(FLMutableArray NONNULL, uint32_t index, FLValue);
+    /// Appends a Fleece array to an array
+    static inline void FLMutableArray_SetArray(FLMutableArray NONNULL, uint32_t index, FLArray);
+    /// Appends a Fleece dictionary to an array
+    static inline void FLMutableArray_SetDict(FLMutableArray NONNULL, uint32_t index, FLDict);
 
     /// Appends a JSON null value to an array.
     static inline void FLMutableArray_AppendNull(FLMutableArray NONNULL);
@@ -539,6 +543,10 @@ while (NULL != (value = FLArrayIterator_GetValue(&iter))) {
     static inline void FLMutableArray_AppendData(FLMutableArray NONNULL, FLSlice);
     /// Appends a Fleece value to an array.
     static inline void FLMutableArray_AppendValue(FLMutableArray NONNULL, FLValue);
+    /// Appends a Fleece array to an array
+    static inline void FLMutableArray_AppendArray(FLMutableArray NONNULL, FLArray);
+    /// Appends a Fleece dictionary to an array
+    static inline void FLMutableArray_AppendDict(FLMutableArray NONNULL, FLDict);
 
 
     /** @} */
@@ -734,6 +742,11 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
     static inline void FLMutableDict_SetData(FLMutableDict NONNULL, FLString key, FLSlice);
     /// Stores a Fleece value into a mutable dictionary.
     static inline void FLMutableDict_SetValue(FLMutableDict NONNULL, FLString key, FLValue);
+    /// Stores a Fleece array into a mutable dictionary.
+    static inline void FLMutableDict_SetArray(FLMutableDict NONNULL, FLString key, FLArray);
+    /// Stores a Fleece dictionary into a mutable dictionary.
+    static inline void FLMutableDict_SetDict(FLMutableDict NONNULL, FLString key, FLDict);
+
 
 
     /** @} */
@@ -1314,6 +1327,12 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
     static inline void FLMutableArray_SetValue(FLMutableArray a, uint32_t index, FLValue val) {
         FLSlot_SetValue(FLMutableArray_Set(a, index), val);
     }
+    static inline void FLMutableArray_SetArray(FLMutableArray a, uint32_t index, FLArray val) {
+        FLSlot_SetValue(FLMutableArray_Set(a, index), (FLValue)val);
+    }
+    static inline void FLMutableArray_SetDict(FLMutableArray a, uint32_t index, FLDict val) {
+        FLSlot_SetValue(FLMutableArray_Set(a, index), (FLDict)val);
+    }
 
     static inline void FLMutableArray_AppendNull(FLMutableArray a) {
         FLSlot_SetNull(FLMutableArray_Append(a));
@@ -1342,6 +1361,12 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
     static inline void FLMutableArray_AppendValue(FLMutableArray a, FLValue val) {
         FLSlot_SetValue(FLMutableArray_Append(a), val);
     }
+    static inline void FLMutableArray_AppendArray(FLMutableArray a, FLArray val) {
+        FLSlot_SetValue(FLMutableArray_Append(a), (FLValue)val);
+    }
+    static inline void FLMutableArray_AppendDict(FLMutableArray a, FLDict val) {
+        FLSlot_SetValue(FLMutableArray_Append(a), (FLValue)val);
+    }
 
     static inline void FLMutableDict_SetNull(FLMutableDict d, FLString key) {
         FLSlot_SetNull(FLMutableDict_Set(d, key));
@@ -1369,6 +1394,12 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
     }
     static inline void FLMutableDict_SetValue(FLMutableDict d, FLString key, FLValue val) {
         FLSlot_SetValue(FLMutableDict_Set(d, key), val);
+    }
+    static inline void FLMutableDict_SetArray(FLMutableDict d, FLString key, FLArray val) {
+        FLSlot_SetValue(FLMutableDict_Set(d, key), (FLValue)val);
+    }
+    static inline void FLMutableDict_SetDict(FLMutableDict d, FLString key, FLDict val) {
+        FLSlot_SetValue(FLMutableDict_Set(d, key), (FLValue)val);
     }
 
 
