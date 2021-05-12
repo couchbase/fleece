@@ -1331,7 +1331,7 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
         FLSlot_SetValue(FLMutableArray_Set(a, index), (FLValue)val);
     }
     static inline void FLMutableArray_SetDict(FLMutableArray a, uint32_t index, FLDict val) {
-        FLSlot_SetValue(FLMutableArray_Set(a, index), (FLDict)val);
+        FLSlot_SetValue(FLMutableArray_Set(a, index), (FLValue)val);
     }
 
     static inline void FLMutableArray_AppendNull(FLMutableArray a) {
