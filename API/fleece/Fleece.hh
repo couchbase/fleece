@@ -26,14 +26,6 @@
 #include <string>
 #include <utility>
 
-// NOTE: These cannot be namespaced or Catch will fail to find them on certain platforms
-// despite using the namespace before including the header...
-static inline bool operator== (FLSlice s1, FLSlice s2) {return FLSlice_Equal(s1, s2);}
-static inline bool operator!= (FLSlice s1, FLSlice s2) {return !(s1 == s2);}
-
-static inline bool operator== (FLSliceResult sr, FLSlice s) {return (FLSlice)sr == s;}
-static inline bool operator!= (FLSliceResult sr, FLSlice s) {return !(sr ==s);}
-
 namespace fleece {
     class Array;
     class Dict;
@@ -50,7 +42,7 @@ namespace fleece {
     /** A Fleece data value. Its subclasses are Array and Dict; Value itself is for scalars. */
     class Value {
     public:
-        Value()                                         { }
+        Value()                                         =default;
         Value(FLValue v)                                :_val(v) { }
         operator FLValue() const                        {return _val;}
 
@@ -164,7 +156,7 @@ namespace fleece {
             inline bool operator!= (const iterator&)    {return value() != nullptr;}
             inline Value operator[] (unsigned n) const  {return FLArrayIterator_GetValueAt(this,n);}
         private:
-            iterator() { }
+            iterator() =default;
             friend class Array;
         };
 
@@ -244,7 +236,7 @@ namespace fleece {
                                     {return FLDictIterator_GetKeyAsNSString(this, sharedStrings);}
 #endif
         private:
-            iterator() { }
+            iterator() =default;
             friend class Dict;
         };
 
@@ -585,7 +577,7 @@ namespace fleece {
     class AllocedDict : public Dict, alloc_slice {
     public:
         AllocedDict()
-        { }
+        =default;
 
         explicit AllocedDict(const alloc_slice &s)
         :Dict(FLValue_AsDict(FLValue_FromData(s, kFLUntrusted)))
@@ -602,8 +594,6 @@ namespace fleece {
 
         const alloc_slice& data() const                 {return *this;}
         explicit operator bool () const                 {return Dict::operator bool();}
-
-        void wipe() { alloc_slice::wipe(); }
 
         // MI disambiguation:
         inline Value operator[] (slice key) const       {return Dict::get(key);}

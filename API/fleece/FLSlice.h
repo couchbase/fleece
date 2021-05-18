@@ -7,6 +7,9 @@
 //
 
 #pragma once
+#ifndef _FLSLICE_H
+#define _FLSLICE_H
+
 #include "Base.h"
 #include <stdbool.h>
 #include <stdint.h>
@@ -117,6 +120,9 @@ bool FLSlice_Equal(FLSlice a, FLSlice b) FLAPI FLPURE;
     differences in length. */
 int FLSlice_Compare(FLSlice, FLSlice) FLAPI FLPURE;
 
+/** Computes a 32-bit hash of a slice's data, suitable for use in hash tables. */
+uint32_t FLSlice_Hash(FLSlice s) FLAPI FLPURE;
+
 /** Copies a slice to a buffer, adding a trailing zero byte to make it a valid C string.
     If there is not enough capacity the slice will be truncated, but the trailing zero byte is
     always written.
@@ -132,6 +138,14 @@ FLSliceResult FLSliceResult_New(size_t) FLAPI;
 /** Allocates an FLSliceResult, copying the given slice. */
 FLSliceResult FLSlice_Copy(FLSlice) FLAPI;
 
+
+/** Allocates an FLSliceResult, copying `size` bytes starting at `buf`. */
+static inline FLSliceResult FLSliceResult_CreateWith(const void *bytes, size_t size) FLAPI {
+    FLSlice s = {bytes, size};
+    return FLSlice_Copy(s);
+}
+
+
 void _FLBuf_Retain(const void*) FLAPI;   // internal; do not call
 void _FLBuf_Release(const void*) FLAPI;  // internal; do not call
 
@@ -146,16 +160,35 @@ static inline void FLSliceResult_Release(FLSliceResult s) FLAPI {
     _FLBuf_Release(s.buf);
 }
 
+/** Type-casts a FLSliceResult to FLSlice, since C doesn't know it's a subclass. */
+static inline FLSlice FLSliceResult_AsSlice(FLSliceResult sr) {
+    return *(FLSlice*)&sr;
+}
+
+
+/** Writes zeroes to `size` bytes of memory starting at `dst`.
+    Unlike a call to `memset`, these writes cannot be optimized away by the compiler.
+    This is useful for securely removing traces of passwords or encryption keys. */
+void FL_WipeMemory(void *dst, size_t size) FLAPI;
+
 
 /** @} */
 
 #ifdef __cplusplus
+}
+
+    FLPURE static inline bool operator== (FLSlice s1, FLSlice s2) {return FLSlice_Equal(s1, s2);}
+    FLPURE static inline bool operator!= (FLSlice s1, FLSlice s2) {return !(s1 == s2);}
+
+    FLPURE static inline bool operator== (FLSliceResult sr, FLSlice s) {return (FLSlice)sr == s;}
+    FLPURE static inline bool operator!= (FLSliceResult sr, FLSlice s) {return !(sr ==s);}
+
 
     FLSliceResult::operator std::string () const {
         auto str = std::string((char*)buf, size);
         FLSliceResult_Release(*this);
         return str;
     }
-
-}
 #endif
+
+#endif // _FLSLICE_H

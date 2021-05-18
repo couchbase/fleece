@@ -51,6 +51,9 @@ namespace fleece { namespace hashtree {
     static constexpr int kMaxChildren = 1 << kBitShift;
     static_assert(sizeof(bitmap_t) == kMaxChildren / 8, "Wrong constants");
 
+    // Hashes a key. The hash value for a key must always be the same no matter what platform or
+    // software version this is, since the structure of the hash table depends on it.
+    FLPURE hash_t ComputeHash(slice key) noexcept;
 
     // Internal class representing a leaf node
     class Leaf {
@@ -61,7 +64,7 @@ namespace fleece { namespace hashtree {
         Value value() const;
         slice keyString() const;
 
-        hash_t hash() const             {return keyString().hash();}
+        hash_t hash() const             {return ComputeHash(keyString());}
 
         bool matches(slice key) const   {return keyString() == key;}
 

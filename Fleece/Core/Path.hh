@@ -45,7 +45,7 @@ namespace fleece { namespace impl {
 
         //// Step-by-step construction:
 
-        Path()                                      { }
+        Path()                                      =default;
         void addProperty(slice key);
         void addIndex(int index);
         void addComponents(slice components);

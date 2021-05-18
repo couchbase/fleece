@@ -27,6 +27,7 @@ function(set_source_files_base)
         Fleece/Mutable/HeapValue.cc
         Fleece/Mutable/ValueSlot.cc
         Fleece/Support/Backtrace.cc
+        Fleece/Support/Base64.cc
         Fleece/Support/betterassert.cc
         Fleece/Support/Bitmap.cc
         Fleece/Support/ConcurrentArena.cc
@@ -40,7 +41,7 @@ function(set_source_files_base)
         Fleece/Support/LibC++Debug.cc
         Fleece/Support/ParseDate.cc
         Fleece/Support/RefCounted.cc
-        Fleece/Support/slice.cc
+        Fleece/Support/slice_stream.cc
         Fleece/Support/sliceIO.cc
         Fleece/Support/StringTable.cc
         Fleece/Support/varint.cc

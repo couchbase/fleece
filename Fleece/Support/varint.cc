@@ -84,39 +84,6 @@ size_t _GetUVarInt32(slice buf, uint32_t *n) {
 }
 
 
-__hot
-bool ReadUVarInt(slice *buf, uint64_t *n) {
-    if (buf->size == 0)
-        return false;
-    size_t bytesRead = GetUVarInt(*buf, n);
-    if (bytesRead == 0)
-        return false;
-    buf->moveStart(bytesRead);
-    return true;
-}
-
-__hot
-bool ReadUVarInt32(slice *buf, uint32_t *n) {
-    if (buf->size == 0)
-        return false;
-    size_t bytesRead = GetUVarInt32(*buf, n);
-    if (bytesRead == 0)
-        return false;
-    buf->moveStart(bytesRead);
-    return true;
-}
-
-
-__hot
-bool WriteUVarInt(slice *buf, uint64_t n) {
-    if (buf->size < kMaxVarintLen64 && buf->size < SizeOfVarInt(n))
-        return false;
-    size_t bytesWritten = PutUVarInt((void*)buf->buf, n);
-    buf->moveStart(bytesWritten);
-    return true;
-}
-
-
 
 #pragma mark - VARIABLE LENGTH INTS:
 
@@ -194,14 +161,6 @@ bool WriteUVarInt(slice *buf, uint64_t n) {
             n >>= 8;
         }
         return len + 1;
-    }
-
-    bool WriteCollatableUInt(slice *buf NONNULL, uint64_t n) {
-        if (buf->size < kMaxCollatableUIntLen64 && buf->size < SizeOfCollatableUInt(n))
-            return false;
-        size_t bytesWritten = PutCollatableUInt((void*)buf->buf, n);
-        buf->moveStart(bytesWritten);
-        return true;
     }
 
     size_t GetCollatableUInt(slice buf, uint64_t *n) {

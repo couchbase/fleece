@@ -26,11 +26,12 @@ namespace fleece {
     public:
 
         /** Total number of live objects that implement InstanceCounted. */
-        static int count()                          {return gInstanceCount;}
+        static int liveInstanceCount()              {return gInstanceCount;}
 
 #if INSTANCECOUNTED_TRACK
         InstanceCounted()                           {track();}
         InstanceCounted(const InstanceCounted&)     {track();}
+        InstanceCounted(InstanceCounted &&old)      {track(); old.untrack();}
         virtual ~InstanceCounted()                  {untrack();}        // must be virtual for RTTI
 
         /** Logs information to stderr about all live objects. */
@@ -74,6 +75,12 @@ namespace fleece {
         InstanceCountedIn(const InstanceCountedIn&)
         :InstanceCounted((size_t)this - (size_t)(BASE*)this)
         { }
+
+        InstanceCountedIn(InstanceCountedIn &&old)
+        :InstanceCounted((size_t)this - (size_t)(BASE*)this)
+        {
+            old.untrack();
+        }
 #endif
     };
 

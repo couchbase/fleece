@@ -37,7 +37,7 @@ namespace fleece { namespace impl {
     /** A Dict key that may be either a string or a small integer. */
     class key_t {
     public:
-        key_t()                                     { }
+        key_t()                                     =default;
         key_t(slice key)        :_string(key)       {assert_precondition(key);}
         key_t(int key)          :_int((int16_t)key) {assert_precondition(key >= 0 && key <= INT16_MAX);}
 

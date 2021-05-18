@@ -43,6 +43,9 @@
 		27393C941FEC30E300FBFE59 /* FleeceTestsMain.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27393C931FEC30E300FBFE59 /* FleeceTestsMain.cc */; };
 		2739970925C9D2DD000C1C1B /* Delimiter.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2739970825C9D2DD000C1C1B /* Delimiter.hh */; };
 		2739971725CDBD8E000C1C1B /* SmallVectorBase.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2739971625CDBD8E000C1C1B /* SmallVectorBase.hh */; };
+		273CD2D825E874CD00B93C59 /* Base64.hh in Headers */ = {isa = PBXBuildFile; fileRef = 273CD2D625E874CD00B93C59 /* Base64.hh */; };
+		273CD2D925E874CD00B93C59 /* Base64.cc in Sources */ = {isa = PBXBuildFile; fileRef = 273CD2D725E874CD00B93C59 /* Base64.cc */; };
+		274281A4262F7CBF00862700 /* slice+ObjC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 274281A3262F7CBF00862700 /* slice+ObjC.mm */; };
 		274D8244209A3A77008BB39F /* HeapDict.cc in Sources */ = {isa = PBXBuildFile; fileRef = 274D8242209A3A77008BB39F /* HeapDict.cc */; };
 		274D8245209A3A77008BB39F /* HeapDict.hh in Headers */ = {isa = PBXBuildFile; fileRef = 274D8243209A3A77008BB39F /* HeapDict.hh */; };
 		274D8248209A5906008BB39F /* ValueSlot.cc in Sources */ = {isa = PBXBuildFile; fileRef = 274D8246209A5906008BB39F /* ValueSlot.cc */; };
@@ -56,6 +59,8 @@
 		275B3596234BE12800FE9CF0 /* FLSlice.cc in Sources */ = {isa = PBXBuildFile; fileRef = 275B3595234BE12800FE9CF0 /* FLSlice.cc */; };
 		275CED521D3EF7BE001DE46C /* FleeceException.cc in Sources */ = {isa = PBXBuildFile; fileRef = 275CED501D3EF7BE001DE46C /* FleeceException.cc */; };
 		275CED531D3EF7BE001DE46C /* FleeceException.hh in Headers */ = {isa = PBXBuildFile; fileRef = 275CED511D3EF7BE001DE46C /* FleeceException.hh */; };
+		275F0460261E46E9005261C0 /* slice_stream.cc in Sources */ = {isa = PBXBuildFile; fileRef = 275F045F261E46E9005261C0 /* slice_stream.cc */; };
+		2760A4DC25E96DDF00E2ECB2 /* wyhash32.h in Headers */ = {isa = PBXBuildFile; fileRef = 2760A4DB25E96DDF00E2ECB2 /* wyhash32.h */; };
 		276D15461E007D3000543B1B /* JSON5.cc in Sources */ = {isa = PBXBuildFile; fileRef = 276D15441E007D3000543B1B /* JSON5.cc */; };
 		276D15471E007D3000543B1B /* JSON5.hh in Headers */ = {isa = PBXBuildFile; fileRef = 276D15451E007D3000543B1B /* JSON5.hh */; };
 		276D15491E008E7A00543B1B /* JSON5Tests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 276D15481E008E7A00543B1B /* JSON5Tests.cc */; };
@@ -145,7 +150,6 @@
 		27DE2E922125FA1700123597 /* varint.cc in Sources */ = {isa = PBXBuildFile; fileRef = 270FA2761BF53CEA005DCB13 /* varint.cc */; };
 		27DE2E962125FA1700123597 /* RefCounted.cc in Sources */ = {isa = PBXBuildFile; fileRef = 274D8254209D1764008BB39F /* RefCounted.cc */; };
 		27DE2E9D2125FA1700123597 /* slice+CoreFoundation.cc in Sources */ = {isa = PBXBuildFile; fileRef = 272E5A601BF91F6C00848580 /* slice+CoreFoundation.cc */; };
-		27DE2E9E2125FA1700123597 /* slice.cc in Sources */ = {isa = PBXBuildFile; fileRef = 270FA2741BF53CEA005DCB13 /* slice.cc */; };
 		27DE2EB22125FA1700123597 /* JSON5.hh in Headers */ = {isa = PBXBuildFile; fileRef = 276D15451E007D3000543B1B /* JSON5.hh */; };
 		27DE2EB32125FA1700123597 /* RefCounted.hh in Headers */ = {isa = PBXBuildFile; fileRef = 274D8255209D1764008BB39F /* RefCounted.hh */; };
 		27DE2EB42125FA1700123597 /* JSONDelta.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27AEFAC121090FF400106ED8 /* JSONDelta.hh */; };
@@ -290,7 +294,6 @@
 		270FA2711BF53CEA005DCB13 /* Writer.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Writer.cc; sourceTree = "<group>"; };
 		270FA2721BF53CEA005DCB13 /* Writer.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Writer.hh; sourceTree = "<group>"; };
 		270FA2731BF53CEA005DCB13 /* Endian.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Endian.hh; sourceTree = "<group>"; };
-		270FA2741BF53CEA005DCB13 /* slice.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = slice.cc; sourceTree = "<group>"; };
 		270FA2761BF53CEA005DCB13 /* varint.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = varint.cc; sourceTree = "<group>"; };
 		270FA2771BF53CEA005DCB13 /* varint.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = varint.hh; sourceTree = "<group>"; };
 		271507E92122381E005FE6E8 /* Fleece+CoreFoundation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Fleece+CoreFoundation.h"; sourceTree = "<group>"; };
@@ -331,6 +334,9 @@
 		27393C931FEC30E300FBFE59 /* FleeceTestsMain.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FleeceTestsMain.cc; sourceTree = "<group>"; };
 		2739970825C9D2DD000C1C1B /* Delimiter.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Delimiter.hh; sourceTree = "<group>"; };
 		2739971625CDBD8E000C1C1B /* SmallVectorBase.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SmallVectorBase.hh; sourceTree = "<group>"; };
+		273CD2D625E874CD00B93C59 /* Base64.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Base64.hh; sourceTree = "<group>"; };
+		273CD2D725E874CD00B93C59 /* Base64.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Base64.cc; sourceTree = "<group>"; };
+		274281A3262F7CBF00862700 /* slice+ObjC.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = "slice+ObjC.mm"; sourceTree = "<group>"; };
 		2744B36424197176005A194D /* Function.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Function.hh; sourceTree = "<group>"; };
 		2746DD3B1D931BE9000517BC /* Benchmark.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Benchmark.hh; sourceTree = "<group>"; };
 		2747D9841CFB9BC300C48211 /* 1person.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = 1person.json; sourceTree = "<group>"; };
@@ -354,7 +360,12 @@
 		275C67DC1BFBA128008AA9E7 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		275CED501D3EF7BE001DE46C /* FleeceException.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FleeceException.cc; sourceTree = "<group>"; };
 		275CED511D3EF7BE001DE46C /* FleeceException.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = FleeceException.hh; sourceTree = "<group>"; };
+		275F0458261E447F005261C0 /* slice_stream.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = slice_stream.hh; sourceTree = "<group>"; };
+		275F045F261E46E9005261C0 /* slice_stream.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = slice_stream.cc; sourceTree = "<group>"; };
 		275F7F5C210FBFFC00861DE8 /* Deltas.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Deltas.md; sourceTree = "<group>"; };
+		2760A4DB25E96DDF00E2ECB2 /* wyhash32.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = wyhash32.h; sourceTree = "<group>"; };
+		2760A4EF25E96E1000E2ECB2 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		2760A4F625E97EF000E2ECB2 /* wyhash.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = wyhash.h; sourceTree = "<group>"; };
 		276D15441E007D3000543B1B /* JSON5.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSON5.cc; sourceTree = "<group>"; };
 		276D15451E007D3000543B1B /* JSON5.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = JSON5.hh; sourceTree = "<group>"; };
 		276D15481E008E7A00543B1B /* JSON5Tests.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSON5Tests.cc; sourceTree = "<group>"; };
@@ -405,6 +416,7 @@
 		27A0E3DD24DCD86900380563 /* ConcurrentArena.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ConcurrentArena.hh; sourceTree = "<group>"; };
 		27A0E3DE24DCD86900380563 /* ConcurrentArena.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ConcurrentArena.cc; sourceTree = "<group>"; };
 		27A2F73A21248DA40081927B /* FLSlice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FLSlice.h; sourceTree = "<group>"; };
+		27A63F38263375B500634F7B /* date.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = date.h; sourceTree = "<group>"; };
 		27A924CD1D9C32E800086206 /* Path.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Path.cc; sourceTree = "<group>"; };
 		27A924CE1D9C32E800086206 /* Path.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Path.hh; sourceTree = "<group>"; };
 		27AEFAC021090FF400106ED8 /* JSONDelta.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSONDelta.cc; sourceTree = "<group>"; };
@@ -608,10 +620,12 @@
 		27298E3E1C00F8A9000CFBA8 /* vendor */ = {
 			isa = PBXGroup;
 			children = (
-				27D9656A23397EBD00F4A51C /* SwiftDtoa */,
 				27E3DD461DB6B86000F2872D /* catch */,
+				27A63F35263375B500634F7B /* date */,
 				27298E3F1C00F8A9000CFBA8 /* jsonsl */,
 				277015321D596436008BADD7 /* libb64 */,
+				27D9656A23397EBD00F4A51C /* SwiftDtoa */,
+				2760A4DA25E96DB000E2ECB2 /* wyhash */,
 			);
 			path = vendor;
 			sourceTree = "<group>";
@@ -667,6 +681,16 @@
 				27D721231F8C074600AA4458 /* ObjC */,
 			);
 			path = Integration;
+			sourceTree = "<group>";
+		};
+		2760A4DA25E96DB000E2ECB2 /* wyhash */ = {
+			isa = PBXGroup;
+			children = (
+				2760A4DB25E96DDF00E2ECB2 /* wyhash32.h */,
+				2760A4F625E97EF000E2ECB2 /* wyhash.h */,
+				2760A4EF25E96E1000E2ECB2 /* README.md */,
+			);
+			path = wyhash;
 			sourceTree = "<group>";
 		};
 		277015321D596436008BADD7 /* libb64 */ = {
@@ -726,6 +750,30 @@
 			path = Tool;
 			sourceTree = "<group>";
 		};
+		27A63F35263375B500634F7B /* date */ = {
+			isa = PBXGroup;
+			children = (
+				27A63F36263375B500634F7B /* include */,
+			);
+			path = date;
+			sourceTree = "<group>";
+		};
+		27A63F36263375B500634F7B /* include */ = {
+			isa = PBXGroup;
+			children = (
+				27A63F37263375B500634F7B /* date */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		27A63F37263375B500634F7B /* date */ = {
+			isa = PBXGroup;
+			children = (
+				27A63F38263375B500634F7B /* date.h */,
+			);
+			path = date;
+			sourceTree = "<group>";
+		};
 		27A89D7C209FC44500C3BEB2 /* Mutable */ = {
 			isa = PBXGroup;
 			children = (
@@ -748,9 +796,11 @@
 			children = (
 				2700BBA0218B949900797537 /* Backtrace.hh */,
 				2700BBA1218B949900797537 /* Backtrace.cc */,
+				273CD2D625E874CD00B93C59 /* Base64.hh */,
+				273CD2D725E874CD00B93C59 /* Base64.cc */,
+				2746DD3B1D931BE9000517BC /* Benchmark.hh */,
 				27C4CEB82127976900470DE9 /* betterassert.cc */,
 				27C4CEB92127976900470DE9 /* betterassert.hh */,
-				2746DD3B1D931BE9000517BC /* Benchmark.hh */,
 				277F45B3208E9A9100A0D159 /* Bitmap.hh */,
 				27D57719212B3032002410BA /* Bitmap.cc */,
 				27A0E3DD24DCD86900380563 /* ConcurrentArena.hh */,
@@ -778,7 +828,8 @@
 				271507ED2122381E005FE6E8 /* PlatformCompat.hh */,
 				274D8254209D1764008BB39F /* RefCounted.cc */,
 				274D8255209D1764008BB39F /* RefCounted.hh */,
-				270FA2741BF53CEA005DCB13 /* slice.cc */,
+				275F0458261E447F005261C0 /* slice_stream.hh */,
+				275F045F261E46E9005261C0 /* slice_stream.cc */,
 				2776AA762093C982004ACE85 /* sliceIO.cc */,
 				2776AA772093C982004ACE85 /* sliceIO.hh */,
 				27C59BA2212F898F003C8492 /* SmallVector.hh */,
@@ -878,10 +929,11 @@
 		27E3DD2A1DB1C17900F2872D /* ObjC */ = {
 			isa = PBXGroup;
 			children = (
-				270FA26D1BF53CEA005DCB13 /* Value+ObjC.mm */,
 				270FA2701BF53CEA005DCB13 /* Encoder+ObjC.mm */,
-				272E5A601BF91F6C00848580 /* slice+CoreFoundation.cc */,
 				270515531D9058F200D62D05 /* Fleece+CoreFoundation.mm */,
+				272E5A601BF91F6C00848580 /* slice+CoreFoundation.cc */,
+				274281A3262F7CBF00862700 /* slice+ObjC.mm */,
+				270FA26D1BF53CEA005DCB13 /* Value+ObjC.mm */,
 			);
 			name = ObjC;
 			path = ../ObjC;
@@ -1008,6 +1060,7 @@
 				27DE2EBD2125FA1700123597 /* Array.hh in Headers */,
 				27DE2EBE2125FA1700123597 /* DeepIterator.hh in Headers */,
 				27DE2EBF2125FA1700123597 /* MArray.hh in Headers */,
+				2760A4DC25E96DDF00E2ECB2 /* wyhash32.h in Headers */,
 				2739970925C9D2DD000C1C1B /* Delimiter.hh in Headers */,
 				2779BA1024CB4A4900BCEA8F /* ConcurrentMap.hh in Headers */,
 				27D9656D23397EF700F4A51C /* SwiftDtoa.h in Headers */,
@@ -1039,6 +1092,7 @@
 				27C59BA4212F898F003C8492 /* SmallVector.hh in Headers */,
 				27DE2ED72125FA1700123597 /* Path.hh in Headers */,
 				27DE2ED82125FA1700123597 /* HeapDict.hh in Headers */,
+				273CD2D825E874CD00B93C59 /* Base64.hh in Headers */,
 				27D965682339595700F4A51C /* NumConversion.hh in Headers */,
 				27DE2ED92125FA1700123597 /* HeapValue.hh in Headers */,
 				27DE2EDA2125FA1700123597 /* FleeceException.hh in Headers */,
@@ -1334,16 +1388,18 @@
 			buildActionMask = 2147483647;
 			files = (
 				27744ADE2139C6AE00399DCA /* betterassert.cc in Sources */,
+				273CD2D925E874CD00B93C59 /* Base64.cc in Sources */,
 				27DE2EEB2125FC9300123597 /* FleeceException.cc in Sources */,
 				275B3596234BE12800FE9CF0 /* FLSlice.cc in Sources */,
 				27DE2E962125FA1700123597 /* RefCounted.cc in Sources */,
 				2700BBA3218B949900797537 /* Backtrace.cc in Sources */,
+				274281A4262F7CBF00862700 /* slice+ObjC.mm in Sources */,
 				2779BA1124CB4A4900BCEA8F /* ConcurrentMap.cc in Sources */,
-				27DE2E9E2125FA1700123597 /* slice.cc in Sources */,
 				27DFAE13219F83AB00DF57EB /* InstanceCounted.cc in Sources */,
 				27DE2E9D2125FA1700123597 /* slice+CoreFoundation.cc in Sources */,
 				27D965692339595700F4A51C /* NumConversion.cc in Sources */,
 				27DE2EEA2125FC5A00123597 /* Writer.cc in Sources */,
+				275F0460261E46E9005261C0 /* slice_stream.cc in Sources */,
 				27DE2E922125FA1700123597 /* varint.cc in Sources */,
 				27DE2EE82125FB2100123597 /* cdecode.c in Sources */,
 				27DE2EE92125FB2100123597 /* cencode.c in Sources */,
