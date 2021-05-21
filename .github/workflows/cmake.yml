@@ -65,7 +65,7 @@ jobs:
         set -e
         cmake --build . --config Debug --target FleeceTests
         cd ..
-        build/FleeceTests -r list
+        stdbuf -o L -e L  build/FleeceTests -r list
 
     - name: Test On Windows
       if: runner.os == 'Windows'
