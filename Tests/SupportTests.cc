@@ -269,9 +269,11 @@ TEST_CASE("ConcurrentMap basic", "[ConcurrentMap]") {
 
 
 TEST_CASE("ConcurrentMap concurrency", "[ConcurrentMap]") {
-    static constexpr size_t kSize = 8000;
+    static constexpr size_t kSize = 6000;
     ConcurrentMap map(kSize);
     cout << "table size = " << map.tableSize() << ", capacity = " << map.capacity() << '\n';
+    cout << "string capacity = " << map.stringBytesCapacity()
+         << ", used = " << map.stringBytesCount() << "\n";
     CHECK(map.count() == 0);
     CHECK(map.capacity() >= kSize);
     CHECK(map.stringBytesCapacity() >= 65535);
@@ -279,7 +281,7 @@ TEST_CASE("ConcurrentMap concurrency", "[ConcurrentMap]") {
     vector<string> keys;
     for (int i = 0; i < kSize; i++) {
         char keybuf[10];
-        sprintf(keybuf, "k-%x", i);
+        sprintf(keybuf, "%x", i);
         keys.push_back(keybuf);
     }
 
@@ -298,34 +300,41 @@ TEST_CASE("ConcurrentMap concurrency", "[ConcurrentMap]") {
         }
     };
 
-    auto writer = [&](int step) { // step must be coprime with kSize
+    auto writer = [&](int step, bool deleteToo) { // step must be coprime with kSize
         unsigned const startIndex = (unsigned)random() % kSize;
         auto index = startIndex;
         for (int n = 0; n < kSize; n++) {
             auto value = uint16_t(index & 0xFFFF);
             auto e = map.insert(keys[index].c_str(), value);
-            assert(e.key != nullslice);
+            if (e.key == nullslice) {
+                cerr << "CONCURRENTMAP OVERFLOW, strings used=" << map.stringBytesCount()
+                     << ", keys = " << map.count() << "\n";
+                throw runtime_error("ConcurrentMap overflow");
+            }
             assert(e.key == keys[index].c_str());
             assert(e.value == value);
             index = (index + step) % kSize;
         }
-        index = startIndex;
-        for (int n = 0; n < kSize; n++) {
-            map.remove(keys[index].c_str());
-            index = (index + step) % kSize;
+        if (deleteToo) {
+            index = startIndex;
+            for (int n = 0; n < kSize; n++) {
+                map.remove(keys[index].c_str());
+                index = (index + step) % kSize;
+            }
         }
     };
 
     auto f1 = async(reader, 7);
     auto f2 = async(reader, 53);
-    auto f3 = async(writer, 23);
-    auto f4 = async(writer, 91);
+    auto f3 = async(writer, 23, true);
+    auto f4 = async(writer, 91, true);
 
     f1.wait();
     f2.wait();
     f3.wait();
     f4.wait();
 
+    cout << "String capacity = " << map.stringBytesCapacity() << ", used = " << map.stringBytesCount() << "\n";
     CHECK(map.count() == 0);
 }
 
