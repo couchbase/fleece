@@ -222,17 +222,13 @@ namespace fleece { namespace impl {
             throwIf(toCount > _count, SharedKeysStateError, "can't revert to a bigger count");
             return;
         }
-        for (auto key = toCount; key < _count; ++key)
-            _byKey[key] = nullslice;
-        _count = unsigned(toCount);
 
-        // StringTable doesn't support removing, so rebuild it:
-        ConcurrentMap table(2047);
-        for (size_t key = 0; key < toCount; ++key) {
-            auto entry = table.insert(_byKey[key], uint16_t(key));
-            _byKey[key] = entry.key;
+        // (Iterating backwards helps the ConcurrentArena free up key space.)
+        for (int key = _count - 1; key >= int(toCount); --key) {
+            _table.remove(_byKey[key]);
+            _byKey[key] = nullslice;
         }
-        _table = move(table);
+        _count = unsigned(toCount);
     }
 
 
