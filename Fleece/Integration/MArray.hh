@@ -32,6 +32,14 @@ namespace fleece {
 
         /** Constructs an empty MArray not connected to any existing Fleece Array. */
         MArray() :MCollection() { }
+        
+        /** Constructs an MArray with value and context, setJSON uses this to create a MArray */
+        MArray(MContext *context, Value value, bool isMutable)
+        : MCollection(context, isMutable)
+        ,_array(value.asArray())
+        {
+            _vec.resize(_array.count());
+        }
 
         /** Constructs an MArray that shadows an Array stored in `mv` and contained in `parent`.
             This is what you'd call from MValue::toNative. */

@@ -36,6 +36,15 @@ namespace fleece {
 
         /** Constructs an empty MDict not connected to any existing Fleece Dict. */
         MDict() :MCollection() { }
+        
+        /** Constructs a MDict with value and context, setJSON uses this to create a MDict */
+        MDict(MContext *context, Value value, bool isMutable)
+        : MCollection(context, isMutable)
+        ,_dict(value.asDict())
+        {
+            _count(_dict.count());
+            _map.reserve(5);
+        }
 
         /** Constructs an MDict that shadows a Dict stored in `mv` and contained in `parent`.
             This is what you'd call from MValue::toNative. */
