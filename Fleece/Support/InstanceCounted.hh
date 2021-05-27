@@ -47,6 +47,7 @@ namespace fleece {
 #else
         InstanceCounted()                           {++gInstanceCount;}
         InstanceCounted(const InstanceCounted&)     {++gInstanceCount;}
+        InstanceCounted(InstanceCounted &&old)      {} // Do nothing, the old and new should balance
         ~InstanceCounted()                          {--gInstanceCount;}
 #endif
 
