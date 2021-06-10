@@ -75,6 +75,7 @@ namespace fleece { namespace impl {
     }
 
     bool DeepIterator::iterateContainer(const Value *container) {
+        _container = container;
         _stack.push_front({{nullslice, 0}, nullptr});   // Push en end-of-level marker first
         auto type = container->type();
         if (type == kArray) {
