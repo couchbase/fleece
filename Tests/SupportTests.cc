@@ -20,7 +20,6 @@
 #include "FleeceImpl.hh"
 #include "ConcurrentMap.hh"
 #include "Bitmap.hh"
-#include "Function.hh"
 #include "TempArray.hh"
 #include "sliceIO.hh"
 #include <iostream>
@@ -112,76 +111,6 @@ TEST_CASE("Bitmap") {
     CHECK(!b.empty());
     CHECK(b.bitCount() == 13);
     CHECK(b.indexOfBit(8) == 4);
-}
-
-
-static Function<char()> charFn(char c) {
-    return [=]() {
-        return c;
-    };
-}
-
-TEST_CASE("Function minimal") {
-    Function<char(void)> fn;
-    CHECK(!fn);
-
-    fn = charFn(123);
-    CHECK(fn);
-    CHECK(fn() == 123);
-
-    auto fn2(move(fn));
-    CHECK(fn2() == 123);
-    //CHECK(!fn);
-}
-
-
-static Function<double(double)> add(double n) {
-    // Return a lambda that captures a string, to make sure copying works correctly.
-    // And add some doubles to capture, to increase the lambda's size.
-    double a = 1, b = 2;
-    return [=](double n2) {
-        if (a > b) return 0.0;
-        fputs(".", stderr);
-        if (n2 > 1000) abort();
-        return n + n2;
-    };
-}
-
-TEST_CASE("Function with primitive types") {
-    Function<double(double)> fn;
-    CHECK(!fn);
-
-    fn = add(100);
-    CHECK(fn);
-    CHECK(fn(1) == 101);
-
-    auto fn2(move(fn));
-    CHECK(fn2(200) == 300);
-    //CHECK(!fn);
-}
-
-
-static Function<string(const string&)> append(string str) {
-    // Return a lambda that captures a string, to make sure copying works correctly.
-    // And add some doubles to capture, to increase the lambda's size.
-    double a = 1, b = 2;
-    return [=](const string &s) {
-        if (a > b) return string("?");
-        return str + s;
-    };
-}
-
-TEST_CASE("Function with non-primitive types") {
-    Function<string(const string&)> fn;
-    CHECK(!fn);
-
-    fn = append("Hello ");
-    CHECK(fn);
-    CHECK(fn("World") == "Hello World");
-
-    auto fn2(move(fn));
-    CHECK(fn2("Mom") == "Hello Mom");
-    //CHECK(!fn);
 }
 
 

@@ -53,11 +53,7 @@ namespace fleece {
         --gInstanceCount;
     }
 
-    void InstanceCounted::dumpInstances() {
-        dumpInstances(nullptr);
-    }
-
-    void InstanceCounted::dumpInstances(Function<void(const InstanceCounted*)> callback) {
+    void InstanceCounted::dumpInstances(function_ref<void(const InstanceCounted*)> *callback) {
         char* unmangled = nullptr;
         lock_guard<mutex> lock(sInstancesMutex);
         for (auto entry : sInstances) {
@@ -73,7 +69,7 @@ namespace fleece {
 
             fprintf(stderr, "    * ");
             if (callback)
-                callback(entry.first);
+                (*callback)(entry.first);
             fprintf(stderr, "%s ", name);
             if (auto rc = dynamic_cast<const RefCounted*>(entry.first); rc)
                 fprintf(stderr, "(refCount=%d) ", rc->refCount());
