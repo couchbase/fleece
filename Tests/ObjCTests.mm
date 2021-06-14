@@ -23,14 +23,31 @@
 using namespace fleece::impl;
 
 static void checkIt(id obj, const char* json) {
-    Encoder enc;
-    enc.writeObjC(obj);
-    enc.end();
-    auto result = enc.finish();
-    auto v = Value::fromData(result);
-    REQUIRE(v != nullptr);
-    REQUIRE(v->toJSON() == alloc_slice(json));
-    REQUIRE([v->toNSObject() isEqual: obj]);
+    @autoreleasepool {
+        Encoder enc;
+        enc.writeObjC(obj);
+        enc.end();
+        auto result = enc.finish();
+        auto v = Value::fromData(result);
+        REQUIRE(v != nullptr);
+        REQUIRE(v->toJSON() == alloc_slice(json));
+        REQUIRE([v->toNSObject() isEqual: obj]);
+    }
+}
+
+
+TEST_CASE("Slice NSData") {
+    @autoreleasepool {
+        slice str = "Hi, I am a string";
+        NSData *data;
+        {
+            alloc_slice s(str);
+            data = s.uncopiedNSData();
+            // `s` is released, but `data` should have its own reference to the heap block...
+        }
+        CHECK(data.length == str.size);
+        CHECK(slice(data) == str);
+    }
 }
 
 

@@ -65,9 +65,19 @@ namespace fleece {
         static CFAllocatorContext context = {
             .version = 0,
             .info = nullptr,
-            .retain = [](const void *p) -> const void* { alloc_slice::retain(slice(p,1)); return p; },
-            .release = [](const void *p) -> void        { alloc_slice::release(slice(p,1)); },
-            .deallocate = [](void *p, void *info) -> void   { alloc_slice::release(slice(p,1)); },
+            .retain = [](const void *p) -> const void* {
+                if (p)
+                    alloc_slice::retain(slice(p,1));
+                return p;
+            },
+            .release = [](const void *p) -> void {
+                if (p)
+                    alloc_slice::release(slice(p,1));
+            },
+            .deallocate = [](void *p, void *info) -> void {
+                if (p)
+                    alloc_slice::release(slice(p,1));
+            },
         };
         static CFAllocatorRef kAllocator = CFAllocatorCreate(nullptr, &context);
         return kAllocator;
