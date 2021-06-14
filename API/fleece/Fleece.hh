@@ -361,8 +361,8 @@ namespace fleece {
         Doc(alloc_slice fleeceData,
             FLTrust trust =kFLUntrusted,
             SharedKeys sk =nullptr,
-            slice externDestination =nullslice) noexcept
-        :_doc(FLDoc_FromResultData({fleeceData.buf, fleeceData.size}, trust, sk, externDestination))
+            slice externDest =nullslice) noexcept
+        :_doc(FLDoc_FromResultData(FLSliceResult(std::move(fleeceData)), trust, sk, externDest))
         { }
 
         static inline Doc fromJSON(slice_NONNULL json, FLError *outError = nullptr);
@@ -579,18 +579,13 @@ namespace fleece {
         AllocedDict()
         =default;
 
-        explicit AllocedDict(const alloc_slice &s)
+        explicit AllocedDict(alloc_slice s)
         :Dict(FLValue_AsDict(FLValue_FromData(s, kFLUntrusted)))
-        ,alloc_slice(s)
+        ,alloc_slice(std::move(s))
         { }
 
         explicit AllocedDict(slice s)
         :AllocedDict(alloc_slice(s)) { }
-
-        AllocedDict(const AllocedDict &d)
-        :Dict(d)
-        ,alloc_slice((const alloc_slice&)d)
-        { }
 
         const alloc_slice& data() const                 {return *this;}
         explicit operator bool () const                 {return Dict::operator bool();}
@@ -615,8 +610,8 @@ namespace fleece {
     inline float Value::asFloat() const         {return FLValue_AsFloat(_val);}
     inline double Value::asDouble() const       {return FLValue_AsDouble(_val);}
     inline FLTimestamp Value::asTimestamp() const {return FLValue_AsTimestamp(_val);}
-    inline slice Value::asString() const     {return FLValue_AsString(_val);}
-    inline slice Value::asData() const        {return FLValue_AsData(_val);}
+    inline slice Value::asString() const        {return FLValue_AsString(_val);}
+    inline slice Value::asData() const          {return FLValue_AsData(_val);}
     inline Array Value::asArray() const         {return FLValue_AsArray(_val);}
     inline Dict Value::asDict() const           {return FLValue_AsDict(_val);}
 
