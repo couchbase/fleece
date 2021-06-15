@@ -290,8 +290,6 @@ namespace fleece {
 
     __hot
     std::optional<uint64_t> slice_istream::readUVarInt() noexcept {
-        if (size == 0)
-            return false;
         uint64_t n;
         if (size_t bytesRead = GetUVarInt(*this, &n); bytesRead > 0) {
             skip(bytesRead);
@@ -304,8 +302,6 @@ namespace fleece {
 
     __hot
     std::optional<uint32_t> slice_istream::readUVarInt32() noexcept {
-        if (size == 0)
-            return false;
         uint32_t n;
         if (size_t bytesRead = GetUVarInt32(*this, &n); bytesRead > 0) {
             skip(bytesRead);
