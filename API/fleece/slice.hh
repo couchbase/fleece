@@ -48,6 +48,7 @@
 // Figure out whether and how string_view is available
 #ifdef __has_include
 #   if __has_include(<string_view>)
+#       include <string_view>
 #       define SLICE_SUPPORTS_STRING_VIEW
 #   endif
 #endif
