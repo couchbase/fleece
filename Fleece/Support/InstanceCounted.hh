@@ -11,9 +11,10 @@
 #include <stdint.h>
 
 #ifndef INSTANCECOUNTED_TRACK
-    #if DEBUG
+    // TODO: Add this guard back in
+    //#if DEBUG
         #define INSTANCECOUNTED_TRACK 1
-    #endif
+    //#endif
 #endif
 
 namespace fleece {
