@@ -456,6 +456,7 @@ void FLSlot_SetValue(FLSlot slot, FLValue v)            FLAPI {slot->set(v);}
 FLDeepIterator FLDeepIterator_New(FLValue v)            FLAPI {return new DeepIterator(v);}
 void FLDeepIterator_Free(FLDeepIterator i)              FLAPI {delete i;}
 FLValue FLDeepIterator_GetValue(FLDeepIterator i)       FLAPI {return i->value();}
+FLValue FLDeepIterator_GetParent(FLDeepIterator i)      FLAPI {return i->parent();}
 FLSlice FLDeepIterator_GetKey(FLDeepIterator i)         FLAPI {return i->keyString();}
 uint32_t FLDeepIterator_GetIndex(FLDeepIterator i)      FLAPI {return i->index();}
 size_t FLDeepIterator_GetDepth(FLDeepIterator i)        FLAPI {return i->path().size();}

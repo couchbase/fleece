@@ -775,10 +775,13 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
     /** Returns the current value being iterated over. or NULL at the end of iteration. */
     FLValue FLDeepIterator_GetValue(FLDeepIterator NONNULL) FLAPI;
 
-    /** Returns the key of the current value, or an empty slice if not in a dictionary. */
+    /** Returns the parent/container of the current value, or NULL at the end of iteration. */
+    FLValue FLDeepIterator_GetParent(FLDeepIterator NONNULL) FLAPI;
+
+    /** Returns the key of the current value in its parent, or an empty slice if not in a dictionary. */
     FLSlice FLDeepIterator_GetKey(FLDeepIterator NONNULL) FLAPI;
 
-    /** Returns the array index of the current value, or 0 if not in an array. */
+    /** Returns the array index of the current value in its parent, or 0 if not in an array. */
     uint32_t FLDeepIterator_GetIndex(FLDeepIterator NONNULL) FLAPI;
 
     /** Returns the current depth in the hierarchy, starting at 1 for the top-level children. */

@@ -213,6 +213,7 @@ namespace fleece {
         RetainedValue(FLValue v)                  :Value(FLValue_Retain(v)) { }
         RetainedValue(const Value &v)             :Value(FLValue_Retain(v)) { }
         RetainedValue(RetainedValue &&v) noexcept :Value(v) {v._val = nullptr;}
+        RetainedValue(const RetainedValue &v) noexcept :RetainedValue(Value(v)) { }
         RetainedValue(MutableArray &&v) noexcept  :Value(v) {v._val = nullptr;}
         RetainedValue(MutableDict &&v) noexcept   :Value(v) {v._val = nullptr;}
         ~RetainedValue()                          {FLValue_Release(_val);}

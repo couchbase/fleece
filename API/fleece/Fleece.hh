@@ -302,6 +302,7 @@ namespace fleece {
         Value value() const                             {return FLDeepIterator_GetValue(_i);}
         slice key() const                               {return FLDeepIterator_GetKey(_i);}
         uint32_t index() const                          {return FLDeepIterator_GetIndex(_i);}
+        Value parent() const                            {return FLDeepIterator_GetParent(_i);}
 
         size_t depth() const                            {return FLDeepIterator_GetDepth(_i);}
         alloc_slice pathString() const                  {return FLDeepIterator_GetPathString(_i);}
