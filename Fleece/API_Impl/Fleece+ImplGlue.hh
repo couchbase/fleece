@@ -119,6 +119,9 @@ namespace fleece { namespace impl {
                 fleeceEncoder->reset();
             if (jsonConverter)
                 jsonConverter->reset();
+            if (jsonEncoder) {
+                jsonEncoder->reset();
+            }
             errorCode = ::kFLNoError;
             extraInfo = nullptr;
         }

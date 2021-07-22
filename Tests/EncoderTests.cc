@@ -1132,4 +1132,33 @@ public:
         CHECK(msg == "Truncated JSON");
     }
 
+    TEST_CASE("Good JSON") {
+        fleece::Encoder enc;
+        REQUIRE(FLEncoder_ConvertJSON(enc, "{}"_sl));
+        CHECK(enc.error() == kFLNoError);
+    }
+
+    TEST_CASE("Good JSON with EncodeJSON") {
+        fleece::Encoder enc(kFLEncodeJSON);
+        REQUIRE(FLEncoder_ConvertJSON(enc, "{}"_sl));
+        CHECK(enc.error() == kFLNoError);
+    }
+
+    TEST_CASE("EncodeJSON: reset the Encoder") {
+        fleece::Encoder enc(kFLEncodeJSON);
+        for (int c = 0; c < 4; ++c) {
+            if (c > 0) {
+                enc.reset();
+            }
+            enc.beginDict();
+            enc.writeKey("intKey");
+            enc.writeInt(123);
+            enc.writeKey("strKey");
+            enc.writeString("abc");
+            enc.endDict();
+            alloc_slice res = enc.finish();
+            CHECK(res.asString() == R"r({"intKey":123,"strKey":"abc"})r");
+        }
+    }
+
 } }

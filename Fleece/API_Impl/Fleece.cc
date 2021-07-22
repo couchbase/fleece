@@ -638,6 +638,7 @@ bool FLEncoder_ConvertJSON(FLEncoder e, FLSlice json) FLAPI {
                 }
             } else {
                 e->jsonEncoder->writeJSON(json);
+                return true;
             }
         } catch (const std::exception &x) {
             e->recordException(x);
