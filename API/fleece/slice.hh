@@ -287,6 +287,7 @@ namespace fleece {
         // FLSlice interoperability:
         constexpr slice(const FLSlice &s) noexcept STEPOVER           :pure_slice(s.buf,s.size) { }
         inline explicit operator FLSliceResult () const noexcept;
+        explicit slice(const FLSliceResult &sr) STEPOVER            :pure_slice(sr.buf, sr.size) { }
         slice& operator= (FLHeapSlice s) noexcept           {set(s.buf, s.size); return *this;} // disambiguation
 
 #ifdef SLICE_SUPPORTS_STRING_VIEW
@@ -388,8 +389,8 @@ namespace fleece {
         inline void shorten(size_t s);
 
         // FLSliceResult interoperability:
-        alloc_slice(const FLSliceResult &s) noexcept STEPOVER :pure_slice(s.buf, s.size) {retain();}
-        explicit alloc_slice(FLSliceResult &&sr) noexcept STEPOVER  :pure_slice(sr.buf, sr.size) { }
+        explicit alloc_slice(const FLSliceResult &s) noexcept STEPOVER :pure_slice(s.buf, s.size) {retain();}
+        alloc_slice(FLSliceResult &&sr) noexcept STEPOVER  :pure_slice(sr.buf, sr.size) { }
         explicit operator FLSliceResult () & noexcept       {retain(); return {(void*)buf, size};}
         explicit operator FLSliceResult () && noexcept      {FLSliceResult r {(void*)buf, size};
                                                              set(nullptr, 0); return r;}
