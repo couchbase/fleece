@@ -110,6 +110,21 @@ namespace fleece { namespace impl {
         Log("Register   (%p ... %p) --> Scope %p, sk=%p [Now %zu]",
             _data.buf, _data.end(), this, _sk.get(), sMemoryMap->size()+1);
 
+        if (!_isDoc && _data.size == 2) {
+            // Values of size 2 are simple values in that they don't have sub-values. Therefore, they don't provide
+            // interesting scope. An exception is the empty dict. We use the empty dict for empty revision bodies
+            // of databases and apply technical check, c.f. DatabaseImpl::validateRevisionBody().
+            // We are mostly concerned of the pre-encoded size-2 values, such as Value::kTrueValue, etc. Their address
+            // ranges are constant, regardless of the associated scope, causing the failure of the assertion of,
+            // "Incompatible duplicate Scope." CBSE-10529.
+
+            // However, we should *always* register the scope if this is a Doc.
+
+            if (auto t = ((const Value*)_data.buf)->type(); t != kDict) {
+                return;
+            }
+        }
+
         memEntry entry = {_data.end(), this};
         memoryMap::iterator iter = upper_bound(sMemoryMap->begin(), sMemoryMap->end(), entry);
 
@@ -121,11 +136,14 @@ namespace fleece { namespace impl {
                 Log("Duplicate  (%p ... %p) --> Scope %p, sk=%p",
                     _data.buf, _data.end(), this, _sk.get());
             } else {
+                static const char* const valueTypeNames[] {"Null", "Boolean", "Number", "String", "Data", "Array", "Dict"};
+                auto type1 = ((const Value*)_data.buf)->type();
+                auto type2 = ((const Value*)existing->_data.buf)->type();
                 FleeceException::_throw(InternalError,
-                    "Incompatible duplicate Scope %p for (%p .. %p) with sk=%p: "
-                    "conflicts with %p for (%p .. %p) with sk=%p",
-                    this, _data.buf, _data.end(), _sk.get(),
-                    existing, existing->_data.buf, existing->_data.end(),
+                    "Incompatible duplicate Scope %p (%s) for (%p .. %p) with sk=%p: "
+                    "conflicts with %p (%s) for (%p .. %p) with sk=%p",
+                    this, valueTypeNames[type1], _data.buf, _data.end(), _sk.get(),
+                    existing, valueTypeNames[type2], existing->_data.buf, existing->_data.end(),
                     existing->_sk.get());
             }
         }
