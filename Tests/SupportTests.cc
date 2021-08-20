@@ -22,6 +22,7 @@
 #include "Bitmap.hh"
 #include "TempArray.hh"
 #include "sliceIO.hh"
+#include "Base64.hh"
 #include <iostream>
 #include <future>
 
@@ -315,4 +316,17 @@ TEST_CASE("SmallVector, big", "[SmallVector]") {
     CHECK(movedStrings[0] == "string 1"_sl);
     CHECK(movedStrings[1] == "string 2"_sl);
     CHECK(movedStrings[2] == "string 3"_sl);
+}
+
+
+TEST_CASE("Base64 encode and decode", "[Base64]") {
+    vector<string> inputs = {"a", "ab", "abc", "abcd", "abcde"};
+    vector<string> encodingResults = {"YQ==", "YWI=", "YWJj", "YWJjZA==", "YWJjZGU="};
+    int i = 0;
+    for (auto in : inputs) {
+        auto encoded = base64::encode(slice(in));
+        CHECK(encoded == encodingResults[i++]);
+        auto decoded = base64::decode(slice(encoded));
+        CHECK(decoded == in);
+    }
 }
