@@ -737,6 +737,14 @@ FLSliceResult FLDoc_GetAllocedData(FLDoc doc) FLAPI {
     return doc ? toSliceResult(doc->allocedData()) : FLSliceResult{};
 }
 
+void* FLDoc_GetAssociated(FLDoc doc, const char *type) FLAPI {
+    return doc ? doc->getAssociated(type) : nullptr;
+}
+
+bool FLDoc_SetAssociated(FLDoc doc, void *pointer, const char *type) FLAPI {
+    return doc && const_cast<Doc*>(doc)->setAssociated(pointer, type);
+}
+
 
 #pragma mark - DELTA COMPRESSION
 

@@ -124,8 +124,34 @@ extern "C" {
     /** Returns the FLSharedKeys used by this FLDoc, as specified when it was created. */
     FLSharedKeys FLDoc_GetSharedKeys(FLDoc) FLAPI FLPURE;
 
+    /** Associates an arbitrary pointer value with a document, and thus its contained values.
+        Allows client code to associate its own pointer with this FLDoc and its Values,
+        which can later be retrieved with \ref FLDoc_GetAssociated.
+        For example, this could be a pointer to an `app::Document` object, of which this Doc's
+        root FLDict is its properties. You would store it by calling
+        `FLDoc_SetAssociated(doc, myDoc, "app::Document");`.
+        @param doc  The FLDoc to store a pointer in.
+        @param pointer  The pointer to store in the FLDoc.
+        @param type  A C string literal identifying the type. This is used to avoid collisions
+                     with unrelated code that might try to store a different type of value.
+        @return  True if the pointer was stored, false if a pointer of a different type is
+                 already stored.
+        @warning  Be sure to clear this before the associated object is freed/invalidated!
+        @warning  This function is not thread-safe. Do not concurrently get & set objects. */
+    bool FLDoc_SetAssociated(FLDoc doc, void *pointer, const char *type) FLAPI;
+
+    /** Returns the pointer associated with the document. You can use this together with
+        \ref FLValue_FindDoc to associate your own object with Fleece values, for instance to find
+        your object that "owns" a value:
+        `myDoc = (app::Document*)FLDoc_GetAssociated(FLValue_FindDoc(val), "app::Document");`.
+        @param doc  The FLDoc to get a pointer from.
+        @param type  The type of object expected, i.e. the same string literal passed to
+                     \ref FLDoc_SetAssociated.
+        @return  The associated pointer of that type, if any. */
+    void* FLDoc_GetAssociated(FLDoc doc, const char *type) FLAPI FLPURE;
+
     /** Looks up the Doc containing the Value, or NULL if the Value was created without a Doc.
-        Caller must release the FLDoc reference!! */
+        @note Caller must release the FLDoc reference!! */
     FLDoc FLValue_FindDoc(FLValue) FLAPI FLPURE;
 
 
