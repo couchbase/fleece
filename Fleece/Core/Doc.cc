@@ -137,8 +137,8 @@ namespace fleece { namespace impl {
                     _data.buf, _data.end(), this, _sk.get());
             } else {
                 static const char* const valueTypeNames[] {"Null", "Boolean", "Number", "String", "Data", "Array", "Dict"};
-                auto type1 = ((const Value*)_data.buf)->type();
-                auto type2 = ((const Value*)existing->_data.buf)->type();
+                auto type1 = Value::fromData(_data)->type();
+                auto type2 = Value::fromData(existing->_data)->type();
                 FleeceException::_throw(InternalError,
                     "Incompatible duplicate Scope %p (%s) for (%p .. %p) with sk=%p: "
                     "conflicts with %p (%s) for (%p .. %p) with sk=%p",
