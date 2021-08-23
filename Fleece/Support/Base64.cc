@@ -40,10 +40,8 @@ namespace fleece { namespace base64 {
 
 
     alloc_slice decode(slice b64) {
-        // 4 chars -> 3 bytes : (ceil(b64.size / 4) * 3) + 1
-        // One extra buffer required by the libb64 decoder when reporting ending decoding position
-        // for the case that the buffer size is the same as the output size.
-        size_t expectedLen = ((b64.size + 3) / 4 * 3) + 1;
+        // 4 chars -> 3 bytes : ceil(b64.size / 4) * 3
+        size_t expectedLen = ((b64.size + 3) / 4 * 3);
         alloc_slice result(expectedLen);
         slice decoded = decode(b64, (void*)result.buf, result.size);
         if (decoded.size == 0)
@@ -55,7 +53,7 @@ namespace fleece { namespace base64 {
 
 
     slice decode(slice b64, void *outputBuffer, size_t bufferSize) noexcept {
-        size_t expectedLen = ((b64.size + 3) / 4 * 3) + 1;
+        size_t expectedLen = (b64.size + 3) / 4 * 3;
         if (expectedLen > bufferSize)
             return nullslice;
         ::base64::decoder dec;
