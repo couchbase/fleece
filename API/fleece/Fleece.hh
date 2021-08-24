@@ -401,6 +401,10 @@ namespace fleece {
         operator FLDoc() const                      {return _doc;}
         FLDoc detach()                              {auto d = _doc; _doc = nullptr; return d;}
 
+        static Doc containing(Value v)              {return Doc(FLValue_FindDoc(v), false);}
+        bool setAssociated(void *p, const char *t)  {return FLDoc_SetAssociated(_doc, p, t);}
+        void* associated(const char *type) const    {return FLDoc_GetAssociated(_doc, type);}
+
     private:
         friend class Value;
         explicit Doc(FLValue v)                     :_doc(FLValue_FindDoc(v)) { }

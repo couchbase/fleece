@@ -324,6 +324,20 @@ namespace fleece { namespace impl {
         return RetainedConst<Doc>((const Doc*)scope);
     }
 
+
+    bool Doc::setAssociated(void *pointer, const char *type) {
+        if (_associatedType && type && (_associatedType != type))
+            return false;
+        _associatedPointer = pointer;
+        _associatedType = type;
+        return true;
+    }
+
+    void* Doc::getAssociated(const char *type) const {
+        return (type == _associatedType || type == nullptr) ? _associatedPointer : nullptr;
+    }
+
+
 } }
 
 
