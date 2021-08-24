@@ -25,6 +25,7 @@ namespace fleece { namespace base64 {
 
     std::string encode(slice data) {
         std::string str;
+        // 3 bytes -> 4 chars : ceil(data.size / 3) * 4
         size_t strLen = ((data.size + 2) / 3) * 4;
         str.resize(strLen);
         char *dst = &str[0];
@@ -39,7 +40,8 @@ namespace fleece { namespace base64 {
 
 
     alloc_slice decode(slice b64) {
-        size_t expectedLen = (b64.size + 3) / 4 * 3;
+        // 4 chars -> 3 bytes : ceil(b64.size / 4) * 3
+        size_t expectedLen = ((b64.size + 3) / 4 * 3);
         alloc_slice result(expectedLen);
         slice decoded = decode(b64, (void*)result.buf, result.size);
         if (decoded.size == 0)
