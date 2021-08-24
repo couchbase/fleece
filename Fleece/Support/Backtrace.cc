@@ -347,7 +347,7 @@ namespace fleece {
     }
 
 
-    void Backtrace::installTerminateHandler(Function<void(const string&)> logger) {
+    void Backtrace::installTerminateHandler(function<void(const string&)> logger) {
         static once_flag sOnce;
         call_once(sOnce, [&] {
             static auto const sLogger = move(logger);

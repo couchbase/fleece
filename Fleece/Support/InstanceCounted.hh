@@ -5,15 +5,16 @@
 //
 
 #pragma once
-#include "Function.hh"
+#include "function_ref.hh"
 #include <cstddef> //for size_t
 #include <atomic>
 #include <stdint.h>
 
 #ifndef INSTANCECOUNTED_TRACK
-    #if DEBUG
+    // TODO: Add this guard back in
+    //#if DEBUG
         #define INSTANCECOUNTED_TRACK 1
-    #endif
+    //#endif
 #endif
 
 namespace fleece {
@@ -26,26 +27,29 @@ namespace fleece {
     public:
 
         /** Total number of live objects that implement InstanceCounted. */
-        static int count()                          {return gInstanceCount;}
+        static int liveInstanceCount()              {return gInstanceCount;}
 
 #if INSTANCECOUNTED_TRACK
         InstanceCounted()                           {track();}
         InstanceCounted(const InstanceCounted&)     {track();}
+        InstanceCounted(InstanceCounted &&old)      {track(); old.untrack();}
         virtual ~InstanceCounted()                  {untrack();}        // must be virtual for RTTI
 
         /** Logs information to stderr about all live objects. */
-        static void dumpInstances();
-        static void dumpInstances(Function<void(const InstanceCounted*)>);
+        static void dumpInstances()                                        {dumpInstances(nullptr);}
+        static void dumpInstances(function_ref<void(const InstanceCounted*)> f) {dumpInstances(&f);}
 
     protected:
         InstanceCounted(size_t offset)              {track(offset);}
     private:
         void track(size_t offset =0) const;
         void untrack() const;
+        static void dumpInstances(function_ref<void(const InstanceCounted*)>*);
 
 #else
         InstanceCounted()                           {++gInstanceCount;}
         InstanceCounted(const InstanceCounted&)     {++gInstanceCount;}
+        InstanceCounted(InstanceCounted &&old)      {} // Do nothing, the old and new should balance
         ~InstanceCounted()                          {--gInstanceCount;}
 #endif
 
@@ -74,6 +78,12 @@ namespace fleece {
         InstanceCountedIn(const InstanceCountedIn&)
         :InstanceCounted((size_t)this - (size_t)(BASE*)this)
         { }
+
+        InstanceCountedIn(InstanceCountedIn &&old)
+        :InstanceCounted((size_t)this - (size_t)(BASE*)this)
+        {
+            old.untrack();
+        }
 #endif
     };
 

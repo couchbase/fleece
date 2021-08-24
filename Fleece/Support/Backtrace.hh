@@ -5,8 +5,8 @@
 //
 
 #pragma once
-#include "Function.hh"
 #include "PlatformCompat.hh"
+#include <functional>
 #include <iosfwd>
 #include <memory>
 #include <string>
@@ -59,7 +59,7 @@ namespace fleece {
         /// `andRaise` to a different signal ID such as SIGILL to force a crash.
         ///
         /// Only the first call to this function has any effect; subsequent calls are ignored.
-        static void installTerminateHandler(Function<void(const std::string&)> logger);
+        static void installTerminateHandler(std::function<void(const std::string&)> logger);
 
     private:
         void _capture(unsigned skipFrames =0, unsigned maxFrames =50);

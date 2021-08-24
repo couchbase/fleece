@@ -16,26 +16,51 @@
 // limitations under the License.
 //
 
+#define __STDC_WANT_LIB_EXT1__ 1    // For `memset_s`
+
 #include "fleece/FLSlice.h"
 #include <algorithm>
 #include <atomic>
 #include <cstddef>
 #include "betterassert.hh"
 
+// Both headers declare a `wyrand()` function, so use namespaces to prevent collision.
+namespace fleece::wyhash {
+    #include "wyhash.h"
+}
+namespace fleece::wyhash32 {
+    #include "wyhash32.h"
+}
+
+#ifdef _MSC_VER
+#include <Windows.h>                // for SecureZeroMemory()
+#endif
+
+
+// Note: These functions avoid passing NULL to memcmp, which is undefined behavior even when
+// the byte count is zero.
+// A slice's buf may only be NULL if its size is 0, so we check that first.
+
 
 bool FLSlice_Equal(FLSlice a, FLSlice b) noexcept {
-    return a.size==b.size && memcmp(a.buf, b.buf, a.size) == 0;
+    return a.size==b.size && (a.size == 0 || memcmp(a.buf, b.buf, a.size) == 0);
 }
 
 
 int FLSlice_Compare(FLSlice a, FLSlice b) noexcept {
     // Optimized for speed
-    if (a.size == b.size)
+    if (a.size == b.size) {
+        if (a.size == 0)
+            return 0;
         return memcmp(a.buf, b.buf, a.size);
-    else if (a.size < b.size) {
+    } else if (a.size < b.size) {
+        if (a.size == 0)
+            return -1;
         int result = memcmp(a.buf, b.buf, a.size);
         return result ? result : -1;
     } else {
+        if (b.size == 0)
+            return 1;
         int result = memcmp(a.buf, b.buf, b.size);
         return result ? result : 1;
     }
@@ -49,6 +74,18 @@ bool FLSlice_ToCString(FLSlice s, char* buffer, size_t capacity) noexcept {
         memcpy(buffer, s.buf, n);
     buffer[n] = '\0';
     return (n == s.size);
+}
+
+
+__hot uint32_t FLSlice_Hash(FLSlice s) noexcept {
+    // I don't know for sure, but I'm assuming it's best to use wyhash on 64-bit CPUs,
+    // and wyhash32 in 32-bit.
+    if (sizeof(void*) >= 8) {
+        return (uint32_t) fleece::wyhash::wyhash(s.buf, s.size, 0, fleece::wyhash::_wyp);
+    } else {
+        static constexpr unsigned kSeed = 0x91BAC172;
+        return fleece::wyhash32::wyhash32(s.buf, s.size, kSeed);
+    }
 }
 
 
@@ -162,3 +199,18 @@ void _FLBuf_Release(const void *buf) noexcept {
 }
 
 
+void FL_WipeMemory(void *buf, size_t size) noexcept {
+    if (size > 0) {
+#if defined(_MSC_VER)
+        SecureZeroMemory(buf, size);
+#elif defined(__STDC_LIB_EXT1__) || defined(__APPLE__)
+        // memset_s is an optional feature of C11, and available in Apple's C library.
+        memset_s(buf, size, 0, size);
+#else
+        // Generic implementation (`volatile` ensures the writes will not be optimized away.)
+        volatile unsigned char* p = (unsigned char *)buf;
+        for (auto s = size; s > 0; --s)
+            *p++ = 0;
+#endif
+    }
+}

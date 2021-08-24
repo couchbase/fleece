@@ -5,8 +5,9 @@
 //
 
 #pragma once
+#ifndef _FLEECE_MUTABLE_HH
+#define _FLEECE_MUTABLE_HH
 #include "Fleece.hh"
-#include "betterassert.hh"
 
 namespace fleece {
 
@@ -124,7 +125,6 @@ namespace fleece {
 
         // This enables e.g. `array[10] = 17`
         inline keyref<MutableArray,uint32_t> operator[] (int i) {
-            assert_precondition(i >= 0);
             return keyref<MutableArray,uint32_t>(*this, i);
         }
 
@@ -209,10 +209,11 @@ namespace fleece {
         reference so it won't be freed. */
     class RetainedValue : public Value {
     public:
-        RetainedValue()                           { }
+        RetainedValue()                           =default;
         RetainedValue(FLValue v)                  :Value(FLValue_Retain(v)) { }
         RetainedValue(const Value &v)             :Value(FLValue_Retain(v)) { }
         RetainedValue(RetainedValue &&v) noexcept :Value(v) {v._val = nullptr;}
+        RetainedValue(const RetainedValue &v) noexcept :RetainedValue(Value(v)) { }
         RetainedValue(MutableArray &&v) noexcept  :Value(v) {v._val = nullptr;}
         RetainedValue(MutableDict &&v) noexcept   :Value(v) {v._val = nullptr;}
         ~RetainedValue()                          {FLValue_Release(_val);}
@@ -269,3 +270,5 @@ namespace fleece {
     }
 
 }
+
+#endif // _FLEECE_MUTABLE_HH

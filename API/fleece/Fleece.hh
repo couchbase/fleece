@@ -26,14 +26,6 @@
 #include <string>
 #include <utility>
 
-// NOTE: These cannot be namespaced or Catch will fail to find them on certain platforms
-// despite using the namespace before including the header...
-static inline bool operator== (FLSlice s1, FLSlice s2) {return FLSlice_Equal(s1, s2);}
-static inline bool operator!= (FLSlice s1, FLSlice s2) {return !(s1 == s2);}
-
-static inline bool operator== (FLSliceResult sr, FLSlice s) {return (FLSlice)sr == s;}
-static inline bool operator!= (FLSliceResult sr, FLSlice s) {return !(sr ==s);}
-
 namespace fleece {
     class Array;
     class Dict;
@@ -50,7 +42,7 @@ namespace fleece {
     /** A Fleece data value. Its subclasses are Array and Dict; Value itself is for scalars. */
     class Value {
     public:
-        Value()                                         { }
+        Value()                                         =default;
         Value(FLValue v)                                :_val(v) { }
         operator FLValue() const                        {return _val;}
 
@@ -164,7 +156,7 @@ namespace fleece {
             inline bool operator!= (const iterator&)    {return value() != nullptr;}
             inline Value operator[] (unsigned n) const  {return FLArrayIterator_GetValueAt(this,n);}
         private:
-            iterator() { }
+            iterator() =default;
             friend class Array;
         };
 
@@ -244,7 +236,7 @@ namespace fleece {
                                     {return FLDictIterator_GetKeyAsNSString(this, sharedStrings);}
 #endif
         private:
-            iterator() { }
+            iterator() =default;
             friend class Dict;
         };
 
@@ -310,6 +302,7 @@ namespace fleece {
         Value value() const                             {return FLDeepIterator_GetValue(_i);}
         slice key() const                               {return FLDeepIterator_GetKey(_i);}
         uint32_t index() const                          {return FLDeepIterator_GetIndex(_i);}
+        Value parent() const                            {return FLDeepIterator_GetParent(_i);}
 
         size_t depth() const                            {return FLDeepIterator_GetDepth(_i);}
         alloc_slice pathString() const                  {return FLDeepIterator_GetPathString(_i);}
@@ -369,8 +362,8 @@ namespace fleece {
         Doc(alloc_slice fleeceData,
             FLTrust trust =kFLUntrusted,
             SharedKeys sk =nullptr,
-            slice externDestination =nullslice) noexcept
-        :_doc(FLDoc_FromResultData({fleeceData.buf, fleeceData.size}, trust, sk, externDestination))
+            slice externDest =nullslice) noexcept
+        :_doc(FLDoc_FromResultData(FLSliceResult(std::move(fleeceData)), trust, sk, externDest))
         { }
 
         static inline Doc fromJSON(slice_NONNULL json, FLError *outError = nullptr);
@@ -407,6 +400,10 @@ namespace fleece {
 
         operator FLDoc() const                      {return _doc;}
         FLDoc detach()                              {auto d = _doc; _doc = nullptr; return d;}
+
+        static Doc containing(Value v)              {return Doc(FLValue_FindDoc(v), false);}
+        bool setAssociated(void *p, const char *t)  {return FLDoc_SetAssociated(_doc, p, t);}
+        void* associated(const char *type) const    {return FLDoc_GetAssociated(_doc, type);}
 
     private:
         friend class Value;
@@ -585,25 +582,18 @@ namespace fleece {
     class AllocedDict : public Dict, alloc_slice {
     public:
         AllocedDict()
-        { }
+        =default;
 
-        explicit AllocedDict(const alloc_slice &s)
+        explicit AllocedDict(alloc_slice s)
         :Dict(FLValue_AsDict(FLValue_FromData(s, kFLUntrusted)))
-        ,alloc_slice(s)
+        ,alloc_slice(std::move(s))
         { }
 
         explicit AllocedDict(slice s)
         :AllocedDict(alloc_slice(s)) { }
 
-        AllocedDict(const AllocedDict &d)
-        :Dict(d)
-        ,alloc_slice((const alloc_slice&)d)
-        { }
-
         const alloc_slice& data() const                 {return *this;}
         explicit operator bool () const                 {return Dict::operator bool();}
-
-        void wipe() { alloc_slice::wipe(); }
 
         // MI disambiguation:
         inline Value operator[] (slice key) const       {return Dict::get(key);}
@@ -625,8 +615,8 @@ namespace fleece {
     inline float Value::asFloat() const         {return FLValue_AsFloat(_val);}
     inline double Value::asDouble() const       {return FLValue_AsDouble(_val);}
     inline FLTimestamp Value::asTimestamp() const {return FLValue_AsTimestamp(_val);}
-    inline slice Value::asString() const     {return FLValue_AsString(_val);}
-    inline slice Value::asData() const        {return FLValue_AsData(_val);}
+    inline slice Value::asString() const        {return FLValue_AsString(_val);}
+    inline slice Value::asData() const          {return FLValue_AsData(_val);}
     inline Array Value::asArray() const         {return FLValue_AsArray(_val);}
     inline Dict Value::asDict() const           {return FLValue_AsDict(_val);}
 

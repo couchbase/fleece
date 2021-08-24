@@ -19,7 +19,7 @@ namespace fleece { namespace impl {
             uint8_t _header;                    // Value header byte (tag | tiny)
 //          uint8_t _data[0];                   // Extra Value data (object is dynamically sized)
 
-            offsetValue() {}
+            offsetValue() =default;
         private:
             offsetValue(const offsetValue&) = delete;
             offsetValue(offsetValue&&) = delete;
@@ -63,7 +63,7 @@ namespace fleece { namespace impl {
             friend class fleece::impl::ValueSlot;
 
             static void* operator new(size_t size, size_t extraSize);
-            HeapValue() { }
+            HeapValue() =default;
             static HeapValue* createStr(internal::tags, slice s);
             template <class INT> static HeapValue* createInt(INT, bool isUnsigned);
         };

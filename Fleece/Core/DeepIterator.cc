@@ -75,6 +75,7 @@ namespace fleece { namespace impl {
     }
 
     bool DeepIterator::iterateContainer(const Value *container) {
+        _container = container;
         _stack.push_front({{nullslice, 0}, nullptr});   // Push en end-of-level marker first
         auto type = container->type();
         if (type == kArray) {
@@ -101,8 +102,8 @@ namespace fleece { namespace impl {
         for (auto &component : _path) {
             if (component.key) {
                 bool quote = false;
-                for (auto cp = (const char*)component.key.buf; cp < component.key.end(); ++cp) {
-                    if (!isalnum(*cp) && *cp != '_') {
+                for (auto c : component.key) {
+                    if (!isalnum(c) && c != '_') {
                         quote = true;
                         break;
                     }

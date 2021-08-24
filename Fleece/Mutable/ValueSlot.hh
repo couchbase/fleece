@@ -69,7 +69,7 @@ namespace fleece { namespace impl {
         internal::HeapCollection* makeMutable(internal::tags ifType);
 
     private:
-        bool isPointer() const noexcept FLPURE          {return _pointerTag == 0;}
+        bool isPointer() const noexcept FLPURE          {return _tag != kInlineTag;}
         bool isInline() const noexcept FLPURE           {return !isPointer();}
         const Value* pointer() const noexcept FLPURE    {return (const Value*)_pointer;}
         const Value* asPointer() const noexcept FLPURE  {return (isPointer() ? pointer() : nullptr);}
@@ -85,17 +85,17 @@ namespace fleece { namespace impl {
         // The data layout below looks weirder than it is! It's just a union of a pointer and
         // a byte array.
         // It can store either a pointer to a Value, or 7 bytes of inline Value data.
-        // The most significant byte of _pointer is used as a tag: if zero the object is storing
-        // a pointer, if nonzero it's storing inline data.
+        // The least significant byte of _pointer is used as a tag: if 0xFF the object is storing
+        // inline data, else it's a pointer.
         //
-        // This works because any real memory address will leave the high byte of _pointer zero:
-        // this is obvious on a 32-bit CPU, but even in 64-bit the CPU only uses the upper 48
-        // bits of an address and leaves the rest zero.
-        // (This is a subset of the widely used "NaN Tagging" technique found in JavaScript
-        // and other dynamic-language runtimes.)
+        // This works because any pointer stored by a ValueSlot will be a Fleece value, and
+        // * Immutable Values (interior pointers in encoded data) are always even;
+        // * Mutable Values are allocated by malloc, which means at least 4-byte alignment.
+        //   The low bit is set to 1 as a tag to indicate it's mutable, but that still leaves at
+        //   at least one zero bit above that.
         //
-        // The #ifdefs are to ensure that the _pointerTag byte lines up with the most significant
-        // byte of _pointer, and _inline doesn't.
+        // The #ifdefs are to ensure that the _tag byte lines up with the least significant
+        // byte of _pointer, and _inlineVal doesn't.
 
         static const auto kInlineCapacity = 7;
 
@@ -103,15 +103,17 @@ namespace fleece { namespace impl {
             uint64_t _pointer;                          // Pointer representation
 
             struct {
-#ifdef __BIG_ENDIAN__
-                uint8_t _pointerTag;                    // Tag, lines up with MSB of _pointer
+#ifdef __LITTLE_ENDIAN__
+                uint8_t _tag;                           // Tag, lines up with LSB of _pointer
 #endif
                 uint8_t _inlineVal[kInlineCapacity];    // Inline Value representation
-#ifdef __LITTLE_ENDIAN__
-                uint8_t _pointerTag;
+#ifdef __BIG_ENDIAN__
+                uint8_t _tag;
 #endif
             };
         };
+
+        static constexpr uint8_t kInlineTag = 0xFF;
     };
 
 } }

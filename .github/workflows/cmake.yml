@@ -65,7 +65,7 @@ jobs:
         set -e
         cmake --build . --config Debug --target FleeceTests
         cd ..
-        build/FleeceTests
+        build/FleeceTests -r list 2>&1
 
     - name: Test On Windows
       if: runner.os == 'Windows'
@@ -75,4 +75,4 @@ jobs:
         set -e
         cmake --build . --config Debug --target FleeceTests
         mkdir -p /c/tmp
-        Debug/FleeceTests.exe
+        Debug/FleeceTests.exe -r list 2>&1

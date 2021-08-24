@@ -456,6 +456,7 @@ void FLSlot_SetValue(FLSlot slot, FLValue v)            FLAPI {slot->set(v);}
 FLDeepIterator FLDeepIterator_New(FLValue v)            FLAPI {return new DeepIterator(v);}
 void FLDeepIterator_Free(FLDeepIterator i)              FLAPI {delete i;}
 FLValue FLDeepIterator_GetValue(FLDeepIterator i)       FLAPI {return i->value();}
+FLValue FLDeepIterator_GetParent(FLDeepIterator i)      FLAPI {return i->parent();}
 FLSlice FLDeepIterator_GetKey(FLDeepIterator i)         FLAPI {return i->keyString();}
 uint32_t FLDeepIterator_GetIndex(FLDeepIterator i)      FLAPI {return i->index();}
 size_t FLDeepIterator_GetDepth(FLDeepIterator i)        FLAPI {return i->path().size();}
@@ -637,6 +638,7 @@ bool FLEncoder_ConvertJSON(FLEncoder e, FLSlice json) FLAPI {
                 }
             } else {
                 e->jsonEncoder->writeJSON(json);
+                return true;
             }
         } catch (const std::exception &x) {
             e->recordException(x);
@@ -733,6 +735,14 @@ FLSlice FLDoc_GetData(FLDoc doc)               FLAPI {return doc ? doc->data() :
 
 FLSliceResult FLDoc_GetAllocedData(FLDoc doc) FLAPI {
     return doc ? toSliceResult(doc->allocedData()) : FLSliceResult{};
+}
+
+void* FLDoc_GetAssociated(FLDoc doc, const char *type) FLAPI {
+    return doc ? doc->getAssociated(type) : nullptr;
+}
+
+bool FLDoc_SetAssociated(FLDoc doc, void *pointer, const char *type) FLAPI {
+    return doc && const_cast<Doc*>(doc)->setAssociated(pointer, type);
 }
 
 

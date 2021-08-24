@@ -37,7 +37,7 @@ namespace fleece { namespace impl {
 
 
     ValueSlot::ValueSlot(Null)
-    :_pointerTag(0xFF)
+    :_tag(kInlineTag)
     {
         _inlineVal[0] = ((kSpecialTag << 4) | kSpecialValueNull);
     }
@@ -100,6 +100,8 @@ namespace fleece { namespace impl {
 
 
     void ValueSlot::setPointer(const Value *v) {
+        // This is a requirement for the tagging to work (see description in header):
+        precondition((intptr_t(v) & 0xFF) != kInlineTag);
         precondition(v != nullptr);
         if (_usuallyFalse(v == pointer()))
             return;
@@ -111,7 +113,7 @@ namespace fleece { namespace impl {
 
     void ValueSlot::setInline(internal::tags valueTag, int tiny) {
         releaseValue();
-        _pointerTag = 0xFF;
+        _tag = kInlineTag;
         _inlineVal[0] = uint8_t((valueTag << 4) | tiny);
     }
 
@@ -187,7 +189,7 @@ namespace fleece { namespace impl {
             if (size <= kInlineCapacity) {
                 // Copy value inline if it's small enough
                 releaseValue();
-                _pointerTag = 0xFF;
+                _tag = kInlineTag;
                 memcpy(&_inlineVal, v, size);
                 return;
             }
@@ -200,7 +202,7 @@ namespace fleece { namespace impl {
     void ValueSlot::setValue(tags valueTag, int tiny, slice bytes) {
         if (1 + bytes.size <= kInlineCapacity) {
             setInline(valueTag, tiny);
-            memcpy(&_inlineVal[1], bytes.buf, bytes.size);
+            bytes.copyTo(&_inlineVal[1]);
         } else {
             setPointer(HeapValue::create(valueTag, tiny, bytes)->asValue());
         }
@@ -211,7 +213,7 @@ namespace fleece { namespace impl {
         if (s.size + 1 <= kInlineCapacity) {
             // Short strings can go inline:
             setInline(valueTag, (int)s.size);
-            memcpy(&_inlineVal[1], s.buf, s.size);
+            s.copyTo(&_inlineVal[1]);
         } else {
             setPointer(HeapValue::createStr(valueTag, s)->asValue());
         }

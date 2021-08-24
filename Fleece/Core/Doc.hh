@@ -109,6 +109,28 @@ namespace fleece { namespace impl {
         const Dict* asDict() const FLPURE              {return _root ? _root->asDict() : nullptr;}
         const Array* asArray() const FLPURE            {return _root ? _root->asArray() : nullptr;}
 
+        /// Allows client code to associate its own pointer with this Doc and its Values,
+        /// which can later be retrieved with \ref getAssociated.
+        /// For example, this could be a pointer to an `app::Document` object, of which this Doc's
+        /// root Dict is its properties. You would store it by calling
+        /// `doc->setAssociatedObject(appDocument, "app::Document")`.
+        /// @param pointer  The pointer to store in this Doc.
+        /// @param type  A C string literal identifying the type. This is used to avoid collisions
+        ///              with unrelated code that might try to store a different type of value.
+        /// @return  True if the pointer was stored, false if a pointer of a different type is
+        ///          already stored.
+        /// @warning  Be sure to clear this before the associated object is freed/invalidated!
+        /// @warning  This method is not thread-safe. Do not concurrently get & set objects.
+        bool setAssociated(void *pointer, const char *type);
+
+        /// Returns a pointer previously stored in this Doc by \ref setAssociated.
+        /// For example, you would look up an `app::Document` object by calliing
+        /// `(app::Document*)Doc::containing(value)->associatedObject("app::Document")`.
+        /// @param type  The type of object expected, i.e. the same string literal passed to the
+        ///              \ref setAssociatedObject method.
+        /// @return  The associated pointer of that type, if any.
+        void* getAssociated(const char *type) const;
+
     protected:
         virtual ~Doc() =default;
 
@@ -117,6 +139,8 @@ namespace fleece { namespace impl {
 
         const Value*        _root {nullptr};            // The root object of the Fleece
         RetainedConst<Doc>  _parent;
+        void*               _associatedPointer {nullptr};
+        const char*         _associatedType {nullptr};
     };
 
 } }

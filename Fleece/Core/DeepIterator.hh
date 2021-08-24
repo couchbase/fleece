@@ -47,6 +47,9 @@ namespace fleece { namespace impl {
         /** Advances the iterator. */
         void next();
 
+        /** The parent of the current value (NULL if at the root.) */
+        const Value* parent() const                     {return _container;}
+
         struct PathComponent {
             slice key;          ///< Dict key, or nullslice if none
             uint32_t index;     ///< Array index, only if there's no key
@@ -75,6 +78,7 @@ namespace fleece { namespace impl {
         const Value* _value;
         std::vector<PathComponent> _path;
         std::deque<std::pair<PathComponent,const Value*>> _stack;
+        const Value* _container {nullptr};
         bool _skipChildren;
         std::unique_ptr<Dict::iterator> _dictIt;
         std::unique_ptr<Array::iterator> _arrayIt;
