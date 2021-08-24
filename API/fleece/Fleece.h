@@ -544,9 +544,9 @@ while (NULL != (value = FLArrayIterator_GetValue(&iter))) {
     static inline void FLMutableArray_SetData(FLMutableArray NONNULL, uint32_t index, FLSlice);
     /// Stores a Fleece value into an array.
     static inline void FLMutableArray_SetValue(FLMutableArray NONNULL, uint32_t index, FLValue);
-    /// Appends a Fleece array to an array
+    /// Stores a Fleece array into an array
     static inline void FLMutableArray_SetArray(FLMutableArray NONNULL, uint32_t index, FLArray);
-    /// Appends a Fleece dictionary to an array
+    /// Stores a Fleece dictionary into an array
     static inline void FLMutableArray_SetDict(FLMutableArray NONNULL, uint32_t index, FLDict);
 
     /// Appends a JSON null value to an array.
@@ -772,7 +772,6 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
     static inline void FLMutableDict_SetArray(FLMutableDict NONNULL, FLString key, FLArray);
     /// Stores a Fleece dictionary into a mutable dictionary.
     static inline void FLMutableDict_SetDict(FLMutableDict NONNULL, FLString key, FLDict);
-
 
 
     /** @} */
@@ -1274,7 +1273,7 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
     /** @} */
     /** \defgroup Slots   Value Slots
         @{
-         An `FLSlot` is a temporary reference to an element of a mutable Array/Dict;
+         An \ref FLSlot is a temporary reference to an element of a mutable Array/Dict;
          its only purpose is to let you store a value into it, using the `FLSlot_...` functions.
 
          Since there are three ways to store a value into a collection (array set, array append,
@@ -1286,21 +1285,21 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
          but you might drop down to the lower level ones if you're creating an adapter between
          Fleece and a different data model, such as Apple's Foundation classes. */
 
-    /** Returns an FLSlot that refers to the given index of the given array.
+    /** Returns an \ref FLSlot that refers to the given index of the given array.
         You store a value to it by calling one of the nine `FLSlot_Set...` functions.
         \warning You should immediately store a value into the `FLSlot`. Do not keep it around;
                  any changes to the array invalidate it.*/
     MUST_USE_RESULT
     FLSlot FLMutableArray_Set(FLMutableArray NONNULL, uint32_t index) FLAPI;
 
-    /** Appends a null value to the array and returns an `FLSLot` that refers to that position.
+    /** Appends a null value to the array and returns an \ref FLSLot that refers to that position.
         You store a value to it by calling one of the nine `FLSlot_Set...` functions.
         \warning You should immediately store a value into the `FLSlot`. Do not keep it around;
                  any changes to the array invalidate it.*/
     MUST_USE_RESULT
     FLSlot FLMutableArray_Append(FLMutableArray NONNULL) FLAPI;
 
-    /** Returns an FLSlot that refers to the given key/value pair of the given dictionary.
+    /** Returns an \ref FLSlot that refers to the given key/value pair of the given dictionary.
         You store a value to it by calling one of the nine `FLSlot_Set...` functions.
         \warning You should immediately store a value into the `FLSlot`. Do not keep it around;
                  any changes to the dictionary invalidate it.*/
