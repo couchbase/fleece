@@ -326,7 +326,7 @@ namespace fleece { namespace impl {
 
 
     bool Doc::setAssociated(void *pointer, const char *type) {
-        if (_associatedType && type && (_associatedType != type))
+        if (_associatedType && type && strcmp(_associatedType, type) != 0)
             return false;
         _associatedPointer = pointer;
         _associatedType = type;
@@ -334,7 +334,11 @@ namespace fleece { namespace impl {
     }
 
     void* Doc::getAssociated(const char *type) const {
-        return (type == _associatedType || type == nullptr) ? _associatedPointer : nullptr;
+        if (type == _associatedType || type == nullptr)
+            return _associatedPointer;
+        else if (_associatedType && strcmp(_associatedType, type) == 0)
+            return _associatedPointer;
+        return nullptr;
     }
 
 
