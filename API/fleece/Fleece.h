@@ -23,6 +23,22 @@
 #include "FLSlice.h"
 #include <stdio.h>
 
+// On Windows, FLEECE_PUBLIC marks symbols as being exported from the shared library.
+// However, this is not the whole list of things that are exported.  The API methods
+// are exported using a definition list, but it is not possible to correctly include
+// initialized global variables, so those need to be marked (both in the header and 
+// implementation) with FLEECE_PUBLIC.  See kFLNullValue below and in Fleece.cc
+// for an example.
+#if defined(_MSC_VER)
+#ifdef FLEECE_EXPORTS
+#define FLEECE_PUBLIC __declspec(dllexport)
+#else
+#define FLEECE_PUBLIC __declspec(dllimport)
+#endif
+#else
+#define FLEECE_PUBLIC
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -366,7 +382,7 @@ extern "C" {
     FLValue FLValue_NewData(FLSlice) FLAPI;
 
     /** A constant null value (not a NULL pointer!) */
-    extern const FLValue kFLNullValue;
+    FLEECE_PUBLIC extern const FLValue kFLNullValue;
 
 
     //////// ARRAY
@@ -396,7 +412,7 @@ extern "C" {
     /** Returns an value at an array index, or NULL if the index is out of range. */
     FLValue FLArray_Get(FLArray, uint32_t index) FLAPI FLPURE;
 
-    extern const FLArray kFLEmptyArray;
+    FLEECE_PUBLIC extern const FLArray kFLEmptyArray;
 
     /** \name Array iteration
         @{
@@ -599,7 +615,7 @@ while (NULL != (value = FLArrayIterator_GetValue(&iter))) {
         Returns NULL if the value is not found or if the dictionary is NULL. */
     FLValue FLDict_Get(FLDict, FLSlice keyString) FLAPI FLPURE;
 
-    extern const FLDict kFLEmptyDict;
+    FLEECE_PUBLIC extern const FLDict kFLEmptyDict;
 
     /** \name Dict iteration
          @{

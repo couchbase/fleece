@@ -35,9 +35,9 @@ namespace fleece { namespace impl {
 } }
 
 
-const FLValue kFLNullValue  = Value::kNullValue;
-const FLArray kFLEmptyArray = Array::kEmpty;
-const FLDict kFLEmptyDict   = Dict::kEmpty;
+FLEECE_PUBLIC const FLValue kFLNullValue  = Value::kNullValue;
+FLEECE_PUBLIC const FLArray kFLEmptyArray = Array::kEmpty;
+FLEECE_PUBLIC const FLDict kFLEmptyDict   = Dict::kEmpty;
 
 
 static FLSliceResult toSliceResult(alloc_slice &&s) {
