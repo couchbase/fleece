@@ -2,7 +2,7 @@ COUCHBASE BUSINESS SOURCE LICENSE AGREEMENT
 
 Business Source License 1.1
 Licensor:  Couchbase, Inc.
-Licensed Work:  Couchbase Lite Version 3.0
+Licensed Work:  Couchbase Lite Version 3.1
 The Licensed Work is © 2021-Present Couchbase, Inc.
 
 Additional Use Grant: You may make production use of the Licensed Work, provided
