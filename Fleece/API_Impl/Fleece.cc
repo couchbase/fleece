@@ -30,6 +30,7 @@ namespace fleece { namespace impl {
 
 
 FLEECE_PUBLIC const FLValue kFLNullValue  = Value::kNullValue;
+FLEECE_PUBLIC const FLValue kFLUndefinedValue  = Value::kUndefinedValue;
 FLEECE_PUBLIC const FLArray kFLEmptyArray = Array::kEmpty;
 FLEECE_PUBLIC const FLDict kFLEmptyDict   = Dict::kEmpty;
 

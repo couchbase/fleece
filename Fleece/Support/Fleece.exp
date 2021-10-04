@@ -9,6 +9,7 @@
 #  the file licenses/APL2.txt.
 
 _kFLNullValue
+_kFLUndefinedValue
 _kFLEmptyArray
 _kFLEmptyDict
 
