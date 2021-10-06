@@ -378,6 +378,9 @@ extern "C" {
     /** A constant null value (not a NULL pointer!) */
     FLEECE_PUBLIC extern const FLValue kFLNullValue;
 
+    /** A constant undefined value */
+    FLEECE_PUBLIC extern const FLValue kFLUndefinedValue;
+
 
     //////// ARRAY
 
