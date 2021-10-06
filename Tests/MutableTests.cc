@@ -10,7 +10,7 @@
 // the file licenses/APL2.txt.
 //
 
-#include "Fleece.h"
+#include "fleece/Fleece.h"
 #include "FleeceTests.hh"
 #include "FleeceImpl.hh"
 #include "MutableArray.hh"
