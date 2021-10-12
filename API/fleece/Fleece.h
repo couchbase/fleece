@@ -1302,7 +1302,7 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
     MUST_USE_RESULT
     FLSlot FLMutableArray_Set(FLMutableArray NONNULL, uint32_t index) FLAPI;
 
-    /** Appends a null value to the array and returns an \ref FLSLot that refers to that position.
+    /** Appends a null value to the array and returns an \ref FLSlot that refers to that position.
         You store a value to it by calling one of the nine `FLSlot_Set...` functions.
         \warning You should immediately store a value into the `FLSlot`. Do not keep it around;
                  any changes to the array invalidate it.*/

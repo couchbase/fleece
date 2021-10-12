@@ -36,26 +36,22 @@ namespace fleece::wyhash32 {
 // A slice's buf may only be NULL if its size is 0, so we check that first.
 
 
+__hot
 bool FLSlice_Equal(FLSlice a, FLSlice b) noexcept {
-    return a.size==b.size && (a.size == 0 || memcmp(a.buf, b.buf, a.size) == 0);
+    return a.size == b.size && FLMemCmp(a.buf, b.buf, a.size) == 0;
 }
 
 
+__hot
 int FLSlice_Compare(FLSlice a, FLSlice b) noexcept {
-    // Optimized for speed
-    if (a.size == b.size) {
-        if (a.size == 0)
-            return 0;
-        return memcmp(a.buf, b.buf, a.size);
-    } else if (a.size < b.size) {
-        if (a.size == 0)
-            return -1;
-        int result = memcmp(a.buf, b.buf, a.size);
+    // Optimized for speed, not simplicity!
+    if (a.size == b.size)
+        return FLMemCmp(a.buf, b.buf, a.size);
+    else if (a.size < b.size) {
+        int result = FLMemCmp(a.buf, b.buf, a.size);
         return result ? result : -1;
     } else {
-        if (b.size == 0)
-            return 1;
-        int result = memcmp(a.buf, b.buf, b.size);
+        int result = FLMemCmp(a.buf, b.buf, b.size);
         return result ? result : 1;
     }
 }
@@ -174,7 +170,7 @@ FLSliceResult FLSlice_Copy(FLSlice s) noexcept {
     auto sb = new (s.size) sharedBuffer;
     if (!sb)
         return {};
-    memcpy(&sb->_buf, s.buf, s.size);
+    ::memcpy(&sb->_buf, s.buf, s.size);     // we know s.buf and sb->_buf are non-null
     return {&sb->_buf, s.size};
 }
 
