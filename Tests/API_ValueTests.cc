@@ -174,6 +174,9 @@ TEST_CASE("API Undefined", "[API]") {
 TEST_CASE("API constants", "[API]") {
     CHECK(Value::null() != nullptr);
     CHECK(Value::null().type() == kFLNull);
+    
+    CHECK(Value::undefined() != nullptr);
+    CHECK(Value::undefined().type() == kFLUndefined);
 
     CHECK((FLValue)Array::emptyArray() != nullptr);
     CHECK(Array::emptyArray().type() == kFLArray);

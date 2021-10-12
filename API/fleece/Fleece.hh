@@ -41,6 +41,7 @@ namespace fleece {
         operator FLValue() const                        {return _val;}
 
         static Value null()                             {return Value(kFLNullValue);}
+        static Value undefined()                        {return Value(kFLUndefinedValue);}
 
         inline FLValueType type() const;
         inline bool isInteger() const;
