@@ -30,6 +30,7 @@ namespace fleece { namespace impl {
 
 
 FLEECE_PUBLIC const FLValue kFLNullValue  = Value::kNullValue;
+FLEECE_PUBLIC const FLValue kFLUndefinedValue  = Value::kUndefinedValue;
 FLEECE_PUBLIC const FLArray kFLEmptyArray = Array::kEmpty;
 FLEECE_PUBLIC const FLDict kFLEmptyDict   = Dict::kEmpty;
 
@@ -48,7 +49,7 @@ FLValue FLValue_FromData(FLSlice data, FLTrust trust) FLAPI {
 const char* FLDump(FLValue v) FLAPI {
     FLStringResult json = FLValue_ToJSON(v);
     auto cstr = (char*)malloc(json.size + 1);
-    memcpy(cstr, json.buf, json.size);
+    FLMemCpy(cstr, json.buf, json.size);
     cstr[json.size] = 0;
     return cstr;
 }
@@ -217,7 +218,6 @@ bool FLArrayIterator_Next(FLArrayIterator* i) FLAPI {
     return false;
 }
 
-
 static FLMutableArray _newMutableArray(FLArray a, FLCopyFlags flags) noexcept {
     try {
         return (MutableArray*)retain(MutableArray::newArray(a, CopyFlags(flags)));
@@ -227,6 +227,31 @@ static FLMutableArray _newMutableArray(FLArray a, FLCopyFlags flags) noexcept {
 
 FLMutableArray FLMutableArray_New(void) FLAPI {
     return _newMutableArray(nullptr, kFLDefaultCopy);
+}
+
+FLMutableArray FLMutableArray_NewFromJSON(FLString json, FLError* outError) FLAPI {
+    if (outError != nullptr) {
+        *outError = kFLNoError;
+    }
+
+    FLDoc doc = FLDoc_FromJSON(json, outError);
+    if (doc == nullptr) {
+        return nullptr;
+    }
+
+    FLValue val = FLDoc_GetRoot(doc);
+    if (val == nullptr || val->type() != kArray) {
+        if (outError != nullptr) {
+            *outError = kFLInvalidData;
+        }
+        FLDoc_Release(doc);
+        return nullptr;
+    }
+
+    FLArray array = val->asArray();
+    FLMutableArray ret = _newMutableArray(array, kFLDeepCopyImmutables);
+    FLDoc_Release(doc);
+    return ret;
 }
 
 FLMutableArray FLArray_MutableCopy(FLArray a, FLCopyFlags flags) FLAPI {
@@ -348,6 +373,31 @@ static FLMutableDict _newMutableDict(FLDict d, FLCopyFlags flags) noexcept {
 
 FLMutableDict FLMutableDict_New(void) FLAPI {
     return _newMutableDict(nullptr, kFLDefaultCopy);
+}
+
+FLMutableDict FLMutableDict_NewFromJSON(FLString json, FLError *outError) FLAPI {
+    if (outError != nullptr) {
+        *outError = kFLNoError;
+    }
+
+    FLDoc doc = FLDoc_FromJSON(json, outError);
+    if (doc == nullptr) {
+        return nullptr;
+    }
+
+    FLValue val = FLDoc_GetRoot(doc);
+    if (val == nullptr || val->type() != kDict) {
+        if (outError != nullptr) {
+            *outError = kFLInvalidData;
+        }
+        FLDoc_Release(doc);
+        return nullptr;
+    }
+
+    FLDict dict = val->asDict();
+    FLMutableDict ret = _newMutableDict(dict, kFLDeepCopyImmutables);
+    FLDoc_Release(doc);
+    return ret;
 }
 
 FLMutableDict FLDict_MutableCopy(FLDict d, FLCopyFlags flags) FLAPI {

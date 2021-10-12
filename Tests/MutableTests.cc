@@ -10,6 +10,7 @@
 // the file licenses/APL2.txt.
 //
 
+#include "fleece/Fleece.h"
 #include "FleeceTests.hh"
 #include "FleeceImpl.hh"
 #include "MutableArray.hh"
@@ -913,4 +914,84 @@ namespace fleece {
         std::cerr << "(Packed data would be " << packedData.size << " bytes)\n";
     }
 
+
+    TEST_CASE("MutableArray from JSON", "[Mutable]") {
+        const char* json1 = R"r([1,"s2",{"k21":[1,{"k221":[2]}]}])r";
+        const char* json2 = R"r({"k1":1,"k2":{"k21":[1,{"k221":[2]}]}})r";
+
+        FLError outError;
+        FLMutableArray flarray = FLMutableArray_NewFromJSON(slice(json1), &outError);
+        CHECK(outError == kFLNoError);
+        CHECK(flarray);
+        MutableArray* array = (MutableArray*)flarray;
+        CHECK(array->count() == 3);
+
+        std::string str = array->toJSONString();
+        CHECK(str == json1);
+
+        FLMutableArray a2 = FLMutableArray_NewFromJSON(slice(json2), &outError);
+        CHECK(outError == kFLInvalidData);
+        CHECK(a2 == nullptr);
+
+        const Value* v0 = array->get(0);
+        CHECK((v0 != nullptr && v0->type() == kNumber && v0->asInt() == 1));
+        array->set(0, "string"_sl);
+        array->set(1, 10);
+        const Value* v2 = array->get(2);
+        CHECK((v2 != nullptr && v2->type() == kDict && v2->isMutable()));
+        MutableDict* dict2 = v2->asDict()->asMutable();
+        const Value* v21 = dict2->get("k21");
+        CHECK((v21 != nullptr && v21->type() == kArray && v21->isMutable()));
+        MutableArray* a21 = v21->asArray()->asMutable();
+        a21->set(0, 100);
+        const Value* v211 = a21->get(1);
+        CHECK((v211 != nullptr && v211->type() == kDict));
+        const Value* v211v = v211->asDict()->get("k221");
+        CHECK((v211v != nullptr && v211v->type() == kArray && v211v->isMutable()));
+        MutableArray* a211v = v211v->asArray()->asMutable();
+        a211v->appending().set(a211v->get(0)->asInt() + 1);
+
+        std::string mutatedStr = array->toJSONString();
+        CHECK(mutatedStr == R"r(["string",10,{"k21":[100,{"k221":[2,3]}]}])r");
+
+        FLMutableArray_Release(flarray);
+    }
+
+
+    TEST_CASE("MutableDict from JSON", "[Mutable]") {
+        const char* json1 = R"r([1,"s2",{"k21":[1,{"k221":[2]}]}])r";
+        const char* json2 = R"r({"k1":1,"k2":{"k21":[1,{"k221":[2]}]}})r";
+
+        FLError outError;
+        FLMutableDict fldict = FLMutableDict_NewFromJSON(slice(json2), &outError);
+        CHECK(outError == kFLNoError);
+        CHECK(fldict);
+        MutableDict* dict = (MutableDict*)fldict;
+        CHECK(dict->count() == 2);
+
+        std::string str = dict->toJSONString();
+        CHECK(str == json2);
+
+        FLMutableDict d2 = FLMutableDict_NewFromJSON(slice(json1), &outError);
+        CHECK(outError == kFLInvalidData);
+        CHECK(d2 == nullptr);
+
+        const Value* k2 = dict->get("k2");
+        CHECK((k2 != nullptr && k2->type() == kDict && k2->isMutable()));
+        const Dict* v2 = k2->asDict();
+        const Value* k21 = v2->get("k21");
+        CHECK((k21 != nullptr && k21->type() == kArray && k21->isMutable()));
+        const Array* v21 = k21->asArray();
+        MutableArray* ma = v21->asMutable();
+        ma->set(0, 10);
+        const Value* v211 = v21->get(1);
+        CHECK((v211 != nullptr && v211->type() == kDict && v211->isMutable()));
+        MutableDict* md = v211->asDict()->asMutable();
+        md->set("k221", "string"_sl);
+
+        std::string mutatedStr = dict->toJSONString();
+        CHECK(mutatedStr == R"r({"k1":1,"k2":{"k21":[10,{"k221":"string"}]}})r");
+
+        FLMutableDict_Release(fldict);
+    }
 }

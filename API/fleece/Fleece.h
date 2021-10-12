@@ -378,6 +378,9 @@ extern "C" {
     /** A constant null value (not a NULL pointer!) */
     FLEECE_PUBLIC extern const FLValue kFLNullValue;
 
+    /** A constant undefined value */
+    FLEECE_PUBLIC extern const FLValue kFLUndefinedValue;
+
 
     //////// ARRAY
 
@@ -481,8 +484,12 @@ while (NULL != (value = FLArrayIterator_GetValue(&iter))) {
     FLMutableArray FLArray_MutableCopy(FLArray, FLCopyFlags) FLAPI;
 
     /** Creates a new empty mutable Array.
-        Its initial ref-count is 1, so a call to FLMutableArray_Free will free it.  */
+        Its initial ref-count is 1, so a call to FLMutableArray_Release will free it.  */
     FLMutableArray FLMutableArray_New(void) FLAPI;
+
+    /** Creates a new mutable Array from JSON. The input json must represent a JSON array or NULL will be returned.
+        Its initial ref-count is 1, so a call to FLMutableArray_Release will free it.  */
+    FLMutableArray FLMutableArray_NewFromJSON(FLString json, FLError* outError) FLAPI;
 
     /** Increments the ref-count of a mutable Array. */
     static inline FLMutableArray FLMutableArray_Retain(FLMutableArray d) {
@@ -715,8 +722,12 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
     FLMutableDict FLDict_MutableCopy(FLDict source, FLCopyFlags) FLAPI;
 
     /** Creates a new empty mutable Dict.
-        Its initial ref-count is 1, so a call to FLMutableDict_Free will free it.  */
+        Its initial ref-count is 1, so a call to FLMutableDict_Release will free it.  */
     FLMutableDict FLMutableDict_New(void) FLAPI;
+
+    /** Creates a new mutable Dict from json. The input JSON must represent a JSON array, or NULL will be returned.
+        Its initial ref-count is 1, so a call to FLMutableDict_Release will free it.  */
+    FLMutableDict FLMutableDict_NewFromJSON(FLString json, FLError *outError) FLAPI;
 
     /** Increments the ref-count of a mutable Dict. */
     static inline FLMutableDict FLMutableDict_Retain(FLMutableDict d) {
@@ -1302,7 +1313,7 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
     MUST_USE_RESULT
     FLSlot FLMutableArray_Set(FLMutableArray NONNULL, uint32_t index) FLAPI;
 
-    /** Appends a null value to the array and returns an \ref FLSLot that refers to that position.
+    /** Appends a null value to the array and returns an \ref FLSlot that refers to that position.
         You store a value to it by calling one of the nine `FLSlot_Set...` functions.
         \warning You should immediately store a value into the `FLSlot`. Do not keep it around;
                  any changes to the array invalidate it.*/
