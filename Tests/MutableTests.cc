@@ -278,6 +278,20 @@ namespace fleece {
         CHECK(copy->get(0)->asArray()->get(0) != a);   // it's so deep you can't get under it
     }
 
+    TEST_CASE("MutableArray comparison after resize", "[Mutable]") {
+        // https://github.com/couchbaselabs/fleece/issues/102
+        Retained<MutableArray> ma0 = MutableArray::newArray();
+        ma0->resize(1);
+
+        Retained<MutableArray> ma1 = MutableArray::newArray();
+        ma1->append(Value::kNullValue);
+
+        Retained<Doc> doc = Doc::fromJSON("[null]");
+
+        CHECK(ma0->isEqual(ma1));
+        CHECK(ma0->isEqual(doc->root()));
+    }
+
 
 #pragma mark - MUTABLE DICT:
 
