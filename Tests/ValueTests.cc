@@ -211,4 +211,11 @@ namespace fleece {
         CHECK(Doc::sharedKeys(root) == nullptr);
     }
 
+    TEST_CASE("Retain empty array contained in Doc", "[Doc]") {
+        // https://github.com/couchbaselabs/fleece/issues/113
+        Retained<Doc> doc = Doc::fromJSON("[]");
+        auto root = doc->root();
+        retain(root);
+        release(root);
+    }
 }

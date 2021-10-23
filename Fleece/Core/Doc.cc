@@ -52,30 +52,33 @@ namespace fleece { namespace impl {
     static mutex sMutex;
 
 
-    Scope::Scope(slice data, SharedKeys *sk, slice destination) noexcept
+    Scope::Scope(slice data, SharedKeys *sk, slice destination, bool isDoc) noexcept
     :_sk(sk)
     ,_externDestination(destination)
     ,_data(data)
+    ,_isDoc(isDoc)
     {
         registr();
     }
 
 
-    Scope::Scope(const alloc_slice &data, SharedKeys *sk, slice destination) noexcept
+    Scope::Scope(const alloc_slice &data, SharedKeys *sk, slice destination, bool isDoc) noexcept
     :_sk(sk)
     ,_externDestination(destination)
     ,_data(data)
     ,_alloced(data)
+    ,_isDoc(isDoc)
     {
         registr();
     }
 
 
-    Scope::Scope(const Scope &parentScope, slice subData) noexcept
+    Scope::Scope(const Scope &parentScope, slice subData, bool isDoc) noexcept
     :_sk(parentScope.sharedKeys())
     ,_externDestination(parentScope.externDestination())
     ,_data(subData)
     ,_alloced(parentScope._alloced)
+    ,_isDoc(isDoc)
     {
         // This ctor does _not_ register the data range, because the parent scope already did.
         _unregistered.test_and_set();
@@ -267,14 +270,14 @@ namespace fleece { namespace impl {
 
 
     Doc::Doc(const alloc_slice &data, Trust trust, SharedKeys *sk, slice destination) noexcept
-    :Scope(data, sk, destination)
+    :Scope(data, sk, destination, true)
     {
         init(trust);
     }
 
 
     Doc::Doc(const Doc *parentDoc, slice subData, Trust trust) noexcept
-    :Scope(*parentDoc, subData)
+    :Scope(*parentDoc, subData, true)
     ,_parent(parentDoc)                         // Ensure parent is retained
     {
         init(trust);
@@ -282,7 +285,7 @@ namespace fleece { namespace impl {
 
 
     Doc::Doc(const Scope &parentScope, slice subData, Trust trust) noexcept
-    :Scope(parentScope, subData)
+    :Scope(parentScope, subData, true)
     {
         init(trust);
     }
@@ -293,7 +296,6 @@ namespace fleece { namespace impl {
             if (!_root)
                 unregister();
         }
-        _isDoc = true;
     }
 
 
