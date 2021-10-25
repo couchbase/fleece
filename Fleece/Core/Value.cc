@@ -283,7 +283,7 @@ namespace fleece { namespace impl {
                 else
                     return asFloat() == v->asFloat();
             case kSpecialTag:
-                return _byte[0] == v->_byte[0];
+                return _byte[1] == v->_byte[1];
             case kStringTag:
             case kBinaryTag:
                 return getStringBytes() == v->getStringBytes();
