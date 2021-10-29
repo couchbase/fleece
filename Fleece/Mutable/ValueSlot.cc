@@ -34,6 +34,7 @@ namespace fleece { namespace impl {
     :_tag(kInlineTag)
     {
         _inlineVal[0] = ((kSpecialTag << 4) | kSpecialValueNull);
+        _inlineVal[1] = 0x00;
     }
 
 
@@ -113,11 +114,13 @@ namespace fleece { namespace impl {
 
     void ValueSlot::set(Null) {
         setInline(kSpecialTag, kSpecialValueNull);
+        _inlineVal[1] = 0x00;
     }
 
 
     void ValueSlot::set(bool b) {
         setInline(kSpecialTag, b ? kSpecialValueTrue : kSpecialValueFalse);
+        _inlineVal[1] = 0x00;
     }
 
 
