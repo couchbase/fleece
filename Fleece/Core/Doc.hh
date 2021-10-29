@@ -29,12 +29,15 @@ namespace fleece { namespace impl {
     public:
         Scope(slice fleeceData,
               SharedKeys*,
-              slice externDestination =nullslice) noexcept;
+              slice externDestination =nullslice,
+              bool isDoc =false) noexcept;
         Scope(const alloc_slice &fleeceData,
               SharedKeys*,
-              slice externDestination =nullslice) noexcept;
+              slice externDestination =nullslice,
+              bool isDoc =false) noexcept;
         Scope(const Scope &parentScope,
-              slice subData) noexcept;
+              slice subData,
+              bool isDoc =false) noexcept;
 
         // Scope doesn't need a vtable, but it's useful for identifying subclasses, for example:
         //     auto s = dynamic_cast<const MyScope*>(Scope::containing(val));
