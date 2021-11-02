@@ -46,9 +46,15 @@ namespace fleece {
         return ParseInteger(str, r, t);
     }
 
+
+    /// Parse `str` as a floating-point number, storing the result in `result` and returning true.
+    /// If `allowTrailing` is false, returns false if there's anything but whitespace after the
+    /// last digit.
+    bool ParseDouble(const char *str NONNULL, double &result, bool allowTrailing =false);
     
     /// Parse `str` as a floating-point number, reading as many digits as possible.
     /// (I.e. non-numeric characters after the digits are not treated as an error.)
+    /// If no digits are parseable, returns 0.0.
     double ParseDouble(const char *str NONNULL) noexcept;
 
 

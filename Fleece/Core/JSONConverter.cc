@@ -117,8 +117,7 @@ namespace fleece { namespace impl {
             case JSONSL_T_SPECIAL: {
                 unsigned f = state->special_flags;
                 if (f & JSONSL_SPECIALf_FLOAT || f & JSONSL_SPECIALf_EXPONENT) {
-                    char *start = (char*)&_input[state->pos_begin];
-                    _encoder.writeDouble(ParseDouble(start));
+                    writeDouble(state);
                 } else if (f & JSONSL_SPECIALf_UNSIGNED) {
                     if (_usuallyTrue(state->pos_cur - state->pos_begin < 19)) {
                         _encoder.writeUInt(state->nelem);

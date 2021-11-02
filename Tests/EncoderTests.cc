@@ -1032,6 +1032,11 @@ public:
         CHECK(DoubleEquals(recovered, M_PI));
         CHECK(FloatEquals(recovered_f, 2.71828f));
 
+        CHECK(ParseDouble(doubleBuf, recovered));
+        CHECK(DoubleEquals(recovered, M_PI));
+        CHECK(ParseDouble(floatBuf, recovered));
+        CHECK(FloatEquals(float(recovered), 2.71828f));
+
 #ifdef _MSC_VER
         setlocale(LC_ALL, "fr-FR");
 #else

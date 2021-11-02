@@ -21,6 +21,13 @@
 
 namespace fleece {
 
+
+    static bool onlyWhitespace(const char *str) {
+        while (isspace(*str))
+            ++str;
+        return *str == '\0';
+    }
+
     // subroutine that parses only digits
     static bool _parseUInt(const char *str NONNULL, uint64_t &result, bool allowTrailing) {
         uint64_t n = 0;
@@ -35,12 +42,8 @@ namespace fleece {
                 return false;
             n += digit;
         }
-        if (!allowTrailing) {
-            while (isspace(*str))
-                ++str;
-            if (_usuallyFalse(*str != '\0'))
-                return false;
-        }
+        if (!allowTrailing && !onlyWhitespace(str))
+            return false;
         result = n;
         return true;
     }
@@ -87,23 +90,32 @@ namespace fleece {
 
 
     double ParseDouble(const char *str) noexcept {
+        double result;
+        (void)ParseDouble(str, result, true);
+        return result;
+    }
+
+
+    bool ParseDouble(const char *str NONNULL, double &result, bool allowTrailing) {
+        char *endptr;
         // strtod is locale-aware, so in some locales it will not interpret '.' as a decimal point.
         // To work around that, use the C locale explicitly.
         #ifdef LC_C_LOCALE          // Apple & BSD
-            return strtod_l(str, nullptr, LC_C_LOCALE);
+            result = strtod_l(str, &endptr, LC_C_LOCALE);
         #elif defined(_MSC_VER)     // Windows
             static _locale_t kCLocale = _create_locale(LC_ALL, "C");
-            return _strtod_l(str, nullptr, kCLocale);
+            result = _strtod_l(str, &endptr, kCLocale);
         #elif defined(__ANDROID__) && __ANDROID_API__ < 26
             // Note: Android only supports the following locales, all of which use
             // period, so no problem:  C, POSIX, en_US.  Android API 26 introduces
             // strtod_l, which maybe will be eventually implemented when and if more
             // locales come in
-            return strtod(str, nullptr);
+            result = strtod(str, &endptr);
         #else                       // Linux
             static locale_t kCLocale = newlocale(LC_ALL_MASK, "C", NULL);
-            return strtod_l(str, nullptr, kCLocale);
+            result = strtod_l(str, &endptr, kCLocale);
         #endif
+        return endptr > str && (allowTrailing || onlyWhitespace(endptr));
     }
 
 
