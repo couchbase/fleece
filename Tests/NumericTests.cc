@@ -30,7 +30,9 @@ static string floatStr(FLOAT n) {
     CHECK(length == strlen(str));
     if (sizeof(FLOAT) >= sizeof(double)) {
         // Test for 100% accurate double->string->double round-trip:
-        CHECK(ParseDouble(str) == n);
+        double d;
+        CHECK(ParseDouble(str, d));
+        CHECK(d == n);
     }
     return string(str);
 }
