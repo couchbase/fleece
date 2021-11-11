@@ -209,7 +209,7 @@ namespace fleece {
 #   endif
 #endif
 
-        constexpr pure_slice(nullptr_t) noexcept                  :pure_slice() {}
+        constexpr pure_slice(std::nullptr_t) noexcept             :pure_slice() {}
         constexpr pure_slice(const char* str) noexcept            :buf(str), size(_strlen(str)) {}
         pure_slice(const std::string& str) noexcept               :buf(&str[0]), size(str.size()) {}
 
