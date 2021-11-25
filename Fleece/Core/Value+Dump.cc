@@ -167,8 +167,7 @@ namespace fleece { namespace impl {
                     } else {
                         auto dstPtr = ptr->deref(wide);
                         writeDumpBrief(dstPtr, true);
-//                        offset = valueToOffset(dstPtr).value_or(0ll);
-                        offset = *valueToOffset(dstPtr);
+                        offset = valueToOffset(dstPtr).value_or(0ll);
                     }
                     char buf[32];
                     if (offset >= 0)
