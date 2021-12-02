@@ -1282,7 +1282,8 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = "/bin/sh -e";
-			shellScript = "if which doxygen >/dev/null\nthen\n  cd $SRCROOT\n  doxygen Documentation/Doxyfile\n  doxygen Documentation/Doxyfile_C++\nfi\n";
+			shellScript = "# On ARM Macs Homebrew installs into /opt/homebrew,\n# not /usr/local. But this isn't in the PATH known\n# to shells run by Xcode; so add it:\nPATH=\"/opt/homebrew/bin:$PATH\"\nif which doxygen >/dev/null\nthen\n  which doxygen  \n  cd $SRCROOT\n  doxygen Documentation/Doxyfile\n  doxygen Documentation/Doxyfile_C++\nelse\n  echo \"doxygen not found in $PATH\"\nfi\n";
+			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
 
