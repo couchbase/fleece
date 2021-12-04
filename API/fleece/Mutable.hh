@@ -249,7 +249,11 @@ namespace fleece {
         }
     };
 
+    // NOTE: The RetainedArray and RetainedDict classes are the copycats of the RetainedValue class
+    // above. Any future changes or bug fixes to the three classes should go together.
 
+    /** Equivalent to Array except that, it holds the Array or MutableArray, and it will retain the
+        underlining FLArray object. */
     class RetainedArray : public Array {
     public:
         RetainedArray()                                 =default;
@@ -283,7 +287,8 @@ namespace fleece {
         }
     };
 
-
+    /** Equivalent to Dict except that, it holds the Dict or MutableDict, and it will retain the
+        underlining FLDict object. */
     class RetainedDict : public Dict {
     public:
         RetainedDict()                                  =default;
