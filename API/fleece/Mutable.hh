@@ -143,6 +143,7 @@ namespace fleece {
     private:
         MutableArray(FLMutableArray a, bool)     :Array((FLArray)a) {}
         friend class RetainedValue;
+        friend class RetainedArray;
         friend class Array;
     };
 
@@ -207,6 +208,7 @@ namespace fleece {
     private:
         MutableDict(FLMutableDict d, bool)      :Dict((FLDict)d) {}
         friend class RetainedValue;
+        friend class RetainedDict;
         friend class Dict;
     };
 
@@ -247,6 +249,78 @@ namespace fleece {
         }
     };
 
+    // NOTE: The RetainedArray and RetainedDict classes are the copycats of the RetainedValue class
+    // above. Any future changes or bug fixes to the three classes should go together.
+
+    /** Equivalent to Array except that, it holds the Array or MutableArray, and it will retain the
+        underlining FLArray object. */
+    class RetainedArray : public Array {
+    public:
+        RetainedArray()                                 =default;
+        RetainedArray(FLArray v) noexcept               :Array(FLArray_Retain(v)) { }
+        RetainedArray(const Array &v) noexcept          :Array(FLArray_Retain(v)) { }
+        RetainedArray(RetainedArray &&v) noexcept       :Array(v) {v._val = nullptr;}
+        RetainedArray(const RetainedArray &v) noexcept  :Array(FLArray_Retain(v)) { }
+        RetainedArray(MutableArray &&v) noexcept        :Array(v) {v._val = nullptr;}
+        ~RetainedArray()                                {FLValue_Release(_val);}
+        
+        RetainedArray& operator= (const Array &v) noexcept {
+            FLValue_Retain(v);
+            FLValue_Release(_val);
+            _val = v;
+            return *this;
+        }
+        
+        RetainedArray& operator= (RetainedArray &&v) noexcept {
+            if (v._val != _val) {
+                FLValue_Release(_val);
+                _val = v._val;
+                v._val = nullptr;
+            }
+            return *this;
+        }
+        
+        RetainedArray& operator= (std::nullptr_t) noexcept {      // disambiguation
+            FLValue_Release(_val);
+            _val = nullptr;
+            return *this;
+        }
+    };
+
+    /** Equivalent to Dict except that, it holds the Dict or MutableDict, and it will retain the
+        underlining FLDict object. */
+    class RetainedDict : public Dict {
+    public:
+        RetainedDict()                                  =default;
+        RetainedDict(FLDict v) noexcept                 :Dict(FLDict_Retain(v)) { }
+        RetainedDict(const Dict &v) noexcept            :Dict(FLDict_Retain(v)) { }
+        RetainedDict(RetainedDict &&v) noexcept         :Dict(v) {v._val = nullptr;}
+        RetainedDict(const RetainedDict &v) noexcept    :Dict(FLDict_Retain(v)) { }
+        RetainedDict(MutableDict &&v) noexcept          :Dict(v) {v._val = nullptr;}
+        ~RetainedDict()                                 {FLValue_Release(_val);}
+        
+        RetainedDict& operator= (const Dict &v) noexcept {
+            FLValue_Retain(v);
+            FLValue_Release(_val);
+            _val = v;
+            return *this;
+        }
+        
+        RetainedDict& operator= (RetainedDict &&v) noexcept {
+            if (v._val != _val) {
+                FLValue_Release(_val);
+                _val = v._val;
+                v._val = nullptr;
+            }
+            return *this;
+        }
+        
+        RetainedDict& operator= (std::nullptr_t) noexcept { // disambiguation
+            FLValue_Release(_val);
+            _val = nullptr;
+            return *this;
+        }
+    };
 
 
     //////// IMPLEMENTATION GUNK:

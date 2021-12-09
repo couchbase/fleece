@@ -194,6 +194,13 @@ static MutableArray returnsMutableArray() {
     return ma;
 }
 
+static MutableDict returnsMutableDict() {
+    MutableDict md = MutableDict::newDict();
+    md.set("foo"_sl, "bar");
+    return md;
+}
+
+
 TEST_CASE("API Mutable Invalid Assignment", "[API]") {
     // This next line should fail to compile:
     //Array a = returnsMutableArray();
@@ -228,4 +235,106 @@ TEST_CASE("API MutableDict", "[API]") {
     CHECK(d.toJSONString() == "{\"foo\":\"bar\",\"x\":1234}");
     REQUIRE(d.get("x"_sl));
     CHECK(d.get("x"_sl).asInt() == 1234);
+}
+
+TEST_CASE("API RetainedArray", "[API]") {
+    // RetainedArray():
+    RetainedArray ra = RetainedArray();
+    CHECK(!(FLArray)ra);
+    CHECK(ra.count() == 0);
+    
+    // RetainedArray(FLArray v):
+    MutableArray a1 = MutableArray::newArray();
+    a1.append("bar1");
+    RetainedArray ra1((FLArray)a1);
+    a1 = nullptr;
+    REQUIRE(ra1.count() == 1);
+    CHECK(ra1.get(0).asString() == "bar1"_sl);
+    
+    // RetainedArray(const Array &v):
+    MutableArray a2 = MutableArray::newArray();
+    a2.append("bar1");
+    RetainedArray ra2 = a2;
+    a2 = nullptr;
+    REQUIRE(ra2.count() == 1);
+    CHECK(ra2.get(0).asString() == "bar1"_sl);
+    
+    // RetainedArray(RetainedArray &&v):
+    RetainedArray ra3 = std::move(ra2);
+    REQUIRE(ra2.count() == 0);
+    REQUIRE(ra3.count() == 1);
+    CHECK(ra3.get(0).asString() == "bar1"_sl);
+    
+    // RetainedArray(const RetainedArray &v):
+    RetainedArray ra4 = ra3;
+    ra3 = nullptr;
+    REQUIRE(ra3.count() == 0);
+    REQUIRE(ra4.count() == 1);
+    CHECK(ra4.get(0).asString() == "bar1"_sl);
+    
+    // RetainedArray(MutableArray &&v):
+    RetainedArray ra5 = returnsMutableArray();
+    REQUIRE(ra5.count() == 1);
+    CHECK(ra5.get(0).asInt() == 17);
+    
+    // RetainedArray& operator= (const Array &v):
+    ra5 = returnsMutableArray();
+    REQUIRE(ra5.count() == 1);
+    CHECK(ra5.get(0).asInt() == 17);
+    
+    // RetainedArray& operator= (RetainedArray &&v):
+    ra4 = std::move(ra5);
+    REQUIRE(ra4.count() == 1);
+    CHECK(ra4.get(0).asInt() == 17);
+}
+
+TEST_CASE("API RetainedDict", "[API]") {
+    // RetainedDict():
+    RetainedDict rd = RetainedDict();
+    CHECK(!(FLDict)rd);
+    CHECK(rd.count() == 0);
+    
+    // RetainedDict(FLDict v):
+    MutableDict d1 = MutableDict::newDict();
+    d1.set("foo"_sl, "bar1");
+    RetainedDict rd1((FLDict)d1);
+    d1 = nullptr;
+    REQUIRE(rd1.get("foo"_sl));
+    CHECK(rd1.get("foo"_sl).asString() == "bar1"_sl);
+    
+    // RetainedDict(const Dict &v):
+    MutableDict d2 = MutableDict::newDict();
+    d2.set("foo"_sl, "bar1");
+    RetainedDict rd2 = d2;
+    d2 = nullptr;
+    REQUIRE(rd2.get("foo"_sl));
+    CHECK(rd2.get("foo"_sl).asString() == "bar1"_sl);
+    
+    // RetainedDict(RetainedDict &&v):
+    RetainedDict rd3 = std::move(rd2);
+    REQUIRE(rd2.count() == 0);
+    REQUIRE(rd3.get("foo"_sl));
+    CHECK(rd3.get("foo"_sl).asString() == "bar1"_sl);
+    
+    // RetainedDict(const RetainedDict &v):
+    RetainedDict rd4 = rd3;
+    rd3 = nullptr;
+    REQUIRE(rd3.count() == 0);
+    REQUIRE(rd4.get("foo"_sl));
+    CHECK(rd4.get("foo"_sl).asString() == "bar1"_sl);
+    
+    // RetainedDict(MutableDict &&v):
+    RetainedDict rd5 = returnsMutableDict();
+    REQUIRE(rd5.get("foo"_sl));
+    CHECK(rd5.get("foo"_sl).asString() == "bar"_sl);
+    
+    // RetainedDict& operator= (const Dict &v):
+    rd5 = returnsMutableDict();
+    REQUIRE(rd5.get("foo"_sl));
+    CHECK(rd5.get("foo"_sl).asString() == "bar"_sl);
+    
+    // RetainedDict& operator= (RetainedDict &&v):
+    rd4 = std::move(rd5);
+    REQUIRE(rd4.get("foo"_sl));
+    CHECK(rd4.get("foo"_sl).asString() == "bar"_sl);
 }
