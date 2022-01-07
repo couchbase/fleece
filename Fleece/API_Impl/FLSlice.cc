@@ -31,6 +31,9 @@ namespace fleece::wyhash32 {
 #endif
 
 
+FL_ASSUME_NONNULL_BEGIN
+
+
 // Note: These functions avoid passing NULL to memcmp, which is undefined behavior even when
 // the byte count is zero.
 // A slice's buf may only be NULL if its size is 0, so we check that first.
@@ -176,14 +179,14 @@ FLSliceResult FLSlice_Copy(FLSlice s) noexcept {
 
 
 __hot
-void _FLBuf_Retain(const void *buf) noexcept {
+void _FLBuf_Retain(const void * FL_NULLABLE buf) noexcept {
     if (buf)
         bufferFromBuf(buf)->retain();
 }
 
 
 __hot
-void _FLBuf_Release(const void *buf) noexcept {
+void _FLBuf_Release(const void * FL_NULLABLE buf) noexcept {
     if (buf)
         bufferFromBuf(buf)->release();
 }
@@ -204,3 +207,5 @@ void FL_WipeMemory(void *buf, size_t size) noexcept {
 #endif
     }
 }
+
+FL_ASSUME_NONNULL_END

@@ -261,7 +261,7 @@ TEST_CASE("API RetainedArray", "[API]") {
     
     // RetainedArray(RetainedArray &&v):
     RetainedArray ra3 = std::move(ra2);
-    REQUIRE(ra2.count() == 0);
+    REQUIRE(ra2.count() == 0);      // peeking in moved-from object to verify it's empty
     REQUIRE(ra3.count() == 1);
     CHECK(ra3.get(0).asString() == "bar1"_sl);
     
@@ -312,7 +312,7 @@ TEST_CASE("API RetainedDict", "[API]") {
     
     // RetainedDict(RetainedDict &&v):
     RetainedDict rd3 = std::move(rd2);
-    REQUIRE(rd2.count() == 0);
+    REQUIRE(rd2.count() == 0);      // peeking in moved-from object to verify it's empty
     REQUIRE(rd3.get("foo"_sl));
     CHECK(rd3.get("foo"_sl).asString() == "bar1"_sl);
     

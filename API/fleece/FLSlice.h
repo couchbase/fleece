@@ -32,6 +32,8 @@
 #endif
 
 
+FL_ASSUME_NONNULL_BEGIN
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -44,7 +46,7 @@ extern "C" {
 /** A simple reference to a block of memory. Does not imply ownership.
     (This is equivalent to the C++ class `slice`.) */
 typedef struct FLSlice {
-    const void *buf;
+    const void* FL_NULLABLE buf;
     size_t size;
 
 #ifdef __cplusplus
@@ -62,7 +64,7 @@ typedef struct FLSlice {
         adopt the reference, and release it in its destructor. For example:
         `alloc_slice foo( CopyFoo() );` */
 typedef struct FLSliceResult {
-    const void *buf;
+    const void* FL_NULLABLE buf;
     size_t size;
 
 #ifdef __cplusplus
@@ -80,7 +82,7 @@ typedef struct FLSliceResult {
     struct FLHeapSlice : public FLSlice {
         constexpr FLHeapSlice() noexcept                           :FLSlice{nullptr, 0} { }
     private:
-        constexpr FLHeapSlice(const void *b, size_t s) noexcept    :FLSlice{b, s} { }
+        constexpr FLHeapSlice(const void *FL_NULLABLE b, size_t s) noexcept    :FLSlice{b, s} { }
         friend struct fleece::alloc_slice;
     };
 #else
@@ -103,7 +105,9 @@ typedef FLSliceResult FLStringResult;
 
 /** Exactly like memcmp, but safely handles the case where a or b is NULL and size is 0 (by returning 0),
     instead of producing "undefined behavior" as per the C spec. */
-static inline FLPURE int FLMemCmp(const void *a, const void *b, size_t size) FLAPI {
+static inline FLPURE int FLMemCmp(const void * FL_NULLABLE a,
+                                  const void * FL_NULLABLE b, size_t size) FLAPI
+{
     if (_usuallyFalse(size == 0))
         return 0;
     return memcmp(a, b, size);
@@ -111,7 +115,7 @@ static inline FLPURE int FLMemCmp(const void *a, const void *b, size_t size) FLA
 
 /** Exactly like memcmp, but safely handles the case where dst or src is NULL and size is 0 (as a no-op),
     instead of producing "undefined behavior" as per the C spec. */
-static inline void FLMemCpy(void *dst, const void *src, size_t size) FLAPI {
+static inline void FLMemCpy(void* FL_NULLABLE dst, const void* FL_NULLABLE src, size_t size) FLAPI {
     if (_usuallyTrue(size > 0))
         memcpy(dst, src, size);
 }
@@ -121,7 +125,7 @@ static inline void FLMemCpy(void *dst, const void *src, size_t size) FLAPI {
     It's OK to pass NULL; this returns an empty slice.
     \note If the string is a literal, it's more efficient to use \ref FLSTR instead.
     \note Performance is O(n) with the length of the string, since it has to call `strlen`. */
-static inline FLSlice FLStr(const char *str) FLAPI {
+static inline FLSlice FLStr(const char* FL_NULLABLE str) FLAPI {
     FLSlice foo = { str, str ? strlen(str) : 0 };
     return foo;
 }
@@ -152,7 +156,7 @@ uint32_t FLSlice_Hash(FLSlice s) FLAPI FLPURE;
     @param buffer  Where to copy the bytes. At least `capacity` bytes must be available.
     @param capacity  The maximum number of bytes to copy (including the trailing 0.)
     @return  True if the entire slice was copied, false if it was truncated. */
-bool FLSlice_ToCString(FLSlice s, char* buffer NONNULL, size_t capacity) FLAPI;
+bool FLSlice_ToCString(FLSlice s, char* buffer, size_t capacity) FLAPI;
 
 /** Allocates an FLSliceResult of the given size, without initializing the buffer. */
 FLSliceResult FLSliceResult_New(size_t) FLAPI;
@@ -162,14 +166,14 @@ FLSliceResult FLSlice_Copy(FLSlice) FLAPI;
 
 
 /** Allocates an FLSliceResult, copying `size` bytes starting at `buf`. */
-static inline FLSliceResult FLSliceResult_CreateWith(const void *bytes, size_t size) FLAPI {
+static inline FLSliceResult FLSliceResult_CreateWith(const void* FL_NULLABLE bytes, size_t size) FLAPI {
     FLSlice s = {bytes, size};
     return FLSlice_Copy(s);
 }
 
 
-void _FLBuf_Retain(const void*) FLAPI;   // internal; do not call
-void _FLBuf_Release(const void*) FLAPI;  // internal; do not call
+void _FLBuf_Retain(const void* FL_NULLABLE) FLAPI;   // internal; do not call
+void _FLBuf_Release(const void* FL_NULLABLE) FLAPI;  // internal; do not call
 
 /** Increments the ref-count of a FLSliceResult. */
 static inline FLSliceResult FLSliceResult_Retain(FLSliceResult s) FLAPI {
@@ -213,4 +217,5 @@ void FL_WipeMemory(void *dst, size_t size) FLAPI;
     }
 #endif
 
+FL_ASSUME_NONNULL_END
 #endif // _FLSLICE_H

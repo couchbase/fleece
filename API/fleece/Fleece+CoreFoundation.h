@@ -14,6 +14,12 @@
 #include <CoreFoundation/CFBase.h>
 #include "Fleece.h"
 
+#ifdef __OBJC__
+#import <Foundation/NSMapTable.h>
+#endif
+
+FL_ASSUME_NONNULL_BEGIN
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -28,16 +34,14 @@ extern "C" {
 
     /** Returns a Value as a corresponding CoreFoundation object.
         Caller must CFRelease the result. */
-    CFTypeRef FLValue_CopyCFObject(FLValue) FLAPI;
+    CFTypeRef FLValue_CopyCFObject(FLValue FL_NULLABLE) FLAPI;
 
 
     /** Same as FLDictGet, but takes the key as a CFStringRef. */
-    FLValue FLDict_GetWithCFString(FLDict, CFStringRef) FLAPI;
+    FLValue FLDict_GetWithCFString(FLDict FL_NULLABLE, CFStringRef) FLAPI;
 
 
 #ifdef __OBJC__
-#import <Foundation/NSMapTable.h>
-    
     // Equivalents of the above functions that take & return Objective-C object types:
     
     /** Writes a Core Foundation (or Objective-C) object to an Encoder.
@@ -50,19 +54,19 @@ extern "C" {
 
     
     /** Returns a Value as a corresponding (autoreleased) Foundation object. */
-    id FLValue_GetNSObject(FLValue, NSMapTable *sharedStrings) FLAPI;
+    id FLValue_GetNSObject(FLValue FL_NULLABLE, NSMapTable* FL_NULLABLE sharedStrings) FLAPI;
 
 
     /** Same as FLDictGet, but takes the key as an NSString. */
-    FLValue FLDict_GetWithNSString(FLDict, NSString*) FLAPI;
+    FLValue FLDict_GetWithNSString(FLDict FL_NULLABLE, NSString*) FLAPI;
 
 
     /** Returns an FLDictIterator's current key as an NSString. */
     NSString* FLDictIterator_GetKeyAsNSString(const FLDictIterator *i,
-                                              NSMapTable *sharedStrings) FLAPI;
+                                              NSMapTable* FL_NULLABLE sharedStrings) FLAPI;
 
     /** Same as FLEncoder_Finish, but returns result as NSData or error as NSError. */
-    NSData* FLEncoder_FinishWithNSData(FLEncoder, NSError**) FLAPI;
+    NSData* FLEncoder_FinishWithNSData(FLEncoder, NSError** FL_NULLABLE) FLAPI;
 
 
     /** NSError domain string for Fleece errors */
@@ -76,8 +80,6 @@ extern "C" {
         a single object (which may of course be an array or dictionary.) */
     - (void) fl_encodeToFLEncoder: (FLEncoder)enc;
     @end
-
-
 #endif
 
 /** @} */
@@ -85,3 +87,5 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
+
+FL_ASSUME_NONNULL_END
