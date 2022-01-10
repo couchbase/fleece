@@ -20,6 +20,8 @@
 #include <string>
 #include <utility>
 
+FL_ASSUME_NONNULL_BEGIN
+
 namespace fleece {
     class Array;
     class Dict;
@@ -31,14 +33,12 @@ namespace fleece {
     class Encoder;
 
 
-
-
     /** A Fleece data value. Its subclasses are Array and Dict; Value itself is for scalars. */
     class Value {
     public:
         Value()                                         =default;
-        Value(FLValue v)                                :_val(v) { }
-        operator FLValue() const                        {return _val;}
+        Value(FLValue FL_NULLABLE v)                    :_val(v) { }
+        operator FLValue FL_NULLABLE () const           {return _val;}
 
         static Value null()                             {return Value(kFLNullValue);}
         static Value undefined()                        {return Value(kFLUndefinedValue);}
@@ -70,9 +70,9 @@ namespace fleece {
         explicit operator bool() const                  {return _val != nullptr;}
         bool operator! () const                         {return _val == nullptr;}
         bool operator== (Value v) const                 {return _val == v._val;}
-        bool operator== (FLValue v) const               {return _val == v;}
+        bool operator== (FLValue FL_NULLABLE v) const   {return _val == v;}
         bool operator!= (Value v) const                 {return _val != v._val;}
-        bool operator!= (FLValue v) const               {return _val != v;}
+        bool operator!= (FLValue FL_NULLABLE v) const   {return _val != v;}
 
         bool isEqual(Value v) const                     {return FLValue_IsEqual(_val, v);}
 
@@ -87,7 +87,7 @@ namespace fleece {
                                                         {return FLValue_FromData(data,t);}
 
 #ifdef __OBJC__
-        inline id asNSObject(NSMapTable *sharedStrings =nil) const {
+        inline id asNSObject(NSMapTable* FL_NULLABLE sharedStrings =nil) const {
             return FLValue_GetNSObject(_val, sharedStrings);
         }
 #endif
@@ -99,7 +99,7 @@ namespace fleece {
         Value& operator= (MutableDict&&) =delete;
 
     protected:
-        ::FLValue _val {nullptr};
+        ::FLValue FL_NULLABLE _val {nullptr};
     };
 
 
@@ -116,8 +116,8 @@ namespace fleece {
     class Array : public Value {
     public:
         Array()                                         :Value() { }
-        Array(FLArray a)                                :Value((FLValue)a) { }
-        operator FLArray () const                       {return (FLArray)_val;}
+        Array(FLArray FL_NULLABLE a)                    :Value((FLValue)a) { }
+        operator FLArray FL_NULLABLE () const           {return (FLArray)_val;}
 
         static Array emptyArray()                       {return Array(kFLEmptyArray);}
 
@@ -169,8 +169,8 @@ namespace fleece {
     class Dict : public Value {
     public:
         Dict()                                          :Value() { }
-        Dict(FLDict d)                                  :Value((FLValue)d) { }
-        operator FLDict () const                        {return (FLDict)_val;}
+        Dict(FLDict FL_NULLABLE d)                      :Value((FLValue)d) { }
+        operator FLDict FL_NULLABLE () const            {return (FLDict)_val;}
 
         static Dict emptyDict()                         {return Dict(kFLEmptyDict);}
 
@@ -179,7 +179,7 @@ namespace fleece {
 
         inline Value get(slice_NONNULL key) const;
 
-        inline Value get(const char* key NONNULL) const {return get(slice(key));}
+        inline Value get(const char* key) const {return get(slice(key));}
 
         inline Value operator[] (slice_NONNULL key) const       {return get(key);}
         inline Value operator[] (const char *key) const {return get(key);}
@@ -255,7 +255,7 @@ namespace fleece {
         property name (but not yet in the middle of a name.) */
     class KeyPath {
     public:
-        KeyPath(slice_NONNULL spec, FLError *err)       :_path(FLKeyPath_New(spec, err)) { }
+        KeyPath(slice_NONNULL spec, FLError* FL_NULLABLE err)       :_path(FLKeyPath_New(spec, err)) { }
         ~KeyPath()                                      {FLKeyPath_Free(_path);}
 
         KeyPath(KeyPath &&kp)                           :_path(kp._path) {kp._path = nullptr;}
@@ -265,13 +265,13 @@ namespace fleece {
         KeyPath(const KeyPath &kp)                      :KeyPath(std::string(kp), nullptr) { }
 
         explicit operator bool() const                  {return _path != nullptr;}
-        operator FLKeyPath() const                      {return _path;}
+        operator FLKeyPath FL_NONNULL () const          {return _path;}
 
         Value eval(Value root) const {
             return FLKeyPath_Eval(_path, root);
         }
 
-        static Value eval(slice_NONNULL specifier, Value root, FLError *error) {
+        static Value eval(slice_NONNULL specifier, Value root, FLError* FL_NULLABLE error) {
             return FLKeyPath_EvalOnce(specifier, root, error);
         }
 
@@ -323,7 +323,7 @@ namespace fleece {
     class SharedKeys {
     public:
         SharedKeys()                                        :_sk(nullptr) { }
-        SharedKeys(FLSharedKeys sk)                         :_sk(FLSharedKeys_Retain(sk)) { }
+        SharedKeys(FLSharedKeys FL_NULLABLE sk)             :_sk(FLSharedKeys_Retain(sk)) { }
         ~SharedKeys()                                       {FLSharedKeys_Release(_sk);}
 
         static SharedKeys create()                          {return SharedKeys(FLSharedKeys_New(), 1);}
@@ -335,7 +335,7 @@ namespace fleece {
         unsigned count() const                              {return FLSharedKeys_Count(_sk);}
         void revertToCount(unsigned count)                  {FLSharedKeys_RevertToCount(_sk, count);}
         
-        operator FLSharedKeys() const                       {return _sk;}
+        operator FLSharedKeys FL_NULLABLE () const          {return _sk;}
         bool operator== (SharedKeys other) const            {return _sk == other._sk;}
 
         SharedKeys(const SharedKeys &other) noexcept        :_sk(FLSharedKeys_Retain(other._sk)) { }
@@ -345,7 +345,7 @@ namespace fleece {
         
     private:
         SharedKeys(FLSharedKeys sk, int)                    :_sk(sk) { }
-        FLSharedKeys _sk {nullptr};
+        FLSharedKeys FL_NULLABLE _sk {nullptr};
     };
 
 
@@ -361,12 +361,12 @@ namespace fleece {
         :_doc(FLDoc_FromResultData(FLSliceResult(std::move(fleeceData)), trust, sk, externDest))
         { }
 
-        static inline Doc fromJSON(slice_NONNULL json, FLError *outError = nullptr);
+        static inline Doc fromJSON(slice_NONNULL json, FLError* FL_NULLABLE outError = nullptr);
 
         static alloc_slice dump(slice_NONNULL fleeceData)   {return FLData_Dump(fleeceData);}
 
         Doc()                                       :_doc(nullptr) { }
-        Doc(FLDoc d, bool retain = true)            :_doc(d) {if (retain) FLDoc_Retain(_doc);}
+        Doc(FLDoc FL_NULLABLE d, bool retain = true) :_doc(d) {if (retain) FLDoc_Retain(_doc);}
         Doc(const Doc &other) noexcept              :_doc(FLDoc_Retain(other._doc)) { }
         Doc(Doc &&other) noexcept                   :_doc(other._doc) {other._doc=nullptr; }
         Doc& operator=(const Doc &other);
@@ -384,7 +384,7 @@ namespace fleece {
 
         operator Value () const                     {return root();}
         operator Dict () const                      {return asDict();}
-        operator FLDict () const                    {return asDict();}
+        operator FLDict FL_NULLABLE () const        {return asDict();}
 
         Value operator[] (int index) const          {return asArray().get(index);}
         Value operator[] (slice key) const          {return asDict().get(key);}
@@ -393,18 +393,18 @@ namespace fleece {
 
         bool operator== (const Doc &d) const        {return _doc == d._doc;}
 
-        operator FLDoc() const                      {return _doc;}
+        operator FLDoc FL_NULLABLE () const         {return _doc;}
         FLDoc detach()                              {auto d = _doc; _doc = nullptr; return d;}
 
         static Doc containing(Value v)              {return Doc(FLValue_FindDoc(v), false);}
-        bool setAssociated(void *p, const char *t)  {return FLDoc_SetAssociated(_doc, p, t);}
-        void* associated(const char *type) const    {return FLDoc_GetAssociated(_doc, type);}
+        bool setAssociated(void * FL_NULLABLE p, const char *t) {return FLDoc_SetAssociated(_doc, p, t);}
+        void* FL_NULLABLE associated(const char *type) const    {return FLDoc_GetAssociated(_doc, type);}
 
     private:
         friend class Value;
         explicit Doc(FLValue v)                     :_doc(FLValue_FindDoc(v)) { }
 
-        FLDoc _doc;
+        FLDoc FL_NULLABLE _doc;
     };
 
 
@@ -445,7 +445,7 @@ namespace fleece {
 
         void suppressTrailer()                          {FLEncoder_SuppressTrailer(_enc);}
 
-        operator ::FLEncoder () const                   {return _enc;}
+        operator ::FLEncoder FL_NONNULL () const        {return _enc;}
 
         inline bool writeNull();
         inline bool writeUndefined();
@@ -477,13 +477,13 @@ namespace fleece {
         inline size_t bytesWritten() const;
         inline size_t nextWritePos() const          {return FLEncoder_GetNextWritePos(_enc);}
 
-        inline Doc finishDoc(FLError* =nullptr);
-        inline alloc_slice finish(FLError* =nullptr);
+        inline Doc finishDoc(FLError* FL_NULLABLE =nullptr);
+        inline alloc_slice finish(FLError* FL_NULLABLE =nullptr);
         inline size_t finishItem()                  {return FLEncoder_FinishItem(_enc);}
         inline void reset();
 
         inline FLError error() const;
-        inline const char* errorMessage() const;
+        inline const char* FL_NULLABLE errorMessage() const;
 
         //////// "<<" convenience operators;
 
@@ -525,7 +525,7 @@ namespace fleece {
         Encoder(const Encoder&) =delete;
         Encoder& operator=(const Encoder&) =delete;
 
-        FLEncoder _enc;
+        FLEncoder FL_NULLABLE _enc;
     };
 
 
@@ -533,7 +533,7 @@ namespace fleece {
     class JSONEncoder : public Encoder {
     public:
         JSONEncoder()                           :Encoder(kFLEncodeJSON) { }
-        inline bool writeRaw(slice raw)       {return FLEncoder_WriteRaw(_enc, raw);}
+        inline bool writeRaw(slice raw)         {return FLEncoder_WriteRaw(_enc, raw);}
     };
 
     /** Subclass of Encoder that generates JSON5 (an variant of JSON with cleaner syntax.) */
@@ -563,7 +563,7 @@ namespace fleece {
 
         static inline alloc_slice apply(Value old,
                                         slice jsonDelta,
-                                        FLError *error);
+                                        FLError* FL_NULLABLE error);
         static inline bool apply(Value old,
                                  slice jsonDelta,
                                  Encoder &encoder);
@@ -674,8 +674,8 @@ namespace fleece {
     inline bool Encoder::writeKey(Value key)    {return FLEncoder_WriteKeyValue(_enc, key);}
     inline bool Encoder::endDict()              {return FLEncoder_EndDict(_enc);}
     inline size_t Encoder::bytesWritten() const {return FLEncoder_BytesWritten(_enc);}
-    inline Doc Encoder::finishDoc(FLError* err) {return Doc(FLEncoder_FinishDoc(_enc, err), false);}
-    inline alloc_slice Encoder::finish(FLError* err) {return FLEncoder_Finish(_enc, err);}
+    inline Doc Encoder::finishDoc(FLError* FL_NULLABLE err) {return Doc(FLEncoder_FinishDoc(_enc, err), false);}
+    inline alloc_slice Encoder::finish(FLError* FL_NULLABLE err) {return FLEncoder_Finish(_enc, err);}
     inline void Encoder::reset()                {return FLEncoder_Reset(_enc);}
     inline FLError Encoder::error() const       {return FLEncoder_GetError(_enc);}
     inline const char* Encoder::errorMessage() const {return FLEncoder_GetErrorMessage(_enc);}
@@ -690,7 +690,7 @@ namespace fleece {
     inline bool JSONDelta::create(Value old, Value nuu, Encoder &jsonEncoder) {
         return FLEncodeJSONDelta(old, nuu, jsonEncoder);
     }
-    inline alloc_slice JSONDelta::apply(Value old, slice jsonDelta, FLError *error) {
+    inline alloc_slice JSONDelta::apply(Value old, slice jsonDelta, FLError * FL_NULLABLE error) {
         return FLApplyJSONDelta(old, jsonDelta, error);
     }
     inline bool JSONDelta::apply(Value old,
@@ -719,7 +719,7 @@ namespace fleece {
         return *this;
     }
 
-    inline Doc Doc::fromJSON(slice_NONNULL json, FLError *outError) {
+    inline Doc Doc::fromJSON(slice_NONNULL json, FLError * FL_NULLABLE outError) {
         return Doc(FLDoc_FromJSON(json, outError), false);
     }
 
@@ -741,5 +741,7 @@ namespace fleece {
     }
 
 }
+
+FL_ASSUME_NONNULL_END
 
 #endif // _FLEECE_HH

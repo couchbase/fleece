@@ -46,9 +46,11 @@ typedef const Doc*      FLDoc;
 #include "fleece/Fleece.h" /* the public C header */
 
 
-namespace fleece { namespace impl {
+FL_ASSUME_NONNULL_BEGIN
 
-    void recordError(const std::exception &x, FLError *outError) noexcept;
+namespace fleece::impl {
+
+    void recordError(const std::exception &x, FLError* FL_NULLABLE outError) noexcept;
 
     #define catchError(OUTERROR) \
         catch (const std::exception &x) { recordError(x, OUTERROR); }
@@ -56,13 +58,13 @@ namespace fleece { namespace impl {
     
     // Implementation of FLEncoder: a subclass of Encoder that keeps track of its error state.
     struct FLEncoderImpl {
-        FLError errorCode {::kFLNoError};
-        const bool ownsFleeceEncoder {true};
-        std::string errorMessage;
-        std::unique_ptr<Encoder> fleeceEncoder;
-        std::unique_ptr<JSONEncoder> jsonEncoder;
-        std::unique_ptr<JSONConverter> jsonConverter;
-        void* extraInfo {nullptr};
+        FLError                         errorCode {::kFLNoError};
+        const bool                      ownsFleeceEncoder {true};
+        std::string                     errorMessage;
+        std::unique_ptr<Encoder>        fleeceEncoder;
+        std::unique_ptr<JSONEncoder>    jsonEncoder;
+        std::unique_ptr<JSONConverter>  jsonConverter;
+        void* FL_NULLABLE               extraInfo {nullptr};
 
         FLEncoderImpl(FLEncoderFormat format,
                       size_t reserveSize =0, bool uniqueStrings =true)
@@ -139,7 +141,7 @@ namespace fleece { namespace impl {
 
     class FLPersistentSharedKeys : public PersistentSharedKeys {
     public:
-        FLPersistentSharedKeys(FLSharedKeysReadCallback callback, void *context)
+        FLPersistentSharedKeys(FLSharedKeysReadCallback callback, void * FL_NULLABLE context)
         :_callback(callback)
         ,_context(context)
         { }
@@ -155,6 +157,8 @@ namespace fleece { namespace impl {
 
     private:
         FLSharedKeysReadCallback const  _callback;
-        void* const                     _context;
+        void* FL_NULLABLE const         _context;
     };
-} }
+} 
+
+FL_ASSUME_NONNULL_END

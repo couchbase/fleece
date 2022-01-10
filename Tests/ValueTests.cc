@@ -59,11 +59,11 @@ namespace fleece {
             auto n = (uint64_t)d;
             std::cerr << std::hex << n << std::dec << ", ";
             size_t nBytes = PutUVarInt(buf, n);
-            CHECK(GetUVarInt(slice(buf, sizeof(buf)), &result) == nBytes);
+            REQUIRE(GetUVarInt(slice(buf, sizeof(buf)), &result) == nBytes);
             CHECK(result == n);
-            CHECK(GetUVarInt(slice(buf, nBytes), &result) == nBytes);
+            REQUIRE(GetUVarInt(slice(buf, nBytes), &result) == nBytes);
             CHECK(result == n);
-            CHECK(GetUVarInt(slice(buf, nBytes - 1), &result) == 0);
+            REQUIRE(GetUVarInt(slice(buf, nBytes - 1), &result) == 0);
         }
         std::cerr << "\n";
 
@@ -80,13 +80,13 @@ namespace fleece {
             size_t nBytes = PutUVarInt(buf, n);
             uint32_t result;
             if (n <= UINT32_MAX) {
-                CHECK(GetUVarInt32(slice(buf, sizeof(buf)), &result) == nBytes);
+                REQUIRE(GetUVarInt32(slice(buf, sizeof(buf)), &result) == nBytes);
                 CHECK(result == n);
-                CHECK(GetUVarInt32(slice(buf, nBytes), &result) == nBytes);
+                REQUIRE(GetUVarInt32(slice(buf, nBytes), &result) == nBytes);
                 CHECK(result == n);
-                CHECK(GetUVarInt32(slice(buf, nBytes - 1), &result) == 0);
+                REQUIRE(GetUVarInt32(slice(buf, nBytes - 1), &result) == 0);
             } else {
-                CHECK(GetUVarInt32(slice(buf, sizeof(buf)), &result) == 0);
+                REQUIRE(GetUVarInt32(slice(buf, sizeof(buf)), &result) == 0);
             }
         }
         std::cerr << "\n";

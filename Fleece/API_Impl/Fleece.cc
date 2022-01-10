@@ -19,14 +19,16 @@
 #include "betterassert.hh"
 
 
-namespace fleece { namespace impl {
+FL_ASSUME_NONNULL_BEGIN
 
-    void recordError(const std::exception &x, FLError *outError) noexcept {
+namespace fleece::impl {
+
+    void recordError(const std::exception &x, FLError* FL_NULLABLE outError) noexcept {
         if (outError)
             *outError = (FLError) FleeceException::getCode(x);
     }
 
-} }
+}
 
 
 FLEECE_PUBLIC const FLValue kFLNullValue  = Value::kNullValue;
@@ -41,12 +43,12 @@ static FLSliceResult toSliceResult(alloc_slice &&s) {
 }
 
 
-FLValue FLValue_FromData(FLSlice data, FLTrust trust) FLAPI {
+FLValue FL_NULLABLE FLValue_FromData(FLSlice data, FLTrust trust) FLAPI {
     return trust ? Value::fromTrustedData(data) : Value::fromData(data);
 }
 
 
-const char* FLDump(FLValue v) FLAPI {
+const char* FL_NULLABLE FLDump(FLValue FL_NULLABLE v) FLAPI {
     FLStringResult json = FLValue_ToJSON(v);
     auto cstr = (char*)malloc(json.size + 1);
     FLMemCpy(cstr, json.buf, json.size);
@@ -54,12 +56,12 @@ const char* FLDump(FLValue v) FLAPI {
     return cstr;
 }
 
-const char* FLDumpData(FLSlice data) FLAPI {
+const char* FL_NULLABLE FLDumpData(FLSlice data) FLAPI {
     return FLDump(Value::fromData(data));
 }
 
 
-FLValueType FLValue_GetType(FLValue v) FLAPI {
+FLValueType FLValue_GetType(FLValue FL_NULLABLE v) FLAPI {
     if (_usuallyFalse(v == NULL))
         return kFLUndefined;
     auto type = (FLValueType)v->type();
@@ -69,36 +71,36 @@ FLValueType FLValue_GetType(FLValue v) FLAPI {
 }
 
 
-bool FLValue_IsInteger(FLValue v)          FLAPI {return v && v->isInteger();}
-bool FLValue_IsUnsigned(FLValue v)         FLAPI {return v && v->isUnsigned();}
-bool FLValue_IsDouble(FLValue v)           FLAPI {return v && v->isDouble();}
-bool FLValue_AsBool(FLValue v)             FLAPI {return v && v->asBool();}
-int64_t FLValue_AsInt(FLValue v)           FLAPI {return v ? v->asInt() : 0;}
-uint64_t FLValue_AsUnsigned(FLValue v)     FLAPI {return v ? v->asUnsigned() : 0;}
-float FLValue_AsFloat(FLValue v)           FLAPI {return v ? v->asFloat() : 0.0f;}
-double FLValue_AsDouble(FLValue v)         FLAPI {return v ? v->asDouble() : 0.0;}
-FLString FLValue_AsString(FLValue v)       FLAPI {return v ? (FLString)v->asString() : kFLSliceNull;}
-FLSlice FLValue_AsData(FLValue v)          FLAPI {return v ? (FLSlice)v->asData() : kFLSliceNull;}
-FLArray FLValue_AsArray(FLValue v)         FLAPI {return v ? v->asArray() : nullptr;}
-FLDict FLValue_AsDict(FLValue v)           FLAPI {return v ? v->asDict() : nullptr;}
-FLTimestamp FLValue_AsTimestamp(FLValue v) FLAPI {return v ? v->asTimestamp() : FLTimestampNone;}
-FLValue FLValue_Retain(FLValue v)          FLAPI {return retain(v);}
-void FLValue_Release(FLValue v)            FLAPI {release(v);}
-bool FLValue_IsMutable(FLValue v)          FLAPI {return v && v->isMutable();}
+bool FLValue_IsInteger(FLValue FL_NULLABLE v)          FLAPI {return v && v->isInteger();}
+bool FLValue_IsUnsigned(FLValue FL_NULLABLE v)         FLAPI {return v && v->isUnsigned();}
+bool FLValue_IsDouble(FLValue FL_NULLABLE v)           FLAPI {return v && v->isDouble();}
+bool FLValue_AsBool(FLValue FL_NULLABLE v)             FLAPI {return v && v->asBool();}
+int64_t FLValue_AsInt(FLValue FL_NULLABLE v)           FLAPI {return v ? v->asInt() : 0;}
+uint64_t FLValue_AsUnsigned(FLValue FL_NULLABLE v)     FLAPI {return v ? v->asUnsigned() : 0;}
+float FLValue_AsFloat(FLValue FL_NULLABLE v)           FLAPI {return v ? v->asFloat() : 0.0f;}
+double FLValue_AsDouble(FLValue FL_NULLABLE v)         FLAPI {return v ? v->asDouble() : 0.0;}
+FLString FLValue_AsString(FLValue FL_NULLABLE v)       FLAPI {return v ? (FLString)v->asString() : kFLSliceNull;}
+FLSlice FLValue_AsData(FLValue FL_NULLABLE v)          FLAPI {return v ? (FLSlice)v->asData() : kFLSliceNull;}
+FLArray FL_NULLABLE FLValue_AsArray(FLValue FL_NULLABLE v)         FLAPI {return v ? v->asArray() : nullptr;}
+FLDict FL_NULLABLE FLValue_AsDict(FLValue FL_NULLABLE v)           FLAPI {return v ? v->asDict() : nullptr;}
+FLTimestamp FLValue_AsTimestamp(FLValue FL_NULLABLE v) FLAPI {return v ? v->asTimestamp() : FLTimestampNone;}
+FLValue FL_NULLABLE FLValue_Retain(FLValue FL_NULLABLE v)          FLAPI {return retain(v);}
+void FLValue_Release(FLValue FL_NULLABLE v)            FLAPI {release(v);}
+bool FLValue_IsMutable(FLValue FL_NULLABLE v)          FLAPI {return v && v->isMutable();}
 
 
-FLDoc FLValue_FindDoc(FLValue v) FLAPI {
+FLDoc FL_NULLABLE FLValue_FindDoc(FLValue FL_NULLABLE v) FLAPI {
     return v ? retain(Doc::containing(v).get()) : nullptr;
 }
 
-bool FLValue_IsEqual(FLValue v1, FLValue v2) FLAPI {
+bool FLValue_IsEqual(FLValue FL_NULLABLE v1, FLValue FL_NULLABLE v2) FLAPI {
     if (_usuallyTrue(v1 != nullptr))
         return v1->isEqual(v2);
     else
         return v2 == nullptr;
 }
 
-FLSliceResult FLValue_ToString(FLValue v) FLAPI {
+FLSliceResult FLValue_ToString(FLValue FL_NULLABLE v) FLAPI {
     if (v) {
         try {
             return toSliceResult(v->toString());    // toString can throw
@@ -108,7 +110,7 @@ FLSliceResult FLValue_ToString(FLValue v) FLAPI {
 }
 
 
-FLValue FLValue_NewString(FLString str) FLAPI {
+FLValue FL_NULLABLE FLValue_NewString(FLString str) FLAPI {
     try {
         return retain(internal::HeapValue::create(str))->asValue();
     } catchError(nullptr)
@@ -116,7 +118,7 @@ FLValue FLValue_NewString(FLString str) FLAPI {
 }
 
 
-FLValue FLValue_NewData(FLSlice data) FLAPI {
+FLValue FL_NULLABLE FLValue_NewData(FLSlice data) FLAPI {
     try {
         return retain(internal::HeapValue::createData(data))->asValue();
     } catchError(nullptr)
@@ -124,7 +126,7 @@ FLValue FLValue_NewData(FLSlice data) FLAPI {
 }
 
 
-FLSliceResult FLValue_ToJSONX(FLValue v,
+FLSliceResult FLValue_ToJSONX(FLValue FL_NULLABLE v,
                               bool json5,
                               bool canonical) FLAPI
 {
@@ -140,11 +142,11 @@ FLSliceResult FLValue_ToJSONX(FLValue v,
     return {nullptr, 0};
 }
 
-FLSliceResult FLValue_ToJSON(FLValue v)      FLAPI {return FLValue_ToJSONX(v, false, false);}
-FLSliceResult FLValue_ToJSON5(FLValue v)     FLAPI {return FLValue_ToJSONX(v, true,  false);}
+FLSliceResult FLValue_ToJSON(FLValue FL_NULLABLE v)      FLAPI {return FLValue_ToJSONX(v, false, false);}
+FLSliceResult FLValue_ToJSON5(FLValue FL_NULLABLE v)     FLAPI {return FLValue_ToJSONX(v, true,  false);}
 
 
-FLSliceResult FLData_ConvertJSON(FLSlice json, FLError *outError) FLAPI {
+FLSliceResult FLData_ConvertJSON(FLSlice json, FLError* FL_NULLABLE outError) FLAPI {
     FLEncoderImpl e(kFLEncodeFleece, json.size);
     FLEncoder_ConvertJSON(&e, json);
     return FLEncoder_Finish(&e, outError);
@@ -152,8 +154,9 @@ FLSliceResult FLData_ConvertJSON(FLSlice json, FLError *outError) FLAPI {
 
 
 FLStringResult FLJSON5_ToJSON(FLString json5,
-                              FLStringResult *outErrorMessage, size_t *outErrorPos,
-                              FLError *error) FLAPI {
+                              FLStringResult* FL_NULLABLE outErrorMessage,
+                              size_t * FL_NULLABLE outErrorPos,
+                              FLError* FL_NULLABLE error) FLAPI {
     alloc_slice errorMessage;
     size_t errorPos = 0;
     try {
@@ -187,11 +190,11 @@ FLSliceResult FLData_Dump(FLSlice data) FLAPI {
 #pragma mark - ARRAYS:
 
 
-uint32_t FLArray_Count(FLArray a)                    FLAPI {return a ? a->count() : 0;}
-bool FLArray_IsEmpty(FLArray a)                      FLAPI {return a ? a->empty() : true;}
-FLValue FLArray_Get(FLArray a, uint32_t index)       FLAPI {return a ? a->get(index) : nullptr;}
+uint32_t FLArray_Count(FLArray FL_NULLABLE a)                    FLAPI {return a ? a->count() : 0;}
+bool FLArray_IsEmpty(FLArray FL_NULLABLE a)                      FLAPI {return a ? a->empty() : true;}
+FLValue FL_NULLABLE FLArray_Get(FLArray FL_NULLABLE a, uint32_t index)       FLAPI {return a ? a->get(index) : nullptr;}
 
-void FLArrayIterator_Begin(FLArray a, FLArrayIterator* i) FLAPI {
+void FLArrayIterator_Begin(FLArray FL_NULLABLE a, FLArrayIterator* i) FLAPI {
     static_assert(sizeof(FLArrayIterator) >= sizeof(Array::iterator),"FLArrayIterator is too small");
     new (i) Array::iterator(a);
     // Note: this is safe even if a is null.
@@ -201,11 +204,11 @@ uint32_t FLArrayIterator_GetCount(const FLArrayIterator* i) FLAPI {
     return ((Array::iterator*)i)->count();
 }
 
-FLValue FLArrayIterator_GetValue(const FLArrayIterator* i) FLAPI {
+FLValue FL_NULLABLE FLArrayIterator_GetValue(const FLArrayIterator* i) FLAPI {
     return ((Array::iterator*)i)->value();
 }
 
-FLValue FLArrayIterator_GetValueAt(const FLArrayIterator *i, uint32_t offset) FLAPI {
+FLValue FL_NULLABLE FLArrayIterator_GetValueAt(const FLArrayIterator *i, uint32_t offset) FLAPI {
     return (*(Array::iterator*)i)[offset];
 }
 
@@ -218,18 +221,18 @@ bool FLArrayIterator_Next(FLArrayIterator* i) FLAPI {
     return false;
 }
 
-static FLMutableArray _newMutableArray(FLArray a, FLCopyFlags flags) noexcept {
+static FLMutableArray FL_NULLABLE _newMutableArray(FLArray FL_NULLABLE a, FLCopyFlags flags) noexcept {
     try {
         return (MutableArray*)retain(MutableArray::newArray(a, CopyFlags(flags)));
     } catchError(nullptr)
     return nullptr;
 }
 
-FLMutableArray FLMutableArray_New(void) FLAPI {
+FLMutableArray FL_NULLABLE FLMutableArray_New(void) FLAPI {
     return _newMutableArray(nullptr, kFLDefaultCopy);
 }
 
-FLMutableArray FLMutableArray_NewFromJSON(FLString json, FLError* outError) FLAPI {
+FLMutableArray FL_NULLABLE FLMutableArray_NewFromJSON(FLString json, FLError* FL_NULLABLE outError) FLAPI {
     if (outError != nullptr) {
         *outError = kFLNoError;
     }
@@ -254,32 +257,32 @@ FLMutableArray FLMutableArray_NewFromJSON(FLString json, FLError* outError) FLAP
     return ret;
 }
 
-FLMutableArray FLArray_MutableCopy(FLArray a, FLCopyFlags flags) FLAPI {
+FLMutableArray FL_NULLABLE FLArray_MutableCopy(FLArray FL_NULLABLE a, FLCopyFlags flags) FLAPI {
     return a ? _newMutableArray(a, flags) : nullptr;
 }
 
-FLMutableArray FLArray_AsMutable(FLArray a)         FLAPI {return a ? a->asMutable() : nullptr;}
-FLArray FLMutableArray_GetSource(FLMutableArray a)  FLAPI {return a ? a->source() : nullptr;}
-bool FLMutableArray_IsChanged(FLMutableArray a)     FLAPI {return a && a->isChanged();}
-void FLMutableArray_SetChanged(FLMutableArray a, bool c)       FLAPI {if (a) a->setChanged(c);}
-void FLMutableArray_Resize(FLMutableArray a, uint32_t size)    FLAPI {a->resize(size);}
+FLMutableArray FL_NULLABLE FLArray_AsMutable(FLArray FL_NULLABLE a)         FLAPI {return a ? a->asMutable() : nullptr;}
+FLArray FL_NULLABLE FLMutableArray_GetSource(FLMutableArray FL_NULLABLE a)  FLAPI {return a ? a->source() : nullptr;}
+bool FLMutableArray_IsChanged(FLMutableArray FL_NULLABLE a)     FLAPI {return a && a->isChanged();}
+void FLMutableArray_SetChanged(FLMutableArray FL_NULLABLE a, bool c)       FLAPI {if (a) a->setChanged(c);}
+void FLMutableArray_Resize(FLMutableArray FL_NULLABLE a, uint32_t size)    FLAPI {a->resize(size);}
 
 FLSlot FLMutableArray_Set(FLMutableArray a, uint32_t index)    FLAPI {return &a->setting(index);}
 FLSlot FLMutableArray_Append(FLMutableArray a)                 FLAPI {return &a->appending();}
 
-void FLMutableArray_Insert(FLMutableArray a, uint32_t firstIndex, uint32_t count) FLAPI {
+void FLMutableArray_Insert(FLMutableArray FL_NULLABLE a, uint32_t firstIndex, uint32_t count) FLAPI {
     if (a) a->insert(firstIndex, count);
 }
 
-void FLMutableArray_Remove(FLMutableArray a, uint32_t firstIndex, uint32_t count) FLAPI {
+void FLMutableArray_Remove(FLMutableArray FL_NULLABLE a, uint32_t firstIndex, uint32_t count) FLAPI {
     if(a) a->remove(firstIndex, count);
 }
 
-FLMutableArray FLMutableArray_GetMutableArray(FLMutableArray a, uint32_t index) FLAPI {
+FLMutableArray FL_NULLABLE FLMutableArray_GetMutableArray(FLMutableArray FL_NULLABLE a, uint32_t index) FLAPI {
     return a ? a->getMutableArray(index) : nullptr;
 }
 
-FLMutableDict FLMutableArray_GetMutableDict(FLMutableArray a, uint32_t index) FLAPI {
+FLMutableDict FL_NULLABLE FLMutableArray_GetMutableDict(FLMutableArray FL_NULLABLE a, uint32_t index) FLAPI {
     return a ? a->getMutableDict(index) : nullptr;
 }
 
@@ -287,9 +290,9 @@ FLMutableDict FLMutableArray_GetMutableDict(FLMutableArray a, uint32_t index) FL
 #pragma mark - DICTIONARIES:
 
 
-uint32_t FLDict_Count(FLDict d)                 FLAPI {return d ? d->count() : 0;}
-bool FLDict_IsEmpty(FLDict d)                   FLAPI {return d ? d->empty() : true;}
-FLValue FLDict_Get(FLDict d, FLSlice keyString) FLAPI {return d ? d->get(keyString) : nullptr;}
+uint32_t FLDict_Count(FLDict FL_NULLABLE d)                 FLAPI {return d ? d->count() : 0;}
+bool FLDict_IsEmpty(FLDict FL_NULLABLE d)                   FLAPI {return d ? d->empty() : true;}
+FLValue FL_NULLABLE FLDict_Get(FLDict FL_NULLABLE d, FLSlice keyString) FLAPI {return d ? d->get(keyString) : nullptr;}
 
 #if 0
 FLSlice FLSharedKey_GetKeyString(FLSharedKeys sk, int keyCode, FLError* outError)
@@ -306,13 +309,13 @@ FLSlice FLSharedKey_GetKeyString(FLSharedKeys sk, int keyCode, FLError* outError
 }
 #endif
 
-void FLDictIterator_Begin(FLDict d, FLDictIterator* i) FLAPI {
+void FLDictIterator_Begin(FLDict FL_NULLABLE d, FLDictIterator* i) FLAPI {
     static_assert(sizeof(FLDictIterator) >= sizeof(Dict::iterator), "FLDictIterator is too small");
     new (i) Dict::iterator(d);
     // Note: this is safe even if d is null.
 }
 
-FLValue FLDictIterator_GetKey(const FLDictIterator* i) FLAPI {
+FLValue FL_NULLABLE FLDictIterator_GetKey(const FLDictIterator* i) FLAPI {
     return ((Dict::iterator*)i)->key();
 }
 
@@ -320,7 +323,7 @@ FLString FLDictIterator_GetKeyString(const FLDictIterator* i) FLAPI {
     return ((Dict::iterator*)i)->keyString();
 }
 
-FLValue FLDictIterator_GetValue(const FLDictIterator* i) FLAPI {
+FLValue FL_NULLABLE FLDictIterator_GetValue(const FLDictIterator* i) FLAPI {
     return ((Dict::iterator*)i)->value();
 }
 
@@ -356,7 +359,7 @@ FLSlice FLDictKey_GetString(const FLDictKey *key) FLAPI {
     return realKey->string();
 }
 
-FLValue FLDict_GetWithKey(FLDict d, FLDictKey *k) FLAPI {
+FLValue FL_NULLABLE FLDict_GetWithKey(FLDict FL_NULLABLE d, FLDictKey *k) FLAPI {
     if (!d)
         return nullptr;
     auto &key = *(Dict::key*)k;
@@ -364,7 +367,7 @@ FLValue FLDict_GetWithKey(FLDict d, FLDictKey *k) FLAPI {
 }
 
 
-static FLMutableDict _newMutableDict(FLDict d, FLCopyFlags flags) noexcept {
+static FLMutableDict FL_NULLABLE _newMutableDict(FLDict FL_NULLABLE d, FLCopyFlags flags) noexcept {
     try {
         return (MutableDict*)retain(MutableDict::newDict(d, CopyFlags(flags)));
     } catchError(nullptr)
@@ -375,7 +378,7 @@ FLMutableDict FLMutableDict_New(void) FLAPI {
     return _newMutableDict(nullptr, kFLDefaultCopy);
 }
 
-FLMutableDict FLMutableDict_NewFromJSON(FLString json, FLError *outError) FLAPI {
+FLMutableDict FL_NULLABLE FLMutableDict_NewFromJSON(FLString json, FLError* FL_NULLABLE outError) FLAPI {
     if (outError != nullptr) {
         *outError = kFLNoError;
     }
@@ -400,25 +403,25 @@ FLMutableDict FLMutableDict_NewFromJSON(FLString json, FLError *outError) FLAPI 
     return ret;
 }
 
-FLMutableDict FLDict_MutableCopy(FLDict d, FLCopyFlags flags) FLAPI {
+FLMutableDict FL_NULLABLE FLDict_MutableCopy(FLDict FL_NULLABLE d, FLCopyFlags flags) FLAPI {
     return d ? _newMutableDict(d, flags) : nullptr;
 }
 
-FLMutableDict FLDict_AsMutable(FLDict d)           FLAPI {return d ? d->asMutable() : nullptr;}
-FLDict FLMutableDict_GetSource(FLMutableDict d)    FLAPI {return d ? d->source() : nullptr;}
-bool FLMutableDict_IsChanged(FLMutableDict d)      FLAPI {return d && d->isChanged();}
-void FLMutableDict_SetChanged(FLMutableDict d, bool c)   FLAPI {if (d) d->setChanged(c);}
+FLMutableDict FL_NULLABLE FLDict_AsMutable(FLDict FL_NULLABLE d)           FLAPI {return d ? d->asMutable() : nullptr;}
+FLDict FL_NULLABLE FLMutableDict_GetSource(FLMutableDict FL_NULLABLE d)    FLAPI {return d ? d->source() : nullptr;}
+bool FLMutableDict_IsChanged(FLMutableDict FL_NULLABLE d)      FLAPI {return d && d->isChanged();}
+void FLMutableDict_SetChanged(FLMutableDict FL_NULLABLE d, bool c)   FLAPI {if (d) d->setChanged(c);}
 
 FLSlot FLMutableDict_Set(FLMutableDict d, FLString k)    FLAPI {return &d->setting(k);}
 
-void FLMutableDict_Remove(FLMutableDict d, FLString key) FLAPI {if(d) d->remove(key);}
-void FLMutableDict_RemoveAll(FLMutableDict d)            FLAPI {if(d) d->removeAll();}
+void FLMutableDict_Remove(FLMutableDict FL_NULLABLE d, FLString key) FLAPI {if(d) d->remove(key);}
+void FLMutableDict_RemoveAll(FLMutableDict FL_NULLABLE d)            FLAPI {if(d) d->removeAll();}
 
-FLMutableArray FLMutableDict_GetMutableArray(FLMutableDict d, FLString key) FLAPI {
+FLMutableArray FL_NULLABLE FLMutableDict_GetMutableArray(FLMutableDict FL_NULLABLE d, FLString key) FLAPI {
     return d ? d->getMutableArray(key) : nullptr;
 }
 
-FLMutableDict FLMutableDict_GetMutableDict(FLMutableDict d, FLString key) FLAPI {
+FLMutableDict FL_NULLABLE FLMutableDict_GetMutableDict(FLMutableDict FL_NULLABLE d, FLString key) FLAPI {
     return d ? d->getMutableDict(key) : nullptr;
 }
 
@@ -427,8 +430,8 @@ FLMutableDict FLMutableDict_GetMutableDict(FLMutableDict d, FLString key) FLAPI 
 
 
 FLSharedKeys FLSharedKeys_New()                            FLAPI {return retain(new SharedKeys());}
-FLSharedKeys FLSharedKeys_Retain(FLSharedKeys sk)          FLAPI {return retain(sk);}
-void FLSharedKeys_Release(FLSharedKeys sk)                 FLAPI {release(sk);}
+FLSharedKeys FL_NULLABLE FLSharedKeys_Retain(FLSharedKeys FL_NULLABLE sk)          FLAPI {return retain(sk);}
+void FLSharedKeys_Release(FLSharedKeys FL_NULLABLE sk)                 FLAPI {release(sk);}
 unsigned FLSharedKeys_Count(FLSharedKeys sk)               FLAPI {return (unsigned)sk->count();}
 bool FLSharedKeys_LoadStateData(FLSharedKeys sk, FLSlice d)FLAPI {return sk->loadFrom(d);}
 bool FLSharedKeys_LoadState(FLSharedKeys sk, FLValue s)    FLAPI {return sk->loadFrom(s);}
@@ -436,7 +439,7 @@ FLSliceResult FLSharedKeys_GetStateData(FLSharedKeys sk)   FLAPI {return toSlice
 FLString FLSharedKeys_Decode(FLSharedKeys sk, int key)     FLAPI {return sk->decode(key);}
 void FLSharedKeys_RevertToCount(FLSharedKeys sk, unsigned c) FLAPI {sk->revertToCount(c);}
 
-FLSharedKeys FLSharedKeys_NewWithRead(FLSharedKeysReadCallback callback, void *context) FLAPI {
+FLSharedKeys FLSharedKeys_NewWithRead(FLSharedKeysReadCallback callback, void* FL_NULLABLE context) FLAPI {
     return retain(new FLPersistentSharedKeys(callback, context));
 }
 
@@ -457,7 +460,7 @@ FLSharedKeyScope FLSharedKeyScope_WithRange(FLSlice range, FLSharedKeys sk) FLAP
     return (FLSharedKeyScope) new Scope(range, sk);
 }
 
-void FLSharedKeyScope_Free(FLSharedKeyScope scope) {
+void FLSharedKeyScope_Free(FLSharedKeyScope FL_NULLABLE scope) {
     delete (Scope*) scope;
 }
 
@@ -473,8 +476,7 @@ FLSharedKeys FLSharedKeys_Create() FLAPI {
 
 FLSharedKeys FLSharedKeys_CreateFromStateData(FLSlice data) FLAPI {
     FLSharedKeys keys = FLSharedKeys_New();
-    if (keys)
-        FLSharedKeys_LoadStateData(keys, data);
+    FLSharedKeys_LoadStateData(keys, data);
     return keys;
 }
 
@@ -497,10 +499,10 @@ void FLSlot_SetValue(FLSlot slot, FLValue v)            FLAPI {slot->set(v);}
 #pragma mark - DEEP ITERATOR:
 
 
-FLDeepIterator FLDeepIterator_New(FLValue v)            FLAPI {return new DeepIterator(v);}
-void FLDeepIterator_Free(FLDeepIterator i)              FLAPI {delete i;}
-FLValue FLDeepIterator_GetValue(FLDeepIterator i)       FLAPI {return i->value();}
-FLValue FLDeepIterator_GetParent(FLDeepIterator i)      FLAPI {return i->parent();}
+FLDeepIterator FLDeepIterator_New(FLValue FL_NULLABLE v)FLAPI {return new DeepIterator(v);}
+void FLDeepIterator_Free(FLDeepIterator FL_NULLABLE i)  FLAPI {delete i;}
+FLValue FL_NULLABLE FLDeepIterator_GetValue(FLDeepIterator i) FLAPI {return i->value();}
+FLValue FL_NULLABLE FLDeepIterator_GetParent(FLDeepIterator i) FLAPI {return i->parent();}
 FLSlice FLDeepIterator_GetKey(FLDeepIterator i)         FLAPI {return i->keyString();}
 uint32_t FLDeepIterator_GetIndex(FLDeepIterator i)      FLAPI {return i->index();}
 size_t FLDeepIterator_GetDepth(FLDeepIterator i)        FLAPI {return i->path().size();}
@@ -531,22 +533,22 @@ FLSliceResult FLDeepIterator_GetJSONPointer(FLDeepIterator i) FLAPI {
 #pragma mark - KEY-PATHS:
 
 
-FLKeyPath FLKeyPath_New(FLSlice specifier, FLError *outError) FLAPI {
+FLKeyPath FL_NULLABLE FLKeyPath_New(FLSlice specifier, FLError* FL_NULLABLE outError) FLAPI {
     try {
         return new Path((std::string)(slice)specifier);
     } catchError(outError)
     return nullptr;
 }
 
-void FLKeyPath_Free(FLKeyPath path) FLAPI {
+void FLKeyPath_Free(FLKeyPath FL_NULLABLE path) FLAPI {
     delete path;
 }
 
-FLValue FLKeyPath_Eval(FLKeyPath path, FLValue root) FLAPI {
+FLValue FL_NULLABLE FLKeyPath_Eval(FLKeyPath path, FLValue root) FLAPI {
     return path->eval(root);
 }
 
-FLValue FLKeyPath_EvalOnce(FLSlice specifier, FLValue root, FLError *outError) FLAPI {
+FLValue FL_NULLABLE FLKeyPath_EvalOnce(FLSlice specifier, FLValue root, FLError * FL_NULLABLE outError) FLAPI {
     try {
         return Path::eval((std::string)(slice)specifier, root);
     } catchError(outError)
@@ -592,11 +594,11 @@ void FLEncoder_Reset(FLEncoder e) FLAPI {
     e->reset();
 }
 
-void FLEncoder_Free(FLEncoder e) FLAPI {
+void FLEncoder_Free(FLEncoder FL_NULLABLE e) FLAPI {
     delete e;
 }
 
-void FLEncoder_SetSharedKeys(FLEncoder e, FLSharedKeys sk) FLAPI {
+void FLEncoder_SetSharedKeys(FLEncoder e, FLSharedKeys FL_NULLABLE sk) FLAPI {
     if (e->isFleece())
         e->fleeceEncoder->setSharedKeys(sk);
 }
@@ -695,15 +697,15 @@ FLError FLEncoder_GetError(FLEncoder e) FLAPI {
     return (FLError)e->errorCode;
 }
 
-const char* FLEncoder_GetErrorMessage(FLEncoder e) FLAPI {
+const char* FL_NULLABLE FLEncoder_GetErrorMessage(FLEncoder e) FLAPI {
     return e->hasError() ? e->errorMessage.c_str() : nullptr;
 }
 
-void FLEncoder_SetExtraInfo(FLEncoder e, void *info) FLAPI {
+void FLEncoder_SetExtraInfo(FLEncoder e, void* FL_NULLABLE info) FLAPI {
     e->extraInfo = info;
 }
 
-void* FLEncoder_GetExtraInfo(FLEncoder e) FLAPI {
+void* FL_NULLABLE FLEncoder_GetExtraInfo(FLEncoder e) FLAPI {
     return e->extraInfo;
 }
 
@@ -720,7 +722,7 @@ size_t FLEncoder_FinishItem(FLEncoder e) FLAPI {
     return 0;
 }
 
-FLDoc FLEncoder_FinishDoc(FLEncoder e, FLError *outError) FLAPI {
+FLDoc FL_NULLABLE FLEncoder_FinishDoc(FLEncoder e, FLError * FL_NULLABLE outError) FLAPI {
     if (e->fleeceEncoder) {
         if (!e->hasError()) {
             try {
@@ -740,7 +742,7 @@ FLDoc FLEncoder_FinishDoc(FLEncoder e, FLError *outError) FLAPI {
 }
 
 
-FLSliceResult FLEncoder_Finish(FLEncoder e, FLError *outError) FLAPI {
+FLSliceResult FLEncoder_Finish(FLEncoder e, FLError * FL_NULLABLE outError) FLAPI {
     if (!e->hasError()) {
         try {
             return toSliceResult(ENCODER_DO(e, finish()));       // finish() can throw
@@ -759,33 +761,33 @@ FLSliceResult FLEncoder_Finish(FLEncoder e, FLError *outError) FLAPI {
 #pragma mark - DOCUMENTS
 
 
-FLDoc FLDoc_FromResultData(FLSliceResult data, FLTrust trust, FLSharedKeys sk, FLSlice externData) FLAPI {
+FLDoc FLDoc_FromResultData(FLSliceResult data, FLTrust trust, FLSharedKeys FL_NULLABLE sk, FLSlice externData) FLAPI {
     return retain(new Doc(alloc_slice(data), (Doc::Trust)trust, sk, externData));
 }
 
-FLDoc FLDoc_FromJSON(FLSlice json, FLError *outError) FLAPI {
+FLDoc FL_NULLABLE FLDoc_FromJSON(FLSlice json, FLError* FL_NULLABLE outError) FLAPI {
     try {
         return retain(Doc::fromJSON(json));
     } catchError(outError);
     return nullptr;
 }
 
-void FLDoc_Release(FLDoc doc)                  FLAPI {release(doc);}
-FLDoc FLDoc_Retain(FLDoc doc)                  FLAPI {return retain(doc);}
+void FLDoc_Release(FLDoc FL_NULLABLE doc)                  FLAPI {release(doc);}
+FLDoc FL_NULLABLE FLDoc_Retain(FLDoc FL_NULLABLE doc)      FLAPI {return retain(doc);}
 
-FLSharedKeys FLDoc_GetSharedKeys(FLDoc doc)    FLAPI {return doc ? doc->sharedKeys() : nullptr;}
-FLValue FLDoc_GetRoot(FLDoc doc)               FLAPI {return doc ? doc->root() : nullptr;}
-FLSlice FLDoc_GetData(FLDoc doc)               FLAPI {return doc ? doc->data() : slice();}
+FLSharedKeys FL_NULLABLE FLDoc_GetSharedKeys(FLDoc FL_NULLABLE doc)    FLAPI {return doc ? doc->sharedKeys() : nullptr;}
+FLValue FL_NULLABLE FLDoc_GetRoot(FLDoc FL_NULLABLE doc)               FLAPI {return doc ? doc->root() : nullptr;}
+FLSlice FLDoc_GetData(FLDoc FL_NULLABLE doc)               FLAPI {return doc ? doc->data() : slice();}
 
-FLSliceResult FLDoc_GetAllocedData(FLDoc doc) FLAPI {
+FLSliceResult FLDoc_GetAllocedData(FLDoc FL_NULLABLE doc) FLAPI {
     return doc ? toSliceResult(doc->allocedData()) : FLSliceResult{};
 }
 
-void* FLDoc_GetAssociated(FLDoc doc, const char *type) FLAPI {
+void* FL_NULLABLE FLDoc_GetAssociated(FLDoc FL_NULLABLE doc, const char *type) FLAPI {
     return doc ? doc->getAssociated(type) : nullptr;
 }
 
-bool FLDoc_SetAssociated(FLDoc doc, void *pointer, const char *type) FLAPI {
+bool FLDoc_SetAssociated(FLDoc FL_NULLABLE doc, void * FL_NULLABLE pointer, const char *type) FLAPI {
     return doc && const_cast<Doc*>(doc)->setAssociated(pointer, type);
 }
 
@@ -793,7 +795,7 @@ bool FLDoc_SetAssociated(FLDoc doc, void *pointer, const char *type) FLAPI {
 #pragma mark - DELTA COMPRESSION
 
 
-FLSliceResult FLCreateJSONDelta(FLValue old, FLValue nuu) FLAPI {
+FLSliceResult FLCreateJSONDelta(FLValue FL_NULLABLE old, FLValue FL_NULLABLE nuu) FLAPI {
     try {
         return toSliceResult(JSONDelta::create(old, nuu));
     } catch (const std::exception&) {
@@ -801,7 +803,7 @@ FLSliceResult FLCreateJSONDelta(FLValue old, FLValue nuu) FLAPI {
     }
 }
 
-bool FLEncodeJSONDelta(FLValue old, FLValue nuu, FLEncoder jsonEncoder) FLAPI {
+bool FLEncodeJSONDelta(FLValue FL_NULLABLE old, FLValue FL_NULLABLE nuu, FLEncoder jsonEncoder) FLAPI {
     try {
         JSONEncoder *enc = jsonEncoder->jsonEncoder.get();
         precondition(enc);  //TODO: Support encoding to Fleece
@@ -814,14 +816,14 @@ bool FLEncodeJSONDelta(FLValue old, FLValue nuu, FLEncoder jsonEncoder) FLAPI {
 }
 
 
-FLSliceResult FLApplyJSONDelta(FLValue old, FLSlice jsonDelta, FLError *outError) FLAPI {
+FLSliceResult FLApplyJSONDelta(FLValue FL_NULLABLE old, FLSlice jsonDelta, FLError * FL_NULLABLE outError) FLAPI {
     try {
         return toSliceResult(JSONDelta::apply(old, jsonDelta));
     } catchError(outError);
     return {};
 }
 
-bool FLEncodeApplyingJSONDelta(FLValue old, FLSlice jsonDelta, FLEncoder encoder) FLAPI {
+bool FLEncodeApplyingJSONDelta(FLValue FL_NULLABLE old, FLSlice jsonDelta, FLEncoder encoder) FLAPI {
     try {
         Encoder *enc = encoder->fleeceEncoder.get();
         if (!enc)
@@ -833,3 +835,5 @@ bool FLEncodeApplyingJSONDelta(FLValue old, FLSlice jsonDelta, FLEncoder encoder
         return false;
     }
 }
+
+FL_ASSUME_NONNULL_END

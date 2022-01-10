@@ -57,11 +57,32 @@
 #endif
 
 
+// Nullability annotations, for function parameters and struct fields.
+// In between FL_ASSUME_NONNULL_BEGIN and FL_ASSUME_NONNULL_END, all pointer declarations implicitly
+// disallow NULL values, unless annotated with FL_NULLABLE (which must come after the `*`.)
+// (FL_NONNULL is occasionally necessary when there are multiple levels of pointers.)
+// NOTE: Only supported in Clang, so far.
+#if __has_feature(nullability)
+#  define FL_ASSUME_NONNULL_BEGIN _Pragma("clang assume_nonnull begin")
+#  define FL_ASSUME_NONNULL_END _Pragma("clang assume_nonnull end")
+#  define FL_NULLABLE _Nullable
+#  define FL_NONNULL _Nonnull
+#  define FL_RETURNS_NONNULL __attribute__((returns_nonnull))
+#else
+#  define FL_ASSUME_NONNULL_BEGIN
+#  define FL_ASSUME_NONNULL_END
+#  define FL_NULLABLE
+#  define FL_NONNULL
+#  define FL_RETURNS_NONNULL
+#endif
+
+
 // Declares that a parameter must not be NULL. The compiler can sometimes detect violations
 // of this at compile time, if the parameter value is a literal.
 // The Clang Undefined-Behavior Sanitizer will detect all violations at runtime.
 // GCC also has an attribute with this name, but it's incompatible: it can't be applied to a
 // parameter, it has to come after the function and list parameters by number. Oh well.
+// TODO: Replace this with the better nullability annotations above.
 #ifdef __clang__
     #define NONNULL                     __attribute__((nonnull))
 #else

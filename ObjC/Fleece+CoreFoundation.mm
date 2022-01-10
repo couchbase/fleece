@@ -28,7 +28,7 @@ id FLValue_GetNSObject(FLValue value, NSMapTable* sharedStrings) FLAPI {
         if (value)
             return value->toNSObject(sharedStrings);
     } catchError(nullptr)
-    return nullptr;
+    return nil;
 }
 
 
