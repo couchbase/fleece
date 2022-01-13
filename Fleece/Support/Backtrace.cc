@@ -190,6 +190,7 @@ namespace fleece {
 #include <Dbghelp.h>
 #include "asprintf.h"
 #include <sstream>
+#include <iomanip>
 using namespace std;
 
 namespace fleece {
@@ -251,9 +252,42 @@ namespace fleece {
     }
 
 #else
-    // Windows Store apps cannot get backtraces
-    static inline int backtrace(void** buffer, size_t max) {return 0;}
-    bool Backtrace::writeTo(std::ostream&) const  {return false;}
+    static inline int backtrace(void** buffer, size_t max) {
+        return (int)CaptureStackBackTrace(0, (DWORD)max, buffer, nullptr);
+    }
+
+    // Symbolication is not possible within a UWP application, has to be performed
+    // using external tools.
+    bool Backtrace::writeTo(ostream& out) const  {
+        for (unsigned i = 0; i < _addrs.size(); i++) {
+            void* moduleBase = nullptr;
+            RtlPcToFileHeader(_addrs[i], &moduleBase);
+            auto moduleBaseTyped = (const unsigned char *)moduleBase;
+            char modulePath[4096];
+            if(moduleBase) {
+                int length = GetModuleFileNameA((HMODULE)moduleBase, modulePath, 4096) - 1;
+                char* pos = modulePath + length;
+                if(length > 0) {
+                    while(length-- > 0 && pos[0] != '\\') {
+                        pos--;
+                    }
+                } else {
+                    strcpy(pos, "<unknown module name> ");
+                }
+
+                if(i > 0) {
+                    out << "\r\n"; 
+                }
+
+                out << '\t';
+                out << pos << "+0x" << setw(sizeof(size_t) * 2) << setfill('0') << hex << (uint32_t)((unsigned char *)_addrs[i] - moduleBaseTyped);
+            } else {
+                out << "\t<unknown module> 0x" << setw(sizeof(size_t) * 2) << setfill('0') << hex << _addrs[i];
+            }
+        }
+
+        return true;
+    }
 #endif
 
 
