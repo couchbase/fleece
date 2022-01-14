@@ -280,9 +280,9 @@ namespace fleece {
                 }
 
                 out << '\t';
-                out << pos << "+0x" << setw(sizeof(size_t) * 2) << setfill('0') << hex << (uint32_t)((unsigned char *)_addrs[i] - moduleBaseTyped);
+                out << pos << "+0x" << setw(sizeof(size_t) * 2) << setfill('0') << hex << (uint32_t)((unsigned char *)_addrs[i] - moduleBaseTyped) << dec;
             } else {
-                out << "\t<unknown module> 0x" << setw(sizeof(size_t) * 2) << setfill('0') << hex << _addrs[i];
+                out << "\t<unknown module> 0x" << setw(sizeof(size_t) * 2) << setfill('0') << hex << _addrs[i] << dec;
             }
         }
 
