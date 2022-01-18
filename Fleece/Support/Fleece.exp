@@ -19,6 +19,10 @@ _FLSlice_ToCString
 __FLBuf_Retain
 __FLBuf_Release
 
+_FLTimestamp_Now
+_FLTimestamp_ToString
+_FLTimestamp_FromString
+
 _FLDoc_FromResultData
 _FLDoc_FromJSON
 _FLDoc_Release
@@ -45,6 +49,7 @@ _FLValue_AsUnsigned
 _FLValue_AsFloat
 _FLValue_AsDouble
 _FLValue_AsString
+_FLValue_AsTimestamp
 _FLValue_AsArray
 _FLValue_AsDict
 _FLValue_ToString
@@ -134,6 +139,7 @@ _FLEncoder_WriteFloat
 _FLEncoder_WriteDouble
 _FLEncoder_WriteString
 _FLEncoder_WriteData
+_FLEncoder_WriteDateString
 _FLEncoder_WriteValue
 _FLEncoder_WriteRaw
 _FLEncoder_BeginArray

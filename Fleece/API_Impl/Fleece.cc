@@ -16,7 +16,9 @@
 #include "JSONDelta.hh"
 #include "fleece/Fleece.h"
 #include "JSON5.hh"
+#include "ParseDate.hh"
 #include "betterassert.hh"
+#include <chrono>
 
 
 FL_ASSUME_NONNULL_BEGIN
@@ -40,6 +42,24 @@ FLEECE_PUBLIC const FLDict kFLEmptyDict   = Dict::kEmpty;
 static FLSliceResult toSliceResult(alloc_slice &&s) {
     s.retain();
     return {(void*)s.buf, s.size};
+}
+
+
+FLTimestamp FLTimestamp_Now() {
+    return FLTimestamp(std::chrono::duration_cast<std::chrono::milliseconds>(
+                         std::chrono::system_clock::now().time_since_epoch()).count());
+}
+
+
+FLStringResult FLTimestamp_ToString(FLTimestamp timestamp, bool asUTC) FLAPI {
+    char str[kFormattedISO8601DateMaxSize];
+    FormatISO8601Date(str, timestamp, asUTC);
+    return FLSliceResult_CreateWith(str, strlen(str));
+}
+
+
+FLTimestamp FLTimestamp_FromString(FLString str) FLAPI {
+    return ParseISO8601Date(str);
 }
 
 
