@@ -75,6 +75,43 @@ extern "C" {
     } FLError;
 
 
+    //////// TIMESTAMPS
+
+
+    /** \name Timestamps
+         @{
+            Fleece does not have a native type for dates or times; like JSON, they are represented
+            as strings in ISO-8601 format, which look like "2008-08-07T05:18:51.589Z".
+
+            They can also be represented more compactly as numbers, interpreted as milliseconds
+            since the Unix epoch (midnight at January 1 1970, UTC.)
+     */
+
+    /** A point in time, expressed as milliseconds since the Unix epoch (1-1-1970 midnight UTC.) */
+    typedef int64_t FLTimestamp;
+
+    /** A value representing a missing timestamp; returned when a date cannot be parsed. */
+    #define FLTimestampNone INT64_MIN
+
+    /** Returns an FLTimestamp corresponding to the current time. */
+    FLTimestamp FLTimestamp_Now(void);
+
+    /** Formats a timestamp as a date-time string in ISO-8601 format.
+        @note  See also \ref FLEncoder_WriteDateString, which writes a timestamp to an `FLEncoder`.
+        @param timestamp  A time, given as milliseconds since the Unix epoch (1/1/1970 00:00 UTC.)
+        @param asUTC  If true, the timestamp will be given in universal time; if false, in the
+                      local timezone.
+        @return  A heap-allocated string, which you are responsible for releasing. */
+    FLStringResult FLTimestamp_ToString(FLTimestamp timestamp, bool asUTC) FLAPI;
+
+    /** Parses an ISO-8601 date-time string to a timestamp. On failure returns `FLTimestampNone`.
+        @note  See also \ref FLValue_AsTimestamp, which takes an `FLValue` and interprets numeric
+        representations as well as strings. */
+    FLTimestamp FLTimestamp_FromString(FLString str) FLAPI;
+
+    /** @} */
+
+
     //////// DOCUMENT
 
 
@@ -270,13 +307,6 @@ extern "C" {
         kFLArray,           ///< An array of values
         kFLDict             ///< A mapping of strings to values
     } FLValueType;
-
-
-    /** A timestamp, expressed as milliseconds since the Unix epoch (1-1-1970 midnight UTC.) */
-    typedef int64_t FLTimestamp;
-
-    /** A value representing a missing timestamp; returned when a date cannot be parsed. */
-    #define FLTimestampNone INT64_MIN
 
 
     /** Returns the data type of an arbitrary Value.
