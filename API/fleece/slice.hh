@@ -192,7 +192,7 @@ namespace fleece {
         inline bool toCString(char *buf, size_t bufSize) const noexcept;
 
         // FLSlice interoperability:
-        operator FLSlice () const noexcept          {return {buf, size};}
+        constexpr operator FLSlice () const noexcept {return {buf, size};}
 
 #ifdef SLICE_SUPPORTS_STRING_VIEW
         // std::string_view interoperability:
