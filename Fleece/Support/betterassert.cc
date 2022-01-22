@@ -32,6 +32,8 @@ namespace fleece {
         return file;
     }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
 
     __cold
     static const char* log(const char *format, const char *cond, const char *fn,
@@ -48,6 +50,8 @@ namespace fleece {
             return format;
         }
     }
+
+#pragma GCC diagnostic pop
 
 
 #ifdef __cpp_exceptions

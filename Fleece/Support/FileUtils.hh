@@ -18,7 +18,7 @@ namespace fleece {
 
     static inline int checkErrno(int result, const char *msg) {
         if (_usuallyFalse(result < 0))
-            FleeceException::_throwErrno(msg);
+            FleeceException::_throwErrno("%s", msg);
         return result;
     }
 

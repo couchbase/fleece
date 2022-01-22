@@ -92,7 +92,7 @@ namespace fleece { namespace impl {
         Encoder enc;
         enc.setSharedKeys(sk);
         JSONConverter cvt(enc);
-        throwIf(!cvt.encodeJSON(slice(json)), JSONError, cvt.errorMessage());
+        throwIf(!cvt.encodeJSON(slice(json)), JSONError, "%s", cvt.errorMessage());
         return enc.finish();
     }
 
