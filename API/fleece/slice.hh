@@ -430,8 +430,8 @@ namespace fleece {
         // Manual ref-count management. Use with extreme caution! You probably don't need this.
         alloc_slice& retain() noexcept                      {_FLBuf_Retain(buf); return *this;}
         inline void release() noexcept                      {_FLBuf_Release(buf);}
-        static void retain(slice s) noexcept                {((alloc_slice*)&s)->retain();}
-        static void release(slice s) noexcept               {((alloc_slice*)&s)->release();}
+        static void retain(slice s) noexcept                {static_cast<alloc_slice &>(static_cast<pure_slice &>(s)).retain();}
+        static void release(slice s) noexcept               {static_cast<alloc_slice &>(static_cast<pure_slice &>(s)).release();}
 
     private:
         void assignFrom(pure_slice s)                       {set(s.buf, s.size);}

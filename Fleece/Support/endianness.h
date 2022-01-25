@@ -34,6 +34,7 @@
 #define _ENDIANNESS_H
 
 #include <stdlib.h>
+#include <string.h>
 #include <stdint.h>
 
 /* Detect platform endianness at compile time */
@@ -143,12 +144,12 @@
 static inline float _htonf(float f) {
 #ifdef __cplusplus
     static_assert(sizeof(float) == sizeof(uint32_t), "Unexpected float format");
-    uint32_t val = hton32(*(reinterpret_cast<const uint32_t *>(&f)));
-    return *(reinterpret_cast<float *>(&val));
-#else
-    uint32_t val = hton32(*(const uint32_t *)(&f));
-    return *((float *)(&val));
 #endif
+    uint32_t val;
+    memcpy(&val, &f, sizeof(val));
+    val = hton32(val);
+    memcpy(&f, &val, sizeof(f));
+    return f;
 }
 #define ntohf(x)   _htonf((x))
 #define htonf(x)   _htonf((x))
@@ -157,12 +158,12 @@ static inline float _htonf(float f) {
 static inline double _htond(double f) {
 #ifdef __cplusplus
     static_assert(sizeof(double) == sizeof(uint64_t), "Unexpected double format");
-    uint64_t val = hton64(*(reinterpret_cast<const uint64_t *>(&f)));
-    return *(reinterpret_cast<double *>(&val));
-#else
-    uint64_t val = hton64(*(const uint64_t *)(&f));
-    return *((double *)(&val));
 #endif
+    uint64_t val;
+    memcpy(&val, &f, sizeof(val));
+    val = hton64(val);
+    memcpy(&f, &val, sizeof(f));
+    return f;
 }
 #define ntohd(x)   _htond((x))
 #define htond(x)   _htond((x))

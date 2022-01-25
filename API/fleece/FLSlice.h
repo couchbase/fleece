@@ -188,7 +188,9 @@ static inline void FLSliceResult_Release(FLSliceResult s) FLAPI {
 
 /** Type-casts a FLSliceResult to FLSlice, since C doesn't know it's a subclass. */
 static inline FLSlice FLSliceResult_AsSlice(FLSliceResult sr) {
-    return *(FLSlice*)&sr;
+    FLSlice ret;
+    memcpy(&ret, &sr, sizeof(ret));
+    return ret;
 }
 
 
