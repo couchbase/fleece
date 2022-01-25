@@ -78,6 +78,7 @@ function(set_test_source_files_base)
         Tests/SharedKeysTests.cc
         Tests/SupportTests.cc
         Tests/ValueTests.cc
+        Tests/C_Test.c
         Experimental/KeyTree.cc
         PARENT_SCOPE
     )
