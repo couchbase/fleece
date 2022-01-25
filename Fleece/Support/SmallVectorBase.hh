@@ -34,7 +34,7 @@ namespace fleece {
 
     protected:
         smallVectorBase() noexcept                      { }
-        smallVectorBase(uint32_t cap) noexcept          :_isBig(false), _size(0), _capacity(cap) { }
+        smallVectorBase(uint32_t cap) noexcept          : _size(0), _capacity(cap), _isBig(false) { }
 
         ~smallVectorBase() {
             if (_isBig)

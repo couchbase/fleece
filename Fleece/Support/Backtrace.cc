@@ -133,7 +133,7 @@ namespace fleece {
 
 
     bool Backtrace::writeTo(ostream &out) const {
-        for (int i = 0; i < _addrs.size(); ++i) {
+        for (decltype(_addrs.size()) i = 0; i < _addrs.size(); ++i) {
             if (i > 0)
                 out << '\n';
             out << '\t';
@@ -151,10 +151,10 @@ namespace fleece {
                 // Abbreviate some C++ verbosity:
                 for (auto &abbrev : kAbbreviations)
                     replace(name, abbrev.old, abbrev.nuu);
-                len = asprintf(&cstr, "%2d  %-25s %s + %zd",
-                               i, frame.library, name.c_str(), frame.offset);
+                len = asprintf(&cstr, "%2lu  %-25s %s + %zd",
+                               (unsigned long)i, frame.library, name.c_str(), frame.offset);
             } else {
-                len = asprintf(&cstr, "%2d  %p", i, _addrs[i]);
+              len = asprintf(&cstr, "%2lu  %p", (unsigned long)i, _addrs[i]);
             }
             if (len < 0)
                 return false;
