@@ -37,6 +37,7 @@ namespace fleece {
     class Value {
     public:
         Value()                                         =default;
+        Value(const Value &) noexcept                   =default;
         Value(FLValue FL_NULLABLE v)                    :_val(v) { }
         operator FLValue FL_NULLABLE () const           {return _val;}
 
@@ -117,6 +118,7 @@ namespace fleece {
     public:
         Array()                                         :Value() { }
         Array(FLArray FL_NULLABLE a)                    :Value((FLValue)a) { }
+        Array(const Array&) noexcept = default;
         operator FLArray FL_NULLABLE () const           {return (FLArray)_val;}
 
         static Array emptyArray()                       {return Array(kFLEmptyArray);}
@@ -170,6 +172,7 @@ namespace fleece {
     public:
         Dict()                                          :Value() { }
         Dict(FLDict FL_NULLABLE d)                      :Value((FLValue)d) { }
+        Dict(const Dict&) noexcept = default;
         operator FLDict FL_NULLABLE () const            {return (FLDict)_val;}
 
         static Dict emptyDict()                         {return Dict(kFLEmptyDict);}
