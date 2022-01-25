@@ -98,7 +98,7 @@ namespace fleece {
         _entries = ConcurrentArenaAllocator<Entry, true>(_heap).allocate(size);
         _keysOffset = tableSize - kMinKeyOffset;
         
-        postcondition(_heap.available() == stringCapacity);
+        postcondition(stringCapacity >= 0 && _heap.available() == size_t(stringCapacity));
     }
 
 

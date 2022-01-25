@@ -244,7 +244,7 @@ namespace fleece {
                _size, _count,  _count/(double)_size*100.0);
         printf(">> Average key distance = %.2f, max = %zd\n",
                totalDistance/(double)count(), _maxDistance);
-        for (size_t i = 0; i <= _maxDistance; ++i)
+        for (decltype(_maxDistance) i = 0; i <= _maxDistance; ++i)
             printf("\t%2zd: %zd\n", i, distanceCounts[i]);
     }
 

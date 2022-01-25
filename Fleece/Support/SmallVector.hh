@@ -50,7 +50,7 @@ namespace fleece {
         ~smallVector() {
             if (_size > 0) {
                 auto item = begin();
-                for (auto i = 0; i < _size; ++i)
+                for (decltype(_size) i = 0; i < _size; ++i)
                     (item++)->T::~T();
             }
         }
