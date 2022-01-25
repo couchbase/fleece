@@ -113,12 +113,17 @@ namespace fleece { namespace impl {
                 _out << ',';
         }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+
         template <class T>
         void _writeInt(const char *fmt, T t) {
             comma();
             char str[32];
             _out.write(str, sprintf(str, fmt, t));
         }
+
+#pragma GCC diagnostic pop
 
         template <class T>
         void _writeFloat(T t) {

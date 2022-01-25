@@ -287,7 +287,7 @@ namespace fleece {
                     auto keyPtr = offsetToKey(e.keyOffset);
                     hash_t hash = hashCode(slice(keyPtr));
                     int bestIndex = indexOfHash(hash);
-                    printf("%6d: %-10s = %08x [%5d]", i, keyPtr, hash, bestIndex);
+                    printf("%6d: %-10s = %08x [%5d]", i, keyPtr, (uint32_t)hash, bestIndex);
                     if (i != bestIndex) {
                         if (bestIndex > i)
                             bestIndex -= size;

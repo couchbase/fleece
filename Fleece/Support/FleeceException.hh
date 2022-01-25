@@ -12,7 +12,7 @@
 
 #pragma once
 #include <stdexcept>
-#include "fleece/Base.h"
+#include "PlatformCompat.hh"
 #include <memory>
 
 namespace fleece {
@@ -40,8 +40,8 @@ namespace fleece {
 
         FleeceException(ErrorCode code_, int errno_, const std::string &what);
 
-        [[noreturn]] static void _throw(ErrorCode code, const char *what, ...);
-        [[noreturn]] static void _throwErrno(const char *what, ...);
+        [[noreturn]] static void _throw(ErrorCode code, const char *what, ...) __printflike(2,3);
+        [[noreturn]] static void _throwErrno(const char *what, ...) __printflike(1,2);
 
         static ErrorCode getCode(const std::exception&) noexcept;
 
@@ -50,7 +50,7 @@ namespace fleece {
         std::shared_ptr<Backtrace> backtrace;
     };
 
-    #define throwIf(BAD, ERROR, MESSAGE) \
-        if (_usuallyTrue(!(BAD))) ; else fleece::FleeceException::_throw(ERROR, MESSAGE)
+    #define throwIf(BAD, ERROR, MESSAGE, ...) \
+     if (_usuallyTrue(!(BAD))) ; else fleece::FleeceException::_throw(ERROR, MESSAGE, ##__VA_ARGS__)
 
 }

@@ -85,6 +85,13 @@ function(setup_build)
         FleeceStatic PUBLIC
         -D__STDC_WANT_LIB_EXT1__=1 # For memset_s
     )
+
+    foreach(platform Fleece FleeceStatic FleeceBase)
+        set_target_properties(
+            ${platform} PROPERTIES COMPILE_FLAGS
+            "-Wformat -Wformat-nonliteral -Wformat-security"
+        )
+    endforeach()
 endfunction()
 
 function(setup_test_build)
