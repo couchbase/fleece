@@ -146,7 +146,7 @@ namespace fleece {
         inline slice upTo(size_t offset) const noexcept FLPURE;
         inline slice from(size_t offset) const noexcept FLPURE;
 
-        inline const bool containsBytes(pure_slice bytes) const noexcept FLPURE;
+        inline bool containsBytes(pure_slice bytes) const noexcept FLPURE;
         inline slice find(pure_slice target) const noexcept FLPURE;
         inline const uint8_t* FL_NULLABLE findByte(uint8_t b) const FLPURE;
         inline const uint8_t* FL_NULLABLE findByteOrEnd(uint8_t byte) const noexcept FLPURE;
@@ -244,7 +244,7 @@ namespace fleece {
         // Calls `assert_precondition(validAddress(addr))`, then returns `addr`
         inline const void* check(const void *addr) const;
         // Calls `assert_precondition(offset <= size)`, then returns `addr`
-        inline const size_t check(size_t offset) const;
+        inline size_t check(size_t offset) const;
     };
 
 
@@ -556,7 +556,7 @@ namespace fleece {
         return addr;
     }
 
-    inline const size_t pure_slice::check(size_t offset) const {
+    inline size_t pure_slice::check(size_t offset) const {
         assert_precondition(offset <= size);
         return offset;
     }
@@ -660,7 +660,7 @@ namespace fleece {
     }
 
 
-    inline const bool pure_slice::containsBytes(pure_slice bytes) const noexcept {
+    inline bool pure_slice::containsBytes(pure_slice bytes) const noexcept {
         return bool(find(bytes));
     }
 
