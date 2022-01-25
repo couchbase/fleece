@@ -116,6 +116,7 @@ namespace fleece {
         const void* FL_NULLABLE const buf;
         size_t                  const size;
 
+        pure_slice(const pure_slice &) noexcept = default;
         /// True if the slice's length is zero.
         bool empty() const noexcept FLPURE                          {return size == 0;}
 
