@@ -164,7 +164,7 @@ namespace fleece {
                 if (slash)
                     s = slash + 1;
 
-                len = asprintf(&cstr, "%2d  %s", i, s);
+                len = asprintf(&cstr, "%2lu  %s", (unsigned long)i, s);
             } else {
               len = asprintf(&cstr, "%2lu  %p", (unsigned long)i, _addrs[i]);
             }
