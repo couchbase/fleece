@@ -32,6 +32,8 @@ namespace fleece {
         /// @param maxFrames  Maximum number of frames to capture
         explicit Backtrace(unsigned skipFrames =0, unsigned maxFrames =50);
 
+        ~Backtrace();
+
         /// Removes frames from the top of the stack.
         void skip(unsigned nFrames);
 
@@ -73,6 +75,7 @@ namespace fleece {
         static void writeCrashLog(std::ostream&);
 
         std::vector<void*> _addrs;          // Array of PCs in backtrace, top first
+        char** _symbols { nullptr };
     };
 
 

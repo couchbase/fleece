@@ -34,7 +34,7 @@
     #include <unwind.h>     // _Unwind_Backtrace(), etc.
 #endif
 
-#if defined(_LIBCPP_VERSION) || defined(__ANDROID__)
+#ifndef _MSC_VER
     #include <cxxabi.h>     // abi::__cxa_demangle()
     #define HAVE_UNMANGLE
 #endif
@@ -89,6 +89,10 @@ namespace fleece {
         return (char*)function;
     }
 
+    Backtrace::~Backtrace() {
+        free(_symbols);
+    }
+
 
     Backtrace::frameInfo Backtrace::getFrame(unsigned i) const {
         precondition(i < _addrs.size());
@@ -103,6 +107,7 @@ namespace fleece {
             if (slash)
                 frame.library = slash + 1;
         }
+
         return frame;
     }
 
@@ -153,13 +158,24 @@ namespace fleece {
                     replace(name, abbrev.old, abbrev.nuu);
                 len = asprintf(&cstr, "%2lu  %-25s %s + %zd",
                                (unsigned long)i, frame.library, name.c_str(), frame.offset);
+            } else if(_symbols) {
+                const char* s = _symbols[i];
+                const char *slash = strrchr(s, '/');
+                if (slash)
+                    s = slash + 1;
+
+                len = asprintf(&cstr, "%2d  %s", i, s);
             } else {
               len = asprintf(&cstr, "%2lu  %p", (unsigned long)i, _addrs[i]);
             }
+
             if (len < 0)
                 return false;
-            out.write(cstr, size_t(len));
-            free(cstr);
+
+            if(len > 0) {
+                out.write(cstr, size_t(len));
+                free(cstr);
+            }
 
             if (stop) {
                 out << "\n\t ... (" << (_addrs.size() - i - 1) << " more suppressed) ...";
@@ -338,6 +354,7 @@ namespace fleece {
         auto n = backtrace(&_addrs[0], skipFrames + maxFrames);
         _addrs.resize(n);
         skip(skipFrames);
+        _symbols = backtrace_symbols(_addrs.data(), _addrs.size());
     }
 
 
