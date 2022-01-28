@@ -354,7 +354,9 @@ namespace fleece {
         auto n = backtrace(&_addrs[0], skipFrames + maxFrames);
         _addrs.resize(n);
         skip(skipFrames);
+#ifndef _MSC_VER
         _symbols = backtrace_symbols(_addrs.data(), _addrs.size());
+#endif
     }
 
 
