@@ -89,10 +89,6 @@ namespace fleece {
         return (char*)function;
     }
 
-    Backtrace::~Backtrace() {
-        free(_symbols);
-    }
-
 
     Backtrace::frameInfo Backtrace::getFrame(unsigned i) const {
         precondition(i < _addrs.size());
@@ -321,6 +317,9 @@ namespace fleece {
 
 namespace fleece {
 
+    Backtrace::~Backtrace() {
+        free(_symbols);
+    }
 
     std::string Unmangle(const char *name NONNULL) {
         auto unmangled = unmangle(name);
