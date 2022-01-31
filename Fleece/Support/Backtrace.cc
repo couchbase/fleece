@@ -138,7 +138,7 @@ namespace fleece {
                 out << '\n';
             out << '\t';
             char *cstr = nullptr;
-            auto frame = getFrame(i);
+            auto frame = getFrame(unsigned(i));
             int len;
             bool stop = false;
             if (frame.function) {
