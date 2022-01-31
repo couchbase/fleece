@@ -62,10 +62,11 @@ namespace fleece {
         void operator= (const keyref &ref)          {_coll.set(_key, ref);}
             template <class T>
         void operator= (const T &value)             {_coll.set(_key, value);}
+
+        void setNull()                              {_coll.set(_key).setNull();}
         void setData(slice value)                   {_coll.set(_key).setData(value);}
         void remove()                               {_coll.remove(_key);}
 
-        operator FLSlot FL_NONNULL ()               {return _coll.set(_key);}
     private:
         Collection _coll;
         Key _key;

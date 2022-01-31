@@ -221,6 +221,15 @@ TEST_CASE("API MutableArray", "[API]") {
     CHECK(d.toJSONString() == "[1234]");
     REQUIRE(d.count() == 1);
     CHECK(d.get(0).asInt() == 1234);
+
+    d[0] = 1234;
+    CHECK(d.toJSONString() == "[1234]");
+    d[0] = false;
+    CHECK(d.toJSONString() == "[false]");
+    d[0] = "hi";
+    CHECK(d.toJSONString() == "[\"hi\"]");
+    d[0].setNull();
+    CHECK(d.toJSONString() == "[null]");
 }
 
 TEST_CASE("API MutableDict", "[API]") {
@@ -337,4 +346,22 @@ TEST_CASE("API RetainedDict", "[API]") {
     rd4 = std::move(rd5);
     REQUIRE(rd4.get("foo"_sl));
     CHECK(rd4.get("foo"_sl).asString() == "bar"_sl);
+}
+
+
+TEST_CASE("API MutableDict item bool conversion", "[API]") {
+    // From #105
+    MutableDict dict { MutableDict::newDict() };
+    dict["a_key"] = 6;
+
+    // This line converted `dict` to `keyref` and thence to `FLSlot`, which was nonnull,
+    // causing the test to pass. I've decided the FLSlot conversion operator is unnecessary;
+    // removing it fixed the issue.
+    if (dict["a_non_existent_key"]) {
+        FAIL("Key test failed");
+    }
+    if (!dict["a_key"]) {
+        FAIL("Negative key test failed");
+    }
+    CHECK(dict.toJSONString() == "{\"a_key\":6}");
 }
