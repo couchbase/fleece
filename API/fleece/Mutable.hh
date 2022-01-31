@@ -19,6 +19,9 @@ FL_ASSUME_NONNULL_BEGIN
 
 namespace fleece {
 
+    // (this is a mostly-internal type that acts as a reference to an item of a MutableArray or
+    // MutableDict, and allows a value to be stored in it. It decouples dereferencing the collection
+    // from setting the value, which simplifies the code.)
     class Slot {
     public:
         void setNull()                              {FLSlot_SetNull(_slot);}
@@ -54,6 +57,8 @@ namespace fleece {
     };
 
 
+    // (this is an internal type used to make `MutableArray` and `MutableDict`'s `operator[]`
+    // act idiomatically, supporting assignment. It's not used directly.)
     template <class Collection, class Key>
     class keyref : public Value {
     public:
@@ -215,8 +220,10 @@ namespace fleece {
     };
 
 
-    /** Equivalent to Value except that, if it holds a MutableArray/Dict, it will retain the
-        reference so it won't be freed. */
+    /** Equivalent to Value except that it retains (and releases) its contents.
+        This makes it safe for holding mutable arrays/dicts. It can also protect regular immutable
+        Values owned by a Doc from being freed, since retaining such a value causes its Doc to be
+        retained. */
     class RetainedValue : public Value {
     public:
         RetainedValue()                           =default;
@@ -251,11 +258,11 @@ namespace fleece {
         }
     };
 
-    // NOTE: The RetainedArray and RetainedDict classes are the copycats of the RetainedValue class
+    // NOTE: The RetainedArray and RetainedDict classes are copycats of the RetainedValue class
     // above. Any future changes or bug fixes to the three classes should go together.
 
-    /** Equivalent to Array except that, it holds the Array or MutableArray, and it will retain the
-        underlining FLArray object. */
+    /** Equivalent to Array except that it retains (and releases) its contents.
+        This makes it safe for holding a heap-allocated mutable array. */
     class RetainedArray : public Array {
     public:
         RetainedArray()                                 =default;
@@ -289,8 +296,8 @@ namespace fleece {
         }
     };
 
-    /** Equivalent to Dict except that, it holds the Dict or MutableDict, and it will retain the
-        underlining FLDict object. */
+    /** Equivalent to Dict except that it retains (and releases) its contents.
+        This makes it safe for holding a heap-allocated mutable dict. */
     class RetainedDict : public Dict {
     public:
         RetainedDict()                                  =default;
