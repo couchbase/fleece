@@ -68,7 +68,7 @@ namespace fleece {
         return _URC_NO_REASON;
     }
 
-    static int backtrace(void** buffer, size_t max) {
+    static int backtrace(void** buffer, int max) {
         BacktraceState state = {buffer, buffer + max};
         _Unwind_Backtrace(unwindCallback, &state);
 
@@ -209,7 +209,7 @@ namespace fleece {
 
 #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
 
-    static inline int backtrace(void** buffer, size_t max) {
+    static inline int backtrace(void** buffer, int max) {
         return (int)CaptureStackBackTrace(0, (DWORD)max, buffer, nullptr);
     }
 
@@ -264,7 +264,7 @@ namespace fleece {
     }
 
 #else
-    static inline int backtrace(void** buffer, size_t max) {
+    static inline int backtrace(void** buffer, int max) {
         return (int)CaptureStackBackTrace(0, (DWORD)max, buffer, nullptr);
     }
 
@@ -354,7 +354,7 @@ namespace fleece {
         _addrs.resize(n);
         skip(skipFrames);
 #ifndef _MSC_VER
-        _symbols = backtrace_symbols(_addrs.data(), _addrs.size());
+        _symbols = backtrace_symbols(_addrs.data(), int(_addrs.size()));
 #endif
     }
 
