@@ -44,6 +44,7 @@ typedef const Doc*      FLDoc;
 #define FL_IMPL         // Prevents redefinition of the above types
 
 #include "fleece/Fleece.h" /* the public C header */
+#include "fleece/FLExpert.h"
 
 
 FL_ASSUME_NONNULL_BEGIN

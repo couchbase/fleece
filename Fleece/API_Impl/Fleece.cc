@@ -45,7 +45,7 @@ static FLSliceResult toSliceResult(alloc_slice &&s) {
 }
 
 
-FLTimestamp FLTimestamp_Now() {
+FLTimestamp FLTimestamp_Now() FLAPI {
     return FLTimestamp(std::chrono::duration_cast<std::chrono::milliseconds>(
                          std::chrono::system_clock::now().time_since_epoch()).count());
 }
@@ -480,7 +480,7 @@ FLSharedKeyScope FLSharedKeyScope_WithRange(FLSlice range, FLSharedKeys sk) FLAP
     return (FLSharedKeyScope) new Scope(range, sk);
 }
 
-void FLSharedKeyScope_Free(FLSharedKeyScope FL_NULLABLE scope) {
+void FLSharedKeyScope_Free(FLSharedKeyScope FL_NULLABLE scope) FLAPI {
     delete (Scope*) scope;
 }
 
@@ -652,13 +652,13 @@ size_t FLEncoder_BytesWritten(FLEncoder e) FLAPI {
     return ENCODER_DO(e, bytesWritten());
 }
 
-intptr_t FLEncoder_LastValueWritten(FLEncoder e) {
+intptr_t FLEncoder_LastValueWritten(FLEncoder e) FLAPI {
     if (e->isFleece())
         return intptr_t(e->fleeceEncoder->lastValueWritten());
     return 0;
 }
 
-void FLEncoder_WriteValueAgain(FLEncoder e, intptr_t preWrittenValue) {
+void FLEncoder_WriteValueAgain(FLEncoder e, intptr_t preWrittenValue) FLAPI {
     if (e->isFleece())
         e->fleeceEncoder->writeValueAgain(Encoder::PreWrittenValue(preWrittenValue));
 }
@@ -729,7 +729,7 @@ void* FL_NULLABLE FLEncoder_GetExtraInfo(FLEncoder e) FLAPI {
     return e->extraInfo;
 }
 
-FLSliceResult FLEncoder_Snip(FLEncoder e) {
+FLSliceResult FLEncoder_Snip(FLEncoder e) FLAPI {
     if (e->isFleece())
         return FLSliceResult(e->fleeceEncoder->snip());
     else

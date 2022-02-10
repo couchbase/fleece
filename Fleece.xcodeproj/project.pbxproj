@@ -302,8 +302,19 @@
 		271507EC2122381E005FE6E8 /* Mutable.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Mutable.hh; sourceTree = "<group>"; };
 		271507ED2122381E005FE6E8 /* PlatformCompat.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = PlatformCompat.hh; sourceTree = "<group>"; };
 		271507EE2122381E005FE6E8 /* slice.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = slice.hh; sourceTree = "<group>"; };
-		271507EF21223A02005FE6E8 /* Base.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Base.h; sourceTree = "<group>"; };
+		271507EF21223A02005FE6E8 /* CompilerSupport.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CompilerSupport.h; sourceTree = "<group>"; };
 		271507F6212349B8005FE6E8 /* API_ValueTests.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = API_ValueTests.cc; sourceTree = "<group>"; };
+		271E0CBB27B5A02700CE2661 /* FLBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FLBase.h; sourceTree = "<group>"; };
+		271E0CBC27B5A16800CE2661 /* FLDoc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FLDoc.h; sourceTree = "<group>"; };
+		271E0CBD27B5A28A00CE2661 /* FLMutable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FLMutable.h; sourceTree = "<group>"; };
+		271E0CC027B5A28A00CE2661 /* FLEncoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FLEncoder.h; sourceTree = "<group>"; };
+		271E0CC127B5A28A00CE2661 /* FLDeepIterator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FLDeepIterator.h; sourceTree = "<group>"; };
+		271E0CC227B5A28A00CE2661 /* FLValue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FLValue.h; sourceTree = "<group>"; };
+		271E0CC327B5A28A00CE2661 /* FLKeyPath.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FLKeyPath.h; sourceTree = "<group>"; };
+		271E0CC427B5A28A00CE2661 /* FLCollections.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FLCollections.h; sourceTree = "<group>"; };
+		271E0CC527B5B4E800CE2661 /* FLJSON.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FLJSON.h; sourceTree = "<group>"; };
+		271E0CC627B5C28B00CE2661 /* FLExpert.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FLExpert.h; sourceTree = "<group>"; };
+		271E0CC727B5CA8F00CE2661 /* Expert.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Expert.hh; sourceTree = "<group>"; };
 		27298E3A1C00F812000CFBA8 /* JSONConverter.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSONConverter.cc; sourceTree = "<group>"; };
 		27298E491C00F8A9000CFBA8 /* jsonsl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jsonsl.c; sourceTree = "<group>"; };
 		27298E4A1C00F8A9000CFBA8 /* jsonsl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = jsonsl.h; sourceTree = "<group>"; };
@@ -605,13 +616,24 @@
 		271507E82122381E005FE6E8 /* fleece */ = {
 			isa = PBXGroup;
 			children = (
-				27A2F73A21248DA40081927B /* FLSlice.h */,
 				271507EA2122381E005FE6E8 /* Fleece.h */,
+				271E0CBB27B5A02700CE2661 /* FLBase.h */,
+				271E0CC427B5A28A00CE2661 /* FLCollections.h */,
+				271E0CC127B5A28A00CE2661 /* FLDeepIterator.h */,
+				271E0CBC27B5A16800CE2661 /* FLDoc.h */,
+				271E0CC027B5A28A00CE2661 /* FLEncoder.h */,
+				271E0CC527B5B4E800CE2661 /* FLJSON.h */,
+				271E0CC327B5A28A00CE2661 /* FLKeyPath.h */,
+				271E0CBD27B5A28A00CE2661 /* FLMutable.h */,
+				271E0CC627B5C28B00CE2661 /* FLExpert.h */,
+				27A2F73A21248DA40081927B /* FLSlice.h */,
+				271E0CC227B5A28A00CE2661 /* FLValue.h */,
 				271507E92122381E005FE6E8 /* Fleece+CoreFoundation.h */,
 				271507EE2122381E005FE6E8 /* slice.hh */,
 				271507EB2122381E005FE6E8 /* Fleece.hh */,
 				271507EC2122381E005FE6E8 /* Mutable.hh */,
-				271507EF21223A02005FE6E8 /* Base.h */,
+				271E0CC727B5CA8F00CE2661 /* Expert.hh */,
+				271507EF21223A02005FE6E8 /* CompilerSupport.h */,
 			);
 			path = fleece;
 			sourceTree = "<group>";

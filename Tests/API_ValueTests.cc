@@ -11,6 +11,7 @@
 //
 
 #include "fleece/Fleece.hh"
+#include "fleece/Expert.hh"
 #include <iostream>
 
 namespace fleece {

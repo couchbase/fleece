@@ -16,6 +16,7 @@
 #include "HashTree+Internal.hh"     // for ComputeHash
 #include "Doc.hh"
 #include "PlatformCompat.hh"
+#include "fleece/Expert.hh"
 #include <iostream>
 #include <set>
 
@@ -94,7 +95,7 @@ public:
 
     alloc_slice encodeTree() {
         Encoder enc;
-        enc.suppressTrailer();
+        expert(enc).suppressTrailer();
         tree.writeTo(enc);
         return enc.finish();
     }
@@ -330,8 +331,8 @@ TEST_CASE_METHOD(HashTreeTests, "HashTree Re-Encode Delta", "[HashTree]") {
     tree.dump(cerr);
 
     Encoder enc;
-    enc.amend(data, false);
-    enc.suppressTrailer();
+    expert(enc).amend(data, false);
+    expert(enc).suppressTrailer();
     tree.writeTo(enc);
     alloc_slice delta = enc.finish();
 

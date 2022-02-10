@@ -1,5 +1,5 @@
 //
-// Base.h
+// CompilerSupport.h
 //
 // Copyright 2018-Present Couchbase, Inc.
 //
@@ -11,8 +11,8 @@
 //
 
 #pragma once
-#ifndef FLEECE_BASE_H
-#define FLEECE_BASE_H
+#ifndef _FLEECE_COMPILER_SUPPORT_H
+#define _FLEECE_COMPILER_SUPPORT_H
 
 // The __has_xxx() macros are only(?) implemented by Clang. (Except GCC has __has_attribute...)
 // Define them to return 0 on other compilers.
@@ -226,6 +226,6 @@
 #endif
 
 
-#else // FLEECE_BASE_H
+#else // _FLEECE_COMPILER_SUPPORT_H
 #warn "Compiler is not honoring #pragma once"
 #endif
