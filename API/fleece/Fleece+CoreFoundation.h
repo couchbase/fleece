@@ -12,7 +12,7 @@
 
 #pragma once
 #include <CoreFoundation/CFBase.h>
-#include "Fleece.h"
+#include "fleece/FLCollections.h"
 
 #ifdef __OBJC__
 #import <Foundation/NSMapTable.h>

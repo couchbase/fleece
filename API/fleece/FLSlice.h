@@ -16,7 +16,7 @@
 #ifndef _FLSLICE_H
 #define _FLSLICE_H
 
-#include "Base.h"
+#include "CompilerSupport.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>

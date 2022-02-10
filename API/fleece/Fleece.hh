@@ -84,9 +84,6 @@ namespace fleece {
 
         inline Doc findDoc() const;
 
-        static Value fromData(slice data, FLTrust t =kFLUntrusted)
-                                                        {return FLValue_FromData(data,t);}
-
 #ifdef __OBJC__
         inline id asNSObject(NSMapTable* FL_NULLABLE sharedStrings =nil) const {
             return FLValue_GetNSObject(_val, sharedStrings);
@@ -319,39 +316,6 @@ namespace fleece {
     };
 
 
-    /** Keeps track of a set of dictionary keys that are stored in abbreviated (small integer) form.
-
-        Encoders can be configured to use an instance of this, and will use it to abbreviate keys
-        that are given to them as strings. (Note: This class is not thread-safe!) */
-    class SharedKeys {
-    public:
-        SharedKeys()                                        :_sk(nullptr) { }
-        SharedKeys(FLSharedKeys FL_NULLABLE sk)             :_sk(FLSharedKeys_Retain(sk)) { }
-        ~SharedKeys()                                       {FLSharedKeys_Release(_sk);}
-
-        static SharedKeys create()                          {return SharedKeys(FLSharedKeys_New(), 1);}
-        static inline SharedKeys create(slice state);
-        bool loadState(slice data)                          {return FLSharedKeys_LoadStateData(_sk, data);}
-        bool loadState(Value state)                         {return FLSharedKeys_LoadState(_sk, state);}
-        alloc_slice stateData() const                       {return FLSharedKeys_GetStateData(_sk);}
-        inline void writeState(const Encoder &enc);
-        unsigned count() const                              {return FLSharedKeys_Count(_sk);}
-        void revertToCount(unsigned count)                  {FLSharedKeys_RevertToCount(_sk, count);}
-        
-        operator FLSharedKeys FL_NULLABLE () const          {return _sk;}
-        bool operator== (SharedKeys other) const            {return _sk == other._sk;}
-
-        SharedKeys(const SharedKeys &other) noexcept        :_sk(FLSharedKeys_Retain(other._sk)) { }
-        SharedKeys(SharedKeys &&other) noexcept             :_sk(other._sk) {other._sk = nullptr;}
-        inline SharedKeys& operator= (const SharedKeys &other);
-        inline SharedKeys& operator= (SharedKeys &&other) noexcept;
-        
-    private:
-        SharedKeys(FLSharedKeys sk, int)                    :_sk(sk) { }
-        FLSharedKeys FL_NULLABLE _sk {nullptr};
-    };
-
-
     /** A container for Fleece data in memory. Every Value belongs to the Doc whose memory range
         contains it. The Doc keeps track of the SharedKeys used by its Dicts, and where to resolve
         external pointers to. */
@@ -359,14 +323,12 @@ namespace fleece {
     public:
         Doc(alloc_slice fleeceData,
             FLTrust trust =kFLUntrusted,
-            SharedKeys sk =nullptr,
+            FLSharedKeys FL_NULLABLE sk =nullptr,
             slice externDest =nullslice) noexcept
         :_doc(FLDoc_FromResultData(FLSliceResult(std::move(fleeceData)), trust, sk, externDest))
         { }
 
         static inline Doc fromJSON(slice_NONNULL json, FLError* FL_NULLABLE outError = nullptr);
-
-        static alloc_slice dump(slice_NONNULL fleeceData)   {return FLData_Dump(fleeceData);}
 
         Doc()                                       :_doc(nullptr) { }
         Doc(FLDoc FL_NULLABLE d, bool retain = true) :_doc(d) {if (retain) FLDoc_Retain(_doc);}
@@ -378,7 +340,7 @@ namespace fleece {
 
         slice data() const                          {return FLDoc_GetData(_doc);}
         alloc_slice allocedData() const             {return FLDoc_GetAllocedData(_doc);}
-        SharedKeys sharedKeys() const               {return FLDoc_GetSharedKeys(_doc);}
+        FLSharedKeys sharedKeys() const             {return FLDoc_GetSharedKeys(_doc);}
 
         Value root() const                          {return FLDoc_GetRoot(_doc);}
         explicit operator bool () const             {return root() != nullptr;}
@@ -432,7 +394,7 @@ namespace fleece {
         :_enc(FLEncoder_NewWritingToFile(file, uniqueStrings))
         { }
 
-        explicit Encoder(SharedKeys sk)                 :Encoder() {setSharedKeys(sk);}
+        explicit Encoder(FLSharedKeys FL_NULLABLE sk)   :Encoder() {setSharedKeys(sk);}
 
         explicit Encoder(FLEncoder enc)                 :_enc(enc) { }
         Encoder(Encoder&& enc)                          :_enc(enc._enc) {enc._enc = nullptr;}
@@ -441,12 +403,7 @@ namespace fleece {
         
         ~Encoder()                                      {FLEncoder_Free(_enc);}
 
-        void setSharedKeys(SharedKeys sk)               {FLEncoder_SetSharedKeys(_enc, sk);}
-
-        inline void amend(slice base, bool reuseStrings =false, bool externPointers =false);
-        slice base() const                              {return FLEncoder_GetBase(_enc);}
-
-        void suppressTrailer()                          {FLEncoder_SuppressTrailer(_enc);}
+        void setSharedKeys(FLSharedKeys FL_NULLABLE sk) {FLEncoder_SetSharedKeys(_enc, sk);}
 
         operator ::FLEncoder FL_NONNULL () const        {return _enc;}
 
@@ -475,20 +432,14 @@ namespace fleece {
         template <class T>
         inline void write(slice_NONNULL key, T value)       {writeKey(key); *this << value;}
 
-        inline void writeRaw(slice data)            {FLEncoder_WriteRaw(_enc, data);}
-
-        inline size_t bytesWritten() const;
-        inline size_t nextWritePos() const          {return FLEncoder_GetNextWritePos(_enc);}
-
         inline Doc finishDoc(FLError* FL_NULLABLE =nullptr);
         inline alloc_slice finish(FLError* FL_NULLABLE =nullptr);
-        inline size_t finishItem()                  {return FLEncoder_FinishItem(_enc);}
         inline void reset();
 
         inline FLError error() const;
         inline const char* FL_NULLABLE errorMessage() const;
 
-        //////// "<<" convenience operators;
+        //====== "<<" convenience operators;
 
         // Note: overriding <<(bool) would be dangerous due to implicit conversion
         Encoder& operator<< (Null)                  {writeNull(); return *this;}
@@ -536,7 +487,7 @@ namespace fleece {
     class JSONEncoder : public Encoder {
     public:
         JSONEncoder()                           :Encoder(kFLEncodeJSON) { }
-        inline bool writeRaw(slice raw)         {return FLEncoder_WriteRaw(_enc, raw);}
+        inline void writeRaw(slice data)        {FLEncoder_WriteRaw(_enc, data);}
     };
 
     /** Subclass of Encoder that generates JSON5 (an variant of JSON with cleaner syntax.) */
@@ -558,48 +509,7 @@ namespace fleece {
     };
 
 
-    /** Support for generating and applying JSON-format deltas/diffs between two Fleece values. */
-    class JSONDelta {
-    public:
-        static inline alloc_slice create(Value old, Value nuu);
-        static inline bool create(Value old, Value nuu, Encoder &jsonEncoder);
-
-        static inline alloc_slice apply(Value old,
-                                        slice jsonDelta,
-                                        FLError* FL_NULLABLE error);
-        static inline bool apply(Value old,
-                                 slice jsonDelta,
-                                 Encoder &encoder);
-    };
-
-
-    //////// DEPRECATED:
-
-
-    /** A Dict that manages its own storage. */
-    class AllocedDict : public Dict, alloc_slice {
-    public:
-        AllocedDict()
-        =default;
-
-        explicit AllocedDict(alloc_slice s)
-        :Dict(FLValue_AsDict(FLValue_FromData(s, kFLUntrusted)))
-        ,alloc_slice(std::move(s))
-        { }
-
-        explicit AllocedDict(slice s)
-        :AllocedDict(alloc_slice(s)) { }
-
-        const alloc_slice& data() const                 {return *this;}
-        explicit operator bool () const                 {return Dict::operator bool();}
-
-        // MI disambiguation:
-        inline Value operator[] (slice key) const       {return Dict::get(key);}
-        inline Value operator[] (const char *key) const {return Dict::get(key);}
-    };
-
-
-    //////// IMPLEMENTATION GUNK:
+    //====== IMPLEMENTATION GUNK:
 
     inline FLValueType Value::type() const      {return FLValue_GetType(_val);}
     inline bool Value::isInteger() const        {return FLValue_IsInteger(_val);}
@@ -652,11 +562,6 @@ namespace fleece {
     inline Value Dict::iterator::value() const  {return FLDictIterator_GetValue(this);}
     inline bool Dict::iterator::next()          {return FLDictIterator_Next(this);}
 
-    inline void SharedKeys::writeState(const Encoder &enc) {FLSharedKeys_WriteState(_sk, enc);}
-
-    inline void Encoder::amend(slice base, bool reuseStrings, bool externPointers)
-                                                {FLEncoder_Amend(_enc, base,
-                                                                     reuseStrings, externPointers);}
     inline bool Encoder::writeNull()            {return FLEncoder_WriteNull(_enc);}
     inline bool Encoder::writeUndefined()       {return FLEncoder_WriteUndefined(_enc);}
     inline bool Encoder::writeBool(bool b)      {return FLEncoder_WriteBool(_enc, b);}
@@ -676,7 +581,6 @@ namespace fleece {
     inline bool Encoder::writeKey(slice_NONNULL key)    {return FLEncoder_WriteKey(_enc, key);}
     inline bool Encoder::writeKey(Value key)    {return FLEncoder_WriteKeyValue(_enc, key);}
     inline bool Encoder::endDict()              {return FLEncoder_EndDict(_enc);}
-    inline size_t Encoder::bytesWritten() const {return FLEncoder_BytesWritten(_enc);}
     inline Doc Encoder::finishDoc(FLError* FL_NULLABLE err) {return Doc(FLEncoder_FinishDoc(_enc, err), false);}
     inline alloc_slice Encoder::finish(FLError* FL_NULLABLE err) {return FLEncoder_Finish(_enc, err);}
     inline void Encoder::reset()                {return FLEncoder_Reset(_enc);}
@@ -686,41 +590,6 @@ namespace fleece {
     // specialization for assigning bool value since there is no Encoder<<bool
     template<>
     inline void Encoder::keyref::operator= (bool value) {_enc.writeKey(_key); _enc.writeBool(value);}
-
-    inline alloc_slice JSONDelta::create(Value old, Value nuu) {
-        return FLCreateJSONDelta(old, nuu);
-    }
-    inline bool JSONDelta::create(Value old, Value nuu, Encoder &jsonEncoder) {
-        return FLEncodeJSONDelta(old, nuu, jsonEncoder);
-    }
-    inline alloc_slice JSONDelta::apply(Value old, slice jsonDelta, FLError * FL_NULLABLE error) {
-        return FLApplyJSONDelta(old, jsonDelta, error);
-    }
-    inline bool JSONDelta::apply(Value old,
-                                 slice jsonDelta,
-                                 Encoder &encoder) {
-        return FLEncodeApplyingJSONDelta(old, jsonDelta, encoder);
-    }
-
-    inline SharedKeys SharedKeys::create(slice state) {
-        auto sk = create();
-        sk.loadState(state);
-        return sk;
-    }
-
-    inline SharedKeys& SharedKeys::operator= (const SharedKeys &other) {
-        auto sk = FLSharedKeys_Retain(other._sk);
-        FLSharedKeys_Release(_sk);
-        _sk = sk;
-        return *this;
-    }
-
-    inline SharedKeys& SharedKeys::operator= (SharedKeys &&other) noexcept {
-        FLSharedKeys_Release(_sk);
-        _sk = other._sk;
-        other._sk = nullptr;
-        return *this;
-    }
 
     inline Doc Doc::fromJSON(slice_NONNULL json, FLError * FL_NULLABLE outError) {
         return Doc(FLDoc_FromJSON(json, outError), false);

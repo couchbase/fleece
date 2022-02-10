@@ -11,6 +11,7 @@
 //
 
 #include "fleece/Fleece.hh"
+#include "fleece/FLExpert.h"
 #include <stdio.h>
 #include <iostream>
 #include <sstream>
@@ -196,7 +197,7 @@ int main(int argc, const char * argv[]) {
             writeOutput(json);
             fprintf(stdout, "\n");
         } else if (dump) {
-            alloc_slice output = Doc::dump(input);
+            alloc_slice output = FLData_Dump(input);
             if (!output)
                 throw "Couldn't parse input as Fleece";
             writeOutput(output);

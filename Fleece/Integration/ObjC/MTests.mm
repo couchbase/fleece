@@ -45,7 +45,7 @@ static NSArray* sortedKeys(NSDictionary* dict) {
 
 
 static std::string fleece2JSON(alloc_slice fleece) {
-    auto v = Value::fromData(fleece);
+    auto v = ValueFromData(fleece);
     if (!v)
         return "INVALID_FLEECE";
     return alloc_slice(v.toJSON5()).asString();
@@ -118,7 +118,7 @@ TEST_CASE("MDict", "[Mutable]") {
 
         alloc_slice combinedData(data);
         combinedData.append(delta);
-        Dict newDict = Value::fromData(combinedData).asDict();
+        Dict newDict = ValueFromData(combinedData).asDict();
         std::cerr << "\nContents:      " << alloc_slice(newDict.toJSON()).asString() << "\n";
         std::cerr <<   "Old:           " << data.size << " bytes: " << data << "\n\n";
         std::cerr <<   "New:           " << newData.size << " bytes: " << newData << "\n\n";

@@ -17,6 +17,7 @@
 #include "PlatformCompat.hh"
 #include "RefCounted.hh"
 #include "fleece/Mutable.hh"
+#include "fleece/Expert.hh"
 #include "fleece/slice.hh"
 #include "TempArray.hh"
 #include "betterassert.hh"
@@ -73,7 +74,7 @@ namespace fleece { namespace hashtree {
                 enc.writeString(_key);
             else
                 enc.writeValue(_value);
-            return (uint32_t)enc.finishItem();
+            return (uint32_t)expert(enc).finishItem();
         }
 
         void dump(std::ostream &out, unsigned indent) {
@@ -255,7 +256,7 @@ namespace fleece { namespace hashtree {
 
 
         static offset_t encodeImmutableOffset(const Node *inode, offset_t off, const Encoder &enc) {
-            ssize_t o = (((char*)inode - (char*)enc.base().buf) - off) - enc.base().size;
+            ssize_t o = (((char*)inode - (char*)expert(enc).base().buf) - off) - expert(enc).base().size;
             assert(o < 0 && o > INT32_MIN);
             return offset_t(o);
         }
@@ -285,7 +286,7 @@ namespace fleece { namespace hashtree {
             }
 
             // Convert the Nodes' absolute positions into offsets:
-            const offset_t childrenPos = (offset_t)enc.nextWritePos();
+            const offset_t childrenPos = (offset_t)expert(enc).nextWritePos();
             auto curPos = childrenPos;
             for (unsigned i = 0; i < n; ++i) {
                 auto &node = nodes[i];
@@ -297,16 +298,16 @@ namespace fleece { namespace hashtree {
             }
 
             // Write the list of children, and return its position & my bitmap:
-            enc.writeRaw({nodes, n * sizeof(nodes[0])});
+            expert(enc).writeRaw({nodes, n * sizeof(nodes[0])});
             return Interior(bitmap_t(_bitmap), childrenPos);
         }
 
 
         offset_t writeRootTo(Encoder &enc) {
             auto intNode = writeTo(enc);
-            auto curPos = (offset_t)enc.nextWritePos();
+            auto curPos = (offset_t)expert(enc).nextWritePos();
             intNode.makeRelativeTo(curPos);
-            enc.writeRaw({&intNode, sizeof(intNode)});
+            expert(enc).writeRaw({&intNode, sizeof(intNode)});
             return offset_t(curPos);
         }
 

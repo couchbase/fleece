@@ -332,7 +332,7 @@ namespace fleece {
     };
 
 
-    //////// IMPLEMENTATION GUNK:
+    //====== IMPLEMENTATION GUNK:
 
     inline MutableArray Array::mutableCopy(FLCopyFlags flags) const {
         return MutableArray(FLArray_MutableCopy(*this, flags), false);

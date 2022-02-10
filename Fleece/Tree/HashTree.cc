@@ -16,6 +16,7 @@
 #include "Endian.hh"
 #include "PlatformCompat.hh"
 #include "TempArray.hh"
+#include "fleece/Expert.hh"
 #include <algorithm>
 #include <ostream>
 #include <string>
@@ -53,15 +54,15 @@ namespace fleece {
         slice Leaf::keyString() const           {return derefValue(_keyOffset).asString();}
 
         uint32_t Leaf::writeTo(Encoder &enc, bool writeKey) const {
-            if (enc.base().containsAddress(this)) {
-                auto pos = int32_t((char*)this - (char*)enc.base().end());
+            if (expert(enc).base().containsAddress(this)) {
+                auto pos = int32_t((char*)this - (char*)expert(enc).base().end());
                 return pos - (writeKey ? _keyOffset : _valueOffset);
             } else {
                 if (writeKey)
                     enc.writeValue(key());
                 else
                     enc.writeValue(value());
-                return (uint32_t)enc.finishItem();
+                return (uint32_t)expert(enc).finishItem();
             }
         }
 
@@ -132,8 +133,8 @@ namespace fleece {
         }
 
         Interior Interior::writeTo(Encoder &enc) const {
-            if (enc.base().containsAddress(this)) {
-                auto pos = int32_t((char*)this - (char*)enc.base().end());
+            if (expert(enc).base().containsAddress(this)) {
+                auto pos = int32_t((char*)this - (char*)expert(enc).base().end());
                 return makeAbsolute(pos);
             } else {
                 //FIX: DRY FAIL: This is nearly identical to MInteriorNode::writeTo()
@@ -155,7 +156,7 @@ namespace fleece {
                         nodes[i].leaf._keyOffset = child->leaf.writeTo(enc, true);
                 }
 
-                const uint32_t childrenPos = (uint32_t)enc.nextWritePos();
+                const uint32_t childrenPos = (uint32_t)expert(enc).nextWritePos();
                 auto curPos = childrenPos;
                 for (unsigned i = 0; i < n; ++i) {
                     auto &node = nodes[i];
@@ -165,7 +166,7 @@ namespace fleece {
                         node.interior.makeRelativeTo(curPos);
                     curPos += sizeof(nodes[i]);
                 }
-                enc.writeRaw({nodes, n * sizeof(nodes[0])});
+                expert(enc).writeRaw({nodes, n * sizeof(nodes[0])});
                 return Interior(bitmap_t(_bitmap), childrenPos);
             }
         }

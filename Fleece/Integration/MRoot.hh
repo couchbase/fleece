@@ -11,6 +11,7 @@
 //
 
 #include "MCollection.hh"
+#include "fleece/Expert.hh"
 
 namespace fleece {
 
@@ -31,7 +32,7 @@ namespace fleece {
 
         explicit MRoot(MContext *context,
                        bool isMutable =true)
-        :MRoot(context, Value::fromData(context->data(), kFLUntrusted), isMutable)
+        :MRoot(context, ValueFromData(context->data(), kFLUntrusted), isMutable)
         { }
 
         explicit MRoot(alloc_slice fleeceData,
@@ -42,7 +43,7 @@ namespace fleece {
 
         explicit MRoot(alloc_slice fleeceData,
                        bool isMutable =true)
-        :MRoot(fleeceData, Value::fromData(fleeceData, kFLUntrusted), isMutable)
+        :MRoot(fleeceData, ValueFromData(fleeceData, kFLUntrusted), isMutable)
         { }
 
         static Native asNative(alloc_slice fleeceData,
@@ -64,7 +65,7 @@ namespace fleece {
 
         alloc_slice amend(bool reuseStrings =false, bool externPointers =false) const {
             Encoder enc;
-            enc.amend(context()->data(), reuseStrings, externPointers);
+            expert(enc).amend(context()->data(), reuseStrings, externPointers);
             encodeTo(enc);
             return enc.finish();
         }

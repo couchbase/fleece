@@ -11,7 +11,7 @@
 //
 
 #pragma once
-#include "fleece/Base.h"
+#include "fleece/CompilerSupport.h"
 #ifdef __APPLE__
     #include <sys/cdefs.h>
     #include "TargetConditionals.h"
