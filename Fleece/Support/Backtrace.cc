@@ -353,7 +353,7 @@ namespace fleece {
         auto n = backtrace(&_addrs[0], skipFrames + maxFrames);
         _addrs.resize(n);
         skip(skipFrames);
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) && !defined(__ANDROID__)
         _symbols = backtrace_symbols(_addrs.data(), int(_addrs.size()));
 #endif
     }
