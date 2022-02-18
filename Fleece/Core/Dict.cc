@@ -87,13 +87,17 @@ namespace fleece { namespace impl {
         }
 
         __hot
-        inline const Value* get(int keyToFind) const noexcept {
-            assert_precondition(keyToFind >= 0);
-            auto key = search(keyToFind, [](int target, const Value *key) {
+        inline const Value* search(int keyToFind) const noexcept {
+            return search(keyToFind, [](int target, const Value *key) {
                 countComparison();
                 return compareKeys(target, key);
             });
-            return finishGet(key, keyToFind);
+        }
+
+        __hot
+        inline const Value* get(int keyToFind) const noexcept {
+            assert_precondition(keyToFind >= 0);
+            return finishGet(search(keyToFind), keyToFind);
         }
 
         __hot
@@ -134,6 +138,14 @@ namespace fleece { namespace impl {
             if (!key)
                 key = findKeyBySearch(keyToFind);
             return finishGet(key, keyToFind);
+        }
+
+        key_t encodeKey(slice keyString, SharedKeys *sharedKeys) const noexcept {
+            int intKey;
+            if (lookupSharedKey(keyString, sharedKeys, intKey) && search(intKey))
+                return intKey;
+            else
+                return keyString;
         }
 
         bool hasParent() const {
@@ -351,6 +363,13 @@ namespace fleece { namespace impl {
             return get(keyToFind.asInt());
         else
             return get(keyToFind.asString());
+    }
+
+    key_t Dict::encodeKey(slice keyString, SharedKeys *sharedKeys) const noexcept {
+        if (isWideArray())
+            return dictImpl<true>(this).encodeKey(keyString, sharedKeys);
+        else
+            return dictImpl<false>(this).encodeKey(keyString, sharedKeys);
     }
 
     MutableDict* Dict::asMutable() const noexcept {
