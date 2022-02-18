@@ -95,6 +95,9 @@ namespace fleece { namespace impl {
         uint32_t rawCount() const noexcept FLPURE;
         const Dict* getParent() const noexcept FLPURE;
 
+        // This is like `get` but returns the key _as stored in the Dict_, either slice or int.
+        key_t encodeKey(slice keyString, SharedKeys *sharedKeys NONNULL) const noexcept;
+
         static bool isMagicParentKey(const Value *v);
         static constexpr int kMagicParentKey = -2048;
 
