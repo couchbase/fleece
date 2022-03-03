@@ -56,7 +56,7 @@ namespace fleece {
     TEST_CASE("VarInt read") {
         uint8_t buf[100];
         uint64_t result;
-        for (double d = 0.0; d <= UINT64_MAX; d = std::max(d, 1.0) * 1.5) {
+        for (double d = 0.0; d <= (double)UINT64_MAX; d = std::max(d, 1.0) * 1.5) {
             auto n = (uint64_t)d;
             std::cerr << std::hex << n << std::dec << ", ";
             size_t nBytes = PutUVarInt(buf, n);
@@ -75,7 +75,7 @@ namespace fleece {
 
     TEST_CASE("VarInt32 read") {
         uint8_t buf[100];
-        for (double d = 0.0; d <= UINT64_MAX; d = std::max(d, 1.0) * 1.5) {
+        for (double d = 0.0; d <= (double)UINT64_MAX; d = std::max(d, 1.0) * 1.5) {
             auto n = (uint64_t)d;
             std::cerr << std::hex << n << std::dec << ", ";
             size_t nBytes = PutUVarInt(buf, n);

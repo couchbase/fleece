@@ -19,6 +19,13 @@ elseif(APPLE)
     include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/platform_apple.cmake")
 elseif(ANDROID OR "${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
     include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/platform_linux.cmake")
+elseif(EMSCRIPTEN)
+    # Emscripten does not actually support shared libraries and instead
+    # just builds a static library for compatibility with existing
+    # build setups. We just set this property to suppress a CMake warning.
+    set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS TRUE)
+
+    include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/platform_emscripten.cmake")
 else()
     message(FATAL_ERROR "Unsupported platform ${CMAKE_SYSTEM_NAME}!")
 endif()
@@ -53,6 +60,8 @@ add_library(FleeceBase    STATIC  ${FLEECE_BASE_SRC})
 # Command-Line Tool
 add_executable(fleeceTool Tool/fleece_tool.cc)
 target_link_libraries(fleeceTool FleeceObjects)
+
+setup_build()
 
 # Fleece Tests
 set_test_source_files(RESULT FLEECE_TEST_SRC)
