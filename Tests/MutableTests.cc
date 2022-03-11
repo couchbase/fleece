@@ -923,7 +923,7 @@ namespace fleece {
     }
 
 
-    TEST_CASE("MutableArray from JSON", "[Mutable][jzhao]") {
+    TEST_CASE("MutableArray from JSON", "[Mutable]") {
         const char* json1 = R"r([1,"s2",{"k21":[1,{"k221":[2]}]}])r";
         const char* json2 = R"r({"k1":1,"k2":{"k21":[1,{"k221":[2]}]}})r";
 
@@ -966,7 +966,7 @@ namespace fleece {
     }
 
 
-    TEST_CASE("MutableDict from JSON", "[Mutable][jzhao]") {
+    TEST_CASE("MutableDict from JSON", "[Mutable]") {
         const char* json1 = R"r([1,"s2",{"k21":[1,{"k221":[2]}]}])r";
         const char* json2 = R"r({"k1":1,"k2":{"k21":[1,{"k221":[2]}]}})r";
 

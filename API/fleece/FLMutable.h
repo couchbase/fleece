@@ -34,7 +34,7 @@ extern "C" {
         kFLDefaultCopy        = 0,  ///< Shallow copy. References immutables instead of copying.
         kFLDeepCopy           = 1,  ///< Deep copy of mutable values
         kFLCopyImmutables     = 2,  ///< Makes mutable copies of immutables instead of just refs.
-        kFLDeepCopyImmutables = (kFLDeepCopy | kFLCopyImmutables), /// < Both deep-copy and copy-immutables.
+        kFLDeepCopyImmutables = (kFLDeepCopy | kFLCopyImmutables), ///< Both deep-copy and copy-immutables.
     } FLCopyFlags;
 
 
