@@ -11,7 +11,7 @@
 //
 
 #include "Writer.hh"
-#include "PlatformCompat.hh"
+#include "fleece/PlatformCompat.hh"
 #include "FleeceException.hh"
 #include "decode.h"
 #include "encode.h"

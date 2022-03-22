@@ -11,7 +11,7 @@
 //
 
 #include "FleeceException.hh"
-#include "PlatformCompat.hh"
+#include "fleece/PlatformCompat.hh"
 #include "Backtrace.hh"
 #include <errno.h>
 #include <memory>

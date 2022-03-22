@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "PlatformCompat.hh"
+#include "fleece/PlatformCompat.hh"
 #include "fleece/slice.hh"
 #include <algorithm>
 #include <utility>

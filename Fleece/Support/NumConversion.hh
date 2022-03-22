@@ -11,7 +11,7 @@
 //
 
 #pragma once
-#include "PlatformCompat.hh"
+#include "fleece/PlatformCompat.hh"
 
 #if __has_include("Error.hh")
 #include "Error.hh"

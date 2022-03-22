@@ -15,7 +15,7 @@
 #include "MutableHashTree.hh"
 #include "HashTree+Internal.hh"     // for ComputeHash
 #include "Doc.hh"
-#include "PlatformCompat.hh"
+#include "fleece/PlatformCompat.hh"
 #include "fleece/Expert.hh"
 #include <iostream>
 #include <set>

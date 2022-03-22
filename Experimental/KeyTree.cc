@@ -16,7 +16,7 @@
 #include <iostream>
 #include <algorithm>
 #include "slice_stream.hh"
-#include "PlatformCompat.hh"
+#include "fleece/PlatformCompat.hh"
 #include "betterassert.hh"
 
 #if (defined __ANDROID__) && (__ANDROID_API__ < 18)

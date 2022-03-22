@@ -14,7 +14,7 @@
 #import "MValue+ObjC.hh"
 #import "MDict.hh"
 #import "MDictIterator.hh"
-#include "PlatformCompat.hh"
+#include "fleece/PlatformCompat.hh"
 
 using namespace fleece;
 

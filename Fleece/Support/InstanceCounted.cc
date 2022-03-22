@@ -10,8 +10,8 @@
 // the file licenses/APL2.txt.
 //
 
-#include "InstanceCounted.hh"
-#include "RefCounted.hh"
+#include "fleece/InstanceCounted.hh"
+#include "fleece/RefCounted.hh"
 #include <map>
 #include <mutex>
 #include <stdlib.h>

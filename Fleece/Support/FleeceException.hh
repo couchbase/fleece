@@ -12,7 +12,7 @@
 
 #pragma once
 #include <stdexcept>
-#include "PlatformCompat.hh"
+#include "fleece/PlatformCompat.hh"
 #include <memory>
 
 namespace fleece {

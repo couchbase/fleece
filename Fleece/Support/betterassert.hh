@@ -33,7 +33,7 @@
 // These are enabled in all builds regardless of the `NDEBUG` flag.
 
 #ifndef assert_always
-    #include "PlatformCompat.hh"
+    #include "fleece/PlatformCompat.hh"
     #ifdef __cpp_exceptions
         #include <stdexcept>
     #else

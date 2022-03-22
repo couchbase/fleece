@@ -14,7 +14,7 @@
 #include "MutableArray.hh"
 #include "HeapDict.hh"
 #include "Internal.hh"
-#include "PlatformCompat.hh"
+#include "fleece/PlatformCompat.hh"
 #include "varint.hh"
 
 

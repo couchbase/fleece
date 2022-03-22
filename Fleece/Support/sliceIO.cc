@@ -15,7 +15,7 @@
 #if FL_HAVE_FILESYSTEM
 
 #include "FleeceException.hh"
-#include "PlatformCompat.hh"
+#include "fleece/PlatformCompat.hh"
 #include "NumConversion.hh"
 #include <fcntl.h>
 #include <errno.h>

@@ -20,7 +20,7 @@
 #include "Endian.hh"
 #include "FleeceException.hh"
 #include "varint.hh"
-#include "PlatformCompat.hh"
+#include "fleece/PlatformCompat.hh"
 #include "JSONEncoder.hh"
 #include "ParseDate.hh"
 #include <math.h>

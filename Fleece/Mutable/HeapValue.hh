@@ -12,7 +12,7 @@
 
 #pragma once
 #include "Value.hh"
-#include "RefCounted.hh"
+#include "fleece/RefCounted.hh"
 
 namespace fleece { namespace impl {
     class ValueSlot;
