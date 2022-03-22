@@ -13,7 +13,7 @@
 #import "MArray+ObjC.h"
 #import "MValue+ObjC.hh"
 #import "MArray.hh"
-#import fleece/PlatformCompat.hh"
+#import "fleece/PlatformCompat.hh"
 #include "betterassert.hh"
 
 using namespace fleece;
