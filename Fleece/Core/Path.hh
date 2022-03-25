@@ -13,7 +13,7 @@
 #pragma once
 #include "Dict.hh"
 #include "SmallVector.hh"
-#include "function_ref.hh"
+#include "fleece/function_ref.hh"
 #include <iosfwd>
 #include <memory>
 #include <string>

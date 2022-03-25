@@ -11,7 +11,7 @@
 //
 
 #pragma once
-#include "PlatformCompat.hh"
+#include "fleece/PlatformCompat.hh"
 #include <functional>
 #include <iosfwd>
 #include <memory>

@@ -19,7 +19,7 @@
 #include "varint.hh"
 #include "FleeceException.hh"
 #include "ParseDate.hh"
-#include "PlatformCompat.hh"
+#include "fleece/PlatformCompat.hh"
 #include "TempArray.hh"
 #include <algorithm>
 #include <cmath>

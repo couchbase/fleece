@@ -11,7 +11,7 @@
 //
 
 #include "MValue+ObjC.hh"
-#include "PlatformCompat.hh"
+#include "fleece/PlatformCompat.hh"
 
 
 @implementation NSObject (FleeceMutable)

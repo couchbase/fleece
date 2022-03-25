@@ -15,7 +15,7 @@
 #include "SharedKeys.hh"
 #include "Doc.hh"
 #include "Internal.hh"
-#include "PlatformCompat.hh"
+#include "fleece/PlatformCompat.hh"
 #include <atomic>
 #include <string>
 #include "betterassert.hh"

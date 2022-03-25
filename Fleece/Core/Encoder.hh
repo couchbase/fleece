@@ -17,7 +17,7 @@
 #include "Doc.hh"
 #include "StringTable.hh"
 #include "SmallVector.hh"
-#include "function_ref.hh"
+#include "fleece/function_ref.hh"
 
 
 namespace fleece { namespace impl {

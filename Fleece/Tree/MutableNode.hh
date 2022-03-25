@@ -14,8 +14,8 @@
 
 #pragma once
 #include "NodeRef.hh"
-#include "PlatformCompat.hh"
-#include "RefCounted.hh"
+#include "fleece/PlatformCompat.hh"
+#include "fleece/RefCounted.hh"
 #include "fleece/Mutable.hh"
 #include "fleece/Expert.hh"
 #include "fleece/slice.hh"

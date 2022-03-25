@@ -10,7 +10,7 @@
 // the file licenses/APL2.txt.
 //
 
-#include "RefCounted.hh"
+#include "fleece/RefCounted.hh"
 #include "Backtrace.hh"
 #include <stdexcept>
 #include <stdio.h>

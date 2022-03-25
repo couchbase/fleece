@@ -14,7 +14,7 @@
 #include "HashTree+Internal.hh"
 #include "Bitmap.hh"
 #include "Endian.hh"
-#include "PlatformCompat.hh"
+#include "fleece/PlatformCompat.hh"
 #include "TempArray.hh"
 #include "fleece/Expert.hh"
 #include <algorithm>

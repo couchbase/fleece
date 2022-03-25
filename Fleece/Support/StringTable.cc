@@ -11,7 +11,7 @@
 //
 
 #include "StringTable.hh"
-#include "PlatformCompat.hh"
+#include "fleece/PlatformCompat.hh"
 #include <algorithm>
 #include <stdlib.h>
 #include <vector>

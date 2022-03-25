@@ -11,7 +11,7 @@
 //
 
 #pragma once
-#include "RefCounted.hh"
+#include "fleece/RefCounted.hh"
 #include "Value.hh"
 #include "fleece/slice.hh"
 #include <atomic>

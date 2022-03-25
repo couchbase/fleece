@@ -11,7 +11,7 @@
 //
 
 #pragma once
-#include "PlatformCompat.hh"
+#include "fleece/PlatformCompat.hh"
 #include "endianness.h"
 
 namespace fleece { namespace endian {

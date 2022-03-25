@@ -13,7 +13,7 @@
 #include "Path.hh"
 #include "SharedKeys.hh"
 #include "FleeceException.hh"
-#include "PlatformCompat.hh"
+#include "fleece/PlatformCompat.hh"
 #include "slice_stream.hh"
 #include <iostream>
 #include <sstream>

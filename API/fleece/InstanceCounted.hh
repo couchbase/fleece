@@ -11,7 +11,7 @@
 //
 
 #pragma once
-#include "function_ref.hh"
+#include "fleece/function_ref.hh"
 #include <cstddef> //for size_t
 #include <atomic>
 #include <stdint.h>
