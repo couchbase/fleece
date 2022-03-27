@@ -20,7 +20,7 @@
 #include <algorithm>
 #include <functional>
 #include <mutex>
-#include <vector>
+#include <set>
 #include "betterassert.hh"
 
 #if 0
@@ -44,7 +44,7 @@ namespace fleece { namespace impl {
         bool operator< (const memEntry &other) const        {return endOfRange < other.endOfRange;}
     };
 
-    using memoryMap = smallVector<memEntry, 10>;
+    using memoryMap = std::multiset<memEntry>;
 
     static memoryMap *sMemoryMap;
 
@@ -123,7 +123,7 @@ namespace fleece { namespace impl {
         }
 
         memEntry entry = {_data.end(), this};
-        memoryMap::iterator iter = upper_bound(sMemoryMap->begin(), sMemoryMap->end(), entry);
+        memoryMap::iterator iter = sMemoryMap->upper_bound(entry);
 
         // Assert that there isn't another conflicting Scope registered for this data:
         if (iter != sMemoryMap->begin() && prev(iter)->endOfRange == entry.endOfRange) {
@@ -166,7 +166,7 @@ namespace fleece { namespace impl {
             Log("Unregister (%p ... %p) --> Scope %p, sk=%p   [now %zu]",
                 _data.buf, _data.end(), this, _sk.get(), sMemoryMap->size()-1);
             memEntry entry = {_data.end(), this};
-            auto iter = lower_bound(sMemoryMap->begin(), sMemoryMap->end(), entry);
+            auto iter = sMemoryMap->lower_bound(entry);
             while (iter != sMemoryMap->end() && iter->endOfRange == entry.endOfRange) {
                 if (iter->scope == this) {
                     sMemoryMap->erase(iter);
@@ -197,7 +197,7 @@ namespace fleece { namespace impl {
         // must have sMutex to call this
         if (_usuallyFalse(!sMemoryMap))
             return nullptr;
-        auto iter = upper_bound(sMemoryMap->begin(), sMemoryMap->end(), memEntry{src, nullptr});
+        auto iter = sMemoryMap->upper_bound({src, nullptr});
         if (_usuallyFalse(iter == sMemoryMap->end()))
             return nullptr;
         Scope *scope = iter->scope;
