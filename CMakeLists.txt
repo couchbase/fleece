@@ -24,8 +24,10 @@ else()
 endif()
 
 set_source_files(RESULT FLEECE_SRC)
-add_library(Fleece        SHARED  ${FLEECE_SRC})
-add_library(FleeceStatic  STATIC  ${FLEECE_SRC})
+add_library(FleeceObjects OBJECT ${FLEECE_SRC})
+add_library(Fleece        SHARED  $<TARGET_OBJECTS:FleeceObjects>)
+add_library(FleeceStatic  STATIC  $<TARGET_OBJECTS:FleeceObjects>)
+target_compile_definitions(FleeceObjects PRIVATE FLEECE_EXPORTS)
 
 # "FleeceBase" static lib for clients that just need support stuff like slice, varint, RefCounted...
 set_base_platform_files(RESULT FLEECE_BASE_PLATFORM_SRC)
@@ -66,7 +68,7 @@ file(COPY Tests/1000people.json DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Tests)
 file(COPY Tests/1person.fleece DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Tests)
 file(COPY Tests/1person.json DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Tests)
 
-foreach(platform Fleece FleeceStatic FleeceBase fleeceTool FleeceTests)
+foreach(platform FleeceObjects Fleece FleeceStatic FleeceBase fleeceTool FleeceTests)
     target_include_directories(
         ${platform} PRIVATE
         API
@@ -86,7 +88,6 @@ foreach(platform Fleece FleeceStatic FleeceBase fleeceTool FleeceTests)
 
     target_compile_definitions(
         ${platform} PRIVATE
-        FLEECE_EXPORTS
         HAS_UNCAUGHT_EXCEPTIONS # date.h use std::uncaught_exceptions instead of std::uncaught_exception
         __STDC_FORMAT_MACROS # To use PRIx64 and friends for formatting variable size types in printf
     )

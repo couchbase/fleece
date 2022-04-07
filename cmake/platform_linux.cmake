@@ -35,16 +35,16 @@ function(setup_build)
     )
 
     target_link_libraries(
-        FleeceStatic INTERFACE
+        FleeceObjects INTERFACE
         dl
     )
 
     target_compile_definitions(
-        FleeceStatic PRIVATE
+        FleeceObjects PRIVATE
         __STDC_WANT_LIB_EXT1__=1 # For memset_s
     )
 
-    foreach(platform Fleece FleeceStatic FleeceBase)
+    foreach(platform FleeceObjects FleeceBase)
         set_target_properties(
             ${platform} PROPERTIES COMPILE_FLAGS
             "-Wformat=2"

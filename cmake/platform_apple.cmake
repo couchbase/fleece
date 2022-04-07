@@ -63,32 +63,22 @@ function(setup_build)
     setup_build_base()
 
     target_include_directories(
-        FleeceStatic PRIVATE
+        FleeceObjects PRIVATE
         Integration/ObjC
-    )
-
-    target_include_directories(
-        Fleece PRIVATE
-        Integration/ObjC
-    )
-
-    set_target_properties(
-        Fleece PROPERTIES LINK_FLAGS
-        "-exported_symbols_list ${PROJECT_SOURCE_DIR}/Fleece/Support/Fleece.exp"
     )
 
     target_link_libraries(
-        FleeceStatic INTERFACE
+        FleeceObjects INTERFACE
         "-framework CoreFoundation"
         "-framework Foundation"
     )
 
     target_compile_definitions(
-        FleeceStatic PUBLIC
+        FleeceObjects PUBLIC
         -D__STDC_WANT_LIB_EXT1__=1 # For memset_s
     )
 
-    foreach(platform Fleece FleeceStatic FleeceBase)
+    foreach(platform FleeceObjects FleeceBase)
         set_target_properties(
             ${platform} PROPERTIES COMPILE_FLAGS
             "-Wformat -Wformat-nonliteral -Wformat-security"
