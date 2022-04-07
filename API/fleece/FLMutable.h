@@ -55,12 +55,12 @@ extern "C" {
         also set, immutable values are also copied, recursively.
 
         If the source Array is NULL, then NULL is returned. */
-    FLMutableArray FL_NULLABLE FLArray_MutableCopy(FLArray FL_NULLABLE,
+    FLEECE_PUBLIC FLMutableArray FL_NULLABLE FLArray_MutableCopy(FLArray FL_NULLABLE,
                                                    FLCopyFlags) FLAPI;
 
     /** Creates a new empty mutable Array.
         Its initial ref-count is 1, so a call to FLMutableArray_Release will free it.  */
-    FLMutableArray FL_NULLABLE FLMutableArray_New(void) FLAPI;
+    FLEECE_PUBLIC FLMutableArray FL_NULLABLE FLMutableArray_New(void) FLAPI;
 
     /** Increments the ref-count of a mutable Array. */
     static inline FLMutableArray FL_NULLABLE FLMutableArray_Retain(FLMutableArray FL_NULLABLE d) {
@@ -72,20 +72,20 @@ extern "C" {
     }
 
     /** If the Array was created by FLArray_MutableCopy, returns the original source Array. */
-    FLArray FL_NULLABLE FLMutableArray_GetSource(FLMutableArray FL_NULLABLE) FLAPI;
+    FLEECE_PUBLIC FLArray FL_NULLABLE FLMutableArray_GetSource(FLMutableArray FL_NULLABLE) FLAPI;
 
     /** Returns true if the Array has been changed from the source it was copied from. */
-    bool FLMutableArray_IsChanged(FLMutableArray FL_NULLABLE) FLAPI;
+    FLEECE_PUBLIC bool FLMutableArray_IsChanged(FLMutableArray FL_NULLABLE) FLAPI;
 
     /** Sets or clears the mutable Array's "changed" flag. */
-    void FLMutableArray_SetChanged(FLMutableArray FL_NULLABLE,
+    FLEECE_PUBLIC void FLMutableArray_SetChanged(FLMutableArray FL_NULLABLE,
                                    bool changed) FLAPI;
 
     /** Inserts a contiguous range of JSON `null` values into the array.
         @param array  The array to operate on.
         @param firstIndex  The zero-based index of the first value to be inserted.
         @param count  The number of items to insert. */
-    void FLMutableArray_Insert(FLMutableArray FL_NULLABLE array,
+    FLEECE_PUBLIC void FLMutableArray_Insert(FLMutableArray FL_NULLABLE array,
                                uint32_t firstIndex,
                                uint32_t count) FLAPI;
 
@@ -93,14 +93,14 @@ extern "C" {
         @param array  The array to operate on.
         @param firstIndex  The zero-based index of the first item to remove.
         @param count  The number of items to remove. */
-    void FLMutableArray_Remove(FLMutableArray FL_NULLABLE array,
+    FLEECE_PUBLIC void FLMutableArray_Remove(FLMutableArray FL_NULLABLE array,
                                uint32_t firstIndex,
                                uint32_t count) FLAPI;
 
     /** Changes the size of an array.
         If the new size is larger, the array is padded with JSON `null` values.
         If it's smaller, values are removed from the end. */
-    void FLMutableArray_Resize(FLMutableArray FL_NULLABLE array,
+    FLEECE_PUBLIC void FLMutableArray_Resize(FLMutableArray FL_NULLABLE array,
                                uint32_t size) FLAPI;
 
     /** Convenience function for getting an array-valued property in mutable form.
@@ -108,7 +108,7 @@ extern "C" {
         - If the value is a mutable array, returns it.
         - If the value is an immutable array, this function makes a mutable copy, assigns the
           copy as the property value, and returns the copy. */
-    FLMutableArray FL_NULLABLE FLMutableArray_GetMutableArray(FLMutableArray FL_NULLABLE,
+    FLEECE_PUBLIC FLMutableArray FL_NULLABLE FLMutableArray_GetMutableArray(FLMutableArray FL_NULLABLE,
                                                               uint32_t index) FLAPI;
 
     /** Convenience function for getting an array-valued property in mutable form.
@@ -116,7 +116,7 @@ extern "C" {
         - If the value is a mutable array, returns it.
         - If the value is an immutable array, this function makes a mutable copy, assigns the
           copy as the property value, and returns the copy. */
-    FLMutableDict FL_NULLABLE FLMutableArray_GetMutableDict(FLMutableArray FL_NULLABLE,
+    FLEECE_PUBLIC FLMutableDict FL_NULLABLE FLMutableArray_GetMutableDict(FLMutableArray FL_NULLABLE,
                                                             uint32_t index) FLAPI;
 
 
@@ -189,11 +189,11 @@ extern "C" {
         nested mutable Dicts and Arrays are also copied, recursively.
 
         If the source dict is NULL, then NULL is returned. */
-    FLMutableDict FL_NULLABLE FLDict_MutableCopy(FLDict FL_NULLABLE source, FLCopyFlags) FLAPI;
+    FLEECE_PUBLIC FLMutableDict FL_NULLABLE FLDict_MutableCopy(FLDict FL_NULLABLE source, FLCopyFlags) FLAPI;
 
     /** Creates a new empty mutable Dict.
         Its initial ref-count is 1, so a call to FLMutableDict_Release will free it.  */
-    FLMutableDict FL_NULLABLE FLMutableDict_New(void) FLAPI;
+    FLEECE_PUBLIC FLMutableDict FL_NULLABLE FLMutableDict_New(void) FLAPI;
 
     /** Increments the ref-count of a mutable Dict. */
     static inline FLMutableDict FL_NULLABLE FLMutableDict_Retain(FLMutableDict FL_NULLABLE d) {
@@ -206,33 +206,33 @@ extern "C" {
     }
 
     /** If the Dict was created by FLDict_MutableCopy, returns the original source Dict. */
-    FLDict FL_NULLABLE FLMutableDict_GetSource(FLMutableDict FL_NULLABLE) FLAPI;
+    FLEECE_PUBLIC FLDict FL_NULLABLE FLMutableDict_GetSource(FLMutableDict FL_NULLABLE) FLAPI;
 
     /** Returns true if the Dict has been changed from the source it was copied from. */
-    bool FLMutableDict_IsChanged(FLMutableDict FL_NULLABLE) FLAPI;
+    FLEECE_PUBLIC bool FLMutableDict_IsChanged(FLMutableDict FL_NULLABLE) FLAPI;
 
     /** Sets or clears the mutable Dict's "changed" flag. */
-    void FLMutableDict_SetChanged(FLMutableDict FL_NULLABLE, bool) FLAPI;
+    FLEECE_PUBLIC void FLMutableDict_SetChanged(FLMutableDict FL_NULLABLE, bool) FLAPI;
 
     /** Removes the value for a key. */
-    void FLMutableDict_Remove(FLMutableDict FL_NULLABLE, FLString key) FLAPI;
+    FLEECE_PUBLIC void FLMutableDict_Remove(FLMutableDict FL_NULLABLE, FLString key) FLAPI;
 
     /** Removes all keys and values. */
-    void FLMutableDict_RemoveAll(FLMutableDict FL_NULLABLE) FLAPI;
+    FLEECE_PUBLIC void FLMutableDict_RemoveAll(FLMutableDict FL_NULLABLE) FLAPI;
 
     /** Convenience function for getting an array-valued property in mutable form.
         - If the value for the key is not an array, returns NULL.
         - If the value is a mutable array, returns it.
         - If the value is an immutable array, this function makes a mutable copy, assigns the
           copy as the property value, and returns the copy. */
-    FLMutableArray FL_NULLABLE FLMutableDict_GetMutableArray(FLMutableDict FL_NULLABLE, FLString key) FLAPI;
+    FLEECE_PUBLIC FLMutableArray FL_NULLABLE FLMutableDict_GetMutableArray(FLMutableDict FL_NULLABLE, FLString key) FLAPI;
 
     /** Convenience function for getting a dict-valued property in mutable form.
         - If the value for the key is not a dict, returns NULL.
         - If the value is a mutable dict, returns it.
         - If the value is an immutable dict, this function makes a mutable copy, assigns the
           copy as the property value, and returns the copy. */
-    FLMutableDict FL_NULLABLE FLMutableDict_GetMutableDict(FLMutableDict FL_NULLABLE, FLString key) FLAPI;
+    FLEECE_PUBLIC FLMutableDict FL_NULLABLE FLMutableDict_GetMutableDict(FLMutableDict FL_NULLABLE, FLString key) FLAPI;
 
 
     /// Stores a JSON null value into a mutable dictionary.
@@ -272,12 +272,12 @@ extern "C" {
     /** Allocates a string value on the heap. This is rarely needed -- usually you'd just add a string
      to a mutable Array or Dict directly using one of their "...SetString" or "...AppendString"
      methods. */
-    FLValue FL_NULLABLE FLValue_NewString(FLString) FLAPI;
+    FLEECE_PUBLIC FLValue FL_NULLABLE FLValue_NewString(FLString) FLAPI;
 
     /** Allocates a data/blob value on the heap. This is rarely needed -- usually you'd just add data
      to a mutable Array or Dict directly using one of their "...SetData or "...AppendData"
      methods. */
-    FLValue FL_NULLABLE FLValue_NewData(FLSlice) FLAPI;
+    FLEECE_PUBLIC FLValue FL_NULLABLE FLValue_NewData(FLSlice) FLAPI;
 
     /** @} */
 
@@ -304,32 +304,32 @@ extern "C" {
         \warning You should immediately store a value into the `FLSlot`. Do not keep it around;
                  any changes to the array invalidate it.*/
     MUST_USE_RESULT
-    FLSlot FLMutableArray_Set(FLMutableArray, uint32_t index) FLAPI;
+    FLEECE_PUBLIC FLSlot FLMutableArray_Set(FLMutableArray, uint32_t index) FLAPI;
 
     /** Appends a null value to the array and returns an \ref FLSlot that refers to that position.
         You store a value to it by calling one of the nine `FLSlot_Set...` functions.
         \warning You should immediately store a value into the `FLSlot`. Do not keep it around;
                  any changes to the array invalidate it.*/
     MUST_USE_RESULT
-    FLSlot FLMutableArray_Append(FLMutableArray) FLAPI;
+    FLEECE_PUBLIC FLSlot FLMutableArray_Append(FLMutableArray) FLAPI;
 
     /** Returns an \ref FLSlot that refers to the given key/value pair of the given dictionary.
         You store a value to it by calling one of the nine `FLSlot_Set...` functions.
         \warning You should immediately store a value into the `FLSlot`. Do not keep it around;
                  any changes to the dictionary invalidate it.*/
     MUST_USE_RESULT
-    FLSlot FLMutableDict_Set(FLMutableDict, FLString key) FLAPI;
+    FLEECE_PUBLIC FLSlot FLMutableDict_Set(FLMutableDict, FLString key) FLAPI;
 
 
-    void FLSlot_SetNull(FLSlot) FLAPI;             ///< Stores a JSON null into a slot.
-    void FLSlot_SetBool(FLSlot, bool) FLAPI;       ///< Stores a boolean into a slot.
-    void FLSlot_SetInt(FLSlot, int64_t) FLAPI;     ///< Stores an integer into a slot.
-    void FLSlot_SetUInt(FLSlot, uint64_t) FLAPI;   ///< Stores an unsigned int into a slot.
-    void FLSlot_SetFloat(FLSlot, float) FLAPI;     ///< Stores a `float` into a slot.
-    void FLSlot_SetDouble(FLSlot, double) FLAPI;   ///< Stores a `double` into a slot.
-    void FLSlot_SetString(FLSlot, FLString) FLAPI; ///< Stores a UTF-8 string into a slot.
-    void FLSlot_SetData(FLSlot, FLSlice) FLAPI;    ///< Stores a data blob into a slot.
-    void FLSlot_SetValue(FLSlot, FLValue) FLAPI;   ///< Stores an FLValue into a slot.
+    FLEECE_PUBLIC void FLSlot_SetNull(FLSlot) FLAPI;             ///< Stores a JSON null into a slot.
+    FLEECE_PUBLIC void FLSlot_SetBool(FLSlot, bool) FLAPI;       ///< Stores a boolean into a slot.
+    FLEECE_PUBLIC void FLSlot_SetInt(FLSlot, int64_t) FLAPI;     ///< Stores an integer into a slot.
+    FLEECE_PUBLIC void FLSlot_SetUInt(FLSlot, uint64_t) FLAPI;   ///< Stores an unsigned int into a slot.
+    FLEECE_PUBLIC void FLSlot_SetFloat(FLSlot, float) FLAPI;     ///< Stores a `float` into a slot.
+    FLEECE_PUBLIC void FLSlot_SetDouble(FLSlot, double) FLAPI;   ///< Stores a `double` into a slot.
+    FLEECE_PUBLIC void FLSlot_SetString(FLSlot, FLString) FLAPI; ///< Stores a UTF-8 string into a slot.
+    FLEECE_PUBLIC void FLSlot_SetData(FLSlot, FLSlice) FLAPI;    ///< Stores a data blob into a slot.
+    FLEECE_PUBLIC void FLSlot_SetValue(FLSlot, FLValue) FLAPI;   ///< Stores an FLValue into a slot.
 
     static inline void FLSlot_SetArray(FLSlot slot, FLArray array) {
         FLSlot_SetValue(slot, (FLValue)array);

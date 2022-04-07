@@ -37,31 +37,31 @@ extern "C" {
     /** Creates an FLDoc from Fleece-encoded data that's been returned as a result from
         FLSlice_Copy or other API. The resulting document retains the data, so you don't need to
         worry about it remaining valid. */
-    FLDoc FLDoc_FromResultData(FLSliceResult data, FLTrust,
+    FLEECE_PUBLIC FLDoc FLDoc_FromResultData(FLSliceResult data, FLTrust,
                                FLSharedKeys FL_NULLABLE, FLSlice externData) FLAPI;
 
     /** Releases a reference to an FLDoc. This must be called once to free an FLDoc you created. */
-    void FLDoc_Release(FLDoc FL_NULLABLE) FLAPI;
+    FLEECE_PUBLIC void FLDoc_Release(FLDoc FL_NULLABLE) FLAPI;
 
     /** Adds a reference to an FLDoc. This extends its lifespan until at least such time as you
         call FLRelease to remove the reference. */
-    FLDoc FLDoc_Retain(FLDoc FL_NULLABLE) FLAPI;
+    FLEECE_PUBLIC FLDoc FLDoc_Retain(FLDoc FL_NULLABLE) FLAPI;
 
     /** Returns the encoded Fleece data backing the document. */
-    FLSlice FLDoc_GetData(FLDoc FL_NULLABLE) FLAPI FLPURE;
+    FLEECE_PUBLIC FLSlice FLDoc_GetData(FLDoc FL_NULLABLE) FLAPI FLPURE;
 
     /** Returns the FLSliceResult data owned by the document, if any, else a null slice. */
-    FLSliceResult FLDoc_GetAllocedData(FLDoc FL_NULLABLE) FLAPI FLPURE;
+    FLEECE_PUBLIC FLSliceResult FLDoc_GetAllocedData(FLDoc FL_NULLABLE) FLAPI FLPURE;
 
     /** Returns the root value in the FLDoc, usually an FLDict. */
-    FLValue FLDoc_GetRoot(FLDoc FL_NULLABLE) FLAPI FLPURE;
+    FLEECE_PUBLIC FLValue FLDoc_GetRoot(FLDoc FL_NULLABLE) FLAPI FLPURE;
 
     /** Returns the FLSharedKeys used by this FLDoc, as specified when it was created. */
-    FLSharedKeys FLDoc_GetSharedKeys(FLDoc FL_NULLABLE) FLAPI FLPURE;
+    FLEECE_PUBLIC FLSharedKeys FLDoc_GetSharedKeys(FLDoc FL_NULLABLE) FLAPI FLPURE;
 
     /** Looks up the Doc containing the Value, or NULL if there is none.
         @note Caller must release the FLDoc reference!! */
-    FLDoc FL_NULLABLE FLValue_FindDoc(FLValue FL_NULLABLE) FLAPI FLPURE;
+    FLEECE_PUBLIC FLDoc FL_NULLABLE FLValue_FindDoc(FLValue FL_NULLABLE) FLAPI FLPURE;
 
     /** Associates an arbitrary pointer value with a document, and thus its contained values.
         Allows client code to associate its own pointer with this FLDoc and its Values,
@@ -77,7 +77,7 @@ extern "C" {
                  already stored.
         @warning  Be sure to clear this before the associated object is freed/invalidated!
         @warning  This function is not thread-safe. Do not concurrently get & set objects. */
-    bool FLDoc_SetAssociated(FLDoc FL_NULLABLE doc,
+    FLEECE_PUBLIC bool FLDoc_SetAssociated(FLDoc FL_NULLABLE doc,
                              void * FL_NULLABLE pointer,
                              const char *type) FLAPI;
 
@@ -89,7 +89,7 @@ extern "C" {
         @param type  The type of object expected, i.e. the same string literal passed to
                      \ref FLDoc_SetAssociated.
         @return  The associated pointer of that type, if any. */
-    void* FLDoc_GetAssociated(FLDoc FL_NULLABLE doc, const char *type) FLAPI FLPURE;
+    FLEECE_PUBLIC void* FLDoc_GetAssociated(FLDoc FL_NULLABLE doc, const char *type) FLAPI FLPURE;
 
 
     /** @} */

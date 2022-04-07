@@ -30,7 +30,7 @@
 #define FLEECE_PUBLIC __declspec(dllimport)
 #endif
 #else
-#define FLEECE_PUBLIC
+#define FLEECE_PUBLIC __attribute__((visibility("default")))
 #endif
 
 FL_ASSUME_NONNULL_BEGIN
@@ -111,7 +111,7 @@ extern "C" {
     #define FLTimestampNone INT64_MIN
 
     /** Returns an FLTimestamp corresponding to the current time. */
-    FLTimestamp FLTimestamp_Now(void) FLAPI;
+    FLEECE_PUBLIC FLTimestamp FLTimestamp_Now(void) FLAPI;
 
     /** Formats a timestamp as a date-time string in ISO-8601 format.
         @note  See also \ref FLEncoder_WriteDateString, which writes a timestamp to an `FLEncoder`.
@@ -119,12 +119,12 @@ extern "C" {
         @param asUTC  If true, the timestamp will be given in universal time; if false, in the
                       local timezone.
         @return  A heap-allocated string, which you are responsible for releasing. */
-    FLStringResult FLTimestamp_ToString(FLTimestamp timestamp, bool asUTC) FLAPI;
+    FLEECE_PUBLIC FLStringResult FLTimestamp_ToString(FLTimestamp timestamp, bool asUTC) FLAPI;
 
     /** Parses an ISO-8601 date-time string to a timestamp. On failure returns `FLTimestampNone`.
         @note  See also \ref FLValue_AsTimestamp, which takes an `FLValue` and interprets numeric
         representations as well as strings. */
-    FLTimestamp FLTimestamp_FromString(FLString str) FLAPI;
+    FLEECE_PUBLIC FLTimestamp FLTimestamp_FromString(FLString str) FLAPI;
 
     /** @} */
 
