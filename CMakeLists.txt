@@ -52,7 +52,7 @@ add_library(FleeceBase    STATIC  ${FLEECE_BASE_SRC})
 
 # Command-Line Tool
 add_executable(fleeceTool Tool/fleece_tool.cc)
-target_link_libraries(fleeceTool FleeceStatic)
+target_link_libraries(fleeceTool FleeceObjects)
 
 # Fleece Tests
 set_test_source_files(RESULT FLEECE_TEST_SRC)
