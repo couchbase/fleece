@@ -22,10 +22,10 @@ else()
     message(FATAL_ERROR "Unsupported platform ${CMAKE_SYSTEM_NAME}!")
 endif()
 
-if(CMAKE_COMPILER_IS_GNUCC)
-   # Suppress a note about GCC 7 ABI changes
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-psabi")
-endif()
+# if(CMAKE_COMPILER_IS_GNUCC)
+#    # Suppress a note about GCC 7 ABI changes
+#     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-psabi")
+# endif()
 
 set_source_files(RESULT FLEECE_SRC)
 add_library(Fleece        SHARED  ${FLEECE_SRC})
