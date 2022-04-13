@@ -14,6 +14,7 @@
 #include "ConcurrentArena.hh"
 #include "fleece/slice.hh"
 #include <atomic>
+#include <cstdint>
 #include <memory>
 
 namespace fleece {
@@ -84,7 +85,7 @@ namespace fleece {
 
     private:
         // Hash table entry (32 bits).
-        struct Entry {
+        struct alignas(uint32_t) Entry {
             uint16_t keyOffset;     // offset of key from _keysOffset, or 0 if empty, 1 if deleted
             uint16_t value;         // value associated with key
 
