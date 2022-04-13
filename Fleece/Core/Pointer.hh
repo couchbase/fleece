@@ -13,6 +13,7 @@
 #pragma once
 #include "Value.hh"
 #include "betterassert.hh"
+#include <cstring>
 
 namespace fleece { namespace impl { namespace internal {
     using namespace fleece::impl;
@@ -71,10 +72,18 @@ namespace fleece { namespace impl { namespace internal {
 
         const Value* derefExtern(bool wide, const Value *dst) const noexcept;
 
-        void setNarrowBytes(uint16_t b)             {*(uint16_t*)_byte = b;}
-        void setWideBytes(uint32_t b)               {*(uint32_t*)_byte = b;}
-        uint16_t narrowBytes() const FLPURE                {return *(uint16_t*)_byte;}
-        uint32_t wideBytes() const FLPURE                  {return *(uint32_t*)_byte;}
+        void setNarrowBytes(uint16_t b) { std::memcpy(_byte, &b, sizeof(b)); }
+        void setWideBytes(uint32_t b) { std::memcpy(_byte, &b, sizeof(b)); }
+        uint16_t narrowBytes() const FLPURE {
+          uint16_t ret;
+          std::memcpy(&ret, _byte, sizeof(ret));
+          return ret;
+        }
+        uint32_t wideBytes() const FLPURE {
+          uint32_t ret;
+          std::memcpy(&ret, _byte, sizeof(ret));
+          return ret;
+        }
     };
 
 
