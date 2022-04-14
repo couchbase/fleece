@@ -52,7 +52,7 @@ set(FLEECE_BASE_SRC Fleece/API_Impl/FLSlice.cc
 
 add_library(FleeceBase    STATIC  ${FLEECE_BASE_SRC})
 
-setup_build()
+# setup_build()
 
 # Command-Line Tool
 add_executable(fleeceTool Tool/fleece_tool.cc)
@@ -97,3 +97,5 @@ foreach(platform Fleece FleeceStatic FleeceBase fleeceTool FleeceTests)
         __STDC_FORMAT_MACROS # To use PRIx64 and friends for formatting variable size types in printf
     )
 endforeach()
+
+setup_build()
