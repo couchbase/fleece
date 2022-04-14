@@ -87,6 +87,7 @@ endfunction()
 function(get_all_targets outvar)
     set(targets)
     get_all_targets_recursive(targets ${CMAKE_CURRENT_SOURCE_DIR})
+    list(FILTER targets EXCLUDE REGEX "lib|apidoc")
     set(${outvar} ${targets} PARENT_SCOPE)
 endfunction()
 
@@ -105,7 +106,6 @@ function(setup_build_base)
         # Suppress an annoying note about GCC 7 ABI changes, and linker errors about the Fleece C API
 
         get_all_targets(all_targets)
-		list(FILTER all_targets EXCLUDE REGEX "lib|apidoc")
         foreach(target ${all_targets})
             target_compile_options(
                 ${target} PRIVATE

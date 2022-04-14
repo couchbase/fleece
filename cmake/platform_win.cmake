@@ -47,6 +47,29 @@ function(setup_build)
             -DNOMINMAX
         )
     endforeach()
+
+    # Compile string literals as UTF-8,
+    # Enable exception handling for C++ but disable for extern C
+    # Disable the following warnings:
+    #   4068 (unrecognized pragma)
+    #   4244 (converting float to integer)
+    #   4018 (signed / unsigned mismatch)
+    #   4819 (character that cannot be represented in current code page)
+    #   4800 (value forced to bool)
+    #   5105 ("macro expansion producing 'defined' has undefined behavior")
+    # Disable warning about "insecure" C runtime functions (strcpy vs strcpy_s)
+
+    get_all_targets(all_targets)
+    foreach(target ${all_targets})
+        target_compile_options(
+            ${target} PRIVATE
+            "/utf-8"
+            "/wd4068;/wd4244;/wd4018;/wd4819;/wd4800;/wd5105"
+            "-D_CRT_SECURE_NO_WARNINGS=1"
+            "$<$<COMPILE_LANGUAGE:CXX>:/EHsc>"
+        )
+    endforeach()
+
 endfunction()
 
 function(setup_test_build)
@@ -59,4 +82,19 @@ function(setup_test_build)
         FleeceTests PRIVATE
         "/utf-8"                # Some source files have UTF-8 literals
     )
+endfunction()
+
+function(setup_build_base)
+    if(CMAKE_COMPILER_IS_GNUCC)
+        # Suppress an annoying note about GCC 7 ABI changes, and linker errors about the Fleece C API
+
+        get_all_targets(all_targets)
+		list(FILTER all_targets EXCLUDE REGEX "lib|apidoc")
+        foreach(target ${all_targets})
+            target_compile_options(
+                ${target} PRIVATE
+                "$<$<COMPILE_LANGUAGE:CXX>:-Wno-psabi;-Wno-odr>"
+            )
+        endforeach()
+     endif()
 endfunction()
