@@ -22,11 +22,6 @@ else()
     message(FATAL_ERROR "Unsupported platform ${CMAKE_SYSTEM_NAME}!")
 endif()
 
-if(CMAKE_COMPILER_IS_GNUCC)
-   # Suppress a note about GCC 7 ABI changes
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-psabi")
-endif()
-
 set_source_files(RESULT FLEECE_SRC)
 add_library(Fleece        SHARED  ${FLEECE_SRC})
 add_library(FleeceStatic  STATIC  ${FLEECE_SRC})
@@ -51,8 +46,6 @@ set(FLEECE_BASE_SRC Fleece/API_Impl/FLSlice.cc
                     ${FLEECE_BASE_PLATFORM_SRC})
 
 add_library(FleeceBase    STATIC  ${FLEECE_BASE_SRC})
-
-setup_build()
 
 # Command-Line Tool
 add_executable(fleeceTool Tool/fleece_tool.cc)
@@ -97,3 +90,5 @@ foreach(platform Fleece FleeceStatic FleeceBase fleeceTool FleeceTests)
         __STDC_FORMAT_MACROS # To use PRIx64 and friends for formatting variable size types in printf
     )
 endforeach()
+
+setup_build()

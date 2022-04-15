@@ -60,6 +60,8 @@ function(set_test_source_files)
 endfunction()
 
 function(setup_build)
+    setup_build_base()
+
     target_include_directories(
         FleeceStatic PRIVATE
         Integration/ObjC
