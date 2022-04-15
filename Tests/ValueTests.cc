@@ -218,4 +218,18 @@ namespace fleece {
         retain(root);
         release(root);
     }
+
+    TEST_CASE("Recreate Doc from same data", "[Doc]") {
+        alloc_slice data( readTestFile("1person.fleece") );
+        Retained<Doc> doc = new Doc(data, Doc::kUntrusted);
+        doc = nullptr;
+        doc = new Doc(data, Doc::kUntrusted);
+    }
+
+    TEST_CASE("Many Docs", "[Doc]") {
+        std::vector<Retained<Doc>> docs;
+        for (int i = 0; i < 100; i++) {
+            docs.push_back(Doc::fromJSON("[]"));
+        }
+    }
 }

@@ -40,17 +40,27 @@ namespace fleece { namespace impl {
     // `sMemoryMap` is a global mapping from pointers to Scopes.
     struct memEntry {
         const void *endOfRange; // The _end_ of the memory range covered by the Scope
-        Scope *scope;           // The Scope
+        Scope *scope;           // The Scope. Is nullptr if the entry is a tombstone.
         bool operator< (const memEntry &other) const        {return endOfRange < other.endOfRange;}
     };
+
+    // The number of Scopes that can be registered without heap allocation.
+    static const size_t kMemoryMapPrealloc = 10;
 
     using memoryMap = std::multiset<memEntry>;
 
     static memoryMap *sMemoryMap;
 
-    // Mutex for access to `sMemoryMap`
-    static mutex sMutex;
+    // The current number of tombstones in sMemoryMap.
+    static size_t sMemoryMapTombstones = 0;
 
+    // Must be called under sMutext and assumes sMemoryMap is initialized.
+    static size_t memEntryCount() {
+        return sMemoryMap->size() - sMemoryMapTombstones;
+    }
+
+    // Mutex for access to `sMemoryMap` and `sMemoryMapTombstones`.
+    static mutex sMutex;
 
     Scope::Scope(slice data, SharedKeys *sk, slice destination, bool isDoc) noexcept
     :_sk(sk)
@@ -102,10 +112,14 @@ namespace fleece { namespace impl {
             _dataHash = _data.hash();
 #endif
         lock_guard<mutex> lock(sMutex);
-        if (_usuallyFalse(!sMemoryMap))
+        if (_usuallyFalse(!sMemoryMap)) {
             sMemoryMap = new memoryMap;
+            for (size_t i = 0; i < kMemoryMapPrealloc; ++i)
+                sMemoryMap->insert({nullptr, nullptr});
+            sMemoryMapTombstones = kMemoryMapPrealloc;
+        }
         Log("Register   (%p ... %p) --> Scope %p, sk=%p [Now %zu]",
-            _data.buf, _data.end(), this, _sk.get(), sMemoryMap->size()+1);
+            _data.buf, _data.end(), this, _sk.get(), memEntryCount()+1);
 
         if (!_isDoc && _data.size == 2) {
             // Values of size 2 are simple values in that they don't have sub-values. Therefore, they don't provide
@@ -125,27 +139,50 @@ namespace fleece { namespace impl {
         memEntry entry = {_data.end(), this};
         memoryMap::iterator iter = sMemoryMap->upper_bound(entry);
 
-        // Assert that there isn't another conflicting Scope registered for this data:
-        if (iter != sMemoryMap->begin() && prev(iter)->endOfRange == entry.endOfRange) {
-            Scope *existing = prev(iter)->scope;
-            if (existing->_data == _data && existing->_externDestination == _externDestination
-                && existing->_sk == _sk) {
-                Log("Duplicate  (%p ... %p) --> Scope %p, sk=%p",
-                    _data.buf, _data.end(), this, _sk.get());
-            } else {
-                static const char* const valueTypeNames[] {"Null", "Boolean", "Number", "String", "Data", "Array", "Dict"};
-                auto type1 = Value::fromData(_data)->type();
-                auto type2 = Value::fromData(existing->_data)->type();
-                FleeceException::_throw(InternalError,
-                    "Incompatible duplicate Scope %p (%s) for (%p .. %p) with sk=%p: "
-                    "conflicts with %p (%s) for (%p .. %p) with sk=%p",
-                    this, valueTypeNames[type1], _data.buf, _data.end(), _sk.get(),
-                    existing, valueTypeNames[type2], existing->_data.buf, existing->_data.end(),
-                    existing->_sk.get());
+        if (iter != sMemoryMap->begin()) {
+            auto prevEntry = &*prev(iter);
+            if (prevEntry->endOfRange == entry.endOfRange) {
+                Scope *existing = prevEntry->scope;
+                if (existing) {
+                    // Assert that there isn't another conflicting Scope registered for this data:
+                    if (existing->_data == _data && existing->_externDestination == _externDestination
+                        && existing->_sk == _sk) {
+                        Log("Duplicate  (%p ... %p) --> Scope %p, sk=%p",
+                            _data.buf, _data.end(), this, _sk.get());
+                    } else {
+                        static const char* const valueTypeNames[] {"Null", "Boolean", "Number", "String", "Data", "Array", "Dict"};
+                        auto type1 = Value::fromData(_data)->type();
+                        auto type2 = Value::fromData(existing->_data)->type();
+                        FleeceException::_throw(InternalError,
+                            "Incompatible duplicate Scope %p (%s) for (%p .. %p) with sk=%p: "
+                            "conflicts with %p (%s) for (%p .. %p) with sk=%p",
+                            this, valueTypeNames[type1], _data.buf, _data.end(), _sk.get(),
+                            existing, valueTypeNames[type2], existing->_data.buf, existing->_data.end(),
+                            existing->_sk.get());
+                    }
+                } else  {
+                    // The prevEntry is a tombstone, so we can reuse it.
+                    // It is safe to mutate the entry because the scope does not factor into the
+                    // order of the entries and it is already at the right position.
+                    const_cast<memEntry*>(prevEntry)->scope = this;
+                    sMemoryMapTombstones--;
+                    _unregistered.clear();
+                    return;
+                }
             }
         }
 
-        sMemoryMap->insert(iter, entry);
+        if (sMemoryMapTombstones) {
+            // There are tombstones available, so we reuse one of them.
+            auto it = sMemoryMap->begin();
+            while (it->scope) it++;
+            auto node = sMemoryMap->extract(it);
+            node.value() = entry;
+            sMemoryMap->insert(move(node));
+            sMemoryMapTombstones--;
+        } else {
+            sMemoryMap->insert(iter, entry);
+        }
         _unregistered.clear();
     }
 
@@ -163,13 +200,19 @@ namespace fleece { namespace impl {
 #endif
 
             lock_guard<mutex> lock(sMutex);
-            Log("Unregister (%p ... %p) --> Scope %p, sk=%p   [now %zu]",
-                _data.buf, _data.end(), this, _sk.get(), sMemoryMap->size()-1);
+            Log("Unregister (%p ... %p) --> Scope %p, sk=%p   [Now %zu]",
+                _data.buf, _data.end(), this, _sk.get(), memEntryCount()-1);
             memEntry entry = {_data.end(), this};
             auto iter = sMemoryMap->lower_bound(entry);
             while (iter != sMemoryMap->end() && iter->endOfRange == entry.endOfRange) {
                 if (iter->scope == this) {
-                    sMemoryMap->erase(iter);
+                    if (sMemoryMap->size() == kMemoryMapPrealloc) {
+                        // The memory map has reached the occupancy threshold at which we start to
+                        // create tombstones instead of removing entries.
+                        const_cast<memEntry*>(&*iter)->scope = nullptr;
+                        sMemoryMapTombstones++;
+                    } else
+                        sMemoryMap->erase(iter);
                     return;
                 } else {
                     ++iter;
@@ -199,7 +242,13 @@ namespace fleece { namespace impl {
             return nullptr;
         auto iter = sMemoryMap->upper_bound({src, nullptr});
         if (_usuallyFalse(iter == sMemoryMap->end()))
-            return nullptr;
+                return nullptr;
+        while (_usuallyFalse(!iter->scope)) {
+            // The found entry is a tombstone, so we skip it and try the next entry.
+            iter++;
+            if (_usuallyFalse(iter == sMemoryMap->end()))
+                return nullptr;
+        }
         Scope *scope = iter->scope;
         if (_usuallyFalse(src < scope->_data.buf))
             return nullptr;
@@ -259,6 +308,9 @@ namespace fleece { namespace impl {
         }
         for (auto &entry : *sMemoryMap) {
             auto scope = entry.scope;
+            if (!scope)
+                // The current entry is a tombstone.
+                continue;
             fprintf(stderr, "%p -- %p (%4zu bytes) --> SharedKeys[%p]%s\n",
                     scope->_data.buf, scope->_data.end(), scope->_data.size, scope->sharedKeys(),
                     (scope->_isDoc ? " (Doc)" : ""));
