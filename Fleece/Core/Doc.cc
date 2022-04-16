@@ -55,6 +55,7 @@ namespace fleece { namespace impl {
     static size_t sMemoryMapTombstones = 0;
 
     // Must be called under sMutext and assumes sMemoryMap is initialized.
+    [[maybe_unused]]
     static size_t memEntryCount() {
         return sMemoryMap->size() - sMemoryMapTombstones;
     }
@@ -200,7 +201,7 @@ namespace fleece { namespace impl {
 #endif
 
             lock_guard<mutex> lock(sMutex);
-            Log("Unregister (%p ... %p) --> Scope %p, sk=%p   [Now %zu]",
+            Log("Unregister (%p ... %p) --> Scope %p, sk=%p [Now %zu]",
                 _data.buf, _data.end(), this, _sk.get(), memEntryCount()-1);
             memEntry entry = {_data.end(), this};
             auto iter = sMemoryMap->lower_bound(entry);
