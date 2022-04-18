@@ -59,8 +59,7 @@ function(setup_build)
     #   5105 ("macro expansion producing 'defined' has undefined behavior")
     # Disable warning about "insecure" C runtime functions (strcpy vs strcpy_s)
 
-    get_all_targets(all_targets)
-    foreach(target ${all_targets})
+    foreach(target ${LITECORE_TARGETS})
         target_compile_options(
             ${target} PRIVATE
             "/utf-8"
