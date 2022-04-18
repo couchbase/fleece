@@ -44,12 +44,14 @@ namespace fleece { namespace impl {
         bool operator< (const memEntry &other) const        {return endOfRange < other.endOfRange;}
     };
 
-    // The number of Scopes that can be registered without heap allocation.
-    static const size_t kMemoryMapPrealloc = 10;
-
     using memoryMap = std::multiset<memEntry>;
 
     static memoryMap *sMemoryMap;
+
+    // The maximum number tombstones that will be created in sMemoryMap.
+    // While the number of registered Scopes is below this value, new Scopes can generally be
+    // registered without heap allocation.
+    static const size_t kMemoryMapMaxTombstones = 25;
 
     // The current number of tombstones in sMemoryMap.
     static size_t sMemoryMapTombstones = 0;
@@ -113,12 +115,8 @@ namespace fleece { namespace impl {
             _dataHash = _data.hash();
 #endif
         lock_guard<mutex> lock(sMutex);
-        if (_usuallyFalse(!sMemoryMap)) {
+        if (_usuallyFalse(!sMemoryMap))
             sMemoryMap = new memoryMap;
-            for (size_t i = 0; i < kMemoryMapPrealloc; ++i)
-                sMemoryMap->insert({nullptr, nullptr});
-            sMemoryMapTombstones = kMemoryMapPrealloc;
-        }
         Log("Register   (%p ... %p) --> Scope %p, sk=%p [Now %zu]",
             _data.buf, _data.end(), this, _sk.get(), memEntryCount()+1);
 
@@ -207,9 +205,9 @@ namespace fleece { namespace impl {
             auto iter = sMemoryMap->lower_bound(entry);
             while (iter != sMemoryMap->end() && iter->endOfRange == entry.endOfRange) {
                 if (iter->scope == this) {
-                    if (sMemoryMap->size() == kMemoryMapPrealloc) {
-                        // The memory map has reached the occupancy threshold at which we start to
-                        // create tombstones instead of removing entries.
+                    if (sMemoryMap->size() <= kMemoryMapMaxTombstones) {
+                        // The memory map is below the occupancy threshold at which we start to
+                        // removing entries and instead create tombstones.
                         const_cast<memEntry*>(&*iter)->scope = nullptr;
                         sMemoryMapTombstones++;
                     } else
