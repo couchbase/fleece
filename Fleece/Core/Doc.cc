@@ -48,7 +48,7 @@ namespace fleece { namespace impl {
 
     static memoryMap *sMemoryMap;
 
-    // The maximum number tombstones that will be created in sMemoryMap.
+    // The maximum number of tombstones that will be created in sMemoryMap.
     // While the number of registered Scopes is below this value, new Scopes can generally be
     // registered without heap allocation.
     static const size_t kMemoryMapMaxTombstones = 25;
