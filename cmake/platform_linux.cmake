@@ -27,6 +27,8 @@ function(set_test_source_files)
 endfunction()
 
 function(setup_build)
+    setup_build_base()
+
     target_link_libraries(
         FleeceBase INTERFACE
         dl
