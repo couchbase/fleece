@@ -29,16 +29,16 @@ extern "C" {
 
     /** Writes a Core Foundation (or Objective-C) object to an Encoder.
         Supports all the JSON types, as well as CFData. */
-    bool FLEncoder_WriteCFObject(FLEncoder, CFTypeRef) FLAPI;
+    FLEECE_PUBLIC bool FLEncoder_WriteCFObject(FLEncoder, CFTypeRef) FLAPI;
 
 
     /** Returns a Value as a corresponding CoreFoundation object.
         Caller must CFRelease the result. */
-    CFTypeRef FLValue_CopyCFObject(FLValue FL_NULLABLE) FLAPI;
+    FLEECE_PUBLIC CFTypeRef FLValue_CopyCFObject(FLValue FL_NULLABLE) FLAPI;
 
 
     /** Same as FLDictGet, but takes the key as a CFStringRef. */
-    FLValue FLDict_GetWithCFString(FLDict FL_NULLABLE, CFStringRef) FLAPI;
+    FLEECE_PUBLIC FLValue FLDict_GetWithCFString(FLDict FL_NULLABLE, CFStringRef) FLAPI;
 
 
 #ifdef __OBJC__
@@ -46,31 +46,31 @@ extern "C" {
     
     /** Writes a Core Foundation (or Objective-C) object to an Encoder.
         Supports all the JSON types, as well as CFData. */
-    bool FLEncoder_WriteNSObject(FLEncoder, id) FLAPI;
+    FLEECE_PUBLIC bool FLEncoder_WriteNSObject(FLEncoder, id) FLAPI;
 
 
     /** Creates an NSMapTable configured for storing shared NSStrings for Fleece decoding. */
-    NSMapTable* FLCreateSharedStringsTable(void) FLAPI;
+    FLEECE_PUBLIC NSMapTable* FLCreateSharedStringsTable(void) FLAPI;
 
     
     /** Returns a Value as a corresponding (autoreleased) Foundation object. */
-    id FLValue_GetNSObject(FLValue FL_NULLABLE, NSMapTable* FL_NULLABLE sharedStrings) FLAPI;
+    FLEECE_PUBLIC id FLValue_GetNSObject(FLValue FL_NULLABLE, NSMapTable* FL_NULLABLE sharedStrings) FLAPI;
 
 
     /** Same as FLDictGet, but takes the key as an NSString. */
-    FLValue FLDict_GetWithNSString(FLDict FL_NULLABLE, NSString*) FLAPI;
+    FLEECE_PUBLIC FLValue FLDict_GetWithNSString(FLDict FL_NULLABLE, NSString*) FLAPI;
 
 
     /** Returns an FLDictIterator's current key as an NSString. */
-    NSString* FLDictIterator_GetKeyAsNSString(const FLDictIterator *i,
+    FLEECE_PUBLIC NSString* FLDictIterator_GetKeyAsNSString(const FLDictIterator *i,
                                               NSMapTable* FL_NULLABLE sharedStrings) FLAPI;
 
     /** Same as FLEncoder_Finish, but returns result as NSData or error as NSError. */
-    NSData* FLEncoder_FinishWithNSData(FLEncoder, NSError** FL_NULLABLE) FLAPI;
+    FLEECE_PUBLIC NSData* FLEncoder_FinishWithNSData(FLEncoder, NSError** FL_NULLABLE) FLAPI;
 
 
     /** NSError domain string for Fleece errors */
-    extern NSString* const FLErrorDomain;
+    FLEECE_PUBLIC extern NSString* const FLErrorDomain;
 
 
     @interface NSObject (Fleece)

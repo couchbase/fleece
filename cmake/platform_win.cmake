@@ -35,7 +35,7 @@ endfunction()
 function(setup_build)
     setup_build_base()
 
-    foreach(target FleeceStatic Fleece FleeceBase)
+    foreach(target FleeceObjects FleeceBase)
         target_include_directories(
             ${target} PRIVATE
             MSVC

@@ -33,12 +33,12 @@ extern "C" {
 
     /** Encodes a Fleece value as JSON (or a JSON fragment.)
         @note Any Data values will be encoded as base64-encoded strings. */
-    FLStringResult FLValue_ToJSON(FLValue FL_NULLABLE) FLAPI;
+    FLEECE_PUBLIC FLStringResult FLValue_ToJSON(FLValue FL_NULLABLE) FLAPI;
 
     /** Encodes a Fleece value as JSON5, a more lenient variant of JSON that allows dictionary
         keys to be unquoted if they're alphanumeric. This tends to be more readable.
         @note Any Data values will be encoded as base64-encoded strings. */
-    FLStringResult FLValue_ToJSON5(FLValue FL_NULLABLE) FLAPI;
+    FLEECE_PUBLIC FLStringResult FLValue_ToJSON5(FLValue FL_NULLABLE) FLAPI;
 
     /** Most general Fleece to JSON converter.
         @param v  The Fleece value to encode
@@ -46,7 +46,7 @@ extern "C" {
         @param canonicalForm  If true, outputs the JSON in a consistent "canonical" form. All
                 equivalent values should produce byte-for-byte identical canonical JSON.
                 This is useful for creating digital signatures, for example. */
-    FLStringResult FLValue_ToJSONX(FLValue FL_NULLABLE v,
+    FLEECE_PUBLIC FLStringResult FLValue_ToJSONX(FLValue FL_NULLABLE v,
                                    bool json5,
                                    bool canonicalForm) FLAPI;
 
@@ -59,20 +59,20 @@ extern "C" {
     /** Creates an FLDoc from JSON-encoded data. The data is first encoded into Fleece, and the
         Fleece data is kept by the doc; the input JSON data is no longer needed after this
         function returns. */
-    FLDoc FLDoc_FromJSON(FLSlice json, FLError* FL_NULLABLE outError) FLAPI;
+    FLEECE_PUBLIC FLDoc FLDoc_FromJSON(FLSlice json, FLError* FL_NULLABLE outError) FLAPI;
 
     /** Creates a new mutable Array from JSON. It is an error if the JSON is not an array.
         Its initial ref-count is 1, so a call to FLMutableArray_Release will free it.  */
-    FLMutableArray FL_NULLABLE FLMutableArray_NewFromJSON(FLString json, FLError* FL_NULLABLE outError) FLAPI;
+    FLEECE_PUBLIC FLMutableArray FL_NULLABLE FLMutableArray_NewFromJSON(FLString json, FLError* FL_NULLABLE outError) FLAPI;
 
     /** Creates a new mutable Dict from json. It is an error if the JSON is not a dictionary/object.
         Its initial ref-count is 1, so a call to FLMutableDict_Release will free it.  */
-    FLMutableDict FL_NULLABLE FLMutableDict_NewFromJSON(FLString json, FLError* FL_NULLABLE outError) FLAPI;
+    FLEECE_PUBLIC FLMutableDict FL_NULLABLE FLMutableDict_NewFromJSON(FLString json, FLError* FL_NULLABLE outError) FLAPI;
 
     /** Parses JSON data and writes the value(s) to the encoder as their Fleece equivalents.
         (This acts as a single write, like WriteInt; it's just that the value written is likely to
         be an entire dictionary or array.) */
-    bool FLEncoder_ConvertJSON(FLEncoder, FLSlice json) FLAPI;
+    FLEECE_PUBLIC bool FLEncoder_ConvertJSON(FLEncoder, FLSlice json) FLAPI;
 
     /** @} */
 

@@ -37,30 +37,30 @@ extern "C" {
     /** Creates a FLDeepIterator to iterate over a dictionary.
         Call FLDeepIterator_GetKey and FLDeepIterator_GetValue to get the first item,
         then FLDeepIterator_Next. */
-    FLDeepIterator FLDeepIterator_New(FLValue FL_NULLABLE) FLAPI;
+    FLEECE_PUBLIC FLDeepIterator FLDeepIterator_New(FLValue FL_NULLABLE) FLAPI;
 
-    void FLDeepIterator_Free(FLDeepIterator FL_NULLABLE) FLAPI;
+    FLEECE_PUBLIC void FLDeepIterator_Free(FLDeepIterator FL_NULLABLE) FLAPI;
 
     /** Returns the current value being iterated over. or NULL at the end of iteration. */
-    FLValue FL_NULLABLE FLDeepIterator_GetValue(FLDeepIterator) FLAPI;
+    FLEECE_PUBLIC FLValue FL_NULLABLE FLDeepIterator_GetValue(FLDeepIterator) FLAPI;
 
     /** Returns the parent/container of the current value, or NULL at the end of iteration. */
-    FLValue FL_NULLABLE FLDeepIterator_GetParent(FLDeepIterator) FLAPI;
+    FLEECE_PUBLIC FLValue FL_NULLABLE FLDeepIterator_GetParent(FLDeepIterator) FLAPI;
 
     /** Returns the key of the current value in its parent, or an empty slice if not in a dictionary. */
-    FLSlice FLDeepIterator_GetKey(FLDeepIterator) FLAPI;
+    FLEECE_PUBLIC FLSlice FLDeepIterator_GetKey(FLDeepIterator) FLAPI;
 
     /** Returns the array index of the current value in its parent, or 0 if not in an array. */
-    uint32_t FLDeepIterator_GetIndex(FLDeepIterator) FLAPI;
+    FLEECE_PUBLIC uint32_t FLDeepIterator_GetIndex(FLDeepIterator) FLAPI;
 
     /** Returns the current depth in the hierarchy, starting at 1 for the top-level children. */
-    size_t FLDeepIterator_GetDepth(FLDeepIterator) FLAPI;
+    FLEECE_PUBLIC size_t FLDeepIterator_GetDepth(FLDeepIterator) FLAPI;
 
     /** Tells the iterator to skip the children of the current value. */
-    void FLDeepIterator_SkipChildren(FLDeepIterator) FLAPI;
+    FLEECE_PUBLIC void FLDeepIterator_SkipChildren(FLDeepIterator) FLAPI;
 
     /** Advances the iterator to the next value, or returns false if at the end. */
-    bool FLDeepIterator_Next(FLDeepIterator) FLAPI;
+    FLEECE_PUBLIC bool FLDeepIterator_Next(FLDeepIterator) FLAPI;
 
     typedef struct {
         FLSlice key;        ///< Dict key, or kFLSliceNull if none
@@ -68,15 +68,15 @@ extern "C" {
     } FLPathComponent;
 
     /** Returns the path as an array of FLPathComponents. */
-    void FLDeepIterator_GetPath(FLDeepIterator,
+    FLEECE_PUBLIC void FLDeepIterator_GetPath(FLDeepIterator,
                                 FLPathComponent* FL_NONNULL * FL_NONNULL outPath,
                                 size_t* outDepth) FLAPI;
 
     /** Returns the current path in JavaScript format. */
-    FLSliceResult FLDeepIterator_GetPathString(FLDeepIterator) FLAPI;
+    FLEECE_PUBLIC FLSliceResult FLDeepIterator_GetPathString(FLDeepIterator) FLAPI;
 
     /** Returns the current path in JSONPointer format (RFC 6901). */
-    FLSliceResult FLDeepIterator_GetJSONPointer(FLDeepIterator) FLAPI;
+    FLEECE_PUBLIC FLSliceResult FLDeepIterator_GetJSONPointer(FLDeepIterator) FLAPI;
 
     /** @} */
 
