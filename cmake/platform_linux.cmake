@@ -29,15 +29,12 @@ endfunction()
 function(setup_build)
     setup_build_base()
 
-    target_link_libraries(
-        FleeceBase INTERFACE
-        dl
-    )
-
-    target_link_libraries(
-        FleeceObjects INTERFACE
-        dl
-    )
+    foreach(platform FleeceBase FleeceObjects FleeceStatic Fleece)
+        target_link_libraries(
+            ${platform} INTERFACE
+            dl
+        ) 
+    endforeach()
 
     target_compile_definitions(
         FleeceObjects PRIVATE

@@ -67,11 +67,13 @@ function(setup_build)
         Integration/ObjC
     )
 
-    target_link_libraries(
-        FleeceObjects INTERFACE
-        "-framework CoreFoundation"
-        "-framework Foundation"
-    )
+    foreach(platform FleeceBase FleeceObjects FleeceStatic Fleece)
+        target_link_libraries(
+            ${platform} INTERFACE
+            "-framework CoreFoundation"
+            "-framework Foundation"
+        ) 
+    endforeach()
 
     target_compile_definitions(
         FleeceObjects PUBLIC
