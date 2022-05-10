@@ -257,7 +257,7 @@ extern "C" {
         value written. You can continue writing, and the final output returned by \ref FLEncoder_Finish will
         consist of everything after this point. That second part can be used in the future by loading it
         as an `FLDoc` with the first part as its `extern` reference. */
-    FLSliceResult FLEncoder_Snip(FLEncoder) FLAPI;
+    FLEECE_PUBLIC FLSliceResult FLEncoder_Snip(FLEncoder) FLAPI;
 
     /** Finishes encoding the current item, and returns its offset in the output data. */
     FLEECE_PUBLIC size_t FLEncoder_FinishItem(FLEncoder) FLAPI;
