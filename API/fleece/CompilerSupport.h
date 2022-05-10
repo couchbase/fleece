@@ -225,6 +225,27 @@
     #define WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) 0
 #endif
 
+// On Windows, FLEECE_PUBLIC marks symbols as being exported from the shared library.
+// However, this is not the whole list of things that are exported.  The API methods
+// are exported using a definition list, but it is not possible to correctly include
+// initialized global variables, so those need to be marked (both in the header and
+// implementation) with FLEECE_PUBLIC.  See kFLNullValue below and in Fleece.cc
+// for an example.
+#if defined(_MSC_VER)
+#ifdef FLEECE_EXPORTS
+#define FLEECE_PUBLIC __declspec(dllexport)
+#else
+#define FLEECE_PUBLIC __declspec(dllimport)
+#endif
+#else
+#define FLEECE_PUBLIC __attribute__((visibility("default")))
+#endif
+
+#ifdef __cplusplus
+    #define FLAPI noexcept
+#else
+    #define FLAPI
+#endif
 
 #else // _FLEECE_COMPILER_SUPPORT_H
 #warn "Compiler is not honoring #pragma once"

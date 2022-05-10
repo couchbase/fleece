@@ -25,10 +25,7 @@
 
 #ifdef __cplusplus
     #include <string>
-    #define FLAPI noexcept
     namespace fleece { struct alloc_slice; }
-#else
-    #define FLAPI
 #endif
 
 
@@ -140,14 +137,14 @@ static inline FLSlice FLStr(const char* FL_NULLABLE str) FLAPI {
 
 
 /** Equality test of two slices. */
-bool FLSlice_Equal(FLSlice a, FLSlice b) FLAPI FLPURE;
+FLEECE_PUBLIC bool FLSlice_Equal(FLSlice a, FLSlice b) FLAPI FLPURE;
 
 /** Lexicographic comparison of two slices; basically like memcmp(), but taking into account
     differences in length. */
-int FLSlice_Compare(FLSlice, FLSlice) FLAPI FLPURE;
+FLEECE_PUBLIC int FLSlice_Compare(FLSlice, FLSlice) FLAPI FLPURE;
 
 /** Computes a 32-bit hash of a slice's data, suitable for use in hash tables. */
-uint32_t FLSlice_Hash(FLSlice s) FLAPI FLPURE;
+FLEECE_PUBLIC uint32_t FLSlice_Hash(FLSlice s) FLAPI FLPURE;
 
 /** Copies a slice to a buffer, adding a trailing zero byte to make it a valid C string.
     If there is not enough capacity the slice will be truncated, but the trailing zero byte is
@@ -156,13 +153,13 @@ uint32_t FLSlice_Hash(FLSlice s) FLAPI FLPURE;
     @param buffer  Where to copy the bytes. At least `capacity` bytes must be available.
     @param capacity  The maximum number of bytes to copy (including the trailing 0.)
     @return  True if the entire slice was copied, false if it was truncated. */
-bool FLSlice_ToCString(FLSlice s, char* buffer, size_t capacity) FLAPI;
+FLEECE_PUBLIC bool FLSlice_ToCString(FLSlice s, char* buffer, size_t capacity) FLAPI;
 
 /** Allocates an FLSliceResult of the given size, without initializing the buffer. */
-FLSliceResult FLSliceResult_New(size_t) FLAPI;
+FLEECE_PUBLIC FLSliceResult FLSliceResult_New(size_t) FLAPI;
 
 /** Allocates an FLSliceResult, copying the given slice. */
-FLSliceResult FLSlice_Copy(FLSlice) FLAPI;
+FLEECE_PUBLIC FLSliceResult FLSlice_Copy(FLSlice) FLAPI;
 
 
 /** Allocates an FLSliceResult, copying `size` bytes starting at `buf`. */
@@ -172,8 +169,8 @@ static inline FLSliceResult FLSliceResult_CreateWith(const void* FL_NULLABLE byt
 }
 
 
-void _FLBuf_Retain(const void* FL_NULLABLE) FLAPI;   // internal; do not call
-void _FLBuf_Release(const void* FL_NULLABLE) FLAPI;  // internal; do not call
+FLEECE_PUBLIC void _FLBuf_Retain(const void* FL_NULLABLE) FLAPI;   // internal; do not call
+FLEECE_PUBLIC void _FLBuf_Release(const void* FL_NULLABLE) FLAPI;  // internal; do not call
 
 /** Increments the ref-count of a FLSliceResult. */
 static inline FLSliceResult FLSliceResult_Retain(FLSliceResult s) FLAPI {
@@ -197,7 +194,7 @@ static inline FLSlice FLSliceResult_AsSlice(FLSliceResult sr) {
 /** Writes zeroes to `size` bytes of memory starting at `dst`.
     Unlike a call to `memset`, these writes cannot be optimized away by the compiler.
     This is useful for securely removing traces of passwords or encryption keys. */
-void FL_WipeMemory(void *dst, size_t size) FLAPI;
+FLEECE_PUBLIC void FL_WipeMemory(void *dst, size_t size) FLAPI;
 
 
 /** @} */
