@@ -41,6 +41,9 @@ namespace fleece { namespace impl {
         /** Resets the encoder so it can be used again. */
         void reset()                            {_out.reset(); _first = true;}
 
+        /** Adds a newline between consecutive top-level values. */
+        void nextDocument()                     {_out << '\n'; _first = true;}
+
         /////// Writing data:
 
         void writeNull()                        {comma(); _out << slice("null");}
