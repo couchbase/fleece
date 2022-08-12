@@ -684,6 +684,10 @@ bool FLEncoder_WriteKey(FLEncoder e, FLSlice s)         FLAPI {ENCODER_TRY(e, wr
 bool FLEncoder_WriteKeyValue(FLEncoder e, FLValue key)  FLAPI {ENCODER_TRY(e, writeKey(key));}
 bool FLEncoder_EndDict(FLEncoder e)                     FLAPI {ENCODER_TRY(e, endDictionary());}
 
+void FLJSONEncoder_NextDocument(FLEncoder e) FLAPI {
+    if (!e->isFleece())
+        e->jsonEncoder->nextDocument();
+}
 
 bool FLEncoder_ConvertJSON(FLEncoder e, FLSlice json) FLAPI {
     if (!e->hasError()) {

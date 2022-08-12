@@ -262,6 +262,12 @@ extern "C" {
     /** Finishes encoding the current item, and returns its offset in the output data. */
     FLEECE_PUBLIC size_t FLEncoder_FinishItem(FLEncoder) FLAPI;
 
+    /** In a JSON encoder, adds a newline ('\n') and prepares to start encoding another
+        top-level object. The encoder MUST be not be within an array or dict.
+        Has no effect in a Fleece encoder. */
+    FLEECE_PUBLIC void FLJSONEncoder_NextDocument(FLEncoder) FLAPI;
+
+
     /** @} */
 
 
