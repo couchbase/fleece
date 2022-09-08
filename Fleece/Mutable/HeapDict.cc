@@ -46,9 +46,19 @@ namespace fleece { namespace impl { namespace internal {
 
 
     key_t HeapDict::encodeKey(slice key) const noexcept {
-        int intKey;
-        if (_sharedKeys && _sharedKeys->encode(key, intKey))
-            return intKey;
+        if (_sharedKeys) {
+            if (_source) {
+                // If I have a source Dict, ask it to encode the key. This ensures I'm storing the
+                // same form (int or slice) of key as it is, which is important when iterating
+                // since it affects the sort order of the keys. [CBL-2844]
+                return _source->encodeKey(key, _sharedKeys);
+            } else {
+                // Else ask the SharedKeys directly
+                int intKey;
+                if (_sharedKeys->encode(key, intKey))
+                    return intKey;
+            }
+        }
         return key;
     }
 
