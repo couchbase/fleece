@@ -23,6 +23,9 @@ FL_ASSUME_NONNULL_BEGIN
 
 namespace fleece {
 
+    // VOLATILE API: These methods are meant for internal use, and will be removed
+    // in a future release
+
     //  Rarely-needed or advanced functionality; a C++ wrapper around fleece/FLExpert.h
     //  For documentation, see the comments above the C functions these wrap.
 

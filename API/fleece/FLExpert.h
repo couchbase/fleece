@@ -22,6 +22,9 @@ FL_ASSUME_NONNULL_BEGIN
 extern "C" {
 #endif
 
+    // VOLATILE API: FLExpert methods are meant for internal use, and will be removed
+    // in a future release
+
     // This is the C API! For the C++ API, see Fleece.hh.
 
 
