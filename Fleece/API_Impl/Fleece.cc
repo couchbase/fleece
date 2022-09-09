@@ -786,7 +786,9 @@ FLSliceResult FLEncoder_Finish(FLEncoder e, FLError * FL_NULLABLE outError) FLAP
 
 
 FLDoc FLDoc_FromResultData(FLSliceResult data, FLTrust trust, FLSharedKeys FL_NULLABLE sk, FLSlice externData) FLAPI {
-    return retain(new Doc(alloc_slice(data), (Doc::Trust)trust, sk, externData));
+    auto ret = retain(new Doc(alloc_slice(data), (Doc::Trust)trust, sk, externData));
+    FLSliceResult_Release(data);
+    return ret;
 }
 
 FLDoc FL_NULLABLE FLDoc_FromJSON(FLSlice json, FLError* FL_NULLABLE outError) FLAPI {
