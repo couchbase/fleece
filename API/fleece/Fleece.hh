@@ -325,8 +325,11 @@ namespace fleece {
             FLTrust trust =kFLUntrusted,
             FLSharedKeys FL_NULLABLE sk =nullptr,
             slice externDest =nullslice) noexcept
-        :_doc(FLDoc_FromResultData(FLSliceResult(std::move(fleeceData)), trust, sk, externDest))
-        { }
+        {
+            auto sliceResult = FLSliceResult(std::move(fleeceData));
+            _doc = FLDoc_FromResultData(sliceResult, trust, sk, externDest);
+            FLSliceResult_Release(sliceResult);
+        }
 
         static inline Doc fromJSON(slice_NONNULL json, FLError* FL_NULLABLE outError = nullptr);
 
