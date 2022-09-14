@@ -326,6 +326,9 @@ namespace fleece {
             FLSharedKeys FL_NULLABLE sk =nullptr,
             slice externDest =nullslice) noexcept
         {
+            // We construct FLSliceResult the following way to avoid unnecessary
+            // retain. (alloc_slice::operator FLSliceResult()& will apply a retain, which,
+            // if not matched by a release, will lead to memory leak.)
             FLSliceResult sliceResult {fleeceData.buf, fleeceData.size};
             _doc = FLDoc_FromResultData(sliceResult, trust, sk, externDest);
         }
