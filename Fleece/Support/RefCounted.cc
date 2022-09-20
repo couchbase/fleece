@@ -122,4 +122,21 @@ namespace fleece {
         if (oldRef == 1) delete this;
     }
 
+
+    // Performs retain only if _refCount is not 1, or, equivalently, greater than 1.
+    // Otherwise, returns false without changing the _refCount.
+    bool RefCounted::_retainUnlessUnique() const noexcept {
+        auto cur = _refCount.load();
+        while (cur != 1) {
+            if (cur <= 0) {
+                // throws.
+                fail(this, "retained", cur);
+            }
+            if (_refCount.compare_exchange_weak(cur, cur+1)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

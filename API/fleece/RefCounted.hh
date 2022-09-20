@@ -39,6 +39,8 @@ namespace fleece {
     private:
         template <typename T>
         friend T* retain(T*) noexcept;
+        template <typename T>
+        friend bool retainUnlessUnique(T*) noexcept;
         friend void release(const RefCounted*) noexcept;
         friend void assignRef(RefCounted* &dst, RefCounted *src) noexcept;
 
@@ -49,6 +51,7 @@ namespace fleece {
         ALWAYS_INLINE void _retain() const noexcept   { ++_refCount; }
         void _release() const noexcept;
 #endif
+        bool _retainUnlessUnique() const noexcept;
 
         static constexpr int32_t kCarefulInitialRefCount = -6666666;
         void _careful_retain() const noexcept;
@@ -72,6 +75,13 @@ namespace fleece {
         if (r) r->_retain();
         return r;
     }
+
+
+    template <typename REFCOUNTED>
+    ALWAYS_INLINE bool retainUnlessUnique(REFCOUNTED *r) noexcept {
+        return r->_retainUnlessUnique();
+    }
+
 
     /** Releases a RefCounted object. Does nothing given a null pointer.
         \warning Manual retain/release is error prone. This function is intended mostly for interfacing
