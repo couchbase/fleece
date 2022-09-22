@@ -37,9 +37,10 @@ namespace fleece_test {
 
     std::string sliceToHex(slice result) {
         std::string hex;
+        constexpr size_t bufSize = 4;
         for (size_t i = 0; i < result.size; i++) {
-            char str[4];
-            sprintf(str, "%02X", result[i]);
+            char str[bufSize];
+            snprintf(str, bufSize, "%02X", result[i]);
             hex.append(str);
             if (i % 2 && i != result.size-1)
                 hex.append(" ");
@@ -50,11 +51,12 @@ namespace fleece_test {
 
     std::string sliceToHexDump(slice result, size_t width) {
         std::string hex;
+        constexpr size_t bufSize = 4;
         for (size_t row = 0; row < result.size; row += width) {
             size_t end = std::min(row + width, result.size);
             for (size_t i = row; i < end; ++i) {
-                char str[4];
-                sprintf(str, "%02X", result[i]);
+                char str[bufSize];
+                snprintf(str, bufSize, "%02X", result[i]);
                 hex.append(str);
                 if (i % 2 && i != result.size-1)
                     hex.append(" ");

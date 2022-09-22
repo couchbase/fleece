@@ -24,6 +24,7 @@ namespace fleece { namespace impl {
         _out << '"';
         auto start = (const uint8_t*)str.buf;
         auto end = (const uint8_t*)str.end();
+        constexpr size_t bufSize = 7;
         for (auto p = start; p < end; p++) {
             uint8_t ch = *p;
             if (ch == '"' || ch == '\\' || ch < 32 || ch == 127) {
@@ -46,8 +47,8 @@ namespace fleece { namespace impl {
                         _out.write("\\t"_sl);
                         break;
                     default: {
-                        char buf[7];
-                        _out.write(buf, sprintf(buf, "\\u%04x", (unsigned)ch));
+                        char buf[bufSize];
+                        _out.write(buf, snprintf(buf, bufSize, "\\u%04x", (unsigned)ch));
                         break;
                     }
                 }

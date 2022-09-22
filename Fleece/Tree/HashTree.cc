@@ -67,8 +67,9 @@ namespace fleece {
         }
 
         void Leaf::dump(std::ostream &out, unsigned indent) const {
-            char hashStr[30];
-            sprintf(hashStr, "[%08x ", hash());
+            constexpr size_t bufSize = 30;
+            char hashStr[bufSize];
+            snprintf(hashStr, bufSize, "[%08x ", hash());
             out << string(2*indent, ' ') << hashStr << '"';
             auto k = keyString();
             out.write((char*)k.buf, k.size);
