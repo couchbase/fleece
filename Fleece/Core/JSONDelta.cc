@@ -157,15 +157,16 @@ namespace fleece { namespace impl {
                     if (minCount > 0) {
                         pathItem curLevel = {path, false, nullslice};
                         uint32_t index = 0;
-                        char key[10];
+                        constexpr size_t bufSize = 10;
+                        char key[bufSize];
                         for (Array::iterator iOld(oldArray), iNew(nuuArray); index < minCount;
                              ++iOld, ++iNew, ++index) {
-                            sprintf(key, "%d", index);
+                            snprintf(key, bufSize, "%d", index);
                             curLevel.key = slice(key);
                             _write(iOld.value(), iNew.value(), &curLevel);
                         }
                         if (oldCount != nuuCount) {
-                            sprintf(key, "%d-", index);
+                            snprintf(key, bufSize, "%d-", index);
                             curLevel.key = slice(key);
                             writePath(&curLevel);
                             _encoder->beginArray();
@@ -376,10 +377,11 @@ namespace fleece { namespace impl {
         _decoder->beginArray();
         uint32_t index = 0;
         const Value *remainder = nullptr;
+        constexpr size_t bufSize = 10;
         for (Array::iterator iOld(old); iOld; ++iOld, ++index) {
             auto oldItem = iOld.value();
-            char key[10];
-            sprintf(key, "%d", index);
+            char key[bufSize];
+            snprintf(key, bufSize, "%d", index);
             auto replacement = delta->get(slice(key));
             if (replacement) {
                 // Patch this array item:
@@ -397,8 +399,8 @@ namespace fleece { namespace impl {
         }
 
         if (!remainder) {
-            char key[10];
-            sprintf(key, "%d-", old->count());
+            char key[bufSize];
+            snprintf(key, bufSize, "%d-", old->count());
             remainder = delta->get(slice(key));
         }
         if (remainder) {

@@ -78,8 +78,9 @@ namespace fleece { namespace hashtree {
         }
 
         void dump(std::ostream &out, unsigned indent) {
-            char hashStr[30];
-            sprintf(hashStr, "{%08x ", _hash);
+            constexpr size_t bufSize = 30;
+            char hashStr[bufSize];
+            snprintf(hashStr, bufSize, "{%08x ", _hash);
             out << string(2*indent, ' ') << hashStr << '"';
             out.write((char*)_key.buf, _key.size);
             out << "\"=" << _value.toJSONString() << "}";

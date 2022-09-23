@@ -164,15 +164,16 @@ namespace fleece { namespace impl {
     }
 
     alloc_slice Value::toString() const {
-        char buf[32], *str = buf;
+        constexpr size_t bufSize = 32;
+        char buf[bufSize], *str = buf;
         switch (tag()) {
             case kShortIntTag:
             case kIntTag: {
                 int64_t i = asInt();
                 if (isUnsigned())
-                    sprintf(str, "%llu", (unsigned long long)i);
+                    snprintf(str, bufSize, "%llu", (unsigned long long)i);
                 else
-                    sprintf(str, "%lld", (long long)i);
+                    snprintf(str, bufSize, "%lld", (long long)i);
                 break;
             }
             case kSpecialTag: {

@@ -112,9 +112,10 @@ TEST_CASE("Bitmap") {
 TEST_CASE("Hash distribution") {
     static constexpr int kSize = 4096, kNKeys = 2048;
     int bucket[kSize] = {0};
+    constexpr size_t bufSize = 10;
     for (int i = 0; i < kNKeys; ++i) {
-        char keybuf[10];
-        sprintf(keybuf, "k-%04d", i);
+        char keybuf[bufSize];
+        snprintf(keybuf, bufSize, "k-%04d", i);
         int hash = slice(keybuf).hash();
         int index = hash & (kSize-1);
         ++bucket[index];
@@ -167,10 +168,12 @@ TEST_CASE("ConcurrentMap basic", "[ConcurrentMap]") {
     CHECK(!found.key);
     CHECK(!map.remove("durian"));
 
+    constexpr size_t bufSize = 10;
+    
     for (int pass = 1; pass <= 2; ++pass) { // insert on 1st pass, read on 2nd
         for (uint16_t i = 0; i < 2046; ++i) {
-            char keybuf[10];
-            sprintf(keybuf, "k-%04d", i);
+            char keybuf[bufSize];
+            snprintf(keybuf, bufSize, "k-%04d", i);
             auto result = (pass == 1) ? map.insert(keybuf, i) : map.find(keybuf);
             CHECK(result.key == keybuf);
             CHECK(result.value == i);
@@ -203,9 +206,10 @@ TEST_CASE("ConcurrentMap concurrency", "[ConcurrentMap]") {
     CHECK(map.stringBytesCapacity() >= 65535);
 
     vector<string> keys;
+    constexpr size_t bufSize = 10;
     for (int i = 0; i < kSize; i++) {
-        char keybuf[10];
-        sprintf(keybuf, "%x", i);
+        char keybuf[bufSize];
+        snprintf(keybuf, bufSize, "%x", i);
         keys.push_back(keybuf);
     }
 

@@ -122,8 +122,9 @@ namespace fleece { namespace impl {
         template <class T>
         void _writeInt(const char *fmt, T t) {
             comma();
-            char str[32];
-            _out.write(str, sprintf(str, fmt, t));
+            constexpr size_t bufSize = 32;
+            char str[bufSize];
+            _out.write(str, snprintf(str, bufSize, fmt, t));
         }
 
 #pragma GCC diagnostic pop
