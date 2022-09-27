@@ -85,14 +85,5 @@ function(set_test_source_files_base)
 endfunction()
 
 function(setup_build_base)
-    if(CMAKE_COMPILER_IS_GNUCC)
-        # Suppress an annoying note about GCC 7 ABI changes, and linker errors about the Fleece C API
-
-        foreach(target ${LITECORE_TARGETS})
-            target_compile_options(
-                ${target} PRIVATE
-                "$<$<COMPILE_LANGUAGE:CXX>:-Wno-psabi;-Wno-odr>"
-            )
-        endforeach()
-     endif()
+    # No-op
 endfunction()

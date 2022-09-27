@@ -36,15 +36,13 @@ function(setup_build)
         ) 
     endforeach()
 
-    target_compile_definitions(
-        FleeceObjects PRIVATE
-        __STDC_WANT_LIB_EXT1__=1 # For memset_s
-    )
-
     foreach(platform FleeceObjects FleeceBase)
-        set_target_properties(
-            ${platform} PROPERTIES COMPILE_FLAGS
+        target_compile_options(
+            ${platform} PRIVATE
             "-Wformat=2"
+            "-fstack-protector"
+            "-D_FORTIFY_SOURCE=2"
+            "$<$<COMPILE_LANGUAGE:CXX>:-Wno-psabi;-Wno-odr>"
         )
     endforeach()
 endfunction()
