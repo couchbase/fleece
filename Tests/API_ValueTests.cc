@@ -366,3 +366,32 @@ TEST_CASE("API MutableDict item bool conversion", "[API]") {
     }
     CHECK(dict.toJSONString() == "{\"a_key\":6}");
 }
+
+
+TEST_CASE("API Mutable copy of Dict with int", "[API]") {
+    auto enc = fleece::Encoder();
+    enc.beginDict();
+    enc.writeKey("a");
+    enc.writeInt(0xFFFFFFFFFFFFFF);
+    enc.endDict();
+    auto data = enc.finish();
+    auto doc = Doc(data);
+    auto copy = doc.root().asDict().mutableCopy(kFLCopyImmutables);
+    CHECK(copy.count() == 1);
+    CHECK(copy["a"].type() == kFLNumber);
+    CHECK(copy["a"].asInt() == 0xFFFFFFFFFFFFFF);
+}
+
+TEST_CASE("API Mutable copy of Dict with data", "[API]") {
+    auto enc = fleece::Encoder();
+    enc.beginDict();
+    enc.writeKey("a");
+    enc.writeData("aaaaaaaaaaaaaaaa"_sl);
+    enc.endDict();
+    auto data = enc.finish();
+    auto doc = Doc(data);
+    auto copy = doc.root().asDict().mutableCopy(kFLCopyImmutables);
+    CHECK(copy.count() == 1);
+    CHECK(copy["a"].type() == kFLData);
+    CHECK(copy["a"].asData() == "aaaaaaaaaaaaaaaa"_sl);
+}

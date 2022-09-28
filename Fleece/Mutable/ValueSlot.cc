@@ -256,6 +256,13 @@ namespace fleece { namespace impl {
                 case kStringTag:
                     set(value->asString());
                     break;
+                case kBinaryTag:
+                    setData(value->asData());
+                    break;
+                case kIntTag:
+                    if (value->isUnsigned()) set(value->asUnsigned());
+                    else set(value->asInt());
+                    break;
                 case kFloatTag:
                     set(value->asDouble());
                     break;
