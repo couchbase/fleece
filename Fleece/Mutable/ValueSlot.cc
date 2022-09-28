@@ -16,6 +16,7 @@
 #include "Encoder.hh"
 #include "varint.hh"
 #include <algorithm>
+#include <cmath>
 
 namespace fleece { namespace impl {
     using namespace std;
@@ -176,7 +177,7 @@ namespace fleece { namespace impl {
         } else {
             setPointer(HeapValue::create(d)->asValue());
         }
-        assert_postcondition(asValue()->asDouble() == d);
+        assert_postcondition(asValue()->asDouble() == d || (isnan(asValue()->asDouble()) && isnan(d)));
     }
 
 
