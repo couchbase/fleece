@@ -19,6 +19,7 @@
 
 using namespace std;
 using namespace fleece::impl;
+using namespace fleece::impl::internal;
 
 
 TEST_CASE("basic", "[SharedKeys]") {
@@ -472,9 +473,11 @@ TEST_CASE("big JSON encoding", "[SharedKeys]") {
     int nameKey;
     REQUIRE(sk->encode("name"_sl, nameKey));
 
+    gDisableNecessarySharedKeysCheck = true;
     auto root = Value::fromTrustedData(encoded)->asArray();
     auto person = root->get(33)->asDict();
     const Value *name = person->get(nameKey);
     std::string nameStr = (std::string)name->asString();
     REQUIRE(nameStr == std::string("Janet Ayala"));
+    gDisableNecessarySharedKeysCheck = false;
 }

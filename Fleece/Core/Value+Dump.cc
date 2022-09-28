@@ -253,7 +253,7 @@ namespace fleece { namespace impl {
 
 
     bool Value::dump(slice data, std::ostream &out) {
-        auto root = fromData(data);
+        auto root = fromData(data, /*checkSharedKeyExists=*/ false);
         if (!root)
             return false;
         // Walk the tree and collect every value with its address:

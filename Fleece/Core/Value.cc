@@ -16,6 +16,7 @@
 #include "Dict.hh"
 #include "Internal.hh"
 #include "Doc.hh"
+#include "SharedKeys.hh"
 #include "HeapValue.hh"
 #include "Endian.hh"
 #include "FleeceException.hh"
@@ -316,9 +317,9 @@ namespace fleece { namespace impl {
         return findRoot(s);
     }
 
-    const Value* Value::fromData(slice s) noexcept {
+    const Value* Value::fromData(slice s, bool checkSharedKeyExists) noexcept {
         auto root = findRoot(s);
-        if (root && _usuallyFalse(!root->validate(s.buf, s.end())))
+        if (root && _usuallyFalse(!root->validate(s.buf, s.end(), checkSharedKeyExists)))
             root = nullptr;
         return root;
     }
@@ -344,38 +345,114 @@ namespace fleece { namespace impl {
         return root;
     }
 
-    bool Value::validate(const void *dataStart, const void *dataEnd) const noexcept {
+    bool Value::validate(const void *dataStart, const void *dataEnd,
+                         bool checkSharedKeyExists) const noexcept {
+        // Check that size fits first so we don't read past the end of the buffer:
+        auto size = carefulDataSize(dataEnd);
+        if (_usuallyFalse(size == -1))
+            // Size could not be read because the data is invalid.
+            return false;
+        if (_usuallyFalse(offsetby(this, size) > dataEnd))
+            return false;
+
         auto t = tag();
         if (t == kArrayTag || t == kDictTag) {
             Array::impl array(this);
             if (_usuallyTrue(array._count > 0)) {
+                bool isDict = t == kDictTag;
+                bool isWide = array._width == kWide;
+                auto sharedKeys = t == kDictTag ? Scope::sharedKeys(this) : nullptr;
+
                 // For validation purposes a Dict is just an array with twice as many items:
                 size_t itemCount = array._count;
-                if (_usuallyTrue(t == kDictTag))
+                if (_usuallyTrue(isDict))
                     itemCount *= 2;
-                // Check that size fits:
-                auto itemsSize = itemCount * array._width;
-                if (_usuallyFalse(offsetby(array._first, itemsSize) > dataEnd))
-                    return false;
 
                 // Check each Array/Dict element:
                 auto item = array._first;
-                while (itemCount-- > 0) {
+                const Value* lastKey = nullptr;
+                bool isParentDict = false;
+                for (size_t i = 0; i < itemCount; ++i) {
+                    bool isKey = isDict && i % 2 == 0;
+                    bool isParentKey = false;
+                    if (_usuallyFalse(isKey && i == 0 && Dict::isMagicParentKey(item))) {
+                        isKey = false;
+                        isParentKey = true;
+                        isParentDict = true;
+                    }
+
                     auto nextItem = offsetby(item, array._width);
                     if (item->isPointer()) {
-                        if (_usuallyFalse(!item->_asPointer()->validate(array._width == kWide, dataStart)))
+                        if (_usuallyFalse(!item->_asPointer()->validate(isWide, dataStart,
+                                                                        checkSharedKeyExists)))
                             return false;
+                        item = item->deref(isWide);
                     } else {
-                        if (_usuallyFalse(!item->validate(dataStart, nextItem)))
+                        if (_usuallyFalse(!item->validate(dataStart, nextItem,
+                                                          checkSharedKeyExists)))
                             return false;
                     }
+
+                    if (_usuallyFalse(isKey && !item->isValidKey(sharedKeys, checkSharedKeyExists,
+                                                                 &lastKey, isWide)))
+                        return false;
+                    if (_usuallyFalse(!isParentKey && isParentDict)) {
+                        if (_usuallyFalse(item->tag() != kDictTag))
+                            return false;
+                        isParentDict = false;
+                    }
+
                     item = nextItem;
                 }
                 return true;
             }
         }
-        // Default: just check that size fits:
-        return offsetby(this, dataSize()) <= dataEnd;
+
+        return true;
+    }
+
+    bool Value::isValidKey(SharedKeys* sharedKeys, bool checkSharedKeyExists, const Value** lastKey,
+                           bool wide) const noexcept {
+        switch (tag()) {
+            case kStringTag:
+                if (sharedKeys) {
+                    auto stringKey = asString();
+                    if (stringKey.size > sharedKeys->maxKeyLength())
+                        break;
+                    int sharedKey;
+                    if (sharedKeys->encode(stringKey, sharedKey))
+                        // Any key that has be encoded as a shared must always be encoded
+                        // as a shared key.
+                        return false;
+                }
+                break;
+            case kShortIntTag: {
+                auto key = asInt();
+                // Shared keys must be non-negative.
+                if (key < 0)
+                    return false;
+
+                if (gDisableNecessarySharedKeysCheck)
+                    checkSharedKeyExists = false;
+
+                // SharedKeys must be available and key must exist in them.
+                if (checkSharedKeyExists && (!sharedKeys || !sharedKeys->decode(key)))
+                    return false;
+                break;
+            }
+            default:
+                // Non-string keys are not allowed.
+                return false;
+        }
+
+        if (*lastKey) {
+            // Keys must be sorted and unique.
+            if (compareKeys(this, *lastKey, wide) <= 0)
+                return false;
+        }
+
+        *lastKey = this;
+        return true;
     }
 
     // This does not include the inline items in arrays/dicts
@@ -391,6 +468,61 @@ namespace fleece { namespace impl {
             case kDictTag:      return (uint8_t*)Array::impl(this)._first - (uint8_t*)this;
             case kPointerTagFirst:
             default:            return 2;   // size might actually be 4; depends on context
+        }
+    }
+
+    // Returns the full size of the value, including items in arrays/dicts
+    // while taking care not to read past dataEnd.
+    //
+    // Returns -1 if the data is invalid and the size could not be read.
+    ptrdiff_t Value::carefulDataSize(const void* dataEnd) const noexcept {
+        auto t = tag();
+        switch(t) {
+            case kStringTag:
+            case kBinaryTag: {
+                slice data(&_byte[1], tinyValue());
+                if (_usuallyFalse(data.size == 0x0F)) {
+                    // This means the actual length follows as a varint:
+                    size_t maxDataLength = (uint8_t*)dataEnd - (uint8_t*)data.buf;
+                    data = slice(data.buf, maxDataLength);
+                    uint32_t length;
+                    size_t lengthBytes = GetUVarInt32(data, &length);
+                    if (_usuallyFalse(lengthBytes == 0))
+                        // Invalid varint so the data is invalid.
+                        return -1;
+                    return 1 + lengthBytes + length;
+                }
+                return 1 + data.size;
+            }
+            case kArrayTag:
+            case kDictTag: {
+                if (_usuallyFalse(isMutable()))
+                    return -1;
+
+                auto first = (const Value*)(&_byte[2]);
+                auto width = isWideArray() ? kWide : kNarrow;
+                auto count = countValue();
+                size_t extraCountBytes = 0;
+                if (_usuallyFalse(count == kLongArrayCount)) {
+                    // Long count is stored as a varint:
+                    size_t maxDataLength = (uint8_t*)dataEnd - (uint8_t*)first;
+                    uint32_t extraCount;
+                    extraCountBytes = GetUVarInt32(slice(first, maxDataLength), &extraCount);
+                    if (_usuallyFalse(extraCountBytes == 0))
+                        // Invalid varint so the data is invalid.
+                        return -1;
+                    count += extraCount;
+                    first = offsetby(first, extraCountBytes + (extraCountBytes & 1));
+                }
+
+                size_t itemCount = count;
+                if (_usuallyTrue(t == kDictTag))
+                    itemCount *= 2;
+                size_t itemsSize = itemCount * width;
+                return 2 + extraCountBytes + itemsSize;
+            }
+            default:
+                return dataSize();
         }
     }
 

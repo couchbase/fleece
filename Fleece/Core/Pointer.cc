@@ -101,10 +101,11 @@ namespace fleece { namespace impl { namespace internal {
     }
 
 
-    bool Pointer::validate(bool wide, const void *dataStart) const noexcept{
+    bool Pointer::validate(bool wide, const void *dataStart,
+                           bool checkSharedKeyExists) const noexcept{
         const void *dataEnd = this;
         const Value *target = carefulDeref(wide, dataStart, dataEnd);
-        return target && target->validate(dataStart, dataEnd);
+        return target && target->validate(dataStart, dataEnd, checkSharedKeyExists);
     }
 
 

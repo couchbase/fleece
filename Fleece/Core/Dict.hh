@@ -21,6 +21,9 @@ namespace fleece { namespace impl {
     class SharedKeys;
     class key_t;
 
+    /** Compares Dict keys in the order in which they must appear in Fleece data. */
+    int compareKeys(const Value *a, const Value *b, bool wide);
+
     /** A Value that's a dictionary/map */
     class Dict : public Value {
     public:
@@ -72,7 +75,7 @@ namespace fleece { namespace impl {
             key(const key&) =delete;
         private:
             void setSharedKeys(SharedKeys*);
-            
+
             slice const _rawString;
             SharedKeys* _sharedKeys {nullptr};
             uint32_t _hint          {0xFFFFFFFF};

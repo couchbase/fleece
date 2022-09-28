@@ -278,7 +278,7 @@ namespace fleece { namespace impl {
 
 
     __hot
-    static int compareKeys(const Value *keyToFind, const Value *key, bool wide) {
+    int compareKeys(const Value *keyToFind, const Value *key, bool wide) {
         if (wide)
             return dictImpl<true>::compareKeys(keyToFind, key);
         else
