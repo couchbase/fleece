@@ -30,10 +30,10 @@ namespace fleece { namespace impl {
         bool empty() const noexcept FLPURE;
 
         /** Looks up the Value for a string key. */
-        const Value* get(slice keyToFind) const noexcept FLPURE;
+        const Value* get(slice keyToFind, bool returnUndefined= false) const noexcept FLPURE;
 
         /** Looks up the Value for an integer (shared) key. */
-        const Value* get(int numericKeyToFind) const noexcept FLPURE;
+        const Value* get(int numericKeyToFind, bool returnUndefined= false) const noexcept FLPURE;
 
         /** If this array is mutable, returns the equivalent MutableArray*, else returns nullptr. */
         MutableDict* asMutable() const noexcept FLPURE;
@@ -84,9 +84,9 @@ namespace fleece { namespace impl {
 
         /** Looks up the Value for a key, in a form that can cache the key's Fleece object.
             Using the Fleece object is significantly faster than a normal get. */
-        const Value* get(key&) const noexcept;
+        const Value* get(key&, bool returnUndefined= false) const noexcept;
 
-        const Value* get(const key_t&) const noexcept;
+        const Value* get(const key_t&, bool returnUndefined= false) const noexcept;
 
         constexpr Dict()  :Value(internal::kDictTag, 0, 0) { }
 

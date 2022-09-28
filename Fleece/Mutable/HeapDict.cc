@@ -115,7 +115,7 @@ namespace fleece { namespace impl { namespace internal {
             key = encodeKey(stringKey);
             slotp = &_makeValueFor(key);
         }
-        if (slotp->empty() && !(_source && _source->get(key)))
+        if (slotp->empty() && !(_source && _source->get(key, /*returnUndefined =*/ true)))
             ++_count;
         markChanged();
         return *slotp;
@@ -177,7 +177,7 @@ namespace fleece { namespace impl { namespace internal {
 
     void HeapDict::remove(slice stringKey) {
         key_t key = encodeKey(stringKey);
-        if (_source && _source->get(key)) {
+        if (_source && _source->get(key, /*returnUndefined =*/ true)) {
             auto it = _map.find(key);
             if (it != _map.end()) {
                 if (_usuallyFalse(!it->second))

@@ -366,3 +366,17 @@ TEST_CASE("API MutableDict item bool conversion", "[API]") {
     }
     CHECK(dict.toJSONString() == "{\"a_key\":6}");
 }
+
+
+TEST_CASE("API Mutable copy of Dict with undefined value", "[API]") {
+    auto enc = fleece::Encoder();
+    enc.beginDict();
+    enc.writeKey("a");
+    enc.writeUndefined();
+    enc.endDict();
+    auto data = enc.finish();
+    auto doc = Doc(data);
+    auto copy = doc.root().asDict().mutableCopy(kFLCopyImmutables);
+    CHECK(copy.count() == 1);
+    CHECK(copy["a"].type() == kFLUndefined);
+}
