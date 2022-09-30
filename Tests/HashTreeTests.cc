@@ -41,14 +41,16 @@ public:
         enc.endArray();
         _doc = enc.finishDoc();
         values = _doc.asArray();
+        
+        constexpr size_t bufSize = 100;
 
         keys.clear();
         for (size_t i = 0; i < N; i++) {
-            char buf[100];
+            char buf[bufSize];
             if (i < 100)
-                sprintf(buf, "%s %s", kDigits[i/10], kDigits[i%10]);
+                snprintf(buf, bufSize, "%s %s", kDigits[i/10], kDigits[i%10]);
             else
-                sprintf(buf, "%zd %s", i/10, kDigits[i%10]);
+                snprintf(buf, bufSize, "%zd %s", i/10, kDigits[i%10]);
             keys.push_back(alloc_slice(buf));
         }
     }

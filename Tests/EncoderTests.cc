@@ -58,9 +58,10 @@ public:
     void checkOutput(const char *expected) {
         endEncoding();
         std::string hex;
+        constexpr size_t bufSize = 4;
         for (size_t i = 0; i < result.size; i++) {
-            char str[4];
-            sprintf(str, "%02X", result[i]);
+            char str[bufSize];
+            snprintf(str, bufSize, "%02X", result[i]);
             hex.append(str);
             if (i % 2 && i != result.size-1)
                 hex.append(" ");
@@ -488,9 +489,10 @@ public:
             enc.beginArray();
             enc.writeInt(depth);
         }
+        constexpr size_t bufSize = 20;
         for (int depth = 0; depth < 100; ++depth) {
-            char str[20];
-            sprintf(str, "Hi there %d", depth);
+            char str[bufSize];
+            snprintf(str, bufSize, "Hi there %d", depth);
             enc.writeString(str);
             enc.endArray();
         }
@@ -1012,13 +1014,14 @@ public:
     TEST_CASE("Locale-free encoding") {
         // Note this will fail if Linux is missing the French locale,
         // so make sure it is installed on the machine doing testing
+        constexpr size_t doubleBufSize = 32, floatBufSize = 32;
         
-        char doubleBuf[32];
-        char floatBuf[32];
+        char doubleBuf[doubleBufSize];
+        char floatBuf[floatBufSize];
         double testDouble = M_PI;
         float testFloat = 2.71828f;
-        sprintf(doubleBuf, "%.16g", testDouble);
-        sprintf(floatBuf, "%.7g", testFloat);
+        snprintf(doubleBuf, doubleBufSize, "%.16g", testDouble);
+        snprintf(floatBuf, floatBufSize, "%.7g", testFloat);
         CHECK(std::string(doubleBuf) == "3.141592653589793");
         CHECK(std::string(floatBuf) == "2.71828");
 
@@ -1038,8 +1041,8 @@ public:
         setlocale(LC_ALL, "fr_FR");
 #endif
 
-        sprintf(doubleBuf, "%.16g", testDouble);
-        sprintf(floatBuf, "%.7g", testFloat);
+        snprintf(doubleBuf, doubleBufSize, "%.16g", testDouble);
+        snprintf(floatBuf, floatBufSize, "%.7g", testFloat);
         CHECK(std::string(doubleBuf) == "3,141592653589793");
         CHECK(std::string(floatBuf) == "2,71828");
 

@@ -96,8 +96,9 @@ public:
     static std::string formatTime(double t) {
         const char *unit;
         double scale = timeScale(t, unit);
-        char str[50];
-        sprintf(str, "%.3f %s", t * scale, unit);
+        constexpr size_t bufSize = 50;
+        char str[bufSize];
+        snprintf(str, bufSize, "%.3f %s", t * scale, unit);
         return str;
     }
 
