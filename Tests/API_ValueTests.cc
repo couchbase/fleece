@@ -408,3 +408,16 @@ TEST_CASE("API Mutable copy of Dict with data", "[API]") {
     CHECK(copy["a"].type() == kFLData);
     CHECK(copy["a"].asData() == "aaaaaaaaaaaaaaaa"_sl);
 }
+
+TEST_CASE("API Mutable copy of Dict with empty string shared key", "[API]") {
+    auto sk = fleece::SharedKeys::create();
+    auto enc = fleece::Encoder(sk);
+    enc.beginDict();
+    enc.writeKey("");
+    enc.writeNull();
+    enc.endDict();
+    auto doc = enc.finishDoc();
+    auto copy = doc.root().asDict().mutableCopy(kFLCopyImmutables);
+    CHECK(copy.count() == 1);
+    CHECK(copy[""].type() == kFLNull);
+}
