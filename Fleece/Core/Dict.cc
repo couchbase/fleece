@@ -309,7 +309,7 @@ namespace fleece { namespace impl {
         if (_usuallyFalse(isMutable()))
             return heapDict()->count();
         Array::impl imp(this);
-        if (_usuallyFalse(imp._count > 1 && isMagicParentKey(imp._first))) {
+        if (_usuallyFalse(imp._count >= 1 && isMagicParentKey(imp._first))) {
             // Dict has a parent; this makes counting much more expensive!
             uint32_t c = 0;
             for (iterator i(this); i; ++i)
