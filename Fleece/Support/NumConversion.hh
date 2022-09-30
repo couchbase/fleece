@@ -87,16 +87,17 @@ namespace fleece {
                     "Invalid narrow_cast %" PRIu64 " -> %s", (uint64_t)val, typeid(Out).name());
             }
 #else
-            char message[256];
+            constexpr size_t bufSize = 256;
+            char message[bufSize];
             if(::std::is_floating_point<In>::value) {
-                sprintf(message, "Invalid narrow_cast %g -> %s", (double)val, typeid(Out).name());
+                snprintf(message, bufSize, "Invalid narrow_cast %g -> %s", (double)val, typeid(Out).name());
                 throwIf(val < std::numeric_limits<Out>::min() || val > std::numeric_limits<Out>::max(), InternalError, message);
             } else if(::std::is_signed<In>::value) {
-                sprintf(message, "Invalid narrow_cast %" PRIi64 " -> %s", (int64_t)val, typeid(Out).name());
+                snprintf(message, bufSize, "Invalid narrow_cast %" PRIi64 " -> %s", (int64_t)val, typeid(Out).name());
                 throwIf((!min_ok && val < std::numeric_limits<Out>::min()) || val > std::numeric_limits<Out>::max(),
                     InternalError, message);
             } else {
-                sprintf(message, "Invalid narrow_cast %" PRIu64 " -> %s", (uint64_t)val, typeid(Out).name());
+                snprintf(message, bufSize, "Invalid narrow_cast %" PRIu64 " -> %s", (uint64_t)val, typeid(Out).name());
                 throwIf((!min_ok && val < std::numeric_limits<Out>::min()) || val > std::numeric_limits<Out>::max(),
                     InternalError, message);
             }
