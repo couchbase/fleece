@@ -103,15 +103,16 @@ namespace fleece { namespace impl {
         // Writes the Value's byte offset and up to 4 bytes of its data.
         size_t dumpHex(const Value *value, bool wide) const {
             intptr_t pos = valueToOffset(value).value_or(intptr_t(value));
-            char buf[64];
-            sprintf(buf, "%c%04zx: %02x %02x",
+            constexpr size_t bufSize = 64;
+            char buf[bufSize];
+            snprintf(buf, bufSize, "%c%04zx: %02x %02x",
                     (pos < 0 ? '-' : ' '), std::abs(pos), value->_byte[0], value->_byte[1]);
             _out << buf;
             auto size = value->dataSize();
             if (wide && size < kWide)
                 size = kWide;
             if (size > 2) {
-                sprintf(buf, " %02x %02x", value->_byte[2], value->_byte[3]);
+                snprintf(buf, bufSize, " %02x %02x", value->_byte[2], value->_byte[3]);
                 _out << buf;
                 _out << (size > 4 ? "…" : " ");
             } else {
@@ -169,11 +170,12 @@ namespace fleece { namespace impl {
                         writeDumpBrief(dstPtr, true);
                         offset = valueToOffset(dstPtr).value_or(0ll);
                     }
-                    char buf[32];
+                    constexpr size_t bufSize = 32;
+                    char buf[bufSize];
                     if (offset >= 0)
-                        sprintf(buf, " @%04llx", offset);
+                        snprintf(buf, bufSize, " @%04llx", offset);
                     else
-                        sprintf(buf, " @-%04llx", -offset);
+                        snprintf(buf, bufSize, " @-%04llx", -offset);
                     _out << buf;
                     if (legacy)
                         _out << " [legacy ptr]";
