@@ -65,25 +65,25 @@ namespace fleece { namespace impl {
 
         template <class KEY>
         __hot
-        const Value* finishGet(const Value *keyFound, KEY &keyToFind) const noexcept {
+        const Value* finishGet(const Value *keyFound, KEY &keyToFind, bool returnUndefined) const noexcept {
             if (keyFound) {
                 auto value = deref(next(keyFound));
-                if (_usuallyFalse(value->isUndefined()))
+                if (!returnUndefined && _usuallyFalse(value->isUndefined()))
                     value = nullptr;
                 return value;
             } else {
                 const Dict *parent = getParent();
-                return parent ? parent->get(keyToFind) : nullptr;
+                return parent ? parent->get(keyToFind, returnUndefined) : nullptr;
             }
         }
 
         __hot
-        inline const Value* getUnshared(slice keyToFind) const noexcept {
+        inline const Value* getUnshared(slice keyToFind, bool returnUndefined) const noexcept {
             auto key = search(keyToFind, [](slice target, const Value *val) {
                 countComparison();
                 return compareKeys(target, val);
             });
-            return finishGet(key, keyToFind);
+            return finishGet(key, keyToFind, returnUndefined);
         }
 
         __hot
@@ -95,25 +95,25 @@ namespace fleece { namespace impl {
         }
 
         __hot
-        inline const Value* get(int keyToFind) const noexcept {
+        inline const Value* get(int keyToFind, bool returnUndefined= false) const noexcept {
             assert_precondition(keyToFind >= 0);
-            return finishGet(search(keyToFind), keyToFind);
+            return finishGet(search(keyToFind), keyToFind, returnUndefined);
         }
 
         __hot
-        inline const Value* get(slice keyToFind, SharedKeys *sharedKeys =nullptr) const noexcept {
+        inline const Value* get(slice keyToFind, SharedKeys *sharedKeys =nullptr, bool returnUndefined= false) const noexcept {
             if (!sharedKeys && usesSharedKeys()) {
                 sharedKeys = findSharedKeys();
                 assert_precondition(sharedKeys || gDisableNecessarySharedKeysCheck);
             }
             int encoded;
             if (sharedKeys && lookupSharedKey(keyToFind, sharedKeys, encoded))
-                return get(encoded);
-            return getUnshared(keyToFind);
+                return get(encoded, returnUndefined);
+            return getUnshared(keyToFind, returnUndefined);
         }
 
         __hot
-        const Value* get(Dict::key &keyToFind) const noexcept {
+        const Value* get(Dict::key &keyToFind, bool returnUndefined= false) const noexcept {
             auto sharedKeys = keyToFind._sharedKeys;
             if (!sharedKeys && usesSharedKeys()) {
                 sharedKeys = findSharedKeys();
@@ -123,13 +123,13 @@ namespace fleece { namespace impl {
             if (_usuallyTrue(sharedKeys != nullptr)) {
                 // Look for a numeric key first:
                 if (_usuallyTrue(keyToFind._hasNumericKey))
-                    return get(keyToFind._numericKey);
+                    return get(keyToFind._numericKey, returnUndefined);
                 // Key was not registered last we checked; see if dict contains any new keys:
                 if (_usuallyFalse(_count == 0))
                     return nullptr;
                 if (lookupSharedKey(keyToFind._rawString, sharedKeys, keyToFind._numericKey)) {
                     keyToFind._hasNumericKey = true;
-                    return get(keyToFind._numericKey);
+                    return get(keyToFind._numericKey, returnUndefined);
                 }
             }
 
@@ -137,7 +137,7 @@ namespace fleece { namespace impl {
             const Value *key = findKeyByHint(keyToFind);
             if (!key)
                 key = findKeyBySearch(keyToFind);
-            return finishGet(key, keyToFind);
+            return finishGet(key, keyToFind, returnUndefined);
         }
 
         key_t encodeKey(slice keyString, SharedKeys *sharedKeys) const noexcept {
@@ -278,7 +278,7 @@ namespace fleece { namespace impl {
 
 
     __hot
-    static int compareKeys(const Value *keyToFind, const Value *key, bool wide) {
+    int compareKeys(const Value *keyToFind, const Value *key, bool wide) {
         if (wide)
             return dictImpl<true>::compareKeys(keyToFind, key);
         else
@@ -309,7 +309,7 @@ namespace fleece { namespace impl {
         if (_usuallyFalse(isMutable()))
             return heapDict()->count();
         Array::impl imp(this);
-        if (_usuallyFalse(imp._count > 1 && isMagicParentKey(imp._first))) {
+        if (_usuallyFalse(imp._count >= 1 && isMagicParentKey(imp._first))) {
             // Dict has a parent; this makes counting much more expensive!
             uint32_t c = 0;
             for (iterator i(this); i; ++i)
@@ -327,17 +327,26 @@ namespace fleece { namespace impl {
     }
 
     __hot
-    const Value* Dict::get(slice keyToFind) const noexcept {
+    const Value* Dict::get(slice keyToFind, bool returnUndefined) const noexcept {
         if (_usuallyFalse(isMutable()))
             return heapDict()->get(keyToFind);
         if (isWideArray())
-            return dictImpl<true>(this).get(keyToFind);
+            return dictImpl<true>(this).get(keyToFind, nullptr, returnUndefined);
         else
-            return dictImpl<false>(this).get(keyToFind);
+            return dictImpl<false>(this).get(keyToFind, nullptr, returnUndefined);
     }
 
     __hot
-    const Value* Dict::get(int keyToFind) const noexcept {
+    const Value* Dict::get(int keyToFind, bool returnUndefined) const noexcept {
+        if (_usuallyFalse(isMutable()))
+            return heapDict()->get(keyToFind);
+        else if (isWideArray())
+            return dictImpl<true>(this).get(keyToFind, returnUndefined);
+        else
+            return dictImpl<false>(this).get(keyToFind, returnUndefined);
+    }
+
+    const Value* Dict::get(key &keyToFind, bool returnUndefined) const noexcept {
         if (_usuallyFalse(isMutable()))
             return heapDict()->get(keyToFind);
         else if (isWideArray())
@@ -346,23 +355,14 @@ namespace fleece { namespace impl {
             return dictImpl<false>(this).get(keyToFind);
     }
 
-    const Value* Dict::get(key &keyToFind) const noexcept {
-        if (_usuallyFalse(isMutable()))
-            return heapDict()->get(keyToFind);
-        else if (isWideArray())
-            return dictImpl<true>(this).get(keyToFind);
-        else
-            return dictImpl<false>(this).get(keyToFind);
-    }
-
     __hot
-    const Value* Dict::get(const key_t &keyToFind) const noexcept {
+    const Value* Dict::get(const key_t &keyToFind, bool returnUndefined) const noexcept {
         if (_usuallyFalse(isMutable()))
             return heapDict()->get(keyToFind);
         else if (keyToFind.shared())
-            return get(keyToFind.asInt());
+            return get(keyToFind.asInt(), returnUndefined);
         else
-            return get(keyToFind.asString());
+            return get(keyToFind.asString(), returnUndefined);
     }
 
     key_t Dict::encodeKey(slice keyString, SharedKeys *sharedKeys) const noexcept {

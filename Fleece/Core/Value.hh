@@ -65,7 +65,7 @@ namespace fleece { namespace impl {
             Validates the data first; if it's invalid, returns nullptr.
             Does NOT copy or take ownership of the data; the caller is responsible for keeping it
             intact. Any changes to the data will invalidate any FLValues obtained from it. */
-        static const Value* fromData(slice) noexcept;
+        static const Value* fromData(slice, bool checkSharedKeyExists= true) noexcept;
 
         /** Returns a pointer to the root value in the encoded data, without validating.
             This is a lot faster, but "undefined behavior" occurs if the data is corrupt... */
@@ -206,7 +206,10 @@ namespace fleece { namespace impl {
         { }
 
         static const Value* findRoot(slice) noexcept FLPURE;
-        bool validate(const void* dataStart, const void *dataEnd) const noexcept FLPURE;
+        bool validate(const void* dataStart, const void *dataEnd,
+                      bool checkSharedKeyExists) const noexcept FLPURE;
+        bool isValidKey(SharedKeys* sharedKeys, bool checkSharedKeyExists, const Value** lastKey,
+                        bool wide) const noexcept FLPURE;
 
         internal::tags tag() const noexcept FLPURE   {return (internal::tags)(_byte[0] >> 4);}
         unsigned tinyValue() const noexcept FLPURE   {return _byte[0] & 0x0F;}
@@ -239,6 +242,7 @@ namespace fleece { namespace impl {
         FLPURE const Value* next() const noexcept         {return next(WIDE);}
 
         size_t dataSize() const noexcept FLPURE;
+        ptrdiff_t carefulDataSize(const void* dataEnd) const noexcept FLPURE;
 
         //////// Here's the data:
 

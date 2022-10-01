@@ -41,15 +41,28 @@ FL_ASSUME_NONNULL_BEGIN
 
 __hot
 bool FLSlice_Equal(FLSlice a, FLSlice b) noexcept {
-    return a.size == b.size && FLMemCmp(a.buf, b.buf, a.size) == 0;
+    if (a.size == b.size) {
+        if (a.size == 0)
+            // Check wether both slices are the nullslice or empty slices.
+            return (a.buf == nullptr) == (b.buf == nullptr);
+        else
+            return FLMemCmp(a.buf, b.buf, a.size) == 0;
+    }
+    return false;
 }
-
 
 __hot
 int FLSlice_Compare(FLSlice a, FLSlice b) noexcept {
     // Optimized for speed, not simplicity!
     if (a.size == b.size)
-        return FLMemCmp(a.buf, b.buf, a.size);
+        if (a.size == 0) {
+            // Sort the nullsice before an empty slice.
+            if ((a.buf == nullptr) == (b.buf == nullptr))
+                return 0;
+            else
+                return a.buf == nullptr ? -1 : 1;
+        } else
+            return FLMemCmp(a.buf, b.buf, a.size);
     else if (a.size < b.size) {
         int result = FLMemCmp(a.buf, b.buf, a.size);
         return result ? result : -1;

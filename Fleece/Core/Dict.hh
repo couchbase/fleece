@@ -21,6 +21,9 @@ namespace fleece { namespace impl {
     class SharedKeys;
     class key_t;
 
+    /** Compares Dict keys in the order in which they must appear in Fleece data. */
+    int compareKeys(const Value *a, const Value *b, bool wide);
+
     /** A Value that's a dictionary/map */
     class Dict : public Value {
     public:
@@ -30,10 +33,10 @@ namespace fleece { namespace impl {
         bool empty() const noexcept FLPURE;
 
         /** Looks up the Value for a string key. */
-        const Value* get(slice keyToFind) const noexcept FLPURE;
+        const Value* get(slice keyToFind, bool returnUndefined= false) const noexcept FLPURE;
 
         /** Looks up the Value for an integer (shared) key. */
-        const Value* get(int numericKeyToFind) const noexcept FLPURE;
+        const Value* get(int numericKeyToFind, bool returnUndefined= false) const noexcept FLPURE;
 
         /** If this array is mutable, returns the equivalent MutableArray*, else returns nullptr. */
         MutableDict* asMutable() const noexcept FLPURE;
@@ -72,7 +75,7 @@ namespace fleece { namespace impl {
             key(const key&) =delete;
         private:
             void setSharedKeys(SharedKeys*);
-            
+
             slice const _rawString;
             SharedKeys* _sharedKeys {nullptr};
             uint32_t _hint          {0xFFFFFFFF};
@@ -84,9 +87,9 @@ namespace fleece { namespace impl {
 
         /** Looks up the Value for a key, in a form that can cache the key's Fleece object.
             Using the Fleece object is significantly faster than a normal get. */
-        const Value* get(key&) const noexcept;
+        const Value* get(key&, bool returnUndefined= false) const noexcept;
 
-        const Value* get(const key_t&) const noexcept;
+        const Value* get(const key_t&, bool returnUndefined= false) const noexcept;
 
         constexpr Dict()  :Value(internal::kDictTag, 0, 0) { }
 

@@ -58,7 +58,8 @@ namespace fleece { namespace impl { namespace internal {
                                   const void* &dataEnd) const noexcept;
 
 
-        bool validate(bool wide, const void *dataStart) const noexcept FLPURE;
+        bool validate(bool wide, const void *dataStart,
+                      bool checkSharedKeyExists) const noexcept FLPURE;
 
     private:
         // Byte offset as interpreted prior to the 'extern' flag

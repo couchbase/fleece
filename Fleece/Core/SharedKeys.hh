@@ -75,7 +75,10 @@ namespace fleece { namespace impl {
         alloc_slice stateData() const;
         void writeState(Encoder &enc) const;
 
-        /** Sets the maximum length of string that can be mapped. (Defaults to 16 bytes.) */
+        /** The maximum length of string that can be mapped. */
+        size_t maxKeyLength()                   {return _maxKeyLength;}
+
+        /** Sets maxKeyLength. (Defaults to 16 bytes.) */
         void setMaxKeyLength(size_t m)          {_maxKeyLength = m;}
 
         /** The number of stored keys. */
