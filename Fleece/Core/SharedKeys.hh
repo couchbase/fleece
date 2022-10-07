@@ -106,6 +106,8 @@ namespace fleece { namespace impl {
 
         bool isUnknownKey(int key) const FLPURE;
 
+        bool isInTransaction() const FLPURE             {return _inTransaction;}
+
         virtual bool refresh()                          {return false;}
 
         static const size_t kMaxCount = 2048;               // Max number of keys to store

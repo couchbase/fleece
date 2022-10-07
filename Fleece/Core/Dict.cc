@@ -128,7 +128,11 @@ namespace fleece { namespace impl {
                 if (_usuallyFalse(_count == 0))
                     return nullptr;
                 if (lookupSharedKey(keyToFind._rawString, sharedKeys, keyToFind._numericKey)) {
-                    keyToFind._hasNumericKey = true;
+                    // If the SharedKeys are in a transaction we don't mark the key as having a
+                    // shared key, because the transaction might be rolled back. If the found
+                    // shared key is rolled back as part of rolling back the transaction, continuing
+                    // to use it would lead to incorrect lookup results.
+                    keyToFind._hasNumericKey = !sharedKeys->isInTransaction();
                     return get(keyToFind._numericKey);
                 }
             }
