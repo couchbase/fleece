@@ -53,8 +53,7 @@ FLTimestamp FLTimestamp_Now() FLAPI {
 
 FLStringResult FLTimestamp_ToString(FLTimestamp timestamp, bool asUTC) FLAPI {
     char str[kFormattedISO8601DateMaxSize];
-    FormatISO8601Date(str, timestamp, asUTC);
-    return FLSliceResult_CreateWith(str, strlen(str));
+    return FLSlice_Copy(FormatISO8601Date(str, timestamp, asUTC));
 }
 
 
