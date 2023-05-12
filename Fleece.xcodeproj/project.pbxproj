@@ -1460,6 +1460,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 2776AA48208A6CED004ACE85 /* FleeceStaticLib.xcconfig */;
 			buildSettings = {
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 			};
 			name = Debug;
 		};
@@ -1467,6 +1468,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 2776AA48208A6CED004ACE85 /* FleeceStaticLib.xcconfig */;
 			buildSettings = {
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 			};
 			name = Release;
 		};
@@ -1495,6 +1497,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 2776AA48208A6CED004ACE85 /* FleeceStaticLib.xcconfig */;
 			buildSettings = {
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 			};
 			name = Debug_EE;
 		};
@@ -1534,6 +1537,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 2776AA48208A6CED004ACE85 /* FleeceStaticLib.xcconfig */;
 			buildSettings = {
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 			};
 			name = Release_EE;
 		};
@@ -1566,6 +1570,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27744AE5213F0E6A00399DCA /* FleeceBase.xcconfig */;
 			buildSettings = {
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 			};
 			name = Debug_EE;
 		};
@@ -1573,6 +1578,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27744AE5213F0E6A00399DCA /* FleeceBase.xcconfig */;
 			buildSettings = {
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 			};
 			name = Release_EE;
 		};
@@ -1580,6 +1586,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27C4CEAA2127729D00470DE9 /* FleeceDylib.xcconfig */;
 			buildSettings = {
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 			};
 			name = Debug_EE;
 		};
@@ -1587,6 +1594,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27C4CEB02127781300470DE9 /* FleeceDylib_Release.xcconfig */;
 			buildSettings = {
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 			};
 			name = Release_EE;
 		};
@@ -1608,6 +1616,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27C4CEAA2127729D00470DE9 /* FleeceDylib.xcconfig */;
 			buildSettings = {
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 			};
 			name = Debug;
 		};
@@ -1615,6 +1624,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27C4CEAA2127729D00470DE9 /* FleeceDylib.xcconfig */;
 			buildSettings = {
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 			};
 			name = Release;
 		};
@@ -1640,6 +1650,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27744AE5213F0E6A00399DCA /* FleeceBase.xcconfig */;
 			buildSettings = {
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 			};
 			name = Debug;
 		};
@@ -1647,6 +1658,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27744AE5213F0E6A00399DCA /* FleeceBase.xcconfig */;
 			buildSettings = {
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 			};
 			name = Release;
 		};
