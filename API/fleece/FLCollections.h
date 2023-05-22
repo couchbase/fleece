@@ -207,7 +207,7 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
         be stored inside the FLDictKey that will speed up subsequent lookups. */
     FLEECE_PUBLIC FLValue FL_NULLABLE FLDict_GetWithKey(FLDict FL_NULLABLE, FLDictKey*) FLAPI;
 
-    
+
     /** @} */
     /** @} */
 

@@ -127,12 +127,11 @@ namespace fleece { namespace impl {
                 // Key was not registered last we checked; see if dict contains any new keys:
                 if (_usuallyFalse(_count == 0))
                     return nullptr;
-                if (lookupSharedKey(keyToFind._rawString, sharedKeys, keyToFind._numericKey)) {
-                    // If the SharedKeys are in a transaction we don't mark the key as having a
-                    // shared key, because the transaction might be rolled back. If the found
-                    // shared key is rolled back as part of rolling back the transaction, continuing
-                    // to use it would lead to incorrect lookup results.
-                    keyToFind._hasNumericKey = !sharedKeys->isInTransaction();
+                bool isCacheable = false;
+                if (lookupSharedKey(keyToFind._rawString, sharedKeys, keyToFind._numericKey, &isCacheable)) {
+                    // Shared keys are not always cacheable, for example if the SharedKeys are
+                    // currently being updated as part of a transaction.
+                    keyToFind._hasNumericKey = isCacheable;
                     return get(keyToFind._numericKey);
                 }
             }
@@ -241,8 +240,8 @@ namespace fleece { namespace impl {
         }
 
         __hot
-        bool lookupSharedKey(slice keyToFind, SharedKeys *sharedKeys, int &encoded) const noexcept {
-            if (sharedKeys->encode(keyToFind, encoded))
+        bool lookupSharedKey(slice keyToFind, SharedKeys *sharedKeys, int &encoded, bool* isCacheableOut = nullptr) const noexcept {
+            if (sharedKeys->encode(keyToFind, encoded, isCacheableOut))
                 return true;
             // Key is not known to my SharedKeys; see if dict contains any unknown keys:
             if (_count == 0)
@@ -253,7 +252,7 @@ namespace fleece { namespace impl {
                     if (sharedKeys->isUnknownKey((int)v->asInt())) {
                         // Yup, try updating SharedKeys and re-encoding:
                         sharedKeys->refresh();
-                        return sharedKeys->encode(keyToFind, encoded);
+                        return sharedKeys->encode(keyToFind, encoded, isCacheableOut);
                     }
                     return false;
                 }

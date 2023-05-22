@@ -191,6 +191,7 @@ _FLSharedKeys_Release
 _FLSharedKeys_Retain
 _FLSharedKeys_RevertToCount
 _FLSharedKeys_WriteState
+_FLSharedKeys_DisableCaching
 
 _FLSharedKeyScope_WithRange
 _FLSharedKeyScope_Free

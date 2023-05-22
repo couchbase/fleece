@@ -457,6 +457,7 @@ bool FLSharedKeys_LoadState(FLSharedKeys sk, FLValue s)    FLAPI {return sk->loa
 FLSliceResult FLSharedKeys_GetStateData(FLSharedKeys sk)   FLAPI {return toSliceResult(sk->stateData());}
 FLString FLSharedKeys_Decode(FLSharedKeys sk, int key)     FLAPI {return sk->decode(key);}
 void FLSharedKeys_RevertToCount(FLSharedKeys sk, unsigned c) FLAPI {sk->revertToCount(c);}
+void FLSharedKeys_DisableCaching(FLSharedKeys sk)          FLAPI {sk->disableCaching();}
 
 FLSharedKeys FLSharedKeys_NewWithRead(FLSharedKeysReadCallback callback, void* FL_NULLABLE context) FLAPI {
     return retain(new FLPersistentSharedKeys(callback, context));

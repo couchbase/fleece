@@ -97,6 +97,8 @@ TEST_CASE("decode", "[SharedKeys]") {
 
 TEST_CASE("revertToCount", "[SharedKeys]") {
     Retained<SharedKeys> sk = new SharedKeys();
+    sk->disableCaching();
+
     int key;
     CHECK( sk->encodeAndAdd("zero"_sl, key));
     CHECK( sk->encodeAndAdd("one"_sl, key));

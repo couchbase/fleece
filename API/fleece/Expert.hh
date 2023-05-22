@@ -110,6 +110,7 @@ namespace fleece {
         inline void writeState(const Encoder &enc);
         unsigned count() const                              {return FLSharedKeys_Count(_sk);}
         void revertToCount(unsigned count)                  {FLSharedKeys_RevertToCount(_sk, count);}
+        void disableCaching(unsigned count)                 {FLSharedKeys_DisableCaching(_sk);}
 
         operator FLSharedKeys FL_NULLABLE () const          {return _sk;}
         bool operator== (SharedKeys other) const            {return _sk == other._sk;}

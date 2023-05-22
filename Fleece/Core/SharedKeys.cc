@@ -88,6 +88,7 @@ namespace fleece { namespace impl {
 
 
     void SharedKeys::writeState(Encoder &enc) const {
+        LOCK(_mutex);
         auto count = _count;
         enc.beginArray(count);
         for (size_t key = 0; key < count; ++key)
@@ -103,7 +104,17 @@ namespace fleece { namespace impl {
     }
 
 
-    bool SharedKeys::encode(slice str, int &key) const {
+    bool SharedKeys::encode(slice str, int &key, bool *isCacheableOut) const {
+        unique_lock<mutex> lock;
+
+        if (isCacheableOut) {
+            lock = unique_lock<mutex>(_mutex);
+            *isCacheableOut = _isCacheable;
+            if (!_isCacheable) {
+                lock.unlock();
+            }
+        }
+
         // Is this string already encoded?
         auto entry = _table.find(str);
         if (_usuallyTrue(entry.key != nullslice)) {
@@ -159,6 +170,19 @@ namespace fleece { namespace impl {
     }
 
 
+    void SharedKeys::disableCaching() {
+        LOCK(_mutex);
+        _isCachingEnabled = false;
+        _isCacheable = false;
+    }
+
+    void SharedKeys::setIsCacheable(bool isCacheable) {
+        LOCK(_mutex);
+        if (_isCachingEnabled) {
+            _isCacheable = isCacheable;
+        }
+    }
+
     /** Decodes an integer back to a string. */
     slice SharedKeys::decode(int key) const {
         throwIf(key < 0, InvalidData, "key must be non-negative");
@@ -212,6 +236,7 @@ namespace fleece { namespace impl {
 
     void SharedKeys::revertToCount(size_t toCount) {
         LOCK(_mutex);
+        throwIf(_isCacheable, SharedKeysStateError, "can't remove keys while caching is allowed");
         if (toCount >= _count) {
             throwIf(toCount > _count, SharedKeysStateError, "can't revert to a bigger count");
             return;
@@ -252,6 +277,7 @@ namespace fleece { namespace impl {
         LOCK(_refreshMutex);
         throwIf(_inTransaction, SharedKeysStateError, "already in transaction");
         _inTransaction = true;
+        setIsCacheable(false);
         read();     // Catch up with any external changes
     }
 
@@ -260,6 +286,7 @@ namespace fleece { namespace impl {
         if (_inTransaction) {
             _committedPersistedCount = _persistedCount;
             _inTransaction = false;
+            setIsCacheable(true);
         }
     }
 

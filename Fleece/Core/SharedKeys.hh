@@ -81,8 +81,11 @@ namespace fleece { namespace impl {
         /** The number of stored keys. */
         size_t count() const FLPURE;
 
-        /** Maps a string to an integer, or returns false if there is no mapping. */
-        bool encode(slice string, int &key) const;
+        /** Maps a string to an integer, or returns false if there is no mapping.
+
+            If provided, isCacheableOut will reflect whether the shared key is safe to cache or
+            whether it might become invalide in the future. */
+        bool encode(slice string, int &key, bool *isCacheableOut = nullptr) const;
 
         /** Maps a string to an integer. Will automatically add a new mapping if the string
             qualifies. */
@@ -104,9 +107,10 @@ namespace fleece { namespace impl {
             or equal to the new count. (I.e. it truncates the byKey vector.) */
         void revertToCount(size_t count);
 
-        bool isUnknownKey(int key) const FLPURE;
+        /** Disables caching of shared keys in DictKeys. */
+        void disableCaching();
 
-        bool isInTransaction() const FLPURE             {return _inTransaction;}
+        bool isUnknownKey(int key) const FLPURE;
 
         virtual bool refresh()                          {return false;}
 
@@ -131,6 +135,8 @@ namespace fleece { namespace impl {
             if the string contains only alphanumeric characters, '_' or '-'. */
         virtual bool isEligibleToEncode(slice str) const FLPURE;
 
+        void setIsCacheable(bool isCacheable);
+
     private:
         friend class PersistentSharedKeys;
 
@@ -143,6 +149,8 @@ namespace fleece { namespace impl {
         mutable std::mutex _mutex;
         unsigned _count {0};
         bool _inTransaction {true};                     // (for PersistentSharedKeys)
+        bool _isCachingEnabled {true};
+        bool _isCacheable {true};
         mutable std::vector<PlatformString> _platformStringsByKey; // Reverse mapping, int->platform key
         ConcurrentMap _table;                             // Hash table mapping slice->int
         std::array<slice, kMaxCount> _byKey;      // Reverse mapping, int->slice
