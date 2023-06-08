@@ -23,8 +23,8 @@ CLANG_STATIC_ANALYZER_MODE = shallow
 HEADER_SEARCH_PATHS                                = API $(SRCROOT)/vendor/date/include   // allows for #include <fleece/Fleece.h>
 
 
-IPHONEOS_DEPLOYMENT_TARGET                         =  9.0
-MACOSX_DEPLOYMENT_TARGET                           = 10.12
+IPHONEOS_DEPLOYMENT_TARGET                         = 10.0
+MACOSX_DEPLOYMENT_TARGET                           = 10.14
 TVOS_DEPLOYMENT_TARGET                             =  9.0
 ONLY_ACTIVE_ARCH                                   = YES
 SKIP_INSTALL                                       = YES
