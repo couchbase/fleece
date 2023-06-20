@@ -158,7 +158,7 @@ namespace fleece { namespace impl { namespace internal {
         } else if (v) {
             RetainedConst<Doc> doc = Doc::containing(v);
             if (_usuallyTrue(doc != nullptr))
-                fleece::retain(move(doc));
+                fleece::retain(std::move(doc));
             else if (!isHardwiredValue(v))
                 FleeceException::_throw(InvalidData,
                                         "Can't retain immutable Value %p that's not part of a Doc",

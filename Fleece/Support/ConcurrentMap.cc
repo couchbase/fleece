@@ -103,7 +103,7 @@ namespace fleece {
 
 
     ConcurrentMap::ConcurrentMap(ConcurrentMap &&map) {
-        *this = move(map);
+        *this = std::move(map);
     }
 
 
@@ -112,7 +112,7 @@ namespace fleece {
         _capacity = map._capacity;
         _count = map._count.load();
         _entries = map._entries;
-        _heap = move(map._heap);
+        _heap = std::move(map._heap);
         return *this;
     }
 

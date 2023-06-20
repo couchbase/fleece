@@ -177,7 +177,7 @@ namespace fleece { namespace impl {
             while (it->scope) it++;
             auto node = sMemoryMap->extract(it);
             node.value() = entry;
-            sMemoryMap->insert(move(node));
+            sMemoryMap->insert(std::move(node));
             sMemoryMapTombstones--;
         } else {
             sMemoryMap->insert(iter, entry);
