@@ -25,7 +25,7 @@ HEADER_SEARCH_PATHS                                = API $(SRCROOT)/vendor/date/
 
 IPHONEOS_DEPLOYMENT_TARGET                         = 10.0
 MACOSX_DEPLOYMENT_TARGET                           = 10.14
-TVOS_DEPLOYMENT_TARGET                             =  9.0
+TVOS_DEPLOYMENT_TARGET                             = 10.0
 ONLY_ACTIVE_ARCH                                   = YES
 SKIP_INSTALL                                       = YES
 SUPPORTED_PLATFORMS                                = macosx iphoneos iphonesimulator appletvos appletvsimulator
