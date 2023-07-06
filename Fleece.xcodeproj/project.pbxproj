@@ -1673,6 +1673,57 @@
 			};
 			name = Release;
 		};
+		D6200C0A2A5746B200790C0F /* Test_CE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2776AA45208A6C5A004ACE85 /* Project_Debug.xcconfig */;
+			buildSettings = {
+			};
+			name = Test_CE;
+		};
+		D6200C0B2A5746B200790C0F /* Test_CE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2776AA48208A6CED004ACE85 /* FleeceStaticLib.xcconfig */;
+			buildSettings = {
+			};
+			name = Test_CE;
+		};
+		D6200C0C2A5746B200790C0F /* Test_CE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 27744AE5213F0E6A00399DCA /* FleeceBase.xcconfig */;
+			buildSettings = {
+			};
+			name = Test_CE;
+		};
+		D6200C0D2A5746B200790C0F /* Test_CE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 27C4CEAA2127729D00470DE9 /* FleeceDylib.xcconfig */;
+			buildSettings = {
+			};
+			name = Test_CE;
+		};
+		D6200C0E2A5746B200790C0F /* Test_CE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 27F25A8220A6559800E181FA /* FleeceMutableObjC.xcconfig */;
+			buildSettings = {
+				EXECUTABLE_PREFIX = lib;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Test_CE;
+		};
+		D6200C0F2A5746B200790C0F /* Test_CE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2776AA49208A6E01004ACE85 /* FleeceTest.xcconfig */;
+			buildSettings = {
+			};
+			name = Test_CE;
+		};
+		D6200C102A5746B200790C0F /* Test_CE */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = fleece;
+			};
+			name = Test_CE;
+		};
 		D6D93DFF2A30122000E30981 /* Test_EE */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 2776AA45208A6C5A004ACE85 /* Project_Debug.xcconfig */;
@@ -1733,6 +1784,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				270FA2651BF53CAD005DCB13 /* Debug */,
+				D6200C0A2A5746B200790C0F /* Test_CE */,
 				27744AB521372EB000399DCA /* Debug_EE */,
 				D6D93DFF2A30122000E30981 /* Test_EE */,
 				270FA2661BF53CAD005DCB13 /* Release */,
@@ -1745,6 +1797,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				270FA2681BF53CAD005DCB13 /* Debug */,
+				D6200C0B2A5746B200790C0F /* Test_CE */,
 				27744AB621372EB000399DCA /* Debug_EE */,
 				D6D93E002A30122000E30981 /* Test_EE */,
 				270FA2691BF53CAD005DCB13 /* Release */,
@@ -1757,6 +1810,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				272E5A501BF7FE5600848580 /* Debug */,
+				D6200C0F2A5746B200790C0F /* Test_CE */,
 				27744AB821372EB000399DCA /* Debug_EE */,
 				D6D93E042A30122000E30981 /* Test_EE */,
 				272E5A511BF7FE5600848580 /* Release */,
@@ -1769,6 +1823,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				279AC5361C096872002C80DB /* Debug */,
+				D6200C102A5746B200790C0F /* Test_CE */,
 				27744AB921372EB000399DCA /* Debug_EE */,
 				D6D93E052A30122000E30981 /* Test_EE */,
 				279AC5371C096872002C80DB /* Release */,
@@ -1781,6 +1836,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				27C4CEA42127719D00470DE9 /* Debug */,
+				D6200C0D2A5746B200790C0F /* Test_CE */,
 				27C4CEA52127719D00470DE9 /* Release */,
 				27744ADA2137452300399DCA /* Debug_EE */,
 				D6D93E022A30122000E30981 /* Test_EE */,
@@ -1793,6 +1849,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				27D7218E1F8E8EEA00AA4458 /* Debug */,
+				D6200C0E2A5746B200790C0F /* Test_CE */,
 				27744AB721372EB000399DCA /* Debug_EE */,
 				D6D93E032A30122000E30981 /* Test_EE */,
 				27D7218F1F8E8EEA00AA4458 /* Release */,
@@ -1805,6 +1862,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				27DE2EDD2125FA1700123597 /* Debug */,
+				D6200C0C2A5746B200790C0F /* Test_CE */,
 				27DE2EDE2125FA1700123597 /* Release */,
 				27744AD82137452300399DCA /* Debug_EE */,
 				D6D93E012A30122000E30981 /* Test_EE */,
