@@ -652,14 +652,11 @@ size_t FLEncoder_BytesWritten(FLEncoder e) FLAPI {
 }
 
 intptr_t FLEncoder_LastValueWritten(FLEncoder e) FLAPI {
-    if (e->isFleece())
-        return intptr_t(e->fleeceEncoder->lastValueWritten());
-    return 0;
+    return e->isFleece() ? intptr_t(e->fleeceEncoder->lastValueWritten()) : kFLNoWrittenValue;
 }
 
-void FLEncoder_WriteValueAgain(FLEncoder e, intptr_t preWrittenValue) FLAPI {
-    if (e->isFleece())
-        e->fleeceEncoder->writeValueAgain(Encoder::PreWrittenValue(preWrittenValue));
+bool FLEncoder_WriteValueAgain(FLEncoder e, intptr_t prewritten) FLAPI {
+    return e->isFleece() && e->fleeceEncoder->writeValueAgain(Encoder::PreWrittenValue(prewritten));
 }
 
 bool FLEncoder_WriteNull(FLEncoder e)              FLAPI {ENCODER_TRY(e, writeNull());}
