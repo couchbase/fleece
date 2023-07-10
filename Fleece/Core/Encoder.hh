@@ -172,9 +172,9 @@ namespace fleece { namespace impl {
         slice baseUsed() const                  {return _baseMinUsed != 0 ? slice(_baseMinUsed, _base.end()) : slice();}
         const StringTable& strings() const      {return _strings;}
 
-        enum class PreWrittenValue : ssize_t { none = 0 };
+        enum class PreWrittenValue : intptr_t { none = INTPTR_MIN };
         PreWrittenValue lastValueWritten() const;   // Opaque reference to last thing written
-        void writeValueAgain(PreWrittenValue);         // Writes pointer to an already-written value
+        bool writeValueAgain(PreWrittenValue);      // Writes pointer to an already-written value
 
         /** Returns the data written so far as a standalone Fleece document, whose root is the last
             value written. You can continue writing, and the final output returned by \ref finish will
