@@ -47,6 +47,8 @@ namespace fleece {
                 heedlessPushBack(*b++);
         }
 
+        smallVector(std::initializer_list<T> init)      :smallVector(init.begin(), init.end()) { }
+
         ~smallVector() {
             if (_size > 0) {
                 auto item = begin();
@@ -152,18 +154,19 @@ namespace fleece {
                 *dst++ = *b++;
         }
 
-        void erase(iterator first) {
-            erase(first, first+1);
+        iterator erase(iterator first) {
+            return erase(first, first+1);
         }
 
-        void erase(iterator first, iterator last) {
+        iterator erase(iterator first, iterator last) {
             assert_precondition(begin() <= first && first <= last && last <= end());
             if (first == last)
-                return;
+                return first;
             for (auto i = first; i != last; ++i)
                 i->T::~T();                 // destruct removed items
             _moveItems(first, last, end());
             _size -= last - first;
+            return first;
         }
 
         void resize(size_t sz) {
@@ -175,6 +178,20 @@ namespace fleece {
                     (void) new (i++) T();       // default-construct new items
             } else {
                 shrinkTo(sz);
+            }
+        }
+
+        /// Resizes, but only if `sz` is smaller than the current size.
+        /// Unlike `resize` this can be called when T does not have a default constructor.
+        void shrinkTo(size_t sz) {
+            if (sz < _size) {
+                auto item = end();
+                for (auto i = sz; i < _size; ++i)
+                    (--item)->T::~T();                 // destruct removed items
+                _size = (uint32_t)sz;
+
+                if (_isBig && sz <= N)
+                    _emsmallen(N, kItemSize);
             }
         }
 
@@ -200,18 +217,6 @@ namespace fleece {
         T* grow()                               {return (T*)_growTo(_size + 1, kItemSize);}
         T* heedlessGrow()                       {assert(_size < _capacity); return &_get(_size++);}
         T& heedlessPushBack(const T& t)         {return * new(heedlessGrow()) T(t);}
-
-        void shrinkTo(size_t sz) {
-            if (sz < _size) {
-                auto item = end();
-                for (auto i = sz; i < _size; ++i)
-                    (--item)->T::~T();                 // destruct removed items
-                _size = (uint32_t)sz;
-
-                if (_isBig && sz <= N)
-                    _emsmallen(N, kItemSize);
-            }
-        }
 
 
         // The size of one vector item, taking into account alignment.
