@@ -12,8 +12,7 @@
 //  the file licenses/APL2.txt.
 //
 
-// Workaround for Catch 2 requiring C++ features not available until macOS 10.12
-MACOSX_DEPLOYMENT_TARGET            = 10.12
+MACOSX_DEPLOYMENT_TARGET            = 10.14
 
 CLANG_WARN__EXIT_TIME_DESTRUCTORS = NO
 GCC_PREPROCESSOR_DEFINITIONS = $(inherited) _LIBCPP_DEBUG=0

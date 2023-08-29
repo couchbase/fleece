@@ -31,12 +31,12 @@ namespace fleece {
 
 
     ConcurrentArena::ConcurrentArena(ConcurrentArena &&other) {
-        *this = move(other);
+        *this = std::move(other);
     }
 
 
     ConcurrentArena& ConcurrentArena::operator=(ConcurrentArena &&other) {
-        _heap = move(other._heap);
+        _heap = std::move(other._heap);
         _heapEnd = other._heapEnd;
         _nextBlock = other._nextBlock.load();
         return *this;
