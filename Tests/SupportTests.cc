@@ -10,6 +10,7 @@
 // the file licenses/APL2.txt.
 //
 
+#include "fleece/FLBase.h"
 #include "FleeceTests.hh"
 #include "FleeceImpl.hh"
 #include "ConcurrentMap.hh"
@@ -327,4 +328,19 @@ TEST_CASE("Base64 encode and decode", "[Base64]") {
         auto decoded = base64::decode(slice(encoded));
         CHECK(decoded == in);
     }
+}
+
+
+TEST_CASE("Timestamp Conversions", "[Timestamps]") {
+    FLTimestamp ts = FLTimestamp_Now();
+    bool asUTC = true;
+    SECTION("UTC") {
+        asUTC = true;
+    }
+    SECTION("Not UTC") {
+        asUTC = false;
+    }
+    FLStringResult str = FLTimestamp_ToString(ts, asUTC);
+    FLTimestamp ts2 = FLTimestamp_FromString((FLString)str);
+    CHECK(ts == ts2);
 }
