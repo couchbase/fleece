@@ -20,7 +20,7 @@
 
 namespace fleece { namespace impl { namespace internal {
 
-    HeapDict::HeapDict(const Dict *d)
+    HeapDict::HeapDict(const Dict *d, CopyFlags flags)
     :HeapCollection(kDictTag)
     {
         if (d) {
@@ -30,9 +30,15 @@ namespace fleece { namespace impl { namespace internal {
                 _source = hd->_source;
                 _map = hd->_map;
                 _backingSlices = hd->_backingSlices;
+            } else if (flags & kCopyImmutables) {
+                _count = 0;
+                for (Dict::iterator i(d); i; ++i) 
+                    set(i.keyString(), i.value());
             } else {
                 _source = d;
             }
+            if (flags)
+                copyChildren(flags);
             if (_source)
                 _sharedKeys = _source->sharedKeys();
         }

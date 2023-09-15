@@ -22,10 +22,7 @@ namespace fleece { namespace impl {
     public:
 
         static Retained<MutableDict> newDict(const Dict *d =nullptr, CopyFlags flags =kDefaultCopy) {
-            auto hd = retained(new internal::HeapDict(d));
-            if (flags)
-                hd->copyChildren(flags);
-            return hd->asMutableDict();
+            return retained(new internal::HeapDict(d, flags))->asMutableDict();
         }
 
         Retained<MutableDict> copy(CopyFlags f =kDefaultCopy) {return newDict(this, f);}

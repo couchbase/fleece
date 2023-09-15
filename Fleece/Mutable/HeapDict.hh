@@ -27,7 +27,7 @@ namespace fleece { namespace impl { namespace internal {
 
     class HeapDict : public HeapCollection {
     public:
-        HeapDict(const Dict* =nullptr);
+        HeapDict(const Dict* =nullptr, CopyFlags flags =kDefaultCopy);
 
         static MutableDict* asMutableDict(HeapDict *a)      {return (MutableDict*)asValue(a);}
         MutableDict* asMutableDict() const                  {return (MutableDict*)asValue();}
