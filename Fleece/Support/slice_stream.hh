@@ -137,7 +137,10 @@ namespace fleece {
         constexpr slice_istream(const alloc_slice &s) noexcept  :slice(s) { }
         constexpr slice_istream(const void* b, size_t s) noexcept STEPOVER    :slice(b, s) {}
         constexpr slice_istream(const void* s NONNULL, const void* e NONNULL) noexcept STEPOVER
-                                                                                :slice(s, e) { }
+                                                                      :slice(s, e) { }
+        constexpr slice_istream(slice_istream&&) = default;
+        slice_istream& operator=(slice_istream&&) = default;
+
         /// The number of bytes remaining to be read.
         size_t bytesRemaining() const noexcept FLPURE           {return size;}
 
@@ -232,6 +235,6 @@ namespace fleece {
         // Pass-by-value is intentionally forbidden to make passing a `slice_istream` as a
         // parameter illegal. That's because its behavior would be wrong: reads made by the
         // callee would not be reflected in the caller. Always pass a reference, `slice_istream&`.
-        slice_istream(const slice_istream&) = default;
+        slice_istream(const slice_istream&) = delete;
     };
 }
