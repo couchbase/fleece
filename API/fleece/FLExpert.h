@@ -31,6 +31,12 @@ extern "C" {
     /** \defgroup Obscure  Rarely-needed or advanced functions
         @{ */
 
+    /** For use with \ref FLDoc_FromResultData. This option prevents the function from parsing the
+        data at all; you are responsible for locating the FLValues in it.
+        This is for the case where you have trusted data in a custom format that contains Fleece-
+        encoded data within it. You still need an FLDoc to access the data safely (especially to
+        retain FLValues), but it can't be parsed as-is. */
+    #define kFLTrustedDontParse FLTrust(-1)
 
     /** \name  Delta Compression
      @{
