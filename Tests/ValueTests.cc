@@ -14,6 +14,7 @@
 #define NOMINMAX
 #endif
 
+#include "fleece/Fleece.h"
 #include "FleeceTests.hh"
 #include "Value.hh"
 #include "Pointer.hh"
@@ -231,5 +232,110 @@ namespace fleece {
         for (int i = 0; i < 100; i++) {
             docs.push_back(Doc::fromJSON("[]"));
         }
+    }
+
+    TEST_CASE("Array Iterators") {
+        FLDoc doc = nullptr;
+        SECTION("Empty Array") {
+            doc = FLDoc_FromJSON("[]"_sl, nullptr);
+        }
+        SECTION("Non Empty Array") {
+            doc = FLDoc_FromJSON("[1]"_sl, nullptr);
+        }
+        REQUIRE(doc);
+
+        FLValue val = FLDoc_GetRoot(doc);
+        FLArray arr = FLValue_AsArray(val);
+        REQUIRE(arr);
+        Array::iterator iter = Array::iterator((Array*)arr);
+
+        bool caughtException = false;
+        bool capturedBacktrace = true;
+
+        // No exception with typical loop.
+        try {
+            for (; iter; ++iter);
+        } catch (...) {
+            caughtException = true;
+        }
+        CHECK(!caughtException);
+
+        caughtException = false;
+        // ++iter will throw if already at the end.
+        // OutOfRange exception should contain the backtrace.
+        try {
+            ++iter;
+        } catch (const FleeceException& exc) {
+            if (exc.code == (int)kFLOutOfRange) {
+                caughtException = true;
+                capturedBacktrace = !!exc.backtrace;
+            }
+        }
+        CHECK((caughtException && !capturedBacktrace));
+
+        // FL Itarator
+        FLArrayIterator flIter;
+        FLArrayIterator_Begin(arr, &flIter);
+        FLValue value;
+        while (NULL != (value = FLArrayIterator_GetValue(&flIter))) {
+            FLArrayIterator_Next(&flIter);
+        }
+        // Calling Next is okay. It will trigger exception but we won't try to capture the backtrace.
+        CHECK(!FLArrayIterator_Next(&flIter));
+
+        FLDoc_Release(doc);
+    }
+
+    TEST_CASE("Dict Iterators") {
+        FLDoc doc = nullptr;
+        SECTION("Empty Dict") {
+            doc = FLDoc_FromJSON("{}"_sl, nullptr);
+        }
+        SECTION("Non Empty Dict") {
+            doc = FLDoc_FromJSON(R"({"key": 1})"_sl, nullptr);
+        }
+        REQUIRE(doc);
+
+        FLValue val = FLDoc_GetRoot(doc);
+        FLDict dict = FLValue_AsDict(val);
+        REQUIRE(dict);
+        Dict::iterator iter = Dict::iterator((Dict*)dict);
+
+        bool caughtException = false;
+        bool capturedBacktrace = true;
+
+        // No exception with typical loop pattern.
+        try {
+            for (; iter; ++iter);
+        } catch (...) {
+            caughtException = true;
+        }
+        CHECK(!caughtException);
+
+        caughtException = false;
+        // ++iter will throw if already at the end.
+        // OutOfRange exception should contain the backtrace.
+        try {
+            ++iter;
+        } catch (const FleeceException& exc) {
+            if (exc.code == (int)kFLOutOfRange) {
+                caughtException = true;
+                capturedBacktrace = !!exc.backtrace;
+            }
+        }
+        CHECK((caughtException && !capturedBacktrace));
+
+        // FL Itarator
+        FLDictIterator flIter;
+        FLDictIterator_Begin(dict, &flIter);
+        FLValue value;
+        while (NULL != (value = FLDictIterator_GetValue(&flIter))) {
+            FLDictIterator_Next(&flIter);
+        }
+        // Calling Next is okay. It will trigger exception but we won't try to capture the backtrace.
+        // Cannot assert it directly. Internally, it uses Dict::iterator::operator++().
+        CHECK(!FLDictIterator_Next(&flIter));
+
+        FLDoc_Release(doc);
     }
 }

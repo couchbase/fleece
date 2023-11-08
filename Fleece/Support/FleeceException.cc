@@ -48,8 +48,11 @@ namespace fleece {
     :std::runtime_error(what)
     ,code(code_)
     ,err_no(errno_)
-    ,backtrace(Backtrace::capture(2))
-    { }
+    {
+        if (code_ != OutOfRange) {
+            backtrace = Backtrace::capture(2);
+        }
+    }
 
 
     __cold
