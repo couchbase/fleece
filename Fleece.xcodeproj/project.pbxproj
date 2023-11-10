@@ -79,6 +79,7 @@
 		278163B51CE69CA800B94E32 /* Fleece.cc in Sources */ = {isa = PBXBuildFile; fileRef = 278163B31CE69CA800B94E32 /* Fleece.cc */; settings = {COMPILER_FLAGS = "-Wno-return-type-c-linkage"; }; };
 		278163B91CE6BB8C00B94E32 /* C_Test.c in Sources */ = {isa = PBXBuildFile; fileRef = 278163B81CE6BB8C00B94E32 /* C_Test.c */; };
 		278163BD1CE7A72300B94E32 /* KeyTree.hh in Headers */ = {isa = PBXBuildFile; fileRef = 278163BB1CE7A72300B94E32 /* KeyTree.hh */; };
+		278343132A675A7000621050 /* function_ref.hh in Headers */ = {isa = PBXBuildFile; fileRef = 278343122A675A7000621050 /* function_ref.hh */; };
 		27867AF2211E27E5007BDA5F /* Doc.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27867AF0211E27E5007BDA5F /* Doc.cc */; };
 		27867AF3211E27E5007BDA5F /* Doc.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27867AF1211E27E5007BDA5F /* Doc.hh */; };
 		2797BCAC1C0FBFDE00E5C991 /* StringTable.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2797BCAA1C0FBFDE00E5C991 /* StringTable.cc */; };
@@ -393,7 +394,6 @@
 		2776AA20208678AA004ACE85 /* DeepIterator.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DeepIterator.hh; sourceTree = "<group>"; };
 		2776AA232086C94B004ACE85 /* 1person-deepIterOutput.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "1person-deepIterOutput.txt"; sourceTree = "<group>"; };
 		2776AA242086CC1F004ACE85 /* 1person-shallowIterOutput.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "1person-shallowIterOutput.txt"; sourceTree = "<group>"; };
-		2776AA2F2088FEC3004ACE85 /* function_ref.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = function_ref.hh; sourceTree = "<group>"; };
 		2776AA44208A6C5A004ACE85 /* Project.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Project.xcconfig; sourceTree = "<group>"; };
 		2776AA45208A6C5A004ACE85 /* Project_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Project_Debug.xcconfig; sourceTree = "<group>"; };
 		2776AA46208A6C5A004ACE85 /* Project_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Project_Release.xcconfig; sourceTree = "<group>"; };
@@ -415,6 +415,7 @@
 		278163B81CE6BB8C00B94E32 /* C_Test.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = C_Test.c; sourceTree = "<group>"; };
 		278163BA1CE7A72300B94E32 /* KeyTree.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = KeyTree.cc; sourceTree = "<group>"; };
 		278163BB1CE7A72300B94E32 /* KeyTree.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = KeyTree.hh; sourceTree = "<group>"; };
+		278343122A675A7000621050 /* function_ref.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = function_ref.hh; sourceTree = "<group>"; };
 		27867AF0211E27E5007BDA5F /* Doc.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Doc.cc; sourceTree = "<group>"; };
 		27867AF1211E27E5007BDA5F /* Doc.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Doc.hh; sourceTree = "<group>"; };
 		2797BCAA1C0FBFDE00E5C991 /* StringTable.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StringTable.cc; sourceTree = "<group>"; };
@@ -616,6 +617,7 @@
 		271507E82122381E005FE6E8 /* fleece */ = {
 			isa = PBXGroup;
 			children = (
+				271507EF21223A02005FE6E8 /* CompilerSupport.h */,
 				271507EA2122381E005FE6E8 /* Fleece.h */,
 				271E0CBB27B5A02700CE2661 /* FLBase.h */,
 				271E0CC427B5A28A00CE2661 /* FLCollections.h */,
@@ -629,11 +631,14 @@
 				27A2F73A21248DA40081927B /* FLSlice.h */,
 				271E0CC227B5A28A00CE2661 /* FLValue.h */,
 				271507E92122381E005FE6E8 /* Fleece+CoreFoundation.h */,
-				271507EE2122381E005FE6E8 /* slice.hh */,
 				271507EB2122381E005FE6E8 /* Fleece.hh */,
-				271507EC2122381E005FE6E8 /* Mutable.hh */,
+				278343122A675A7000621050 /* function_ref.hh */,
 				271E0CC727B5CA8F00CE2661 /* Expert.hh */,
-				271507EF21223A02005FE6E8 /* CompilerSupport.h */,
+				271507EC2122381E005FE6E8 /* Mutable.hh */,
+				27DFAE10219F83AB00DF57EB /* InstanceCounted.hh */,
+				271507ED2122381E005FE6E8 /* PlatformCompat.hh */,
+				274D8255209D1764008BB39F /* RefCounted.hh */,
+				271507EE2122381E005FE6E8 /* slice.hh */,
 			);
 			path = fleece;
 			sourceTree = "<group>";
@@ -835,7 +840,6 @@
 				277A06B220B36D1A00970354 /* FileUtils.hh */,
 				275CED501D3EF7BE001DE46C /* FleeceException.cc */,
 				275CED511D3EF7BE001DE46C /* FleeceException.hh */,
-				27DFAE10219F83AB00DF57EB /* InstanceCounted.hh */,
 				27DFAE11219F83AB00DF57EB /* InstanceCounted.cc */,
 				276D15441E007D3000543B1B /* JSON5.cc */,
 				276D15451E007D3000543B1B /* JSON5.hh */,
@@ -845,9 +849,7 @@
 				27D965672339595700F4A51C /* NumConversion.cc */,
 				2700BB9B217E8C0C00797537 /* ParseDate.cc */,
 				2700BB9A217E8C0C00797537 /* ParseDate.hh */,
-				271507ED2122381E005FE6E8 /* PlatformCompat.hh */,
 				274D8254209D1764008BB39F /* RefCounted.cc */,
-				274D8255209D1764008BB39F /* RefCounted.hh */,
 				275F0458261E447F005261C0 /* slice_stream.hh */,
 				275F045F261E46E9005261C0 /* slice_stream.cc */,
 				2776AA762093C982004ACE85 /* sliceIO.cc */,
@@ -862,7 +864,6 @@
 				270FA2771BF53CEA005DCB13 /* varint.hh */,
 				270FA2711BF53CEA005DCB13 /* Writer.cc */,
 				270FA2721BF53CEA005DCB13 /* Writer.hh */,
-				2776AA2F2088FEC3004ACE85 /* function_ref.hh */,
 				27F25A8320A6560900E181FA /* LibC++Debug.cc */,
 				27CEE44F20F00B4E00089A85 /* Fleece.exp */,
 				27AEFAC721091A8C00106ED8 /* diff_match_patch.hh */,
@@ -1012,6 +1013,7 @@
 				274D8249209A5906008BB39F /* ValueSlot.hh in Headers */,
 				2734B8A41F8583FF00BE5249 /* MCollection.hh in Headers */,
 				27E3DD4C1DB6C32400F2872D /* CaseListReporter.hh in Headers */,
+				278343132A675A7000621050 /* function_ref.hh in Headers */,
 				270FA2801BF53CEA005DCB13 /* Writer.hh in Headers */,
 				270FA27D1BF53CEA005DCB13 /* Encoder.hh in Headers */,
 				27C8DF072084102900A99BFC /* MutableHashTree.hh in Headers */,

@@ -169,9 +169,11 @@ namespace fleece { namespace impl {
     }
 
     // Writes a pointer to an already-written value, allowing it to appear twice without overhead.
-    void Encoder::writeValueAgain(PreWrittenValue pos) {
-        throwIf(pos == PreWrittenValue::none, EncodeError, "Can't rewrite an inline Value");
-        writePointer(ssize_t(pos) - _base.size);
+    bool Encoder::writeValueAgain(PreWrittenValue pos) {
+        if (pos == PreWrittenValue::none)
+            return false;
+        writePointer(intptr_t(pos) - _base.size);
+        return true;
     }
 
 

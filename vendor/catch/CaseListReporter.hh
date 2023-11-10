@@ -17,6 +17,7 @@
 #include <chrono>
 #include <iostream>
 #include <time.h>
+#include <vector>
 
 #ifdef CASE_LIST_BACKTRACE
 #include "Backtrace.hh"
@@ -36,7 +37,12 @@ struct CaseListReporter : public Catch::ConsoleReporter {
 
     virtual ~CaseListReporter() override {
         auto now = time(nullptr);
-        stream << "ENDED TESTS IN " << (now - _start) << "sec, AT " << ctime(&now);
+        if (!_failedTests.empty()) {
+            stream << "failed tests:\n";
+            for (std::string const& name : _failedTests)
+                stream << "    >>> " << name << std::endl;
+        }
+        stream << "\nENDED TESTS IN " << (now - _start) << "sec, AT " << ctime(&now) << std::endl;
         stream.flush();
     }
 
@@ -61,6 +67,8 @@ struct CaseListReporter : public Catch::ConsoleReporter {
     virtual void testCaseEnded( Catch::TestCaseStats const& _testCaseStats ) override {
         stream << "\t    [" << _stopwatch.elapsed() << " sec]\n";
         stream.flush();
+        if (_testCaseStats.totals.testCases.failed > 0)
+            _failedTests.push_back(_testCaseStats.testInfo.name);
         ConsoleReporter::testCaseEnded(_testCaseStats);
     }
 
@@ -101,6 +109,7 @@ struct CaseListReporter : public Catch::ConsoleReporter {
     unsigned _sectionNesting;
     time_t _start;
     fleece::Stopwatch _stopwatch;
+    std::vector<std::string> _failedTests;
 };
 
 CATCH_REGISTER_REPORTER("list", CaseListReporter )

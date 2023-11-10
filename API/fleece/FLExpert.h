@@ -31,6 +31,12 @@ extern "C" {
     /** \defgroup Obscure  Rarely-needed or advanced functions
         @{ */
 
+    /** For use with \ref FLDoc_FromResultData. This option prevents the function from parsing the
+        data at all; you are responsible for locating the FLValues in it.
+        This is for the case where you have trusted data in a custom format that contains Fleece-
+        encoded data within it. You still need an FLDoc to access the data safely (especially to
+        retain FLValues), but it can't be parsed as-is. */
+    #define kFLTrustedDontParse FLTrust(-1)
 
     /** \name  Delta Compression
      @{
@@ -246,15 +252,19 @@ extern "C" {
         (Due to internal buffering, this is not the same as FLEncoder_BytesWritten.) */
     FLEECE_PUBLIC size_t FLEncoder_GetNextWritePos(FLEncoder) FLAPI;
 
+    #define kFLNoWrittenValue INTPTR_MIN
+
     /** Returns an opaque reference to the last complete value written to the encoder, if possible.
-        Fails (returning 0) if nothing has been written, or if the value is inline and can't be
-        referenced this way -- that only happens with small scalars or empty collections. */
+        Fails (returning kFLNoWrittenValue) if nothing has been written, or if the value is inline
+        and can't be referenced this way -- that only happens with small scalars or empty
+        collections. */
     FLEECE_PUBLIC intptr_t FLEncoder_LastValueWritten(FLEncoder) FLAPI;
 
     /** Writes another reference (a "pointer") to an already-written value, given a reference previously
         returned from \ref FLEncoder_LastValueWritten. The effect is exactly the same as if you wrote the
-        entire value again, except that the size of the encoded data only grows by 4 bytes. */
-    FLEECE_PUBLIC void FLEncoder_WriteValueAgain(FLEncoder, intptr_t preWrittenValue) FLAPI;
+        entire value again, except that the size of the encoded data only grows by 4 bytes.
+        Returns false if the reference couldn't be written. */
+    FLEECE_PUBLIC bool FLEncoder_WriteValueAgain(FLEncoder, intptr_t preWrittenValue) FLAPI;
 
     /** Returns the data written so far as a standalone Fleece document, whose root is the last
         value written. You can continue writing, and the final output returned by \ref FLEncoder_Finish will

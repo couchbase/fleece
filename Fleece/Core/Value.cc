@@ -158,6 +158,9 @@ namespace fleece { namespace impl {
             // This means the actual length follows as a varint:
             uint32_t length;
             size_t lengthBytes = GetUVarInt32(s, &length);
+            if (_usuallyFalse(lengthBytes == 0))
+                // Invalid data, but I'm not allowed to throw an exception.
+                return nullslice;
             return slice(&s[lengthBytes], length);
         }
         return s;
