@@ -49,6 +49,12 @@ namespace fleece {
     ,code(code_)
     ,err_no(errno_)
     {
+        // The Fleece iterator (of array and dict) throws OutOfRange exception as one moves
+        // the iterator, operator++ or FLArrayIterator_Next, for instances, beyond the
+        // end of the array. Although the exception is caught inside Fleece and the
+        // client gets return of false, the effort to capture the backtrace can be
+        // very significant as shown in performance profilings. And, the backtrace is not
+        // used anyway.
         if (code_ != OutOfRange) {
             backtrace = Backtrace::capture(2);
         }
