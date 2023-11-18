@@ -70,7 +70,9 @@ namespace fleece { namespace impl {
             slice string() const noexcept                {return _rawString;}
             int compare(const key &k) const noexcept     {return _rawString.compare(k._rawString);}
             key(const key&) =delete;
+#ifndef LITECORE_CPPTEST
         private:
+#endif
             void setSharedKeys(SharedKeys*);
             
             slice const _rawString;
