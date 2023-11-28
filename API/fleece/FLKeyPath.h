@@ -37,8 +37,7 @@ extern "C" {
 
      A leading JSONPath-like `$.` is allowed but ignored.
 
-     A '\' can be used to escape a special character ('.', '[' or '$') at the start of a
-     property name (but not yet in the middle of a name.)
+     A '\' can be used to escape a special character ('.', '[' or '$').
      */
 
 #ifndef FL_IMPL
