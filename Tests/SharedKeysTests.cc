@@ -430,15 +430,11 @@ TEST_CASE("encoding", "[SharedKeys]") {
         Dict::key typeKey("type"_sl), attsKey("_attachments"_sl);
 
         const Value *v = root->get(typeKey);
-#ifdef LITECORE_CPPTEST
-        CHECK(typeKey._hasNumericKey);
-#endif
+        CHECK(typeKey.isShared());
         REQUIRE(v);
         REQUIRE(v->asString() == "animal"_sl);
         const Dict *atts = root->get(attsKey)->asDict();
-#ifdef LITECORE_CPPTEST
-        CHECK(attsKey._hasNumericKey);
-#endif
+        CHECK(attsKey.isShared());
         REQUIRE(atts);
         REQUIRE(atts->get("thumbnail.jpg"_sl) != nullptr);
         REQUIRE(atts->get(typeKey) != nullptr);
@@ -453,17 +449,13 @@ TEST_CASE("encoding", "[SharedKeys]") {
 
         // Use a Dict::key:
         Dict::key typeKey("type"_sl), attsKey("_attachments"_sl);
-#ifdef LITECORE_CPPTEST
-        CHECK(!typeKey._hasNumericKey);
-#endif
+        CHECK(!typeKey.isShared());
         const Value *v = root->get(typeKey);
         REQUIRE(v);
         REQUIRE(v->asString() == "animal"_sl);
 
         const Dict *atts = root->get(attsKey)->asDict();
-#ifdef LITECORE_CPPTEST
-        CHECK(!attsKey._hasNumericKey);
-#endif
+        CHECK(!attsKey.isShared());
         REQUIRE(atts);
         REQUIRE(atts->get("thumbnail.jpg"_sl) != nullptr);
         REQUIRE(atts->get(typeKey) != nullptr);
