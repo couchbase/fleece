@@ -430,9 +430,11 @@ TEST_CASE("encoding", "[SharedKeys]") {
         Dict::key typeKey("type"_sl), attsKey("_attachments"_sl);
 
         const Value *v = root->get(typeKey);
+        CHECK(typeKey.isShared());
         REQUIRE(v);
         REQUIRE(v->asString() == "animal"_sl);
         const Dict *atts = root->get(attsKey)->asDict();
+        CHECK(attsKey.isShared());
         REQUIRE(atts);
         REQUIRE(atts->get("thumbnail.jpg"_sl) != nullptr);
         REQUIRE(atts->get(typeKey) != nullptr);
@@ -441,6 +443,23 @@ TEST_CASE("encoding", "[SharedKeys]") {
         // Try a Dict::key that can't be mapped to an integer:
         Dict::key thumbKey("thumbnail.jpg"_sl);
         REQUIRE(atts->get(thumbKey) != nullptr);
+    }
+    SECTION("Dict::key Not Cache") {
+        sk->disableCaching();
+
+        // Use a Dict::key:
+        Dict::key typeKey("type"_sl), attsKey("_attachments"_sl);
+        CHECK(!typeKey.isShared());
+        const Value *v = root->get(typeKey);
+        REQUIRE(v);
+        REQUIRE(v->asString() == "animal"_sl);
+
+        const Dict *atts = root->get(attsKey)->asDict();
+        CHECK(!attsKey.isShared());
+        REQUIRE(atts);
+        REQUIRE(atts->get("thumbnail.jpg"_sl) != nullptr);
+        REQUIRE(atts->get(typeKey) != nullptr);
+        REQUIRE(atts->get(attsKey) == nullptr);
     }
     SECTION("Path lookup") {
         Path attsTypePath("_attachments.type");

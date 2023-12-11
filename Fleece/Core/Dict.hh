@@ -70,6 +70,7 @@ namespace fleece { namespace impl {
             slice string() const noexcept                {return _rawString;}
             int compare(const key &k) const noexcept     {return _rawString.compare(k._rawString);}
             key(const key&) =delete;
+            bool isShared() const noexcept               {return _hasNumericKey;}
         private:
             void setSharedKeys(SharedKeys*);
             

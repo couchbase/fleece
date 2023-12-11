@@ -106,8 +106,6 @@ namespace fleece { namespace impl {
 
         bool isUnknownKey(int key) const FLPURE;
 
-        bool isInTransaction() const FLPURE             {return _inTransaction;}
-
         virtual bool refresh()                          {return false;}
 
         static const size_t kMaxCount = 2048;               // Max number of keys to store
@@ -124,7 +122,12 @@ namespace fleece { namespace impl {
         void setPlatformStringForKey(int key, PlatformString) const;
         PlatformString platformStringForKey(int key) const;
 
+        bool isCacheable() const FLPURE { return _isCacheable; }
+        void disableCaching()           { _isCacheable = false; }
+
     protected:
+        void enableCaching()            { _isCacheable = true; }
+
         virtual ~SharedKeys();
 
         /** Determines whether a new string should be added. Default implementation returns true
@@ -143,6 +146,7 @@ namespace fleece { namespace impl {
         mutable std::mutex _mutex;
         unsigned _count {0};
         bool _inTransaction {true};                     // (for PersistentSharedKeys)
+        bool _isCacheable   {true};                     // SharedKeys are cacheable unless explicitly disabled.
         mutable std::vector<PlatformString> _platformStringsByKey; // Reverse mapping, int->platform key
         ConcurrentMap _table;                             // Hash table mapping slice->int
         std::array<slice, kMaxCount> _byKey;      // Reverse mapping, int->slice

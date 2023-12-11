@@ -154,6 +154,9 @@ extern "C" {
     /** Reverts an FLSharedKeys by "forgetting" any keys added since it had the count `oldCount`. */
     FLEECE_PUBLIC void FLSharedKeys_RevertToCount(FLSharedKeys, unsigned oldCount) FLAPI;
 
+    /** Disable caching of the SharedKeys.. */
+    FLEECE_PUBLIC void FLSharedKeys_DisableCaching(FLSharedKeys) FLAPI;
+
     /** Increments the reference count of an FLSharedKeys. */
     FLEECE_PUBLIC FLSharedKeys FL_NULLABLE FLSharedKeys_Retain(FLSharedKeys FL_NULLABLE) FLAPI;
 

@@ -132,7 +132,7 @@ namespace fleece { namespace impl {
                     // shared key, because the transaction might be rolled back. If the found
                     // shared key is rolled back as part of rolling back the transaction, continuing
                     // to use it would lead to incorrect lookup results.
-                    keyToFind._hasNumericKey = !sharedKeys->isInTransaction();
+                    keyToFind._hasNumericKey = sharedKeys->isCacheable();
                     return get(keyToFind._numericKey);
                 }
             }

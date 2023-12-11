@@ -252,6 +252,7 @@ namespace fleece { namespace impl {
         LOCK(_refreshMutex);
         throwIf(_inTransaction, SharedKeysStateError, "already in transaction");
         _inTransaction = true;
+        disableCaching();
         read();     // Catch up with any external changes
     }
 
@@ -260,6 +261,7 @@ namespace fleece { namespace impl {
         if (_inTransaction) {
             _committedPersistedCount = _persistedCount;
             _inTransaction = false;
+            enableCaching();
         }
     }
 

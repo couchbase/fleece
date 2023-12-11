@@ -262,7 +262,7 @@ namespace fleece {
 
         caughtException = false;
         // ++iter will throw if already at the end.
-        // OutOfRange exception should contain the backtrace.
+        // OutOfRange exception should not contain the backtrace.
         try {
             ++iter;
         } catch (const FleeceException& exc) {
