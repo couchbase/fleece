@@ -75,11 +75,11 @@
 
 #ifdef WIN32
 #    include <Windows.h>
-tm* gmtime_r(time_t time, tm* buf) {
+tm* gmtime_r(time_t* time, tm* buf) {
     gmtime_s(buf, time);
     return buf;
 }
-tm* localtime_r(time_t time, tm* buf) {
+tm* localtime_r(time_t* time, tm* buf) {
     localtime_s(buf, time);
     return buf;
 }
