@@ -75,8 +75,14 @@
 
 #ifdef WIN32
 #    include <Windows.h>
-#    define gmtime_r(TIME, BUF) gmtime_s(BUF, TIME)
-#    define localtime_r(TIME, BUF) localtime_s(BUF, TIME)
+tm* gmtime_r(time_t time, tm* buf) {
+    gmtime_s(buf, time);
+    return buf;
+}
+tm* localtime_r(time_t time, tm* buf) {
+    localtime_s(buf, time);
+    return buf;
+}
 #endif
 
 using namespace std;
