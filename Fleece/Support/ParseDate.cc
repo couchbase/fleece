@@ -60,7 +60,6 @@
 #include "ParseDate.hh"
 #include "date/date.h"
 #include "FleeceException.hh"
-#include "fleece/PlatformCompat.hh"
 #include <cstdint>
 #include <cstdarg>
 #include <cctype>
@@ -76,6 +75,8 @@
 
 #ifdef WIN32
 #    include <Windows.h>
+#    define gmtime_r(TIME, BUF) gmtime_s(BUF, TIME)
+#    define localtime_r(TIME, BUF) localtime_s(BUF, TIME)
 #endif
 
 using namespace std;
