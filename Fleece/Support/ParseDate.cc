@@ -60,7 +60,7 @@
 #include "ParseDate.hh"
 #include "date/date.h"
 #include "FleeceException.hh"
-
+#include "fleece/PlatformCompat.hh"
 #include <cstdint>
 #include <cstdarg>
 #include <cctype>
