@@ -488,7 +488,7 @@ namespace fleece {
 
         // Split out the milliseconds from the timestamp:
         time_t secs{timestamp / 1000};
-        int    millis = (int)timestamp % 1000;
+        int    millis = (int)(timestamp % 1000);
 
         // Format it, up to the seconds:
         struct tm  timebuf {};
