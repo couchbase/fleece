@@ -75,10 +75,12 @@
 
 #ifdef WIN32
 #    include <Windows.h>
+
 tm* gmtime_r(time_t* time, tm* buf) {
     gmtime_s(buf, time);
     return buf;
 }
+
 tm* localtime_r(time_t* time, tm* buf) {
     localtime_s(buf, time);
     return buf;
@@ -96,8 +98,7 @@ typedef int64_t sqlite3_int64;
 #define sqlite3Isdigit isdigit
 #define sqlite3Isspace isspace
 
-#define LONG_MONTHS 0x15AA          // 1 bits for months with 31 days
-
+#define LONG_MONTHS 0x15AA  // 1 bits for months with 31 days
 
 /*
  ** Convert zDate into one or more integers.  Additional arguments
@@ -112,37 +113,33 @@ typedef int64_t sqlite3_int64;
  ** Conversions continue until one with nextC==0 is encountered.
  ** The function returns the number of successful conversions.
  */
-static int getDigits(const char *zDate, ...){
+static int getDigits(const char* zDate, ...) {
     va_list ap;
-    int val;
-    int N;
-    int min;
-    int max;
-    int nextC;
-    int *pVal;
-    int cnt = 0;
+    int     val;
+    int     N;
+    int     min;
+    int     max;
+    int     nextC;
+    int*    pVal;
+    int     cnt = 0;
     va_start(ap, zDate);
-    do{
-        N = va_arg(ap, int);
-        min = va_arg(ap, int);
-        max = va_arg(ap, int);
+    do {
+        N     = va_arg(ap, int);
+        min   = va_arg(ap, int);
+        max   = va_arg(ap, int);
         nextC = va_arg(ap, int);
-        pVal = va_arg(ap, int*);
-        val = 0;
-        while( N-- ){
-            if( !sqlite3Isdigit(*zDate) ){
-                goto end_getDigits;
-            }
-            val = val*10 + *zDate - '0';
+        pVal  = va_arg(ap, int*);
+        val   = 0;
+        while ( N-- ) {
+            if ( !sqlite3Isdigit(*zDate) ) { goto end_getDigits; }
+            val = val * 10 + *zDate - '0';
             zDate++;
         }
-        if( val<min || val>max || (nextC!=0 && nextC!=*zDate) ){
-            goto end_getDigits;
-        }
+        if ( val < min || val > max || (nextC != 0 && nextC != *zDate) ) { goto end_getDigits; }
         *pVal = val;
         zDate++;
         cnt++;
-    }while( nextC );
+    } while ( nextC );
 end_getDigits:
     va_end(ap);
     return cnt;
@@ -168,42 +165,36 @@ static int parseTimezone(const char* zDate, fleece::DateTime* p) {
     int sgn = 0;
     int nHr, nMn;
     int c;
-    while( sqlite3Isspace(*zDate) ){ zDate++; }
-    p->tz = 0;
+    while ( sqlite3Isspace(*zDate) ) { zDate++; }
+    p->tz      = 0;
     p->validTZ = 0;
-    c = (unsigned char)*zDate;
-    if( c=='-' ){
+    c          = (unsigned char)*zDate;
+    if ( c == '-' ) {
         sgn = -1;
-    }else if( c=='+' ){
+    } else if ( c == '+' ) {
         sgn = +1;
-    }else if( c=='Z' || c=='z' ){
+    } else if ( c == 'Z' || c == 'z' ) {
         zDate++;
         goto zulu_time;
-    }else{
-        return c!=0;
+    } else {
+        return c != 0;
     }
     zDate++;
-    
-    if( getDigits(zDate, 2, 0, 14, 0, &nHr) != 1 ) {
-        return 1;
-    }
-    
+
+    if ( getDigits(zDate, 2, 0, 14, 0, &nHr) != 1 ) { return 1; }
+
     zDate += 2;
-    
-    if (*zDate == ':') {
-        zDate++;
-    }
-    
-    if( getDigits(zDate, 2, 0, 59, 0, &nMn) != 1 ) {
-        return 1;
-    }
-    
+
+    if ( *zDate == ':' ) { zDate++; }
+
+    if ( getDigits(zDate, 2, 0, 59, 0, &nMn) != 1 ) { return 1; }
+
     zDate += 2;
-    p->tz = sgn*(nMn + nHr*60);
+    p->tz = sgn * (nMn + nHr * 60);
 zulu_time:
-    while( sqlite3Isspace(*zDate) ){ zDate++; }
-    p->validTZ = (char)(*zDate==0);
-    return *zDate!=0;
+    while ( sqlite3Isspace(*zDate) ) { zDate++; }
+    p->validTZ = (char)(*zDate == 0);
+    return *zDate != 0;
 }
 
 /*
@@ -213,38 +204,34 @@ zulu_time:
  **
  ** Return 1 if there is a parsing error and 0 on success.
  */
-static int parseHhMmSs(const char *zDate, fleece::DateTime *p){
-    int h, m, s;
+static int parseHhMmSs(const char* zDate, fleece::DateTime* p) {
+    int    h, m, s;
     double ms = 0.0;
-    if( getDigits(zDate, 2, 0, 24, ':', &h, 2, 0, 59, 0, &m)!=2 ){
-        return 1;
-    }
+    if ( getDigits(zDate, 2, 0, 24, ':', &h, 2, 0, 59, 0, &m) != 2 ) { return 1; }
     zDate += 5;
-    if( *zDate==':' ){
+    if ( *zDate == ':' ) {
         zDate++;
-        if( getDigits(zDate, 2, 0, 59, 0, &s)!=1 ){
-            return 1;
-        }
+        if ( getDigits(zDate, 2, 0, 59, 0, &s) != 1 ) { return 1; }
         zDate += 2;
-        if( *zDate=='.' && sqlite3Isdigit(zDate[1]) ){
+        if ( *zDate == '.' && sqlite3Isdigit(zDate[1]) ) {
             double rScale = 1.0;
             zDate++;
-            while( sqlite3Isdigit(*zDate) ){
-                ms = ms*10.0 + *zDate - '0';
+            while ( sqlite3Isdigit(*zDate) ) {
+                ms = ms * 10.0 + *zDate - '0';
                 rScale *= 10.0;
                 zDate++;
             }
             ms /= rScale;
         }
-    }else{
+    } else {
         s = 0;
     }
-    p->validJD = 0;
+    p->validJD  = 0;
     p->validHMS = 1;
-    p->h = h;
-    p->m = m;
-    p->s = s + ms;
-    if( parseTimezone(zDate, p) ) return 1;
+    p->h        = h;
+    p->m        = m;
+    p->s        = s + ms;
+    if ( parseTimezone(zDate, p) ) return 1;
     return 0;
 }
 
@@ -254,36 +241,36 @@ static int parseHhMmSs(const char *zDate, fleece::DateTime *p){
  **
  ** Reference:  Meeus page 61
  */
-static void computeJD(fleece::DateTime *p){
+static void computeJD(fleece::DateTime* p) {
     int Y, M, D, A, B, X1, X2;
 
-    if( p->validJD ) return;
-    if( p->validYMD ){
+    if ( p->validJD ) return;
+    if ( p->validYMD ) {
         Y = p->Y;
         M = p->M;
         D = p->D;
-    }else{
-        Y = 2000;  /* If no YMD specified, assume 2000-Jan-01 */
+    } else {
+        Y = 2000; /* If no YMD specified, assume 2000-Jan-01 */
         M = 1;
         D = 1;
     }
-    if( M<=2 ){
+    if ( M <= 2 ) {
         Y--;
         M += 12;
     }
-    A = Y/100;
-    B = 2 - A + (A/4);
-    X1 = 36525*(Y+4716)/100;
-    X2 = 306001*(M+1)/10000;
-    p->iJD = (sqlite3_int64)((X1 + X2 + D + B - 1524.5 ) * 86400000);
+    A          = Y / 100;
+    B          = 2 - A + (A / 4);
+    X1         = 36525 * (Y + 4716) / 100;
+    X2         = 306001 * (M + 1) / 10000;
+    p->iJD     = (int64_t)((X1 + X2 + D + B - 1524.5) * 86400000);
     p->validJD = 1;
-    if( p->validHMS ){
-        p->iJD += p->h*3600000 + p->m*60000 + (sqlite3_int64)round(p->s*1000);
-        if( p->validTZ ){
-            p->iJD -= p->tz*60000;
+    if ( p->validHMS ) {
+        p->iJD += p->h * 3600000 + p->m * 60000 + (int64_t)round(p->s * 1000);
+        if ( p->validTZ ) {
+            p->iJD -= p->tz * 60000;
             p->validYMD = 0;
             p->validHMS = 0;
-            p->validTZ = 0;
+            p->validTZ  = 0;
         }
     }
 }
@@ -325,22 +312,22 @@ static void inject_local_tz(fleece::DateTime* p) {
 static int parseYyyyMmDd(const char* zDate, fleece::DateTime* p, bool doJD) {
     int Y, M, D, neg;
 
-    if( zDate[0]=='-' ){
+    if ( zDate[0] == '-' ) {
         zDate++;
         neg = 1;
-    }else{
+    } else {
         neg = 0;
     }
     if ( getDigits(zDate, 4, 0, 9999, '-', &Y, 2, 1, 12, '-', &M, 2, 1, 31, 0, &D) != 3 ) { return 1; }
     if ( _usuallyFalse(D >= 29) ) {
         // Check for days past the end of the month:
-        if (_usuallyFalse(M == 2)) {
-            if (_usuallyFalse(D > 29)) {
+        if ( _usuallyFalse(M == 2) ) {
+            if ( _usuallyFalse(D > 29) ) {
                 return 1;
-            } else if (_usuallyFalse(Y % 4 != 0 || (Y % 100 == 0 && Y % 400 != 0))) {
+            } else if ( _usuallyFalse(Y % 4 != 0 || (Y % 100 == 0 && Y % 400 != 0)) ) {
                 return 1;
             }
-        } else if (_usuallyFalse(D > 30 && !(LONG_MONTHS & (1 << M)))) {
+        } else if ( _usuallyFalse(D > 30 && !(LONG_MONTHS & (1 << M))) ) {
             return 1;
         }
     }
@@ -355,16 +342,16 @@ static int parseYyyyMmDd(const char* zDate, fleece::DateTime* p, bool doJD) {
     } else if ( *zDate == 0 ) {
         p->validHMS = 0;
         p->h = p->m = 0;
-        p->s = 0.0;
-        p->validTZ = 0;
-    }else{
+        p->s        = 0.0;
+        p->validTZ  = 0;
+    } else {
         return 1;
     }
-    p->validJD = 0;
+    p->validJD  = 0;
     p->validYMD = 1;
-    p->Y = neg ? -Y : Y;
-    p->M = M;
-    p->D = D;
+    p->Y        = neg ? -Y : Y;
+    p->M        = M;
+    p->D        = D;
     if ( doJD ) {
         if ( p->validTZ ) {
             computeJD(p);
@@ -387,9 +374,9 @@ static size_t offset_to_str(int offset, char* buf) {
     const int hours   = std::abs(offset) / 60;
     const int minutes = std::abs(offset) % 60;
     if ( offset < 0 ) {
-        snprintf(buf, 6, "-%02d:%02d", hours, minutes);
+        snprintf(buf, 7, "-%02d:%02d", hours, minutes);
     } else {
-        snprintf(buf, 6, "+%02d:%02d", hours, minutes);
+        snprintf(buf, 7, "+%02d:%02d", hours, minutes);
     }
 
     return 6;
@@ -429,15 +416,13 @@ namespace fleece {
     }
 
     int64_t ToMillis(DateTime& dt, bool no_tz) {
-        if(!dt.validHMS) {
+        if ( !dt.validHMS ) {
             dt.h = dt.m = 0;
-            dt.s = 0.0;
+            dt.s        = 0.0;
             dt.validHMS = 1;
         }
 
-        if(!no_tz && !dt.validTZ) {
-            inject_local_tz(&dt);
-        } 
+        if ( !no_tz && !dt.validTZ ) { inject_local_tz(&dt); }
 
         computeJD(&dt);
         return dt.iJD - 210866760000000;
@@ -445,31 +430,29 @@ namespace fleece {
 
     DateTime FromMillis(int64_t timestamp) {
         // Split out the milliseconds from the timestamp:
-        time_t secs { timestamp / 1000 };
-        int millis = (int)timestamp % 1000;
+        time_t secs{timestamp / 1000};
+        int    millis = (int)timestamp % 1000;
 
-        struct tm timebuf {};
+        struct tm  timebuf {};
         struct tm* result = gmtime_r(&secs, &timebuf);
-        return {
-            0,
-            timebuf.tm_year + 1900,
-            timebuf.tm_mon + 1,
-            timebuf.tm_mday,
-            timebuf.tm_hour,
-            timebuf.tm_min,
-            0,
-            (double)timebuf.tm_sec + millis / 1000.0,
-            1,
-            1,
-            0,
-            1
-        };
+        return {0,
+                timebuf.tm_year + 1900,
+                timebuf.tm_mon + 1,
+                timebuf.tm_mday,
+                timebuf.tm_hour,
+                timebuf.tm_min,
+                0,
+                (double)timebuf.tm_sec + millis / 1000.0,
+                1,
+                1,
+                0,
+                1};
     }
 
     int64_t ParseISO8601Date(const char* dateStr) {
         DateTime x;
         if ( parseYyyyMmDd(dateStr, &x, true) ) return kInvalidDate;
-        return ToMillis(x) ;
+        return ToMillis(x);
     }
 
     int64_t ParseISO8601Date(fleece::slice date) { return ParseISO8601Date(string(date).c_str()); }
@@ -558,7 +541,7 @@ namespace fleece {
 
         // Split out the milliseconds from the timestamp:
         time_t secs{timestamp / 1000};
-        int    millis = (int)timestamp % 1000;
+        int    millis = (int)(timestamp % 1000);
 
         // Format it, up to the seconds:
         struct tm  timebuf {};
@@ -581,7 +564,7 @@ namespace fleece {
 
         if ( hms ) {
             if ( ymd ) {
-                buf[len] = format->separator;
+                buf[len] = separator;
                 len++;
             }
 
