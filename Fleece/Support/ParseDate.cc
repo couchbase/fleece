@@ -431,10 +431,11 @@ namespace fleece {
     DateTime FromMillis(int64_t timestamp) {
         // Split out the milliseconds from the timestamp:
         time_t secs{timestamp / 1000};
-        int    millis = (int)timestamp % 1000;
+        int    millis = (int)(timestamp % 1000);
 
         struct tm  timebuf {};
         struct tm* result = gmtime_r(&secs, &timebuf);
+        if ( result == nullptr ) { return {}; }
         return {0,
                 timebuf.tm_year + 1900,
                 timebuf.tm_mon + 1,
