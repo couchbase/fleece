@@ -430,7 +430,7 @@ namespace fleece {
 
     DateTime FromMillis(int64_t timestamp) {
         // Split out the milliseconds from the timestamp:
-        time_t secs{timestamp / 1000};
+        time_t secs{long(timestamp / 1000)};
         int    millis = (int)(timestamp % 1000);
 
         struct tm  timebuf {};
@@ -478,7 +478,7 @@ namespace fleece {
         }
 
         // Split out the milliseconds from the timestamp:
-        time_t secs{timestamp / 1000};
+        time_t secs{long(timestamp / 1000)};
         int    millis = (int)(timestamp % 1000);
 
         // Format it, up to the seconds:
@@ -541,7 +541,7 @@ namespace fleece {
         timestamp += tzoffset * 60 * 1000;
 
         // Split out the milliseconds from the timestamp:
-        time_t secs{timestamp / 1000};
+        time_t secs{long(timestamp / 1000)};
         int    millis = (int)(timestamp % 1000);
 
         // Format it, up to the seconds:
