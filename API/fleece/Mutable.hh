@@ -22,7 +22,7 @@ namespace fleece {
     // (this is a mostly-internal type that acts as a reference to an item of a MutableArray or
     // MutableDict, and allows a value to be stored in it. It decouples dereferencing the collection
     // from setting the value, which simplifies the code.)
-    class Slot {
+    class [[nodiscard]] Slot {
     public:
         void setNull()                              {FLSlot_SetNull(_slot);}
         void operator= (Null)                       {FLSlot_SetNull(_slot);}
@@ -60,7 +60,7 @@ namespace fleece {
     // (this is an internal type used to make `MutableArray` and `MutableDict`'s `operator[]`
     // act idiomatically, supporting assignment. It's not used directly.)
     template <class Collection, class Key>
-    class keyref : public Value {
+    class [[nodiscard]] keyref : public Value {
     public:
         keyref(Collection &coll, Key key)           :Value(coll.get(key)), _coll(coll), _key(key) { }
             template <class T>

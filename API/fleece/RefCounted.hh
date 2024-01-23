@@ -147,6 +147,7 @@ namespace fleece {
 
         /// Converts a Retained into a raw pointer with a +1 reference that must be released.
         /// Used in C++ functions that bridge to C and return C references.
+        [[nodiscard]]
         T* detach() && noexcept                  {auto r = _ref; _ref = nullptr; return r;}
 
         // The operator below is often a dangerous mistake, so it's deliberately made impossible.
@@ -228,6 +229,7 @@ namespace fleece {
             return *this;
         }
 
+        [[nodiscard]]
         const T* detach() && noexcept                   {auto r = _ref; _ref = nullptr; return r;}
 
         operator const T* () const && =delete; // Usually a mistake; see above under Retained
@@ -239,13 +241,13 @@ namespace fleece {
 
     /** Easy instantiation of a ref-counted object: `auto f = retained(new Foo());`*/
     template <typename REFCOUNTED>
-    inline Retained<REFCOUNTED> retained(REFCOUNTED *r) noexcept {
+    [[nodiscard]] inline Retained<REFCOUNTED> retained(REFCOUNTED *r) noexcept {
         return Retained<REFCOUNTED>(r);
     }
 
     /** Easy instantiation of a const ref-counted object: `auto f = retained(new Foo());`*/
     template <typename REFCOUNTED>
-    inline RetainedConst<REFCOUNTED> retained(const REFCOUNTED *r) noexcept {
+    [[nodiscard]] inline RetainedConst<REFCOUNTED> retained(const REFCOUNTED *r) noexcept {
         return RetainedConst<REFCOUNTED>(r);
     }
 
@@ -253,7 +255,7 @@ namespace fleece {
         This has no effect on the object's ref-count; the existing +1 ref will be released when the
         Retained destructs. */
     template <typename REFCOUNTED>
-    inline Retained<REFCOUNTED> adopt(REFCOUNTED *r) noexcept {
+    [[nodiscard]] inline Retained<REFCOUNTED> adopt(REFCOUNTED *r) noexcept {
         return Retained<REFCOUNTED>(r, false);
     }
 
@@ -262,7 +264,7 @@ namespace fleece {
     /** make_retained<T>(...) is equivalent to `std::make_unique` and `std::make_shared`.
         It constructs a new RefCounted object, passing params to the constructor, returning a `Retained`. */
     template<class T, class... _Args>
-    static inline Retained<T>
+    [[nodiscard]] static inline Retained<T>
     make_retained(_Args&&... __args) {
         return Retained<T>(new T(std::forward<_Args>(__args)...));
     }
@@ -271,13 +273,14 @@ namespace fleece {
     /** Extracts the pointer from a Retained. It must later be released via `release`.
         This is used in bridging functions that return a direct pointer for a C API. */
     template <typename REFCOUNTED>
-    ALWAYS_INLINE REFCOUNTED* retain(Retained<REFCOUNTED> &&retained) noexcept {
+    [[nodiscard]] ALWAYS_INLINE REFCOUNTED* retain(Retained<REFCOUNTED> &&retained) noexcept {
         return std::move(retained).detach();
     }
 
     /** Extracts the pointer from a RetainedConst. It must later be released via `release`.
         This is used in bridging functions that return a direct pointer for a C API. */
     template <typename REFCOUNTED>
+    [[nodiscard]]
     ALWAYS_INLINE const REFCOUNTED* retain(RetainedConst<REFCOUNTED> &&retained) noexcept {
         return std::move(retained).detach();
     }

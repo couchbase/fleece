@@ -29,16 +29,16 @@ extern "C" {
 
     /** Writes a Core Foundation (or Objective-C) object to an Encoder.
         Supports all the JSON types, as well as CFData. */
-    FLEECE_PUBLIC bool FLEncoder_WriteCFObject(FLEncoder, CFTypeRef) FLAPI;
+    NODISCARD FLEECE_PUBLIC bool FLEncoder_WriteCFObject(FLEncoder, CFTypeRef) FLAPI;
 
 
     /** Returns a Value as a corresponding CoreFoundation object.
         Caller must CFRelease the result. */
-    FLEECE_PUBLIC CFTypeRef FLValue_CopyCFObject(FLValue FL_NULLABLE) FLAPI;
+    NODISCARD FLEECE_PUBLIC CFTypeRef FLValue_CopyCFObject(FLValue FL_NULLABLE) FLAPI;
 
 
     /** Same as FLDictGet, but takes the key as a CFStringRef. */
-    FLEECE_PUBLIC FLValue FLDict_GetWithCFString(FLDict FL_NULLABLE, CFStringRef) FLAPI;
+    NODISCARD FLEECE_PUBLIC FLValue FLDict_GetWithCFString(FLDict FL_NULLABLE, CFStringRef) FLAPI;
 
 
 #ifdef __OBJC__

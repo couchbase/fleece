@@ -486,15 +486,15 @@ void FLSharedKeyScope_Free(FLSharedKeyScope FL_NULLABLE scope) FLAPI {
 
 // deprecated
 extern "C" {
-    FLSharedKeys FLSharedKeys_Create() FLAPI;
-    FLSharedKeys FLSharedKeys_CreateFromStateData(FLSlice) FLAPI;
+    FL_NULLABLE FLSharedKeys FLSharedKeys_Create() FLAPI;
+    FL_NULLABLE FLSharedKeys FLSharedKeys_CreateFromStateData(FLSlice) FLAPI;
 }
     
 FLSharedKeys FLSharedKeys_Create() FLAPI {
     return FLSharedKeys_New();
 }
 
-FLSharedKeys FLSharedKeys_CreateFromStateData(FLSlice data) FLAPI {
+FL_NULLABLE FLSharedKeys FLSharedKeys_CreateFromStateData(FLSlice data) FLAPI {
     FLSharedKeys keys = FLSharedKeys_New();
     FLSharedKeys_LoadStateData(keys, data);
     return keys;

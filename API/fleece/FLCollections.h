@@ -48,7 +48,7 @@ extern "C" {
     FLEECE_PUBLIC bool FLArray_IsEmpty(FLArray FL_NULLABLE) FLAPI FLPURE;
 
     /** If the array is mutable, returns it cast to FLMutableArray, else NULL. */
-    FLEECE_PUBLIC FLMutableArray FL_NULLABLE FLArray_AsMutable(FLArray FL_NULLABLE) FLAPI FLPURE;
+    NODISCARD FLEECE_PUBLIC FLMutableArray FL_NULLABLE FLArray_AsMutable(FLArray FL_NULLABLE) FLAPI FLPURE;
 
     /** Returns an value at an array index, or NULL if the index is out of range. */
     FLEECE_PUBLIC FLValue FL_NULLABLE FLArray_Get(FLArray FL_NULLABLE, uint32_t index) FLAPI FLPURE;

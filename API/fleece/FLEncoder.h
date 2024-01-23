@@ -48,7 +48,7 @@ extern "C" {
 
 
     /** Creates a new encoder, for generating Fleece data. Call FLEncoder_Free when done. */
-    FLEECE_PUBLIC FLEncoder FLEncoder_New(void) FLAPI;
+    NODISCARD FLEECE_PUBLIC FLEncoder FLEncoder_New(void) FLAPI;
 
     /** Creates a new encoder, allowing some options to be customized.
         @param format  The output format to generate (Fleece, JSON, or JSON5.)
@@ -57,12 +57,12 @@ extern "C" {
             as a single shared value. This saves space but makes encoding slightly slower.
             You should only turn this off if you know you're going to be writing large numbers
             of non-repeated strings. (Default is true) */
-    FLEECE_PUBLIC FLEncoder FLEncoder_NewWithOptions(FLEncoderFormat format,
+    NODISCARD FLEECE_PUBLIC FLEncoder FLEncoder_NewWithOptions(FLEncoderFormat format,
                                        size_t reserveSize,
                                        bool uniqueStrings) FLAPI;
 
     /** Creates a new Fleece encoder that writes to a file, not to memory. */
-    FLEECE_PUBLIC FLEncoder FLEncoder_NewWritingToFile(FILE*, bool uniqueStrings) FLAPI;
+    NODISCARD FLEECE_PUBLIC FLEncoder FLEncoder_NewWritingToFile(FILE*, bool uniqueStrings) FLAPI;
 
     /** Frees the space used by an encoder. */
     FLEECE_PUBLIC void FLEncoder_Free(FLEncoder FL_NULLABLE) FLAPI;
@@ -201,12 +201,12 @@ extern "C" {
     /** Ends encoding; if there has been no error, it returns the encoded Fleece data packaged in
         an FLDoc. (This function does not support JSON encoding.)
         This does not free the FLEncoder; call FLEncoder_Free (or FLEncoder_Reset) next. */
-    MUST_USE_RESULT
+    NODISCARD
     FLEECE_PUBLIC FLDoc FL_NULLABLE FLEncoder_FinishDoc(FLEncoder, FLError* FL_NULLABLE outError) FLAPI;
 
     /** Ends encoding; if there has been no error, it returns the encoded data, else null.
         This does not free the FLEncoder; call FLEncoder_Free (or FLEncoder_Reset) next. */
-    MUST_USE_RESULT
+    NODISCARD
     FLEECE_PUBLIC FLSliceResult FLEncoder_Finish(FLEncoder, FLError* FL_NULLABLE outError) FLAPI;
 
     /** @} */

@@ -37,7 +37,7 @@ extern "C" {
     /** Creates an FLDoc from Fleece-encoded data that's been returned as a result from
         FLSlice_Copy or other API. The resulting document retains the data, so you don't need to
         worry about it remaining valid. */
-    FLEECE_PUBLIC FLDoc FLDoc_FromResultData(FLSliceResult data, FLTrust,
+    NODISCARD FLEECE_PUBLIC FLDoc FLDoc_FromResultData(FLSliceResult data, FLTrust,
                                FLSharedKeys FL_NULLABLE, FLSlice externData) FLAPI;
 
     /** Releases a reference to an FLDoc. This must be called once to free an FLDoc you created. */
@@ -61,7 +61,7 @@ extern "C" {
 
     /** Looks up the Doc containing the Value, or NULL if there is none.
         @note Caller must release the FLDoc reference!! */
-    FLEECE_PUBLIC FLDoc FL_NULLABLE FLValue_FindDoc(FLValue FL_NULLABLE) FLAPI FLPURE;
+    NODISCARD FLEECE_PUBLIC FLDoc FL_NULLABLE FLValue_FindDoc(FLValue FL_NULLABLE) FLAPI FLPURE;
 
     /** Associates an arbitrary pointer value with a document, and thus its contained values.
         Allows client code to associate its own pointer with this FLDoc and its Values,
