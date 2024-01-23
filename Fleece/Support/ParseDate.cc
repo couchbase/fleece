@@ -63,6 +63,7 @@
 #include <cstdint>
 #include <cstdarg>
 #include <cctype>
+#include <cstring>
 #include <cmath>
 #include <ctime>
 #include <mutex>
