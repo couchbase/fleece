@@ -69,7 +69,6 @@
 #include <mutex>
 #include <chrono>
 #include <sstream>
-#include <iomanip>
 #include <map>
 #include <algorithm>
 #include <cctype>
@@ -351,23 +350,6 @@ static int parseYyyyMmDd(const char* zDate, fleece::DateTime* p, bool doJD) {
 
 #pragma mark END OF SQLITE CODE
 #pragma mark -
-
-static size_t offset_to_str(int offset, char* buf) {
-    if ( offset == 0 ) {
-        buf[0] = 'Z';
-        return 1;
-    }
-
-    const int hours   = std::abs(offset) / 60;
-    const int minutes = std::abs(offset) % 60;
-    if ( offset < 0 ) {
-        snprintf(buf, 7, "-%02d:%02d", hours, minutes);
-    } else {
-        snprintf(buf, 7, "+%02d:%02d", hours, minutes);
-    }
-
-    return 6;
-}
 
 namespace fleece {
     static map<string, DateComponent> dateComponentMap = {{"millennium", kDateComponentMillennium},
