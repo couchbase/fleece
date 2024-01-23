@@ -426,8 +426,8 @@ namespace fleece { namespace impl {
 
 
     void Encoder::writeDateString(int64_t timestamp, bool asUTC) {
-        char str[kFormattedISO8601DateMaxSize];
-        writeString(FormatISO8601Date(str, timestamp, asUTC, nullptr));
+        char buf[kFormattedISO8601DateMaxSize];
+        writeString(FormatISO8601Date(buf, timestamp, asUTC, nullptr));
     }
 
 
