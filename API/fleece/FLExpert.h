@@ -54,7 +54,7 @@ extern "C" {
         @param nuu  A value that's typically the new/changed state of the `old` data.
         @return  JSON data representing the changes from `old` to `nuu`, or NULL on
                     (extremely unlikely) failure. */
-    FLEECE_PUBLIC FLSliceResult FLCreateJSONDelta(FLValue FL_NULLABLE old,
+    NODISCARD FLEECE_PUBLIC FLSliceResult FLCreateJSONDelta(FLValue FL_NULLABLE old,
                                     FLValue FL_NULLABLE nuu) FLAPI;
 
     /** Writes JSON that describes the changes to turn the value `old` into `nuu`.
@@ -64,7 +64,7 @@ extern "C" {
         @param jsonEncoder  An encoder to write the JSON to. Must have been created using
                 `FLEncoder_NewWithOptions`, with JSON or JSON5 format.
         @return  True on success, false on (extremely unlikely) failure. */
-    FLEECE_PUBLIC bool FLEncodeJSONDelta(FLValue FL_NULLABLE old,
+    NODISCARD FLEECE_PUBLIC bool FLEncodeJSONDelta(FLValue FL_NULLABLE old,
                            FLValue FL_NULLABLE nuu,
                            FLEncoder jsonEncoder) FLAPI;
 
@@ -77,7 +77,7 @@ extern "C" {
         @param jsonDelta  A JSON-encoded delta created by `FLCreateJSONDelta` or `FLEncodeJSONDelta`.
         @param outError  On failure, error information will be stored where this points, if non-null.
         @return  The corresponding `nuu` value, encoded as Fleece, or null if an error occurred. */
-    FLEECE_PUBLIC FLSliceResult FLApplyJSONDelta(FLValue FL_NULLABLE old,
+    NODISCARD FLEECE_PUBLIC FLSliceResult FLApplyJSONDelta(FLValue FL_NULLABLE old,
                                    FLSlice jsonDelta,
                                    FLError* FL_NULLABLE outError) FLAPI;
 
@@ -116,17 +116,18 @@ extern "C" {
         */
 
     /** Creates a new empty FLSharedKeys object, which must eventually be released. */
-    FLEECE_PUBLIC FLSharedKeys FLSharedKeys_New(void) FLAPI;
+    NODISCARD FLEECE_PUBLIC FLSharedKeys FLSharedKeys_New(void) FLAPI;
 
     typedef bool (*FLSharedKeysReadCallback)(void* FL_NULLABLE context, FLSharedKeys);
 
-    FLEECE_PUBLIC FLSharedKeys FLSharedKeys_NewWithRead(FLSharedKeysReadCallback,
+    NODISCARD FLEECE_PUBLIC FLSharedKeys FLSharedKeys_NewWithRead(FLSharedKeysReadCallback,
                                           void* FL_NULLABLE context) FLAPI;
 
     /** Returns a data blob containing the current state (all the keys and their integers.) */
-    FLEECE_PUBLIC FLSliceResult FLSharedKeys_GetStateData(FLSharedKeys) FLAPI;
+    NODISCARD FLEECE_PUBLIC FLSliceResult FLSharedKeys_GetStateData(FLSharedKeys) FLAPI;
 
-    /** Updates an FLSharedKeys with saved state data created by \ref FLSharedKeys_GetStateData. */
+    /** Updates an FLSharedKeys with saved state data created by \ref FLSharedKeys_GetStateData.
+        Returns true if new keys were added, false if not. */
     FLEECE_PUBLIC bool FLSharedKeys_LoadStateData(FLSharedKeys, FLSlice) FLAPI;
 
     /** Writes the current state to a Fleece encoder as a single value,
@@ -135,7 +136,7 @@ extern "C" {
 
     /** Updates an FLSharedKeys object with saved state, a Fleece value previously written by
         \ref FLSharedKeys_WriteState. */
-    FLEECE_PUBLIC bool FLSharedKeys_LoadState(FLSharedKeys, FLValue) FLAPI;
+    NODISCARD FLEECE_PUBLIC bool FLSharedKeys_LoadState(FLSharedKeys, FLValue) FLAPI;
 
     /** Maps a key string to a number in the range [0...2047], or returns -1 if it isn't mapped.
         If the key doesn't already have a mapping, and the `add` flag is true,
@@ -158,7 +159,7 @@ extern "C" {
     FLEECE_PUBLIC void FLSharedKeys_DisableCaching(FLSharedKeys) FLAPI;
 
     /** Increments the reference count of an FLSharedKeys. */
-    FLEECE_PUBLIC FLSharedKeys FL_NULLABLE FLSharedKeys_Retain(FLSharedKeys FL_NULLABLE) FLAPI;
+    NODISCARD FLEECE_PUBLIC FLSharedKeys FL_NULLABLE FLSharedKeys_Retain(FLSharedKeys FL_NULLABLE) FLAPI;
 
     /** Decrements the reference count of an FLSharedKeys, freeing it when it reaches zero. */
     FLEECE_PUBLIC void FLSharedKeys_Release(FLSharedKeys FL_NULLABLE) FLAPI;
@@ -168,7 +169,7 @@ extern "C" {
 
     /** Registers a range of memory containing Fleece data that uses the given shared keys.
         This allows Dict accessors to look up the values of shared keys. */
-    FLEECE_PUBLIC FLSharedKeyScope FLSharedKeyScope_WithRange(FLSlice range, FLSharedKeys) FLAPI;
+    NODISCARD FLEECE_PUBLIC FLSharedKeyScope FLSharedKeyScope_WithRange(FLSlice range, FLSharedKeys) FLAPI;
 
     /** Unregisters a scope created by \ref FLSharedKeyScope_WithRange. */
     FLEECE_PUBLIC void FLSharedKeyScope_Free(FLSharedKeyScope FL_NULLABLE) FLAPI;
@@ -212,14 +213,14 @@ extern "C" {
                         will be stored here (if it's not NULL.)
         @param outError  On failure, the error code will be stored here (if it's not NULL.)
         @return  The converted JSON. */
-    FLEECE_PUBLIC FLStringResult FLJSON5_ToJSON(FLString json5,
+    NODISCARD FLEECE_PUBLIC FLStringResult FLJSON5_ToJSON(FLString json5,
                                   FLStringResult* FL_NULLABLE outErrorMessage,
                                   size_t* FL_NULLABLE outErrorPos,
                                   FLError* FL_NULLABLE outError) FLAPI;
 
     /** Directly converts JSON data to Fleece-encoded data. Not commonly needed.
         Prefer \ref FLDoc_FromJSON instead. */
-    FLEECE_PUBLIC FLSliceResult FLData_ConvertJSON(FLSlice json, FLError* FL_NULLABLE outError) FLAPI;
+    NODISCARD FLEECE_PUBLIC FLSliceResult FLData_ConvertJSON(FLSlice json, FLError* FL_NULLABLE outError) FLAPI;
 
     /** @} */
 
@@ -273,10 +274,10 @@ extern "C" {
         value written. You can continue writing, and the final output returned by \ref FLEncoder_Finish will
         consist of everything after this point. That second part can be used in the future by loading it
         as an `FLDoc` with the first part as its `extern` reference. */
-    FLEECE_PUBLIC FLSliceResult FLEncoder_Snip(FLEncoder) FLAPI;
+    NODISCARD FLEECE_PUBLIC FLSliceResult FLEncoder_Snip(FLEncoder) FLAPI;
 
     /** Finishes encoding the current item, and returns its offset in the output data. */
-    FLEECE_PUBLIC size_t FLEncoder_FinishItem(FLEncoder) FLAPI;
+    NODISCARD FLEECE_PUBLIC size_t FLEncoder_FinishItem(FLEncoder) FLAPI;
 
     /** In a JSON encoder, adds a newline ('\n') and prepares to start encoding another
         top-level object. The encoder MUST be not be within an array or dict.

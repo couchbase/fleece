@@ -31,13 +31,13 @@ namespace fleece {
         /// Captures the stream's state to another stream. You can use this as a way to "rewind"
         /// the stream afterwards. (This is equivalent to a copy constructor, but that constructor
         /// is explicitly deleted to avoid confusion.)
-        slice_ostream capture() const            {return slice_ostream(*this);}
+        [[nodiscard]] slice_ostream capture() const            {return slice_ostream(*this);}
 
         // Utility that allocates a buffer, lets the callback write into it, then trims the buffer.
         // The callback must take a `slice_ostream&` parameter and return `bool`.
         // (If you need a growable buffer, use a \ref Writer instead.)
         template <class Callback>
-        static alloc_slice alloced(size_t maxSize, const Callback &writer) {
+        [[nodiscard]] static alloc_slice alloced(size_t maxSize, const Callback &writer) {
             alloc_slice buf(maxSize);
             slice_ostream out(buf);
             if (!writer(out) || out.overflowed())
@@ -90,8 +90,7 @@ namespace fleece {
 #pragma mark  CUSTOM WRITING:
 
         /// Returns a pointer to where the next byte will be written.
-        MUST_USE_RESULT
-        void* next() noexcept                   {return _next;}
+        [[nodiscard]] void* next() noexcept     {return _next;}
 
         /// Returns the entire remaining writeable buffer.
         mutable_slice buffer() noexcept         {return {_next, _end};}
@@ -160,10 +159,10 @@ namespace fleece {
 
         /// Copies _exactly_ `dstSize` bytes to `dstBuf` and returns true.
         /// If not enough bytes are available, copies nothing and returns false.
-        bool readAll(void *dstBuf, size_t dstSize) noexcept;
+        [[nodiscard]] bool readAll(void *dstBuf, size_t dstSize) noexcept;
 
         /// Copies _up to_ `dstSize` bytes to `dstBuf`, and returns the number of bytes copied.
-        size_t readAtMost(void *dstBuf, size_t dstSize) noexcept;
+        [[nodiscard]] size_t readAtMost(void *dstBuf, size_t dstSize) noexcept;
 
         /// Searches for `delim`. If found, it returns all the data before it and moves the stream
         /// position past it.
@@ -191,8 +190,7 @@ namespace fleece {
 #pragma mark  CUSTOM READING:
 
         /// Returns a pointer to where the next bytes will be read from.
-        MUST_USE_RESULT
-        const void* next() const noexcept FLPURE                {return buf;}
+        [[nodiscard]] const void* next() const noexcept FLPURE  {return buf;}
 
         /// Advances past `n` bytes without doing anything with them.
         void skip(size_t n)                                     {slice::moveStart(n);}

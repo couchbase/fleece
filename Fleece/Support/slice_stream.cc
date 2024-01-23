@@ -165,7 +165,8 @@ namespace fleece {
 
     size_t slice_istream::readAtMost(void *dstBuf, size_t dstSize) noexcept {
         dstSize = std::min(dstSize, size);
-        readAll(dstBuf, dstSize);
+        ::memcpy(dstBuf, buf, dstSize);
+        skip(dstSize);
         return dstSize;
     }
 

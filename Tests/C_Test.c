@@ -13,4 +13,4 @@
 
 // This is just to make sure that the C header actually parses in C, with no C++-isms.
 #include "fleece/Fleece.h"
-
+#include "fleece/FLExpert.h"

@@ -14,7 +14,7 @@
 #ifndef _FLEECE_COMPILER_SUPPORT_H
 #define _FLEECE_COMPILER_SUPPORT_H
 
-// The __has_xxx() macros are only(?) implemented by Clang. (Except GCC has __has_attribute...)
+// The __has_xxx() macros are supported by [at least] Clang and GCC.
 // Define them to return 0 on other compilers.
 // https://clang.llvm.org/docs/AttributeReference.html
 // https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html
@@ -36,24 +36,37 @@
 #endif
 
 
-#if defined(__clang__) || defined(__GNUC__)
-    // Tells the optimizer that a function's return value is never NULL.
-    #define RETURNS_NONNULL                 __attribute__((returns_nonnull))
-
-    // Triggers a compile error if a call to the function ignores the returned value.
-    // Typically this is because the return value is something that must be released/freed.
-    #define MUST_USE_RESULT                 __attribute__((warn_unused_result))
-
-    // These have no effect on behavior, but they hint to the optimizer which branch of an 'if'
-    // statement to make faster.
-    #define _usuallyTrue(VAL)               __builtin_expect(VAL, true)
-    #define _usuallyFalse(VAL)              __builtin_expect(VAL, false)
+// Tells the optimizer that a function's return value is never NULL.
+#if __has_attribute(returns_nonnull)
+#  define RETURNS_NONNULL               __attribute__((returns_nonnull))
 #else
-    #define RETURNS_NONNULL
-    #define MUST_USE_RESULT
+#  define RETURNS_NONNULL
+#endif
 
-    #define _usuallyTrue(VAL)               (VAL)
-    #define _usuallyFalse(VAL)              (VAL)
+// deprecated; use NODISCARD instead
+#if __has_attribute(returns_nonnull)
+#  define MUST_USE_RESULT               __attribute__((warn_unused_result))
+#else
+#  define MUST_USE_RESULT
+#endif
+
+// NODISCARD expands to the C++17/C23 `[[nodiscard]]` attribute, or else MUST_USE_RESULT.
+// (We can't just redefine MUST_USE_RESULT as `[[nodiscard]]` unfortunately, because the former is
+// already in use in positions where `[[nodiscard]]` isn't valid, like at the end of a declaration.)
+#if (__cplusplus >= 201700L) || (__STDC_VERSION__ >= 202000)
+#  define NODISCARD                     [[nodiscard]]
+#else
+#  define NODISCARD                     MUST_USE_RESULT
+#endif
+
+// These have no effect on behavior, but they hint to the optimizer which branch of an 'if'
+// statement to make faster.
+#if __has_builtin(__builtin_expect)
+#define _usuallyTrue(VAL)               __builtin_expect(VAL, true)
+#define _usuallyFalse(VAL)              __builtin_expect(VAL, false)
+#else
+#define _usuallyTrue(VAL)               (VAL)
+#define _usuallyFalse(VAL)              (VAL)
 #endif
 
 
@@ -83,10 +96,10 @@
 // GCC also has an attribute with this name, but it's incompatible: it can't be applied to a
 // parameter, it has to come after the function and list parameters by number. Oh well.
 // TODO: Replace this with the better nullability annotations above.
-#ifdef __clang__
-    #define NONNULL                     __attribute__((nonnull))
+#if __has_attribute(nonnull)
+#  define NONNULL                       __attribute__((nonnull))
 #else
-    #define NONNULL
+#  define NONNULL
 #endif
 
 
@@ -104,10 +117,10 @@
 //  declared with the pure attribute can safely read any non-volatile objects, and modify the value
 //  of objects in a way that does not affect their return value or the observable state of the
 //  program." -- GCC manual
-#if defined(__GNUC__) || __has_attribute(__pure__)
-    #define FLPURE                      __attribute__((__pure__))
+#if __has_attribute(__pure__)
+#  define FLPURE                        __attribute__((__pure__))
 #else
-    #define FLPURE
+#  define FLPURE
 #endif
 
 // FLCONST is even stricter than FLPURE. The function cannot access memory at all (except for
@@ -126,10 +139,10 @@
 // "In general, since a function cannot distinguish data that might change from data that cannot,
 //  const functions should never take pointer or, in C++, reference arguments. Likewise, a function
 //  that calls a non-const function usually must not be const itself." -- GCC manual
-#if defined(__GNUC__) || __has_attribute(__const__)
-    #define FLCONST                     __attribute__((__const__))
+#if __has_attribute(__const__)
+#  define FLCONST                     __attribute__((__const__))
 #else
-    #define FLCONST
+#  define FLCONST
 #endif
 
 

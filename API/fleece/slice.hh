@@ -84,12 +84,12 @@ namespace fleece {
     }
 
     /** Subtracts the 2nd pointer from the 1st, returning the difference in addresses. */
-    constexpr inline ptrdiff_t _pointerDiff(const void* FL_NULLABLE a, const void* FL_NULLABLE b) noexcept {
+    FLCONST constexpr inline ptrdiff_t _pointerDiff(const void* FL_NULLABLE a, const void* FL_NULLABLE b) noexcept {
         return (uint8_t*)a - (uint8_t*)b;
     }
 
     /** Subtracts the 2nd pointer from the 1st, returning the difference in addresses. */
-    constexpr inline ptrdiff_t pointerDiff(const void* a, const void* b) noexcept {
+    FLCONST constexpr inline ptrdiff_t pointerDiff(const void* a, const void* b) noexcept {
         return _pointerDiff(a, b);
     }
 
@@ -342,7 +342,7 @@ namespace fleece {
 #pragma mark - ALLOC_SLICE:
 
     /** A \ref slice that owns a heap-allocated, ref-counted block of memory. */
-    struct alloc_slice : public pure_slice {
+    struct [[nodiscard]] alloc_slice : public pure_slice {
         constexpr alloc_slice() noexcept STEPOVER                             {}
         constexpr alloc_slice(std::nullptr_t) noexcept STEPOVER               {}
         constexpr alloc_slice(nullslice_t) noexcept STEPOVER                  {}
@@ -418,7 +418,7 @@ namespace fleece {
         explicit alloc_slice(CFStringRef FL_NULLABLE);
         /** Creates a CFDataDataRef. The data is not copied: the CFDataRef points to the same
             bytes as this alloc_slice, which is retained until the CFDataRef is freed. */
-        CFDataRef createCFData() const;
+        [[nodiscard]] CFDataRef createCFData() const;
 #   ifdef __OBJC__
         explicit alloc_slice(NSData* FL_NULLABLE data);
         /** Creates an NSData using initWithBytesNoCopy and a deallocator that releases this

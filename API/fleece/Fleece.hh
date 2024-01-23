@@ -121,7 +121,7 @@ namespace fleece {
         static Array emptyArray()                       {return Array(kFLEmptyArray);}
 
         inline uint32_t count() const;
-        inline bool empty() const;
+        [[nodiscard]] inline bool empty() const;
         inline Value get(uint32_t index) const;
 
         inline Value operator[] (int index) const       {return get(index);}
@@ -131,9 +131,9 @@ namespace fleece {
         Array& operator= (std::nullptr_t)               {_val = nullptr; return *this;}
         Value& operator= (Value v)                      =delete;
 
-        inline MutableArray asMutable() const;
+        [[nodiscard]] inline MutableArray asMutable() const;
 
-        inline MutableArray mutableCopy(FLCopyFlags =kFLDefaultCopy) const;
+        [[nodiscard]] inline MutableArray mutableCopy(FLCopyFlags =kFLDefaultCopy) const;
 
 
         class iterator : private FLArrayIterator {
@@ -175,7 +175,7 @@ namespace fleece {
         static Dict emptyDict()                         {return Dict(kFLEmptyDict);}
 
         inline uint32_t count() const;
-        inline bool empty() const;
+        [[nodiscard]] inline bool empty() const;
 
         inline Value get(slice_NONNULL key) const;
 
@@ -189,9 +189,9 @@ namespace fleece {
         Dict& operator= (std::nullptr_t)                {_val = nullptr; return *this;}
         Value& operator= (Value v)                      =delete;
 
-        inline MutableDict asMutable() const;
+        [[nodiscard]] inline MutableDict asMutable() const;
 
-        inline MutableDict mutableCopy(FLCopyFlags =kFLDefaultCopy) const;
+        [[nodiscard]] inline MutableDict mutableCopy(FLCopyFlags =kFLDefaultCopy) const;
 
         /** An efficient key for a Dict. */
         class Key {
@@ -437,8 +437,8 @@ namespace fleece {
         template <class T>
         inline void write(slice_NONNULL key, T value)       {writeKey(key); *this << value;}
 
-        inline Doc finishDoc(FLError* FL_NULLABLE =nullptr);
-        inline alloc_slice finish(FLError* FL_NULLABLE =nullptr);
+        [[nodiscard]] inline Doc finishDoc(FLError* FL_NULLABLE =nullptr);
+        [[nodiscard]] inline alloc_slice finish(FLError* FL_NULLABLE =nullptr);
         inline void reset();
 
         inline FLError error() const;

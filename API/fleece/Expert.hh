@@ -78,9 +78,11 @@ namespace fleece {
         static inline alloc_slice create(Value old, Value nuu);
         static inline bool create(Value old, Value nuu, Encoder &jsonEncoder);
 
-        static inline alloc_slice apply(Value old,
-                                        slice jsonDelta,
-                                        FLError* FL_NULLABLE error);
+        [[nodiscard]] static inline alloc_slice apply(Value old,
+                                                      slice jsonDelta,
+                                                      FLError* FL_NULLABLE error);
+        /// Writes patched Fleece to the Encoder.
+        /// On failure, returns false and sets the Encoder's error property.
         static inline bool apply(Value old,
                                  slice jsonDelta,
                                  Encoder &encoder);
@@ -105,7 +107,7 @@ namespace fleece {
         static SharedKeys create()                          {return SharedKeys(FLSharedKeys_New(), 1);}
         static inline SharedKeys create(slice state);
         bool loadState(slice data)                          {return FLSharedKeys_LoadStateData(_sk, data);}
-        bool loadState(Value state)                         {return FLSharedKeys_LoadState(_sk, state);}
+        [[nodiscard]] bool loadState(Value state)           {return FLSharedKeys_LoadState(_sk, state);}
         alloc_slice stateData() const                       {return FLSharedKeys_GetStateData(_sk);}
         inline void writeState(const Encoder &enc);
         unsigned count() const                              {return FLSharedKeys_Count(_sk);}

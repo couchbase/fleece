@@ -55,12 +55,12 @@ extern "C" {
         also set, immutable values are also copied, recursively.
 
         If the source Array is NULL, then NULL is returned. */
-    FLEECE_PUBLIC FLMutableArray FL_NULLABLE FLArray_MutableCopy(FLArray FL_NULLABLE,
+    NODISCARD FLEECE_PUBLIC FLMutableArray FL_NULLABLE FLArray_MutableCopy(FLArray FL_NULLABLE,
                                                    FLCopyFlags) FLAPI;
 
     /** Creates a new empty mutable Array.
         Its initial ref-count is 1, so a call to FLMutableArray_Release will free it.  */
-    FLEECE_PUBLIC FLMutableArray FL_NULLABLE FLMutableArray_New(void) FLAPI;
+    NODISCARD FLEECE_PUBLIC FLMutableArray FL_NULLABLE FLMutableArray_New(void) FLAPI;
 
     /** Increments the ref-count of a mutable Array. */
     static inline FLMutableArray FL_NULLABLE FLMutableArray_Retain(FLMutableArray FL_NULLABLE d) {
@@ -108,7 +108,7 @@ extern "C" {
         - If the value is a mutable array, returns it.
         - If the value is an immutable array, this function makes a mutable copy, assigns the
           copy as the property value, and returns the copy. */
-    FLEECE_PUBLIC FLMutableArray FL_NULLABLE FLMutableArray_GetMutableArray(FLMutableArray FL_NULLABLE,
+    NODISCARD FLEECE_PUBLIC FLMutableArray FL_NULLABLE FLMutableArray_GetMutableArray(FLMutableArray FL_NULLABLE,
                                                               uint32_t index) FLAPI;
 
     /** Convenience function for getting an array-valued property in mutable form.
@@ -116,7 +116,7 @@ extern "C" {
         - If the value is a mutable array, returns it.
         - If the value is an immutable array, this function makes a mutable copy, assigns the
           copy as the property value, and returns the copy. */
-    FLEECE_PUBLIC FLMutableDict FL_NULLABLE FLMutableArray_GetMutableDict(FLMutableArray FL_NULLABLE,
+    NODISCARD FLEECE_PUBLIC FLMutableDict FL_NULLABLE FLMutableArray_GetMutableDict(FLMutableArray FL_NULLABLE,
                                                             uint32_t index) FLAPI;
 
 
@@ -303,21 +303,21 @@ extern "C" {
         You store a value to it by calling one of the nine `FLSlot_Set...` functions.
         \warning You should immediately store a value into the `FLSlot`. Do not keep it around;
                  any changes to the array invalidate it.*/
-    MUST_USE_RESULT
+    NODISCARD
     FLEECE_PUBLIC FLSlot FLMutableArray_Set(FLMutableArray, uint32_t index) FLAPI;
 
     /** Appends a null value to the array and returns an \ref FLSlot that refers to that position.
         You store a value to it by calling one of the nine `FLSlot_Set...` functions.
         \warning You should immediately store a value into the `FLSlot`. Do not keep it around;
                  any changes to the array invalidate it.*/
-    MUST_USE_RESULT
+    NODISCARD
     FLEECE_PUBLIC FLSlot FLMutableArray_Append(FLMutableArray) FLAPI;
 
     /** Returns an \ref FLSlot that refers to the given key/value pair of the given dictionary.
         You store a value to it by calling one of the nine `FLSlot_Set...` functions.
         \warning You should immediately store a value into the `FLSlot`. Do not keep it around;
                  any changes to the dictionary invalidate it.*/
-    MUST_USE_RESULT
+    NODISCARD
     FLEECE_PUBLIC FLSlot FLMutableDict_Set(FLMutableDict, FLString key) FLAPI;
 
 

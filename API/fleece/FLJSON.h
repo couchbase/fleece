@@ -59,15 +59,15 @@ extern "C" {
     /** Creates an FLDoc from JSON-encoded data. The data is first encoded into Fleece, and the
         Fleece data is kept by the doc; the input JSON data is no longer needed after this
         function returns. */
-    FLEECE_PUBLIC FLDoc FLDoc_FromJSON(FLSlice json, FLError* FL_NULLABLE outError) FLAPI;
+    NODISCARD FLEECE_PUBLIC FLDoc FLDoc_FromJSON(FLSlice json, FLError* FL_NULLABLE outError) FLAPI;
 
     /** Creates a new mutable Array from JSON. It is an error if the JSON is not an array.
         Its initial ref-count is 1, so a call to FLMutableArray_Release will free it.  */
-    FLEECE_PUBLIC FLMutableArray FL_NULLABLE FLMutableArray_NewFromJSON(FLString json, FLError* FL_NULLABLE outError) FLAPI;
+    NODISCARD FLEECE_PUBLIC FLMutableArray FL_NULLABLE FLMutableArray_NewFromJSON(FLString json, FLError* FL_NULLABLE outError) FLAPI;
 
     /** Creates a new mutable Dict from json. It is an error if the JSON is not a dictionary/object.
         Its initial ref-count is 1, so a call to FLMutableDict_Release will free it.  */
-    FLEECE_PUBLIC FLMutableDict FL_NULLABLE FLMutableDict_NewFromJSON(FLString json, FLError* FL_NULLABLE outError) FLAPI;
+    NODISCARD FLEECE_PUBLIC FLMutableDict FL_NULLABLE FLMutableDict_NewFromJSON(FLString json, FLError* FL_NULLABLE outError) FLAPI;
 
     /** Parses JSON data and writes the value(s) to the encoder as their Fleece equivalents.
         (This acts as a single write, like WriteInt; it's just that the value written is likely to

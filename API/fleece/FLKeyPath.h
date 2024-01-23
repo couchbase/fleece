@@ -45,24 +45,24 @@ extern "C" {
 #endif
 
     /** Creates a new FLKeyPath object by compiling a path specifier string. */
-    FLEECE_PUBLIC FLKeyPath FL_NULLABLE FLKeyPath_New(FLSlice specifier,
+    NODISCARD FLEECE_PUBLIC FLKeyPath FL_NULLABLE FLKeyPath_New(FLSlice specifier,
                                         FLError* FL_NULLABLE outError) FLAPI;
 
     /** Frees a compiled FLKeyPath object. (It's ok to pass NULL.) */
     FLEECE_PUBLIC void FLKeyPath_Free(FLKeyPath FL_NULLABLE) FLAPI;
 
     /** Evaluates a compiled key-path for a given Fleece root object. */
-    FLEECE_PUBLIC FLValue FL_NULLABLE FLKeyPath_Eval(FLKeyPath,
+    NODISCARD FLEECE_PUBLIC FLValue FL_NULLABLE FLKeyPath_Eval(FLKeyPath,
                                        FLValue root) FLAPI;
 
     /** Evaluates a key-path from a specifier string, for a given Fleece root object.
         If you only need to evaluate the path once, this is a bit faster than creating an
         FLKeyPath object, evaluating, then freeing it. */
-    FLEECE_PUBLIC FLValue FL_NULLABLE FLKeyPath_EvalOnce(FLSlice specifier, FLValue root,
+    NODISCARD FLEECE_PUBLIC FLValue FL_NULLABLE FLKeyPath_EvalOnce(FLSlice specifier, FLValue root,
                                            FLError* FL_NULLABLE outError) FLAPI;
 
     /** Returns a path in string form. */
-    FLEECE_PUBLIC FLStringResult FLKeyPath_ToString(FLKeyPath path) FLAPI;
+    NODISCARD FLEECE_PUBLIC FLStringResult FLKeyPath_ToString(FLKeyPath path) FLAPI;
 
     /** Equality test. */
     FLEECE_PUBLIC bool FLKeyPath_Equals(FLKeyPath path1, FLKeyPath path2) FLAPI;
