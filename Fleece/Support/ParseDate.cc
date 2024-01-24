@@ -446,23 +446,23 @@ namespace fleece {
         return entry->second;
     }
 
-    slice FormatISO8601Date(char buf[], int64_t timestamp, bool asUTC, const DateTime* format) {
+    slice FormatISO8601Date(char buf[], const int64_t timestamp, const bool asUTC, const DateTime* format) {
         std::ostringstream stream {};
+
         if ( timestamp == kInvalidDate ) {
             *buf = 0;
             return nullslice;
         }
 
-        const auto millis = duration<int64_t, std::ratio<1, 1000>>{timestamp};
-        auto tm = date::local_time<milliseconds>{millis};
+        milliseconds millis{timestamp};
 
-        seconds offset = {};
-        if ( asUTC ) {
-            // convert time to UTC
-            struct tm tmpTime = FromTimestamp(duration_cast<seconds>(tm.time_since_epoch()));
-            offset = seconds{GetLocalTZOffset(&tmpTime, true)};
-            tm -= offset;
+        auto temp = FromTimestamp(duration_cast<seconds>(millis));
+        const seconds offset_seconds = GetLocalTZOffset(&temp, false);
+
+        if(!asUTC) {
+            millis += duration_cast<milliseconds>(offset_seconds);
         }
+        const auto tm = date::local_time<milliseconds>{millis};
 
         const bool has_milli = millis.count() % 1000 != 0;
         bool       ymd       = true;
@@ -482,19 +482,17 @@ namespace fleece {
             if ( ymd ) {
                 stream << separator;
             }
-
-            if (has_milli) {
+            if ( has_milli ) {
                 stream << date::format("%T", tm);
             } else {
-                const seconds secs{timestamp / 1000};
+                const auto secs = duration_cast<seconds>(millis);
                 stream << date::format("%T", local_seconds(secs));
             }
-
             if ( zone ) {
-                if (asUTC || offset.count() == 0) {
+                if ( asUTC || offset_seconds.count() == 0 ) {
                     stream << 'Z';
                 } else {
-                    to_stream(stream, "%Ez", tm, nullptr, &offset);
+                    to_stream(stream, "%Ez", tm, nullptr, &offset_seconds);
                 }
             }
         }
@@ -505,17 +503,15 @@ namespace fleece {
         return { buf, res.length() };
     }
 
-    slice FormatISO8601Date(char buf[], int64_t timestamp, const minutes tzoffset, const DateTime* format) {
+    slice FormatISO8601Date(char buf[], const int64_t timestamp, const minutes tzoffset, const DateTime* format) {
         std::ostringstream stream {};
 
         if ( timestamp == kInvalidDate ) {
-            stream << 0;
+            *buf = 0;
             return nullslice;
         }
 
-        timestamp += tzoffset.count() * 60 * 1000;
-
-        const milliseconds millis { timestamp };
+        const milliseconds millis { milliseconds { timestamp } + duration_cast<milliseconds>(tzoffset) };
         const auto tm = date::local_time<milliseconds>{ millis };
 
         const seconds offset_seconds{tzoffset};
@@ -542,7 +538,7 @@ namespace fleece {
             if (has_milli) {
                 stream << date::format("%T", tm);
             } else {
-                const seconds secs{timestamp / 1000};
+                const auto secs = duration_cast<seconds>(millis);
                 stream << date::format("%T", local_seconds(secs));
             }
 
