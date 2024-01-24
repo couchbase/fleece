@@ -397,9 +397,11 @@ namespace fleece {
         return dt.iJD - 210866760000000;
     }
 
+    using time_point = std::chrono::time_point<system_clock, milliseconds>;
+
     DateTime FromMillis(const int64_t timestamp) {
         const milliseconds millis { timestamp };
-        const system_clock::time_point tp { millis };
+        const time_point tp { millis };
         const auto td = date::floor<days>(tp);
 
         const year_month_day ymd { td };
