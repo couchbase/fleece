@@ -102,7 +102,7 @@ namespace fleece {
         @param format The model to use for formatting (i.e. which portions to include).
                       If null, then the full ISO-8601 format is used
         @return  The formatted string (points to `buf`). */
-    slice FormatISO8601Date(char buf[], int64_t timestamp, int tzoffset, const DateTime* format);
+    slice FormatISO8601Date(char buf[], int64_t timestamp, minutes tzoffset, const DateTime* format);
 
     /** Creates a tm out of a timestamp, but it will not be fully valid until
         passed through mktime.

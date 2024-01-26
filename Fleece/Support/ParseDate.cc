@@ -63,29 +63,15 @@
 #include <cstdint>
 #include <cstdarg>
 #include <cctype>
+#include <cstring>
 #include <cmath>
 #include <ctime>
 #include <mutex>
 #include <chrono>
 #include <sstream>
-#include <iomanip>
 #include <map>
 #include <algorithm>
 #include <cctype>
-
-#ifdef WIN32
-#    include <Windows.h>
-
-tm* gmtime_r(time_t* time, tm* buf) {
-    gmtime_s(buf, time);
-    return buf;
-}
-
-tm* localtime_r(time_t* time, tm* buf) {
-    localtime_s(buf, time);
-    return buf;
-}
-#endif
 
 using namespace std;
 using namespace std::chrono;
@@ -365,23 +351,6 @@ static int parseYyyyMmDd(const char* zDate, fleece::DateTime* p, bool doJD) {
 #pragma mark END OF SQLITE CODE
 #pragma mark -
 
-static size_t offset_to_str(int offset, char* buf) {
-    if ( offset == 0 ) {
-        buf[0] = 'Z';
-        return 1;
-    }
-
-    const int hours   = std::abs(offset) / 60;
-    const int minutes = std::abs(offset) % 60;
-    if ( offset < 0 ) {
-        snprintf(buf, 7, "-%02d:%02d", hours, minutes);
-    } else {
-        snprintf(buf, 7, "+%02d:%02d", hours, minutes);
-    }
-
-    return 6;
-}
-
 namespace fleece {
     static map<string, DateComponent> dateComponentMap = {{"millennium", kDateComponentMillennium},
                                                           {"century", kDateComponentCentury},
@@ -428,26 +397,32 @@ namespace fleece {
         return dt.iJD - 210866760000000;
     }
 
-    DateTime FromMillis(int64_t timestamp) {
-        // Split out the milliseconds from the timestamp:
-        time_t secs{long(timestamp / 1000)};
-        int    millis = (int)(timestamp % 1000);
+    using time_point = std::chrono::time_point<system_clock, milliseconds>;
 
-        struct tm  timebuf {};
-        struct tm* result = gmtime_r(&secs, &timebuf);
-        if ( result == nullptr ) { return {}; }
-        return {0,
-                timebuf.tm_year + 1900,
-                timebuf.tm_mon + 1,
-                timebuf.tm_mday,
-                timebuf.tm_hour,
-                timebuf.tm_min,
-                0,
-                (double)timebuf.tm_sec + millis / 1000.0,
-                1,
-                1,
-                0,
-                1};
+    DateTime FromMillis(const int64_t timestamp) {
+        const milliseconds millis { timestamp };
+        const time_point tp { millis };
+        const auto td = date::floor<days>(tp);
+
+        const year_month_day ymd { td };
+        const hh_mm_ss hms { floor<milliseconds>(tp - td) };
+
+        const double ms = static_cast<double>(hms.subseconds().count()) / 1000.0;
+
+        return {
+            0,
+            static_cast<int>(ymd.year()),
+            static_cast<int>(static_cast<unsigned>(ymd.month())),
+            static_cast<int>(static_cast<unsigned>(ymd.day())),
+            static_cast<int>(hms.hours().count()),
+            static_cast<int>(hms.minutes().count()),
+            0,
+            static_cast<double>(hms.seconds().count()) + ms,
+            1,
+            1,
+            0,
+            1
+        };
     }
 
     int64_t ParseISO8601Date(const char* dateStr) {
@@ -471,20 +446,25 @@ namespace fleece {
         return entry->second;
     }
 
-    slice FormatISO8601Date(char buf[], int64_t timestamp, bool asUTC, const DateTime* format) {
+    slice FormatISO8601Date(char buf[], const int64_t timestamp, const bool asUTC, const DateTime* format) {
+        std::ostringstream stream {};
+
         if ( timestamp == kInvalidDate ) {
             *buf = 0;
             return nullslice;
         }
 
-        // Split out the milliseconds from the timestamp:
-        time_t secs{long(timestamp / 1000)};
-        int    millis = (int)(timestamp % 1000);
+        milliseconds millis{timestamp};
 
-        // Format it, up to the seconds:
-        struct tm  timebuf {};
-        struct tm* result    = asUTC ? gmtime_r(&secs, &timebuf) : localtime_r(&secs, &timebuf);
-        size_t     len       = 0;
+        auto temp = FromTimestamp(duration_cast<seconds>(millis));
+        const seconds offset_seconds = GetLocalTZOffset(&temp, false);
+
+        if(!asUTC) {
+            millis += duration_cast<milliseconds>(offset_seconds);
+        }
+        const auto tm = date::local_time<milliseconds>{millis};
+
+        const bool has_milli = millis.count() % 1000 != 0;
         bool       ymd       = true;
         bool       hms       = true;
         bool       zone      = true;
@@ -496,64 +476,51 @@ namespace fleece {
             separator = format->separator;
         }
 
-        if ( ymd ) { len += strftime(buf, kFormattedISO8601DateMaxSize, "%F", result); }
+        if ( ymd ) { stream << date::format("%F", tm); }
 
         if ( hms ) {
             if ( ymd ) {
-                buf[len] = separator;
-                len++;
+                stream << separator;
             }
-
-            len += strftime(buf + len, kFormattedISO8601DateMaxSize - len, "%T", result);
-
-            // Write the milliseconds:
-            if ( millis > 0 ) { len += snprintf(buf + len, kFormattedISO8601DateMaxSize - len, ".%03d", millis); }
-
+            if ( has_milli ) {
+                stream << date::format("%T", tm);
+            } else {
+                const auto secs = duration_cast<seconds>(millis);
+                stream << date::format("%T", local_seconds(secs));
+            }
             if ( zone ) {
-                // Write the time-zone:
-                char* tz = buf + len;
-                if ( asUTC ) {
-                    strcpy(tz, "Z");
-                    ++len;
+                if ( asUTC || offset_seconds.count() == 0 ) {
+                    stream << 'Z';
                 } else {
-                    size_t added = strftime(tz, 6, "%z", &timebuf);
-
-                    // It would be nice to use tm_gmtoff but that's not available everywhere...
-                    if ( strncmp("0000", tz + 1, 4) == 0 ) {
-                        strcpy(tz, "Z");
-                        ++len;
-                    } else {
-                        len += added;
-                    }
+                    to_stream(stream, "%Ez", tm, nullptr, &offset_seconds);
                 }
             }
         }
 
-        return {buf, len};
+        const std::string res = stream.str();
+        std::strncpy(buf, res.c_str(), res.length());
+
+        return { buf, res.length() };
     }
 
-    slice FormatISO8601Date(char buf[], int64_t timestamp, int tzoffset, const DateTime* format) {
+    slice FormatISO8601Date(char buf[], const int64_t timestamp, const minutes tzoffset, const DateTime* format) {
+        std::ostringstream stream {};
+
         if ( timestamp == kInvalidDate ) {
             *buf = 0;
             return nullslice;
         }
 
-        timestamp += tzoffset * 60 * 1000;
+        const milliseconds millis { milliseconds { timestamp } + duration_cast<milliseconds>(tzoffset) };
+        const auto tm = date::local_time<milliseconds>{ millis };
 
-        // Split out the milliseconds from the timestamp:
-        time_t secs{long(timestamp / 1000)};
-        int    millis = (int)(timestamp % 1000);
+        const seconds offset_seconds{tzoffset};
 
-        // Format it, up to the seconds:
-        struct tm  timebuf {};
-        struct tm* result = gmtime_r(&secs, &timebuf);
-        if ( result == nullptr ) { return nullslice; }
-
-        size_t len       = 0;
-        bool   ymd       = true;
-        bool   hms       = true;
-        bool   zone      = true;
-        char   separator = 'T';
+        const bool has_milli = millis.count() % 1000 != 0;
+        bool       ymd       = true;
+        bool       hms       = true;
+        bool       zone      = true;
+        char       separator = 'T';
         if ( format ) {
             ymd       = format->validYMD;
             hms       = format->validHMS;
@@ -561,27 +528,33 @@ namespace fleece {
             separator = format->separator;
         }
 
-        if ( ymd ) { len += strftime(buf, kFormattedISO8601DateMaxSize, "%F", result); }
+        if ( ymd ) { stream << date::format("%F", tm); }
 
         if ( hms ) {
             if ( ymd ) {
-                buf[len] = separator;
-                len++;
+                stream << separator;
             }
 
-            len += strftime(buf + len, kFormattedISO8601DateMaxSize - len, "%T", result);
+            if (has_milli) {
+                stream << date::format("%T", tm);
+            } else {
+                const auto secs = duration_cast<seconds>(millis);
+                stream << date::format("%T", local_seconds(secs));
+            }
 
-            // Write the milliseconds:
-            if ( millis > 0 ) { len += snprintf(buf + len, kFormattedISO8601DateMaxSize - len, ".%03d", millis); }
-
-            if ( zone ) {
-                // Write the time-zone:
-                char* tz = buf + len;
-                len += offset_to_str(tzoffset, tz);
+            if (zone) {
+                if (offset_seconds.count() == 0) {
+                    stream << 'Z';
+                } else {
+                    to_stream(stream, "%Ez", tm, nullptr, &offset_seconds);
+                }
             }
         }
 
-        return {buf, len};
+        const std::string res = stream.str();
+        std::strncpy(buf, res.c_str(), res.length());
+
+        return { buf, res.length() };
     }
 
     struct tm FromTimestamp(seconds timestamp) {
@@ -630,7 +603,7 @@ namespace fleece {
         // NOTE: These values are the opposite of what you would expect, being defined
         // as seconds WEST of GMT (so UTC-8 would be 28,800, not -28,800)
 #ifdef WIN32
-        long s;
+        long s {};
         throwIf(_get_timezone(&s) != 0, fleece::InternalError, "Unable to query local system time zone");
         auto offset = seconds(-s);
 #elif defined(__DARWIN_UNIX03) || defined(__ANDROID__) || defined(_XOPEN_SOURCE) || defined(_SVID_SOURCE)
