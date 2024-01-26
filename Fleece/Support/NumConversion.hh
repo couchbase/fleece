@@ -71,7 +71,7 @@ namespace fleece {
         template<typename Out, typename In>
         static Out narrow_cast (In val) {
             static_assert(::std::is_arithmetic<In>::value && ::std::is_arithmetic<Out>::value, "Only numeric types are valid for narrow_cast");
-            if(sizeof(In) <= sizeof(Out) && ::std::is_signed<In>::value == ::std::is_signed<Out>::value) {
+            if constexpr(sizeof(In) <= sizeof(Out) && ::std::is_signed<In>::value == ::std::is_signed<Out>::value) {
                 return (Out)val;
             }
 
@@ -82,20 +82,20 @@ namespace fleece {
             bool min_ok = std::is_signed<Out>::value && !std::is_signed<In>::value;
 
 #ifdef Assert
-            if(::std::is_floating_point<In>::value) {
-                Assert(val >= std::numeric_limits<Out>::min() && val <= ::std::numeric_limits<Out>::max(), 
+            if constexpr (::std::is_floating_point<In>::value) {
+                Assert(val >= std::numeric_limits<Out>::min() && val <= ::std::numeric_limits<Out>::max(),
                     "Invalid narrow_cast %g -> %s", (double)val, typeid(Out).name());
-            } else if(::std::is_signed<In>::value) {
-                Assert((min_ok || val >= std::numeric_limits<Out>::min()) && val <= ::std::numeric_limits<Out>::max(), 
+            } else if constexpr(::std::is_signed<In>::value) {
+                Assert((min_ok || val >= std::numeric_limits<Out>::min()) && val <= ::std::numeric_limits<Out>::max(),
                     "Invalid narrow_cast %" PRIi64 " -> %s", (int64_t)val, typeid(Out).name());
             } else {
                 Assert((min_ok || val >= std::numeric_limits<Out>::min()) && val <= ::std::numeric_limits<Out>::max(), 
                     "Invalid narrow_cast %" PRIu64 " -> %s", (uint64_t)val, typeid(Out).name());
             }
 #else
-            if(::std::is_floating_point<In>::value) {
+            if constexpr(::std::is_floating_point<In>::value) {
                 throwIf(val < std::numeric_limits<Out>::min() || val > std::numeric_limits<Out>::max(), InternalError, "Invalid narrow_cast %g -> %s", (double)val, typeid(Out).name());
-            } else if(::std::is_signed<In>::value) {
+            } else if constexpr(::std::is_signed<In>::value) {
                 throwIf((!min_ok && val < std::numeric_limits<Out>::min()) || val > std::numeric_limits<Out>::max(),
                     InternalError, "Invalid narrow_cast %" PRIi64 " -> %s", (int64_t)val, typeid(Out).name());
             } else {
