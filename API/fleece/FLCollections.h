@@ -80,10 +80,11 @@ while (NULL != (value = FLArrayIterator_GetValue(&iter))) {
     } FLArrayIterator;
 
     /** Initializes a FLArrayIterator struct to iterate over an array.
-        Call FLArrayIteratorGetValue to get the first item, then FLArrayIteratorNext. */
+        Call FLArrayIteratorGetValue to get the first item, then as long as the item is not NULL,
+        call FLArrayIterator_Next to advance. */
     FLEECE_PUBLIC void FLArrayIterator_Begin(FLArray FL_NULLABLE, FLArrayIterator*) FLAPI;
 
-    /** Returns the current value being iterated over. */
+    /** Returns the current value being iterated over, or NULL at the end. */
     FLEECE_PUBLIC FLValue FL_NULLABLE FLArrayIterator_GetValue(const FLArrayIterator*) FLAPI FLPURE;
 
     /** Returns a value in the array at the given offset from the current value. */
@@ -92,7 +93,9 @@ while (NULL != (value = FLArrayIterator_GetValue(&iter))) {
     /** Returns the number of items remaining to be iterated, including the current one. */
     FLEECE_PUBLIC uint32_t FLArrayIterator_GetCount(const FLArrayIterator*) FLAPI FLPURE;
 
-    /** Advances the iterator to the next value, or returns false if at the end. */
+    /** Advances the iterator to the next value.
+        @warning It is illegal to call this when the iterator is already at the end.
+                 In particular, calling this when the array is empty is always illegal. */
     FLEECE_PUBLIC bool FLArrayIterator_Next(FLArrayIterator*) FLAPI;
 
     /** @} */
@@ -153,22 +156,26 @@ while (NULL != (value = FLDictIterator_GetValue(&iter))) {
 
     /** Initializes a FLDictIterator struct to iterate over a dictionary.
         Call FLDictIterator_GetKey and FLDictIterator_GetValue to get the first item,
-        then FLDictIterator_Next. */
+        then as long as the item is not NULL, call FLDictIterator_Next to advance. */
     FLEECE_PUBLIC void FLDictIterator_Begin(FLDict FL_NULLABLE, FLDictIterator*) FLAPI;
 
-    /** Returns the current key being iterated over. This Value will be a string or an integer. */
+    /** Returns the current key being iterated over. 
+        This Value will be a string or an integer, or NULL when there are no more keys. */
     FLEECE_PUBLIC FLValue FL_NULLABLE FLDictIterator_GetKey(const FLDictIterator*) FLAPI FLPURE;
 
-    /** Returns the current key's string value. */
+    /** Returns the current key's string value, or NULL when there are no more keys. */
     FLEECE_PUBLIC FLString FLDictIterator_GetKeyString(const FLDictIterator*) FLAPI;
 
-    /** Returns the current value being iterated over. */
+    /** Returns the current value being iterated over. 
+        Returns NULL when there are no more values. */
     FLEECE_PUBLIC FLValue FL_NULLABLE FLDictIterator_GetValue(const FLDictIterator*) FLAPI FLPURE;
 
     /** Returns the number of items remaining to be iterated, including the current one. */
     FLEECE_PUBLIC uint32_t FLDictIterator_GetCount(const FLDictIterator*) FLAPI FLPURE;
 
-    /** Advances the iterator to the next value, or returns false if at the end. */
+    /** Advances the iterator to the next value.
+        @warning It is illegal to call this when the iterator is already at the end.
+                 In particular, calling this when the dict is empty is always illegal. */
     FLEECE_PUBLIC bool FLDictIterator_Next(FLDictIterator*) FLAPI;
 
     /** Cleans up after an iterator. Only needed if (a) the dictionary is a delta, and
