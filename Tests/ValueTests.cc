@@ -14,6 +14,7 @@
 #define NOMINMAX
 #endif
 
+#include "fleece/Fleece.h"
 #include "FleeceTests.hh"
 #include "Value.hh"
 #include "Pointer.hh"
@@ -268,5 +269,31 @@ namespace fleece {
             }
             CHECK(errCode == fleece::JSONError);
         }
+    }
+    
+    TEST_CASE("Empty FLArrayIterator", "[API]") {
+        FLDoc doc = FLDoc_FromJSON("[]"_sl, nullptr);
+        FLArray arr = FLValue_AsArray(FLDoc_GetRoot(doc));
+        REQUIRE(arr);
+        FLArrayIterator iter;
+        FLArrayIterator_Begin(arr, &iter);
+        CHECK(FLArrayIterator_GetValue(&iter) == nullptr);
+        CHECK(FLArrayIterator_GetCount(&iter) == 0);
+        // (calling FLArrayIterator_Next would be illegal)
+        FLDoc_Release(doc);
+    }
+
+    TEST_CASE("Empty FLDictIterator", "[API]") {
+        FLDoc doc = FLDoc_FromJSON("{}"_sl, nullptr);
+        FLDict arr = FLValue_AsDict(FLDoc_GetRoot(doc));
+        REQUIRE(arr);
+        FLDictIterator iter;
+        FLDictIterator_Begin(arr, &iter);
+        CHECK(FLDictIterator_GetValue(&iter) == nullptr);
+        CHECK(FLDictIterator_GetKey(&iter) == nullptr);
+        CHECK(FLDictIterator_GetKeyString(&iter) == kFLSliceNull);
+        CHECK(FLDictIterator_GetCount(&iter) == 0);
+        // (calling FLDictIterator_Next would be illegal)
+        FLDoc_Release(doc);
     }
 }
