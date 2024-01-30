@@ -452,6 +452,8 @@ namespace fleece { namespace impl {
     }
 
     slice DictIterator::keyString() const noexcept {
+        if (_usuallyFalse(!_key))
+            return nullslice;
         slice keyStr = _key->asString();
         if (!keyStr && _key->isInteger()) {
             auto sk = _sharedKeys ? _sharedKeys : findSharedKeys();
@@ -463,7 +465,9 @@ namespace fleece { namespace impl {
     }
 
     key_t DictIterator::keyt() const noexcept {
-        if (_key->isInteger())
+        if (_usuallyFalse(!_key))
+            return {};
+        else if (_key->isInteger())
             return (int)_key->asInt();
         else
             return _key->asString();
