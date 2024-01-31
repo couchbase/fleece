@@ -386,7 +386,7 @@ namespace fleece { namespace impl {
         switch(tag()) {
             case kShortIntTag:
             case kSpecialTag:   return 2;
-            case kFloatTag:     return isDouble() ? 10 : 6;
+            case kFloatTag:     return isEncodedAsDouble() ? 10 : 6;
             case kIntTag:       return 2 + (tinyValue() & 0x07);
             case kStringTag:
             case kBinaryTag:    return (uint8_t*)getStringBytes().end() - (uint8_t*)this;

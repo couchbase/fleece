@@ -75,6 +75,7 @@ namespace fleece { namespace impl {
         internal::HeapCollection* makeMutable(internal::tags ifType);
 
     private:
+        void set(float, int tiny);
         bool isPointer() const noexcept FLPURE          {return _tag != kInlineTag;}
         bool isInline() const noexcept FLPURE           {return !isPointer();}
         const Value* pointer() const noexcept FLPURE    {return (const Value*)_pointer;}
