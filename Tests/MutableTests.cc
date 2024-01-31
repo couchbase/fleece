@@ -49,7 +49,7 @@ namespace fleece {
 
 
     TEST_CASE("MutableArray set values", "[Mutable]") {
-        static constexpr size_t kSize = 17;
+        static constexpr size_t kSize = 18;
         Retained<MutableArray> ma = MutableArray::newArray();
 
         REQUIRE(ma->count() == 0);
@@ -82,16 +82,17 @@ namespace fleece {
         ma->set(8, "Hot dog"_sl);
         ma->set(9, float(M_PI));
         ma->set(10, M_PI);
-        ma->set(11, std::numeric_limits<uint64_t>::max());
-        ma->set(12, (int64_t)0x100000000LL);
-        ma->set(13, (uint64_t)0x100000000ULL);
-        ma->set(14, std::numeric_limits<int64_t>::min());
-        ma->set(15, (int64_t)9223372036854775807LL);
-        ma->set(16, (int64_t)-9223372036854775807LL);
+        ma->set(11, double(123.5));
+        ma->set(12, std::numeric_limits<uint64_t>::max());
+        ma->set(13, (int64_t)0x100000000LL);
+        ma->set(14, (uint64_t)0x100000000ULL);
+        ma->set(15, std::numeric_limits<int64_t>::min());
+        ma->set(16, (int64_t)9223372036854775807LL);
+        ma->set(17, (int64_t)-9223372036854775807LL);
 
         static const valueType kExpectedTypes[kSize] = {
             kNull, kBoolean, kBoolean, kNumber, kNumber, kNumber, kNumber, kNumber, kString,
-            kNumber, kNumber, kNumber, kNumber, kNumber, kNumber, kNumber, kNumber
+            kNumber, kNumber, kNumber, kNumber, kNumber, kNumber, kNumber, kNumber, kNumber
         };
         for (int i = 0; i < 9; i++)
             CHECK(ma->get(i)->type() == kExpectedTypes[i]);
@@ -104,13 +105,17 @@ namespace fleece {
         CHECK(ma->get(7)->asInt() == -123456789);
         CHECK(ma->get(8)->asString() == "Hot dog"_sl);
         CHECK(ma->get(9)->asFloat() == float(M_PI));
+        CHECK_FALSE(ma->get(9)->isDouble());
         CHECK(ma->get(10)->asDouble() == M_PI);
-        CHECK(ma->get(11)->asUnsigned() == std::numeric_limits<uint64_t>::max());
-        CHECK(ma->get(12)->asInt() == 0x100000000LL);
-        CHECK(ma->get(13)->asUnsigned() == 0x100000000ULL);
-        CHECK(ma->get(14)->asInt() == std::numeric_limits<int64_t>::min());
-        CHECK(ma->get(15)->asInt() == 9223372036854775807LL);
-        CHECK(ma->get(16)->asInt() == -9223372036854775807LL);
+        CHECK(ma->get(10)->isDouble());
+        CHECK(ma->get(11)->isDouble());
+        CHECK(ma->get(11)->asDouble() == 123.5);
+        CHECK(ma->get(12)->asUnsigned() == std::numeric_limits<uint64_t>::max());
+        CHECK(ma->get(13)->asInt() == 0x100000000LL);
+        CHECK(ma->get(14)->asUnsigned() == 0x100000000ULL);
+        CHECK(ma->get(15)->asInt() == std::numeric_limits<int64_t>::min());
+        CHECK(ma->get(16)->asInt() == 9223372036854775807LL);
+        CHECK(ma->get(17)->asInt() == -9223372036854775807LL);
 
         {
             MutableArray::iterator i(ma);
@@ -125,17 +130,17 @@ namespace fleece {
         }
 
         CHECK(ma->asArray()->toJSON() == "[null,false,true,0,-123,2017,123456789,-123456789,\"Hot dog\",3.1415927,"
-              "3.141592653589793,18446744073709551615,4294967296,4294967296,"
+              "3.141592653589793,123.5,18446744073709551615,4294967296,4294967296,"
               "-9223372036854775808,9223372036854775807,-9223372036854775807]"_sl);
 
         ma->remove(3, 5);
-        CHECK(ma->count() == 12);
+        CHECK(ma->count() == 13);
         CHECK(ma->get(2)->type() == kBoolean);
         CHECK(ma->get(2)->asBool() == true);
         CHECK(ma->get(3)->type() == kString);
 
         ma->insert(1, 2);
-        CHECK(ma->count() == 14);
+        CHECK(ma->count() == 15);
         REQUIRE(ma->get(1)->type() == kNull);
         REQUIRE(ma->get(2)->type() == kNull);
         CHECK(ma->get(3)->type() == kBoolean);

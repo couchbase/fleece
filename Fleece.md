@@ -81,7 +81,8 @@ The reason for the (rare) second pointer dereference is that the true root objec
 ```
  0000iiii iiiiiiii       small integer (12-bit, signed, range ±2048)
  0001uccc iiiiiiii...    long integer (u = unsigned?; ccc = byte count - 1) LE integer follows
- 0010s--- --------...    floating point (s = 0:float, 1:double). LE float data follows.
+ 0010sx-- --------...    floating point (s = 0:32-bit, 1:64-bit). LE float data follows.
+                                If x=1, value is a `double` even if encoded as 32-bit `float`.
  0011ss-- --------       special (s = 0:null, 1:false, 2:true, 3:undefined)
  0100cccc ssssssss...    string (cccc is byte count, or if it’s 15 then count follows as varint)
  0101cccc dddddddd...    binary data (same as string)

@@ -23,7 +23,7 @@
 
  0000iiii iiiiiiii       small integer (12-bit, signed, range ±2048)
  0001uccc iiiiiiii...    long integer (u = unsigned?; ccc = byte count - 1) LE integer follows
- 0010s--- --------...    floating point (s = 0:float, 1:double). LE float data follows.
+ 0010ss-- --------...    floating point (see below for `ss` meaning). LE float data follows.
  0011ss-- --------       special (s = 0:null, 1:false, 2:true, 3:undefined)
  0100cccc ssssssss...    string (cccc is byte count, or if it’s 15 then count follows as varint)
  0101cccc dddddddd...    binary data (same as string)
@@ -57,6 +57,13 @@ namespace fleece { namespace impl { namespace internal {
         kArrayTag,
         kDictTag,
         kPointerTagFirst = 8            // 9...15 are also pointers
+    };
+
+    // Interpretation of ss-- in a Float value:
+    enum {
+        kFloatValue32BitSingle  = 0x00,     // 0000  32-bit float
+        kFloatValue32BitDouble  = 0x04,     // 0100  64-bit float encoded as 32-bit w/o data loss
+        kFloatValue64BitDouble  = 0x08,     // 1000  64-bit float
     };
 
     // Interpretation of ss-- in a special value:

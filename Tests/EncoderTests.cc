@@ -167,6 +167,12 @@ public:
         }
     }
 
+    void checkReadAsJSON(const char *str) {
+        auto v = Value::fromData(result);
+        REQUIRE(v != nullptr);
+        CHECK(v->toJSONString() == std::string(str));
+    }
+
     void checkJSONStr(std::string json,
                       slice expectedStr,
                       int expectedErr = JSONSL_ERROR_SUCCESS)
@@ -315,10 +321,31 @@ public:
 #endif
 
         // Doubles that get encoded as float:
-        enc.writeDouble( 0.5);   checkOutput("2000 0000 003F 8003");           checkReadDouble( 0.5);
-        enc.writeDouble(-0.5);   checkOutput("2000 0000 00BF 8003");           checkReadDouble(-0.5);
-        enc.writeDouble((float)M_PI); checkOutput("2000 DB0F 4940 8003");      checkReadDouble((float)M_PI);
-}
+        enc.writeDouble( 0.5);   checkOutput("2400 0000 003F 8003");  checkReadDouble( 0.5);
+        enc.writeDouble(-0.5);   checkOutput("2400 0000 00BF 8003");  checkReadDouble(-0.5);
+        enc.writeDouble((float)M_PI); checkOutput("2400 DB0F 4940 8003"); checkReadDouble((float)M_PI);
+
+        // A long decimal that nevertheless has an exact float representation:
+        static_assert(307.79998779296875f == 307.8f);
+        enc.writeFloat(307.79998779296875);
+        checkOutput("2000 66E6 9943 8003");
+        checkReadFloat(307.79998779296875);
+        checkReadAsJSON("307.8");
+
+        // If we write the same as a double, it will be encoded as float but still act as a double:
+        static_assert(307.79998779296875 == 307.79998779296875f);
+        static_assert(307.79998779296875 != 307.8);
+        enc.writeDouble(307.79998779296875);
+        checkOutput("2400 66E6 9943 8003");
+        checkReadDouble(307.79998779296875);
+        checkReadAsJSON("307.79998779296875");  // <-- This used to fail; see #206
+
+        // This number is just barely not float-compatible (last digit is changed)
+        enc.writeDouble(307.7999877929688);
+        checkOutput("2800 0100 00C0 CC3C 7340 8005");
+        checkReadDouble(307.7999877929688);
+        checkReadAsJSON("307.7999877929688");
+    }
 
     TEST_CASE_METHOD(EncoderTests, "Strings", "[Encoder]") {
         enc.writeString("");    checkOutput("4000");            checkReadString("");

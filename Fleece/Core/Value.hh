@@ -104,7 +104,10 @@ namespace fleece { namespace impl {
         bool isUnsigned() const noexcept FLPURE    {return tag() == internal::kIntTag && (_byte[0] & 0x08) != 0;}
 
         /** Is this a 64-bit floating-point value? */
-        bool isDouble() const noexcept FLPURE      {return tag() == internal::kFloatTag && (_byte[0] & 0x8);}
+        bool isDouble() const noexcept FLPURE      {return tag() == internal::kFloatTag && (_byte[0] & 0xC);}
+
+        /** Is this a 64-bit floating-point value that was _not_ encoded as 32-bit? */
+        bool isEncodedAsDouble() const noexcept FLPURE {return tag() == internal::kFloatTag && (_byte[0] & 0x8);}
 
         /** "undefined" is a special subtype of kNull */
         bool isUndefined() const noexcept FLPURE   {return _byte[0] == ((internal::kSpecialTag << 4) |
