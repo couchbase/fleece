@@ -236,7 +236,7 @@ namespace fleece {
         inline void set(const void * FL_NULLABLE, size_t) noexcept;
 
         // (Assignment must be custom because `buf` is declared as const/immutable.)
-        pure_slice& operator=(const pure_slice &s) noexcept  {set(s.buf, s.size); return *this;}
+        pure_slice& operator=(const pure_slice &s) & noexcept  {set(s.buf, s.size); return *this;}
         static inline constexpr size_t _strlen(const char* FL_NULLABLE str) noexcept FLPURE;
         // Throws std::bad_alloc, or if exceptions are disabled calls std::terminate()
         [[noreturn]] static void failBadAlloc();
@@ -269,10 +269,11 @@ namespace fleece {
         slice(const std::string& str) noexcept STEPOVER               :pure_slice(str) {}
         constexpr slice(const char* FL_NULLABLE str) noexcept STEPOVER  :pure_slice(str) {}
 
-        slice& operator= (alloc_slice&&) =delete;   // Disallowed: might lead to ptr to freed buf
-        slice& operator= (const alloc_slice &s) noexcept    {return *this = slice(s);}
-        slice& operator= (std::nullptr_t) noexcept          {set(nullptr, 0); return *this;}
-        inline slice& operator= (nullslice_t) noexcept;
+        slice& operator= (const char* s) & noexcept           {return *this = slice(s);}
+        slice& operator= (const std::string &s) & noexcept    {return *this = slice(s);}
+        slice& operator= (const alloc_slice &s) & noexcept    {return *this = slice(s);}
+        slice& operator= (std::nullptr_t) & noexcept          {set(nullptr, 0); return *this;}
+        inline slice& operator= (nullslice_t) & noexcept;
 
         /// Sets `size`.
         void setSize(size_t s) noexcept                     {pure_slice::setSize(s);}
@@ -292,7 +293,7 @@ namespace fleece {
         constexpr slice(const FLSlice &s) noexcept STEPOVER           :pure_slice(s.buf,s.size) { }
         inline explicit operator FLSliceResult () const noexcept;
         explicit slice(const FLSliceResult &sr) STEPOVER            :pure_slice(sr.buf, sr.size) { }
-        slice& operator= (FLHeapSlice s) noexcept           {set(s.buf, s.size); return *this;} // disambiguation
+        slice& operator= (FLHeapSlice s) & noexcept           {set(s.buf, s.size); return *this;} // disambiguation
 
 #ifdef SLICE_SUPPORTS_STRING_VIEW
         constexpr slice(string_view str) noexcept STEPOVER            :pure_slice(str) {}
@@ -304,6 +305,9 @@ namespace fleece {
         explicit slice(NSData* data) noexcept                         :pure_slice(data) {}
 #   endif
 #endif
+
+        slice& operator= (std::string&&) =delete;   // Disallowed: might lead to ptr to freed buf
+        slice& operator= (alloc_slice&&) =delete;   // Disallowed: might lead to ptr to freed buf
     };
 
 
@@ -362,9 +366,9 @@ namespace fleece {
 
         ~alloc_slice() STEPOVER                                 {_FLBuf_Release(buf);}
 
-        inline alloc_slice& operator=(const alloc_slice&) noexcept STEPOVER;
+        inline alloc_slice& operator=(const alloc_slice&) & noexcept STEPOVER;
 
-        alloc_slice& operator=(alloc_slice&& s) noexcept  {
+        alloc_slice& operator=(alloc_slice&& s) & noexcept  {
             std::swap((slice&)*this, (slice&)s);
             return *this;
         }
@@ -373,13 +377,13 @@ namespace fleece {
             data. This allows the contents of the alloc_slice to be used as a C string. */
         inline static alloc_slice nullPaddedString(pure_slice);
 
-        alloc_slice& operator= (pure_slice s)               {return *this = alloc_slice(s);}
-        alloc_slice& operator= (FLSlice s)                  {return operator=(slice(s.buf,s.size));}
-        alloc_slice& operator= (std::nullptr_t) noexcept    {reset(); return *this;}
+        alloc_slice& operator= (pure_slice s) &               {return *this = alloc_slice(s);}
+        alloc_slice& operator= (FLSlice s) &                  {return operator=(slice(s.buf,s.size));}
+        alloc_slice& operator= (std::nullptr_t) & noexcept    {reset(); return *this;}
 
         // disambiguation:
-        alloc_slice& operator= (const char *str)            {*this = (slice)str; return *this;}
-        alloc_slice& operator= (const std::string &str)     {*this = (slice)str; return *this;}
+        alloc_slice& operator= (const char *str) &            {*this = (slice)str; return *this;}
+        alloc_slice& operator= (const std::string &str) &     {*this = (slice)str; return *this;}
 
         /// Releases and clears; same as assigning `nullslice`.
         void reset() noexcept                               {release(); assignFrom(nullslice);}
@@ -398,17 +402,17 @@ namespace fleece {
         explicit operator FLSliceResult () & noexcept       {retain(); return {(void*)buf, size};}
         explicit operator FLSliceResult () && noexcept      {FLSliceResult r {(void*)buf, size};
                                                              set(nullptr, 0); return r;}
-        alloc_slice& operator= (FLSliceResult &&sr) noexcept {release(); set(sr.buf, sr.size);
+        alloc_slice& operator= (FLSliceResult &&sr) & noexcept {release(); set(sr.buf, sr.size);
                                                               return *this;}
         // FLHeapSlice interoperability:
         alloc_slice(FLHeapSlice s) noexcept STEPOVER        :pure_slice(s.buf, s.size) {retain();}
-        alloc_slice& operator= (FLHeapSlice) noexcept;
+        alloc_slice& operator= (FLHeapSlice) & noexcept;
         operator FLHeapSlice () const noexcept              {return {buf, size};}
 
         // std::string_view interoperability:
 #ifdef SLICE_SUPPORTS_STRING_VIEW
         explicit alloc_slice(string_view str) STEPOVER          :alloc_slice(slice(str)) {}
-        alloc_slice& operator=(string_view str)             {*this = (slice)str; return *this;}
+        alloc_slice& operator=(string_view str) &             {*this = (slice)str; return *this;}
 #endif
 
         // CFData / CFString / NSData / NSString interoperability:
@@ -770,7 +774,7 @@ namespace fleece {
     }
 
 
-    inline slice& slice::operator= (nullslice_t) noexcept {
+    inline slice& slice::operator= (nullslice_t) & noexcept {
         set(nullptr, 0);
         return *this;
     }
@@ -824,7 +828,7 @@ namespace fleece {
 
 
     __hot
-    inline alloc_slice& alloc_slice::operator=(const alloc_slice& s) noexcept {
+    inline alloc_slice& alloc_slice::operator=(const alloc_slice& s) & noexcept {
         if (_usuallyTrue(s.buf != buf)) {
             release();
             assignFrom(s);
@@ -835,7 +839,7 @@ namespace fleece {
 
 
     __hot
-    inline alloc_slice& alloc_slice::operator=(FLHeapSlice s) noexcept {
+    inline alloc_slice& alloc_slice::operator=(FLHeapSlice s) & noexcept {
         if (_usuallyTrue(s.buf != buf)) {
             release();
             assignFrom(slice(s));

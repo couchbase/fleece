@@ -114,14 +114,14 @@ namespace fleece {
 
         explicit operator bool () const FLPURE          {return (_ref != nullptr);}
 
-        Retained& operator=(T *t) noexcept              {assignRef(_ref, t); return *this;}
+        Retained& operator=(T *t) & noexcept            {assignRef(_ref, t); return *this;}
 
-        Retained& operator=(const Retained &r) noexcept {return *this = r._ref;}
+        Retained& operator=(const Retained &r) & noexcept {return *this = r._ref;}
 
         template <typename U>
-        Retained& operator=(const Retained<U> &r) noexcept {return *this = r._ref;}
+        Retained& operator=(const Retained<U> &r) & noexcept {return *this = r._ref;}
 
-        Retained& operator= (Retained &&r) noexcept {
+        Retained& operator= (Retained &&r) & noexcept {
             // Unexpectedly, the simplest & most efficient way to implement this is by simply
             // swapping the refs, instead of the commented-out code below.
             // The reason this works is that `r` is going to get destructed anyway when it goes
@@ -136,7 +136,7 @@ namespace fleece {
         }
 
         template <typename U>
-        Retained& operator= (Retained<U> &&r) noexcept {
+        Retained& operator= (Retained<U> &&r) & noexcept {
             auto oldRef = _ref;
             if (oldRef != r._ref) { // necessary to avoid premature release
                 _ref = std::move(r).detach();
@@ -202,29 +202,29 @@ namespace fleece {
         const T* operator-> () const noexcept FLPURE STEPOVER   {return _ref;}
         const T* get() const noexcept FLPURE STEPOVER           {return _ref;}
 
-        RetainedConst& operator=(const T *t) noexcept {
+        RetainedConst& operator=(const T *t) & noexcept {
             auto oldRef = _ref;
             _ref = retain(t);
             release(oldRef);
             return *this;
         }
 
-        RetainedConst& operator=(const RetainedConst &r) noexcept {
+        RetainedConst& operator=(const RetainedConst &r) & noexcept {
             return *this = r._ref;
         }
 
-        RetainedConst& operator= (RetainedConst &&r) noexcept {
+        RetainedConst& operator= (RetainedConst &&r) & noexcept {
             std::swap(_ref, r._ref);
             return *this;
         }
 
         template <typename U>
-        RetainedConst& operator=(const Retained<U> &r) noexcept {
+        RetainedConst& operator=(const Retained<U> &r) & noexcept {
             return *this = r._ref;
         }
 
         template <typename U>
-        RetainedConst& operator= (Retained<U> &&r) noexcept {
+        RetainedConst& operator= (Retained<U> &&r) & noexcept {
             std::swap(_ref, r._ref);
             return *this;
         }
