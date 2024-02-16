@@ -17,6 +17,7 @@
 #include "Fleece.h"
 #endif
 #include "slice.hh"
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -255,7 +256,8 @@ namespace fleece {
         property name (but not yet in the middle of a name.) */
     class KeyPath {
     public:
-        KeyPath(slice_NONNULL spec, FLError* FL_NULLABLE err)       :_path(FLKeyPath_New(spec, err)) { }
+        KeyPath()                                       :_path(FLKeyPath_NewEmpty()) { }
+        KeyPath(slice_NONNULL spec, FLError* FL_NULLABLE err) :_path(FLKeyPath_New(spec, err)) { }
         ~KeyPath()                                      {FLKeyPath_Free(_path);}
 
         KeyPath(KeyPath &&kp)                           :_path(kp._path) {kp._path = nullptr;}
@@ -264,27 +266,37 @@ namespace fleece {
 
         KeyPath(const KeyPath &kp)                      :KeyPath(std::string(kp), nullptr) { }
 
+
         explicit operator bool() const                  {return _path != nullptr;}
         operator FLKeyPath FL_NONNULL () const          {return _path;}
 
-        Value eval(Value root) const {
-            return FLKeyPath_Eval(_path, root);
-        }
+        size_t count() const                            {return FLKeyPath_GetCount(_path);}
+
+        inline std::pair<slice,int> get(size_t i) const;
+
+        Value eval(Value root) const                    {return FLKeyPath_Eval(_path, root);}
 
         static Value eval(slice_NONNULL specifier, Value root, FLError* FL_NULLABLE error) {
             return FLKeyPath_EvalOnce(specifier, root, error);
         }
 
-        explicit operator std::string() const {
-            return std::string(alloc_slice(FLKeyPath_ToString(_path)));
-        }
+        alloc_slice toString() const                    {return FLKeyPath_ToString(_path);}
+        explicit operator std::string() const           {return std::string(toString());}
 
         bool operator== (const KeyPath &kp) const       {return FLKeyPath_Equals(_path, kp._path);}
+
+        void addProperty(slice key)                     {FLKeyPath_AddProperty(_path, key);}
+        void addIndex(int index)                        {FLKeyPath_AddIndex(_path, index);}
+        bool addComponents(slice components, FLError* FL_NULLABLE err) {
+            return FLKeyPath_AddComponents(_path, components, err);
+        }
+        void dropComponents(size_t n)                   {FLKeyPath_DropComponents(_path, n);}
+
     private:
         KeyPath& operator=(const KeyPath&) =delete;
         friend class Value;
 
-        FLKeyPath _path;
+        FLKeyPath FL_NULLABLE _path;
     };
 
 
@@ -595,6 +607,16 @@ namespace fleece {
     // specialization for assigning bool value since there is no Encoder<<bool
     template<>
     inline void Encoder::keyref::operator= (bool value) {_enc.writeKey(_key); _enc.writeBool(value);}
+
+    inline std::pair<slice,int> KeyPath::get(size_t i) const {
+        FLSlice key = {};
+        int32_t index = 0;
+        if (FLKeyPath_GetElement(_path, i, &key, &index))
+            return {key, index};
+        else
+            throw std::domain_error("invalid KeyPath index");
+    }
+
 
     inline Doc Doc::fromJSON(slice_NONNULL json, FLError * FL_NULLABLE outError) {
         return Doc(FLDoc_FromJSON(json, outError), false);
