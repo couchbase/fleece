@@ -555,7 +555,7 @@ FLSliceResult FLDeepIterator_GetJSONPointer(FLDeepIterator i) FLAPI {
 
 FLKeyPath FL_NULLABLE FLKeyPath_New(FLSlice specifier, FLError* FL_NULLABLE outError) FLAPI {
     try {
-        return new Path((std::string)(slice)specifier);
+        return new Path(specifier);
     } catchError(outError)
     return nullptr;
 }
@@ -570,7 +570,7 @@ FLValue FL_NULLABLE FLKeyPath_Eval(FLKeyPath path, FLValue root) FLAPI {
 
 FLValue FL_NULLABLE FLKeyPath_EvalOnce(FLSlice specifier, FLValue root, FLError * FL_NULLABLE outError) FLAPI {
     try {
-        return Path::eval((std::string)(slice)specifier, root);
+        return Path::eval(specifier, root);
     } catchError(outError)
     return nullptr;
 }
@@ -583,6 +583,10 @@ bool FLKeyPath_Equals(FLKeyPath path1, FLKeyPath path2) FLAPI {
     return *path1 == *path2;
 }
 
+size_t FLKeyPath_GetCount(FLKeyPath path) FLAPI {
+    return path->size();
+}
+
 bool FLKeyPath_GetElement(FLKeyPath path, size_t i, FLSlice *outKey, int32_t *outIndex) FLAPI {
     if (i >= path->size())
         return false;
@@ -590,6 +594,31 @@ bool FLKeyPath_GetElement(FLKeyPath path, size_t i, FLSlice *outKey, int32_t *ou
     *outKey = element.keyStr();
     *outIndex = element.index();
     return true;
+}
+
+FLKeyPath FL_NULLABLE FLKeyPath_NewEmpty(void) FLAPI {
+    return new Path();
+}
+
+void FLKeyPath_AddProperty(FLKeyPath path, FLString property) FLAPI {
+    if (property.size > 0)
+        path->addProperty(property);
+}
+
+void FLKeyPath_AddIndex(FLKeyPath path, int index) FLAPI {
+    path->addIndex(index);
+}
+
+bool FLKeyPath_AddComponents(FLKeyPath path, FLString specifier, FLError* FL_NULLABLE outError) FLAPI {
+    try {
+        path->addComponents(specifier);
+        return true;
+    } catchError(outError)
+    return false;
+}
+
+void FLKeyPath_DropComponents(FLKeyPath path, size_t n) FLAPI {
+    path->drop(n);
 }
 
 
