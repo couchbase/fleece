@@ -77,8 +77,8 @@ namespace fleece {
 
         bool isEqual(Value v) const                     {return FLValue_IsEqual(_val, v);}
 
-        Value& operator= (Value v)                      {_val = v._val; return *this;}
-        Value& operator= (std::nullptr_t)               {_val = nullptr; return *this;}
+        Value& operator= (Value v) &                    {_val = v._val; return *this;}
+        Value& operator= (std::nullptr_t) &             {_val = nullptr; return *this;}
 
         inline Value operator[] (const KeyPath &kp) const;
 
@@ -127,9 +127,9 @@ namespace fleece {
         inline Value operator[] (int index) const       {return get(index);}
         inline Value operator[] (const KeyPath &kp) const {return Value::operator[](kp);}
 
-        Array& operator= (Array a)                      {_val = a._val; return *this;}
-        Array& operator= (std::nullptr_t)               {_val = nullptr; return *this;}
-        Value& operator= (Value v)                      =delete;
+        Array& operator= (Array a) &                     {_val = a._val; return *this;}
+        Array& operator= (std::nullptr_t) &              {_val = nullptr; return *this;}
+        Value& operator= (Value v)                       =delete;
 
         [[nodiscard]] inline MutableArray asMutable() const;
 
@@ -185,8 +185,8 @@ namespace fleece {
         inline Value operator[] (const char *key) const {return get(key);}
         inline Value operator[] (const KeyPath &kp) const {return Value::operator[](kp);}
 
-        Dict& operator= (Dict d)                        {_val = d._val; return *this;}
-        Dict& operator= (std::nullptr_t)                {_val = nullptr; return *this;}
+        Dict& operator= (Dict d) &                      {_val = d._val; return *this;}
+        Dict& operator= (std::nullptr_t) &              {_val = nullptr; return *this;}
         Value& operator= (Value v)                      =delete;
 
         [[nodiscard]] inline MutableDict asMutable() const;
@@ -259,7 +259,7 @@ namespace fleece {
         ~KeyPath()                                      {FLKeyPath_Free(_path);}
 
         KeyPath(KeyPath &&kp)                           :_path(kp._path) {kp._path = nullptr;}
-        KeyPath& operator=(KeyPath &&kp)                {FLKeyPath_Free(_path); _path = kp._path;
+        KeyPath& operator=(KeyPath &&kp) &              {FLKeyPath_Free(_path); _path = kp._path;
                                                          kp._path = nullptr; return *this;}
 
         KeyPath(const KeyPath &kp)                      :KeyPath(std::string(kp), nullptr) { }

@@ -235,14 +235,14 @@ namespace fleece {
         RetainedValue(MutableDict &&v) noexcept   :Value(v) {v._val = nullptr;}
         ~RetainedValue()                          {FLValue_Release(_val);}
 
-        RetainedValue& operator= (const Value &v) {
+        RetainedValue& operator= (const Value &v) & {
             FLValue_Retain(v);
             FLValue_Release(_val);
             _val = v;
             return *this;
         }
 
-        RetainedValue& operator= (RetainedValue &&v) noexcept {
+        RetainedValue& operator= (RetainedValue &&v) & noexcept {
             if (v._val != _val) {
                 FLValue_Release(_val);
                 _val = v._val;
@@ -251,7 +251,7 @@ namespace fleece {
             return *this;
         }
 
-        RetainedValue& operator= (std::nullptr_t) {      // disambiguation
+        RetainedValue& operator= (std::nullptr_t) & {      // disambiguation
             FLValue_Release(_val);
             _val = nullptr;
             return *this;
