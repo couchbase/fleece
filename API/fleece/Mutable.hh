@@ -235,6 +235,9 @@ namespace fleece {
         RetainedValue(MutableDict &&v) noexcept   :Value(v) {v._val = nullptr;}
         ~RetainedValue()                          {FLValue_Release(_val);}
 
+        static RetainedValue newString(slice s) {return RetainedValue(FLValue_NewString(s), false);}
+        static RetainedValue newData(slice d)   {return RetainedValue(FLValue_NewData(d), false);}
+
         RetainedValue& operator= (const Value &v) & {
             FLValue_Retain(v);
             FLValue_Release(_val);
@@ -256,6 +259,9 @@ namespace fleece {
             _val = nullptr;
             return *this;
         }
+
+    private:
+        RetainedValue(FLValue v, bool)          :Value(v) { }
     };
 
     // NOTE: The RetainedArray and RetainedDict classes are copycats of the RetainedValue class
