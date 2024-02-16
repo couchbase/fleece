@@ -46,20 +46,20 @@ extern "C" {
 
     /** Creates a new FLKeyPath object by compiling a path specifier string. */
     NODISCARD FLEECE_PUBLIC FLKeyPath FL_NULLABLE FLKeyPath_New(FLSlice specifier,
-                                        FLError* FL_NULLABLE outError) FLAPI;
+                                                                FLError* FL_NULLABLE outError) FLAPI;
 
     /** Frees a compiled FLKeyPath object. (It's ok to pass NULL.) */
     FLEECE_PUBLIC void FLKeyPath_Free(FLKeyPath FL_NULLABLE) FLAPI;
 
     /** Evaluates a compiled key-path for a given Fleece root object. */
     NODISCARD FLEECE_PUBLIC FLValue FL_NULLABLE FLKeyPath_Eval(FLKeyPath,
-                                       FLValue root) FLAPI;
+                                                               FLValue root) FLAPI;
 
     /** Evaluates a key-path from a specifier string, for a given Fleece root object.
         If you only need to evaluate the path once, this is a bit faster than creating an
         FLKeyPath object, evaluating, then freeing it. */
     NODISCARD FLEECE_PUBLIC FLValue FL_NULLABLE FLKeyPath_EvalOnce(FLSlice specifier, FLValue root,
-                                           FLError* FL_NULLABLE outError) FLAPI;
+                                                                   FLError* FL_NULLABLE outError) FLAPI;
 
     /** Returns a path in string form. */
     NODISCARD FLEECE_PUBLIC FLStringResult FLKeyPath_ToString(FLKeyPath path) FLAPI;
@@ -67,11 +67,37 @@ extern "C" {
     /** Equality test. */
     FLEECE_PUBLIC bool FLKeyPath_Equals(FLKeyPath path1, FLKeyPath path2) FLAPI;
 
-    /** Returns an element of a path, either a key or an array index. */
-    FLEECE_PUBLIC bool FLKeyPath_GetElement(FLKeyPath,
-                              size_t i,
-                              FLSlice *outDictKey,
-                              int32_t *outArrayIndex) FLAPI;
+    /** The number of path components. */
+    FLEECE_PUBLIC size_t FLKeyPath_GetCount(FLKeyPath) FLAPI;
+
+    /** Returns an element of a path, either a key or an array index.
+        @param path  The path to examine.
+        @param i  The index of the component to examine.
+        @param outDictKey  On return this will be the property name, or a null slice
+                           if this component is an array index.
+        @param outArrayIndex  On return this will be the array index,
+                              or 0 if this component is a property.
+        @returns  True on success, false if there is no such component. */
+    FLEECE_PUBLIC bool FLKeyPath_GetElement(FLKeyPath path,
+                                            size_t i,
+                                            FLSlice *outDictKey,
+                                            int32_t *outArrayIndex) FLAPI;
+
+    /** Creates a new _empty_ FLKeyPath, for the purpose of adding components to it. */
+    NODISCARD FLEECE_PUBLIC FLKeyPath FL_NULLABLE FLKeyPath_NewEmpty(void) FLAPI;
+
+    /** Appends a single property/key component to a path. The string should not be escaped. */
+    FLEECE_PUBLIC void FLKeyPath_AddProperty(FLKeyPath, FLString property) FLAPI;
+
+    /** Appends a single array index component to a path. */
+    FLEECE_PUBLIC void FLKeyPath_AddIndex(FLKeyPath, int index) FLAPI;
+
+    /** Appends one or more components, encoded as a specifier like the one passed to FLKeyPath_New. */
+    NODISCARD FLEECE_PUBLIC bool FLKeyPath_AddComponents(FLKeyPath, FLString specifier,
+                                                         FLError* FL_NULLABLE outError) FLAPI;
+
+    /** Removes the first `n` components. */
+    FLEECE_PUBLIC void FLKeyPath_DropComponents(FLKeyPath, size_t n) FLAPI;
 
     /** @} */
 
