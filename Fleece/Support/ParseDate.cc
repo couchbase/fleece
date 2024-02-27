@@ -400,29 +400,27 @@ namespace fleece {
     using time_point = std::chrono::time_point<system_clock, milliseconds>;
 
     DateTime FromMillis(const int64_t timestamp) {
-        const milliseconds millis { timestamp };
-        const time_point tp { millis };
-        const auto td = date::floor<days>(tp);
+        const milliseconds millis{timestamp};
+        const time_point   tp{millis};
+        const auto         td = date::floor<days>(tp);
 
-        const year_month_day ymd { td };
-        const hh_mm_ss hms { floor<milliseconds>(tp - td) };
+        const year_month_day ymd{td};
+        const hh_mm_ss       hms{floor<milliseconds>(tp - td)};
 
         const double ms = static_cast<double>(hms.subseconds().count()) / 1000.0;
 
-        return {
-            0,
-            static_cast<int>(ymd.year()),
-            static_cast<int>(static_cast<unsigned>(ymd.month())),
-            static_cast<int>(static_cast<unsigned>(ymd.day())),
-            static_cast<int>(hms.hours().count()),
-            static_cast<int>(hms.minutes().count()),
-            0,
-            static_cast<double>(hms.seconds().count()) + ms,
-            1,
-            1,
-            0,
-            1
-        };
+        return {0,
+                static_cast<int>(ymd.year()),
+                static_cast<int>(static_cast<unsigned>(ymd.month())),
+                static_cast<int>(static_cast<unsigned>(ymd.day())),
+                static_cast<int>(hms.hours().count()),
+                static_cast<int>(hms.minutes().count()),
+                0,
+                static_cast<double>(hms.seconds().count()) + ms,
+                1,
+                1,
+                0,
+                1};
     }
 
     int64_t ParseISO8601Date(const char* dateStr) {
@@ -447,72 +445,26 @@ namespace fleece {
     }
 
     slice FormatISO8601Date(char buf[], const int64_t timestamp, const bool asUTC, const DateTime* format) {
-        std::ostringstream stream {};
-
-        if ( timestamp == kInvalidDate ) {
-            *buf = 0;
-            return nullslice;
+        if ( asUTC ) {
+            return FormatISO8601Date(buf, timestamp, minutes{0}, format);
+        } else {
+            const milliseconds  millis{timestamp};
+            auto          temp           = FromTimestamp(floor<seconds>(millis));
+            const seconds offset_seconds = GetLocalTZOffset(&temp, false);
+            return FormatISO8601Date(buf, timestamp, duration_cast<minutes>(offset_seconds), format);
         }
-
-        milliseconds millis{timestamp};
-
-        auto temp = FromTimestamp(duration_cast<seconds>(millis));
-        const seconds offset_seconds = GetLocalTZOffset(&temp, false);
-
-        if(!asUTC) {
-            millis += duration_cast<milliseconds>(offset_seconds);
-        }
-        const auto tm = date::local_time<milliseconds>{millis};
-
-        const bool has_milli = millis.count() % 1000 != 0;
-        bool       ymd       = true;
-        bool       hms       = true;
-        bool       zone      = true;
-        char       separator = 'T';
-        if ( format ) {
-            ymd       = format->validYMD;
-            hms       = format->validHMS;
-            zone      = format->validTZ;
-            separator = format->separator;
-        }
-
-        if ( ymd ) { stream << date::format("%F", tm); }
-
-        if ( hms ) {
-            if ( ymd ) {
-                stream << separator;
-            }
-            if ( has_milli ) {
-                stream << date::format("%T", tm);
-            } else {
-                const auto secs = duration_cast<seconds>(millis);
-                stream << date::format("%T", local_seconds(secs));
-            }
-            if ( zone ) {
-                if ( asUTC || offset_seconds.count() == 0 ) {
-                    stream << 'Z';
-                } else {
-                    to_stream(stream, "%Ez", tm, nullptr, &offset_seconds);
-                }
-            }
-        }
-
-        const std::string res = stream.str();
-        std::strncpy(buf, res.c_str(), res.length());
-
-        return { buf, res.length() };
     }
 
     slice FormatISO8601Date(char buf[], const int64_t timestamp, const minutes tzoffset, const DateTime* format) {
-        std::ostringstream stream {};
+        std::ostringstream stream{};
 
         if ( timestamp == kInvalidDate ) {
             *buf = 0;
             return nullslice;
         }
 
-        const milliseconds millis { milliseconds { timestamp } + duration_cast<milliseconds>(tzoffset) };
-        const auto tm = date::local_time<milliseconds>{ millis };
+        const milliseconds millis{milliseconds{timestamp} + duration_cast<milliseconds>(tzoffset)};
+        const auto         tm = date::local_time<milliseconds>{millis};
 
         const seconds offset_seconds{tzoffset};
 
@@ -531,19 +483,17 @@ namespace fleece {
         if ( ymd ) { stream << date::format("%F", tm); }
 
         if ( hms ) {
-            if ( ymd ) {
-                stream << separator;
-            }
+            if ( ymd ) { stream << separator; }
 
-            if (has_milli) {
+            if ( has_milli ) {
                 stream << date::format("%T", tm);
             } else {
                 const auto secs = duration_cast<seconds>(millis);
                 stream << date::format("%T", local_seconds(secs));
             }
 
-            if (zone) {
-                if (offset_seconds.count() == 0) {
+            if ( zone ) {
+                if ( offset_seconds.count() == 0 ) {
                     stream << 'Z';
                 } else {
                     to_stream(stream, "%Ez", tm, nullptr, &offset_seconds);
@@ -554,7 +504,7 @@ namespace fleece {
         const std::string res = stream.str();
         std::strncpy(buf, res.c_str(), res.length());
 
-        return { buf, res.length() };
+        return {buf, res.length()};
     }
 
     struct tm FromTimestamp(seconds timestamp) {
@@ -603,7 +553,7 @@ namespace fleece {
         // NOTE: These values are the opposite of what you would expect, being defined
         // as seconds WEST of GMT (so UTC-8 would be 28,800, not -28,800)
 #ifdef WIN32
-        long s {};
+        long s{};
         throwIf(_get_timezone(&s) != 0, fleece::InternalError, "Unable to query local system time zone");
         auto offset = seconds(-s);
 #elif defined(__DARWIN_UNIX03) || defined(__ANDROID__) || defined(_XOPEN_SOURCE) || defined(_SVID_SOURCE)
