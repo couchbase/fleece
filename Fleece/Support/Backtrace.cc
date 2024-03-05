@@ -417,4 +417,11 @@ namespace fleece {
         });
     }
 
+    FleeceLogCallback sFleeceLogCallback = 0;
+    void registerFleeceLogCallback(FleeceLogCallback cbk) {
+        sFleeceLogCallback = cbk;
+    }
+    FleeceLogCallback fleeceLogCallback() {
+        return sFleeceLogCallback;
+    }
 }

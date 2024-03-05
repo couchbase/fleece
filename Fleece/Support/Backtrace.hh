@@ -89,4 +89,13 @@ namespace fleece {
     /// The name will be unmangled, if possible.
     std::string FunctionName(const void *pc);
 
+    typedef void (*FleeceLogCallback)(const char* msg, int flag, const void* pointer);
+    enum {
+        eQueryEnumNew = 1,
+        eQueryEnumRel,
+        eEncodeValue,
+        eColumnValue
+    };
+    void registerFleeceLogCallback(FleeceLogCallback cbk);
+    FleeceLogCallback fleeceLogCallback();
 }

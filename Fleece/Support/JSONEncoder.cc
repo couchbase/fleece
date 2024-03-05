@@ -14,6 +14,7 @@
 #include "FleeceImpl.hh"
 #include "SmallVector.hh"
 #include "ParseDate.hh"
+#include "Backtrace.hh"
 #include <algorithm>
 #include "betterassert.hh"
 
@@ -128,6 +129,8 @@ namespace fleece { namespace impl {
 
 
     void JSONEncoder::writeValue(const Value *v) {
+        (*fleece::fleeceLogCallback())("JSONEncoder::writeValue", fleece::eEncodeValue, v);
+
         switch (v->type()) {
             case kNull:
                 if (v->isUndefined()) {
