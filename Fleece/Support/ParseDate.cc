@@ -496,7 +496,7 @@ namespace fleece {
                 if ( offset_seconds.count() == 0 ) {
                     stream << 'Z';
                 } else {
-                    to_stream(stream, "%Ez", tm, nullptr, &offset_seconds);
+                    to_stream(stream, "%z", tm, nullptr, &offset_seconds);
                 }
             }
         }
