@@ -40,6 +40,7 @@ function(set_source_files_base)
         Fleece/Support/JSONEncoder.cc
         Fleece/Support/LibC++Debug.cc
         Fleece/Support/ParseDate.cc
+        Fleece/Support/DateFormat.cc
         Fleece/Support/RefCounted.cc
         Fleece/Support/slice_stream.cc
         Fleece/Support/sliceIO.cc

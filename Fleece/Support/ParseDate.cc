@@ -58,6 +58,7 @@
  */
 
 #include "ParseDate.hh"
+#include "DateFormat.hh"
 #include "date/date.h"
 #include "FleeceException.hh"
 #include <cstdint>
@@ -442,69 +443,6 @@ namespace fleece {
         if ( entry == dateComponentMap.end() ) { return kDateComponentInvalid; }
 
         return entry->second;
-    }
-
-    slice FormatISO8601Date(char buf[], const int64_t timestamp, const bool asUTC, const DateTime* format) {
-        if ( asUTC ) {
-            return FormatISO8601Date(buf, timestamp, minutes{0}, format);
-        } else {
-            const milliseconds  millis{timestamp};
-            auto          temp           = FromTimestamp(floor<seconds>(millis));
-            const seconds offset_seconds = GetLocalTZOffset(&temp, false);
-            return FormatISO8601Date(buf, timestamp, duration_cast<minutes>(offset_seconds), format);
-        }
-    }
-
-    slice FormatISO8601Date(char buf[], const int64_t timestamp, const minutes tzoffset, const DateTime* format) {
-        std::ostringstream stream{};
-
-        if ( timestamp == kInvalidDate ) {
-            *buf = 0;
-            return nullslice;
-        }
-
-        const milliseconds millis{milliseconds{timestamp} + duration_cast<milliseconds>(tzoffset)};
-        const auto         tm = date::local_time<milliseconds>{millis};
-
-        const seconds offset_seconds{tzoffset};
-
-        const bool has_milli = millis.count() % 1000 != 0;
-        bool       ymd       = true;
-        bool       hms       = true;
-        bool       zone      = true;
-        char       separator = 'T';
-        if ( format ) {
-            ymd       = format->validYMD;
-            hms       = format->validHMS;
-            zone      = format->validTZ;
-            separator = format->separator;
-        }
-
-        if ( ymd ) { stream << date::format("%F", tm); }
-
-        if ( hms ) {
-            if ( ymd ) { stream << separator; }
-
-            if ( has_milli ) {
-                stream << date::format("%T", tm);
-            } else {
-                const auto secs = duration_cast<seconds>(millis);
-                stream << date::format("%T", local_seconds(secs));
-            }
-
-            if ( zone ) {
-                if ( offset_seconds.count() == 0 ) {
-                    stream << 'Z';
-                } else {
-                    to_stream(stream, "%z", tm, nullptr, &offset_seconds);
-                }
-            }
-        }
-
-        const std::string res = stream.str();
-        std::strncpy(buf, res.c_str(), res.length());
-
-        return {buf, res.length()};
     }
 
     struct tm FromTimestamp(seconds timestamp) {

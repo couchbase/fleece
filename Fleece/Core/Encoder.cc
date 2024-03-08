@@ -19,6 +19,7 @@
 #include "varint.hh"
 #include "FleeceException.hh"
 #include "ParseDate.hh"
+#include "DateFormat.hh"
 #include "fleece/PlatformCompat.hh"
 #include "TempArray.hh"
 #include <algorithm>
@@ -425,7 +426,7 @@ namespace fleece { namespace impl {
 
     void Encoder::writeDateString(int64_t timestamp, bool asUTC) {
         char str[kFormattedISO8601DateMaxSize];
-        writeString(FormatISO8601Date(str, timestamp, asUTC, nullptr));
+        writeString(DateFormat::format(str, timestamp, asUTC, {}));
     }
 
 

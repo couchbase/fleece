@@ -38,6 +38,7 @@ set(FLEECE_BASE_SRC Fleece/API_Impl/FLSlice.cc
                     Fleece/Support/InstanceCounted.cc
                     Fleece/Support/NumConversion.cc
                     Fleece/Support/ParseDate.cc
+                    Fleece/Support/DateFormat.cc
                     Fleece/Support/RefCounted.cc
                     Fleece/Support/Writer.cc
                     Fleece/Support/betterassert.cc

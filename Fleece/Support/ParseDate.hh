@@ -19,8 +19,6 @@
 namespace fleece {
     using namespace std::chrono;
 
-    static constexpr int64_t kInvalidDate = INT64_MIN;
-
     typedef enum {
         kDateComponentMillennium,
         kDateComponentCentury,
@@ -80,29 +78,6 @@ namespace fleece {
     /** Parses a C string as a date component (valid strings are represented by the DateComponent
         enum above) */
     DateComponent ParseDateComponent(slice component);
-
-    /** Maximum length of a formatted ISO-8601 date. (Actually it's a bit bigger.) */
-    static constexpr size_t kFormattedISO8601DateMaxSize = 40;
-
-    /** Formats a timestamp (milliseconds since 1/1/1970) as an ISO-8601 date-time.
-        @param buf  The location to write the formatted C string. At least
-                    kFormattedISO8601DateMaxSize bytes must be available.
-        @param timestamp  The timestamp (milliseconds since 1/1/1970).
-        @param asUTC  True to format as UTC, false to use the local time-zone.
-        @param format The model to use for formatting (i.e. which portions to include).
-                      If null, then the full ISO-8601 format is used
-        @return  The formatted string (points to `buf`). */
-    slice FormatISO8601Date(char buf[], int64_t timestamp, bool asUTC, const DateTime* format);
-
-    /** Formats a timestamp (milliseconds since 1/1/1970) as an ISO-8601 date-time.
-        @param buf  The location to write the formatted C string. At least
-                    kFormattedISO8601DateMaxSize bytes must be available.
-        @param timestamp  The timestamp (milliseconds since 1/1/1970).
-        @param tzoffset   The timezone offset from UTC in minutes
-        @param format The model to use for formatting (i.e. which portions to include).
-                      If null, then the full ISO-8601 format is used
-        @return  The formatted string (points to `buf`). */
-    slice FormatISO8601Date(char buf[], int64_t timestamp, minutes tzoffset, const DateTime* format);
 
     /** Creates a tm out of a timestamp, but it will not be fully valid until
         passed through mktime.

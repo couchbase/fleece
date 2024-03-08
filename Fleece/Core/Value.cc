@@ -23,6 +23,7 @@
 #include "fleece/PlatformCompat.hh"
 #include "JSONEncoder.hh"
 #include "ParseDate.hh"
+#include "DateFormat.hh"
 #include <math.h>
 #include "betterassert.hh"
 

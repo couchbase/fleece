@@ -17,6 +17,7 @@
 #include "fleece/Fleece.h"
 #include "JSON5.hh"
 #include "ParseDate.hh"
+#include "DateFormat.hh"
 #include "betterassert.hh"
 #include <chrono>
 
@@ -53,7 +54,7 @@ FLTimestamp FLTimestamp_Now() FLAPI {
 
 FLStringResult FLTimestamp_ToString(FLTimestamp timestamp, bool asUTC) FLAPI {
     char str[kFormattedISO8601DateMaxSize];
-    return FLSlice_Copy(FormatISO8601Date(str, timestamp, asUTC, nullptr));
+    return FLSlice_Copy(DateFormat::format(str, timestamp, asUTC, {}));
 }
 
 
