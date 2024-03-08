@@ -15,6 +15,8 @@ namespace fleece {
 
     // 1111-11-11T11:11:11.111Z
     std::optional<DateFormat> DateFormat::parseDateFormat(slice formatString) {
+        auto timezone = parseTimezone(formatString);
+
         auto hyphenYearSize = separatedSection(formatString, (char)DateFormat::YMD::Separator::Hyphen);
         auto slashYearSize  = separatedSection(formatString, (char)DateFormat::YMD::Separator::Slash);
 
@@ -57,7 +59,31 @@ namespace fleece {
 
         auto timeSeparator = DateFormat::HMS::Separator::Colon;
 
-        if ( separatedSection(formatString, (char)timeSeparator) != ) }
+        if ( separatedSection(formatString, (char)timeSeparator) != true /** TODO: */ ) {}
+    }
+
+    std::optional<DateFormat::Timezone> DateFormat::parseTimezone(slice formatString) {
+        // Default to No Colon
+        if ( *(formatString.end() - 1) == 'Z' ) return {Timezone::NoColon};
+        // Minimum 5 `+0000`
+        if ( formatString.size < 5 ) return {};
+        const bool colon = *(formatString.end() - 3) == ':';
+        if ( colon ) {
+            formatString.setStart(formatString.end() - 6);
+        } else {
+            formatString.setStart(formatString.end() - 5);
+        }
+
+        if ( formatString.hasPrefix('+') || formatString.hasPrefix('-') ) {
+            if ( colon ) {
+                return {Timezone::Colon};
+            } else {
+                return {Timezone::NoColon};
+            }
+        }
+
+        return {};
+    }
 
     std::optional<DateFormat> DateFormat::parse(slice formatString) {
         if ( formatString.empty() ) { return {}; }

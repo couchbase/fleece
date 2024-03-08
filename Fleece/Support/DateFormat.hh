@@ -12,11 +12,6 @@ namespace fleece {
         std::string format(int64_t timestamp);
 
       private:
-        // %Y-%M-%DT%H:%M:%S
-        static std::optional<DateFormat> parseTokenFormat(slice formatString);
-
-        // 1111-11-11T11:11:11
-        static std::optional<DateFormat> parseDateFormat(slice formatString);
 
         // Short = YY, Long = YYYY
         enum class Year : uint8_t { Short, Long };
@@ -26,7 +21,7 @@ namespace fleece {
         enum class Minutes : uint8_t {};
         enum class Seconds : uint8_t {};
         enum class Millis : uint8_t {};
-        enum class Timezone : uint8_t {};
+        enum class Timezone : uint8_t { NoColon, Colon };
         enum class Separator : char { Space = ' ', T = 'T' };
 
         struct YMD {
@@ -48,6 +43,14 @@ namespace fleece {
 
         DateFormat(YMD ymd, Separator separator, std::optional<HMS> hms = {}, std::optional<Timezone> tz = {})
             : ymd{ymd}, separator{separator}, hms{hms}, tz{tz} {}
+
+        // %Y-%M-%DT%H:%M:%S
+        static std::optional<DateFormat> parseTokenFormat(slice formatString);
+
+        // 1111-11-11T11:11:11
+        static std::optional<DateFormat> parseDateFormat(slice formatString);
+
+        static std::optional<Timezone> parseTimezone(slice formatString);
 
         YMD                     ymd;
         Separator               separator;
