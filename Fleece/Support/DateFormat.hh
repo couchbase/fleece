@@ -20,7 +20,7 @@ namespace fleece {
                     kFormattedISO8601DateMaxSize bytes must be available.
         @param timestamp  The timestamp (milliseconds since 1/1/1970).
         @param asUTC  True to format as UTC, false to use the local time-zone.
-        @param format The model to use for formatting (i.e. which portions to include).
+        @param fmt The model to use for formatting (i.e. which portions to include).
                       If null, then the full ISO-8601 format is used
         @return  The formatted string (points to `buf`). */
         static slice format(char buf[], int64_t timestamp, bool asUTC, std::optional<DateFormat> fmt);

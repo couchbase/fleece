@@ -211,6 +211,10 @@
 		27F666472017FE7C00A8ED31 /* TempArray.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27F666462017FE7C00A8ED31 /* TempArray.hh */; };
 		27FE87F31E53E43200C5CF3F /* JSONEncoder.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27FE87F11E53E43200C5CF3F /* JSONEncoder.cc */; };
 		27FE87F41E53E43200C5CF3F /* JSONEncoder.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27FE87F21E53E43200C5CF3F /* JSONEncoder.hh */; };
+		EA5529A32B9F48C300B96ACA /* DateFormat.hh in Headers */ = {isa = PBXBuildFile; fileRef = EA5529A12B9F48C300B96ACA /* DateFormat.hh */; };
+		EA5529A42B9F48C300B96ACA /* DateFormat.cc in Sources */ = {isa = PBXBuildFile; fileRef = EA5529A22B9F48C300B96ACA /* DateFormat.cc */; };
+		EA5529A52B9F48CD00B96ACA /* DateFormat.cc in Sources */ = {isa = PBXBuildFile; fileRef = EA5529A22B9F48C300B96ACA /* DateFormat.cc */; };
+		EA5529A62B9F48D500B96ACA /* DateFormat.hh in Headers */ = {isa = PBXBuildFile; fileRef = EA5529A12B9F48C300B96ACA /* DateFormat.hh */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -490,6 +494,8 @@
 		27F666462017FE7C00A8ED31 /* TempArray.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = TempArray.hh; sourceTree = "<group>"; };
 		27FE87F11E53E43200C5CF3F /* JSONEncoder.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSONEncoder.cc; sourceTree = "<group>"; };
 		27FE87F21E53E43200C5CF3F /* JSONEncoder.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = JSONEncoder.hh; sourceTree = "<group>"; };
+		EA5529A12B9F48C300B96ACA /* DateFormat.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = DateFormat.hh; sourceTree = "<group>"; };
+		EA5529A22B9F48C300B96ACA /* DateFormat.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DateFormat.cc; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -820,6 +826,8 @@
 		27AFF69720EFE6CE0055E966 /* Support */ = {
 			isa = PBXGroup;
 			children = (
+				EA5529A22B9F48C300B96ACA /* DateFormat.cc */,
+				EA5529A12B9F48C300B96ACA /* DateFormat.hh */,
 				2700BBA0218B949900797537 /* Backtrace.hh */,
 				2700BBA1218B949900797537 /* Backtrace.cc */,
 				273CD2D625E874CD00B93C59 /* Base64.hh */,
@@ -1001,6 +1009,7 @@
 				2734B8A01F8583FF00BE5249 /* MArray+ObjC.h in Headers */,
 				270FA2851BF53CEA005DCB13 /* varint.hh in Headers */,
 				277F45B0208E871000A0D159 /* HashTree.hh in Headers */,
+				EA5529A32B9F48C300B96ACA /* DateFormat.hh in Headers */,
 				2734B89F1F8583FF00BE5249 /* MValue.hh in Headers */,
 				27C4CEBB2127976900470DE9 /* betterassert.hh in Headers */,
 				270FA2791BF53CEA005DCB13 /* Value.hh in Headers */,
@@ -1067,6 +1076,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EA5529A62B9F48D500B96ACA /* DateFormat.hh in Headers */,
 				27DE2EB22125FA1700123597 /* JSON5.hh in Headers */,
 				27DE2EB32125FA1700123597 /* RefCounted.hh in Headers */,
 				27DE2EB42125FA1700123597 /* JSONDelta.hh in Headers */,
@@ -1348,6 +1358,7 @@
 				274D8248209A5906008BB39F /* ValueSlot.cc in Sources */,
 				274D8252209CF9B3008BB39F /* HeapValue.cc in Sources */,
 				2776AA21208678AA004ACE85 /* DeepIterator.cc in Sources */,
+				EA5529A42B9F48C300B96ACA /* DateFormat.cc in Sources */,
 				27F25A8E20AA053D00E181FA /* Pointer.cc in Sources */,
 				27298E651C00F8A9000CFBA8 /* jsonsl.c in Sources */,
 				270FA27F1BF53CEA005DCB13 /* Writer.cc in Sources */,
@@ -1410,6 +1421,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EA5529A52B9F48CD00B96ACA /* DateFormat.cc in Sources */,
 				27744ADE2139C6AE00399DCA /* betterassert.cc in Sources */,
 				273CD2D925E874CD00B93C59 /* Base64.cc in Sources */,
 				27DE2EEB2125FC9300123597 /* FleeceException.cc in Sources */,
