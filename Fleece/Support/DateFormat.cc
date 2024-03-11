@@ -9,15 +9,176 @@ namespace fleece {
 
     using namespace std::chrono;
 
+    // The default format
     // YYYY-MM-DDThh:mm:ssTZD
-    DateFormat DateFormat::kISO8601 = DateFormat{YMD{{}, {}, {}, YMD::Separator::Hyphen},
+    DateFormat DateFormat::kISO8601 = DateFormat{YMD{Year{}, Month{}, Day{}, YMD::Separator::Hyphen},
                                                  Separator::T,
-                                                 HMS{{}, {}, {}, HMS::Separator::Colon},
+                                                 HMS{Hours{}, Minutes{}, Seconds{}, HMS::Separator::Colon},
                                                  {Timezone{}}};
 
-    // %Y-%M-%DT%H:%M:%S
-    // TODO: Implement!
-    std::optional<DateFormat> DateFormat::parseTokenFormat(slice formatString) { return {}; }
+    /** This parses a subset of the formatting tokens from "date.h", found 
+     * here: https://howardhinnant.github.io/date/date.html#to_stream_formatting.
+     * The valid tokens are:
+     * %Y: Year (YYYY), %m: Month (MM), %d: Day (DD).
+     * %F == %Y-%m-%d
+     * %H: Hours (HH), %M: Minutes (MM), %S: Seconds (SS), %s: Milliseconds (sss) (Milliseconds is an addition to date.h tokens)
+     * %T == %H:%M:%S
+     * %z: Timezone offset (Z for UTC, or offset in minutes (+/-)ZZZZ), %Ez: Timezone offset with colon ((+/-)ZZ:ZZ)
+     * This parser is pretty restrictive, and only allows formats which match what we want.
+     * YMD must always be full YMD, HMS must always be full HMS. Separators are restricted to 'T' and ' ' for YMD/HMS separator,
+     * '-' and '/' for YMD separator, and ':' for HMS separator. Timezone offset is only allowed if HMS is present.
+     * YMD can only be in ISO8601 order (no MDY allowed).
+     *
+     * ISO8601 can be represented as `%Y-%m-%dT%H:%M:%S.%s%z` OR `%FT%T.%s%z`
+     * */
+    std::optional<DateFormat> DateFormat::parseTokenFormat(slice formatString) {
+        if ( formatString.size < 2 ) return {};
+
+        // - YMD
+
+        auto ymd = kISO8601.ymd;
+
+        // %F == %Y-%m-%d
+        if ( formatString[1] == 'F' ) {
+            // ISO YMD, so we don't need to change `ymd`
+            formatString.setStart(formatString.begin() + 2);
+        } else {
+            if ( formatString[1] == 'Y' ) {
+                // Minimum %Y-%m-%d
+                if ( formatString.size < 8 || formatString[3] != '%' || formatString[4] != 'm' || formatString[6] != '%'
+                     || formatString[7] != 'd' ) {
+                    return {};
+                }
+                switch ( formatString[2] ) {
+                    case (char)YMD::Separator::Hyphen:
+                        break;
+                    case (char)YMD::Separator::Slash:
+                        ymd.value().separator = YMD::Separator::Slash;
+                        break;
+                    default:
+                        return {};
+                }
+                formatString.setStart(formatString.begin() + 8);
+            } else {
+                ymd = {};
+            }
+        }
+
+        if ( formatString.empty() ) {
+            if ( ymd.has_value() ) return DateFormat{ymd.value()};
+            else
+                return {};
+        }
+
+        // - SEPARATOR
+
+        auto sep = kISO8601.separator;
+
+        switch ( formatString[0] ) {
+            case (char)Separator::Space:
+                sep.value() = Separator::Space;
+            case (char)Separator::T:
+                formatString.setStart(formatString.begin() + 1);
+                break;
+            default:
+                sep = {};
+        }
+
+        if ( formatString.size < 2 ) {
+            if ( ymd.has_value() ) return DateFormat{ymd.value()};
+            else
+                return {};
+        }
+
+        if ( formatString[0] != '%' ) { return {}; }
+
+        // - HMS
+
+        auto hms = kISO8601.hms;
+
+        // Equivalent to %H:%M:%S
+        if ( formatString[1] == 'T' ) {
+            // ISO HMS, so we don't need to change `hms`
+            formatString.setStart(formatString.begin() + 2);
+        } else {
+            if ( formatString.size < 8 || formatString[1] != 'H' || formatString[3] != '%' || formatString[4] != 'M'
+                 || formatString[6] != '%' || formatString[7] == 'S' ) {
+                return {};
+            }
+            switch ( formatString[2] ) {
+                case (char)HMS::Separator::Colon:
+                    break;
+                default:
+                    return {};
+            }
+            formatString.setStart(formatString.begin() + 8);
+        }
+
+        if ( formatString.size < 2 ) {
+            if ( ymd.has_value() ) {
+                if ( hms.has_value() ) {
+                    // If YMD + HMS, Separator is required.
+                    if ( !sep.has_value() ) { return {}; }
+                    return DateFormat{ymd.value(), sep.value(), hms.value()};
+                }
+                return DateFormat{ymd.value()};
+            }
+            if ( hms.has_value() ) { return DateFormat{hms.value()}; }
+            return {};
+        }
+
+        // Millis
+        // %s OR %.s
+        if ( hms.has_value() ) {
+            if ( formatString[0] == '%' && formatString[1] == 's' ) {
+                hms.value().millis = {Millis{}};
+                formatString.setStart(formatString.begin() + 2);
+            } else if ( formatString.size > 2 && formatString[0] == '.' && formatString[1] == '%'
+                        && formatString[2] == 's' ) {
+                hms.value().millis = {Millis{}};
+                formatString.setStart(formatString.begin() + 3);
+            }
+        }
+
+        if ( formatString.size < 2 ) {
+            if ( ymd.has_value() ) {
+                if ( hms.has_value() ) {
+                    // If YMD + HMS, Separator is required.
+                    if ( !sep.has_value() ) { return {}; }
+                    return DateFormat{ymd.value(), sep.value(), hms.value()};
+                }
+                return DateFormat{ymd.value()};
+            }
+            if ( hms.has_value() ) { return DateFormat{hms.value()}; }
+            return {};
+        }
+
+        // - TIMEZONE
+
+        auto tz = kISO8601.tz;
+
+        if ( formatString[0] == '%' && formatString[1] == 'z' ) {
+            tz.value() = Timezone::NoColon;
+        } else if ( formatString.size >= 3 && formatString[0] == '%' && formatString[1] == 'E'
+                    && formatString[2] == 'z' ) {
+            tz.value() = Timezone::Colon;
+        }
+
+        if ( ymd.has_value() ) {
+            if ( hms.has_value() ) {
+                // If YMD + HMS, Separator is required.
+                if ( !sep.has_value() ) { return {}; }
+                if ( tz.has_value() ) { return DateFormat{ymd.value(), sep.value(), hms.value(), tz.value()}; }
+                return DateFormat{ymd.value(), sep.value(), hms.value()};
+            }
+            return DateFormat{ymd.value()};
+        }
+        if ( hms.has_value() ) {
+            if ( tz.has_value() ) return DateFormat{hms.value(), tz.value()};
+            return DateFormat{hms.value()};
+        }
+        return {};
+    }
 
     // 1111-11-11T11:11:11.111Z
     std::optional<DateFormat> DateFormat::parseDateFormat(slice formatString) {
@@ -32,8 +193,9 @@ namespace fleece {
 
         if ( hmsResult.has_value() ) formatString = hmsResult.value().second;
 
-        std::optional<char> separatorChar =
-                formatString.empty() || !hmsResult.has_value() ? std::optional<char>() : formatString[formatString.size - 1];
+        std::optional<char> separatorChar = formatString.empty() || !hmsResult.has_value()
+                                                    ? std::optional<char>()
+                                                    : formatString[formatString.size - 1];
 
         std::optional<Separator> separator{};
 
