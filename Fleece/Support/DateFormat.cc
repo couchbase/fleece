@@ -13,7 +13,7 @@ namespace fleece {
     // YYYY-MM-DDThh:mm:ssTZD
     DateFormat DateFormat::kISO8601 = DateFormat{YMD{Year{}, Month{}, Day{}, YMD::Separator::Hyphen},
                                                  Separator::T,
-                                                 HMS{Hours{}, Minutes{}, Seconds{}, HMS::Separator::Colon},
+                                                 HMS{Hours{}, Minutes{}, Seconds{}, Millis{}, HMS::Separator::Colon},
                                                  {Timezone{}}};
 
     /** This parses a subset of the formatting tokens from "date.h", found 
@@ -321,7 +321,7 @@ namespace fleece {
         }
     }
 
-    slice DateFormat::format(char buf[], int64_t timestamp, minutes tzoffset, std::optional<DateFormat> fmt) {
+    slice DateFormat::format(char buf[], const int64_t timestamp, minutes tzoffset, std::optional<DateFormat> fmt) {
         if ( timestamp == kInvalidDate ) {
             *buf = 0;
             return nullslice;
@@ -341,7 +341,7 @@ namespace fleece {
         if ( f.hms.has_value() ) {
             if ( f.ymd.has_value() ) { stream << (char)f.separator.value(); }
 
-            if ( f.hms.value().millis.has_value() ) {
+            if ( f.hms.value().millis.has_value() && timestamp % 1000 ) {
                 stream << date::format("%T", tm);
             } else {
                 const auto secs = duration_cast<seconds>(millis);
@@ -360,7 +360,7 @@ namespace fleece {
         }
 
         const std::string res = stream.str();
-        std::strncpy(buf, res.c_str(), res.length());
+        strncpy(buf, res.c_str(), res.length());
 
         return {buf, res.length()};
     }
