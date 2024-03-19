@@ -38,7 +38,6 @@ namespace fleece {
 
         static DateFormat kISO8601;
 
-      private:
         enum class Year : uint8_t {};
         enum class Month : uint8_t {};
         enum class Day : uint8_t {};
@@ -54,6 +53,10 @@ namespace fleece {
 
             YMD(const Year y, const Month m, const Day d, const Separator sep)
                 : year(y), month(m), day(d), separator(sep) {}
+
+            bool operator==(const YMD& other) const;
+
+            static YMD kISO8601;
 
             Year      year;
             Month     month;
@@ -72,6 +75,10 @@ namespace fleece {
             HMS(const Hours h, const Minutes m, const Seconds s, const Millis ms, const Separator sep)
                 : hours{h}, minutes{m}, seconds{s}, millis{ms}, separator{sep} {}
 
+            bool operator==(const HMS& other) const;
+
+            static HMS kISO8601;
+
             Hours                  hours;
             Minutes                minutes;
             std::optional<Seconds> seconds;
@@ -89,6 +96,12 @@ namespace fleece {
         // 11:11:11(Z)
         explicit DateFormat(HMS hms, const std::optional<Timezone> tz = {}) : hms{hms}, tz{tz} {}
 
+        bool operator ==(const DateFormat& other) const;
+        bool operator !=(const DateFormat& other) const { return !(*this==other); }
+
+        explicit operator std::string() const;
+
+      private:
         // %Y-%M-%DT%H:%M:%S
         static std::optional<DateFormat> parseTokenFormat(slice formatString);
 
@@ -106,5 +119,9 @@ namespace fleece {
         std::optional<HMS>       hms;
         std::optional<Timezone>  tz;
     };
+
+    std::ostream& operator << (std::ostream& os, DateFormat const& df);
+
+    std::ostream& operator << (std::ostream& os, std::optional<DateFormat> const& odf);
 
 }  // namespace fleece

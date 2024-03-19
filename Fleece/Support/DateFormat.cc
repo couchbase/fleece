@@ -11,10 +11,15 @@ namespace fleece {
 
     // The default format
     // YYYY-MM-DDThh:mm:ssTZD
-    DateFormat DateFormat::kISO8601 = DateFormat{YMD{Year{}, Month{}, Day{}, YMD::Separator::Hyphen},
+
+    DateFormat::YMD DateFormat::YMD::kISO8601 = YMD{Year{}, Month{}, Day{}, YMD::Separator::Hyphen};
+
+    DateFormat::HMS DateFormat::HMS::kISO8601 = HMS{Hours{}, Minutes{}, Seconds{}, Millis{}, HMS::Separator::Colon};
+
+    DateFormat DateFormat::kISO8601 = DateFormat{YMD::kISO8601,
                                                  Separator::T,
-                                                 HMS{Hours{}, Minutes{}, Seconds{}, Millis{}, HMS::Separator::Colon},
-                                                 {Timezone{}}};
+                                                 HMS::kISO8601,
+                                                 {Timezone::NoColon}};
 
     /** This parses a subset of the formatting tokens from "date.h", found 
      * here: https://howardhinnant.github.io/date/date.html#to_stream_formatting.
@@ -22,14 +27,14 @@ namespace fleece {
      * %Y: Year (YYYY), %m: Month (MM), %d: Day (DD).
      * %F == %Y-%m-%d
      * %H: Hours (HH), %M: Minutes (MM), %S: Seconds (SS), %s: Milliseconds (sss) (Milliseconds is an addition to date.h tokens)
-     * %T == %H:%M:%S
+     * %T == %H:%M:%S.%s
      * %z: Timezone offset (Z for UTC, or offset in minutes (+/-)ZZZZ), %Ez: Timezone offset with colon ((+/-)ZZ:ZZ)
      * This parser is pretty restrictive, and only allows formats which match what we want.
      * YMD must always be full YMD, HMS must always be full HMS. Separators are restricted to 'T' and ' ' for YMD/HMS separator,
      * '-' and '/' for YMD separator, and ':' for HMS separator. Timezone offset is only allowed if HMS is present.
      * YMD can only be in ISO8601 order (no MDY allowed).
      *
-     * ISO8601 can be represented as `%Y-%m-%dT%H:%M:%S.%s%z` OR `%FT%T.%s%z`
+     * ISO8601 can be represented as `%Y-%m-%dT%H:%M:%S%z` OR `%FT%T%z`
      * */
     std::optional<DateFormat> DateFormat::parseTokenFormat(slice formatString) {
         if ( formatString.size < 2 ) return {};
@@ -102,7 +107,7 @@ namespace fleece {
             formatString.setStart(formatString.begin() + 2);
         } else {
             if ( formatString.size < 8 || formatString[1] != 'H' || formatString[3] != '%' || formatString[4] != 'M'
-                 || formatString[6] != '%' || formatString[7] == 'S' ) {
+                 || formatString[6] != '%' || formatString[7] != 'S' ) {
                 return {};
             }
             switch ( formatString[2] ) {
@@ -112,6 +117,8 @@ namespace fleece {
                     return {};
             }
             formatString.setStart(formatString.begin() + 8);
+            // Set Millis to None until we parse it later
+            hms->millis = {};
         }
 
         if ( formatString.size < 2 ) {
@@ -162,6 +169,9 @@ namespace fleece {
         } else if ( formatString.size >= 3 && formatString[0] == '%' && formatString[1] == 'E'
                     && formatString[2] == 'z' ) {
             tz.value() = Timezone::Colon;
+        } else {
+            // Format string contains additional invalid tokens
+            return {};
         }
 
         if ( ymd.has_value() ) {
@@ -364,4 +374,58 @@ namespace fleece {
 
         return {buf, res.length()};
     }
+
+    bool DateFormat::YMD::operator==(const YMD& other) const {
+        return year == other.year && month == other.month && day == other.day && separator == other.separator;
+    }
+
+    bool DateFormat::HMS::operator==(const HMS& other) const {
+        return hours == other.hours && minutes == other.minutes && seconds == other.seconds && millis == other.millis
+               && separator == other.separator;
+    }
+
+    bool DateFormat::operator==(const DateFormat& other) const {
+        return ymd == other.ymd && hms == other.hms && separator == other.separator && tz == other.tz;
+    }
+
+     DateFormat::operator std::string() const {
+        std::stringstream stream {};
+        if (ymd.has_value()) {
+            const char sep = (char)ymd.value().separator;
+            stream << "Y" << sep << "M" << sep << "D";
+        }
+        if (separator.has_value()) {
+            stream << (char)separator.value();
+        }
+        if (hms.has_value()) {
+            const char sep = (char)hms.value().separator;
+            stream << "h" << sep << "m" << sep << "s";
+            if (hms.value().millis.has_value()) {
+                stream << ".SSS";
+            }
+        }
+        if (tz.has_value()) {
+            if (tz.value() == Timezone::Colon) {
+                stream << "Ez";
+            } else {
+                stream << "z";
+            }
+        }
+        return stream.str();
+    }
+
+    std::ostream& operator<<(std::ostream& os, DateFormat const& df) {
+        os << std::string(df);
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, std::optional<DateFormat> const& odf) {
+        if ( odf.has_value() ) {
+            os << std::string(odf.value());
+        } else {
+            os << "None";
+        }
+        return os;
+    }
+
 }  // namespace fleece
