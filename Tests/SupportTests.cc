@@ -351,50 +351,47 @@ TEST_CASE("DateTime Format parser", "[Timestamps]") {
     std::vector<std::pair<std::string, std::optional<DateFormat>>> tests{};
 
     SECTION("Valid Formats") {
-        tests = {
-                {"%F", DateFormat{DateFormat::YMD::kISO8601}},
-                {"%Y-%m-%d", DateFormat{DateFormat::YMD::kISO8601}},
-                {"%Y/%m/%d", DateFormat{DateFormat::YMD{{}, {}, {}, DateFormat::YMD::Separator::Slash}}},
-                {"%FT%T",
-                 DateFormat{DateFormat::YMD::kISO8601, DateFormat::Separator::T, DateFormat::HMS::kISO8601}},
-                {"%FT%H:%M:%S",
-                 DateFormat{DateFormat::YMD::kISO8601, DateFormat::Separator::T, DateFormat::HMS{{}, {}, {}, DateFormat::HMS::Separator::Colon}}},
-                {"%F %T",
-                 DateFormat{DateFormat::YMD::kISO8601, DateFormat::Separator::Space, DateFormat::HMS::kISO8601}},
-                {"%FT%H:%M:%S.%s",
-                 DateFormat{DateFormat::YMD::kISO8601, DateFormat::Separator::T, DateFormat::HMS::kISO8601}},
-                {"%FT%H:%M:%S%s", DateFormat{DateFormat::YMD::kISO8601, DateFormat::Separator::T, DateFormat::HMS::kISO8601}},
-                {"%FT%T%z", DateFormat::kISO8601},
-                {"%FT%T%Ez", DateFormat{DateFormat::YMD::kISO8601, DateFormat::Separator::T, DateFormat::HMS::kISO8601,
+        tests = {{"%F", DateFormat{DateFormat::YMD::kISO8601}},
+                 {"%Y-%m-%d", DateFormat{DateFormat::YMD::kISO8601}},
+                 {"%Y/%m/%d", DateFormat{DateFormat::YMD{{}, {}, {}, DateFormat::YMD::Separator::Slash}}},
+                 {"%FT%T", DateFormat{DateFormat::YMD::kISO8601, DateFormat::Separator::T, DateFormat::HMS::kISO8601}},
+                 {"%FT%H:%M:%S", DateFormat{DateFormat::YMD::kISO8601, DateFormat::Separator::T,
+                                            DateFormat::HMS{{}, {}, {}, DateFormat::HMS::Separator::Colon}}},
+                 {"%F %T",
+                  DateFormat{DateFormat::YMD::kISO8601, DateFormat::Separator::Space, DateFormat::HMS::kISO8601}},
+                 {"%FT%H:%M:%S.%s",
+                  DateFormat{DateFormat::YMD::kISO8601, DateFormat::Separator::T, DateFormat::HMS::kISO8601}},
+                 {"%FT%H:%M:%S%s",
+                  DateFormat{DateFormat::YMD::kISO8601, DateFormat::Separator::T, DateFormat::HMS::kISO8601}},
+                 {"%FT%T%z", DateFormat::kISO8601},
+                 {"%FT%T%Ez", DateFormat{DateFormat::YMD::kISO8601, DateFormat::Separator::T, DateFormat::HMS::kISO8601,
                                          DateFormat::Timezone::Colon}},
-                {"%T%s%z", DateFormat{DateFormat::HMS::kISO8601, DateFormat::Timezone::NoColon}}};
+                 {"%T%s%z", DateFormat{DateFormat::HMS::kISO8601, DateFormat::Timezone::NoColon}}};
     }
 
     SECTION("Invalid Formats") {
-        tests = {
-            // Only YMD order is allowed
-            {"%m/%d/%Y", {}},
-            {"%m-%d-%Y", {}},
-            // Separator is required
-            {"%Y%m%d", {}},
-            {"%F%T", {}},
-            // YMD must come before HMS
-            {"%T%F", {}},
-            // Must choose from available separators
-            {"%F*%T", {}},
-            // Cannot have timezone without HMS
-            {"%F%z", {}},
-            {"%F%Ez", {}},
-            {"%z", {}}
-        };
+        tests = {// Only YMD order is allowed
+                 {"%m/%d/%Y", {}},
+                 {"%m-%d-%Y", {}},
+                 // Separator is required
+                 {"%Y%m%d", {}},
+                 {"%F%T", {}},
+                 // YMD must come before HMS
+                 {"%T%F", {}},
+                 // Must choose from available separators
+                 {"%F*%T", {}},
+                 // Cannot have timezone without HMS
+                 {"%F%z", {}},
+                 {"%F%Ez", {}},
+                 {"%z", {}}};
     }
 
-    for (const auto& [formatString, expected] : tests ) {
+    for ( const auto& [formatString, expected] : tests ) {
         const auto result = DateFormat::parse(formatString);
         CHECK(result == expected);
-        if (result != expected) {
-            std::cerr << "Format string '" << formatString << "' produced result '"
-                      << result << "' which is not equal to expected '" << expected << "'" << std::endl;
+        if ( result != expected ) {
+            std::cerr << "Format string '" << formatString << "' produced result '" << result
+                      << "' which is not equal to expected '" << expected << "'" << std::endl;
         }
     }
 }
