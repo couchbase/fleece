@@ -233,6 +233,17 @@
 #   endif
 #endif /* __cold */
 
+// Declares this function takes a printf-like format string, and the subsequent args should
+// be type-checked against it.
+#ifndef __printflike
+#  if __has_attribute(__format__)
+#    define __printflike(fmtarg, firstvararg) \
+                          __attribute__((__format__ (__printf__, fmtarg, firstvararg)))
+#  else
+#    define __printflike(fmtarg, firstvararg)
+#  endif
+#endif
+
 
 #ifndef _MSC_VER
     #define WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) 0
