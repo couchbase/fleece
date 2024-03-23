@@ -61,5 +61,9 @@ COMBINE_HIDPI_IMAGES                               = YES    // Stop Xcode from c
 
 SUPPORTS_MACCATALYST                               = YES
 
-// Make memset_s available
-GCC_PREPROCESSOR_DEFINITIONS = $(inherited) __STDC_WANT_LIB_EXT1__=1
+// * Defining `__STDC_WANT_LIB_EXT1__=1` makes C11 Annex K fns like  `memset_s` available.
+// * Defining `_LIBCPP_REMOVE_TRANSITIVE_INCLUDES` stops libc++'s headers from including other
+//   libc++ headers except as defined in the language standard. This is a good idea because it will
+//   catch situations where a header isn't explicitly included, which will cause build errors with
+//   other standard libs like GCC's and MSVC's.
+GCC_PREPROCESSOR_DEFINITIONS = $(GCC_PREPROCESSOR_DEFINITIONS) __STDC_WANT_LIB_EXT1__=1 _LIBCPP_REMOVE_TRANSITIVE_INCLUDES
