@@ -259,4 +259,41 @@ namespace fleece {
         // (calling FLDictIterator_Next would be illegal)
         FLDoc_Release(doc);
     }
+
+    TEST_CASE("Many Levels in a Doc", "[Doc]") {
+        auto genDoc = [](unsigned nlevels) -> string {
+            // pre-condition: nlevels >= 1
+            string ret = "";
+            for (unsigned i = 1; i <= nlevels; ++i) {
+                ret += R"({"a":)";
+            }
+            ret += "1}";
+            for (unsigned i = 2; i <= nlevels; ++i) {
+                ret += "}";
+            }
+            return ret;
+        };
+
+        SECTION("100 Levels of JSON Dictionary") {
+            alloc_slice origJSON{genDoc(100)};
+            Retained<Doc> doc = Doc::fromJSON(origJSON);
+            auto root = doc->root();
+            alloc_slice json = root->toJSON();
+            CHECK(origJSON == json);
+            retain(root);
+            release(root);
+        }
+
+        SECTION("100 Is the Limit of JSON Dictionary") {
+            alloc_slice origJSON{genDoc(101)};
+            Retained<Doc> doc;
+            fleece::ErrorCode errCode = fleece::NoError;
+            try {
+                doc = Doc::fromJSON(origJSON);
+            } catch (FleeceException& exc) {
+                errCode = fleece::JSONError;
+            }
+            CHECK(errCode == fleece::JSONError);
+        }
+    }
 }

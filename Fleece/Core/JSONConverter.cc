@@ -32,7 +32,7 @@ namespace fleece { namespace impl {
 
     JSONConverter::JSONConverter(Encoder &e) noexcept
     :_encoder(e),
-     _jsn(jsonsl_new(50)),      // never returns nullptr, according to source code
+     _jsn(jsonsl_new(102)),     // never returns nullptr, according to source code. 102 allows 100 logical levels.
      _jsonError(JSONSL_ERROR_SUCCESS),
      _errorPos(0)
     {
