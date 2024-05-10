@@ -62,7 +62,9 @@ TEST_CASE("Obj-C Ints", "[Encoder]") {
     checkIt(@123456789,     "123456789");
     checkIt(@123456789012,  "123456789012");
     checkIt(@(INT64_MAX),   "9223372036854775807");
-    checkIt(@(UINT64_MAX),  "18446744073709551615");
+    // It was found that @() may not turn UINT64_MAX to unsigned. In the following,
+    // we create unsignedLongLong explicitly
+    checkIt([NSNumber numberWithUnsignedLongLong:UINT64_MAX], "18446744073709551615");
 }
 
 TEST_CASE("Obj-C Floats", "[Encoder]") {
