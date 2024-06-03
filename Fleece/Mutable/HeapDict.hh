@@ -72,8 +72,8 @@ namespace fleece { namespace impl { namespace internal {
 
         class iterator {
         public:
-            iterator(const HeapDict* NONNULL) noexcept;
-            iterator(const MutableDict* NONNULL) noexcept;
+            iterator(const HeapDict* FL_NONNULL) noexcept;
+            iterator(const MutableDict* FL_NONNULL) noexcept;
 
             uint32_t count() const noexcept                 {return _count;}
             

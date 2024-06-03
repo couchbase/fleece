@@ -321,7 +321,7 @@ namespace fleece {
         free(_symbols);
     }
 
-    std::string Unmangle(const char *name NONNULL) {
+    std::string Unmangle(const char* FL_NONNULL name) {
         auto unmangled = unmangle(name);
         std::string result = unmangled;
         if (unmangled != name)

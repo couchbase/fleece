@@ -19,58 +19,56 @@ namespace fleece {
 
     /** A simple fixed-capacity output stream that writes to memory. */
     class slice_ostream {
-    public:
+      public:
         /// Constructs a stream that will write to memory at `begin` with a capacity of `cap`.
-        slice_ostream(void* begin, size_t cap)   :_begin(begin), _next((uint8_t*)begin)
-                                                 ,_end(_next + cap) { }
+        slice_ostream(void* begin, size_t cap) : _begin(begin), _next((uint8_t*)begin), _end(_next + cap) {}
 
         /// Constructs a stream that will write to the memory pointed to by a slice.
         /// \warning Like a `const_cast`, this violates the read-only nature of the slice.
-        explicit slice_ostream(slice s)          :slice_ostream((uint8_t*)s.buf, s.size) { }
+        explicit slice_ostream(slice s) : slice_ostream((uint8_t*)s.buf, s.size) {}
 
         /// Captures the stream's state to another stream. You can use this as a way to "rewind"
         /// the stream afterwards. (This is equivalent to a copy constructor, but that constructor
         /// is explicitly deleted to avoid confusion.)
-        [[nodiscard]] slice_ostream capture() const            {return slice_ostream(*this);}
+        [[nodiscard]] slice_ostream capture() const { return slice_ostream(*this); }
 
         // Utility that allocates a buffer, lets the callback write into it, then trims the buffer.
         // The callback must take a `slice_ostream&` parameter and return `bool`.
         // (If you need a growable buffer, use a \ref Writer instead.)
         template <class Callback>
-        [[nodiscard]] static alloc_slice alloced(size_t maxSize, const Callback &writer) {
-            alloc_slice buf(maxSize);
+        [[nodiscard]] static alloc_slice alloced(size_t maxSize, const Callback& writer) {
+            alloc_slice   buf(maxSize);
             slice_ostream out(buf);
-            if (!writer(out) || out.overflowed())
-                return nullslice;
+            if ( !writer(out) || out.overflowed() ) return nullslice;
             buf.shorten(out.bytesWritten());
             return buf;
         }
 
         /// The data written so far.
-        slice output() const noexcept FLPURE            {return slice(_begin, _next);}
+        slice output() const noexcept FLPURE { return slice(_begin, _next); }
 
         /// The number of bytes written so far.
-        size_t bytesWritten() const noexcept FLPURE     {return _next - (uint8_t*)_begin;}
+        size_t bytesWritten() const noexcept FLPURE { return _next - (uint8_t*)_begin; }
 
         /// The number of bytes more that can be written.
-        size_t capacity() const noexcept FLPURE         {return _end - _next;}
+        size_t capacity() const noexcept FLPURE { return _end - _next; }
 
         /// True if the stream is full (capacity is zero.)
-        bool full() const noexcept FLPURE               {return _next >= _end;}
+        bool full() const noexcept FLPURE { return _next >= _end; }
 
         /// True if at least one write or advance operation has failed (returned false.)
-        bool overflowed() const noexcept FLPURE         {return _overflowed;}
+        bool overflowed() const noexcept FLPURE { return _overflowed; }
 
-#pragma mark  WRITING:
+#pragma mark WRITING:
 
         // NOTE: The write methods are "all-or-nothing": they return false and set the
         // \ref overflowed flag, instead of writing any data, if there's not enough capacity.
 
         /// Writes exactly `size` bytes from `src`.
-        bool write(const void *src, size_t size) noexcept;
+        bool write(const void* src, size_t size) noexcept;
 
         /// Writes the bytes of a slice.
-        bool write(slice s) noexcept            {return write(s.buf, s.size);}
+        bool write(slice s) noexcept { return write(s.buf, s.size); }
 
         /// Writes a single byte.
         bool writeByte(uint8_t) noexcept;
@@ -87,17 +85,17 @@ namespace fleece {
         /// Writes a number in Google/Go Unsigned VarInt format. (See varint.hh)
         bool writeUVarInt(uint64_t) noexcept;
 
-#pragma mark  CUSTOM WRITING:
+#pragma mark CUSTOM WRITING:
 
         /// Returns a pointer to where the next byte will be written.
-        [[nodiscard]] void* next() noexcept     {return _next;}
+        [[nodiscard]] void* next() noexcept { return _next; }
 
         /// Returns the entire remaining writeable buffer.
-        mutable_slice buffer() noexcept         {return {_next, _end};}
+        mutable_slice buffer() noexcept { return {_next, _end}; }
 
         /// Makes `next` the next byte to be written, or returns false if it's past the end.
         /// Call this after you've written data yourself.
-        bool advanceTo(void *next) noexcept;
+        bool advanceTo(void* next) noexcept;
 
         /// Advances the `next` pointer by `n` bytes, or returns false if there's no room.
         /// Call this after you've written data yourself.
@@ -106,47 +104,50 @@ namespace fleece {
         /// Moves the `next` pointer back `n` bytes, "un-writing" data.
         void retreat(size_t n);
 
-    private:
+      private:
         // Pass-by-value is intentionally forbidden to make passing a `slice_stream` as a
         // parameter illegal. That's because its behavior would be wrong: the caller's stream
         // position wouldn't advance after the callee wrote data.
         // Always pass a reference, `slice_ostream&`.
         slice_ostream(const slice_ostream&) = default;
 
-        void*    _begin;                // Beginning of output buffer
-        uint8_t* _next;                 // Address of next byte to write
-        uint8_t* _end;                  // End of buffer (past last byte)
-        bool     _overflowed {false};   // Set to true if any write fails (returns false)
+        void*    _begin;              // Beginning of output buffer
+        uint8_t* _next;               // Address of next byte to write
+        uint8_t* _end;                // End of buffer (past last byte)
+        bool     _overflowed{false};  // Set to true if any write fails (returns false)
     };
 
-
-    inline slice_ostream& operator<< (slice_ostream &out, slice data) noexcept {
-        out.write(data); return out;
-    }
-    inline slice_ostream& operator<< (slice_ostream &out, uint8_t byte) noexcept {
-        out.writeByte(byte); return out;
+    inline slice_ostream& operator<<(slice_ostream& out, slice data) noexcept {
+        out.write(data);
+        return out;
     }
 
-
+    inline slice_ostream& operator<<(slice_ostream& out, uint8_t byte) noexcept {
+        out.writeByte(byte);
+        return out;
+    }
 
     /** A simple stream that reads from memory using a slice to keep track of the available bytes. */
     struct slice_istream : public slice {
         // slice_istream is constructed from a slice, or from the same parameters as a slice.
-        constexpr slice_istream(const slice &s) noexcept        :slice(s) { }
-        constexpr slice_istream(const alloc_slice &s) noexcept  :slice(s) { }
-        constexpr slice_istream(const void* b, size_t s) noexcept STEPOVER    :slice(b, s) {}
-        constexpr slice_istream(const void* s NONNULL, const void* e NONNULL) noexcept STEPOVER
-                                                                      :slice(s, e) { }
-        constexpr slice_istream(slice_istream&&) = default;
-        slice_istream& operator=(slice_istream&&) = default;
+        constexpr slice_istream(const slice& s) noexcept : slice(s) {}
+
+        constexpr slice_istream(const alloc_slice& s) noexcept : slice(s) {}
+
+        constexpr slice_istream(const void* b, size_t s) noexcept STEPOVER : slice(b, s) {}
+
+        constexpr slice_istream(const void* FL_NONNULL s, const void* FL_NONNULL e) noexcept STEPOVER : slice(s, e) {}
+
+        constexpr      slice_istream(slice_istream&&) = default;
+        slice_istream& operator=(slice_istream&&)     = default;
 
         /// The number of bytes remaining to be read.
-        size_t bytesRemaining() const noexcept FLPURE           {return size;}
+        size_t bytesRemaining() const noexcept FLPURE { return size; }
 
         /// Returns true when there's no more data to read.
-        bool eof() const noexcept FLPURE                        {return size == 0;}
+        bool eof() const noexcept FLPURE { return size == 0; }
 
-#pragma mark  READING:
+#pragma mark READING:
 
         /// Reads _exactly_ `nBytes` bytes and returns them as a \ref slice.
         /// (This doesn't actually copy any memory, just does some pointer arithmetic.)
@@ -159,10 +160,10 @@ namespace fleece {
 
         /// Copies _exactly_ `dstSize` bytes to `dstBuf` and returns true.
         /// If not enough bytes are available, copies nothing and returns false.
-        [[nodiscard]] bool readAll(void *dstBuf, size_t dstSize) noexcept;
+        [[nodiscard]] bool readAll(void* dstBuf, size_t dstSize) noexcept;
 
         /// Copies _up to_ `dstSize` bytes to `dstBuf`, and returns the number of bytes copied.
-        [[nodiscard]] size_t readAtMost(void *dstBuf, size_t dstSize) noexcept;
+        [[nodiscard]] size_t readAtMost(void* dstBuf, size_t dstSize) noexcept;
 
         /// Searches for `delim`. If found, it returns all the data before it and moves the stream
         /// position past it.
@@ -182,25 +183,25 @@ namespace fleece {
         uint8_t readByte() noexcept;
 
         /// Returns the next byte, or 0 if at EOF, but does not advance the stream.
-        uint8_t peekByte() const noexcept FLPURE            {return (size > 0) ? (*this)[0] : 0;}
+        uint8_t peekByte() const noexcept FLPURE { return (size > 0) ? (*this)[0] : 0; }
 
         /// Returns all the remaining data that hasn't been read yet, without consuming it.
-        slice peek() const noexcept FLPURE                      {return *this;}
+        slice peek() const noexcept FLPURE { return *this; }
 
-#pragma mark  CUSTOM READING:
+#pragma mark CUSTOM READING:
 
         /// Returns a pointer to where the next bytes will be read from.
-        [[nodiscard]] const void* next() const noexcept FLPURE  {return buf;}
+        [[nodiscard]] const void* next() const noexcept FLPURE { return buf; }
 
         /// Advances past `n` bytes without doing anything with them.
-        void skip(size_t n)                                     {slice::moveStart(n);}
+        void skip(size_t n) { slice::moveStart(n); }
 
         /// Advances to the given address, skipping intervening bytes.
-        void skipTo(const void *pos);
+        void skipTo(const void* pos);
 
         /// Moves back to the given position, "un-reading" bytes.
         /// The `pos` value should come from a previous call to \ref next.
-        void rewindTo(const void *pos);
+        void rewindTo(const void* pos);
 
 #pragma mark - NUMERIC:
 
@@ -229,10 +230,10 @@ namespace fleece {
         /// If the number is invalid or too large, returns `nullopt` without advancing the stream.
         std::optional<uint32_t> readUVarInt32() noexcept;
 
-    private:
+      private:
         // Pass-by-value is intentionally forbidden to make passing a `slice_istream` as a
         // parameter illegal. That's because its behavior would be wrong: reads made by the
         // callee would not be reflected in the caller. Always pass a reference, `slice_istream&`.
         slice_istream(const slice_istream&) = delete;
     };
-}
+}  // namespace fleece

@@ -30,49 +30,52 @@ namespace fleece { namespace impl {
         A '\' can be used to escape a special character ('.', '[' or '$') at the start of a
         property name (but not yet in the middle of a name.) */
     class Path {
-    public:
+      public:
         class Element;
 
         //// Construction from a string: (throws FleeceException with code PathSyntaxError)
 
-        Path(slice specifier)                       {addComponents(specifier);}
+        Path(slice specifier) { addComponents(specifier); }
 
         //// Step-by-step construction:
 
-        Path()                                      =default;
+             Path() = default;
         void addProperty(slice key);
         void addIndex(int index);
         void addComponents(slice components);
 
-        bool operator== (const Path&) const;
-        bool operator!= (const Path& other) const      {return !(*this == other);}
+        bool operator==(const Path&) const;
 
-        Path& operator += (const Path&);
-        void drop(size_t numToDropFromStart);
+        bool operator!=(const Path& other) const { return !(*this == other); }
+
+        Path& operator+=(const Path&);
+        void  drop(size_t numToDropFromStart);
 
         //// Path element accessors:
 
-        const smallVector<Element,4>& path() const      {return _path;}
-        smallVector<Element,4>& path()                  {return _path;}
-        bool empty() const                              {return _path.empty();}
-        size_t size() const                             {return _path.size();}
+        const smallVector<Element, 4>& path() const { return _path; }
 
-        const Element& operator[] (size_t i) const      {return _path[i];}
-        Element& operator[] (size_t i)                  {return _path[i];}
+        smallVector<Element, 4>& path() { return _path; }
+
+        bool empty() const { return _path.empty(); }
+
+        size_t size() const { return _path.size(); }
+
+        const Element& operator[](size_t i) const { return _path[i]; }
+
+        Element& operator[](size_t i) { return _path[i]; }
 
         //// Evaluation:
 
-        const Value* eval(const Value *root) const noexcept;
+        const Value* eval(const Value* root) const noexcept;
 
         /** One-shot evaluation; faster if you're only doing it once */
-        static const Value* eval(slice specifier,
-                                 const Value *root NONNULL);
+        static const Value* eval(slice specifier, const Value* FL_NONNULL root);
 
         /** Evaluates a JSONPointer string (RFC 6901), which has a different syntax.
             This can only be done one-shot since JSONPointer path components are ambiguous unless
             the actual JSON is present (a number could be an array index or dict key.) */
-        static const Value* evalJSONPointer(slice specifier,
-                                            const Value* root NONNULL);
+        static const Value* evalJSONPointer(slice specifier, const Value* FL_NONNULL root);
 
         //// Converting to string:
 
@@ -84,41 +87,45 @@ namespace fleece { namespace impl {
             It will add a backslash before any '.' and '[' characters.
             If `first` is true it will also backslash-escape a leading '$'.
             If `first` is false, it will prefix a '.'. */
-        static void writeProperty(std::ostream&, slice key, bool first =false);
+        static void writeProperty(std::ostream&, slice key, bool first = false);
 
         /** Utility for writing a path component to a stream. */
         static void writeIndex(std::ostream&, int arrayIndex);
 
-
         /** An element of a Path, representing either a named property or an array index. */
         class Element {
-        public:
+          public:
             Element(slice property);
-            Element(int32_t arrayIndex)             :_index(arrayIndex) { }
-            Element(const Element &e);
-            bool operator== (const Element &e) const;
-            bool isKey() const                      {return _key != nullptr;}
-            Dict::key& key() const                  {return *_key;}
-            slice keyStr() const                    {return _key ? _key->string() : slice();}
-            int32_t index() const                   {return _index;}
 
-            const Value* eval(const Value* NONNULL) const noexcept;
-            static const Value* eval(char token, slice property, int32_t index,
-                                     const Value *item NONNULL) noexcept;
+            Element(int32_t arrayIndex) : _index(arrayIndex) {}
 
-        private:
-            static const Value* getFromArray(const Value* NONNULL, int32_t index) noexcept;
+                 Element(const Element& e);
+            bool operator==(const Element& e) const;
 
-            alloc_slice _keyBuf;
-            std::unique_ptr<Dict::key> _key {nullptr};
-            int32_t _index {0};
+            bool isKey() const { return _key != nullptr; }
+
+            Dict::key& key() const { return *_key; }
+
+            slice keyStr() const { return _key ? _key->string() : slice(); }
+
+            int32_t index() const { return _index; }
+
+            const Value*        eval(const Value* FL_NONNULL) const noexcept;
+            static const Value* eval(char token, slice property, int32_t index, const Value* FL_NONNULL item) noexcept;
+
+          private:
+            static const Value* getFromArray(const Value* FL_NONNULL, int32_t index) noexcept;
+
+            alloc_slice                _keyBuf;
+            std::unique_ptr<Dict::key> _key{nullptr};
+            int32_t                    _index{0};
         };
 
-    private:
-        using eachComponentCallback = function_ref<bool(char,slice,int32_t)>;
+      private:
+        using eachComponentCallback = function_ref<bool(char, slice, int32_t)>;
         static void forEachComponent(slice in, bool atStart, eachComponentCallback);
 
         smallVector<Element, 4> _path;
     };
 
-} }
+}}  // namespace fleece::impl
