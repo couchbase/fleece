@@ -64,6 +64,12 @@ namespace fleece { namespace impl {
         /** Replaces an external value with a copy of itself. */
         void copyValue(CopyFlags);
 
+#ifdef __LITTLE_ENDIAN__
+        static bool isInlineValue(const Value* v) {
+            return ((size_t)v & 1) != 0 && ((uint8_t*)v)[-1] == kInlineTag;
+        }
+#endif
+
     protected:
         friend class internal::HeapArray;
         friend class internal::HeapDict;
@@ -120,7 +126,8 @@ namespace fleece { namespace impl {
             };
         };
 
-        static constexpr uint8_t kInlineTag = 0xFF;
+        // Value stored in `_tag`. Must have 2 LSB set. Must not be equal to kHeapValuePad.
+        static constexpr uint8_t kInlineTag = 0x8F;
     };
 
 } }

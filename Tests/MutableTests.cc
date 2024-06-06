@@ -121,9 +121,12 @@ namespace fleece {
             MutableArray::iterator i(ma);
             for (int n = 0; n < kSize; ++n) {
                 std::cerr << "Item " << n << ": " << (void*)i.value() << "\n";
+                INFO("Item " << n << ": " << (void*)i.value());
                 CHECK(i);
                 CHECK(i.value() != nullptr);
                 CHECK(i.value()->type() == kExpectedTypes[n]);
+                bool expectMutable = (n == 8 || n == 10 || n == 12 || n >= 15);
+                CHECK(i.value()->isMutable() == expectMutable);
                 ++i;
             }
             CHECK(!i);
@@ -283,6 +286,7 @@ namespace fleece {
         CHECK(copy->get(0)->asArray()->get(0) != a);   // it's so deep you can't get under it
     }
 
+
     TEST_CASE("MutableArray comparison after resize", "[Mutable]") {
         // https://github.com/couchbaselabs/fleece/issues/102
         Retained<MutableArray> ma0 = MutableArray::newArray();
@@ -295,6 +299,26 @@ namespace fleece {
 
         CHECK(ma0->isEqual(ma1));
         CHECK(ma0->isEqual(doc->root()));
+    }
+
+
+    TEST_CASE("Retain scalar in mutable collection (throws!)", "[Mutable]") {
+        // Test case for #223, "Can't retain a scalar that's inline in a mutable collection".
+        Retained<MutableArray> ma = MutableArray::newArray();
+        ma->append(true);
+        const Value* scalar = ma->get(0);
+        CHECK(scalar->type() == valueType::kBoolean);
+        // #223 causes this to return true, because the scalar in a ValueSlot happens to have an
+        // odd address like a mutable value, and also the same 0xFF tag byte:
+        CHECK(!scalar->isMutable());
+        // Now trigger the bug. #223 causes `retain` to write 4 bytes starting 5 bytes before
+        // `scalar`: a buffer overrun that either triggers ASan, corrupts an earlier array item,
+        // or corrupts the heap :-o
+        //
+        // (The expression below should be `retain(scalar)`, but that function is `noexcept` so
+        // the exception would terminate the process. Workaround is to "inline" `retain` by
+        // directly calling `->_retain()`.)
+        REQUIRE_THROWS_AS(scalar->_retain(), FleeceException);
     }
 
 
