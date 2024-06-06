@@ -142,7 +142,7 @@ namespace fleece { namespace impl {
         alloc_slice toString() const;
 
         /** Returns true if this value is a mutable array or dict. */
-        bool isMutable() const FLPURE              {return ((size_t)this & 1) != 0;}
+        bool isMutable() const FLPURE;
 
         /** Looks up the SharedKeys from the enclosing Doc (if any.) */
         SharedKeys* sharedKeys() const noexcept FLPURE;

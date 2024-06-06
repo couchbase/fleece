@@ -121,9 +121,12 @@ namespace fleece {
             MutableArray::iterator i(ma);
             for (int n = 0; n < kSize; ++n) {
                 std::cerr << "Item " << n << ": " << (void*)i.value() << "\n";
+                INFO("Item " << n << ": " << (void*)i.value());
                 CHECK(i);
                 CHECK(i.value() != nullptr);
                 CHECK(i.value()->type() == kExpectedTypes[n]);
+                bool expectMutable = (n == 8 || n == 10 || n == 12 || n >= 15);
+                CHECK(i.value()->isMutable() == expectMutable);
                 ++i;
             }
             CHECK(!i);
