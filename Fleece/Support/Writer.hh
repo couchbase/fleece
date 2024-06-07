@@ -23,30 +23,39 @@ namespace fleece {
     /// A simple write-only stream that buffers its output into a slice.
     ///  (Used instead of C++ ostreams because those have too much overhead.)
     class Writer {
-    public:
+      public:
         static constexpr size_t kDefaultInitialCapacity = 256;
 
-        explicit Writer(size_t initialCapacity =kDefaultInitialCapacity);
-        ~Writer();
+        explicit Writer(size_t initialCapacity = kDefaultInitialCapacity);
+        ~        Writer();
 
-        Writer(Writer&&) noexcept;
-        Writer& operator= (Writer&&) noexcept;
+                Writer(Writer&&) noexcept;
+        Writer& operator=(Writer&&) noexcept;
 
         /// The number of bytes written.
-        size_t length() const                   {return _length - _available.size;}
+        size_t length() const { return _length - _available.size; }
 
         //-------- Writing:
 
         /// Writes data. Returns a pointer to where the data got written to.
-        const void* write(slice s)              {return _write(s.buf, s.size);}
+        const void* write(slice s) { return _write(s.buf, s.size); }
 
-        const void* write(const void* data NONNULL, size_t length)  {return _write(data, length);}
+        const void* write(const void* FL_NONNULL data, size_t length) { return _write(data, length); }
 
-        Writer& operator<< (uint8_t byte)       {_write(&byte,1); return *this;}
-        Writer& operator<< (slice s)            {write(s); return *this;}
+        Writer& operator<<(uint8_t byte) {
+            _write(&byte, 1);
+            return *this;
+        }
+
+        Writer& operator<<(slice s) {
+            write(s);
+            return *this;
+        }
 
         /// Pads output to even length by writing a zero byte if necessary.
-        void padToEvenLength()                  {if (length() & 1) *this << 0;}
+        void padToEvenLength() {
+            if ( length() & 1 ) *this << 0;
+        }
 
         /// Encodes the data to base64 format and writes that to the output.
         /// The encoded data will contain no line breaks.
@@ -60,17 +69,19 @@ namespace fleece {
         /// Reserves space for data, but leaves that space uninitialized.
         /// The data must be filled in later, before accessing the output,
         /// otherwise there will be garbage in the output.
-        void* reserveSpace(size_t length)       {return _write(nullptr, length);}
+        void* reserveSpace(size_t length) { return _write(nullptr, length); }
 
         /// Reserves space for \ref count values of type \ref T.
         template <class T>
-        T* reserveSpace(size_t count)           {return (T*) reserveSpace(count * sizeof(T));}
+        T* reserveSpace(size_t count) {
+            return (T*)reserveSpace(count * sizeof(T));
+        }
 
         /// Reserves `maxLength` bytes of space and passes a pointer to the callback.
         /// The callback must write _up to_ `maxLength` bytes, then return the byte count written.
         template <class T>
         void* write(size_t maxLength, T callback) {
-            auto dst = (uint8_t*)reserveSpace(maxLength);
+            auto   dst        = (uint8_t*)reserveSpace(maxLength);
             size_t usedLength = callback(dst);
             _available.moveStart((ssize_t)usedLength - (ssize_t)maxLength);
             return dst;
@@ -85,25 +96,24 @@ namespace fleece {
         alloc_slice copyOutput() const;
 
         /// Copies the output data to memory starting at `dst`.
-        void copyOutputTo(void *dst) const;
+        void copyOutputTo(void* dst) const;
 
         /// Invokes the callback for each range of bytes in the output.
         template <class T>
         void forEachChunk(T callback) const {
             assert_precondition(!_outputFile);
             auto n = _chunks.size();
-            for (auto chunk : _chunks) {
-                if (_usuallyFalse(--n == 0)) {
+            for ( auto chunk : _chunks ) {
+                if ( _usuallyFalse(--n == 0) ) {
                     chunk.setSize(chunk.size - _available.size);
-                    if (chunk.size == 0)
-                        continue;
+                    if ( chunk.size == 0 ) continue;
                 }
                 callback(chunk);
             }
         }
 
         /// Writes the output to a file. (Must not already be writing to a file.)
-        bool writeOutputToFile(FILE *);
+        bool writeOutputToFile(FILE*);
 
         //-------- Finishing:
 
@@ -117,7 +127,7 @@ namespace fleece {
         /// Unlike the regular `finish`, this avoids heap allocation if there's only one chunk.
         template <class T>
         void finish(T callback) {
-            if (_chunks.size() == 1) {
+            if ( _chunks.size() == 1 ) {
                 slice chunk = _chunks[0];
                 chunk.setSize(chunk.size - _available.size);
                 callback(chunk);
@@ -136,30 +146,30 @@ namespace fleece {
         ///   not just before finishing, otherwise the uninitialized data may be flushed to disk.
         /// * `reset` has no effect.
         /// * `finish` calls `flush`, but returns null.
-        explicit Writer(FILE * NONNULL outputFile);
+        explicit Writer(FILE* FL_NONNULL outputFile);
 
         /// The output file, or NULL.
-        FILE* outputFile() const                {return _outputFile;}
+        FILE* outputFile() const { return _outputFile; }
 
         /// If writing to a file, flushes to disk. Otherwise a no-op.
         void flush();
 
 
-    private:
-        void _reset();
+      private:
+        void  _reset();
         void* _write(const void* dataOrNull, size_t length);
         void* writeToNewChunk(const void* dataOrNull, size_t length);
-        void addChunk(size_t capacity);
-        void freeChunk(slice);
-        void migrateInitialBuf(const Writer& other);
+        void  addChunk(size_t capacity);
+        void  freeChunk(slice);
+        void  migrateInitialBuf(const Writer& other);
 
-        Writer(const Writer&) = delete;
+                      Writer(const Writer&)    = delete;
         const Writer& operator=(const Writer&) = delete;
 
 #if DEBUG
         void assertLengthCorrect() const;
 #else
-        void assertLengthCorrect() const { }
+        void assertLengthCorrect() const {}
 #endif
 
         /* IMPLEMENTATION NOTES:
@@ -179,12 +189,12 @@ namespace fleece {
 
         // TODO: Make _available a slice_ostream
 
-        slice _available;               // Available range of current chunk
-        smallVector<slice, 4> _chunks;  // Chunks in consecutive order. Last is written to.
-        size_t _chunkSize;              // Size of next chunk to allocate
-        size_t _length {0};             // Output length, offset by _available.size
-        FILE* _outputFile;              // File writing to, or NULL
-        uint8_t _initialBuf[kDefaultInitialCapacity];   // Inline buffer to avoid a malloc
+        slice                 _available;                            // Available range of current chunk
+        smallVector<slice, 4> _chunks;                               // Chunks in consecutive order. Last is written to.
+        size_t                _chunkSize;                            // Size of next chunk to allocate
+        size_t                _length{0};                            // Output length, offset by _available.size
+        FILE*                 _outputFile;                           // File writing to, or NULL
+        uint8_t               _initialBuf[kDefaultInitialCapacity];  // Inline buffer to avoid a malloc
     };
 
-}
+}  // namespace fleece

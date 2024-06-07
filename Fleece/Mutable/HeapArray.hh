@@ -79,8 +79,8 @@ namespace fleece { namespace impl { namespace internal {
 
         class iterator {
         public:
-            iterator(const HeapArray* NONNULL) noexcept;
-            iterator(const MutableArray* NONNULL) noexcept;
+            iterator(const HeapArray* FL_NONNULL) noexcept;
+            iterator(const MutableArray* FL_NONNULL) noexcept;
 
             const Value* value() const noexcept             {return _value;}
 

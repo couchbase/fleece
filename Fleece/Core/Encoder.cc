@@ -539,7 +539,7 @@ namespace fleece { namespace impl {
     }
 
 
-    void Encoder::writeValue(const Value* NONNULL value, const WriteValueFunc *fn) {
+    void Encoder::writeValue(const Value* FL_NONNULL value, const WriteValueFunc *fn) {
         const SharedKeys *sk = nullptr;
         writeValue(value, sk, fn);
     }

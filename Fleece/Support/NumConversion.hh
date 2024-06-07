@@ -14,9 +14,9 @@
 #include "fleece/PlatformCompat.hh"
 
 #if __has_include("Error.hh")
-#include "Error.hh"
+#    include "Error.hh"
 #else
-#include "FleeceException.hh"
+#    include "FleeceException.hh"
 #endif
 
 #include <cstddef>
@@ -32,84 +32,85 @@ namespace fleece {
     /// to fit in an `int64_t`.
     /// Expected: optional whitespace, an optional '-' or '+',  one or more decimal digits.
     /// If `allowTrailing` is false it also rejects anything but whitespace after the last digit.
-    bool ParseInteger(const char *str NONNULL, int64_t &result, bool allowTrailing =false);
+    bool ParseInteger(const char* FL_NONNULL str, int64_t& result, bool allowTrailing = false);
 
     /// Parse `str` as an unsigned integer, storing the result in `result` and returning true.
     /// Returns false if the string is not a valid unsigned integer, or if the result is too large
     /// to fit in a `uint64_t`.
     /// Expected: optional whitespace, an optional '+', one or more decimal digits.
     /// If `allowTrailing` is false it also rejects anything but whitespace after the last digit.
-    bool ParseInteger(const char *str NONNULL, uint64_t &result, bool allowTrailing =false);
+    bool ParseInteger(const char* FL_NONNULL str, uint64_t& result, bool allowTrailing = false);
 
     /// Alternative syntax for parsing an unsigned integer.
-    static inline bool ParseUnsignedInteger(const char *str NONNULL, uint64_t &r, bool t =false) {
+    static inline bool ParseUnsignedInteger(const char* FL_NONNULL str, uint64_t& r, bool t = false) {
         return ParseInteger(str, r, t);
     }
-
 
     /// Parse `str` as a floating-point number, storing the result in `result` and returning true.
     /// If `allowTrailing` is false, returns false if there's anything but whitespace after the
     /// last digit.
-    bool ParseDouble(const char *str NONNULL, double &result, bool allowTrailing =false);
-    
+    bool ParseDouble(const char* FL_NONNULL str, double& result, bool allowTrailing = false);
+
     /// Parse `str` as a floating-point number, reading as many digits as possible.
     /// (I.e. non-numeric characters after the digits are not treated as an error.)
     /// If no digits are parseable, returns 0.0.
-    double ParseDouble(const char *str NONNULL) noexcept;
+    double ParseDouble(const char* FL_NONNULL str) noexcept;
 
 
     /// Format a 64-bit-floating point number to a string.
-    size_t WriteFloat(double n, char *dst, size_t capacity);
+    size_t WriteFloat(double n, char* dst, size_t capacity);
 
     /// Format a 32-bit floating-point number to a string.
-    size_t WriteFloat(float n, char *dst, size_t capacity);
+    size_t WriteFloat(float n, char* dst, size_t capacity);
 
     /// Alternative syntax for formatting a 64-bit-floating point number to a string.
-    static inline size_t WriteDouble(double n, char *dst, size_t c)  {return WriteFloat(n, dst, c);}
+    static inline size_t WriteDouble(double n, char* dst, size_t c) { return WriteFloat(n, dst, c); }
 
-    #if DEBUG
-        template<typename Out, typename In>
-        static Out narrow_cast (In val) {
-            static_assert(::std::is_arithmetic<In>::value && ::std::is_arithmetic<Out>::value, "Only numeric types are valid for narrow_cast");
-            if constexpr(sizeof(In) <= sizeof(Out) && ::std::is_signed<In>::value == ::std::is_signed<Out>::value) {
-                return (Out)val;
-            }
-
-            // Comparing an unsigned number against a signed minimum causes issues, at least on Windows,
-            // but if the output is signed and the input is unsigned then there is never a case where
-            // the input could underflow the output.  The reverse situation does not appear to be true.
-            // the input could underflow the output.  The reverse situation does not appear to be true.
-            bool min_ok = std::is_signed<Out>::value && !std::is_signed<In>::value;
-
-#ifdef Assert
-            if constexpr (::std::is_floating_point<In>::value) {
-                Assert(val >= std::numeric_limits<Out>::min() && val <= ::std::numeric_limits<Out>::max(),
-                    "Invalid narrow_cast %g -> %s", (double)val, typeid(Out).name());
-            } else if constexpr(::std::is_signed<In>::value) {
-                Assert((min_ok || val >= std::numeric_limits<Out>::min()) && val <= ::std::numeric_limits<Out>::max(),
-                    "Invalid narrow_cast %" PRIi64 " -> %s", (int64_t)val, typeid(Out).name());
-            } else {
-                Assert((min_ok || val >= std::numeric_limits<Out>::min()) && val <= ::std::numeric_limits<Out>::max(), 
-                    "Invalid narrow_cast %" PRIu64 " -> %s", (uint64_t)val, typeid(Out).name());
-            }
-#else
-            if constexpr(::std::is_floating_point<In>::value) {
-                throwIf(val < std::numeric_limits<Out>::min() || val > std::numeric_limits<Out>::max(), InternalError, "Invalid narrow_cast %g -> %s", (double)val, typeid(Out).name());
-            } else if constexpr(::std::is_signed<In>::value) {
-                throwIf((!min_ok && val < std::numeric_limits<Out>::min()) || val > std::numeric_limits<Out>::max(),
-                    InternalError, "Invalid narrow_cast %" PRIi64 " -> %s", (int64_t)val, typeid(Out).name());
-            } else {
-                throwIf((!min_ok && val < std::numeric_limits<Out>::min()) || val > std::numeric_limits<Out>::max(),
-                    InternalError, "Invalid narrow_cast %" PRIu64 " -> %s", (uint64_t)val, typeid(Out).name());
-            }
-#endif
+#if DEBUG
+    template <typename Out, typename In>
+    static Out narrow_cast(In val) {
+        static_assert(::std::is_arithmetic<In>::value && ::std::is_arithmetic<Out>::value,
+                      "Only numeric types are valid for narrow_cast");
+        if constexpr ( sizeof(In) <= sizeof(Out) && ::std::is_signed<In>::value == ::std::is_signed<Out>::value ) {
             return (Out)val;
         }
-    #else
-        template<typename Out, typename In>
-        static inline Out narrow_cast(In val) {
-            return static_cast<Out>(val);
-        }
-    #endif
 
-}
+        // Comparing an unsigned number against a signed minimum causes issues, at least on Windows,
+        // but if the output is signed and the input is unsigned then there is never a case where
+        // the input could underflow the output.  The reverse situation does not appear to be true.
+        // the input could underflow the output.  The reverse situation does not appear to be true.
+        bool min_ok = std::is_signed<Out>::value && !std::is_signed<In>::value;
+
+#    ifdef Assert
+        if constexpr ( ::std::is_floating_point<In>::value ) {
+            Assert(val >= std::numeric_limits<Out>::min() && val <= ::std::numeric_limits<Out>::max(),
+                   "Invalid narrow_cast %g -> %s", (double)val, typeid(Out).name());
+        } else if constexpr ( ::std::is_signed<In>::value ) {
+            Assert((min_ok || val >= std::numeric_limits<Out>::min()) && val <= ::std::numeric_limits<Out>::max(),
+                   "Invalid narrow_cast %" PRIi64 " -> %s", (int64_t)val, typeid(Out).name());
+        } else {
+            Assert((min_ok || val >= std::numeric_limits<Out>::min()) && val <= ::std::numeric_limits<Out>::max(),
+                   "Invalid narrow_cast %" PRIu64 " -> %s", (uint64_t)val, typeid(Out).name());
+        }
+#    else
+        if constexpr ( ::std::is_floating_point<In>::value ) {
+            throwIf(val < std::numeric_limits<Out>::min() || val > std::numeric_limits<Out>::max(), InternalError,
+                    "Invalid narrow_cast %g -> %s", (double)val, typeid(Out).name());
+        } else if constexpr ( ::std::is_signed<In>::value ) {
+            throwIf((!min_ok && val < std::numeric_limits<Out>::min()) || val > std::numeric_limits<Out>::max(),
+                    InternalError, "Invalid narrow_cast %" PRIi64 " -> %s", (int64_t)val, typeid(Out).name());
+        } else {
+            throwIf((!min_ok && val < std::numeric_limits<Out>::min()) || val > std::numeric_limits<Out>::max(),
+                    InternalError, "Invalid narrow_cast %" PRIu64 " -> %s", (uint64_t)val, typeid(Out).name());
+        }
+#    endif
+        return (Out)val;
+    }
+#else
+    template <typename Out, typename In>
+    static inline Out narrow_cast(In val) {
+        return static_cast<Out>(val);
+    }
+#endif
+
+}  // namespace fleece
