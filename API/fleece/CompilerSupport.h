@@ -70,12 +70,12 @@
 #endif
 
 
-// Nullability annotations, for function parameters and struct fields.
+// Clang nullability annotations, for function parameters and struct fields.
 // In between FL_ASSUME_NONNULL_BEGIN and FL_ASSUME_NONNULL_END, all pointer declarations implicitly
 // disallow NULL values, unless annotated with FL_NULLABLE (which must come after the `*`.)
 // (FL_NONNULL is occasionally necessary when there are multiple levels of pointers.)
 // NOTE: Only supported in Clang, so far.
-#if __has_feature(nullability)
+#if defined(__clang__)
 #  define FL_ASSUME_NONNULL_BEGIN _Pragma("clang assume_nonnull begin")
 #  define FL_ASSUME_NONNULL_END _Pragma("clang assume_nonnull end")
 #  define FL_NULLABLE _Nullable
@@ -96,7 +96,7 @@
 // GCC also has an attribute with this name, but it's incompatible: it can't be applied to a
 // parameter, it has to come after the function and list parameters by number. Oh well.
 // TODO: Replace this with the better nullability annotations above.
-#if __has_attribute(nonnull)
+#if defined(__clang__)
 #  define NONNULL                       __attribute__((nonnull))
 #else
 #  define NONNULL
