@@ -18,16 +18,16 @@
 #include "fleece/slice.hh"
 
 extern "C" {
-struct jsonsl_state_st;
-struct jsonsl_st;
+    struct jsonsl_state_st;
+    struct jsonsl_st;
 }
 
 namespace fleece { namespace impl {
 
     /** Parses JSON data and writes the values in it to a Fleece encoder. */
     class JSONConverter {
-      public:
-         JSONConverter(Encoder&) noexcept;
+    public:
+        JSONConverter(Encoder&) noexcept;
         ~JSONConverter();
 
         /** Parses JSON data and writes the values to the encoder.
@@ -35,41 +35,42 @@ namespace fleece { namespace impl {
         bool encodeJSON(slice json);
 
         /** See jsonsl_error_t for error codes, plus a few more defined below. */
-        int jsonError() noexcept { return _jsonError; }
-
-        ErrorCode errorCode() noexcept { return _errorCode; }
-
+        int jsonError() noexcept                {return _jsonError;}
+        ErrorCode errorCode() noexcept          {return _errorCode;}
         const char* errorMessage() noexcept;
-
+        
         /** Byte offset in input where error occurred */
-        size_t errorPos() noexcept { return _errorPos; }
+        size_t errorPos() noexcept              {return _errorPos;}
 
         /** Extra error codes beyond those in jsonsl_error_t. */
-        enum { kErrTruncatedJSON = 1000, kErrExceptionThrown };
+        enum {
+            kErrTruncatedJSON = 1000,
+            kErrExceptionThrown
+        };
 
         /** Resets the converter, as though you'd deleted it and constructed a new one. */
         void reset();
 
         /** Convenience method to convert JSON to Fleece data. Throws FleeceException on error. */
-        static alloc_slice convertJSON(slice json, SharedKeys* sk = nullptr);
+        static alloc_slice convertJSON(slice json, SharedKeys *sk =nullptr);
 
-        //private:
-        void push(struct jsonsl_state_st* FL_NONNULL state);
-        void pop(struct jsonsl_state_st* FL_NONNULL state);
-        int  gotError(int err, size_t pos) noexcept;
-        int  gotError(int err, const char* errat) noexcept;
-        void gotException(ErrorCode code, const char* FL_NONNULL what, size_t pos) noexcept;
+    //private:
+        void push(struct jsonsl_state_st *state NONNULL);
+        void pop(struct jsonsl_state_st *state NONNULL);
+        int gotError(int err, size_t pos) noexcept;
+        int gotError(int err, const char *errat) noexcept;
+        void gotException(ErrorCode code, const char *what NONNULL, size_t pos) noexcept;
 
-      private:
-        void writeDouble(struct jsonsl_state_st*);
+    private:
+        void writeDouble(struct jsonsl_state_st *);
 
-        Encoder&          _encoder;       // encoder to write to
-        struct jsonsl_st* _jsn{nullptr};  // JSON parser
-        int               _jsonError{0};  // Parse error from jsonsl
-        ErrorCode         _errorCode{NoError};
-        std::string       _errorMessage;
-        size_t            _errorPos{0};  // Byte index where parse error occurred
-        slice             _input;        // Current JSON being parsed
+        Encoder &_encoder;                  // encoder to write to
+        struct jsonsl_st * _jsn {nullptr};  // JSON parser
+        int _jsonError {0};                 // Parse error from jsonsl
+        ErrorCode _errorCode {NoError};
+        std::string _errorMessage;
+        size_t _errorPos {0};               // Byte index where parse error occurred
+        slice _input;                       // Current JSON being parsed
     };
 
-}}  // namespace fleece::impl
+} }

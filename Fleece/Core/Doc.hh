@@ -20,90 +20,103 @@
 namespace fleece { namespace impl {
     class SharedKeys;
     class Value;
-
     namespace internal {
         class Pointer;
     }
 
+
     class Scope {
-      public:
-        Scope(slice fleeceData, SharedKeys*, slice externDestination = nullslice, bool isDoc = false) noexcept;
-        Scope(const alloc_slice& fleeceData, SharedKeys*, slice externDestination = nullslice,
-              bool isDoc = false) noexcept;
-        Scope(const Scope& parentScope, slice subData, bool isDoc = false) noexcept;
+    public:
+        Scope(slice fleeceData,
+              SharedKeys*,
+              slice externDestination =nullslice,
+              bool isDoc =false) noexcept;
+        Scope(const alloc_slice &fleeceData,
+              SharedKeys*,
+              slice externDestination =nullslice,
+              bool isDoc =false) noexcept;
+        Scope(const Scope &parentScope,
+              slice subData,
+              bool isDoc =false) noexcept;
 
         // Scope doesn't need a vtable, but it's useful for identifying subclasses, for example:
         //     auto s = dynamic_cast<const MyScope*>(Scope::containing(val));
         // The dynamic_cast will safely check whether the returned Scope is a MyScope instance.
         virtual ~Scope();
 
-        static const Scope* containing(const Value* FL_NONNULL) noexcept;
+        static const Scope* containing(const Value* NONNULL) noexcept;
 
-        slice data() const FLPURE { return _data; }
+        slice data() const FLPURE                      {return _data;}
+        alloc_slice allocedData() const FLPURE         {return _alloced;}
 
-        alloc_slice allocedData() const FLPURE { return _alloced; }
-
-        SharedKeys* sharedKeys() const FLPURE { return _sk; }
-
-        slice externDestination() const FLPURE { return _externDestination; }
+        SharedKeys* sharedKeys() const FLPURE          {return _sk;}
+        slice externDestination() const FLPURE         {return _externDestination;}
 
         // For internal use:
 
-        static SharedKeys*                    sharedKeys(const Value* FL_NONNULL v) noexcept;
-        const Value*                          resolveExternPointerTo(const void* FL_NONNULL) const noexcept;
-        static const Value*                   resolvePointerFrom(const internal::Pointer* FL_NONNULL src,
-                                                                 const void* FL_NONNULL              dst) noexcept;
-        static std::pair<const Value*, slice> resolvePointerFromWithRange(const internal::Pointer* FL_NONNULL src,
-                                                                          const void* FL_NONNULL dst) noexcept;
-        static void                           dumpAll();
+        static SharedKeys* sharedKeys(const Value* NONNULL v) noexcept;
+        const Value* resolveExternPointerTo(const void* NONNULL) const noexcept;
+        static const Value* resolvePointerFrom(const internal::Pointer* NONNULL src,
+                                               const void* NONNULL dst) noexcept;
+        static std::pair<const Value*,slice> resolvePointerFromWithRange(
+                                                                         const internal::Pointer* NONNULL src,
+                                                                         const void* NONNULL dst) noexcept;
+        static void dumpAll();
 
-      protected:
-        static const Scope* _containing(const Value* FL_NONNULL) noexcept;
-        void                unregister() noexcept;
+    protected:
+        static const Scope* _containing(const Value* NONNULL) noexcept;
+        void unregister() noexcept;
 
-      private:
-             Scope(const Scope&) = delete;
+    private:
+        Scope(const Scope&) =delete;
         void registr() noexcept;
 
-        Retained<SharedKeys>           _sk;                 // SharedKeys used for this Fleece data
-        slice const                    _externDestination;  // Extern ptr destination for this data
-        slice const                    _data;               // The memory range I represent
-        alloc_slice const              _alloced;            // Retains data if it's an alloc_slice
-        std::atomic_flag _unregistered ATOMIC_FLAG_INIT;    // False if registered in sMemoryMap
+        Retained<SharedKeys> _sk;                       // SharedKeys used for this Fleece data
+        slice const         _externDestination;         // Extern ptr destination for this data
+        slice const         _data;                      // The memory range I represent
+        alloc_slice const   _alloced;                   // Retains data if it's an alloc_slice
+        std::atomic_flag    _unregistered ATOMIC_FLAG_INIT; // False if registered in sMemoryMap
 #if DEBUG
-        uint32_t _dataHash;  // hash of _data, for troubleshooting
+        uint32_t            _dataHash;                  // hash of _data, for troubleshooting
 #endif
-      protected:
-        bool _isDoc{false};  // True if I am a field of a Doc
+    protected:
+        bool                _isDoc {false};             // True if I am a field of a Doc
         friend class Doc;
     };
+
 
     /** A container for Fleece data in memory. Every Value belongs to the Doc whose memory range
         contains it. The Doc keeps track of the SharedKeys used by its Dicts, and where to resolve
         external pointers to. */
-    class Doc
-        : public RefCounted
-        , public Scope {
-      public:
-        enum Trust { kUntrusted, kTrusted, kDontParse = -1 };
+    class Doc : public RefCounted, public Scope {
+    public:
+        enum Trust {
+            kUntrusted, kTrusted,
+            kDontParse = -1
+        };
 
-        explicit Doc(const alloc_slice& fleeceData, Trust = kUntrusted, SharedKeys* = nullptr,
-                     slice              externDest = nullslice) noexcept;
+        explicit
+        Doc(const alloc_slice &fleeceData,
+            Trust =kUntrusted,
+            SharedKeys* =nullptr,
+            slice externDest =nullslice) noexcept;
 
-        Doc(const Doc* FL_NONNULL parentDoc, slice subData, Trust = kUntrusted) noexcept;
+        Doc(const Doc *parentDoc NONNULL,
+            slice subData,
+            Trust =kUntrusted) noexcept;
 
-        Doc(const Scope& parentScope, slice subData, Trust = kUntrusted) noexcept;
+        Doc(const Scope &parentScope,
+            slice subData,
+            Trust =kUntrusted) noexcept;
 
-        static Retained<Doc> fromFleece(const alloc_slice& fleece, Trust = kUntrusted);
-        static Retained<Doc> fromJSON(slice json, SharedKeys* = nullptr);
+        static Retained<Doc> fromFleece(const alloc_slice &fleece, Trust =kUntrusted);
+        static Retained<Doc> fromJSON(slice json, SharedKeys* =nullptr);
 
-        static RetainedConst<Doc> containing(const Value* FL_NONNULL) noexcept;
+        static RetainedConst<Doc> containing(const Value* NONNULL) noexcept;
 
-        const Value* root() const FLPURE { return _root; }
-
-        const Dict* asDict() const FLPURE { return _root ? _root->asDict() : nullptr; }
-
-        const Array* asArray() const FLPURE { return _root ? _root->asArray() : nullptr; }
+        const Value* root() const FLPURE               {return _root;}
+        const Dict* asDict() const FLPURE              {return _root ? _root->asDict() : nullptr;}
+        const Array* asArray() const FLPURE            {return _root ? _root->asArray() : nullptr;}
 
         /// Allows client code to associate its own pointer with this Doc and its Values,
         /// which can later be retrieved with \ref getAssociated.
@@ -117,7 +130,7 @@ namespace fleece { namespace impl {
         ///          already stored.
         /// @warning  Be sure to clear this before the associated object is freed/invalidated!
         /// @warning  This method is not thread-safe. Do not concurrently get & set objects.
-        bool setAssociated(void* pointer, const char* type);
+        bool setAssociated(void *pointer, const char *type);
 
         /// Returns a pointer previously stored in this Doc by \ref setAssociated.
         /// For example, you would look up an `app::Document` object by calliing
@@ -125,23 +138,24 @@ namespace fleece { namespace impl {
         /// @param type  The type of object expected, i.e. the same string literal passed to the
         ///              \ref setAssociatedObject method.
         /// @return  The associated pointer of that type, if any.
-        void* getAssociated(const char* type) const;
+        void* getAssociated(const char *type) const;
 
-      protected:
-        virtual ~Doc() = default;
+    protected:
+        virtual ~Doc() =default;
 
-      private:
+    private:
         void init(Trust) noexcept;
 
-        const Value*       _root{nullptr};  // The root object of the Fleece
-        RetainedConst<Doc> _parent;
-        void*              _associatedPointer{nullptr};
-        const char*        _associatedType{nullptr};
+        const Value*        _root {nullptr};            // The root object of the Fleece
+        RetainedConst<Doc>  _parent;
+        void*               _associatedPointer {nullptr};
+        const char*         _associatedType {nullptr};
     };
 
-}}  // namespace fleece::impl
+} }
+
 
 extern "C" {
-// For debugging only; to be called from a debugger
-void FLDumpScopes();
+    // For debugging only; to be called from a debugger
+    void FLDumpScopes();
 }

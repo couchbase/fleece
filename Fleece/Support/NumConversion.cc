@@ -29,7 +29,7 @@ namespace fleece {
     }
 
     // subroutine that parses only digits
-    static bool _parseUInt(const char* FL_NONNULL str, uint64_t &result, bool allowTrailing) {
+    static bool _parseUInt(const char *str NONNULL, uint64_t &result, bool allowTrailing) {
         uint64_t n = 0;
         if (!isdigit(*str))
             return false;
@@ -49,7 +49,7 @@ namespace fleece {
     }
 
     // Unsigned version:
-    bool ParseInteger(const char* FL_NONNULL str, uint64_t &result, bool allowTrailing) {
+    bool ParseInteger(const char *str NONNULL, uint64_t &result, bool allowTrailing) {
         while (isspace(*str))
             ++str;
         if (*str == '+')
@@ -59,7 +59,7 @@ namespace fleece {
 
 
     // Signed version:
-    bool ParseInteger(const char* FL_NONNULL str, int64_t &result, bool allowTrailing) {
+    bool ParseInteger(const char *str NONNULL, int64_t &result, bool allowTrailing) {
         while (isspace(*str))
             ++str;
         bool negative = (*str == '-');
@@ -96,7 +96,7 @@ namespace fleece {
     }
 
 
-    bool ParseDouble(const char* FL_NONNULL str, double &result, bool allowTrailing) {
+    bool ParseDouble(const char *str NONNULL, double &result, bool allowTrailing) {
         char *endptr;
         // strtod is locale-aware, so in some locales it will not interpret '.' as a decimal point.
         // To work around that, use the C locale explicitly.

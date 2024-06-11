@@ -282,7 +282,7 @@ namespace fleece { namespace impl {
     }
 
 
-    inline void JSONDelta::_applyArray(const Value *old, const Array* FL_NONNULL delta) {
+    inline void JSONDelta::_applyArray(const Value *old, const Array* NONNULL delta) {
         switch (delta->count()) {
             case 0:
                 // Deletion:
@@ -330,7 +330,7 @@ namespace fleece { namespace impl {
     }
 
 
-    inline void JSONDelta::_patchDict(const Dict* FL_NONNULL old, const Dict* FL_NONNULL delta) {
+    inline void JSONDelta::_patchDict(const Dict* NONNULL old, const Dict* NONNULL delta) {
         // Dict: Incremental update
         if (_decoder->valueIsInBase(old)) {
             // If the old dict is in the base, we can create an inherited dict:
@@ -372,7 +372,7 @@ namespace fleece { namespace impl {
     }
 
 
-    inline void JSONDelta::_patchArray(const Array* FL_NONNULL old, const Dict* FL_NONNULL delta) {
+    inline void JSONDelta::_patchArray(const Array* NONNULL old, const Dict* NONNULL delta) {
         // Array: Incremental update
         _decoder->beginArray();
         uint32_t index = 0;
