@@ -56,10 +56,10 @@ namespace fleece { namespace impl {
         bool _write(const Value *old, const Value *nuu, pathItem *path);
 
         JSONDelta(Encoder&);
-        void _apply(const Value *old, const Value* FL_NONNULL delta);
-        void _applyArray(const Value* old, const Array* FL_NONNULL delta);
-        void _patchArray(const Array* FL_NONNULL old, const Dict* FL_NONNULL delta);
-        void _patchDict(const Dict* FL_NONNULL old, const Dict* FL_NONNULL delta);
+        void _apply(const Value *old, const Value* NONNULL delta);
+        void _applyArray(const Value* old, const Array* NONNULL delta);
+        void _patchArray(const Array* NONNULL old, const Dict* NONNULL delta);
+        void _patchDict(const Dict* NONNULL old, const Dict* NONNULL delta);
 
         void writePath(pathItem*);
         static bool isDeltaDeletion(const Value *delta);
