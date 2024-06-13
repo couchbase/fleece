@@ -424,6 +424,7 @@
 		279AC5311C096872002C80DB /* fleece */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = fleece; sourceTree = BUILT_PRODUCTS_DIR; };
 		279AC5331C096872002C80DB /* fleece_tool.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = fleece_tool.cc; sourceTree = "<group>"; };
 		279AC53B1C097941002C80DB /* Value+Dump.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "Value+Dump.cc"; sourceTree = "<group>"; };
+		27A0B3652C1B89120053B941 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; tabWidth = 4; usesTabs = 1; };
 		27A0E3DD24DCD86900380563 /* ConcurrentArena.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ConcurrentArena.hh; sourceTree = "<group>"; };
 		27A0E3DE24DCD86900380563 /* ConcurrentArena.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ConcurrentArena.cc; sourceTree = "<group>"; };
 		27A2F73A21248DA40081927B /* FLSlice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FLSlice.h; sourceTree = "<group>"; };
@@ -562,6 +563,7 @@
 				2776AA43208A6C5A004ACE85 /* xcconfigs */,
 				27298E3E1C00F8A9000CFBA8 /* vendor */,
 				270FA25D1BF53CAD005DCB13 /* Products */,
+				27A0B3652C1B89120053B941 /* Makefile */,
 				2750735D1F4B5F0F003D2CCE /* CMakeLists.txt */,
 				275B35A2234E4D3C00FE9CF0 /* cmake */,
 				27DE2EE22125FAC600123597 /* Frameworks */,
