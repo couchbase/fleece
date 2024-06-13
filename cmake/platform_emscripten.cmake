@@ -27,7 +27,7 @@ function(set_test_source_files)
 endfunction()
 
 function(setup_build)
-    foreach(platform Fleece FleeceStatic FleeceBase)
+    foreach(platform Fleece FleeceStatic FleeceBase FleeceObjects)
         target_compile_options(
             ${platform}
             PRIVATE
@@ -50,7 +50,6 @@ function(setup_build)
         "-pthread"
         "-fwasm-exceptions"
         "SHELL:-s ALLOW_MEMORY_GROWTH=1"
-        "SHELL:-s DEMANGLE_SUPPORT=1"
         "SHELL:-s EXIT_RUNTIME=1"
         "SHELL:-s WASM_BIGINT=1"
     )
@@ -72,7 +71,6 @@ function(setup_test_build)
         "-lnoderawfs.js"
         "SHELL:-s ALLOW_MEMORY_GROWTH=1"
         "SHELL:-s PTHREAD_POOL_SIZE=8"
-        "SHELL:-s DEMANGLE_SUPPORT=1"
         "SHELL:-s EXIT_RUNTIME=1"
         "SHELL:-s WASM_BIGINT=1"
     )
