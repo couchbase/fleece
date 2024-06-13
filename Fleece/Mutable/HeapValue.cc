@@ -37,7 +37,6 @@ namespace fleece { namespace impl { namespace internal {
 
 
     HeapValue::HeapValue(tags tag, int tiny) {
-        _pad = 0xFF;
         _header = uint8_t((tag << 4) | tiny);
     }
 
@@ -140,7 +139,7 @@ namespace fleece { namespace impl { namespace internal {
         if (!isHeapValue(v))
             return nullptr;
         auto ov = (offsetValue*)(size_t(v) & ~1);
-        assert_postcondition(ov->_pad == 0xFF);
+        assert_postcondition(ov->_pad == kHeapValuePad);
         return (HeapValue*)ov;
     }
 
@@ -159,10 +158,24 @@ namespace fleece { namespace impl { namespace internal {
             RetainedConst<Doc> doc = Doc::containing(v);
             if (_usuallyTrue(doc != nullptr))
                 (void)fleece::retain(std::move(doc));
-            else if (!isHardwiredValue(v))
+            else if (!isHardwiredValue(v)) {
+#ifdef __LITTLE_ENDIAN__
+                if (ValueSlot::isInlineValue(v)) {
+                    // This is an annoying limitation, currently. This Value is contained in a
+                    // ValueSlot in a mutable Array or Dict. We could effectively retain it by
+                    // retaining the container ... but there's not enough information in the slot
+                    // to locate the container. (See issue #223)
+                    // In big-endian we can't even detect this situation because inline values in
+                    // a ValueSlot are even-aligned, indistinguishably from an immutable Value.
+                    FleeceException::_throw(InvalidData,
+                                            "Can't retain scalar Value %p that's inline in a "
+                                            "mutable container [Fleece #223]", v);
+                }
+#endif
                 FleeceException::_throw(InvalidData,
                                         "Can't retain immutable Value %p that's not part of a Doc",
                                         v);
+            }
         }
         return v;
     }
