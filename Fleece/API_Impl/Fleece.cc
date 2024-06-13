@@ -719,7 +719,7 @@ FLError FLEncoder_GetError(FLEncoder e) FLAPI {
 }
 
 const char* FL_NULLABLE FLEncoder_GetErrorMessage(FLEncoder e) FLAPI {
-    return e->hasError() ? e->errorMessage.c_str() : nullptr;
+    return e->errorMessage.empty() ? nullptr : e->errorMessage.c_str();
 }
 
 void FLEncoder_SetExtraInfo(FLEncoder e, void* FL_NULLABLE info) FLAPI {
