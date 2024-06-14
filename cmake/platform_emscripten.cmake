@@ -1,5 +1,20 @@
 include("${CMAKE_CURRENT_LIST_DIR}/platform_base.cmake")
 
+set(EMSCRIPTEN_COMPILE_FLAGS
+    "-pthread"
+    "-fwasm-exceptions"
+    "-flto"
+)
+set(EMSCRIPTEN_LINK_FLAGS
+    "-pthread"
+    "-fwasm-exceptions"
+    "-flto"
+    "-lembind"
+    "SHELL:-s ALLOW_MEMORY_GROWTH=1"
+    "SHELL:-s EXIT_RUNTIME=1"
+    "SHELL:-s WASM_BIGINT=1"
+)
+
 function(set_source_files)
     set(oneValueArgs RESULT)
     cmake_parse_arguments(EMSCRIPTEN_SSS "" "${oneValueArgs}" "" ${ARGN})
@@ -27,31 +42,19 @@ function(set_test_source_files)
 endfunction()
 
 function(setup_build)
-    foreach(platform Fleece FleeceStatic FleeceBase FleeceObjects)
+    foreach(platform Fleece FleeceStatic FleeceBase FleeceObjects fleeceTool)
         target_compile_options(
             ${platform}
             PRIVATE
             "-Wformat=2"
-            "-pthread"
-            "-fwasm-exceptions"
+            ${EMSCRIPTEN_COMPILE_FLAGS}
         )
     endforeach()
-
-    target_compile_options(
-        fleeceTool
-        PRIVATE
-        "-pthread"
-        "-fwasm-exceptions"
-    )
 
     target_link_options(
         fleeceTool
         PRIVATE
-        "-pthread"
-        "-fwasm-exceptions"
-        "SHELL:-s ALLOW_MEMORY_GROWTH=1"
-        "SHELL:-s EXIT_RUNTIME=1"
-        "SHELL:-s WASM_BIGINT=1"
+        ${EMSCRIPTEN_LINK_FLAGS}
     )
 endfunction()
 
@@ -59,19 +62,14 @@ function(setup_test_build)
     target_compile_options(
         FleeceTests
         PRIVATE
-        "-pthread"
-        "-fwasm-exceptions"
+        ${EMSCRIPTEN_COMPILE_FLAGS}
     )
     target_link_options(
         FleeceTests
         PRIVATE
-        "-pthread"
-        "-fwasm-exceptions"
+        ${EMSCRIPTEN_LINK_FLAGS}
         "-lnodefs.js"
         "-lnoderawfs.js"
-        "SHELL:-s ALLOW_MEMORY_GROWTH=1"
         "SHELL:-s PTHREAD_POOL_SIZE=8"
-        "SHELL:-s EXIT_RUNTIME=1"
-        "SHELL:-s WASM_BIGINT=1"
     )
 endfunction()
