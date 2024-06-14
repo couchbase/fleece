@@ -26,7 +26,7 @@
 
 #include <dlfcn.h>          // dladdr()
 
-#ifndef __ANDROID__
+#if !defined(__ANDROID__) && !defined(__EMSCRIPTEN__)
     #define HAVE_EXECINFO
     #include <execinfo.h>   // backtrace(), backtrace_symbols()
 #else
@@ -39,12 +39,16 @@
     #define HAVE_UNMANGLE
 #endif
 
+#ifdef __EMSCRIPTEN__
+    #include <emscripten.h>
+#endif
+
 
 namespace fleece {
     using namespace std;
 
 
-#ifndef HAVE_EXECINFO
+#if !defined(HAVE_EXECINFO) && !defined(__EMSCRIPTEN__)
     // Use libunwind to emulate backtrace(). This is limited in that it won't traverse any stack
     // frames before a signal handler, so it's not useful for logging the stack upon a crash.
     // Adapted from https://stackoverflow.com/a/28858941
@@ -91,8 +95,11 @@ namespace fleece {
 
 
     Backtrace::frameInfo Backtrace::getFrame(unsigned i) const {
-        precondition(i < _addrs.size());
         frameInfo frame = { };
+#ifdef __EMSCRIPTEN__
+        precondition(i < _frames.size());
+#else
+        precondition(i < _addrs.size());
         Dl_info info;
         if (dladdr(_addrs[i], &info)) {
             frame.pc = _addrs[i];
@@ -103,10 +110,9 @@ namespace fleece {
             if (slash)
                 frame.library = slash + 1;
         }
-
+#endif
         return frame;
     }
-
 
     // If any of these strings occur in a backtrace, suppress further frames.
     static constexpr const char* kTerminalFunctions[] = {
@@ -132,8 +138,34 @@ namespace fleece {
         }
     }
 
-
     bool Backtrace::writeTo(ostream &out) const {
+#ifdef __EMSCRIPTEN__
+        int i = 0;
+        for (auto &frameRef : _frames) {
+            if (i++ > 0)
+                out << "\n";
+            out << '\t';
+
+            string frame(frameRef);
+
+            bool stop = false;
+            for (auto fn : kTerminalFunctions) {
+                if (frame.find(fn) != string::npos)
+                    stop = true;
+            }
+
+            for (auto &abbrev : kAbbreviations)
+                replace(frame, abbrev.old, abbrev.nuu);
+
+            out << frame;
+
+            if (stop) {
+                out << "\n\t... (more suppressed) ...";
+                break;
+            }
+        }
+        return true;
+#else
         for (decltype(_addrs.size()) i = 0; i < _addrs.size(); ++i) {
             if (i > 0)
                 out << '\n';
@@ -179,6 +211,7 @@ namespace fleece {
             }
         }
         return true;
+#endif
     }
 
 
@@ -318,7 +351,9 @@ namespace fleece {
 namespace fleece {
 
     Backtrace::~Backtrace() {
+#ifndef __EMSCRIPTEN__
         free(_symbols);
+#endif
     }
 
     std::string Unmangle(const char *name NONNULL) {
@@ -344,23 +379,45 @@ namespace fleece {
 
     Backtrace::Backtrace(unsigned skipFrames, unsigned maxFrames) {
         if (maxFrames > 0)
-            capture(skipFrames + 1, maxFrames);
+            _capture(skipFrames + 1, maxFrames);
     }
 
 
     void Backtrace::_capture(unsigned skipFrames, unsigned maxFrames) {
+#ifdef __EMSCRIPTEN__
+        auto callstackSize = emscripten_get_callstack(EM_LOG_JS_STACK | EM_LOG_C_STACK, nullptr, 0);
+        if (callstackSize > 0) {
+            auto buffer = (char*)malloc(callstackSize + 128);
+            emscripten_get_callstack(EM_LOG_JS_STACK | EM_LOG_C_STACK, buffer, callstackSize);;
+            istringstream frames(buffer);
+            string frame;
+            int i = 0;
+            while (i < maxFrames && getline(frames, frame, '\n')) {
+                i++;
+                // Remove the "    at " prefix before each frame.
+                replace(frame, "    at ", "");
+                _frames.push_back(frame);
+            }
+            skip(skipFrames);
+        }
+#else
         _addrs.resize(++skipFrames + maxFrames);        // skip this frame
         auto n = backtrace(&_addrs[0], skipFrames + maxFrames);
         _addrs.resize(n);
         skip(skipFrames);
-#if !defined(_MSC_VER) && !defined(__ANDROID__)
+#if !defined(_MSC_VER) && !defined(__ANDROID__) && !defined(__EMSCRIPTEN__)
         _symbols = backtrace_symbols(_addrs.data(), int(_addrs.size()));
+#endif
 #endif
     }
 
 
     void Backtrace::skip(unsigned nFrames) {
+#ifdef __EMSCRIPTEN__
+        _frames.erase(_frames.begin(),_frames.begin() + min(size_t(nFrames), _frames.size()));
+#else
         _addrs.erase(_addrs.begin(), _addrs.begin() + min(size_t(nFrames), _addrs.size()));
+#endif
     }
 
 
@@ -388,7 +445,7 @@ namespace fleece {
                 out << "unknown exception type\n";
             }
         }
-        out << "Backtrace:";
+        out << "Backtrace:" << endl;
         bt.writeTo(out);
     }
 

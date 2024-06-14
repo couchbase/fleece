@@ -558,6 +558,8 @@ namespace fleece {
         auto offset = seconds(-s);
 #elif defined(__DARWIN_UNIX03) || defined(__ANDROID__) || defined(_XOPEN_SOURCE) || defined(_SVID_SOURCE)
         auto offset = seconds(-timezone);
+#elif defined(__EMSCRIPTEN__)
+        auto offset = seconds(timezone);
 #else
 #    error Unimplemented GetLocalTZOffset
 #endif

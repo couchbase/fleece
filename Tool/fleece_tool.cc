@@ -37,7 +37,7 @@ static void usage(void) {
 }
 
 
-#if defined(__ANDROID__) || defined(__GLIBC__) || defined(_MSC_VER)
+#if defined(__ANDROID__) || defined(__GLIBC__) || defined(_MSC_VER) || defined(__EMSCRIPTEN__)
 // digittoint is a BSD function, not available on Android, Linux, etc.
 static int digittoint(char ch) {
     int d = ch - '0';

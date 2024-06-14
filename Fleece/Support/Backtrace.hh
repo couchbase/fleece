@@ -53,7 +53,13 @@ namespace fleece {
         };
 
         /// The number of stack frames captured.
-        unsigned size() const                   {return (unsigned)_addrs.size();}
+        unsigned size() const                   {
+#ifdef __EMSCRIPTEN__
+            return (unsigned)_frames.size();
+#else
+            return (unsigned)_addrs.size();
+#endif
+        }
 
         /// Returns info about a stack frame. 0 is the top.
         frameInfo getFrame(unsigned) const;
@@ -74,8 +80,12 @@ namespace fleece {
         char* printFrame(unsigned i) const;
         static void writeCrashLog(std::ostream&);
 
+#ifdef __EMSCRIPTEN__
+        std::vector<std::string> _frames;
+#else
         std::vector<void*> _addrs;          // Array of PCs in backtrace, top first
         char** _symbols { nullptr };
+#endif
     };
 
 
