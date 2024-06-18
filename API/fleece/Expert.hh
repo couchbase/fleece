@@ -30,7 +30,7 @@ namespace fleece {
     //  For documentation, see the comments above the C functions these wrap.
 
 
-    /** Just a simple wrapper around \ref FLValue_FromData.
+    /** Just a simple wrapper around `FLValue_FromData`.
         You should generally use a \ref Doc instead; it's safer.*/
     inline Value ValueFromData(slice data, FLTrust t =kFLUntrusted) {
         return FLValue_FromData(data,t);
