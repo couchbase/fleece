@@ -12,16 +12,11 @@
 
 #pragma once
 #include "fleece/CompilerSupport.h"
-#ifdef __APPLE__
-    #include <sys/cdefs.h>
-    #include "TargetConditionals.h"
-#endif
 
 #ifdef _MSC_VER
     #define NOINLINE                        __declspec(noinline)
     #define ALWAYS_INLINE                   inline
     #define ASSUME(cond)                    __assume(cond)
-	#define LITECORE_UNUSED
     #define __typeof                        decltype
 
     #define __func__                        __FUNCTION__
@@ -37,11 +32,6 @@
     #include <winapifamily.h>
 
 #else
-
-    // Suppresses "unused function" warnings
-    #if __has_attribute(unused)
-    #  define LITECORE_UNUSED __attribute__((unused))
-    #endif
 
     // Disables inlining a function. Use when the space savings are worth more than speed.
     #if __has_attribute(noinline)
