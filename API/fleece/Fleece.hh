@@ -78,7 +78,6 @@ namespace fleece {
 
         bool isEqual(Value v) const                     {return FLValue_IsEqual(_val, v);}
 
-        Value& operator= (Value v) &                    {_val = v._val; return *this;}
         Value& operator= (std::nullptr_t) &             {_val = nullptr; return *this;}
 
         inline Value operator[] (const KeyPath &kp) const;
@@ -128,9 +127,8 @@ namespace fleece {
         inline Value operator[] (int index) const       {return get(index);}
         inline Value operator[] (const KeyPath &kp) const {return Value::operator[](kp);}
 
-        Array& operator= (Array a) &                     {_val = a._val; return *this;}
-        Array& operator= (std::nullptr_t) &              {_val = nullptr; return *this;}
-        Value& operator= (Value v)                       =delete;
+        Array& operator= (std::nullptr_t) &             {_val = nullptr; return *this;}
+        Value& operator= (Value v)                      =delete;
 
         [[nodiscard]] inline MutableArray asMutable() const;
 
@@ -148,7 +146,7 @@ namespace fleece {
             inline Value operator * () const            {return value();}
             inline explicit operator bool() const       {return (bool)value();}
             inline iterator& operator++ ()              {next(); return *this;}
-            inline bool operator!= (const iterator&)    {return value() != nullptr;}
+            inline bool operator!= (const iterator&) const    {return value() != nullptr;}
             inline Value operator[] (unsigned n) const  {return FLArrayIterator_GetValueAt(this,n);}
         private:
             iterator() =default;
@@ -186,7 +184,6 @@ namespace fleece {
         inline Value operator[] (const char *key) const {return get(key);}
         inline Value operator[] (const KeyPath &kp) const {return Value::operator[](kp);}
 
-        Dict& operator= (Dict d) &                      {_val = d._val; return *this;}
         Dict& operator= (std::nullptr_t) &              {_val = nullptr; return *this;}
         Value& operator= (Value v)                      =delete;
 
@@ -260,8 +257,8 @@ namespace fleece {
         KeyPath(slice_NONNULL spec, FLError* FL_NULLABLE err) :_path(FLKeyPath_New(spec, err)) { }
         ~KeyPath()                                      {FLKeyPath_Free(_path);}
 
-        KeyPath(KeyPath &&kp)                           :_path(kp._path) {kp._path = nullptr;}
-        KeyPath& operator=(KeyPath &&kp) &              {FLKeyPath_Free(_path); _path = kp._path;
+        KeyPath(KeyPath &&kp) noexcept                  :_path(kp._path) {kp._path = nullptr;}
+        KeyPath& operator=(KeyPath &&kp) & noexcept     {FLKeyPath_Free(_path); _path = kp._path;
                                                          kp._path = nullptr; return *this;}
 
         KeyPath(const KeyPath &kp)                      :KeyPath(std::string(kp), nullptr) { }
@@ -333,7 +330,7 @@ namespace fleece {
         external pointers to. */
     class Doc {
     public:
-        Doc(alloc_slice fleeceData,
+        Doc(const alloc_slice& fleeceData,
             FLTrust trust =kFLUntrusted,
             FLSharedKeys FL_NULLABLE sk =nullptr,
             slice externDest =nullslice) noexcept
@@ -414,7 +411,7 @@ namespace fleece {
         explicit Encoder(FLSharedKeys FL_NULLABLE sk)   :Encoder() {setSharedKeys(sk);}
 
         explicit Encoder(FLEncoder enc)                 :_enc(enc) { }
-        Encoder(Encoder&& enc)                          :_enc(enc._enc) {enc._enc = nullptr;}
+        Encoder(Encoder&& enc) noexcept                 :_enc(enc._enc) {enc._enc = nullptr;}
 
         void detach()                                   {_enc = nullptr;}
         
@@ -433,7 +430,7 @@ namespace fleece {
         inline bool writeDouble(double);
         inline bool writeString(slice);
         inline bool writeString(const char *s)          {return writeString(slice(s));}
-        inline bool writeString(std::string s)          {return writeString(slice(s));}
+        inline bool writeString(const std::string& s)   {return writeString(slice(s));}
         inline bool writeDateString(FLTimestamp, bool asUTC =true);
         inline bool writeData(slice);
         inline bool writeValue(Value);
@@ -527,6 +524,10 @@ namespace fleece {
 
 
     //====== IMPLEMENTATION GUNK:
+
+    static_assert(std::is_trivially_copyable_v<Value>);
+    static_assert(std::is_trivially_copyable_v<Array>);
+    static_assert(std::is_trivially_copyable_v<Dict>);
 
     inline FLValueType Value::type() const      {return FLValue_GetType(_val);}
     inline bool Value::isInteger() const        {return FLValue_IsInteger(_val);}
