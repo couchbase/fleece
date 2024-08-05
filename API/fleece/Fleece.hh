@@ -355,23 +355,23 @@ namespace fleece {
         Doc& operator=(Doc &&other) noexcept;
         ~Doc()                                      {FLDoc_Release(_doc);}
 
-        slice data() const                          {return FLDoc_GetData(_doc);}
+        slice data() const LIFETIMEBOUND            {return FLDoc_GetData(_doc);}
         alloc_slice allocedData() const             {return FLDoc_GetAllocedData(_doc);}
         FLSharedKeys sharedKeys() const             {return FLDoc_GetSharedKeys(_doc);}
 
-        Value root() const                          {return FLDoc_GetRoot(_doc);}
+        Value root() const LIFETIMEBOUND            {return FLDoc_GetRoot(_doc);}
         explicit operator bool () const             {return root() != nullptr;}
         Array asArray() const                       {return root().asArray();}
         Dict asDict() const                         {return root().asDict();}
 
-        operator Value () const                     {return root();}
-        operator Dict () const                      {return asDict();}
-        operator FLDict FL_NULLABLE () const        {return asDict();}
+        operator Value () const LIFETIMEBOUND                     {return root();}
+        operator Dict () const LIFETIMEBOUND                      {return asDict();}
+        operator FLDict FL_NULLABLE () const LIFETIMEBOUND        {return asDict();}
 
-        Value operator[] (int index) const          {return asArray().get(index);}
-        Value operator[] (slice key) const          {return asDict().get(key);}
-        Value operator[] (const char *key) const    {return asDict().get(key);}
-        Value operator[] (const KeyPath &kp) const  {return root().operator[](kp);}
+        Value operator[] (int index) const LIFETIMEBOUND          {return asArray().get(index);}
+        Value operator[] (slice key) const LIFETIMEBOUND          {return asDict().get(key);}
+        Value operator[] (const char *key) const LIFETIMEBOUND    {return asDict().get(key);}
+        Value operator[] (const KeyPath &kp) const LIFETIMEBOUND  {return root().operator[](kp);}
 
         bool operator== (const Doc &d) const        {return _doc == d._doc;}
 

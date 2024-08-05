@@ -133,7 +133,7 @@ namespace fleece {
     struct slice_istream : public slice {
         // slice_istream is constructed from a slice, or from the same parameters as a slice.
         constexpr slice_istream(const slice &s) noexcept        :slice(s) { }
-        constexpr slice_istream(const alloc_slice &s) noexcept  :slice(s) { }
+        slice_istream(const alloc_slice &s) noexcept  :slice(s) { }
         constexpr slice_istream(const void* b, size_t s) noexcept STEPOVER    :slice(b, s) {}
         constexpr slice_istream(const void* s NONNULL, const void* e NONNULL) noexcept STEPOVER
                                                                       :slice(s, e) { }

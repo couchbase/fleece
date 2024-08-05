@@ -93,14 +93,16 @@ namespace fleece { namespace impl { namespace internal {
     HeapCollection* HeapArray::getMutable(uint32_t index, tags ifType) {
         if (index >= count())
             return nullptr;
-        Retained<HeapCollection> result = nullptr;
+        HeapCollection* result = nullptr;
         auto &mval = _items[index];
         if (mval) {
             result = mval.makeMutable(ifType);
         } else if (_source) {
-            result = HeapCollection::mutableCopy(_source->get(index), ifType);
-            if (result)
-                _items[index].set(result->asValue());
+            Retained<HeapCollection> copied = HeapCollection::mutableCopy(_source->get(index), ifType);
+            if (copied) {
+                _items[index].set(copied->asValue());
+                result = copied;
+            }
         }
         if (result)
             setChanged(true);

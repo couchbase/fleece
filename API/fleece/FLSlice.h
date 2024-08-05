@@ -47,8 +47,11 @@ typedef struct FLSlice {
     size_t size;
 
 #ifdef __cplusplus
-    explicit operator bool() const noexcept FLPURE  {return buf != nullptr;}
-    explicit operator std::string() const           {return std::string((char*)buf, size);}
+    constexpr const void* FL_NULLABLE data() const noexcept FLPURE  {return buf;}
+    constexpr size_t size_bytes() const noexcept FLPURE             {return size;} // compatibility with std::span
+    constexpr bool empty() const noexcept FLPURE                    {return size == 0;}
+    constexpr explicit operator bool() const noexcept FLPURE        {return buf != nullptr;}
+    explicit operator std::string() const                           {return std::string((char*)buf, size);}
 #endif
 } FLSlice;
 
@@ -65,8 +68,11 @@ struct NODISCARD FLSliceResult {
     size_t size;
 
 #ifdef __cplusplus
-    explicit operator bool() const noexcept FLPURE  {return buf != nullptr;}
-    explicit operator FLSlice () const              {return {buf, size};}
+    constexpr const void* FL_NULLABLE data() const noexcept FLPURE  {return buf;}
+    constexpr size_t size_bytes() const noexcept FLPURE             {return size;} // compatibility with std::span
+    constexpr bool empty() const noexcept FLPURE                    {return size == 0;}
+    constexpr explicit operator bool() const noexcept FLPURE        {return buf != nullptr;}
+    constexpr explicit operator FLSlice () const                    {return {buf, size};}
     inline explicit operator std::string() const;
 #endif
 };
@@ -123,7 +129,7 @@ static inline void FLMemCpy(void* FL_NULLABLE dst, const void* FL_NULLABLE src, 
     It's OK to pass NULL; this returns an empty slice.
     \note If the string is a literal, it's more efficient to use \ref FLSTR instead.
     \note Performance is O(n) with the length of the string, since it has to call `strlen`. */
-static inline FLSlice FLStr(const char* FL_NULLABLE str) FLAPI {
+static inline FLSlice FLStr(const char* FL_NULLABLE str LIFETIMEBOUND) FLAPI {
     FLSlice foo = { str, str ? strlen(str) : 0 };
     return foo;
 }
@@ -185,7 +191,7 @@ static inline void FLSliceResult_Release(FLSliceResult s) FLAPI {
 }
 
 /** Type-casts a FLSliceResult to FLSlice, since C doesn't know it's a subclass. */
-static inline FLSlice FLSliceResult_AsSlice(FLSliceResult sr) {
+static inline FLSlice FLSliceResult_AsSlice(FLSliceResult sr LIFETIMEBOUND) {
     FLSlice ret;
     memcpy(&ret, &sr, sizeof(ret));
     return ret;

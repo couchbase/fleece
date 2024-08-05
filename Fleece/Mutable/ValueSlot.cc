@@ -235,8 +235,8 @@ namespace fleece { namespace impl {
             return nullptr;
         Retained<HeapCollection> mval = HeapCollection::mutableCopy(pointer(), ifType);
         if (mval)
-            set(mval->asValue());
-        return mval;
+            set(mval->asValue());   // this retains mval, making it safe to return it as a pointer
+        return mval.unsafe_get();
     }
 
 

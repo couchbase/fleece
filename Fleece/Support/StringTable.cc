@@ -82,7 +82,7 @@ namespace fleece {
     }
 
 
-    __hot const StringTable::entry_t* StringTable::find(key_t key, hash_t hash) const noexcept {
+    __hot const StringTable::entry_t* StringTable::find(key_t key, hash_t hash) const noexcept LIFETIMEBOUND {
         assert_precondition(key.buf != nullptr);
         assert_precondition(hash != hash_t::Empty);
         size_t end = wrap(size_t(hash) + _maxDistance + 1);

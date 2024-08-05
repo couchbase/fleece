@@ -108,9 +108,9 @@ namespace fleece {
 
         ~Retained()                                     {release(_ref);}
 
-        operator T* () const & noexcept FLPURE STEPOVER {return _ref;}
-        T* operator-> () const noexcept FLPURE STEPOVER {return _ref;}
-        T* get() const noexcept FLPURE STEPOVER         {return _ref;}
+        operator T* () const & noexcept LIFETIMEBOUND FLPURE STEPOVER {return _ref;}
+        T* operator-> () const noexcept LIFETIMEBOUND FLPURE STEPOVER {return _ref;}
+        T* get() const noexcept LIFETIMEBOUND FLPURE STEPOVER         {return _ref;}
 
         explicit operator bool () const FLPURE          {return (_ref != nullptr);}
 
@@ -149,6 +149,11 @@ namespace fleece {
         /// Used in C++ functions that bridge to C and return C references.
         [[nodiscard]]
         T* detach() && noexcept                  {auto r = _ref; _ref = nullptr; return r;}
+
+        /// Equivalent to `get` but without the `LIFETIMEBOUND` attribute. For use in rare cases where you have
+        /// a `Retained<T>` and need to return it as a `T*`, which is normally illegal, but you know that there's
+        /// another `Retained` value keeping the object alive even after this function returns.
+        T* unsafe_get() const noexcept          {return _ref;}
 
         // The operator below is often a dangerous mistake, so it's deliberately made impossible.
         // It happens in these sorts of contexts, where it can produce a dangling pointer to a
@@ -198,9 +203,9 @@ namespace fleece {
         RetainedConst(Retained<T> &&r) noexcept         :_ref(std::move(r).detach()) { }
         ALWAYS_INLINE ~RetainedConst()                  {release(_ref);}
 
-        operator const T* () const & noexcept FLPURE STEPOVER   {return _ref;}
-        const T* operator-> () const noexcept FLPURE STEPOVER   {return _ref;}
-        const T* get() const noexcept FLPURE STEPOVER           {return _ref;}
+        operator const T* () const & noexcept LIFETIMEBOUND FLPURE STEPOVER   {return _ref;}
+        const T* operator-> () const noexcept LIFETIMEBOUND FLPURE STEPOVER   {return _ref;}
+        const T* get() const noexcept LIFETIMEBOUND FLPURE STEPOVER           {return _ref;}
 
         RetainedConst& operator=(const T *t) & noexcept {
             auto oldRef = _ref;

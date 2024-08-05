@@ -25,6 +25,6 @@ namespace fleece { namespace base64 {
     /** Decodes Base64 data from receiver into output. On success returns subrange of output
         where the decoded data is. If output is too small to hold all the decoded data, returns
         a null slice. */
-    slice decode(slice input, void *outputBuffer, size_t bufferSize) noexcept;
+    slice decode(slice input, void *outputBuffer LIFETIMEBOUND, size_t bufferSize) noexcept;
 
 } }

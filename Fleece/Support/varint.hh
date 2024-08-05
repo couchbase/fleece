@@ -79,7 +79,7 @@ static inline size_t GetUVarInt32(slice buf, uint32_t *n NONNULL) {
 
 /** Skips a pointer past a varint without decoding it. */
 __hot
-static inline const void* SkipVarInt(const void *buf NONNULL) {
+static inline const void* SkipVarInt(const void *buf LIFETIMEBOUND NONNULL) {
     auto p = (const uint8_t*)buf;
     uint8_t byte;
     do {
