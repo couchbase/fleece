@@ -115,7 +115,7 @@ namespace fleece {
         void disableCaching()                               {if (_sk) FLSharedKeys_DisableCaching(_sk);}
 
         operator FLSharedKeys FL_NULLABLE () const          {return _sk;}
-        bool operator== (SharedKeys other) const            {return _sk == other._sk;}
+        bool operator== (FLSharedKeys other) const          {return _sk == other;}
 
         SharedKeys(const SharedKeys &other) noexcept        :_sk(FLSharedKeys_Retain(other._sk)) { }
         SharedKeys(SharedKeys &&other) noexcept             :_sk(other._sk) {other._sk = nullptr;}
