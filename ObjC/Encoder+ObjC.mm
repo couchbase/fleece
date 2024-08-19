@@ -25,6 +25,10 @@ namespace fleece {
         FLEncoderImpl enc(this);
         [obj fl_encodeToFLEncoder: &enc];
     }
+
+    void Encoder::writeCF(CFTypeRef obj) {
+        writeObjC((__bridge id)obj);
+    }
 }
 
 

@@ -98,6 +98,11 @@ namespace fleece { namespace impl {
             the callback can invoke the Encoder to write a different Value instead if it likes. */
         void writeValue(const Value* NONNULL v, WriteValueFunc fn)  {writeValue(v, &fn);}
 
+#ifdef __APPLE__
+        /** Writes a CoreFoundation value (CFTypeRef). Supported types are the ones allowed by
+            NSJSONSerialization, as well as CFData. */
+        void writeCF(const void* cfValue);
+#endif
 #ifdef __OBJC__
         /** Writes an Objective-C object. Supported classes are the ones allowed by
             NSJSONSerialization, as well as NSData. */
