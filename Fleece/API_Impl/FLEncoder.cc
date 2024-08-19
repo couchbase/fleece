@@ -95,6 +95,21 @@ bool FLEncoder_WriteData(FLEncoder e, FLSlice d)   FLAPI {ENCODER_TRY(e, writeDa
 bool FLEncoder_WriteRaw(FLEncoder e, FLSlice r)    FLAPI {ENCODER_TRY(e, writeRaw(r));}
 bool FLEncoder_WriteValue(FLEncoder e, FLValue v)  FLAPI {ENCODER_TRY(e, writeValue(v));}
 
+bool FLEncoder_WriteFormatted(FLEncoder e, const char* format, ...) FLAPI {
+    va_list args;
+    va_start(args, format);
+    bool ok = FLEncoder_WriteFormattedArgs(e, format, args);
+    va_end(args);
+    return ok;
+}
+
+bool FLEncoder_WriteFormattedArgs(FLEncoder e, const char* format, va_list args) FLAPI {
+    return e->try_([&](auto impl) {
+        impl->do_([&](auto& enc) { builder::VEncode(enc, format, args); });
+        return true;
+    });
+}
+
 bool FLEncoder_BeginArray(FLEncoder e, size_t reserve)  FLAPI {ENCODER_TRY(e, beginArray(reserve));}
 bool FLEncoder_EndArray(FLEncoder e)                    FLAPI {ENCODER_TRY(e, endArray());}
 bool FLEncoder_BeginDict(FLEncoder e, size_t reserve)   FLAPI {ENCODER_TRY(e, beginDictionary(reserve));}

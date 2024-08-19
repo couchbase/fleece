@@ -61,6 +61,16 @@ namespace fleece::impl {
         }
 
 
+        void peekToken(char c, const char* errorMessage) {
+            if (char actual = peekToken(); actual != c) {
+                if (_in.eof())
+                    fail("unexpected end");
+                else
+                    fail(errorMessage);
+            }
+        }
+
+
         // Fails if anything remains in the input but whitespace.
         void finished() {
             if (peekToken() != 0)

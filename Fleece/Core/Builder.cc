@@ -18,6 +18,8 @@
 
 #include "Builder.hh"
 #include "FleeceException.hh"
+#include "FleeceImpl.hh"
+#include "JSONEncoder.hh"
 #include "JSLexer.hh"
 #include "JSON5.hh"
 #include "MutableDict.hh"
@@ -64,15 +66,13 @@ namespace fleece::impl::builder {
 
 
         void buildInto(MutableDict *dict) {
-            if (peekToken() != '{')
-                fail("expected '{'");
+            peekToken('{', "expected '{'");
             _buildInto(dict);
         }
 
 
         void buildInto(MutableArray *array) {
-            if (peekToken() != '[')
-                fail("expected '['");
+            peekToken('[', "expected '['");
             _buildInto(array);
         }
 
@@ -131,8 +131,8 @@ namespace fleece::impl::builder {
 
                 if (peekToken() == ',')         // Note: JSON5 allows trailing `,` before `}`
                     getChar();
-                else if (peekToken() != '}')
-                    fail("unexpected token after dict item");
+                else
+                    peekToken('}', "unexpected token after dict item");
             }
             getChar(); // eat close bracket/brace
         }
@@ -147,8 +147,8 @@ namespace fleece::impl::builder {
 
                 if (peekToken() == ',')         // Note: JSON5 allows trailing `,` before `]`
                     getChar();
-                else if (peekToken() != ']')
-                    fail("unexpected token after array item");
+                else
+                    peekToken(']', "unexpected token after array item");
             }
             getChar(); // eat close bracket/brace
         }
@@ -178,10 +178,11 @@ namespace fleece::impl::builder {
 #pragma mark - ENCODER:
 
 
+    template <class ENCODER>
     class Buildencoder : private JSLexer {
     public:
 
-        Buildencoder(Encoder& encoder, slice formatString, va_list args)
+        Buildencoder(ENCODER& encoder, slice formatString, va_list args)
         :JSLexer(formatString, args)
         ,_encoder(encoder)
         { }
@@ -191,31 +192,17 @@ namespace fleece::impl::builder {
         void buildValue() {
             switch (peekToken()) {
                 case '[':
-                    _writeArray();
+                    writeArray();
                     break;
                 case '{':
-                    _writeDict();
+                    writeDict();
                     break;
                 default:
-                    fail("only '{...}' or '[...]' allowed at top level");
+                    writeDictInterior();
+                    break;
             }
             finished();
         }
-
-
-        void writeDict() {
-            if (peekToken() != '{')
-                fail("expected '{'");
-            _writeDict();
-        }
-
-
-        void writeArray() {
-            if (peekToken() != '[')
-                fail("expected '['");
-            _writeArray();
-        }
-
 
     protected:
         // Parses a Fleece value from the input and writes it, prefixed by the key if one's given.
@@ -226,10 +213,10 @@ namespace fleece::impl::builder {
                 _encoder.writeKey(key);
             switch (v) {
                 case ValueType::array:
-                    _writeArray();
+                    writeArray();
                     break;
                 case ValueType::dict:
-                    _writeDict();
+                    writeDict();
                     break;
                 case ValueType::null:
                     readIdentifier("null");
@@ -260,32 +247,42 @@ namespace fleece::impl::builder {
 
 
         // Parses a JSON5 object from the input and adds its entries to `dict`.
-        void _writeDict() {
+        void writeDict() {
             getChar();      // skip the opening '{' *without verifying*
             _encoder.beginDictionary();
-            while (peekToken() != '}') {
+            if (peekToken() != '}')
+                writeDictInterior();
+            else
+                getChar();
+            _encoder.endDictionary();
+            peekToken('}', "unexpected token after dict item");
+            getChar(); // eat close bracket/brace
+        }
+
+
+        void writeDictInterior() {
+            while (true) {
                 writeValue(readKey());
 
-                if (peekToken() == ',')         // Note: JSON5 allows trailing `,` before `}`
-                    getChar();
-                else if (peekToken() != '}')
-                    fail("unexpected token after dict item");
+                if (peekToken() != ',')         // Note: JSON5 allows trailing `,` before `}`
+                    break;
+                getChar();
+                if (char c = peekToken(); c == '}' || c == '\0')
+                    break;
             }
-            getChar(); // eat close bracket/brace
-            _encoder.endDictionary();
         }
 
 
         // Parses a JSON5 array from the input and adds its entries to `dict`.
-        void _writeArray() {
+        void writeArray() {
             getChar();      // skip the opening '[' *without verifying*
             _encoder.beginArray();
             while (peekToken() != ']') {
                 writeValue();
                 if (peekToken() == ',')         // Note: JSON5 allows trailing `,` before `]`
                     getChar();
-                else if (peekToken() != ']')
-                    fail("unexpected token after array item");
+                else
+                    peekToken(']', "unexpected token after array item");
             }
             getChar(); // eat close bracket/brace
             _encoder.endArray();
@@ -318,7 +315,7 @@ namespace fleece::impl::builder {
         }
 
     private:
-        Encoder& _encoder;   // The Encoder I'm writing to
+        ENCODER& _encoder;   // The Encoder or JSONEncoder I'm writing to
     };
 
 
@@ -334,12 +331,12 @@ namespace fleece::impl::builder {
     }
 
 
-    void VBuild(Encoder& encoder, const char *format, va_list args) {
-        Buildencoder(encoder, format, args).buildValue();
+    void VEncode(Encoder& encoder, slice format, va_list args) {
+        Buildencoder<Encoder>(encoder, format, args).buildValue();
     }
 
-    void VBuild(Encoder& encoder, slice format, va_list args) {
-        Buildencoder(encoder, format, args).buildValue();
+    void VEncode(JSONEncoder& encoder, slice format, va_list args) {
+        Buildencoder<JSONEncoder>(encoder, format, args).buildValue();
     }
 
 
@@ -352,10 +349,10 @@ namespace fleece::impl::builder {
     }
 
 
-    void Build(Encoder& encoder, const char *format, ...) {
+    void Encode(Encoder& encoder, const char *format, ...) {
         va_list args;
         va_start(args, format);
-        VBuild(encoder, format, args);
+        VEncode(encoder, format, args);
         va_end(args);
     }
 
@@ -369,10 +366,10 @@ namespace fleece::impl::builder {
         return result;
     }
 
-    void BuildCF(Encoder& encoder, CFStringRef cfFormat, ...) {
+    void EncodeCF(Encoder& encoder, CFStringRef cfFormat, ...) {
         va_list args;
         va_start(args, cfFormat);
-        VBuild(encoder, nsstring_slice(cfFormat), args);
+        VEncode(encoder, nsstring_slice(cfFormat), args);
         va_end(args);
     }
 #endif
