@@ -13,20 +13,22 @@
 #pragma once
 #include "FleeceImpl.hh"
 #include "ValueSlot.hh"
+#include "Encoder.hh"
 #include "JSONEncoder.hh"
 #include "Path.hh"
 #include "DeepIterator.hh"
 #include "Doc.hh"
 #include "FleeceException.hh"
 #include <memory>
+#include <variant>
 
 using namespace fleece;
 using namespace fleece::impl;
 
 
-namespace fleece { namespace impl {
-    struct FLEncoderImpl;
-} }
+namespace fleece::impl {
+    class FLEncoderImpl;
+}
 
 // Define the public types as typedefs of the impl types:
 typedef const Value*    FLValue;
@@ -56,88 +58,128 @@ namespace fleece::impl {
     #define catchError(OUTERROR) \
         catch (const std::exception &x) { recordError(x, OUTERROR); }
 
-    
-    // Implementation of FLEncoder: a subclass of Encoder that keeps track of its error state.
-    struct FLEncoderImpl {
-        FLError                         errorCode {::kFLNoError};
-        const bool                      ownsFleeceEncoder {true};
-        std::string                     errorMessage;
-        std::unique_ptr<Encoder>        fleeceEncoder;
-        std::unique_ptr<JSONEncoder>    jsonEncoder;
-        std::unique_ptr<JSONConverter>  jsonConverter;
-        void* FL_NULLABLE               extraInfo {nullptr};
 
+    /** A wrapper around Encoder and JSONEncoder that can write either. Catches exceptions.
+        The public type `FLEncoder` is a pointer to this. */
+    class FLEncoderImpl {
+    public:
         FLEncoderImpl(FLEncoderFormat format,
                       size_t reserveSize =0, bool uniqueStrings =true)
+        :_encoder(mkEncoder(format, reserveSize ? reserveSize : 256))
         {
-            if (reserveSize == 0)
-                reserveSize = 256;
-            if (format == kFLEncodeFleece) {
-                fleeceEncoder.reset(new Encoder(reserveSize));
-                fleeceEncoder->uniqueStrings(uniqueStrings);
-            } else {
-                jsonEncoder.reset(new JSONEncoder(reserveSize));
-                jsonEncoder->setJSON5(format == kFLEncodeJSON5);
+            if (format == kFLEncodeFleece)
+                fleeceEncoder()->uniqueStrings(uniqueStrings);
+            else
+                jsonEncoder()->setJSON5(format == kFLEncodeJSON5);
+        }
+
+        explicit FLEncoderImpl(FILE *outputFile, bool uniqueStrings =true)
+        :_encoder(outputFile)
+        {
+            std::get<Encoder>(_encoder).uniqueStrings(uniqueStrings);
+        }
+
+        explicit FLEncoderImpl(Encoder* fleeceEncoder)
+        :_encoder(fleeceEncoder)
+        { }
+
+        Encoder* FL_NULLABLE fleeceEncoder() {
+            switch (_encoder.index()) {
+                case 0: return std::get_if<Encoder>(&_encoder);
+                case 2: return std::get<Encoder*>(_encoder);
+                default: return nullptr;
             }
         }
 
-        FLEncoderImpl(FILE *outputFile, bool uniqueStrings =true) {
-            fleeceEncoder.reset(new Encoder(outputFile));
-            fleeceEncoder->uniqueStrings(uniqueStrings);
+        JSONEncoder* FL_NULLABLE jsonEncoder()    {
+            return std::get_if<JSONEncoder>(&_encoder);
         }
 
-        FLEncoderImpl(Encoder *encoder)
-        :ownsFleeceEncoder(false)
-        ,fleeceEncoder(encoder)
-        { }
+        bool isFleece() const noexcept {return _encoder.index() == 0;}
+        bool hasError() const noexcept {return errorCode != ::kFLNoError;}
 
-        ~FLEncoderImpl() {
-            if (!ownsFleeceEncoder)
-                fleeceEncoder.release();
+        bool encodeJSON(slice json) {
+            if (isFleece()) {
+                if (_jsonConverter)
+                    _jsonConverter->reset();
+                else
+                    _jsonConverter = std::make_unique<JSONConverter>(*fleeceEncoder());
+                if (_jsonConverter->encodeJSON(json)) {                   // encodeJSON can throw
+                    return true;
+                } else {
+                    errorCode = (FLError)_jsonConverter->errorCode();
+                    errorMessage = _jsonConverter->errorMessage();
+                    _jsonConverter = nullptr;
+                    return false;
+                }
+            } else {
+                jsonEncoder()->writeJSON(json);
+                return true;
+            }
         }
 
-        bool isFleece() const {
-            return fleeceEncoder != nullptr;
+        /// Invokes a callback. If it throws, catches the error, sets my error and returns false.
+        template <typename CALLBACK>
+        bool try_(CALLBACK const& callback) noexcept {
+            if (!hasError()) {
+                try {
+                    return callback(this);
+                } catch (const std::exception &x) {
+                    recordException(x);
+                }
+            }
+            return false;
         }
 
-        bool hasError() const {
-            return errorCode != ::kFLNoError;
+        /// Invokes a callback on the underlying encoder. Callback parameter is a ref to the Encoder or JSONEncoder.
+        template <typename CALLBACK>
+        auto do_(CALLBACK const& callback) {
+            return std::visit([&](auto& e) {
+                if constexpr (std::is_pointer_v<__typeof(e)>)
+                    return callback(*e);
+                else
+                    return callback(e);
+            }, _encoder);
+        }
+
+        /// Combination of `try_` and `do_`.
+        template <typename CALLBACK>
+        bool try_do_(CALLBACK const& callback) {
+            return try_([&](auto self) {return self->do_(callback);});
+        }
+
+        void reset() noexcept {
+            do_([](auto& e) {e.reset();});
+            if (_jsonConverter)
+                _jsonConverter->reset();
+            errorCode = ::kFLNoError;
+            extraInfo = nullptr;
         }
 
         void recordException(const std::exception &x) noexcept {
             if (!hasError()) {
-                fleece::impl::recordError(x, &errorCode);
+                errorCode = FLError(FleeceException::getCode(x));
                 errorMessage = x.what();
             }
         }
 
-        void reset() {
-            if (fleeceEncoder)
-                fleeceEncoder->reset();
-            if (jsonConverter)
-                jsonConverter->reset();
-            if (jsonEncoder) {
-                jsonEncoder->reset();
-            }
-            errorCode = ::kFLNoError;
-            extraInfo = nullptr;
+        FLError                         errorCode {::kFLNoError};
+        std::string                     errorMessage;
+        void* FL_NULLABLE               extraInfo {nullptr};
+
+    private:
+        using VariEnc = std::variant<Encoder,JSONEncoder,Encoder*>;
+
+        static VariEnc mkEncoder(FLEncoderFormat format, size_t reserveSize) {
+            if (format == kFLEncodeFleece)
+                return VariEnc(std::in_place_type<Encoder>, reserveSize);
+            else
+                return VariEnc(std::in_place_type<JSONEncoder>, reserveSize);
         }
+
+        VariEnc                         _encoder;
+        std::unique_ptr<JSONConverter>  _jsonConverter;
     };
-
-    #define ENCODER_DO(E, METHOD) \
-        (E->isFleece() ? E->fleeceEncoder->METHOD : E->jsonEncoder->METHOD)
-
-    // Body of an FLEncoder_WriteXXX function:
-    #define ENCODER_TRY(E, METHOD) \
-        try{ \
-            if (!E->hasError()) { \
-                ENCODER_DO(E, METHOD); \
-                return true; \
-            } \
-        } catch (const std::exception &x) { \
-            E->recordException(x); \
-        } \
-        return false;
 
 
     class FLPersistentSharedKeys : public PersistentSharedKeys {

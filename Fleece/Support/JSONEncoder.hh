@@ -65,9 +65,13 @@ namespace fleece { namespace impl {
         void writeJSON(slice json)              {comma(); _out << json;}
         void writeRaw(slice raw)                {_out << raw;}
 
+#ifdef __APPLE__
+        void writeCF(const void*)               {FleeceException::_throw(JSONError,
+                                                                         "Encoding CF value to JSON is unimplemented");}
+#endif
 #ifdef __OBJC__
         void writeObjC(id)                      {FleeceException::_throw(JSONError,
-                                                    "Encoding Obj-C to JSON is unimplemented");}
+                                                                         "Encoding Obj-C to JSON is unimplemented");}
 #endif
 
         //////// Writing arrays:
