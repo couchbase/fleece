@@ -453,6 +453,11 @@ namespace fleece {
         template <class T>
         inline void write(slice_NONNULL key, T value)       {writeKey(key); *this << value;}
 
+        template <typename FN>
+        bool writeArray(FN const& fn) {return beginArray() && (fn(), endArray());}
+        template <typename FN>
+        bool writeDict(FN const& fn) {return beginDict() && (fn(), endDict());}
+
         [[nodiscard]] inline Doc finishDoc(FLError* FL_NULLABLE =nullptr);
         [[nodiscard]] inline alloc_slice finish(FLError* FL_NULLABLE =nullptr);
         inline void reset();
