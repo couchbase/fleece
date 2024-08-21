@@ -174,7 +174,7 @@ TEST_CASE("MArray iteration", "[Mutable]") {
         NSUInteger i = 0;
         for (id o in array) {
             NSLog(@"item #%zu: %@", i, o);
-            CHECK([o isEqualTo: orig[i]]);
+            CHECK([o isEqual: orig[i]]);
             ++i;
         }
     }

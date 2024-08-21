@@ -15,7 +15,7 @@
 #include <ctype.h>
 #include <locale.h>
 #include <stdlib.h>
-#if !defined(_MSC_VER) && !defined(__GLIBC__)
+#if !defined(_MSC_VER) && !defined(__GLIBC__) && !defined(__EMSCRIPTEN__)
 #include <xlocale.h>
 #endif
 
