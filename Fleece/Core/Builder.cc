@@ -166,7 +166,7 @@ namespace fleece::impl::builder {
             }
 #endif
             std::visit([&](auto val) {
-                if constexpr (!is_same_v<__typeof(val), monostate> && !is_same_v<__typeof(val), const void*>)
+                if constexpr (!is_same_v<decltype(val), monostate> && !is_same_v<decltype(val), const void*>)
                     inSlot.set(val);
             }, p);
             return true;
@@ -299,11 +299,11 @@ namespace fleece::impl::builder {
             if (key)
                 _encoder.writeKey(key);
             std::visit([&](auto val) {
-                if constexpr (is_same_v<__typeof(val), monostate>) {
+                if constexpr (is_same_v<decltype(val), monostate>) {
                     //
-                } else if constexpr (is_same_v<__typeof(val), bool>) {
+                } else if constexpr (is_same_v<decltype(val), bool>) {
                     _encoder.writeBool(val);
-                } else if constexpr (is_same_v<__typeof(val), const void*>) {
+                } else if constexpr (is_same_v<decltype(val), const void*>) {
 #ifdef __APPLE__
                     _encoder.writeCF(val);
 #endif

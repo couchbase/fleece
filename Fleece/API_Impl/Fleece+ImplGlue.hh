@@ -135,7 +135,7 @@ namespace fleece::impl {
         template <typename CALLBACK>
         auto do_(CALLBACK const& callback) {
             return std::visit([&](auto& e) {
-                if constexpr (std::is_pointer_v<__typeof(e)>)
+                if constexpr (std::is_pointer_v<std::remove_reference_t<decltype(e)>>)
                     return callback(*e);
                 else
                     return callback(e);
