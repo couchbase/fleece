@@ -12,7 +12,6 @@
 
 #pragma once
 #include "fleece/PlatformCompat.hh"
-#include <algorithm>
 #include <atomic>
 #include <utility>
 
