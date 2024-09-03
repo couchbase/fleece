@@ -71,11 +71,12 @@ namespace fleece {
 
     private:
         void _capture(unsigned skipFrames =0, unsigned maxFrames =50);
-        char* printFrame(unsigned i) const;
+        const char* getSymbol(unsigned i) const;
+        [[nodiscard]] char* printFrame(unsigned i) const;
         static void writeCrashLog(std::ostream&);
 
         std::vector<void*> _addrs;          // Array of PCs in backtrace, top first
-        char** _symbols { nullptr };
+        mutable char** _symbols { nullptr };
     };
 
 

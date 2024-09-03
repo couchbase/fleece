@@ -108,6 +108,32 @@ namespace fleece {
     }
 
 
+    const char* Backtrace::getSymbol(unsigned i) const {
+#if !defined(__ANDROID__)
+        precondition(i < _addrs.size());
+        if (!_symbols)
+            _symbols = backtrace_symbols(_addrs.data(), int(_addrs.size()));
+        if (_symbols) {
+            const char* s = _symbols[i];
+#if __APPLE__
+            // Skip line number and whitespace:
+            while (*s && isdigit(*s))
+                ++s;
+            while (*s && isspace(*s))
+                ++s;
+#else
+            // ?? On Linux is there a path here ??
+            const char *slash = strrchr(s, '/');
+            if (slash)
+                s = slash + 1;
+#endif
+            return s;
+        }
+#endif
+        return nullptr;
+    }
+
+
     // If any of these strings occur in a backtrace, suppress further frames.
     static constexpr const char* kTerminalFunctions[] = {
         "_C_A_T_C_H____T_E_S_T_",
@@ -134,12 +160,12 @@ namespace fleece {
 
 
     bool Backtrace::writeTo(ostream &out) const {
-        for (decltype(_addrs.size()) i = 0; i < _addrs.size(); ++i) {
+        for (unsigned i = 0; i < unsigned(_addrs.size()); ++i) {
             if (i > 0)
                 out << '\n';
             out << '\t';
             char *cstr = nullptr;
-            auto frame = getFrame(unsigned(i));
+            auto frame = getFrame(i);
             int len;
             bool stop = false;
             if (frame.function) {
@@ -152,17 +178,12 @@ namespace fleece {
                 // Abbreviate some C++ verbosity:
                 for (auto &abbrev : kAbbreviations)
                     replace(name, abbrev.old, abbrev.nuu);
-                len = asprintf(&cstr, "%2lu  %-25s %s + %zd",
-                               (unsigned long)i, frame.library, name.c_str(), frame.offset);
-            } else if(_symbols) {
-                const char* s = _symbols[i];
-                const char *slash = strrchr(s, '/');
-                if (slash)
-                    s = slash + 1;
-
-                len = asprintf(&cstr, "%2lu  %s", (unsigned long)i, s);
+                len = asprintf(&cstr, "%2u  %-25s %s + %zd",
+                               i, frame.library, name.c_str(), frame.offset);
+            } else if (const char* s = getSymbol(i)) {
+                len = asprintf(&cstr, "%2u  %s", i, s);
             } else {
-              len = asprintf(&cstr, "%2lu  %p", (unsigned long)i, _addrs[i]);
+              len = asprintf(&cstr, "%2u  %p", i, _addrs[i]);
             }
 
             if (len < 0)
@@ -353,9 +374,6 @@ namespace fleece {
         auto n = backtrace(&_addrs[0], skipFrames + maxFrames);
         _addrs.resize(n);
         skip(skipFrames);
-#if !defined(_MSC_VER) && !defined(__ANDROID__)
-        _symbols = backtrace_symbols(_addrs.data(), int(_addrs.size()));
-#endif
     }
 
 

@@ -13,6 +13,7 @@
 #include "fleece/FLBase.h"
 #include "FleeceTests.hh"
 #include "FleeceImpl.hh"
+#include "Backtrace.hh"
 #include "ConcurrentMap.hh"
 #include "Bitmap.hh"
 #include "TempArray.hh"
@@ -343,4 +344,17 @@ TEST_CASE("Timestamp Conversions", "[Timestamps]") {
     FLStringResult str = FLTimestamp_ToString(ts, asUTC);
     FLTimestamp ts2 = FLTimestamp_FromString((FLString)str);
     CHECK(ts == ts2);
+}
+
+
+static Backtrace makeBacktrace() {
+    return Backtrace();
+}
+
+
+TEST_CASE("Backtrace") {
+    Backtrace bt = makeBacktrace();
+    string str = bt.toString();
+    cout << str << endl;
+    CHECK(std::count(str.begin(), str.end(), '\n') >= 4);
 }
