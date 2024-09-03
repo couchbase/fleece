@@ -344,7 +344,7 @@ namespace fleece {
 
     Backtrace::Backtrace(unsigned skipFrames, unsigned maxFrames) {
         if (maxFrames > 0)
-            capture(skipFrames + 1, maxFrames);
+            _capture(skipFrames + 1, maxFrames);
     }
 
 
