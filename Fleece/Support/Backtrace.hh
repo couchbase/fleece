@@ -25,7 +25,7 @@ namespace fleece {
     class Backtrace {
     public:
         /// Captures a backtrace and returns a shared pointer to the instance.
-        static std::shared_ptr<Backtrace> capture(unsigned skipFrames =0, unsigned maxFrames =50);
+        [[nodiscard]] static std::shared_ptr<Backtrace> capture(unsigned skipFrames =0, unsigned maxFrames =50);
 
         /// Captures a backtrace, unless maxFrames is zero.
         /// @param skipFrames  Number of frames to skip at top of stack
