@@ -32,7 +32,7 @@ namespace fleece {
 
     /** Just a simple wrapper around \ref FLValue_FromData.
         You should generally use a \ref Doc instead; it's safer.*/
-    static inline Value ValueFromData(slice data, FLTrust t =kFLUntrusted) {
+    inline Value ValueFromData(slice data, FLTrust t =kFLUntrusted) {
         return FLValue_FromData(data,t);
     }
 
@@ -47,7 +47,7 @@ namespace fleece {
         Encoder_ExpertAPI() = delete;
 
         /// Creates an Encoder that writes directly to a file.
-        static inline Encoder encodeToFile(FILE *file, bool uniqueStrings =true);
+        inline Encoder encodeToFile(FILE *file, bool uniqueStrings =true);
 
         inline void amend(slice base, bool reuseStrings =false, bool externPointers =false);
 
@@ -64,8 +64,8 @@ namespace fleece {
     };
 
     // use this to call one of the above methods; e.g. `expert(e).suppressTrailer()`.
-    static inline auto& expert(Encoder &enc)        {return (Encoder_ExpertAPI&)enc;}
-    static inline auto& expert(const Encoder &enc)  {return (const Encoder_ExpertAPI&)(enc);}
+    inline auto& expert(Encoder &enc)        {return (Encoder_ExpertAPI&)enc;}
+    inline auto& expert(const Encoder &enc)  {return (const Encoder_ExpertAPI&)(enc);}
 
 
     //====== DELTAS:
