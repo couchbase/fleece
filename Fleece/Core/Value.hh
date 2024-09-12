@@ -267,7 +267,7 @@ namespace fleece { namespace impl {
     NOINLINE void assignRef(const Value* &holder, const Value *newValue) noexcept;
 
     template <typename T>
-    static inline void assignRef(T* &holder, const Value *newValue) noexcept {
+    inline void assignRef(T* &holder, const Value *newValue) noexcept {
         assignRef((const Value*&)holder, newValue);
     }
 
