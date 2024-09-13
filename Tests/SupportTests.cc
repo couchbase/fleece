@@ -11,6 +11,7 @@
 //
 
 #include "fleece/FLBase.h"
+#include "fleece/InstanceCounted.hh"
 #include "FleeceTests.hh"
 #include "FleeceImpl.hh"
 #include "Backtrace.hh"
@@ -358,4 +359,22 @@ TEST_CASE("Backtrace") {
     string str = bt.toString();
     cout << str << endl;
     CHECK(std::count(str.begin(), str.end(), '\n') >= 4);
+}
+
+
+class ICTest : public RefCounted, public InstanceCountedIn<ICTest> {
+public:
+    ICTest() noexcept = default;
+};
+
+
+TEST_CASE("InstanceCounted") {
+    auto n = InstanceCounted::liveInstanceCount();
+    {
+        auto i1 = make_retained<ICTest>();
+        auto i2 = make_retained<ICTest>();
+        InstanceCounted::dumpInstances();
+        CHECK(InstanceCounted::liveInstanceCount() == n + 2);
+    }
+    CHECK(InstanceCounted::liveInstanceCount() == n);
 }
