@@ -28,13 +28,6 @@
 #define REQUIRE(TEST)   while (!(TEST)) {abort();}
 #undef CHECK
 #define CHECK(TEST)     while (!(TEST)) {abort();}
-#ifdef __APPLE__
-#define FLEECE_UNUSED __unused
-#elif !defined(_MSC_VER)
-#define FLEECE_UNUSED __attribute__((unused))
-#else
-#define FLEECE_UNUSED
-#endif
 
 
 using namespace fleece;
@@ -116,7 +109,7 @@ TEST_CASE("Perf LoadFleece", "[.Perf]") {
         Benchmark bench;
         for (int i = 0; i < kIterations; i++) {
             bench.start();
-            FLEECE_UNUSED auto root = Value::fromData(doc)->asArray();
+            [[maybe_unused]] auto root = Value::fromData(doc)->asArray();
             REQUIRE(root != nullptr);
             bench.stop();
         }
@@ -130,7 +123,7 @@ TEST_CASE("Perf LoadFleece", "[.Perf]") {
         for (int i = 0; i < kIterations; i++) {
             bench.start();
             for (int j = 0; j < kIterationsPerSample; j++) {
-                FLEECE_UNUSED auto root = Value::fromTrustedData(doc)->asArray();
+                [[maybe_unused]] auto root = Value::fromTrustedData(doc)->asArray();
                 REQUIRE(root != nullptr);
             }
             bench.stop();
