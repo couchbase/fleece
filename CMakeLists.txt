@@ -77,8 +77,6 @@ foreach(platform FleeceObjects Fleece FleeceStatic FleeceBase fleeceTool FleeceT
         Fleece/Integration
         Fleece/Mutable
         Fleece/Support
-        Fleece/Tree
-        Experimental
         vendor/date/include
         vendor/jsonsl
         vendor/libb64
