@@ -346,6 +346,7 @@ TEST_CASE("Timestamp Conversions", "[Timestamps]") {
     FLStringResult str = FLTimestamp_ToString(ts, asUTC);
     FLTimestamp ts2 = FLTimestamp_FromString((FLString)str);
     CHECK(ts == ts2);
+    FLSliceResult_Release(str);
 }
 
 
