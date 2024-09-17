@@ -1076,11 +1076,12 @@ public:
         CHECK(ParseDouble(floatBuf, recovered));
         CHECK(FloatEquals(float(recovered), 2.71828f));
 
+        const char* localeName = "fr_FR";
 #ifdef _MSC_VER
-        setlocale(LC_ALL, "fr-FR");
-#else
-        setlocale(LC_ALL, "fr_FR");
+        localeName = "fr-FR";
 #endif
+        if(setlocale(LC_ALL, localeName) == nullptr)
+            FAIL("Zut alors! No French locale installed!");
 
         snprintf(doubleBuf, doubleBufSize, "%.16g", testDouble);
         snprintf(floatBuf, floatBufSize, "%.7g", testFloat);
