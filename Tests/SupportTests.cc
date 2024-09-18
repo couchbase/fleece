@@ -23,6 +23,7 @@
 #include <future>
 
 using namespace std;
+using namespace fleece;
 
 
 // TESTS:

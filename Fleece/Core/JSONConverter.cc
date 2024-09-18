@@ -12,8 +12,13 @@
 
 #include "JSONConverter.hh"
 #include "NumConversion.hh"
-#include "jsonsl.h"
 #include <map>
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdocumentation"
+#pragma clang diagnostic ignored "-Wdocumentation-unknown-command"
+#include "jsonsl.h"
+#pragma clang diagnostic pop
 
 namespace fleece { namespace impl {
 

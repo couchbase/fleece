@@ -32,6 +32,7 @@ namespace fleece {
     using namespace std;
     using namespace impl;
     using namespace impl::internal;
+    using namespace fleece_test;
 
     class ValueTests {  // Value declares this as a friend so it can call private API
     public:
@@ -290,7 +291,7 @@ namespace fleece {
             fleece::ErrorCode errCode = fleece::NoError;
             try {
                 doc = Doc::fromJSON(origJSON);
-            } catch (FleeceException& exc) {
+            } catch (FleeceException&) {
                 errCode = fleece::JSONError;
             }
             CHECK(errCode == fleece::JSONError);

@@ -66,7 +66,7 @@ namespace fleece { namespace impl {
         void writeRaw(slice raw)                {_out << raw;}
 
 #ifdef __OBJC__
-        void writeObjC(id)                      {FleeceException::_throw(JSONError,
+        [[noreturn]] void writeObjC(id)         {FleeceException::_throw(JSONError,
                                                     "Encoding Obj-C to JSON is unimplemented");}
 #endif
 
@@ -102,7 +102,7 @@ namespace fleece { namespace impl {
         // Just for API compatibility with Encoder class:
         void beginArray(size_t)                       {beginArray();}
         void beginDictionary(size_t)                  {beginDictionary();}
-        void writeUndefined() {
+        [[noreturn]] void writeUndefined() {
             FleeceException::_throw(JSONError, "Cannot write `undefined` to JSON encoder");
         }
 
