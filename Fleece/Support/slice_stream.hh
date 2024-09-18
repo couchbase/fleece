@@ -28,6 +28,8 @@ namespace fleece {
         /// \warning Like a `const_cast`, this violates the read-only nature of the slice.
         explicit slice_ostream(slice s)          :slice_ostream((uint8_t*)s.buf, s.size) { }
 
+        slice_ostream& operator=(const slice_ostream&) = default;
+
         /// Captures the stream's state to another stream. You can use this as a way to "rewind"
         /// the stream afterwards. (This is equivalent to a copy constructor, but that constructor
         /// is explicitly deleted to avoid confusion.)

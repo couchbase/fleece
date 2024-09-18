@@ -88,7 +88,4 @@ namespace fleece {
     /** Utility function for constructing a Bitmap from an integer. */
     template <class Rep>
     inline Bitmap<Rep> asBitmap(Rep bits)     {return Bitmap<Rep>(bits);}
-
-    template <class Rep>
-    constexpr unsigned Bitmap<Rep>::capacity;
 }

@@ -83,7 +83,7 @@ namespace fleece::impl::builder {
     protected:
         // Parses a Fleece value from the input and stores it in the ValueSlot.
         // Recognizes a '%' specifier, and calls `putParameter` to read the value from the args.
-        const bool _buildValue(ValueSlot &inSlot) {
+        bool _buildValue(ValueSlot &inSlot) {
             switch (peekToken()) {
                 case '[': {
                     Retained<MutableArray> array = MutableArray::newArray();

@@ -74,6 +74,10 @@ namespace fleece { namespace impl {
             template <class INT> static HeapValue* createInt(INT, bool isUnsigned);
         };
 
+        extern template HeapValue* HeapValue::createInt(int,      bool isUnsigned);
+        extern template HeapValue* HeapValue::createInt(unsigned, bool isUnsigned);
+        extern template HeapValue* HeapValue::createInt(int64_t,  bool isUnsigned);
+        extern template HeapValue* HeapValue::createInt(uint64_t, bool isUnsigned);
 
 
         /** Abstract base class of Heap{Array,Dict}. */

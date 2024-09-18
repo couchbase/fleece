@@ -169,7 +169,7 @@ namespace fleece { namespace impl {
         size_t nextWritePos();
         size_t finishItem();
         slice base() const                      {return _base;}
-        slice baseUsed() const                  {return _baseMinUsed != 0 ? slice(_baseMinUsed, _base.end()) : slice();}
+        slice baseUsed() const                  {return _baseMinUsed ? slice(_baseMinUsed, _base.end()) : slice();}
         const StringTable& strings() const      {return _strings;}
 
         enum class PreWrittenValue : intptr_t { none = INTPTR_MIN };
@@ -250,8 +250,8 @@ namespace fleece { namespace impl {
         Retained<SharedKeys> _sharedKeys;  // Client-provided key-to-int mapping
         slice _base;                 // Base Fleece data being appended to (if any)
         alloc_slice _ownedBase;      // If I allocated _base, it's stored here too to retain it
-        const void* _baseCutoff {0}; // Lowest addr in _base that I can write a ptr to
-        const void* _baseMinUsed {0};// Lowest addr in _base I've written a ptr to
+        const void* _baseCutoff {};  // Lowest addr in _base that I can write a ptr to
+        const void* _baseMinUsed {}; // Lowest addr in _base I've written a ptr to
         int _copyingCollection {0};  // Nonzero inside writeValue when writing array/dict
         bool _writingKey    {false}; // True if Value being written is a key
         bool _blockedOnKey  {false}; // True if writes should be refused

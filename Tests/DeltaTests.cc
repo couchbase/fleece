@@ -21,6 +21,7 @@ namespace fleece { namespace impl {
 
 using namespace fleece;
 using namespace fleece::impl;
+using namespace fleece_test;
 
 
 static bool isValidUTF8(fleece::slice sl) noexcept;
@@ -210,7 +211,7 @@ static void checkDelta(const Value *left, const Value *right, const Value *expec
     if (expectedDelta)
         CHECK(expectedDelta->isEqual(delta));
     else
-        CHECK(delta == 0);
+        CHECK(delta == nullptr);
 }
 
 

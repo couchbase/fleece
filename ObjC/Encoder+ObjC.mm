@@ -62,7 +62,7 @@ void FLSlot_SetCFValue(FLSlot slot, CFTypeRef value) {
 
 
 @implementation NSObject (Fleece)
-- (void) fl_encodeToFLEncoder: (FLEncoder)enc {
+- (void) fl_encodeToFLEncoder: (FLEncoder)enc __attribute__((noreturn)) {
     // Default implementation -- object doesn't implement Fleece encoding at all.
     NSString* msg = [NSString stringWithFormat: @"Objects of class %@ cannot be encoded",
                      [self class]];

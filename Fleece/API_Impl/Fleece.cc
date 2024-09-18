@@ -33,6 +33,9 @@ namespace fleece::impl {
 
 }
 
+using namespace fleece;
+using namespace fleece::impl;
+
 
 FLEECE_PUBLIC const FLValue kFLNullValue  = Value::kNullValue;
 FLEECE_PUBLIC const FLValue kFLUndefinedValue  = Value::kUndefinedValue;

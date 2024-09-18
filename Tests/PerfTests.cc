@@ -23,6 +23,8 @@
 #endif
 #include "betterassert.hh"
 
+#pragma clang diagnostic ignored "-Wmissing-noreturn"
+
 // Catch's REQUIRE is too slow for perf testing
 #undef REQUIRE
 #define REQUIRE(TEST)   while (!(TEST)) {abort();}
@@ -32,6 +34,7 @@
 
 using namespace fleece;
 using namespace fleece::impl;
+using namespace fleece_test;
 
 
 #if !FL_EMBEDDED
