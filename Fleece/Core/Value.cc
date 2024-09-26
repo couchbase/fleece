@@ -343,7 +343,7 @@ namespace fleece { namespace impl {
             // If the root is a direct value there better not be any data before it:
             if (_usuallyFalse(s.size != kNarrow))
                 return nullptr;
-        };
+        }
         return root;
     }
 

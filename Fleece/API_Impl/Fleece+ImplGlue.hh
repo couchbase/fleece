@@ -133,7 +133,7 @@ namespace fleece::impl {
         } catch (const std::exception &x) { \
             E->recordException(x); \
         } \
-        return false;
+        return false
 
 
     class FLPersistentSharedKeys : public PersistentSharedKeys {

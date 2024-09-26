@@ -21,7 +21,7 @@
 #include "betterassert.hh"
 
 
-#ifndef _MSC_VER
+#ifndef WIN32
 #pragma mark - UNIX IMPLEMENTATION:
 
 #include <dlfcn.h>          // dladdr()
@@ -34,7 +34,7 @@
     #include <unwind.h>     // _Unwind_Backtrace(), etc.
 #endif
 
-#ifndef _MSC_VER
+#if __has_include("cxxabi.h")
     #include <cxxabi.h>     // abi::__cxa_demangle()
     #define HAVE_UNMANGLE
 #endif
@@ -220,7 +220,7 @@ namespace fleece {
 
 #pragma comment(lib, "Dbghelp.lib")
 #include <Windows.h>
-#include <Dbghelp.h>
+#include <DbgHelp.h>
 #include "asprintf.h"
 #include <sstream>
 #include <iomanip>

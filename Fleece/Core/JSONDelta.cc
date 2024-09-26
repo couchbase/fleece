@@ -451,8 +451,8 @@ namespace fleece { namespace impl {
         stringstream diff;
         long lastOldPos = 0, correction = 0;
         for (auto patch = patches.begin(); patch != patches.end(); ++patch) {
-            long oldPos = patch->start1 + correction;   // position in oldStr
-            long nuuPos = patch->start2;                // position in nuuStr
+            long oldPos = narrow_cast<long>(patch->start1 + correction);   // position in oldStr
+            long nuuPos = narrow_cast<long>(patch->start2);                // position in nuuStr
             auto &diffs = patch->diffs;
             for (auto cur_diff = diffs.begin(); cur_diff != diffs.end(); ++cur_diff) {
                 auto length = cur_diff->text.length();

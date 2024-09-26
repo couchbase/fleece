@@ -20,7 +20,7 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#ifndef _MSC_VER
+#ifndef WIN32
     #include <sys/stat.h>
     #include <unistd.h>
     #define _open open
@@ -29,10 +29,10 @@
     #define _read read
 #else
     #include <io.h>
-    #include <windows.h>
+    #include <Windows.h>
 #endif
 
-#ifndef _MSC_VER
+#ifndef WIN32
 #define O_BINARY 0
 #endif
 

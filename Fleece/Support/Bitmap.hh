@@ -13,7 +13,7 @@
 #pragma once
 #include <type_traits>
 
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) || defined(__clang__)
 extern "C" {
     // Clang & GCC builtin functions for hardware-accelerated popcount:
     extern int __builtin_popcount(unsigned int);
@@ -28,7 +28,7 @@ namespace fleece {
     /** Returns the number of 1 bits in the integer `bits`. */
     template<class INT, typename std::enable_if<std::is_integral<INT>::value, INT>::type = 0>
     INT popcount(INT bits) {
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
         extern int _popcount(unsigned int) noexcept;
         extern int _popcountl(unsigned long) noexcept;
         extern int _popcountll(unsigned long long) noexcept;

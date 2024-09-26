@@ -24,7 +24,7 @@
 
     #define __func__                        __FUNCTION__
 
-    #include <BaseTsd.h>
+    #include <basetsd.h>
     typedef SSIZE_T ssize_t;
 
     #define MAXFLOAT FLT_MAX

@@ -246,7 +246,7 @@
 
 
 // Suppresses sanitizers in a function
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) || defined(__clang__)
 #   define __no_sanitize(X)     __attribute__((no_sanitize(X)))
 #else
 #   define __no_sanitize(X)

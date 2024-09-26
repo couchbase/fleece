@@ -18,7 +18,8 @@
 #include <stdio.h>
 #include <typeinfo>
 
-#if defined(__clang__) // For __cxa_demangle
+#if __has_include("cxxabi.h") // For __cxa_demangle
+#define HAS_UNMANGLE
 #include <cxxabi.h>
 #endif
 
@@ -53,7 +54,7 @@ namespace fleece {
         for (auto entry : sInstances) {
             const char *name =  typeid(*entry.first).name();
             const void *address = (uint8_t*)entry.first - entry.second;
-    #ifdef __clang__
+    #ifdef HAS_UNMANGLE
             int status;
             size_t unmangledLen = 0;
             unmangled = abi::__cxa_demangle(name, unmangled, &unmangledLen, &status);
@@ -87,3 +88,5 @@ namespace fleece {
 
 
 }
+
+#undef HAS_UNMANGLE

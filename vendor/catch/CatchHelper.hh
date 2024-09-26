@@ -53,7 +53,7 @@ namespace Catch {
     public:
         NWayMethodTestInvoker( void (C::*method)() ) : m_method( method ) {}
 
-        virtual void invoke() const {
+        virtual void invoke() const override {
             {
                 for (int i = 0; i < C::numberOfOptions; i++) {
                     C obj(i);

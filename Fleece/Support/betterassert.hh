@@ -42,7 +42,7 @@
         #define _postcondition_failed _postcondition_failed_nox
     #endif
 
-    #ifdef _MSC_VER
+    #if defined(_MSC_VER) && !defined(__clang__)
         // MSVC has `__FUNCSIG__` for the function signature
         #define assert_always(e) ((void) (_usuallyTrue(!!(e)) ? ((void)0) : fleece::_assert_failed (#e, __FUNCSIG__, __FILE__, __LINE__)))
         #define precondition(e) ((void)  (_usuallyTrue(!!(e)) ? ((void)0) : ::fleece::_precondition_failed (#e, __FUNCSIG__, __FILE__, __LINE__)))

@@ -24,6 +24,7 @@ namespace fleece { namespace impl {
         class Pointer;
     }
 
+    class Doc;
 
     class Scope {
     public:

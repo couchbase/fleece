@@ -1542,10 +1542,10 @@ static void subtract128x128(swift_uint128_t *lhs, swift_uint128_t rhs) {
     t = (t >> 32) + lhs->high + (~rhs.high);
     lhs->high = (uint32_t)t;
 }
-#endif
 
 #ifdef _MSC_VER
 #pragma warning(pop)
+#endif
 #endif
 
 // Shift a 128-bit integer right, rounding down.

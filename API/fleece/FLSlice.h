@@ -94,7 +94,7 @@ typedef FLSliceResult FLStringResult;
 
 
 /** A convenient constant denoting a null slice. */
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
     static const FLSlice kFLSliceNull = { NULL, 0 };
 #else
     #define kFLSliceNull ((FLSlice){NULL, 0})

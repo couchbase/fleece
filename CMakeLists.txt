@@ -37,6 +37,7 @@ if(FLEECE_WARNINGS_HARDCORE)
             -Wno-nullable-to-nonnull-conversion # TODO: "implicit conversion from nullable pointer to non-nullable pointer type"
             -Wno-sign-compare # TODO "comparison of integers of different signs"
             -Wno-undefined-func-template # TODO: Can't figure out how to fix MValue.hh
+            -Wno-implicit-int-float-conversion #TODO: diff_match_patch.hh
             -Wno-alloca
             -Wno-atomic-implicit-seq-cst # "implicit use of sequentially-consistent atomic may incur stronger memory barriers than necessary"
             -Wno-c++98-compat
@@ -70,6 +71,9 @@ if(FLEECE_WARNINGS_HARDCORE)
             -Wno-unused-macros
             -Wno-unused-parameter # Unused fn parameter
             -Wno-weak-vtables # "Class has no out-of-line virtual method definitions; its vtable will be emitted in every translation unit"
+            -Wno-reserved-identifier
+            -Wno-unsafe-buffer-usage
+            -Wno-zero-as-null-pointer-constant # Using 0 instead of nullptr. Some of our dependencies do this in headers.
         )
     endif()
 endif()
@@ -90,7 +94,7 @@ if (LITECORE_SANITIZE AND NOT CODE_COVERAGE_ENABLED AND (CMAKE_CXX_COMPILER_ID M
         -fsanitize=address
         -fsanitize=undefined
     )
-else()
+elseif(NOT WIN32)
     set(FLEECE_COMPILE_OPTIONS
         -fstack-protector
         -D_FORTIFY_SOURCE=2
@@ -125,6 +129,7 @@ set(FLEECE_BASE_SRC Fleece/API_Impl/FLSlice.cc
                     ${FLEECE_BASE_PLATFORM_SRC})
 
 add_library(FleeceBase    STATIC  ${FLEECE_BASE_SRC})
+target_compile_definitions(FleeceBase PRIVATE FLEECE_EXPORTS)
 
 # Command-Line Tool
 add_executable(fleeceTool Tool/fleece_tool.cc)

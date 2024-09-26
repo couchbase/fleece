@@ -29,7 +29,7 @@ namespace fleece { namespace impl {
     class Array;
     class Dict;
     class SharedKeys;
-
+    class Encoder;
 
     /* Types of values -- same as JSON types, plus binary data */
     enum valueType : uint8_t {
