@@ -320,7 +320,7 @@ namespace fleece {
 
 
     /** Literal syntax for slices: `"foo"_sl` */
-    inline constexpr slice operator "" _sl (const char *str, size_t length) noexcept {
+    inline constexpr slice operator ""_sl (const char *str, size_t length) noexcept {
         return slice(str, length);
     }
 

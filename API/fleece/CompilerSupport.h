@@ -240,6 +240,14 @@
 #endif
 
 
+// Suppresses sanitizers in a function
+#ifndef _MSC_VER
+#   define __no_sanitize(X)     __attribute__((no_sanitize(X)))
+#else
+#   define __no_sanitize(X)
+#endif
+
+
 #ifndef _MSC_VER
     #define WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) 0
 #endif

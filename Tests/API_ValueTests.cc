@@ -25,8 +25,9 @@ namespace fleece {
 #include "fleece/Fleece.hh"
 #include "fleece/Mutable.hh"
 
-using namespace fleece;
 using namespace std;
+using namespace fleece;
+using namespace fleece_test;
 
 
 #if 0

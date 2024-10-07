@@ -309,6 +309,11 @@ namespace fleece { namespace impl {
     }
 
 
+    bool Value::isMutable() const {
+        return HeapValue::isHeapValue(this);
+    }
+
+
 #pragma mark - VALIDATION:
 
     

@@ -11,8 +11,10 @@
 //
 
 #include "fleece/FLBase.h"
+#include "fleece/InstanceCounted.hh"
 #include "FleeceTests.hh"
 #include "FleeceImpl.hh"
+#include "Backtrace.hh"
 #include "ConcurrentMap.hh"
 #include "Bitmap.hh"
 #include "TempArray.hh"
@@ -22,6 +24,7 @@
 #include <future>
 
 using namespace std;
+using namespace fleece;
 
 
 // Tests for the LIFETIMEBOUND attribute on slices. This code is commented out because it should fail to compile.
@@ -364,4 +367,36 @@ TEST_CASE("Timestamp Conversions", "[Timestamps]") {
     FLStringResult str = FLTimestamp_ToString(ts, asUTC);
     FLTimestamp ts2 = FLTimestamp_FromString((FLString)str);
     CHECK(ts == ts2);
+    FLSliceResult_Release(str);
+}
+
+
+static Backtrace makeBacktrace() {
+    return Backtrace();
+}
+
+
+TEST_CASE("Backtrace") {
+    Backtrace bt = makeBacktrace();
+    string str = bt.toString();
+    cout << str << endl;
+    CHECK(std::count(str.begin(), str.end(), '\n') >= 4);
+}
+
+
+class ICTest : public RefCounted, public InstanceCountedIn<ICTest> {
+public:
+    ICTest() noexcept = default;
+};
+
+
+TEST_CASE("InstanceCounted") {
+    auto n = InstanceCounted::liveInstanceCount();
+    {
+        auto i1 = make_retained<ICTest>();
+        auto i2 = make_retained<ICTest>();
+        InstanceCounted::dumpInstances();
+        CHECK(InstanceCounted::liveInstanceCount() == n + 2);
+    }
+    CHECK(InstanceCounted::liveInstanceCount() == n);
 }

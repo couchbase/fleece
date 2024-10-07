@@ -83,7 +83,7 @@ namespace fleece {
 
     // Makes `assignRef` polymorphic with RefCounted subclasses.
     template <typename T>
-    static inline void assignRef(T* &holder, RefCounted *newValue) noexcept {
+    inline void assignRef(T* &holder, RefCounted *newValue) noexcept {
         assignRef((RefCounted*&)holder, newValue);
     }
 
@@ -268,7 +268,7 @@ namespace fleece {
     /** make_retained<T>(...) is equivalent to `std::make_unique` and `std::make_shared`.
         It constructs a new RefCounted object, passing params to the constructor, returning a `Retained`. */
     template<class T, class... _Args>
-    [[nodiscard]] static inline Retained<T>
+    [[nodiscard]] inline Retained<T>
     make_retained(_Args&&... __args) {
         return Retained<T>(new T(std::forward<_Args>(__args)...));
     }

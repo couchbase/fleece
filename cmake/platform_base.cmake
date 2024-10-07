@@ -8,6 +8,7 @@ function(set_source_files_base)
     set(
         ${BASE_SSS_RESULT}
         Fleece/API_Impl/Fleece.cc
+        Fleece/API_Impl/FLEncoder.cc
         Fleece/API_Impl/FLSlice.cc
         Fleece/Core/Array.cc
         Fleece/Core/Builder.cc
@@ -47,9 +48,9 @@ function(set_source_files_base)
         Fleece/Support/StringTable.cc
         Fleece/Support/varint.cc
         Fleece/Support/Writer.cc
-        Fleece/Tree/HashTree.cc
-        Fleece/Tree/MutableHashTree.cc
-        Fleece/Tree/NodeRef.cc
+#        Fleece/Tree/HashTree.cc
+#        Fleece/Tree/MutableHashTree.cc
+#        Fleece/Tree/NodeRef.cc
         vendor/jsonsl/jsonsl.c
         vendor/libb64/cdecode.c
         vendor/libb64/cencode.c
@@ -73,7 +74,7 @@ function(set_test_source_files_base)
         Tests/FleeceTests.cc
         Tests/BuilderTests.cc
         Tests/FleeceTestsMain.cc
-        Tests/HashTreeTests.cc
+#       Tests/HashTreeTests.cc
         Tests/JSON5Tests.cc
         Tests/MutableTests.cc
         Tests/PerfTests.cc
@@ -81,7 +82,7 @@ function(set_test_source_files_base)
         Tests/SupportTests.cc
         Tests/ValueTests.cc
         Tests/C_Test.c
-        Experimental/KeyTree.cc
+#       Experimental/KeyTree.cc
         PARENT_SCOPE
     )
 endfunction()

@@ -20,8 +20,10 @@ namespace fleece { namespace impl {
     namespace internal {
         using namespace fleece::impl;
 
+        constexpr uint8_t kHeapValuePad = 0xFF;
+
         struct offsetValue {
-            uint8_t _pad = 0xFF;                // Unused byte, to ensure _header is at an odd address
+            uint8_t _pad = kHeapValuePad;       // Unused byte, to ensure _header is at an odd address
             uint8_t _header;                    // Value header byte (tag | tiny)
 //          uint8_t _data[0];                   // Extra Value data (object is dynamically sized)
 
@@ -51,7 +53,10 @@ namespace fleece { namespace impl {
             static const Value* asValue(HeapValue *v) FLPURE   {return v ? v->asValue() : nullptr;}
             const Value* asValue() const FLPURE                {return (const Value*)&_header;}
 
-            static bool isHeapValue(const Value *v) FLPURE     {return ((size_t)v & 1) != 0;}
+            static bool isHeapValue(const Value *v) FLPURE {
+                return ((size_t)v & 1) != 0 && ((uint8_t*)v)[-1] == kHeapValuePad;
+            }
+
             static HeapValue* asHeapValue(const Value*);
 
             static const Value* retain(const Value *v);
@@ -74,6 +79,10 @@ namespace fleece { namespace impl {
             template <class INT> static HeapValue* createInt(INT, bool isUnsigned);
         };
 
+        extern template HeapValue* HeapValue::createInt(int,      bool isUnsigned);
+        extern template HeapValue* HeapValue::createInt(unsigned, bool isUnsigned);
+        extern template HeapValue* HeapValue::createInt(int64_t,  bool isUnsigned);
+        extern template HeapValue* HeapValue::createInt(uint64_t, bool isUnsigned);
 
 
         /** Abstract base class of Heap{Array,Dict}. */
