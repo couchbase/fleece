@@ -8,6 +8,7 @@ function(set_source_files_base)
     set(
         ${BASE_SSS_RESULT}
         Fleece/API_Impl/Fleece.cc
+        Fleece/API_Impl/FLEncoder.cc
         Fleece/API_Impl/FLSlice.cc
         Fleece/Core/Array.cc
         Fleece/Core/Builder.cc

@@ -153,6 +153,13 @@ extern "C" {
     /** Writes a Fleece Value to an Encoder. */
     FLEECE_PUBLIC bool FLEncoder_WriteValue(FLEncoder, FLValue) FLAPI;
 
+    /** Writes an Array or Dict to the encoder, as per the format string and printf-style arguments.
+        For details, see documentation of \ref FLValue_NewWithFormat. */
+    FLEECE_PUBLIC bool FLEncoder_WriteFormatted(FLEncoder, const char* format, ...) FLAPI __printflike(2, 3);
+
+    /** Writes an Array or Dict to the encoder, as per the format string and `va_list`.
+        For details, see documentation of \ref FLValue_NewWithFormat. */
+    FLEECE_PUBLIC bool FLEncoder_WriteFormattedArgs(FLEncoder, const char* format, va_list args) FLAPI;
 
     /** Begins writing an array value to an encoder. This pushes a new state where each
         subsequent value written becomes an array item, until FLEncoder_EndArray is called.

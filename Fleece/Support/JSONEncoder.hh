@@ -36,13 +36,13 @@ namespace fleece { namespace impl {
         size_t bytesWritten() const             {return _out.length();}
 
         /** Returns the encoded data. */
-        alloc_slice finish()                    {return _out.finish();}
+        alloc_slice finish()                    {requireUnnested(); return _out.finish();}
 
         /** Resets the encoder so it can be used again. */
-        void reset()                            {_out.reset(); _first = true;}
+        void reset()                            {_out.reset(); _nesting = 0; _first = true;}
 
         /** Adds a newline between consecutive top-level values. */
-        void nextDocument()                     {_out << '\n'; _first = true;}
+        void nextDocument()                     {requireUnnested(); _out << '\n'; _first = true;}
 
         /////// Writing data:
 
@@ -65,20 +65,24 @@ namespace fleece { namespace impl {
         void writeJSON(slice json)              {comma(); _out << json;}
         void writeRaw(slice raw)                {_out << raw;}
 
+#ifdef __APPLE__
+        void writeCF(const void*)               {FleeceException::_throw(JSONError,
+                                                                         "Encoding CF value to JSON is unimplemented");}
+#endif
 #ifdef __OBJC__
-        [[noreturn]] void writeObjC(id)         {FleeceException::_throw(JSONError,
-                                                    "Encoding Obj-C to JSON is unimplemented");}
+        void writeObjC(id)                      {FleeceException::_throw(JSONError,
+                                                                         "Encoding Obj-C to JSON is unimplemented");}
 #endif
 
         //////// Writing arrays:
 
-        void beginArray()                       {comma(); _out << '['; _first = true;}
-        void endArray()                         {_out << ']'; _first = false;}
+        void beginArray()                       {nest(); comma(); _out << '['; _first = true;}
+        void endArray()                         {unnest(); _out << ']'; _first = false;}
 
         //////// Writing dictionaries:
 
-        void beginDictionary()                  {comma(); _out << '{'; _first = true;}
-        void endDictionary()                    {_out << '}'; _first = false;}
+        void beginDictionary()                  {nest(); comma(); _out << '{'; _first = true;}
+        void endDictionary()                    {unnest(); _out << '}'; _first = false;}
 
         void writeKey(slice s);
         void writeKey(const std::string &s)     {writeKey(slice(s));}
@@ -108,13 +112,10 @@ namespace fleece { namespace impl {
 
     private:
         void writeDict(const Dict*);
-        
-        void comma() {
-            if (_first)
-                _first = false;
-            else
-                _out << ',';
-        }
+        void comma();
+        void nest();
+        void unnest();
+        void requireUnnested();
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
@@ -137,6 +138,7 @@ namespace fleece { namespace impl {
         }
 
         Writer _out;
+        int _nesting {0};
         bool _json5 {false};
         bool _canonical {false};
         bool _first {true};

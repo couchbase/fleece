@@ -5,9 +5,20 @@
 //
 
 #pragma once
-#include "FleeceImpl.hh"
-#include "slice_stream.hh"
+#include "Value.hh"
+#include "fleece/RefCounted.hh"
 #include <stdarg.h>
+
+#ifdef __APPLE__
+#include <CoreFoundation/CFString.h>
+#endif
+
+namespace fleece::impl {
+    class Encoder;
+    class JSONEncoder;
+    class MutableArray;
+    class MutableDict;
+}
 
 namespace fleece::impl::builder {
 
@@ -42,7 +53,6 @@ namespace fleece::impl::builder {
         location where the error occurred. */
     RetainedConst<Value> Build(const char *format, ...) __printflike(1, 2);
 
-
     /** Variant of \ref Build that takes a pre-existing `va_list`. */
     RetainedConst<Value> VBuild(const char *format, va_list args);
     RetainedConst<Value> VBuild(slice format, va_list args);
@@ -58,11 +68,29 @@ namespace fleece::impl::builder {
     /** Variant of \ref Put that takes a pre-existing `va_list`. */
     void VPut(Value*, const char *format, va_list args);
 
+
+    /** Variant of Build that writes the value to an Encoder.
+        Format string syntax is the same, except that the braces around the outer dictionary may be removed,
+        which causes its keys and values to be added to the Encoder's current dictionary. */
+    void Encode(Encoder&, const char *format, ...) __printflike(2, 3);
+    void Encode(JSONEncoder&, const char *format, ...) __printflike(2, 3);
+
+    /** Variant of \ref Build that writes to an Encoder and takes a pre-existing `va_list`. */
+    void VEncode(Encoder&, slice format, va_list args);
+    void VEncode(JSONEncoder&, slice format, va_list args);
+
+
 #ifdef __APPLE__
     /** Variant of Build that allows `%@` for [Core]Foundation values; the corresponding arg
         must be a `CFStringRef`, `CFNumberRef`, `CFArrayRef` or `CFDictionaryRef`.
         \note The format string is a `CFStringRef` not a `char*`, because `CF_FORMAT_FUNCTION`
               requires that. */
     RetainedConst<Value> BuildCF(CFStringRef format, ...) CF_FORMAT_FUNCTION(1, 2);
+
+    /** Variant of Build to an Encoder that allows `%@` for [Core]Foundation values; the corresponding arg
+        must be a `CFStringRef`, `CFNumberRef`, `CFArrayRef` or `CFDictionaryRef`.
+        \note The format string is a `CFStringRef` not a `char*`, because `CF_FORMAT_FUNCTION`
+        requires that. */
+    void EncodeCF(Encoder&, CFStringRef format, ...) CF_FORMAT_FUNCTION(2, 3);
 #endif
 }

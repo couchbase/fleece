@@ -17,6 +17,7 @@
 #include "Fleece.h"
 #endif
 #include "slice.hh"
+#include <cstdarg>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -439,6 +440,9 @@ namespace fleece {
         inline bool writeValue(Value);
         inline bool convertJSON(slice_NONNULL);
 
+        inline bool writeFormatted(const char* format, ...) __printflike(2, 3);
+        inline bool writeFormattedArgs(const char* format, va_list args);
+
         inline bool beginArray(size_t reserveCount =0);
         inline bool endArray();
         inline bool beginDict(size_t reserveCount =0);
@@ -448,6 +452,11 @@ namespace fleece {
 
         template <class T>
         inline void write(slice_NONNULL key, T value)       {writeKey(key); *this << value;}
+
+        template <typename FN>
+        bool writeArray(FN const& fn) {return beginArray() && (fn(), endArray());}
+        template <typename FN>
+        bool writeDict(FN const& fn) {return beginDict() && (fn(), endDict());}
 
         [[nodiscard]] inline Doc finishDoc(FLError* FL_NULLABLE =nullptr);
         [[nodiscard]] inline alloc_slice finish(FLError* FL_NULLABLE =nullptr);
@@ -603,6 +612,18 @@ namespace fleece {
     inline void Encoder::reset()                {return FLEncoder_Reset(_enc);}
     inline FLError Encoder::error() const       {return FLEncoder_GetError(_enc);}
     inline const char* Encoder::errorMessage() const {return FLEncoder_GetErrorMessage(_enc);}
+
+    inline bool Encoder::writeFormatted(const char* format, ...) {
+        va_list args;
+        va_start(args, format);
+        bool ok = FLEncoder_WriteFormattedArgs(_enc, format, args);
+        va_end(args);
+        return ok;
+    }
+    
+    inline bool Encoder::writeFormattedArgs(const char* format, va_list args) {
+        return FLEncoder_WriteFormattedArgs(_enc, format, args);
+    }
 
     // specialization for assigning bool value since there is no Encoder<<bool
     template<>

@@ -86,6 +86,8 @@
 		279AC53C1C097941002C80DB /* Value+Dump.cc in Sources */ = {isa = PBXBuildFile; fileRef = 279AC53B1C097941002C80DB /* Value+Dump.cc */; };
 		27A0E3DF24DCD86900380563 /* ConcurrentArena.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27A0E3DD24DCD86900380563 /* ConcurrentArena.hh */; };
 		27A0E3E024DCD86900380563 /* ConcurrentArena.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27A0E3DE24DCD86900380563 /* ConcurrentArena.cc */; };
+		27A1327B2C700D45008E84FA /* JSLexer.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27A1327A2C700D45008E84FA /* JSLexer.hh */; };
+		27A132812C73BF8C008E84FA /* FLEncoder.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27A132802C73BF8C008E84FA /* FLEncoder.cc */; };
 		27A2F73B21248DA50081927B /* FLSlice.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A2F73A21248DA40081927B /* FLSlice.h */; };
 		27A924CF1D9C32E800086206 /* Path.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27A924CD1D9C32E800086206 /* Path.cc */; };
 		27A924D01D9C32E800086206 /* Path.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27A924CE1D9C32E800086206 /* Path.hh */; };
@@ -410,6 +412,8 @@
 		279AC53B1C097941002C80DB /* Value+Dump.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "Value+Dump.cc"; sourceTree = "<group>"; };
 		27A0E3DD24DCD86900380563 /* ConcurrentArena.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ConcurrentArena.hh; sourceTree = "<group>"; };
 		27A0E3DE24DCD86900380563 /* ConcurrentArena.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ConcurrentArena.cc; sourceTree = "<group>"; };
+		27A1327A2C700D45008E84FA /* JSLexer.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = JSLexer.hh; sourceTree = "<group>"; };
+		27A132802C73BF8C008E84FA /* FLEncoder.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FLEncoder.cc; sourceTree = "<group>"; };
 		27A2F73A21248DA40081927B /* FLSlice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FLSlice.h; sourceTree = "<group>"; };
 		27A63F38263375B500634F7B /* date.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = date.h; sourceTree = "<group>"; };
 		27A924CD1D9C32E800086206 /* Path.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Path.cc; sourceTree = "<group>"; };
@@ -587,6 +591,7 @@
 			isa = PBXGroup;
 			children = (
 				278163B31CE69CA800B94E32 /* Fleece.cc */,
+				27A132802C73BF8C008E84FA /* FLEncoder.cc */,
 				275B3595234BE12800FE9CF0 /* FLSlice.cc */,
 				270515551D90596000D62D05 /* Fleece+ImplGlue.hh */,
 			);
@@ -856,6 +861,7 @@
 				27298E7F1C04E665000CFBA8 /* Encoder.cc */,
 				270FA26F1BF53CEA005DCB13 /* Encoder.hh */,
 				27E3CE0E263B1B0700CA7056 /* Builder.cc */,
+				27A1327A2C700D45008E84FA /* JSLexer.hh */,
 				27E3CE0D263B1B0700CA7056 /* Builder.hh */,
 				27298E3A1C00F812000CFBA8 /* JSONConverter.cc */,
 				27298E761C00FB48000CFBA8 /* JSONConverter.hh */,
@@ -971,6 +977,8 @@
 				278343132A675A7000621050 /* function_ref.hh in Headers */,
 				270FA2801BF53CEA005DCB13 /* Writer.hh in Headers */,
 				270FA27D1BF53CEA005DCB13 /* Encoder.hh in Headers */,
+				27C8DF072084102900A99BFC /* MutableHashTree.hh in Headers */,
+				27A1327B2C700D45008E84FA /* JSLexer.hh in Headers */,
 				27A924D01D9C32E800086206 /* Path.hh in Headers */,
 				274D8245209A3A77008BB39F /* HeapDict.hh in Headers */,
 				274D8253209CF9B3008BB39F /* HeapValue.hh in Headers */,
@@ -1288,6 +1296,7 @@
 				27CA08431F6B0E9400FF8C71 /* Dict.cc in Sources */,
 				27867AF2211E27E5007BDA5F /* Doc.cc in Sources */,
 				27298E801C04E665000CFBA8 /* Encoder.cc in Sources */,
+				27A132812C73BF8C008E84FA /* FLEncoder.cc in Sources */,
 				27298E3C1C00F812000CFBA8 /* JSONConverter.cc in Sources */,
 				279AC53C1C097941002C80DB /* Value+Dump.cc in Sources */,
 				27FE87F31E53E43200C5CF3F /* JSONEncoder.cc in Sources */,
