@@ -25,6 +25,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 #endif
 
+using namespace fleece;
 using namespace fleece::impl;
 
 

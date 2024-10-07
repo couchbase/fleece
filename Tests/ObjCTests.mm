@@ -14,6 +14,7 @@
 #include "FleeceTests.hh"
 #include "FleeceImpl.hh"
 
+using namespace fleece;
 using namespace fleece::impl;
 
 static void checkIt(id obj, const char* json) {
@@ -190,11 +191,9 @@ TEST_CASE("Obj-C PerfReadNamesNS", "[.Perf]") {
 
         Stopwatch st;
         for (int j = 0; j < 10000; j++) {
-            int i = 0;
             for (NSDictionary *person in people) {
                 if (person[@"name"] == nil)
                     abort();
-                i++;
             }
         }
         fprintf(stderr, "Iterating people (NS) took %g ms\n", st.elapsedMS()/10000);

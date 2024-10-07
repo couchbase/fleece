@@ -20,6 +20,7 @@
 
 namespace fleece {
     using namespace fleece::impl;
+    using namespace fleece_test;
 
     TEST_CASE("MutableArray type checking", "[Mutable]") {
         Retained<MutableArray> ma = MutableArray::newArray();
@@ -33,7 +34,7 @@ namespace fleece {
         CHECK(ma->asBool() == true);
         CHECK(ma->asInt() == 0);
         CHECK(ma->asUnsigned() == 0);
-        CHECK(ma->asFloat() == 0.0);
+        CHECK(ma->asFloat() == 0.0f);
         CHECK(ma->asDouble() == 0.0);
 
         CHECK(!ma->isInteger());
@@ -314,7 +315,7 @@ namespace fleece {
         CHECK(d->asBool() == true);
         CHECK(d->asInt() == 0);
         CHECK(d->asUnsigned() == 0);
-        CHECK(d->asFloat() == 0.0);
+        CHECK(d->asFloat() == 0.0f);
         CHECK(d->asDouble() == 0.0);
 
         CHECK(!d->isInteger());

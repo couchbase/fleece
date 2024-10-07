@@ -106,7 +106,7 @@ namespace fleece { namespace impl {
         // Just for API compatibility with Encoder class:
         void beginArray(size_t)                       {beginArray();}
         void beginDictionary(size_t)                  {beginDictionary();}
-        void writeUndefined() {
+        [[noreturn]] void writeUndefined() {
             FleeceException::_throw(JSONError, "Cannot write `undefined` to JSON encoder");
         }
 

@@ -42,7 +42,7 @@ namespace fleece {
     bool ParseInteger(const char *str NONNULL, uint64_t &result, bool allowTrailing =false);
 
     /// Alternative syntax for parsing an unsigned integer.
-    static inline bool ParseUnsignedInteger(const char *str NONNULL, uint64_t &r, bool t =false) {
+    inline bool ParseUnsignedInteger(const char *str NONNULL, uint64_t &r, bool t =false) {
         return ParseInteger(str, r, t);
     }
 
@@ -65,11 +65,11 @@ namespace fleece {
     size_t WriteFloat(float n, char *dst, size_t capacity);
 
     /// Alternative syntax for formatting a 64-bit-floating point number to a string.
-    static inline size_t WriteDouble(double n, char *dst, size_t c)  {return WriteFloat(n, dst, c);}
+    inline size_t WriteDouble(double n, char *dst, size_t c)  {return WriteFloat(n, dst, c);}
 
     #if DEBUG
         template<typename Out, typename In>
-        static Out narrow_cast (In val) {
+        Out narrow_cast (In val) {
             static_assert(::std::is_arithmetic<In>::value && ::std::is_arithmetic<Out>::value, "Only numeric types are valid for narrow_cast");
             if constexpr(sizeof(In) <= sizeof(Out) && ::std::is_signed<In>::value == ::std::is_signed<Out>::value) {
                 return (Out)val;
@@ -107,7 +107,7 @@ namespace fleece {
         }
     #else
         template<typename Out, typename In>
-        static inline Out narrow_cast(In val) {
+        inline Out narrow_cast(In val) {
             return static_cast<Out>(val);
         }
     #endif

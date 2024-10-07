@@ -31,17 +31,17 @@ namespace fleece::impl {
 }
 
 // Define the public types as typedefs of the impl types:
-typedef const Value*    FLValue;
-typedef const Array*    FLArray;
-typedef const Dict*     FLDict;
-typedef ValueSlot*      FLSlot;
-typedef MutableArray*   FLMutableArray;
-typedef MutableDict*    FLMutableDict;
-typedef FLEncoderImpl*  FLEncoder;
-typedef SharedKeys*     FLSharedKeys;
-typedef Path*           FLKeyPath;
-typedef DeepIterator*   FLDeepIterator;
-typedef const Doc*      FLDoc;
+typedef const fleece::impl::Value*    FLValue;
+typedef const fleece::impl::Array*    FLArray;
+typedef const fleece::impl::Dict*     FLDict;
+typedef fleece::impl::ValueSlot*      FLSlot;
+typedef fleece::impl::MutableArray*   FLMutableArray;
+typedef fleece::impl::MutableDict*    FLMutableDict;
+typedef fleece::impl::FLEncoderImpl*  FLEncoder;
+typedef fleece::impl::SharedKeys*     FLSharedKeys;
+typedef fleece::impl::Path*           FLKeyPath;
+typedef fleece::impl::DeepIterator*   FLDeepIterator;
+typedef const fleece::impl::Doc*      FLDoc;
 
 #define FL_IMPL         // Prevents redefinition of the above types
 
