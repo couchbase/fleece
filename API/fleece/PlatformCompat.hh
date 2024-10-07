@@ -12,15 +12,12 @@
 
 #pragma once
 #include "fleece/CompilerSupport.h"
-#ifdef __APPLE__
-    #include <sys/cdefs.h>
-    #include "TargetConditionals.h"
-#endif
 
 #ifdef _MSC_VER
     #define NOINLINE                        __declspec(noinline)
     #define ALWAYS_INLINE                   inline
     #define ASSUME(cond)                    __assume(cond)
+    #define __typeof                        decltype
 
     #define __func__                        __FUNCTION__
 

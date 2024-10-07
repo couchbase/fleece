@@ -213,7 +213,6 @@ extern "C" {
 
     /** Ends encoding; if there has been no error, it returns the encoded data, else null.
         This does not free the FLEncoder; call FLEncoder_Free (or FLEncoder_Reset) next. */
-    NODISCARD
     FLEECE_PUBLIC FLSliceResult FLEncoder_Finish(FLEncoder, FLError* FL_NULLABLE outError) FLAPI;
 
     /** @} */
@@ -226,7 +225,7 @@ extern "C" {
     FLEECE_PUBLIC FLError FLEncoder_GetError(FLEncoder) FLAPI;
 
     /** Returns the error message of an encoder, or NULL if there's no error. */
-    FLEECE_PUBLIC const char* FL_NULLABLE FLEncoder_GetErrorMessage(FLEncoder) FLAPI;
+    FLEECE_PUBLIC const char* FL_NULLABLE FLEncoder_GetErrorMessage(FLEncoder e LIFETIMEBOUND) FLAPI;
 
     /** @} */
     /** @} */

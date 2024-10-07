@@ -16,14 +16,18 @@
 
 #include "FLSlice.h"
 #include <algorithm>            // for std::min()
-#include <stddef.h>
-#include <stdlib.h>
-#include <stdio.h>              // for fputs()
-#include <string.h>             // for memcpy(), memcmp()
+#include <cstddef>
+#include <cstdlib>
+#include <cstring>              // for memcpy(), memcmp()
 #include <string>
+#include <string_view>
+
+#ifndef __cpp_exceptions
+#include <cstdio>               // for fputs()
+#endif
 
 #ifndef assert
-#   include <assert.h>
+#   include <cassert>
 #endif
 #   ifndef assert_precondition
 #   define assert_precondition(e) assert(e)
@@ -36,14 +40,6 @@
         @class NSData;
         @class NSString;
         @class NSMapTable;
-#   endif
-#endif
-
-// Figure out whether and how string_view is available
-#ifdef __has_include
-#   if __has_include(<string_view>)
-#       include <string_view>
-#       define SLICE_SUPPORTS_STRING_VIEW
 #   endif
 #endif
 
@@ -62,10 +58,6 @@ namespace fleece {
     struct alloc_slice;
     struct nullslice_t;
 
-#ifdef SLICE_SUPPORTS_STRING_VIEW
-    using string_view = std::string_view; // create typedef with correct namespace
-#endif
-
 #ifdef __APPLE__
     using CFStringRef = const struct ::__CFString *;
     using CFDataRef   = const struct ::__CFData *;
@@ -73,13 +65,13 @@ namespace fleece {
     
     /** Adds a byte offset to a pointer. */
     template <typename T>
-    FLCONST constexpr14 inline const T* FL_NONNULL offsetby(const T * FL_NONNULL t, ptrdiff_t offset) noexcept {
+    FLCONST constexpr inline const T* FL_NONNULL offsetby(const T * FL_NONNULL t, ptrdiff_t offset) noexcept {
         return (const T*)((uint8_t*)t + offset);
     }
 
     /** Adds a byte offset to a pointer. */
     template <typename T>
-    FLCONST constexpr14 inline T* FL_NONNULL offsetby(T * FL_NONNULL t, ptrdiff_t offset) noexcept {
+    FLCONST constexpr inline T* FL_NONNULL offsetby(T * FL_NONNULL t, ptrdiff_t offset) noexcept {
         return (T*)((uint8_t*)t + offset);
     }
 
@@ -110,13 +102,14 @@ namespace fleece {
           ownership: it manages a ref-counted heap-allocated buffer.
         * Instances are immutable: `buf` and `size` cannot be changed. The `slice` subclass
           changes this.
-        * The memory pointed to cannot be modified through this class. `slice` has some
-          methods that allow writes. */
+        * The memory pointed to cannot be modified through this class. */
     struct pure_slice {
-        const void* FL_NULLABLE const buf;
-        size_t                  const size;
+        const void* FL_NULLABLE const buf  = nullptr;
+        size_t                  const size = 0;
 
-        pure_slice(const pure_slice &) noexcept = default;
+        constexpr const void* data() const noexcept FLPURE          {return buf;}   //like std::span
+        constexpr size_t size_bytes() const noexcept FLPURE         {return size;}  //like std::span
+
         /// True if the slice's length is zero.
         bool empty() const noexcept FLPURE                          {return size == 0;}
 
@@ -178,11 +171,9 @@ namespace fleece {
         /// Copies my contents to memory starting at `dst`, using `memcpy`.
         void copyTo(void *dst) const noexcept       {FLMemCpy(dst, buf, size);}
 
-        /// Returns new malloc'ed slice containing same data. Call free() on it when done.
-        inline slice copy() const;
-
         // String conversions:
 
+        operator std::string_view() const noexcept STEPOVER {return {(const char*)buf, size};}
         explicit operator std::string() const       {return std::string((const char*)buf, size);}
         std::string asString() const                {return (std::string)*this;}
 
@@ -192,14 +183,7 @@ namespace fleece {
             will not overflow the buffer. Returns false if the slice was truncated. */
         inline bool toCString(char *buf, size_t bufSize) const noexcept;
 
-        // FLSlice interoperability:
         constexpr operator FLSlice () const noexcept {return {buf, size};}
-
-#ifdef SLICE_SUPPORTS_STRING_VIEW
-        // std::string_view interoperability:
-        constexpr pure_slice(string_view str) noexcept            :pure_slice(str.data(), str.length()) {}
-        operator string_view() const noexcept STEPOVER {return string_view((const char*)buf, size);}
-#endif
 
 #ifdef __APPLE__
         // Implementations in slice+CoreFoundation.cc and slice+ObjC.mm
@@ -218,17 +202,20 @@ namespace fleece {
 #   endif
 #endif
 
-        constexpr pure_slice(std::nullptr_t) noexcept             :pure_slice() {}
+        constexpr pure_slice(std::nullptr_t) noexcept              :pure_slice() {}
         constexpr pure_slice(const char* FL_NULLABLE str) noexcept :buf(str), size(_strlen(str)) {}
-        pure_slice(const std::string& str) noexcept               :buf(&str[0]), size(str.size()) {}
+        pure_slice(const std::string& str LIFETIMEBOUND) noexcept  :buf(str.data()), size(str.size()) {}
+        constexpr pure_slice(std::string_view str) noexcept :pure_slice(str.data(), str.length()) {}
 
         // Raw memory allocation. These throw std::bad_alloc on failure.
         RETURNS_NONNULL inline static void* newBytes(size_t sz);
         template <typename T> RETURNS_NONNULL
             static inline T* FL_NONNULL reallocBytes(T* FL_NULLABLE bytes, size_t newSz);
+        // Returns new malloc'ed slice containing same data. Call free() on it when done.
+        inline slice copy() const;
 
     protected:
-        constexpr pure_slice() noexcept                           :buf(nullptr), size(0) {}
+        constexpr pure_slice() noexcept = default;
         inline constexpr pure_slice(const void* FL_NULLABLE b, size_t s) noexcept;
 
         inline void setBuf(const void *b) noexcept;
@@ -259,19 +246,21 @@ namespace fleece {
         * `buf` may be NULL, but only if `size` is zero; this is called `nullslice`.
         * `size` may be zero with a non-NULL `buf`; that's called an "empty slice". */
     struct slice : public pure_slice {
-        constexpr slice() noexcept STEPOVER                           :pure_slice() {}
+        constexpr slice() noexcept STEPOVER = default;
         constexpr slice(std::nullptr_t) noexcept STEPOVER             :pure_slice() {}
         inline constexpr slice(nullslice_t) noexcept STEPOVER;
-        constexpr slice(const void* FL_NULLABLE b, size_t s) noexcept STEPOVER    :pure_slice(b, s) {}
-        inline constexpr slice(const void* start, const void* end) noexcept STEPOVER;
-        inline constexpr slice(const alloc_slice&) noexcept STEPOVER;
+        constexpr slice(const void* FL_NULLABLE b LIFETIMEBOUND, size_t s) noexcept STEPOVER    :pure_slice(b, s) {}
+        inline constexpr slice(const void* start LIFETIMEBOUND, const void* end) noexcept STEPOVER;
+        inline slice(const alloc_slice& LIFETIMEBOUND) noexcept STEPOVER;
 
-        slice(const std::string& str) noexcept STEPOVER               :pure_slice(str) {}
-        constexpr slice(const char* FL_NULLABLE str) noexcept STEPOVER  :pure_slice(str) {}
+        constexpr slice(std::string_view str) noexcept STEPOVER                       :pure_slice(str) {}
+        slice(const std::string& str LIFETIMEBOUND) noexcept STEPOVER                 :pure_slice(str) {}
+        constexpr slice(const char* FL_NULLABLE str LIFETIMEBOUND) noexcept STEPOVER  :pure_slice(str) {}
 
         slice& operator= (const char* s) & noexcept           {return *this = slice(s);}
-        slice& operator= (const std::string &s) & noexcept    {return *this = slice(s);}
-        slice& operator= (const alloc_slice &s) & noexcept    {return *this = slice(s);}
+        slice& operator= (alloc_slice&&) =delete;   // Disallowed: might lead to ptr to freed buf
+        slice& operator= (std::string&&) =delete;   // Disallowed: might lead to ptr to freed buf
+        slice& operator= (const alloc_slice &s LIFETIMEBOUND) & noexcept    {return *this = slice(s);}
         slice& operator= (std::nullptr_t) & noexcept          {set(nullptr, 0); return *this;}
         inline slice& operator= (nullslice_t) & noexcept;
 
@@ -290,14 +279,10 @@ namespace fleece {
         bool checkedMoveStart(size_t delta) noexcept        {if (size<delta) return false;
                                                              else {moveStart(delta); return true;}}
         // FLSlice interoperability:
-        constexpr slice(const FLSlice &s) noexcept STEPOVER           :pure_slice(s.buf,s.size) { }
+        constexpr slice(const FLSlice &s) noexcept STEPOVER            :pure_slice(s.buf,s.size) { }
         inline explicit operator FLSliceResult () const noexcept;
-        explicit slice(const FLSliceResult &sr) STEPOVER            :pure_slice(sr.buf, sr.size) { }
+        explicit slice(const FLSliceResult &sr LIFETIMEBOUND) STEPOVER :pure_slice(sr.buf, sr.size) { }
         slice& operator= (FLHeapSlice s) & noexcept           {set(s.buf, s.size); return *this;} // disambiguation
-
-#ifdef SLICE_SUPPORTS_STRING_VIEW
-        constexpr slice(string_view str) noexcept STEPOVER            :pure_slice(str) {}
-#endif
 
 #ifdef __APPLE__
         explicit slice(CFDataRef data) noexcept                       :pure_slice(data) {}
@@ -305,18 +290,15 @@ namespace fleece {
         explicit slice(NSData* data) noexcept                         :pure_slice(data) {}
 #   endif
 #endif
-
-        slice& operator= (std::string&&) =delete;   // Disallowed: might lead to ptr to freed buf
-        slice& operator= (alloc_slice&&) =delete;   // Disallowed: might lead to ptr to freed buf
     };
 
 
     /** An awkwardly unrelated struct for when the bytes need to be writeable. */
     struct mutable_slice {
-        void* FL_NULLABLE buf;
-        size_t size;
+        void* FL_NULLABLE buf  = nullptr;
+        size_t            size = 0;
 
-        constexpr mutable_slice() noexcept                      :buf(nullptr), size(0) {}
+        constexpr mutable_slice() noexcept = default;
         explicit constexpr mutable_slice(pure_slice s) noexcept :buf((void*)s.buf), size(s.size) {}
         constexpr mutable_slice(void* FL_NULLABLE b, size_t s) noexcept     :buf(b), size(s) {}
         constexpr mutable_slice(void* b, void* e) noexcept      :buf(b),
@@ -347,24 +329,24 @@ namespace fleece {
 
     /** A \ref slice that owns a heap-allocated, ref-counted block of memory. */
     struct [[nodiscard]] alloc_slice : public pure_slice {
-        constexpr alloc_slice() noexcept STEPOVER                             {}
+        constexpr alloc_slice() noexcept STEPOVER = default;
         constexpr alloc_slice(std::nullptr_t) noexcept STEPOVER               {}
         constexpr alloc_slice(nullslice_t) noexcept STEPOVER                  {}
 
         inline explicit alloc_slice(size_t sz) STEPOVER;
 
         alloc_slice(const void* FL_NULLABLE b, size_t s)    :alloc_slice(slice(b, s)) {}
-        alloc_slice(const void* start,
-                    const void* end)                        :alloc_slice(slice(start, end)) {}
+        alloc_slice(const void* start, const void* end)     :alloc_slice(slice(start, end)) {}
         explicit alloc_slice(const char* FL_NULLABLE str)   :alloc_slice(slice(str)) {}
+        explicit alloc_slice(std::string_view str) STEPOVER :alloc_slice(slice(str)) {}
         explicit alloc_slice(const std::string &str)        :alloc_slice(slice(str)) {}
 
         inline explicit alloc_slice(pure_slice s) STEPOVER;
         explicit alloc_slice(FLSlice s)                     :alloc_slice(s.buf, s.size) { }
-        alloc_slice(const alloc_slice &s) noexcept STEPOVER     :pure_slice(s) {retain();}
-        alloc_slice(alloc_slice&& s) noexcept STEPOVER          :pure_slice(s) {s.set(nullptr, 0);}
+        alloc_slice(const alloc_slice &s) noexcept STEPOVER :pure_slice(s) {retain();}
+        alloc_slice(alloc_slice&& s) noexcept STEPOVER      :pure_slice(s) {s.set(nullptr, 0);}
 
-        ~alloc_slice() STEPOVER                                 {_FLBuf_Release(buf);}
+        ~alloc_slice() STEPOVER                             {_FLBuf_Release(buf);}
 
         inline alloc_slice& operator=(const alloc_slice&) & noexcept STEPOVER;
 
@@ -377,13 +359,14 @@ namespace fleece {
             data. This allows the contents of the alloc_slice to be used as a C string. */
         inline static alloc_slice nullPaddedString(pure_slice);
 
-        alloc_slice& operator= (pure_slice s) &               {return *this = alloc_slice(s);}
-        alloc_slice& operator= (FLSlice s) &                  {return operator=(slice(s.buf,s.size));}
-        alloc_slice& operator= (std::nullptr_t) & noexcept    {reset(); return *this;}
+        alloc_slice& operator= (pure_slice s) &             {return *this = alloc_slice(s);}
+        alloc_slice& operator= (FLSlice s) &                {return *this = alloc_slice(s);}
+        alloc_slice& operator= (std::nullptr_t) & noexcept  {reset(); return *this;}
 
         // disambiguation:
-        alloc_slice& operator= (const char *str) &            {*this = (slice)str; return *this;}
-        alloc_slice& operator= (const std::string &str) &     {*this = (slice)str; return *this;}
+        alloc_slice& operator= (const char *str) &          {*this = (slice)str; return *this;}
+        alloc_slice& operator= (std::string_view str) &     {*this = (slice)str; return *this;}
+        alloc_slice& operator= (const std::string &str) &   {*this = (slice)str; return *this;}
 
         /// Releases and clears; same as assigning `nullslice`.
         void reset() noexcept                               {release(); assignFrom(nullslice);}
@@ -408,12 +391,6 @@ namespace fleece {
         alloc_slice(FLHeapSlice s) noexcept STEPOVER        :pure_slice(s.buf, s.size) {retain();}
         alloc_slice& operator= (FLHeapSlice) & noexcept;
         operator FLHeapSlice () const noexcept              {return {buf, size};}
-
-        // std::string_view interoperability:
-#ifdef SLICE_SUPPORTS_STRING_VIEW
-        explicit alloc_slice(string_view str) STEPOVER          :alloc_slice(slice(str)) {}
-        alloc_slice& operator=(string_view str) &             {*this = (slice)str; return *this;}
-#endif
 
         // CFData / CFString / NSData / NSString interoperability:
 #ifdef __APPLE__
@@ -449,15 +426,12 @@ namespace fleece {
         constexpr slice_NONNULL(slice s)                            :slice_NONNULL(s.buf, s.size) {}
         constexpr slice_NONNULL(FLSlice s)                          :slice_NONNULL(s.buf,s.size) {}
         constexpr slice_NONNULL(const char *str NONNULL)            :slice(str) {}
-        slice_NONNULL(alloc_slice s)                                :slice_NONNULL(s.buf,s.size) {}
+        slice_NONNULL(const alloc_slice& s)                         :slice_NONNULL(s.buf,s.size) {}
         slice_NONNULL(const std::string &str)               :slice_NONNULL(str.data(),str.size()) {}
-#ifdef SLICE_SUPPORTS_STRING_VIEW
-        slice_NONNULL(string_view str)                      :slice_NONNULL(str.data(),str.size()) {}
-#endif
+        slice_NONNULL(std::string_view str)                 :slice_NONNULL(str.data(),str.size()) {}
         slice_NONNULL(std::nullptr_t) =delete;
         slice_NONNULL(nullslice_t) =delete;
     };
-
 
 
 #ifdef __APPLE__
@@ -466,9 +440,9 @@ namespace fleece {
         Alternatively it will copy the string's UTF-8 into a small internal buffer, or allocate
         a larger buffer on the heap (and free it in its destructor.) */
     struct nsstring_slice : public slice {
-        nsstring_slice(CFStringRef FL_NULLABLE);
+        explicit nsstring_slice(CFStringRef FL_NULLABLE);
 #   ifdef __OBJC__
-        nsstring_slice(NSString* FL_NULLABLE str)   :nsstring_slice((__bridge CFStringRef)str) { }
+        nsstring_slice(NSString* FL_NULLABLE str LIFETIMEBOUND)   :nsstring_slice((__bridge CFStringRef)str) { }
 #   endif
         ~nsstring_slice();
     private:
@@ -479,19 +453,10 @@ namespace fleece {
 #endif
 
 
-    /** Functor class for hashing the contents of a slice.
-        \note The below declarations of `std::hash` usually make it unnecessary to use this. */
-    struct sliceHash {
-        std::size_t operator() (pure_slice const& s) const {return s.hash();}
-    };
-
-
-
 #pragma mark - PURE_SLICE METHOD BODIES:
 
 
     // like strlen but can run at compile time
-#if __cplusplus >= 201400L || _MSVC_LANG >= 201400L
     inline constexpr size_t pure_slice::_strlen(const char* FL_NULLABLE str) noexcept {
         if (!str)
             return 0;
@@ -499,15 +464,6 @@ namespace fleece {
         while (*c) ++c;
         return c - str;
     }
-#else
-    // (In C++11, constexpr functions couldn't contain loops; use (tail-)recursion instead)
-    inline constexpr size_t pure_slice::_strlen(const char* FL_NULLABLE str) noexcept {
-        return str ? _strlen(str, 0) : 0;
-    }
-    inline constexpr size_t pure_slice::_strlen(const char *str, size_t n) noexcept {
-        return *str ? _strlen(str + 1, n + 1) : n;
-    }
-#endif
 
 
     inline constexpr pure_slice::pure_slice(const void* FL_NULLABLE b, size_t s) noexcept
@@ -764,7 +720,7 @@ namespace fleece {
 
 
     inline constexpr slice::slice(nullslice_t) noexcept           :pure_slice() {}
-    inline constexpr slice::slice(const alloc_slice &s) noexcept  :pure_slice(s) { }
+    inline slice::slice(const alloc_slice &s LIFETIMEBOUND) noexcept  :pure_slice(s) { }
 
 
     inline constexpr slice::slice(const void* start, const void* end) noexcept

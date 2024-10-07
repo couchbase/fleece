@@ -105,36 +105,36 @@ namespace fleece {
         void clear()                                    {shrinkTo(0);}
         void reserve(size_t cap)                        {if (cap>_capacity) setCapacity(cap);}
 
-        const T& get(size_t i) const FLPURE {
+        const T& get(size_t i) const LIFETIMEBOUND FLPURE {
             assert_precondition(i < _size);
             return _get(i);
         }
 
-        T& get(size_t i) FLPURE {
+        T& get(size_t i) LIFETIMEBOUND FLPURE {
             assert_precondition(i < _size);
             return _get(i);
         }
 
-        const T& operator[] (size_t i) const FLPURE     {return get(i);}
-        T& operator[] (size_t i) FLPURE                 {return get(i);}
-        const T& back() const FLPURE                    {return get(_size - 1);}
-        T& back() FLPURE                                {return get(_size - 1);}
+        const T& operator[] (size_t i) const LIFETIMEBOUND FLPURE   {return get(i);}
+        T& operator[] (size_t i) LIFETIMEBOUND FLPURE               {return get(i);}
+        const T& back() const LIFETIMEBOUND FLPURE                  {return get(_size - 1);}
+        T& back() LIFETIMEBOUND FLPURE                              {return get(_size - 1);}
 
         using iterator = T*;
         using const_iterator = const T*;
 
-        iterator begin() FLPURE                         {return &_get(0);}
-        iterator end() FLPURE                           {return &_get(_size);}
-        const_iterator begin() const FLPURE             {return &_get(0);}
-        const_iterator end() const FLPURE               {return &_get(_size);}
+        iterator begin() LIFETIMEBOUND FLPURE                       {return &_get(0);}
+        iterator end() LIFETIMEBOUND FLPURE                         {return &_get(_size);}
+        const_iterator begin() const LIFETIMEBOUND FLPURE           {return &_get(0);}
+        const_iterator end() const LIFETIMEBOUND FLPURE             {return &_get(_size);}
 
-        T& push_back(const T& t)                        {return * new(grow()) T(t);}
-        T& push_back(T&& t)                             {return * new(grow()) T(std::move(t));}
+        T& push_back(const T& t) LIFETIMEBOUND                      {return * new(grow()) T(t);}
+        T& push_back(T&& t) LIFETIMEBOUND                           {return * new(grow()) T(std::move(t));}
 
-        void pop_back()                                 {get(_size - 1).~T(); --_size;}
+        void pop_back()                                             {get(_size - 1).~T(); --_size;}
 
         template <class... Args>
-        T& emplace_back(Args&&... args) {
+        T& emplace_back(Args&&... args) LIFETIMEBOUND {
             return * new(grow()) T(std::forward<Args>(args)...);
         }
 
@@ -154,11 +154,11 @@ namespace fleece {
                 *dst++ = *b++;
         }
 
-        iterator erase(iterator first) {
+        iterator erase(iterator first) LIFETIMEBOUND {
             return erase(first, first+1);
         }
 
-        iterator erase(iterator first, iterator last) {
+        iterator erase(iterator first, iterator last) LIFETIMEBOUND {
             assert_precondition(begin() <= first && first <= last && last <= end());
             if (first == last)
                 return first;
@@ -208,7 +208,7 @@ namespace fleece {
         // Returns a pointer to the space where the new item would go; the caller needs to
         // put a valid value there or Bad Things will happen later.
         // (This method was added for the user of Encoder and is probably not too useful elsewhere.)
-        void* push_back_new()                   {return grow();}
+        void* push_back_new() LIFETIMEBOUND                   {return grow();}
 
     private:
         T& _get(size_t i) FLPURE                {return ((T*)_begin())[i];}

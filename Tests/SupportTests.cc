@@ -27,7 +27,28 @@ using namespace std;
 using namespace fleece;
 
 
-// TESTS:
+// Tests for the LIFETIMEBOUND attribute on slices. This code is commented out because it should fail to compile.
+#if 0
+static slice bad(const char* str) {
+    alloc_slice strslice(str);
+    return strslice;            // Clang should flag this as an error thanks to LIFETIMEBOUND
+}
+
+static slice bad2(const char* str) {
+    string s(str);
+    return s;                   // Clang should flag this as an error thanks to LIFETIMEBOUND
+}
+
+
+TEST_CASE("Slice safety") {
+    // Both of these calls will result in use-after-free UB:
+    slice x = bad("long string will be heap allocated, right?");
+    CHECK(string(x) == "foo");
+    x = bad2("long string will be heap allocated, right?");
+    CHECK(string(x) == "foo");
+}
+#endif
+
 
 #ifndef _MSC_VER
 

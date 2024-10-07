@@ -48,13 +48,13 @@ extern "C" {
     FLEECE_PUBLIC FLDoc FLDoc_Retain(FLDoc FL_NULLABLE) FLAPI;
 
     /** Returns the encoded Fleece data backing the document. */
-    FLEECE_PUBLIC FLSlice FLDoc_GetData(FLDoc FL_NULLABLE) FLAPI FLPURE;
+    FLEECE_PUBLIC FLSlice FLDoc_GetData(FLDoc FL_NULLABLE doc LIFETIMEBOUND) FLAPI FLPURE;
 
     /** Returns the FLSliceResult data owned by the document, if any, else a null slice. */
     FLEECE_PUBLIC FLSliceResult FLDoc_GetAllocedData(FLDoc FL_NULLABLE) FLAPI FLPURE;
 
     /** Returns the root value in the FLDoc, usually an FLDict. */
-    FLEECE_PUBLIC FLValue FLDoc_GetRoot(FLDoc FL_NULLABLE) FLAPI FLPURE;
+    FLEECE_PUBLIC FLValue FLDoc_GetRoot(FLDoc FL_NULLABLE doc LIFETIMEBOUND) FLAPI FLPURE;
 
     /** Returns the FLSharedKeys used by this FLDoc, as specified when it was created. */
     FLEECE_PUBLIC FLSharedKeys FLDoc_GetSharedKeys(FLDoc FL_NULLABLE) FLAPI FLPURE;
