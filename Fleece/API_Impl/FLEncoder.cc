@@ -13,9 +13,12 @@
 #include "Fleece+ImplGlue.hh"
 #include "Builder.hh"
 
-#define ENCODER_DO(E, METHOD)   (E)->do_([&](auto& e) {return e.METHOD;})
+using namespace fleece;
+using namespace fleece::impl;
 
-#define ENCODER_TRY(E, METHOD)  return (E)->try_([&](auto e) { ENCODER_DO(e, METHOD); return true;})
+#define ENCODER_DO(E, METHOD)   (E)->do_([&](auto& _e1) {return _e1.METHOD;})
+
+#define ENCODER_TRY(E, METHOD)  return (E)->try_([&](auto _e2) { ENCODER_DO(_e2, METHOD); return true;})
 
 FLEncoder FLEncoder_New(void) FLAPI {
     return FLEncoder_NewWithOptions(kFLEncodeFleece, 0, true);

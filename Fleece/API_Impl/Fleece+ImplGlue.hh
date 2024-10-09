@@ -22,10 +22,6 @@
 #include <memory>
 #include <variant>
 
-using namespace fleece;
-using namespace fleece::impl;
-
-
 namespace fleece::impl {
     class FLEncoderImpl;
 }
