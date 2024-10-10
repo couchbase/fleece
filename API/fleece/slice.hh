@@ -202,10 +202,11 @@ namespace fleece {
 #   endif
 #endif
 
+        constexpr pure_slice(const pure_slice &s) noexcept = default;
         constexpr pure_slice(std::nullptr_t) noexcept              :pure_slice() {}
         constexpr pure_slice(const char* FL_NULLABLE str) noexcept :buf(str), size(_strlen(str)) {}
         pure_slice(const std::string& str LIFETIMEBOUND) noexcept  :buf(str.data()), size(str.size()) {}
-        constexpr pure_slice(std::string_view str) noexcept :pure_slice(str.data(), str.length()) {}
+        constexpr pure_slice(std::string_view str) noexcept        :buf(str.data()), size(str.size()) {}
 
         // Raw memory allocation. These throw std::bad_alloc on failure.
         RETURNS_NONNULL inline static void* newBytes(size_t sz);
@@ -568,7 +569,7 @@ namespace fleece {
 
 
     inline std::string pure_slice::hexString() const {
-        static const char kDigits[17] = "0123456789abcdef";
+        static constexpr char kDigits[17] = "0123456789abcdef";
         std::string result;
         result.reserve(2 * size);
         for (size_t i = 0; i < size; i++) {
@@ -747,8 +748,7 @@ namespace fleece {
 
 
     inline void slice::setStart(const void *s) noexcept {
-        check(s);
-        set(s, pointerDiff(end(), s));
+        set(check(s), pointerDiff(end(), s));
     }
 
 
@@ -848,10 +848,10 @@ namespace std {
     // Declare the default hash function for `slice` and `alloc_slice`. This allows them to be
     // used in hashed collections like `std::unordered_map` and `std::unordered_set`.
     template<> struct hash<fleece::slice> {
-        std::size_t operator() (fleece::pure_slice const& s) const {return s.hash();}
+        std::size_t operator() (fleece::pure_slice const& s) const noexcept {return s.hash();}
     };
     template<> struct hash<fleece::alloc_slice> {
-        std::size_t operator() (fleece::pure_slice const& s) const {return s.hash();}
+        std::size_t operator() (fleece::pure_slice const& s) const noexcept {return s.hash();}
     };
 }
 

@@ -79,7 +79,7 @@ namespace fleece::impl::builder {
     protected:
         // Parses a Fleece value from the input and stores it in the ValueSlot.
         // Recognizes a '%' specifier, and calls `putParameter` to read the value from the args.
-        const bool _buildValue(ValueSlot &inSlot) {
+        bool _buildValue(ValueSlot &inSlot) {
             switch (peekValue()) {
                 case ValueType::array: {
                     Retained<MutableArray> array = MutableArray::newArray();
@@ -207,7 +207,7 @@ namespace fleece::impl::builder {
     protected:
         // Parses a Fleece value from the input and writes it, prefixed by the key if one's given.
         // Recognizes a '%' specifier, and calls `writeParameter` to read the value from the args.
-        const bool writeValue(slice key = nullslice) {
+        bool writeValue(slice key = nullslice) {
             auto v = peekValue();
             if (v != ValueType::arg && key)
                 _encoder.writeKey(key);
