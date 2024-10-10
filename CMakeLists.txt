@@ -133,10 +133,19 @@ target_link_options(fleeceTool PRIVATE ${FLEECE_LINK_OPTIONS})
 
 # Fleece Tests
 set_test_source_files(RESULT FLEECE_TEST_SRC)
-add_executable(FleeceTests EXCLUDE_FROM_ALL ${FLEECE_TEST_SRC})
+add_executable(FleeceTests EXCLUDE_FROM_ALL
+    ${FLEECE_TEST_SRC}
+    vendor/catch/catch_amalgamated.cpp
+    vendor/catch/CaseListReporter.cc
+)
 setup_test_build()
-target_include_directories(FleeceTests PRIVATE Tests vendor/catch)
-target_link_libraries(FleeceTests FleeceObjects)
+target_include_directories(FleeceTests PRIVATE
+        Tests
+        vendor/catch
+)
+target_link_libraries(FleeceTests
+        FleeceObjects
+)
 if("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
     target_link_libraries(FleeceTests  "pthread")
 endif()

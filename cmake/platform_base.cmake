@@ -73,7 +73,6 @@ function(set_test_source_files_base)
         Tests/EncoderTests.cc
         Tests/FleeceTests.cc
         Tests/BuilderTests.cc
-        Tests/FleeceTestsMain.cc
 #       Tests/HashTreeTests.cc
         Tests/JSON5Tests.cc
         Tests/MutableTests.cc
