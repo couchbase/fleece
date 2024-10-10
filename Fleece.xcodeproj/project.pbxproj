@@ -1245,7 +1245,7 @@
 		270FA2541BF53CAD005DCB13 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1320;
+				LastUpgradeCheck = 1540;
 				ORGANIZATIONNAME = Couchbase;
 				TargetAttributes = {
 					270FA25B1BF53CAD005DCB13 = {
@@ -1302,6 +1302,8 @@
 				"$(SRCROOT)/API/fleece/Fleece.hh",
 				"$(SRCROOT)/API/fleece/Mutable.hh",
 				"$(SRCROOT)/API/fleece/Base.hh",
+				"$(SRCROOT)/Documentation/Doxyfile",
+				"$(SRCROOT)/Documentation/Doxyfile_C++",
 			);
 			name = "Build Documentation";
 			outputFileListPaths = (

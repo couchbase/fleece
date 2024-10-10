@@ -5,6 +5,5 @@
 PROJECT_NAME           = "Fleece (C++ API)"
 OUTPUT_DIRECTORY       = "Documentation/Cpp"
 OPTIMIZE_OUTPUT_FOR_C  = NO
-INPUT                  = API/fleece/
 FILE_PATTERNS          = *.hh
 BUILTIN_STL_SUPPORT    = YES
