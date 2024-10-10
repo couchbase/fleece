@@ -487,8 +487,8 @@ namespace fleece_Catch {
 
         if (double dur = _sectionStats.durationInSeconds; shouldShowDuration(*m_config, dur)) {
             m_stream << m_colour->guardColour(Colour::Warning)
-                     << "[[ "//<< _sectionStats.sectionInfo.name << " took "
-                     << getFormattedDuration(_sectionStats.durationInSeconds) << " sec]]\n" << std::flush;
+                     << "[[ " << getFormattedDuration(_sectionStats.durationInSeconds) << " sec]]\n"
+                     << std::flush;
         }
         if (m_headerPrinted) {
             m_headerPrinted = false;
