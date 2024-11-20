@@ -269,23 +269,23 @@
 #endif
 
 #ifdef __cplusplus
-    #define FLAPI noexcept
-#else
-    #define FLAPI
-#endif
+#   define FLAPI noexcept
 
-// `LIFETIMEBOUND` helps Clang detect value lifetime errors, where one value's lifetime is tied to another and the
-// dependent value is used after the value it depends on exits scope. For examples of usage, see slice.hh.
-// "The `lifetimebound` attribute on a function parameter or implicit object parameter indicates that objects that are
-// referred to by that parameter may also be referred to by the return value of the annotated function (or, for a
-// parameter of a constructor, by the value of the constructed object)."
-// -- https://clang.llvm.org/docs/AttributeReference.html#lifetimebound
-#if __has_cpp_attribute(clang::lifetimebound)
-#   define LIFETIMEBOUND [[clang::lifetimebound]]
+    // `LIFETIMEBOUND` helps Clang detect value lifetime errors, where one value's lifetime is tied to another and the
+    // dependent value is used after the value it depends on exits scope. For examples of usage, see slice.hh.
+    // "The `lifetimebound` attribute on a function parameter or implicit object parameter indicates that objects that are
+    // referred to by that parameter may also be referred to by the return value of the annotated function (or, for a
+    // parameter of a constructor, by the value of the constructed object)."
+    // -- https://clang.llvm.org/docs/AttributeReference.html#lifetimebound
+#   if __has_cpp_attribute(clang::lifetimebound)
+#       define LIFETIMEBOUND [[clang::lifetimebound]]
+#   else
+#       define LIFETIMEBOUND
+#   endif
 #else
+#   define FLAPI
 #   define LIFETIMEBOUND
 #endif
-
 
 // Type-checking for printf-style vararg functions:
 #ifndef __printflike
