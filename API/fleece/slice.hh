@@ -104,8 +104,8 @@ namespace fleece {
           changes this.
         * The memory pointed to cannot be modified through this class. */
     struct pure_slice {
-        const void* FL_NULLABLE const buf  = nullptr;
-        size_t                  const size = 0;
+        const void* FL_NULLABLE const buf;
+        size_t                  const size;
 
         constexpr const void* data() const noexcept FLPURE          {return buf;}   //like std::span
         constexpr size_t size_bytes() const noexcept FLPURE         {return size;}  //like std::span
@@ -216,7 +216,7 @@ namespace fleece {
         inline slice copy() const;
 
     protected:
-        constexpr pure_slice() noexcept = default;
+        constexpr pure_slice() noexcept                             :buf(nullptr), size(0) {}
         inline constexpr pure_slice(const void* FL_NULLABLE b, size_t s) noexcept;
 
         inline void setBuf(const void *b) noexcept;
