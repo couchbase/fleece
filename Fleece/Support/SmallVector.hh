@@ -123,10 +123,10 @@ namespace fleece {
         using iterator = T*;
         using const_iterator = const T*;
 
-        iterator begin() LIFETIMEBOUND FLPURE                       {return &_get(0);}
-        iterator end() LIFETIMEBOUND FLPURE                         {return &_get(_size);}
-        const_iterator begin() const LIFETIMEBOUND FLPURE           {return &_get(0);}
-        const_iterator end() const LIFETIMEBOUND FLPURE             {return &_get(_size);}
+        iterator begin() LIFETIMEBOUND FLPURE                       {return (T*)_begin();}
+        iterator end() LIFETIMEBOUND FLPURE                         {return begin() + _size;}
+        const_iterator begin() const LIFETIMEBOUND FLPURE           {return (const T*)_begin();}
+        const_iterator end() const LIFETIMEBOUND FLPURE             {return begin() + _size;}
 
         T& push_back(const T& t) LIFETIMEBOUND                      {return * new(grow()) T(t);}
         T& push_back(T&& t) LIFETIMEBOUND                           {return * new(grow()) T(std::move(t));}
