@@ -47,6 +47,9 @@
 		2739971725CDBD8E000C1C1B /* SmallVectorBase.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2739971625CDBD8E000C1C1B /* SmallVectorBase.hh */; };
 		273CD2D825E874CD00B93C59 /* Base64.hh in Headers */ = {isa = PBXBuildFile; fileRef = 273CD2D625E874CD00B93C59 /* Base64.hh */; };
 		273CD2D925E874CD00B93C59 /* Base64.cc in Sources */ = {isa = PBXBuildFile; fileRef = 273CD2D725E874CD00B93C59 /* Base64.cc */; };
+		273F3BCE2D4AA26D00BFAD13 /* JSONSchema.hh in Headers */ = {isa = PBXBuildFile; fileRef = 273F3BC92D4AA26D00BFAD13 /* JSONSchema.hh */; };
+		273F3BD02D4AA26D00BFAD13 /* JSONSchema.cc in Sources */ = {isa = PBXBuildFile; fileRef = 273F3BCA2D4AA26D00BFAD13 /* JSONSchema.cc */; };
+		273F3BD42D4AA2A800BFAD13 /* SchemaTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 273F3BD22D4AA2A800BFAD13 /* SchemaTests.cc */; };
 		274281A4262F7CBF00862700 /* slice+ObjC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 274281A3262F7CBF00862700 /* slice+ObjC.mm */; };
 		274D8244209A3A77008BB39F /* HeapDict.cc in Sources */ = {isa = PBXBuildFile; fileRef = 274D8242209A3A77008BB39F /* HeapDict.cc */; };
 		274D8245209A3A77008BB39F /* HeapDict.hh in Headers */ = {isa = PBXBuildFile; fileRef = 274D8243209A3A77008BB39F /* HeapDict.hh */; };
@@ -86,7 +89,6 @@
 		279AC5381C096B5C002C80DB /* libfleeceStatic.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 270FA25C1BF53CAD005DCB13 /* libfleeceStatic.a */; };
 		279AC53C1C097941002C80DB /* Value+Dump.cc in Sources */ = {isa = PBXBuildFile; fileRef = 279AC53B1C097941002C80DB /* Value+Dump.cc */; };
 		27A0E3DF24DCD86900380563 /* ConcurrentArena.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27A0E3DD24DCD86900380563 /* ConcurrentArena.hh */; };
-		27A0E3E024DCD86900380563 /* ConcurrentArena.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27A0E3DE24DCD86900380563 /* ConcurrentArena.cc */; };
 		27A1327B2C700D45008E84FA /* JSLexer.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27A1327A2C700D45008E84FA /* JSLexer.hh */; };
 		27A132812C73BF8C008E84FA /* FLEncoder.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27A132802C73BF8C008E84FA /* FLEncoder.cc */; };
 		27A2F73B21248DA50081927B /* FLSlice.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A2F73A21248DA40081927B /* FLSlice.h */; };
@@ -350,6 +352,10 @@
 		2739971625CDBD8E000C1C1B /* SmallVectorBase.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SmallVectorBase.hh; sourceTree = "<group>"; };
 		273CD2D625E874CD00B93C59 /* Base64.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Base64.hh; sourceTree = "<group>"; };
 		273CD2D725E874CD00B93C59 /* Base64.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Base64.cc; sourceTree = "<group>"; };
+		273F3BC92D4AA26D00BFAD13 /* JSONSchema.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = JSONSchema.hh; sourceTree = "<group>"; };
+		273F3BCA2D4AA26D00BFAD13 /* JSONSchema.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = JSONSchema.cc; sourceTree = "<group>"; };
+		273F3BD22D4AA2A800BFAD13 /* SchemaTests.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SchemaTests.cc; sourceTree = "<group>"; };
+		273F3BD32D4AA2A800BFAD13 /* travel-schema.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "travel-schema.json"; sourceTree = "<group>"; };
 		274281A3262F7CBF00862700 /* slice+ObjC.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = "slice+ObjC.mm"; sourceTree = "<group>"; };
 		2746DD3B1D931BE9000517BC /* Benchmark.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Benchmark.hh; sourceTree = "<group>"; };
 		2747D9841CFB9BC300C48211 /* 1person.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = 1person.json; sourceTree = "<group>"; };
@@ -560,6 +566,7 @@
 				274C948B2150175700F9AEA9 /* Doxyfile */,
 				274C948C215058BB00F9AEA9 /* Doxyfile_C++ */,
 				271507DE212225B3005FE6E8 /* API */,
+				273F3BCD2D4AA26D00BFAD13 /* Experimental */,
 				270FA25E1BF53CAD005DCB13 /* Fleece */,
 				279AC5321C096872002C80DB /* Tool */,
 				272E5A441BF7FD1700848580 /* Tests */,
@@ -686,11 +693,13 @@
 				272E5A5E1BF91DBE00848580 /* ObjCTests.mm */,
 				27AEFAC4210913C500106ED8 /* DeltaTests.cc */,
 				271507F6212349B8005FE6E8 /* API_ValueTests.cc */,
+				273F3BD22D4AA2A800BFAD13 /* SchemaTests.cc */,
 				278163B81CE6BB8C00B94E32 /* C_Test.c */,
 				27EC8D5B1CEBA72E00199FE6 /* mn_wordlist.h */,
 				2747D9841CFB9BC300C48211 /* 1person.json */,
 				2776AA232086C94B004ACE85 /* 1person-deepIterOutput.txt */,
 				2776AA242086CC1F004ACE85 /* 1person-shallowIterOutput.txt */,
+				273F3BD32D4AA2A800BFAD13 /* travel-schema.json */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -710,6 +719,15 @@
 				27D721231F8C074600AA4458 /* ObjC */,
 			);
 			path = Integration;
+			sourceTree = "<group>";
+		};
+		273F3BCD2D4AA26D00BFAD13 /* Experimental */ = {
+			isa = PBXGroup;
+			children = (
+				273F3BC92D4AA26D00BFAD13 /* JSONSchema.hh */,
+				273F3BCA2D4AA26D00BFAD13 /* JSONSchema.cc */,
+			);
+			path = Experimental;
 			sourceTree = "<group>";
 		};
 		2760A4DA25E96DB000E2ECB2 /* wyhash */ = {
@@ -969,6 +987,7 @@
 				27AEFAC321090FF400106ED8 /* JSONDelta.hh in Headers */,
 				27298E661C00F8A9000CFBA8 /* jsonsl.h in Headers */,
 				277A06B420B36D1A00970354 /* FileUtils.hh in Headers */,
+				273F3BCE2D4AA26D00BFAD13 /* JSONSchema.hh in Headers */,
 				27E3DD4D1DB6C32400F2872D /* CatchHelper.hh in Headers */,
 				27AEFAC921091A8C00106ED8 /* diff_match_patch.hh in Headers */,
 				2734B8A51F8583FF00BE5249 /* MDict.hh in Headers */,
@@ -1000,7 +1019,6 @@
 				278343132A675A7000621050 /* function_ref.hh in Headers */,
 				270FA2801BF53CEA005DCB13 /* Writer.hh in Headers */,
 				270FA27D1BF53CEA005DCB13 /* Encoder.hh in Headers */,
-				27C8DF072084102900A99BFC /* MutableHashTree.hh in Headers */,
 				27A1327B2C700D45008E84FA /* JSLexer.hh in Headers */,
 				27A924D01D9C32E800086206 /* Path.hh in Headers */,
 				274D8245209A3A77008BB39F /* HeapDict.hh in Headers */,
@@ -1325,6 +1343,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				270FA27E1BF53CEA005DCB13 /* Encoder+ObjC.mm in Sources */,
+				273F3BD02D4AA26D00BFAD13 /* JSONSchema.cc in Sources */,
 				270FA27B1BF53CEA005DCB13 /* Value+ObjC.mm in Sources */,
 				27C4ACAC1CE5146500938365 /* Array.cc in Sources */,
 				277A06B320B36D1A00970354 /* FileUtils.cc in Sources */,
@@ -1380,6 +1399,7 @@
 				272E5A5D1BF800A100848580 /* EncoderTests.cc in Sources */,
 				27E3DD531DB7DB1C00F2872D /* SharedKeysTests.cc in Sources */,
 				27AEFAC5210913C500106ED8 /* DeltaTests.cc in Sources */,
+				273F3BD42D4AA2A800BFAD13 /* SchemaTests.cc in Sources */,
 				274D824F209A8D01008BB39F /* MutableTests.cc in Sources */,
 				271507F7212349B8005FE6E8 /* API_ValueTests.cc in Sources */,
 				27298E781C01A461000CFBA8 /* PerfTests.cc in Sources */,

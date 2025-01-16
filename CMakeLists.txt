@@ -150,9 +150,11 @@ add_executable(FleeceTests EXCLUDE_FROM_ALL
     ${FLEECE_TEST_SRC}
     vendor/catch/catch_amalgamated.cpp
     vendor/catch/CaseListReporter.cc
+        Tests/SchemaTests.cc
 )
 setup_test_build()
 target_include_directories(FleeceTests PRIVATE
+        Experimental
         Tests
         vendor/catch
 )
