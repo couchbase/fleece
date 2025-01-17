@@ -48,9 +48,9 @@ namespace fleece {
 
     protected:
         InstanceCounted(size_t offset)              {track(offset);}
+        void untrack() const;
     private:
         void track(size_t offset =0) const;
-        void untrack() const;
         static void dumpInstances(function_ref<void(const InstanceCounted*)>*);
 
 #else
