@@ -619,6 +619,14 @@ void FLKeyPath_DropComponents(FLKeyPath path, size_t n) FLAPI {
     path->drop(n);
 }
 
+FLValue FL_NULLABLE FLEvalJSONPointer(FLString jsonPointer, FLValue root, FLError* outError) FLAPI {
+    try {
+        *outError = kFLNoError;
+        return Path::evalJSONPointer(jsonPointer, root);
+    } catchError(outError)
+    return nullptr;
+}
+
 
 #pragma mark - ENCODER:
 

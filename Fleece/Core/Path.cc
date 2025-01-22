@@ -134,39 +134,49 @@ namespace fleece { namespace impl {
     }
 
 
-    /*static*/ const Value* Path::evalJSONPointer(slice specifier, const Value *root)
-    {
+    /*static*/ const Value* Path::evalJSONPointer(slice specifier, const Value *root) {
+        // https://datatracker.ietf.org/doc/html/rfc6901
+        if (specifier.empty())
+            return root;
         slice_istream in(specifier);
         auto current = root;
-        throwIf(in.readByte() != '/', PathSyntaxError, "JSONPointer does not start with '/'");
-        while (!in.eof()) {
-            if (!current)
-                return nullptr;
-
+        throwIf(in.peekByte() != '/', PathSyntaxError, "JSONPointer does not start with '/'");
+        while (current) {
+            in.readByte(); // skip slash
             auto slash = in.findByteOrEnd('/');
-            slice_istream param(in.buf, slash);
+            slice param(in.buf, slash);
 
             switch(current->type()) {
                 case kArray: {
-                    auto i = param.readDecimal();
-                    if (_usuallyFalse(param.size > 0 || i > INT32_MAX))
+                    slice_istream paramStream(param);
+                    auto i = paramStream.readDecimal();
+                    if (_usuallyFalse(paramStream.size > 0 || i > INT32_MAX))
                         FleeceException::_throw(PathSyntaxError, "Invalid array index in JSONPointer");
                     current = ((const Array*)current)->get((uint32_t)i);
                     break;
                 }
                 case kDict: {
-                    string key = param.asString();
-                    current = ((const Dict*)current)->get(key);
+                    if (_usuallyFalse(param.findByte('~') != nullptr)) {
+                        // Screwy JSONPointer escaping:
+                        string paramStr(param);
+                        size_t p;
+                        while (string::npos != (p = paramStr.find("~1")))
+                            paramStr.replace(p, 2, "/");
+                        while (string::npos != (p = paramStr.find("~0")))
+                            paramStr.replace(p, 2, "~");
+                        current = ((const Dict*)current)->get(paramStr);
+                    } else {
+                        current = ((const Dict*)current)->get(param);
+                    }
                     break;
                 }
                 default:
-                    current = nullptr;
-                    break;
+                    return nullptr;
             }
 
             if (slash == in.end())
                 break;
-            in.setStart(slash+1);
+            in.setStart(slash);
         }
         return current;
     }

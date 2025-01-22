@@ -305,6 +305,11 @@ extern "C" {
 
     /** @} */
 
+    /** Follows a JSON Pointer [RFC 6901] from a root Value
+        @returns the resolved Value, or NULL if not found (or the JSON Pointer is invalid.) */
+    FLEECE_PUBLIC FLValue FL_NULLABLE FLEvalJSONPointer(FLString jsonPointer,
+                                                        FLValue root,
+                                                        FLError* outError) FLAPI;
 
     /** @} */
 
