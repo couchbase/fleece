@@ -1162,7 +1162,7 @@ public:
         }
     }
 
-    TEST_CASE("Truncated JSON") {
+    TEST_CASE("Truncated JSON", "[JSON]") {
         // https://issues.couchbase.com/browse/CBL-1763
         fleece::Encoder enc;
         REQUIRE(!FLEncoder_ConvertJSON(enc, "{"_sl));
@@ -1171,19 +1171,19 @@ public:
         CHECK(msg == "Truncated JSON");
     }
 
-    TEST_CASE("Good JSON") {
+    TEST_CASE("Good JSON", "[JSON]") {
         fleece::Encoder enc;
         REQUIRE(FLEncoder_ConvertJSON(enc, "{}"_sl));
         CHECK(enc.error() == kFLNoError);
     }
 
-    TEST_CASE("Good JSON with EncodeJSON") {
+    TEST_CASE("Good JSON with EncodeJSON", "[JSON]") {
         fleece::Encoder enc(kFLEncodeJSON);
         REQUIRE(FLEncoder_ConvertJSON(enc, "{}"_sl));
         CHECK(enc.error() == kFLNoError);
     }
 
-    TEST_CASE("EncodeJSON: reset the Encoder") {
+    TEST_CASE("EncodeJSON: reset the Encoder", "[JSON]") {
         fleece::Encoder enc(kFLEncodeJSON);
         for (int c = 0; c < 4; ++c) {
             if (c > 0) {
@@ -1200,4 +1200,24 @@ public:
         }
     }
 
+    TEST_CASE("Parse JSON Scalars", "[JSON]") {
+        auto roundtrip = [](slice input) -> std::string {
+            Encoder enc;
+            JSONConverter conv(enc);
+            if (conv.encodeJSON(input))
+                return Value::fromData(enc.finish())->toJSONString();
+            else
+                return std::string("Error: ") + conv.errorMessage() + " at " + std::to_string(conv.errorPos());
+        };
+        CHECK(roundtrip("null") == "null");
+        CHECK(roundtrip("\t \r\n null\n") == "null");
+        CHECK(roundtrip(" true") == "true");
+        CHECK(roundtrip("\t123.25") == "123.25");
+        CHECK(roundtrip("\"hello\"") == "\"hello\"");
+
+        CHECK(roundtrip("foo") == "Error: JSON parse error: SPECIAL_EXPECTED at 1");
+        CHECK(roundtrip("  ]") == "Error: JSON parse error: BRACKET_MISMATCH at 3");
+        CHECK(roundtrip("\"hello") == "Error: Truncated JSON at 6");
+    }
+    
 } }
