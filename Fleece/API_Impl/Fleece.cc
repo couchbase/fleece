@@ -332,6 +332,10 @@ void FLDictIterator_Begin(FLDict FL_NULLABLE d, FLDictIterator* i) FLAPI {
     // Note: this is safe even if d is null.
 }
 
+void FLDictIterator_BeginShared(FLDict FL_NULLABLE d, FLSharedKeys sk, FLDictIterator* i) FLAPI {
+    new (i) Dict::iterator(d, sk);
+}
+
 FLValue FL_NULLABLE FLDictIterator_GetKey(const FLDictIterator* i) FLAPI {
     return ((Dict::iterator*)i)->key();
 }

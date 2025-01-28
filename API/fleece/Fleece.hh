@@ -211,7 +211,8 @@ namespace fleece {
 
         class iterator : private FLDictIterator {
         public:
-            inline iterator(Dict);
+            inline explicit iterator(Dict);
+            inline explicit iterator(Dict, FLSharedKeys);
             inline iterator(const FLDictIterator &i)   :FLDictIterator(i) { }
             inline uint32_t count() const               {return FLDictIterator_GetCount(this);}
             inline Value key() const;
