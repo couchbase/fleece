@@ -77,6 +77,7 @@ namespace fleece { namespace impl {
 
         /** Sets the maximum length of string that can be mapped. (Defaults to 16 bytes.) */
         void setMaxKeyLength(size_t m)          {_maxKeyLength = m;}
+        size_t maxKeyLength() const FLPURE      {return _maxKeyLength;}
 
         /** The number of stored keys. */
         size_t count() const FLPURE;

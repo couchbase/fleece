@@ -70,7 +70,7 @@ namespace fleece { namespace impl {
             slice string() const noexcept                {return _rawString;}
             int compare(const key &k) const noexcept     {return _rawString.compare(k._rawString);}
             key(const key&) =delete;
-            bool isShared() const noexcept               {return _hasNumericKey;}
+            bool isShared() const noexcept               {return _hasNumericKey > 0;}
         private:
             void setSharedKeys(SharedKeys*);
             
@@ -78,7 +78,7 @@ namespace fleece { namespace impl {
             SharedKeys* _sharedKeys {nullptr};
             uint32_t _hint          {0xFFFFFFFF};
             int32_t _numericKey;
-            bool _hasNumericKey     {false};
+            int8_t _hasNumericKey   {0};
 
             template <bool WIDE> friend struct dictImpl;
         };
