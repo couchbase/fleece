@@ -206,6 +206,9 @@ namespace fleece {
         inline Value get(Key &key) const;
         inline Value operator[] (Key &key) const        {return get(key);}
 
+        inline Value get(FLDictKey&) const;
+        inline Value operator[] (FLDictKey& key) const  {return get(key);}
+
         class iterator : private FLDictIterator {
         public:
             inline iterator(Dict);
@@ -576,6 +579,7 @@ namespace fleece {
     inline bool Dict::empty() const             {return FLDict_IsEmpty(*this);}
     inline Value Dict::get(slice_NONNULL key) const   {return FLDict_Get(*this, key);}
     inline Value Dict::get(Dict::Key &key) const{return FLDict_GetWithKey(*this, &key._key);}
+    inline Value Dict::get(FLDictKey &key) const{return FLDict_GetWithKey(*this, &key);}
 
     inline Dict::Key::Key(alloc_slice s)        :_str(std::move(s)), _key(FLDictKey_Init(_str)) { }
     inline Dict::Key::Key(slice_NONNULL s)      :Key(alloc_slice(s)) { }
