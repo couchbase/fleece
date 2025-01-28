@@ -106,7 +106,7 @@ namespace fleece { namespace impl {
     bool SharedKeys::encode(slice str, int &key) const {
         // Is this string already encoded?
         auto entry = _table.find(str);
-        if (_usuallyTrue(entry.key != nullslice)) {
+        if (_usuallyTrue(entry.key.buf != nullptr)) {
             key = entry.value;
             return true;
         }
