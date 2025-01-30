@@ -13,9 +13,8 @@ __Fleece__ is a binary encoding for semi-structured data. Its data model is a su
 
 * Documentation, including
     * **High-level API guide "[Using Fleece](https://github.com/couchbaselabs/fleece/wiki/Using-Fleece)"**
-    * The [design document](Fleece.md), with details on the data format
+    * The [design document](Fleece.md), with details on the data format and other internals
     * An [example](Example.md) showing the details of the encoding of a specific data structure, and a walkthrough of what happens when a program works with the resulting Fleece objects
-    * Some older [performance](Performance.md) figures based on the included test suite, including comparisons to JSON parsing using Apple's Foundation framework
 * A C++ reference implementation, including:
     * Encoder and decoder/accessors
     * Extensions for converting JSON directly to Fleece or vice versa
@@ -33,18 +32,15 @@ __Fleece__ is a binary encoding for semi-structured data. Its data model is a su
 ## FAQ
 
 **Q: Why does the world need yet another binary JSON encoding?**  
-A: Excellent question, sock puppet! Fleece is different from [BSON](http://bsonspec.org), [PSON](https://github.com/dcodeIO/PSON), etc. in that it's been carefully designed to not need parsing. In performance tests with other binary formats I found that, while they were faster to parse than JSON, the total time was still dominated by allocating and freeing the resulting objects, as well as the conversion from UTF-8 data to platform strings. (I was using Objective-C, but similar issues would arise if using STL or GLib or other collection frameworks.) The way around this is to structure the encoded data more like a memory dump, with "pointers" (relative byte offsets) and fixed-width random-accessible arrays. That's what Fleece does. As a result, it's many times faster to work with than JSON; [literally _20x faster_](Performance.md) in the included benchmark run on a Macbook Pro.
+A: Excellent question, sock puppet! Fleece is different from [BSON](http://bsonspec.org), [PSON](https://github.com/dcodeIO/PSON), etc. in that it's been carefully designed to not need parsing or heap allocation. In performance tests with other binary formats I found that, while they were faster to parse than JSON, the total time was still dominated by allocating and freeing the resulting objects, as well as the conversion from UTF-8 data to platform strings. (I was using Objective-C, but similar issues would arise if using STL or GLib or other collection frameworks.) The way around this is to structure the encoded data more like a memory dump, with "pointers" (relative byte offsets) and fixed-width random-accessible arrays. That's what Fleece does. As a result, it's many times faster to work with than JSON; [literally _20x faster_](Performance.md) in the included benchmark run on a Macbook Pro.
 
-**Q: Can I use it in $LANGUAGE?** [where $LANGUAGE not in ("C++", "C")]  
-Not currently. It would be very nice to more bindings, and the C API should make that fairly
+**Q: Can I use it in \$LANGUAGE?** [where \$LANGUAGE not in ("C++", "C")]  
+A: Not currently. It would be very nice to more bindings, and the C API should make that fairly
 straightforward since it's easy to call from other languages. (But any real API should follow
 the language's idioms, instead of being a direct translation!)
 
-**Q: Why didn't you write this in $NEW_LANGUAGE instead of crufty C++?**  
-A: I probably should have! $NEW_LANGUAGE is deservedly attracting a lot of attention for its combination of safety, readable syntax, and support for modern programming paradigms. I've been trying out $NEW_LANGUAGE and want to write more code in it. But for this I chose C++ because it's supported on all platforms, lots of people know how to use it, and it still supports high-level abstractions (unlike C.)
-
-**Q: Why did you only benchmark it against Cocoa's Foundation classes? Those are slow.**  
-Because Foundation is what I know and work with. I'd love to incorporate benchmarks of other frameworks; please send a pull request.
+**Q: Why didn't you write this in \$NEW_LANGUAGE instead of crufty C++?**  
+A: I probably should have! \$NEW_LANGUAGE is deservedly attracting a lot of attention for its combination of safety, readable syntax, and support for modern programming paradigms. I've been trying out \$NEW_LANGUAGE and want to write more code in it. But for this I chose C++ because it's supported on all platforms, lots of people know how to use it, and it still supports high-level abstractions (unlike C.)
 
 **Q: Why the name "Fleece"?**  
 A: It's a reference to the mythical [Golden Fleece](https://en.wikipedia.org/wiki/Golden_Fleece), the treasure sought by Jason and the Argonauts.
@@ -54,16 +50,16 @@ A: It's a reference to the mythical [Golden Fleece](https://en.wikipedia.org/wik
 
 ## Status
 
-Fleece is in active use and development. It is a core component of Couchbase Lite 2.0, via the [LiteCore](https://github.com/couchbase/couchbase-lite-core) library.
+Fleece is in active use and development. It is a core component of Couchbase Lite, via the [LiteCore](https://github.com/couchbase/couchbase-lite-core) library.
 
 ## Requirements / Compatibility
 
-* Fleece builds with Xcode, Clang, GCC and MSVC, with C++11 or later. (Yes, there are some Objective-C++ source files (`.mm`), but those are only used to provide Objective-C glue and Mac/iOS specific benchmarks. You can ignore them on other platforms.)
+* Fleece builds with Xcode, Clang, GCC and MSVC. Most of the code is C++17, but some newer parts need C++20. (Yes, there are some Objective-C++ source files (`.mm`), but those are only used to provide Objective-C glue and Mac/iOS specific benchmarks. You can ignore them on other platforms.)
 * There are no dependencies on any external libraries, other than the standard C library and the C++ STL.
 * It _should_ work correctly, and create interoperable data, on both little-endian and big-endian CPUs, but admittedly we are not currently testing or using Fleece on any big-endian platforms.
 
-We use Travis and Appveyor for CI, covering Clang, GCC, Xcode and MSVC on macOS, Linux and Windows. If you encounter portability problems, please file an issue and we'll fix it.
+We use GitHub CI, covering Clang, GCC, Xcode and MSVC on macOS, Linux and Windows. If you encounter portability problems, please file an issue and we'll fix it.
 
 ## License
 
-Apache 2.0
+Couchbase Business Source License
