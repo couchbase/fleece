@@ -371,7 +371,7 @@ namespace fleece {
         bool operator== (const Doc &d) const        {return _doc == d._doc;}
 
         operator FLDoc FL_NULLABLE () const         {return _doc;}
-        FLDoc detach()                              {auto d = _doc; _doc = nullptr; return d;}
+        FLDoc FL_NULLABLE detach()                  {auto d = _doc; _doc = nullptr; return d;}
 
         static Doc containing(Value v)              {return Doc(FLValue_FindDoc(v), false);}
         bool setAssociated(void * FL_NULLABLE p, const char *t) {return FLDoc_SetAssociated(_doc, p, t);}
