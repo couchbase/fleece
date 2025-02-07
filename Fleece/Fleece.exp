@@ -83,6 +83,7 @@ _FLEncoder_BytesWritten
 _FLEncoder_Finish
 _FLEncoder_GetError
 _FLEncoder_GetErrorMessage
+_FLEvalJSONPointer
 _FLKeyPath_New
 _FLKeyPath_Free
 _FLKeyPath_Eval
