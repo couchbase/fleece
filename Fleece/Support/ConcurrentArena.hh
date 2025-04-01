@@ -89,7 +89,7 @@ namespace fleece {
 
         ConcurrentArenaAllocator(ConcurrentArena &arena) :_arena(arena) { }
 
-        [[nodiscard]] T* allocate(size_t n) LIFETIMEBOUND {
+        [[nodiscard]] T* allocate(size_t n) {
             if (Zeroing)
                 return (T*) _arena.calloc(n * sizeof(T));
             else
