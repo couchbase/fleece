@@ -56,6 +56,7 @@ if(FLEECE_WARNINGS_HARDCORE)
             -Wno-global-constructors
             -Wno-gnu-anonymous-struct # "anonymous structs are a GNU extension"
             -Wno-gnu-zero-variadic-macro-arguments # "token pasting of ',' and __VA_ARGS__ is a GNU extension"
+            -Wno-missing-designated-field-initializers # "missing field 'x' initializer"
             -Wno-missing-field-initializers # "missing field 'x' initializer"
             -Wno-nested-anon-types # "anonymous types declared in an anonymous union are an extension"
             -Wno-nullability-extension
@@ -65,6 +66,7 @@ if(FLEECE_WARNINGS_HARDCORE)
             -Wno-sign-conversion
             -Wno-suggest-destructor-override # "'~Foo' overrides a destructor but is not marked 'override'"
             -Wno-super-class-method-mismatch # Obj-C "method parameter type does not match super class method parameter type"
+            -Wno-switch-default # "'switch' missing 'default' label"
             -Wno-switch-enum
             -Wno-undef      # `#if X` where X isn't defined
             -Wno-unused-macros
