@@ -178,7 +178,7 @@ namespace fleece {
                 // Abbreviate some C++ verbosity:
                 for (auto &abbrev : kAbbreviations)
                     replace(name, abbrev.old, abbrev.nuu);
-                len = asprintf(&cstr, "%2u  %-25s %s + %zd",
+                len = asprintf(&cstr, "%2u  %-25s %s + %zu",
                                i, frame.library, name.c_str(), frame.offset);
             } else if (const char* s = getSymbol(i)) {
                 len = asprintf(&cstr, "%2u  %s", i, s);

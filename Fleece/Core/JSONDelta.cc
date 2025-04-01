@@ -168,12 +168,12 @@ namespace fleece { namespace impl {
                         char key[bufSize];
                         for (Array::iterator iOld(oldArray), iNew(nuuArray); index < minCount;
                              ++iOld, ++iNew, ++index) {
-                            snprintf(key, bufSize, "%d", index);
+                            snprintf(key, bufSize, "%u", index);
                             curLevel.key = slice(key);
                             _write(iOld.value(), iNew.value(), &curLevel);
                         }
                         if (oldCount != nuuCount) {
-                            snprintf(key, bufSize, "%d-", index);
+                            snprintf(key, bufSize, "%u-", index);
                             curLevel.key = slice(key);
                             writePath(&curLevel);
                             _encoder->beginArray();
@@ -388,7 +388,7 @@ namespace fleece { namespace impl {
         for (Array::iterator iOld(old); iOld; ++iOld, ++index) {
             auto oldItem = iOld.value();
             char key[bufSize];
-            snprintf(key, bufSize, "%d", index);
+            snprintf(key, bufSize, "%u", index);
             auto replacement = delta->get(slice(key));
             if (replacement) {
                 // Patch this array item:
@@ -407,7 +407,7 @@ namespace fleece { namespace impl {
 
         if (!remainder) {
             char key[bufSize];
-            snprintf(key, bufSize, "%d-", old->count());
+            snprintf(key, bufSize, "%u-", old->count());
             remainder = delta->get(slice(key));
         }
         if (remainder) {
