@@ -51,7 +51,7 @@ namespace fleece {
         char *message = nullptr;
         int n = asprintf(&message,
                  "RefCounted object <%s @ %p> %s while it had an invalid refCount of %d (0x%x)",
-                 Unmangle(typeid(*obj)).c_str(), obj, what, refCount, refCount);
+                 Unmangle(typeid(*obj)).c_str(), obj, what, refCount, unsigned(refCount));
         if (n < 0)
             throw std::runtime_error("RefCounted object has an invalid refCount");
 #ifdef WarnError
