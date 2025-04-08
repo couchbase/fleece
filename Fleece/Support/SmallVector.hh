@@ -120,6 +120,11 @@ namespace fleece {
         const T& back() const LIFETIMEBOUND FLPURE                  {return get(_size - 1);}
         T& back() LIFETIMEBOUND FLPURE                              {return get(_size - 1);}
 
+        /// True if the vector contains an item equal to `item`.
+        bool contains(T const& item) const FLPURE {
+            return std::find(begin(), end(), item) != end();
+        }
+
         using iterator = T*;
         using const_iterator = const T*;
 
@@ -152,6 +157,24 @@ namespace fleece {
             T *dst = (T*)_insert(where, uint32_t(n), kItemSize);
             while (b != e)
                 *dst++ = *b++;
+        }
+
+        /// Appends an item if an equal item isn't already present; else returns false.
+        bool addUnique(T const& item) {
+            if (!contains(item)) {
+                push_back(item);
+                return true;
+            }
+            return false;
+        }
+
+        /// Removes an item equal to `item`; else returns false.
+        bool remove(T const& item) {
+            if (auto j = std::find(begin(), end(), item); j != end()) {
+                erase(j);
+                return true;
+            }
+            return false;
         }
 
         iterator erase(iterator first) LIFETIMEBOUND {
