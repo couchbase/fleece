@@ -12,16 +12,11 @@
 
 #pragma once
 #include "fleece/CompilerSupport.h"
-#ifdef __APPLE__
-    #include <sys/cdefs.h>
-    #include "TargetConditionals.h"
-#endif
 
 #ifdef _MSC_VER
     #define NOINLINE                        __declspec(noinline)
     #define ALWAYS_INLINE                   inline
     #define ASSUME(cond)                    __assume(cond)
-	#define LITECORE_UNUSED
     #define __typeof                        decltype
 
     #define __func__                        __FUNCTION__
@@ -31,19 +26,12 @@
 
     #define MAXFLOAT FLT_MAX
 
-    #define __printflike(A, B)
-
     #define cbl_strdup _strdup
     #define cbl_getcwd _getcwd
 
     #include <winapifamily.h>
 
 #else
-
-    // Suppresses "unused function" warnings
-    #if __has_attribute(unused)
-    #  define LITECORE_UNUSED __attribute__((unused))
-    #endif
 
     // Disables inlining a function. Use when the space savings are worth more than speed.
     #if __has_attribute(noinline)
@@ -67,13 +55,6 @@
         #define ASSUME(cond)                __builtin_assume(cond)
     #else
         #define ASSUME(cond)                (void(0))
-    #endif
-
-    // Declares this function takes a printf-like format string, and the subsequent args should
-    // be type-checked against it.
-    #if __has_attribute(__format__) && !defined(__printflike)
-    #  define __printflike(fmtarg, firstvararg) \
-                            __attribute__((__format__ (__printf__, fmtarg, firstvararg)))
     #endif
 
     // Windows has underscore prefixes before these function names, so define a common name

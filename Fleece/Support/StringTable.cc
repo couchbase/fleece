@@ -82,7 +82,7 @@ namespace fleece {
     }
 
 
-    __hot const StringTable::entry_t* StringTable::find(key_t key, hash_t hash) const noexcept {
+    __hot const StringTable::entry_t* StringTable::find(key_t key, hash_t hash) const noexcept LIFETIMEBOUND {
         assert_precondition(key.buf != nullptr);
         assert_precondition(hash != hash_t::Empty);
         size_t end = wrap(size_t(hash) + _maxDistance + 1);
@@ -228,7 +228,7 @@ namespace fleece {
         ssize_t totalDistance = 0;
         std::vector<size_t> distanceCounts(_maxDistance+1);
         for (size_t i = 0; i < _size; ++i) {
-            printf("%4zd: ", i);
+            printf("%4zu: ", i);
             if (_hashes[i] != hash_t::Empty) {
                 key_t key = _entries[i].first;
                 size_t index = indexOfHash(hashCode(key));
@@ -240,12 +240,12 @@ namespace fleece {
                 printf("--\n");
             }
         }
-        printf(">> Capacity %zd, using %zu (%.0f%%)\n",
+        printf(">> Capacity %zu, using %zu (%.0f%%)\n",
                _size, _count,  _count/(double)_size*100.0);
         printf(">> Average key distance = %.2f, max = %zd\n",
                totalDistance/(double)count(), _maxDistance);
         for (decltype(_maxDistance) i = 0; i <= _maxDistance; ++i)
-            printf("\t%2zd: %zd\n", i, distanceCounts[i]);
+            printf("\t%2zd: %zu\n", i, distanceCounts[i]);
     }
 
 }

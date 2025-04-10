@@ -25,7 +25,7 @@ namespace fleece {
     class Backtrace {
     public:
         /// Captures a backtrace and returns a shared pointer to the instance.
-        static std::shared_ptr<Backtrace> capture(unsigned skipFrames =0, unsigned maxFrames =50);
+        [[nodiscard]] static std::shared_ptr<Backtrace> capture(unsigned skipFrames =0, unsigned maxFrames =50);
 
         /// Captures a backtrace, unless maxFrames is zero.
         /// @param skipFrames  Number of frames to skip at top of stack
@@ -71,11 +71,12 @@ namespace fleece {
 
     private:
         void _capture(unsigned skipFrames =0, unsigned maxFrames =50);
-        char* printFrame(unsigned i) const;
+        const char* getSymbol(unsigned i) const;
+        [[nodiscard]] char* printFrame(unsigned i) const;
         static void writeCrashLog(std::ostream&);
 
         std::vector<void*> _addrs;          // Array of PCs in backtrace, top first
-        char** _symbols { nullptr };
+        mutable char** _symbols { nullptr };
     };
 
 

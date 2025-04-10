@@ -12,7 +12,6 @@
 
 #pragma once
 #include "fleece/PlatformCompat.hh"
-#include <algorithm>
 #include <atomic>
 #include <utility>
 
@@ -84,7 +83,7 @@ namespace fleece {
 
     // Makes `assignRef` polymorphic with RefCounted subclasses.
     template <typename T>
-    static inline void assignRef(T* &holder, RefCounted *newValue) noexcept {
+    inline void assignRef(T* &holder, RefCounted *newValue) noexcept {
         assignRef((RefCounted*&)holder, newValue);
     }
 
@@ -108,20 +107,20 @@ namespace fleece {
 
         ~Retained()                                     {release(_ref);}
 
-        operator T* () const & noexcept FLPURE STEPOVER {return _ref;}
-        T* operator-> () const noexcept FLPURE STEPOVER {return _ref;}
-        T* get() const noexcept FLPURE STEPOVER         {return _ref;}
+        operator T* () const & noexcept LIFETIMEBOUND FLPURE STEPOVER {return _ref;}
+        T* operator-> () const noexcept LIFETIMEBOUND FLPURE STEPOVER {return _ref;}
+        T* get() const noexcept LIFETIMEBOUND FLPURE STEPOVER         {return _ref;}
 
         explicit operator bool () const FLPURE          {return (_ref != nullptr);}
 
-        Retained& operator=(T *t) noexcept              {assignRef(_ref, t); return *this;}
+        Retained& operator=(T *t) & noexcept            {assignRef(_ref, t); return *this;}
 
-        Retained& operator=(const Retained &r) noexcept {return *this = r._ref;}
+        Retained& operator=(const Retained &r) & noexcept {return *this = r._ref;}
 
         template <typename U>
-        Retained& operator=(const Retained<U> &r) noexcept {return *this = r._ref;}
+        Retained& operator=(const Retained<U> &r) & noexcept {return *this = r._ref;}
 
-        Retained& operator= (Retained &&r) noexcept {
+        Retained& operator= (Retained &&r) & noexcept {
             // Unexpectedly, the simplest & most efficient way to implement this is by simply
             // swapping the refs, instead of the commented-out code below.
             // The reason this works is that `r` is going to get destructed anyway when it goes
@@ -136,7 +135,7 @@ namespace fleece {
         }
 
         template <typename U>
-        Retained& operator= (Retained<U> &&r) noexcept {
+        Retained& operator= (Retained<U> &&r) & noexcept {
             auto oldRef = _ref;
             if (oldRef != r._ref) { // necessary to avoid premature release
                 _ref = std::move(r).detach();
@@ -149,6 +148,11 @@ namespace fleece {
         /// Used in C++ functions that bridge to C and return C references.
         [[nodiscard]]
         T* detach() && noexcept                  {auto r = _ref; _ref = nullptr; return r;}
+
+        /// Equivalent to `get` but without the `LIFETIMEBOUND` attribute. For use in rare cases where you have
+        /// a `Retained<T>` and need to return it as a `T*`, which is normally illegal, but you know that there's
+        /// another `Retained` value keeping the object alive even after this function returns.
+        T* unsafe_get() const noexcept          {return _ref;}
 
         // The operator below is often a dangerous mistake, so it's deliberately made impossible.
         // It happens in these sorts of contexts, where it can produce a dangling pointer to a
@@ -198,33 +202,33 @@ namespace fleece {
         RetainedConst(Retained<T> &&r) noexcept         :_ref(std::move(r).detach()) { }
         ALWAYS_INLINE ~RetainedConst()                  {release(_ref);}
 
-        operator const T* () const & noexcept FLPURE STEPOVER   {return _ref;}
-        const T* operator-> () const noexcept FLPURE STEPOVER   {return _ref;}
-        const T* get() const noexcept FLPURE STEPOVER           {return _ref;}
+        operator const T* () const & noexcept LIFETIMEBOUND FLPURE STEPOVER   {return _ref;}
+        const T* operator-> () const noexcept LIFETIMEBOUND FLPURE STEPOVER   {return _ref;}
+        const T* get() const noexcept LIFETIMEBOUND FLPURE STEPOVER           {return _ref;}
 
-        RetainedConst& operator=(const T *t) noexcept {
+        RetainedConst& operator=(const T *t) & noexcept {
             auto oldRef = _ref;
             _ref = retain(t);
             release(oldRef);
             return *this;
         }
 
-        RetainedConst& operator=(const RetainedConst &r) noexcept {
+        RetainedConst& operator=(const RetainedConst &r) & noexcept {
             return *this = r._ref;
         }
 
-        RetainedConst& operator= (RetainedConst &&r) noexcept {
+        RetainedConst& operator= (RetainedConst &&r) & noexcept {
             std::swap(_ref, r._ref);
             return *this;
         }
 
         template <typename U>
-        RetainedConst& operator=(const Retained<U> &r) noexcept {
+        RetainedConst& operator=(const Retained<U> &r) & noexcept {
             return *this = r._ref;
         }
 
         template <typename U>
-        RetainedConst& operator= (Retained<U> &&r) noexcept {
+        RetainedConst& operator= (Retained<U> &&r) & noexcept {
             std::swap(_ref, r._ref);
             return *this;
         }
@@ -264,7 +268,7 @@ namespace fleece {
     /** make_retained<T>(...) is equivalent to `std::make_unique` and `std::make_shared`.
         It constructs a new RefCounted object, passing params to the constructor, returning a `Retained`. */
     template<class T, class... _Args>
-    [[nodiscard]] static inline Retained<T>
+    [[nodiscard]] inline Retained<T>
     make_retained(_Args&&... __args) {
         return Retained<T>(new T(std::forward<_Args>(__args)...));
     }

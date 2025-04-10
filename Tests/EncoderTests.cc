@@ -13,11 +13,8 @@
 #include "FleeceTests.hh"
 #include "Pointer.hh"
 #include "JSONConverter.hh"
-#include "KeyTree.hh"
 #include "Path.hh"
 #include "Internal.hh"
-#include "jsonsl.h"
-#include "mn_wordlist.h"
 #include "NumConversion.hh"
 #include <iostream>
 #include "fleece/Fleece.hh"
@@ -27,8 +24,18 @@
 #include <unistd.h>
 #endif
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"
+#pragma clang diagnostic ignored "-Wdocumentation"
+#pragma clang diagnostic ignored "-Wdocumentation-unknown-command"
+#include "jsonsl.h"
+#include "mn_wordlist.h"
+#pragma clang diagnostic pop
+
+
 namespace fleece { namespace impl {
     using namespace fleece::impl::internal;
+    using namespace fleece_test;
 
 class EncoderTests {
 public:
@@ -975,6 +982,7 @@ public:
 
 #pragma mark - KEY TREE:
 
+#if 0
     TEST_CASE_METHOD(EncoderTests, "KeyTree", "[Encoder]") {
         bool verbose = false;
 
@@ -1037,6 +1045,7 @@ public:
         REQUIRE(keys[(unsigned)n+28].buf == nullptr);
         REQUIRE(keys[(unsigned)9999].buf == nullptr);
     }
+#endif
 
     TEST_CASE("Locale-free encoding") {
         // Note this will fail if Linux is missing the French locale,
@@ -1067,11 +1076,12 @@ public:
         CHECK(ParseDouble(floatBuf, recovered));
         CHECK(FloatEquals(float(recovered), 2.71828f));
 
+        const char* localeName = "fr_FR";
 #ifdef _MSC_VER
-        setlocale(LC_ALL, "fr-FR");
-#else
-        setlocale(LC_ALL, "fr_FR");
+        localeName = "fr-FR";
 #endif
+        if(setlocale(LC_ALL, localeName) == nullptr)
+            FAIL("Zut alors! No French locale installed!");
 
         snprintf(doubleBuf, doubleBufSize, "%.16g", testDouble);
         snprintf(floatBuf, floatBufSize, "%.7g", testFloat);
@@ -1113,7 +1123,7 @@ public:
         }
 
         constexpr const char* kFailCases[] = {
-            "", " ", "+", " +", " + ", "x", " x", "1234x", "1234 x", "123.456", "-17", " + 1234"
+            "", " ", "+", " +", " + ", "x", " x", "1234x", "1234 x", "123.456", "-17", " + 1234",
             "18446744073709551616" // UINT64_MAX + 1
         };
 

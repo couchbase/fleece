@@ -64,7 +64,7 @@ function(setup_build)
 
     target_include_directories(
         FleeceObjects PRIVATE
-        Integration/ObjC
+        Fleece/Integration/ObjC
     )
 
     foreach(platform FleeceBase FleeceObjects FleeceStatic Fleece)

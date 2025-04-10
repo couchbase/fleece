@@ -28,6 +28,8 @@ namespace fleece {
         /// \warning Like a `const_cast`, this violates the read-only nature of the slice.
         explicit slice_ostream(slice s)          :slice_ostream((uint8_t*)s.buf, s.size) { }
 
+        slice_ostream& operator=(const slice_ostream&) = default;
+
         /// Captures the stream's state to another stream. You can use this as a way to "rewind"
         /// the stream afterwards. (This is equivalent to a copy constructor, but that constructor
         /// is explicitly deleted to avoid confusion.)
@@ -133,7 +135,7 @@ namespace fleece {
     struct slice_istream : public slice {
         // slice_istream is constructed from a slice, or from the same parameters as a slice.
         constexpr slice_istream(const slice &s) noexcept        :slice(s) { }
-        constexpr slice_istream(const alloc_slice &s) noexcept  :slice(s) { }
+        slice_istream(const alloc_slice &s) noexcept  :slice(s) { }
         constexpr slice_istream(const void* b, size_t s) noexcept STEPOVER    :slice(b, s) {}
         constexpr slice_istream(const void* s NONNULL, const void* e NONNULL) noexcept STEPOVER
                                                                       :slice(s, e) { }
@@ -180,6 +182,10 @@ namespace fleece {
 
         /// Reads the next byte. If the stream is already at EOF, returns 0.
         uint8_t readByte() noexcept;
+
+        /// Un-does the last call to \ref readByte, i.e. moves back one byte.
+        /// \warning Not range checked: moving back before the start is undefined behavior.
+        void unreadByte() noexcept                              {slice::moveStart(-1);}
 
         /// Returns the next byte, or 0 if at EOF, but does not advance the stream.
         uint8_t peekByte() const noexcept FLPURE            {return (size > 0) ? (*this)[0] : 0;}

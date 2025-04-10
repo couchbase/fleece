@@ -231,7 +231,7 @@ namespace fleece {
         }
 
         // Throws an exception.
-        void fail(const char *error) {
+        [[noreturn]] void fail(const char *error) {
             stringstream message;
             message << error << " (at :" << _pos << ")";
             throw json5_error(message.str(), _pos);

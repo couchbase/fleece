@@ -17,6 +17,7 @@
 #include "fleece/Fleece.h"
 #include "JSON5.hh"
 #include "ParseDate.hh"
+#include "Builder.hh"
 #include "betterassert.hh"
 #include <chrono>
 
@@ -32,17 +33,14 @@ namespace fleece::impl {
 
 }
 
+using namespace fleece;
+using namespace fleece::impl;
+
 
 FLEECE_PUBLIC const FLValue kFLNullValue  = Value::kNullValue;
 FLEECE_PUBLIC const FLValue kFLUndefinedValue  = Value::kUndefinedValue;
 FLEECE_PUBLIC const FLArray kFLEmptyArray = Array::kEmpty;
 FLEECE_PUBLIC const FLDict kFLEmptyDict   = Dict::kEmpty;
-
-
-static FLSliceResult toSliceResult(alloc_slice &&s) {
-    s.retain();
-    return {(void*)s.buf, s.size};
-}
 
 
 FLTimestamp FLTimestamp_Now() FLAPI {
@@ -122,7 +120,7 @@ bool FLValue_IsEqual(FLValue FL_NULLABLE v1, FLValue FL_NULLABLE v2) FLAPI {
 FLSliceResult FLValue_ToString(FLValue FL_NULLABLE v) FLAPI {
     if (v) {
         try {
-            return toSliceResult(v->toString());    // toString can throw
+            return FLSliceResult(v->toString());    // toString can throw
         } catchError(nullptr)
     }
     return {nullptr, 0};
@@ -155,7 +153,7 @@ FLSliceResult FLValue_ToJSONX(FLValue FL_NULLABLE v,
             encoder.setJSON5(json5);
             encoder.setCanonical(canonical);
             encoder.writeValue(v);
-            return toSliceResult(encoder.finish());
+            return FLSliceResult(encoder.finish());
         } catchError(nullptr)
     }
     return {nullptr, 0};
@@ -180,7 +178,7 @@ FLStringResult FLJSON5_ToJSON(FLString json5,
     size_t errorPos = 0;
     try {
         std::string json = ConvertJSON5((std::string((char*)json5.buf, json5.size)));
-        return toSliceResult(alloc_slice(json));
+        return FLSliceResult(alloc_slice(json));
     } catch (const json5_error &x) {
         errorMessage = alloc_slice(x.what());
         errorPos = x.inputPos;
@@ -191,7 +189,7 @@ FLStringResult FLJSON5_ToJSON(FLString json5,
         recordError(x, error);
     }
     if (outErrorMessage)
-        *outErrorMessage = toSliceResult(std::move(errorMessage));
+        *outErrorMessage = FLSliceResult(std::move(errorMessage));
     if (outErrorPos)
         *outErrorPos = errorPos;
     return {};
@@ -200,7 +198,7 @@ FLStringResult FLJSON5_ToJSON(FLString json5,
 
 FLSliceResult FLData_Dump(FLSlice data) FLAPI {
     try {
-        return toSliceResult(alloc_slice(Value::dump(data)));
+        return FLSliceResult(alloc_slice(Value::dump(data)));
     } catchError(nullptr)
     return {nullptr, 0};
 }
@@ -454,7 +452,7 @@ void FLSharedKeys_Release(FLSharedKeys FL_NULLABLE sk)                 FLAPI {re
 unsigned FLSharedKeys_Count(FLSharedKeys sk)               FLAPI {return (unsigned)sk->count();}
 bool FLSharedKeys_LoadStateData(FLSharedKeys sk, FLSlice d)FLAPI {return sk->loadFrom(d);}
 bool FLSharedKeys_LoadState(FLSharedKeys sk, FLValue s)    FLAPI {return sk->loadFrom(s);}
-FLSliceResult FLSharedKeys_GetStateData(FLSharedKeys sk)   FLAPI {return toSliceResult(sk->stateData());}
+FLSliceResult FLSharedKeys_GetStateData(FLSharedKeys sk)   FLAPI {return FLSliceResult(sk->stateData());}
 FLString FLSharedKeys_Decode(FLSharedKeys sk, int key)     FLAPI {return sk->decode(key);}
 void FLSharedKeys_RevertToCount(FLSharedKeys sk, unsigned c) FLAPI {sk->revertToCount(c);}
 void FLSharedKeys_DisableCaching(FLSharedKeys sk)          FLAPI { sk->disableCaching(); }
@@ -465,7 +463,7 @@ FLSharedKeys FLSharedKeys_NewWithRead(FLSharedKeysReadCallback callback, void* F
 
 void FLSharedKeys_WriteState(FLSharedKeys sk, FLEncoder e) FLAPI {
     assert_always(e->isFleece());
-    sk->writeState(*e->fleeceEncoder);
+    sk->writeState(*e->fleeceEncoder());
 }
 
 int FLSharedKeys_Encode(FLSharedKeys sk, FLString keyStr, bool add) FLAPI {
@@ -542,11 +540,11 @@ void FLDeepIterator_GetPath(FLDeepIterator i, FLPathComponent* *outPath, size_t 
 }
 
 FLSliceResult FLDeepIterator_GetPathString(FLDeepIterator i) FLAPI {
-    return toSliceResult(alloc_slice(i->pathString()));
+    return FLSliceResult(alloc_slice(i->pathString()));
 }
 
 FLSliceResult FLDeepIterator_GetJSONPointer(FLDeepIterator i) FLAPI {
-    return toSliceResult(alloc_slice(i->jsonPointer()));
+    return FLSliceResult(alloc_slice(i->jsonPointer()));
 }
 
 
@@ -555,7 +553,7 @@ FLSliceResult FLDeepIterator_GetJSONPointer(FLDeepIterator i) FLAPI {
 
 FLKeyPath FL_NULLABLE FLKeyPath_New(FLSlice specifier, FLError* FL_NULLABLE outError) FLAPI {
     try {
-        return new Path((std::string)(slice)specifier);
+        return new Path(specifier);
     } catchError(outError)
     return nullptr;
 }
@@ -570,17 +568,21 @@ FLValue FL_NULLABLE FLKeyPath_Eval(FLKeyPath path, FLValue root) FLAPI {
 
 FLValue FL_NULLABLE FLKeyPath_EvalOnce(FLSlice specifier, FLValue root, FLError * FL_NULLABLE outError) FLAPI {
     try {
-        return Path::eval((std::string)(slice)specifier, root);
+        return Path::eval(specifier, root);
     } catchError(outError)
     return nullptr;
 }
 
 FLStringResult FLKeyPath_ToString(FLKeyPath path) FLAPI {
-    return toSliceResult(alloc_slice(std::string(*path)));
+    return FLSliceResult(alloc_slice(std::string(*path)));
 }
 
 bool FLKeyPath_Equals(FLKeyPath path1, FLKeyPath path2) FLAPI {
     return *path1 == *path2;
+}
+
+size_t FLKeyPath_GetCount(FLKeyPath path) FLAPI {
+    return path->size();
 }
 
 bool FLKeyPath_GetElement(FLKeyPath path, size_t i, FLSlice *outKey, int32_t *outIndex) FLAPI {
@@ -592,191 +594,70 @@ bool FLKeyPath_GetElement(FLKeyPath path, size_t i, FLSlice *outKey, int32_t *ou
     return true;
 }
 
+FLKeyPath FL_NULLABLE FLKeyPath_NewEmpty(void) FLAPI {
+    return new Path();
+}
+
+void FLKeyPath_AddProperty(FLKeyPath path, FLString property) FLAPI {
+    if (property.size > 0)
+        path->addProperty(property);
+}
+
+void FLKeyPath_AddIndex(FLKeyPath path, int index) FLAPI {
+    path->addIndex(index);
+}
+
+bool FLKeyPath_AddComponents(FLKeyPath path, FLString specifier, FLError* FL_NULLABLE outError) FLAPI {
+    try {
+        path->addComponents(specifier);
+        return true;
+    } catchError(outError)
+    return false;
+}
+
+void FLKeyPath_DropComponents(FLKeyPath path, size_t n) FLAPI {
+    path->drop(n);
+}
+
 
 #pragma mark - ENCODER:
 
 
-FLEncoder FLEncoder_New(void) FLAPI {
-    return FLEncoder_NewWithOptions(kFLEncodeFleece, 0, true);
-}
 
-FLEncoder FLEncoder_NewWithOptions(FLEncoderFormat format,
-                                   size_t reserveSize, bool uniqueStrings) FLAPI
-{
-    return new FLEncoderImpl(format, reserveSize, uniqueStrings);
-}
 
-FLEncoder FLEncoder_NewWritingToFile(FILE *outputFile, bool uniqueStrings) FLAPI {
-    return new FLEncoderImpl(outputFile, uniqueStrings);
-}
+#pragma mark - BUILDER
 
-void FLEncoder_Reset(FLEncoder e) FLAPI {
-    e->reset();
-}
 
-void FLEncoder_Free(FLEncoder FL_NULLABLE e) FLAPI {
-    delete e;
-}
-
-void FLEncoder_SetSharedKeys(FLEncoder e, FLSharedKeys FL_NULLABLE sk) FLAPI {
-    if (e->isFleece())
-        e->fleeceEncoder->setSharedKeys(sk);
-}
-
-void FLEncoder_SuppressTrailer(FLEncoder e) FLAPI {
-    if (e->isFleece())
-        e->fleeceEncoder->suppressTrailer();
-}
-
-void FLEncoder_Amend(FLEncoder e, FLSlice base, bool reuseStrings, bool externPointers) FLAPI {
-    if (e->isFleece() && base.size > 0) {
-        e->fleeceEncoder->setBase(base, externPointers);
-        if(reuseStrings)
-            e->fleeceEncoder->reuseBaseStrings();
+    FLValue FLValue_NewWithFormat(const char *format, ...) {
+        va_list args;
+        va_start(args, format);
+        auto result = FLValue_NewWithFormatV(format, args);
+        va_end(args);
+        return result;
     }
-}
 
-FLSlice FLEncoder_GetBase(FLEncoder e) FLAPI {
-    if (e->isFleece())
-        return e->fleeceEncoder->base();
-    return {};
-}
-
-size_t FLEncoder_GetNextWritePos(FLEncoder e) FLAPI {
-    if (e->isFleece())
-        return e->fleeceEncoder->nextWritePos();
-    return 0;
-}
-
-size_t FLEncoder_BytesWritten(FLEncoder e) FLAPI {
-    return ENCODER_DO(e, bytesWritten());
-}
-
-intptr_t FLEncoder_LastValueWritten(FLEncoder e) FLAPI {
-    return e->isFleece() ? intptr_t(e->fleeceEncoder->lastValueWritten()) : kFLNoWrittenValue;
-}
-
-bool FLEncoder_WriteValueAgain(FLEncoder e, intptr_t prewritten) FLAPI {
-    return e->isFleece() && e->fleeceEncoder->writeValueAgain(Encoder::PreWrittenValue(prewritten));
-}
-
-bool FLEncoder_WriteNull(FLEncoder e)              FLAPI {ENCODER_TRY(e, writeNull());}
-bool FLEncoder_WriteUndefined(FLEncoder e)         FLAPI {ENCODER_TRY(e, writeUndefined());}
-bool FLEncoder_WriteBool(FLEncoder e, bool b)      FLAPI {ENCODER_TRY(e, writeBool(b));}
-bool FLEncoder_WriteInt(FLEncoder e, int64_t i)    FLAPI {ENCODER_TRY(e, writeInt(i));}
-bool FLEncoder_WriteUInt(FLEncoder e, uint64_t u)  FLAPI {ENCODER_TRY(e, writeUInt(u));}
-bool FLEncoder_WriteFloat(FLEncoder e, float f)    FLAPI {ENCODER_TRY(e, writeFloat(f));}
-bool FLEncoder_WriteDouble(FLEncoder e, double d)  FLAPI {ENCODER_TRY(e, writeDouble(d));}
-bool FLEncoder_WriteString(FLEncoder e, FLSlice s) FLAPI {ENCODER_TRY(e, writeString(s));}
-bool FLEncoder_WriteDateString(FLEncoder e, FLTimestamp ts, bool asUTC)
-                                                   FLAPI {ENCODER_TRY(e, writeDateString(ts,asUTC));}
-bool FLEncoder_WriteData(FLEncoder e, FLSlice d)   FLAPI {ENCODER_TRY(e, writeData(d));}
-bool FLEncoder_WriteRaw(FLEncoder e, FLSlice r)    FLAPI {ENCODER_TRY(e, writeRaw(r));}
-bool FLEncoder_WriteValue(FLEncoder e, FLValue v)  FLAPI {ENCODER_TRY(e, writeValue(v));}
-
-bool FLEncoder_BeginArray(FLEncoder e, size_t reserve)  FLAPI {ENCODER_TRY(e, beginArray(reserve));}
-bool FLEncoder_EndArray(FLEncoder e)                    FLAPI {ENCODER_TRY(e, endArray());}
-bool FLEncoder_BeginDict(FLEncoder e, size_t reserve)   FLAPI {ENCODER_TRY(e, beginDictionary(reserve));}
-bool FLEncoder_WriteKey(FLEncoder e, FLSlice s)         FLAPI {ENCODER_TRY(e, writeKey(s));}
-bool FLEncoder_WriteKeyValue(FLEncoder e, FLValue key)  FLAPI {ENCODER_TRY(e, writeKey(key));}
-bool FLEncoder_EndDict(FLEncoder e)                     FLAPI {ENCODER_TRY(e, endDictionary());}
-
-void FLJSONEncoder_NextDocument(FLEncoder e) FLAPI {
-    if (!e->isFleece())
-        e->jsonEncoder->nextDocument();
-}
-
-bool FLEncoder_ConvertJSON(FLEncoder e, FLSlice json) FLAPI {
-    if (!e->hasError()) {
-        try {
-            if (e->isFleece()) {
-                JSONConverter *jc = e->jsonConverter.get();
-                if (jc) {
-                    jc->reset();
-                } else {
-                    jc = new JSONConverter(*e->fleeceEncoder);
-                    e->jsonConverter.reset(jc);
-                }
-                if (jc->encodeJSON(json)) {                   // encodeJSON can throw
-                    return true;
-                } else {
-                    e->errorCode = (FLError)jc->errorCode();
-                    e->errorMessage = jc->errorMessage();
-                }
-            } else {
-                e->jsonEncoder->writeJSON(json);
-                return true;
-            }
-        } catch (const std::exception &x) {
-            e->recordException(x);
-        }
+    FLValue FLValue_NewWithFormatV(const char *format, va_list args) {
+        return std::move(builder::VBuild(format, args)).detach();
     }
-    return false;
-}
 
-FLError FLEncoder_GetError(FLEncoder e) FLAPI {
-    return (FLError)e->errorCode;
-}
-
-const char* FL_NULLABLE FLEncoder_GetErrorMessage(FLEncoder e) FLAPI {
-    return e->hasError() ? e->errorMessage.c_str() : nullptr;
-}
-
-void FLEncoder_SetExtraInfo(FLEncoder e, void* FL_NULLABLE info) FLAPI {
-    e->extraInfo = info;
-}
-
-void* FL_NULLABLE FLEncoder_GetExtraInfo(FLEncoder e) FLAPI {
-    return e->extraInfo;
-}
-
-FLSliceResult FLEncoder_Snip(FLEncoder e) FLAPI {
-    if (e->isFleece())
-        return FLSliceResult(e->fleeceEncoder->snip());
-    else
-        return {};
-}
-
-size_t FLEncoder_FinishItem(FLEncoder e) FLAPI {
-    if (e->isFleece())
-        return e->fleeceEncoder->finishItem();
-    return 0;
-}
-
-FLDoc FL_NULLABLE FLEncoder_FinishDoc(FLEncoder e, FLError * FL_NULLABLE outError) FLAPI {
-    if (e->fleeceEncoder) {
-        if (!e->hasError()) {
-            try {
-                return retain(e->fleeceEncoder->finishDoc());       // finish() can throw
-            } catch (const std::exception &x) {
-                e->recordException(x);
-            }
-        }
-    } else {
-        e->errorCode = kFLUnsupported;  // Doc class doesn't support JSON data
+    void FLMutableArray_UpdateWithFormat(FLMutableArray array, const char *format, ...) {
+        va_list args;
+        va_start(args, format);
+        FLValue_UpdateWithFormatV(array, format, args);
+        va_end(args);
     }
-    // Failure:
-    if (outError)
-        *outError = e->errorCode;
-    e->reset();
-    return nullptr;
-}
 
-
-FLSliceResult FLEncoder_Finish(FLEncoder e, FLError * FL_NULLABLE outError) FLAPI {
-    if (!e->hasError()) {
-        try {
-            return toSliceResult(ENCODER_DO(e, finish()));       // finish() can throw
-        } catch (const std::exception &x) {
-            e->recordException(x);
-        }
+    void FLMutableDict_UpdateWithFormat(FLMutableDict dict, const char *format, ...) {
+        va_list args;
+        va_start(args, format);
+        FLValue_UpdateWithFormatV(dict, format, args);
+        va_end(args);
     }
-    // Failure:
-    if (outError)
-        *outError = e->errorCode;
-    e->reset();
-    return {nullptr, 0};
-}
+
+    void FLValue_UpdateWithFormatV(FLValue v, const char *format, va_list args) {
+        assert(FLValue_IsMutable(v));
+        builder::VPut(const_cast<Value*>(v), format, args);
+    }
 
 
 #pragma mark - DOCUMENTS
@@ -801,7 +682,7 @@ FLValue FL_NULLABLE FLDoc_GetRoot(FLDoc FL_NULLABLE doc)               FLAPI {re
 FLSlice FLDoc_GetData(FLDoc FL_NULLABLE doc)               FLAPI {return doc ? doc->data() : slice();}
 
 FLSliceResult FLDoc_GetAllocedData(FLDoc FL_NULLABLE doc) FLAPI {
-    return doc ? toSliceResult(doc->allocedData()) : FLSliceResult{};
+    return doc ? FLSliceResult(doc->allocedData()) : FLSliceResult{};
 }
 
 void* FL_NULLABLE FLDoc_GetAssociated(FLDoc FL_NULLABLE doc, const char *type) FLAPI {
@@ -818,7 +699,7 @@ bool FLDoc_SetAssociated(FLDoc FL_NULLABLE doc, void * FL_NULLABLE pointer, cons
 
 FLSliceResult FLCreateJSONDelta(FLValue FL_NULLABLE old, FLValue FL_NULLABLE nuu) FLAPI {
     try {
-        return toSliceResult(JSONDelta::create(old, nuu));
+        return FLSliceResult(JSONDelta::create(old, nuu));
     } catch (const std::exception&) {
         return {};
     }
@@ -826,7 +707,7 @@ FLSliceResult FLCreateJSONDelta(FLValue FL_NULLABLE old, FLValue FL_NULLABLE nuu
 
 bool FLEncodeJSONDelta(FLValue FL_NULLABLE old, FLValue FL_NULLABLE nuu, FLEncoder jsonEncoder) FLAPI {
     try {
-        JSONEncoder *enc = jsonEncoder->jsonEncoder.get();
+        JSONEncoder *enc = jsonEncoder->jsonEncoder();
         precondition(enc);  //TODO: Support encoding to Fleece
         JSONDelta::create(old, nuu, *enc);
         return true;
@@ -839,14 +720,14 @@ bool FLEncodeJSONDelta(FLValue FL_NULLABLE old, FLValue FL_NULLABLE nuu, FLEncod
 
 FLSliceResult FLApplyJSONDelta(FLValue FL_NULLABLE old, FLSlice jsonDelta, FLError * FL_NULLABLE outError) FLAPI {
     try {
-        return toSliceResult(JSONDelta::apply(old, jsonDelta));
+        return FLSliceResult(JSONDelta::apply(old, jsonDelta));
     } catchError(outError);
     return {};
 }
 
 bool FLEncodeApplyingJSONDelta(FLValue FL_NULLABLE old, FLSlice jsonDelta, FLEncoder encoder) FLAPI {
     try {
-        Encoder *enc = encoder->fleeceEncoder.get();
+        Encoder *enc = encoder->fleeceEncoder();
         if (!enc)
             FleeceException::_throw(EncodeError, "FLEncodeApplyingJSONDelta cannot encode JSON");
         JSONDelta::apply(old, jsonDelta, false, *enc);

@@ -18,6 +18,11 @@ on:
     branches:
       - '**'
 
+concurrency:
+  # Cancel any running actions when a branch is updated:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Debug
@@ -45,12 +50,12 @@ jobs:
     - name: Configure CMake
       if: runner.os != 'Windows'
       working-directory: ${{github.workspace}}/build
-      run: cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+      run: cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DFLEECE_SANITIZE=ON
 
     - name: Configure CMake (Windows)
       if: runner.os == 'Windows'
       working-directory: ${{github.workspace}}/build
-      run: cmake .. -A x64
+      run: cmake .. -A x64 -DFLEECE_SANITIZE=ON
 
     - name: Build
       working-directory: ${{github.workspace}}/build

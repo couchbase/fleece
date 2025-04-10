@@ -21,6 +21,7 @@
 #include <string>
 
 using namespace std;
+using namespace fleece;
 
 
 template <class FLOAT>

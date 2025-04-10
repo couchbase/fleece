@@ -25,8 +25,9 @@ namespace fleece {
 #include "fleece/Fleece.hh"
 #include "fleece/Mutable.hh"
 
-using namespace fleece;
 using namespace std;
+using namespace fleece;
+using namespace fleece_test;
 
 
 #if 0
@@ -116,6 +117,21 @@ TEST_CASE("API Encoder", "[API][Encoder]") {
     CHECK(doc["bar"_sl].asString() == "wow"_sl);
     CHECK(doc["bool"_sl].asBool() == true);
     CHECK(doc["bool"_sl].type() == kFLBoolean);
+}
+
+
+TEST_CASE("API Encoder Error", "[API][Encoder][!throws]") {
+    // Test fix for #229
+    FLEncoder enc = FLEncoder_New();
+    CHECK_FALSE(FLEncoder_WriteKey(enc, "oops"_sl));   // writing key outside of a dict
+    FLError error = {};
+    FLSliceResult data = FLEncoder_Finish(enc, &error);
+    CHECK(data.buf == nullptr);
+    CHECK(error == kFLEncodeError);
+    const char* errorMessage = FLEncoder_GetErrorMessage(enc);
+    REQUIRE(errorMessage);
+    CHECK(string(errorMessage) == "encoder error: not writing a dictionary");
+    FLEncoder_Free(enc);
 }
 
 

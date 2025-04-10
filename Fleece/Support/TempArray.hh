@@ -48,8 +48,8 @@
                 delete[] _array;
         }
 
-        operator T* () {return _array;}
-        template <class U> explicit operator U* () {return (U*)_array;}
+        operator T* () LIFETIMEBOUND {return _array;}
+        template <class U> explicit operator U* () LIFETIMEBOUND {return (U*)_array;}
 
         bool const _onHeap;
         T* _array;

@@ -17,8 +17,6 @@
 #include <ctime>
 
 namespace fleece {
-    using namespace std::chrono;
-
     static constexpr int64_t kInvalidDate = INT64_MIN;
 
     typedef enum {
@@ -92,7 +90,7 @@ namespace fleece {
         @param format The model to use for formatting (i.e. which portions to include).
                       If null, then the full ISO-8601 format is used
         @return  The formatted string (points to `buf`). */
-    slice FormatISO8601Date(char buf[], int64_t timestamp, bool asUTC, const DateTime* format);
+    slice FormatISO8601Date(char buf[] LIFETIMEBOUND, int64_t timestamp, bool asUTC, const DateTime* format);
 
     /** Formats a timestamp (milliseconds since 1/1/1970) as an ISO-8601 date-time.
         @param buf  The location to write the formatted C string. At least
@@ -102,14 +100,14 @@ namespace fleece {
         @param format The model to use for formatting (i.e. which portions to include).
                       If null, then the full ISO-8601 format is used
         @return  The formatted string (points to `buf`). */
-    slice FormatISO8601Date(char buf[], int64_t timestamp, minutes tzoffset, const DateTime* format);
+    slice FormatISO8601Date(char buf[] LIFETIMEBOUND, int64_t timestamp, std::chrono::minutes tzoffset, const DateTime* format);
 
     /** Creates a tm out of a timestamp, but it will not be fully valid until
         passed through mktime.
         @param timestamp  The timestamp to use
         @return  The populated tm struct (dst value will be unset)
     */
-    struct tm FromTimestamp(seconds timestamp);
+    struct tm FromTimestamp(std::chrono::seconds timestamp);
 
     /** Calculates the timezone offset from UTC given a reference date.
         This function does its best to be daylight savings time aware.
@@ -120,5 +118,5 @@ namespace fleece {
                           Converted to local time before considering DST
         @return  The time elapsed since 1/1/1970 as a duration
     */
-    seconds GetLocalTZOffset(struct tm* time, bool input_utc);
+    std::chrono::seconds GetLocalTZOffset(struct tm* time, bool input_utc);
 }  // namespace fleece

@@ -1,115 +1,97 @@
 //
-//  CaseListReporter.hh
-//  Couchbase Lite Core
+// CaseListReporter.hh
 //
-//  Created by Jens Alfke on 8/26/16.
-//  Copyright 2016-Present Couchbase, Inc.
+// Copyright 2024-Present Couchbase, Inc.
 //
-//  Use of this software is governed by the Business Source License included
-//  in the file licenses/BSL-Couchbase.txt.  As of the Change Date specified
-//  in that file, in accordance with the Business Source License, use of this
-//  software will be governed by the Apache License, Version 2.0, included in
-//  the file licenses/APL2.txt.
+// Use of this software is governed by the Business Source License included
+// in the file licenses/BSL-Couchbase.txt.  As of the Change Date specified
+// in that file, in accordance with the Business Source License, use of this
+// software will be governed by the Apache License, Version 2.0, included in
+// the file licenses/APL2.txt.
 //
 
-#include "catch.hpp"
-#include "Stopwatch.hh"
-#include <chrono>
-#include <iostream>
-#include <time.h>
-#include <vector>
+// This is a modified version of ConsoleReporter.hh from the Catch2 source.
+//
+//              Copyright Catch2 Authors
+// Distributed under the Boost Software License, Version 1.0.
+//   (See accompanying file LICENSE.txt or copy at
+//        https://www.boost.org/LICENSE_1_0.txt)
 
-#ifdef CASE_LIST_BACKTRACE
-#include "Backtrace.hh"
-#endif
+// SPDX-License-Identifier: BSL-1.0
+#pragma once
+
+#include "catch_amalgamated.hpp"
+
+namespace fleece_Catch {
+    using namespace Catch;
+    
+    // Fwd decls
+    class TablePrinter;
+
+    class CaseListReporter : public StreamingReporterBase {
+        Detail::unique_ptr<TablePrinter> m_tablePrinter;
+
+    public:
+        CaseListReporter(ReporterConfig&& config, bool quiet = false);
+        ~CaseListReporter() override;
+        static std::string getDescription();
+
+        void noMatchingTestCases( StringRef unmatchedSpec ) override;
+        void reportInvalidTestSpec( StringRef arg ) override;
+
+        void assertionStarting(AssertionInfo const&) override;
+
+        void assertionEnded(AssertionStats const& _assertionStats) override;
+
+        void sectionStarting(SectionInfo const& _sectionInfo) override;
+        void sectionEnded(SectionStats const& _sectionStats) override;
+
+        void benchmarkPreparing( StringRef name ) override;
+        void benchmarkStarting(BenchmarkInfo const& info) override;
+        void benchmarkEnded(BenchmarkStats<> const& stats) override;
+        void benchmarkFailed( StringRef error ) override;
+
+        void testCasePartialStarting(TestCaseInfo const& testInfo,
+                                     uint64_t partNumber) override;
+
+        void testCaseStarting(TestCaseInfo const& _testInfo) override;
+        void testCaseEnded(TestCaseStats const& _testCaseStats) override;
+
+        void testRunEnded(TestRunStats const& _testRunStats) override;
+        void testRunStarting(TestRunInfo const& _testRunInfo) override;
+
+    private:
+        void lazyPrint();
+
+        void lazyPrintWithoutClosingBenchmarkTable();
+        void lazyPrintRunInfo();
+        void printTestCaseAndSectionHeader();
+
+        void printClosedHeader(std::string const& _name);
+        void printOpenHeader(std::string const& _name);
+
+        // if string has a : in first line will set indent to follow it on
+        // subsequent lines
+        void printHeaderString(std::string const& _string, std::size_t indent = 0);
+
+        void printTotalsDivider(Totals const& totals);
+
+        std::string_view lineOfChars(char c, size_t count = 0) const;
+
+        std::vector<std::string> m_failedTestCases;
+        bool m_headerPrinted = false;
+        bool m_testRunInfoPrinted = false;
+        bool m_ignoreNextPartial = false;
+        bool m_quiet = false;
+    };
 
 
-/** Custom reporter that logs a line for every test file and every test case being run.
-    Use CLI args "-r list" to use it. */
-struct CaseListReporter : public Catch::ConsoleReporter {
-    CaseListReporter( Catch::ReporterConfig const& _config )
-    :   Catch::ConsoleReporter( _config )
-    {
-        _start = time(nullptr);
-        stream << "STARTING TESTS AT " << ctime(&_start);
-        stream.flush();
-    }
+    class QuietCaseListReporter : public CaseListReporter {
+    public:
+        QuietCaseListReporter(ReporterConfig&& config)
+        :CaseListReporter(std::move(config), true) { }
 
-    virtual ~CaseListReporter() override {
-        auto now = time(nullptr);
-        if (!_failedTests.empty()) {
-            stream << "failed tests:\n";
-            for (std::string const& name : _failedTests)
-                stream << "    >>> " << name << std::endl;
-        }
-        stream << "\nENDED TESTS IN " << (now - _start) << "sec, AT " << ctime(&now) << std::endl;
-        stream.flush();
-    }
+        static std::string getDescription();
+    };
 
-    static std::string getDescription() {
-        return "Logs a line for every test case";
-    }
-
-    virtual void testCaseStarting( Catch::TestCaseInfo const& _testInfo ) override {
-        std::string file = _testInfo.lineInfo.file;
-        if (file != _curFile) {
-            _curFile = file;
-            auto slash = file.rfind('/');
-            stream << "## " << file.substr(slash+1) << ":\n";
-        }
-        stream << "\t>>> " << _testInfo.name << "\n";
-        _firstSection = true;
-        _sectionNesting = 0;
-        stream.flush();
-        ConsoleReporter::testCaseStarting(_testInfo);
-        _stopwatch.reset();
-    }
-    virtual void testCaseEnded( Catch::TestCaseStats const& _testCaseStats ) override {
-        stream << "\t    [" << _stopwatch.elapsed() << " sec]\n";
-        stream.flush();
-        if (_testCaseStats.totals.testCases.failed > 0)
-            _failedTests.push_back(_testCaseStats.testInfo.name);
-        ConsoleReporter::testCaseEnded(_testCaseStats);
-    }
-
-    virtual void sectionStarting( Catch::SectionInfo const& _sectionInfo ) override {
-        if (_firstSection)
-            _firstSection = false;
-        else {
-            for (unsigned i = 0; i < _sectionNesting; ++i)
-                stream << "\t";
-            stream << "\t--- " << _sectionInfo.name << "\n";
-            stream.flush();
-        }
-        ++_sectionNesting;
-        ConsoleReporter::sectionStarting(_sectionInfo);
-    }
-
-    void sectionEnded( Catch::SectionStats const& sectionStats ) override {
-        --_sectionNesting;
-        ConsoleReporter::sectionEnded(sectionStats);
-    }
-
-#ifdef CASE_LIST_BACKTRACE
-    virtual bool assertionEnded( Catch::AssertionStats const& stats ) override {
-        if (stats.assertionResult.getResultType() == Catch::ResultWas::FatalErrorCondition) {
-            std::cerr << "\n\n********** CRASH: "
-                      << stats.assertionResult.getMessage()
-                      << " **********";
-            fleece::Backtrace bt(5);
-            bt.writeTo(std::cerr);
-            std::cerr << "\n********** CRASH **********\n";
-        }
-        return Catch::ConsoleReporter::assertionEnded(stats);
-    }
-#endif
-
-    std::string _curFile;
-    bool _firstSection;
-    unsigned _sectionNesting;
-    time_t _start;
-    fleece::Stopwatch _stopwatch;
-    std::vector<std::string> _failedTests;
-};
-
-CATCH_REGISTER_REPORTER("list", CaseListReporter )
+} 

@@ -1,5 +1,6 @@
 //
-//  catch.hpp
+//  Catch2.xcconfig
+//  Fleece
 //
 //  Copyright 2024-Present Couchbase, Inc.
 //
@@ -10,7 +11,6 @@
 //  the file licenses/APL2.txt.
 //
 
-// This header is a shim to accomodate all the test files that #include "catch.hpp".
+#include "FleeceStaticLib.xcconfig"
 
-#pragma once
-#include "./catch_amalgamated.hpp"
+PRODUCT_NAME                    = Catch2

@@ -116,6 +116,10 @@
 
 #include "SwiftDtoa.h"                      //Jens: Edited path
 
+#pragma clang diagnostic ignored "-Wimplicit-int-conversion"    //Jens: Added this
+#pragma clang diagnostic ignored "-Wshorten-64-to-32"           //Jens: Added this
+#pragma clang diagnostic ignored "-Wdouble-promotion"           //Jens: Added this
+
 namespace fleece {                          //Jens: Added namespace
 
 

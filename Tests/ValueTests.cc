@@ -11,7 +11,7 @@
 //
 
 #ifndef NOMINMAX
-#define NOMINMAX
+#    define NOMINMAX
 #endif
 
 #include "fleece/Fleece.h"
@@ -27,15 +27,14 @@
 
 #undef NOMINMAX
 
-
 namespace fleece {
     using namespace std;
     using namespace impl;
     using namespace impl::internal;
+    using namespace fleece_test;
 
     class ValueTests {  // Value declares this as a friend so it can call private API
-    public:
-
+      public:
         static void testPointers() {
             Pointer v(4, kNarrow);
             REQUIRE(v.offset<false>() == 4u);
@@ -45,18 +44,17 @@ namespace fleece {
 
         static void testDeref() {
             uint8_t data[10] = {0x01, 0x02, 0x03, 0x04, 0x80, 0x02};
-            auto start = (const Pointer*)&data[4];
+            auto    start    = (const Pointer*)&data[4];
             REQUIRE(start->offset<false>() == 4u);
             auto dst = start->deref<false>();
             REQUIRE((ptrdiff_t)dst - (ptrdiff_t)&data[0] == 0L);
         }
-
     };
 
     TEST_CASE("VarInt read") {
-        uint8_t buf[100];
+        uint8_t  buf[100];
         uint64_t result;
-        for (double d = 0.0; d <= UINT64_MAX; d = std::max(d, 1.0) * 1.5) {
+        for ( double d = 0.0; d <= UINT64_MAX; d = std::max(d, 1.0) * 1.5 ) {
             auto n = (uint64_t)d;
             std::cerr << std::hex << n << std::dec << ", ";
             size_t nBytes = PutUVarInt(buf, n);
@@ -75,12 +73,12 @@ namespace fleece {
 
     TEST_CASE("VarInt32 read") {
         uint8_t buf[100];
-        for (double d = 0.0; d <= UINT64_MAX; d = std::max(d, 1.0) * 1.5) {
+        for ( double d = 0.0; d <= UINT64_MAX; d = std::max(d, 1.0) * 1.5 ) {
             auto n = (uint64_t)d;
             std::cerr << std::hex << n << std::dec << ", ";
-            size_t nBytes = PutUVarInt(buf, n);
+            size_t   nBytes = PutUVarInt(buf, n);
             uint32_t result;
-            if (n <= UINT32_MAX) {
+            if ( n <= UINT32_MAX ) {
                 REQUIRE(GetUVarInt32(slice(buf, sizeof(buf)), &result) == nBytes);
                 CHECK(result == n);
                 REQUIRE(GetUVarInt32(slice(buf, nBytes), &result) == nBytes);
@@ -96,7 +94,7 @@ namespace fleece {
     TEST_CASE("Constants") {
         CHECK(Value::kNullValue->type() == kNull);
         CHECK(!Value::kNullValue->isUndefined());
-        CHECK(!Value::kNullValue->isMutable());             // tests even-address alignment
+        CHECK(!Value::kNullValue->isMutable());  // tests even-address alignment
 
         CHECK(Value::kUndefinedValue->type() == kNull);
         CHECK(Value::kUndefinedValue->isUndefined());
@@ -111,16 +109,12 @@ namespace fleece {
         CHECK(!Dict::kEmpty->isMutable());
     }
 
-    TEST_CASE("Pointers") {
-        fleece::ValueTests::testPointers();
-    }
+    TEST_CASE("Pointers") { fleece::ValueTests::testPointers(); }
 
-    TEST_CASE("Deref") {
-        fleece::ValueTests::testDeref();
-    }
+    TEST_CASE("Deref") { fleece::ValueTests::testDeref(); }
 
     TEST_CASE("DeepIterator") {
-        auto input = readTestFile("1person.fleece");
+        auto input  = readTestFile("1person.fleece");
         auto person = Value::fromData(input);
 
         {
@@ -147,7 +141,7 @@ namespace fleece {
 
         {
             stringstream s;
-            for (DeepIterator i(person); i; ++i) {
+            for ( DeepIterator i(person); i; ++i ) {
                 s << i.jsonPointer() << ": " << i.value()->toString().asString() << "\n";
             }
             //cerr << s.str();
@@ -158,9 +152,8 @@ namespace fleece {
 
         {
             stringstream s;
-            for (DeepIterator i(person); i; ++i) {
-                if (i.path().empty())
-                    continue;
+            for ( DeepIterator i(person); i; ++i ) {
+                if ( i.path().empty() ) continue;
                 s << i.jsonPointer() << ": " << i.value()->toString().asString() << "\n";
                 i.skipChildren();
             }
@@ -171,12 +164,11 @@ namespace fleece {
         }
     }
 
-
     TEST_CASE("Doc", "[SharedKeys]") {
-        const Dict *root;
+        const Dict* root;
         {
-            Retained<SharedKeys> sk = new SharedKeys();
-            Retained<Doc> doc = new Doc(readTestFile("1person.fleece"), Doc::kUntrusted, sk);
+            Retained<SharedKeys> sk  = new SharedKeys();
+            Retained<Doc>        doc = new Doc(readTestFile("1person.fleece"), Doc::kUntrusted, sk);
             CHECK(doc->sharedKeys() == sk);
             root = (const Dict*)doc->root();
             CHECK(root);
@@ -189,14 +181,13 @@ namespace fleece {
         CHECK(Doc::sharedKeys(root) == nullptr);
     }
 
-
     TEST_CASE("Duplicate Docs", "[SharedKeys]") {
-        const Dict *root;
+        const Dict* root;
         {
-            alloc_slice data( readTestFile("1person.fleece") );
-            Retained<SharedKeys> sk = new SharedKeys();
-            Retained<Doc> doc1 = new Doc(data, Doc::kUntrusted, sk);
-            Retained<Doc> doc2 = new Doc(data, Doc::kUntrusted, sk);
+            alloc_slice          data(readTestFile("1person.fleece"));
+            Retained<SharedKeys> sk   = new SharedKeys();
+            Retained<Doc>        doc1 = new Doc(data, Doc::kUntrusted, sk);
+            Retained<Doc>        doc2 = new Doc(data, Doc::kUntrusted, sk);
             CHECK(doc1->data() == data);
             CHECK(doc2->data() == data);
             CHECK(doc1->sharedKeys() == sk);
@@ -214,28 +205,26 @@ namespace fleece {
 
     TEST_CASE("Retain empty array contained in Doc", "[Doc]") {
         // https://github.com/couchbaselabs/fleece/issues/113
-        Retained<Doc> doc = Doc::fromJSON("[]");
-        auto root = doc->root();
+        Retained<Doc> doc  = Doc::fromJSON("[]");
+        auto          root = doc->root();
         retain(root);
         release(root);
     }
 
     TEST_CASE("Recreate Doc from same data", "[Doc]") {
-        alloc_slice data( readTestFile("1person.fleece") );
+        alloc_slice   data(readTestFile("1person.fleece"));
         Retained<Doc> doc = new Doc(data, Doc::kUntrusted);
-        doc = nullptr;
-        doc = new Doc(data, Doc::kUntrusted);
+        doc               = nullptr;
+        doc               = new Doc(data, Doc::kUntrusted);
     }
 
     TEST_CASE("Many Docs", "[Doc]") {
         std::vector<Retained<Doc>> docs;
-        for (int i = 0; i < 100; i++) {
-            docs.push_back(Doc::fromJSON("[]"));
-        }
+        for ( int i = 0; i < 100; i++ ) { docs.push_back(Doc::fromJSON("[]")); }
     }
 
     TEST_CASE("Empty FLArrayIterator", "[API]") {
-        FLDoc doc = FLDoc_FromJSON("[]"_sl, nullptr);
+        FLDoc   doc = FLDoc_FromJSON("[]"_sl, nullptr);
         FLArray arr = FLValue_AsArray(FLDoc_GetRoot(doc));
         REQUIRE(arr);
         FLArrayIterator iter;
@@ -247,7 +236,7 @@ namespace fleece {
     }
 
     TEST_CASE("Empty FLDictIterator", "[API]") {
-        FLDoc doc = FLDoc_FromJSON("{}"_sl, nullptr);
+        FLDoc  doc = FLDoc_FromJSON("{}"_sl, nullptr);
         FLDict arr = FLValue_AsDict(FLDoc_GetRoot(doc));
         REQUIRE(arr);
         FLDictIterator iter;
@@ -264,36 +253,30 @@ namespace fleece {
         auto genDoc = [](unsigned nlevels) -> string {
             // pre-condition: nlevels >= 1
             string ret = "";
-            for (unsigned i = 1; i <= nlevels; ++i) {
-                ret += R"({"a":)";
-            }
+            for ( unsigned i = 1; i <= nlevels; ++i ) { ret += R"({"a":)"; }
             ret += "1}";
-            for (unsigned i = 2; i <= nlevels; ++i) {
-                ret += "}";
-            }
+            for ( unsigned i = 2; i <= nlevels; ++i ) { ret += "}"; }
             return ret;
         };
 
         SECTION("100 Levels of JSON Dictionary") {
-            alloc_slice origJSON{genDoc(100)};
-            Retained<Doc> doc = Doc::fromJSON(origJSON);
-            auto root = doc->root();
-            alloc_slice json = root->toJSON();
+            alloc_slice   origJSON{genDoc(100)};
+            Retained<Doc> doc  = Doc::fromJSON(origJSON);
+            auto          root = doc->root();
+            alloc_slice   json = root->toJSON();
             CHECK(origJSON == json);
             retain(root);
             release(root);
         }
 
         SECTION("100 Is the Limit of JSON Dictionary") {
-            alloc_slice origJSON{genDoc(101)};
-            Retained<Doc> doc;
+            alloc_slice       origJSON{genDoc(101)};
+            Retained<Doc>     doc;
             fleece::ErrorCode errCode = fleece::NoError;
             try {
                 doc = Doc::fromJSON(origJSON);
-            } catch (FleeceException& exc) {
-                errCode = fleece::JSONError;
-            }
+            } catch ( FleeceException& ) { errCode = fleece::JSONError; }
             CHECK(errCode == fleece::JSONError);
         }
     }
-}
+}  // namespace fleece
