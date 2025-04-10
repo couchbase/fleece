@@ -167,10 +167,10 @@ extern "C" {
         @warning It is illegal to call this on a value obtained from \ref FLValue_FromData. */
     FLEECE_PUBLIC void FLValue_Release(FLValue FL_NULLABLE) FLAPI;
 
-    static inline FLArray FL_NULLABLE FLArray_Retain(FLArray FL_NULLABLE v) {FLValue_Retain((FLValue)v); return v;}
-    static inline void FLArray_Release(FLArray FL_NULLABLE v)   {FLValue_Release((FLValue)v);}
-    static inline FLDict FL_NULLABLE FLDict_Retain(FLDict FL_NULLABLE v)    {FLValue_Retain((FLValue)v); return v;}
-    static inline void FLDict_Release(FLDict FL_NULLABLE v)     {FLValue_Release((FLValue)v);}
+    inline FLArray FL_NULLABLE FLArray_Retain(FLArray FL_NULLABLE v) {FLValue_Retain((FLValue)v); return v;}
+    inline void FLArray_Release(FLArray FL_NULLABLE v)   {FLValue_Release((FLValue)v);}
+    inline FLDict FL_NULLABLE FLDict_Retain(FLDict FL_NULLABLE v)    {FLValue_Retain((FLValue)v); return v;}
+    inline void FLDict_Release(FLDict FL_NULLABLE v)     {FLValue_Release((FLValue)v);}
 
     /** @} */
 

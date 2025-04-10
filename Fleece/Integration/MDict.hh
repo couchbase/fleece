@@ -26,7 +26,7 @@ namespace fleece {
     public:
         using MValue = MValue<Native>;
         using MCollection = MCollection<Native>;
-        using MapType = std::unordered_map<slice, MValue, fleece::sliceHash>;
+        using MapType = std::unordered_map<slice, MValue>;
 
         /** Constructs an empty MDict not connected to any existing Fleece Dict. */
         MDict() :MCollection() { }

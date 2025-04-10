@@ -71,12 +71,10 @@
 #include <sstream>
 #include <map>
 #include <algorithm>
-#include <cctype>
 
 using namespace std;
 using namespace std::chrono;
 using namespace std::chrono_literals;
-using namespace date;
 
 typedef uint8_t u8;
 typedef int64_t sqlite3_int64;
@@ -402,10 +400,10 @@ namespace fleece {
     DateTime FromMillis(const int64_t timestamp) {
         const milliseconds millis{timestamp};
         const time_point   tp{millis};
-        const auto         td = date::floor<days>(tp);
+        const auto         td = date::floor<date::days>(tp);
 
-        const year_month_day ymd{td};
-        const hh_mm_ss       hms{floor<milliseconds>(tp - td)};
+        const date::year_month_day ymd{td};
+        const date::hh_mm_ss       hms{floor<milliseconds>(tp - td)};
 
         const double ms = static_cast<double>(hms.subseconds().count()) / 1000.0;
 
@@ -489,7 +487,7 @@ namespace fleece {
                 stream << date::format("%T", tm);
             } else {
                 const auto secs = duration_cast<seconds>(millis);
-                stream << date::format("%T", local_seconds(secs));
+                stream << date::format("%T", date::local_seconds(secs));
             }
 
             if ( zone ) {
@@ -508,10 +506,10 @@ namespace fleece {
     }
 
     struct tm FromTimestamp(seconds timestamp) {
-        local_seconds  tp{timestamp};
-        auto           dp = floor<days>(tp);
-        year_month_day ymd{dp};
-        auto           hhmmss = make_time(tp - dp);
+        date::local_seconds  tp{timestamp};
+        auto           dp = floor<date::days>(tp);
+        date::year_month_day ymd{dp};
+        auto           hhmmss = date::make_time(tp - dp);
 
         struct tm local_time {};
 

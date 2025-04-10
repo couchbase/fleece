@@ -11,6 +11,7 @@
 //
 
 #include "betterassert.hh"
+#include <exception>
 #include <stdio.h>
 #include <string.h>
 

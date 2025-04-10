@@ -47,8 +47,11 @@ typedef struct FLSlice {
     size_t size;
 
 #ifdef __cplusplus
-    explicit operator bool() const noexcept FLPURE  {return buf != nullptr;}
-    explicit operator std::string() const           {return std::string((char*)buf, size);}
+    constexpr const void* FL_NULLABLE data() const noexcept FLPURE  {return buf;}
+    constexpr size_t size_bytes() const noexcept FLPURE             {return size;} // compatibility with std::span
+    constexpr bool empty() const noexcept FLPURE                    {return size == 0;}
+    constexpr explicit operator bool() const noexcept FLPURE        {return buf != nullptr;}
+    explicit operator std::string() const                           {return std::string((char*)buf, size);}
 #endif
 } FLSlice;
 
@@ -65,8 +68,11 @@ struct NODISCARD FLSliceResult {
     size_t size;
 
 #ifdef __cplusplus
-    explicit operator bool() const noexcept FLPURE  {return buf != nullptr;}
-    explicit operator FLSlice () const              {return {buf, size};}
+    constexpr const void* FL_NULLABLE data() const noexcept FLPURE  {return buf;}
+    constexpr size_t size_bytes() const noexcept FLPURE             {return size;} // compatibility with std::span
+    constexpr bool empty() const noexcept FLPURE                    {return size == 0;}
+    constexpr explicit operator bool() const noexcept FLPURE        {return buf != nullptr;}
+    constexpr explicit operator FLSlice () const                    {return {buf, size};}
     inline explicit operator std::string() const;
 #endif
 };
@@ -103,7 +109,7 @@ typedef FLSliceResult FLStringResult;
 
 /** Exactly like memcmp, but safely handles the case where a or b is NULL and size is 0 (by returning 0),
     instead of producing "undefined behavior" as per the C spec. */
-static inline FLPURE int FLMemCmp(const void * FL_NULLABLE a,
+inline FLPURE int FLMemCmp(const void * FL_NULLABLE a,
                                   const void * FL_NULLABLE b, size_t size) FLAPI
 {
     if (_usuallyFalse(size == 0))
@@ -113,7 +119,7 @@ static inline FLPURE int FLMemCmp(const void * FL_NULLABLE a,
 
 /** Exactly like memcmp, but safely handles the case where dst or src is NULL and size is 0 (as a no-op),
     instead of producing "undefined behavior" as per the C spec. */
-static inline void FLMemCpy(void* FL_NULLABLE dst, const void* FL_NULLABLE src, size_t size) FLAPI {
+inline void FLMemCpy(void* FL_NULLABLE dst, const void* FL_NULLABLE src, size_t size) FLAPI {
     if (_usuallyTrue(size > 0))
         memcpy(dst, src, size);
 }
@@ -123,7 +129,7 @@ static inline void FLMemCpy(void* FL_NULLABLE dst, const void* FL_NULLABLE src, 
     It's OK to pass NULL; this returns an empty slice.
     \note If the string is a literal, it's more efficient to use \ref FLSTR instead.
     \note Performance is O(n) with the length of the string, since it has to call `strlen`. */
-static inline FLSlice FLStr(const char* FL_NULLABLE str) FLAPI {
+inline FLSlice FLStr(const char* FL_NULLABLE str LIFETIMEBOUND) FLAPI {
     FLSlice foo = { str, str ? strlen(str) : 0 };
     return foo;
 }
@@ -164,7 +170,7 @@ FLEECE_PUBLIC FLSliceResult FLSlice_Copy(FLSlice) FLAPI;
 
 
 /** Allocates an FLSliceResult, copying `size` bytes starting at `buf`. */
-static inline FLSliceResult FLSliceResult_CreateWith(const void* FL_NULLABLE bytes, size_t size) FLAPI {
+inline FLSliceResult FLSliceResult_CreateWith(const void* FL_NULLABLE bytes, size_t size) FLAPI {
     FLSlice s = {bytes, size};
     return FLSlice_Copy(s);
 }
@@ -174,18 +180,18 @@ FLEECE_PUBLIC void _FLBuf_Retain(const void* FL_NULLABLE) FLAPI;   // internal; 
 FLEECE_PUBLIC void _FLBuf_Release(const void* FL_NULLABLE) FLAPI;  // internal; do not call
 
 /** Increments the ref-count of a FLSliceResult. */
-static inline FLSliceResult FLSliceResult_Retain(FLSliceResult s) FLAPI {
+inline FLSliceResult FLSliceResult_Retain(FLSliceResult s) FLAPI {
     _FLBuf_Retain(s.buf);
     return s;
 }
 
 /** Decrements the ref-count of a FLSliceResult, freeing its memory if it reached zero. */
-static inline void FLSliceResult_Release(FLSliceResult s) FLAPI {
+inline void FLSliceResult_Release(FLSliceResult s) FLAPI {
     _FLBuf_Release(s.buf);
 }
 
 /** Type-casts a FLSliceResult to FLSlice, since C doesn't know it's a subclass. */
-static inline FLSlice FLSliceResult_AsSlice(FLSliceResult sr) {
+inline FLSlice FLSliceResult_AsSlice(FLSliceResult sr LIFETIMEBOUND) {
     FLSlice ret;
     memcpy(&ret, &sr, sizeof(ret));
     return ret;
@@ -203,11 +209,11 @@ FLEECE_PUBLIC void FL_WipeMemory(void *dst, size_t size) FLAPI;
 #ifdef __cplusplus
 }
 
-    FLPURE static inline bool operator== (FLSlice s1, FLSlice s2) {return FLSlice_Equal(s1, s2);}
-    FLPURE static inline bool operator!= (FLSlice s1, FLSlice s2) {return !(s1 == s2);}
+    FLPURE inline bool operator== (FLSlice s1, FLSlice s2) {return FLSlice_Equal(s1, s2);}
+    FLPURE inline bool operator!= (FLSlice s1, FLSlice s2) {return !(s1 == s2);}
 
-    FLPURE static inline bool operator== (FLSliceResult sr, FLSlice s) {return (FLSlice)sr == s;}
-    FLPURE static inline bool operator!= (FLSliceResult sr, FLSlice s) {return !(sr ==s);}
+    FLPURE inline bool operator== (FLSliceResult sr, FLSlice s) {return (FLSlice)sr == s;}
+    FLPURE inline bool operator!= (FLSliceResult sr, FLSlice s) {return !(sr ==s);}
 
 
     FLSliceResult::operator std::string () const {

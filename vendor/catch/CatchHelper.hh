@@ -1,6 +1,5 @@
 //
 //  CatchHelper.hh
-//  LiteCore
 //
 //  Created by Jens Alfke on 8/31/16.
 //  Copyright 2016-Present Couchbase, Inc.
@@ -15,8 +14,6 @@
 #pragma once
 
 #include "catch.hpp"
-
-
 
 
 #pragma mark - EXTRA ASSERTION MACROS
@@ -36,29 +33,20 @@ template <class T>
 inline T _REQUIRED(T &&value, const char *expr) {if (!value) FAIL(expr); return value; }
 
 
-
 #pragma mark - N-WAY TEST METHODS
-
-
-// N_WAY_TEST_CASE_METHOD is like TEST_CASE_METHOD, except the constructor of the test
-// class must take a boolean parameter, and the test case will be run twice, once on an object
-// that's been constructed with a 'false' parameter, and once with 'true'.
-
 
 
 namespace Catch {
     template<typename C>
     class NWayMethodTestInvoker : public ITestInvoker {
-
     public:
         NWayMethodTestInvoker( void (C::*method)() ) : m_method( method ) {}
 
         virtual void invoke() const {
-            {
-                for (int i = 0; i < C::numberOfOptions; i++) {
-                    C obj(i);
-                    (obj.*m_method)();
-                }
+            int option = GENERATE(range(0, C::numberOfOptions));
+            DYNAMIC_SECTION("Option " << option << ": " << C::nameOfOption[option]) {
+                auto obj = C(option);
+                (obj.*m_method)();
             }
         }
 
@@ -67,15 +55,32 @@ namespace Catch {
     };
 }
 
+
+/// N_WAY_TEST_CASE_METHOD is like TEST_CASE_METHOD, except
+/// - the class must have these two members:
+///   - `static constexpr int numberOfOptions`
+///   - `static constexpr const char* nameOfOption[numberOfOptions]`
+/// - the constructor of the test class must take an int parameter
+/// - the test case will be run `numberOfOptions` times
+/// - each test instance will be constructed with an integer ranging from 0 to `numberOfOptions - 1`
 #define N_WAY_TEST_CASE_METHOD2( TestName, ClassName, ... )\
+    CATCH_INTERNAL_START_WARNINGS_SUPPRESSION \
+    CATCH_INTERNAL_SUPPRESS_GLOBALS_WARNINGS \
+    CATCH_INTERNAL_SUPPRESS_UNUSED_VARIABLE_WARNINGS \
     namespace{ \
         struct TestName : INTERNAL_CATCH_REMOVE_PARENS(ClassName) { \
-            TestName(int opt) :ClassName(opt) { } \
+            explicit TestName(int opt) :ClassName(opt) { } \
             void test(); \
         }; \
-        Catch::AutoReg INTERNAL_CATCH_UNIQUE_NAME( autoRegistrar ) ( new Catch::NWayMethodTestInvoker( &TestName::test ), CATCH_INTERNAL_LINEINFO, #ClassName, Catch::NameAndTags{ __VA_ARGS__ } ); \
+        const Catch::AutoReg INTERNAL_CATCH_UNIQUE_NAME( autoRegistrar )( \
+        Catch::Detail::make_unique<Catch::NWayMethodTestInvoker<TestName>>( &TestName::test ), \
+        CATCH_INTERNAL_LINEINFO,                                      \
+        #ClassName##_catch_sr,                                        \
+        Catch::NameAndTags{ __VA_ARGS__ } ); /* NOLINT */ \
     } \
+    CATCH_INTERNAL_STOP_WARNINGS_SUPPRESSION \
     void TestName::test()
 
+
 #define N_WAY_TEST_CASE_METHOD( ClassName, ... ) \
-    N_WAY_TEST_CASE_METHOD2( INTERNAL_CATCH_UNIQUE_NAME( ____C_A_T_C_H____T_E_S_T____ ), ClassName, __VA_ARGS__ )
+    N_WAY_TEST_CASE_METHOD2( INTERNAL_CATCH_UNIQUE_NAME( CATCH2_INTERNAL_TEST_ ), ClassName, __VA_ARGS__ )

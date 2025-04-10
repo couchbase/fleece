@@ -38,9 +38,9 @@ namespace fleece {
         //-------- Writing:
 
         /// Writes data. Returns a pointer to where the data got written to.
-        const void* write(slice s)              {return _write(s.buf, s.size);}
+        const void* write(slice s) LIFETIMEBOUND {return _write(s.buf, s.size);}
 
-        const void* write(const void* data NONNULL, size_t length)  {return _write(data, length);}
+        const void* write(const void* data NONNULL, size_t length) LIFETIMEBOUND  {return _write(data, length);}
 
         Writer& operator<< (uint8_t byte)       {_write(&byte,1); return *this;}
         Writer& operator<< (slice s)            {write(s); return *this;}
@@ -60,16 +60,16 @@ namespace fleece {
         /// Reserves space for data, but leaves that space uninitialized.
         /// The data must be filled in later, before accessing the output,
         /// otherwise there will be garbage in the output.
-        void* reserveSpace(size_t length)       {return _write(nullptr, length);}
+        void* reserveSpace(size_t length) LIFETIMEBOUND       {return _write(nullptr, length);}
 
         /// Reserves space for \ref count values of type \ref T.
         template <class T>
-        T* reserveSpace(size_t count)           {return (T*) reserveSpace(count * sizeof(T));}
+        T* reserveSpace(size_t count) LIFETIMEBOUND           {return (T*) reserveSpace(count * sizeof(T));}
 
         /// Reserves `maxLength` bytes of space and passes a pointer to the callback.
         /// The callback must write _up to_ `maxLength` bytes, then return the byte count written.
         template <class T>
-        void* write(size_t maxLength, T callback) {
+        void* write(size_t maxLength, T callback) LIFETIMEBOUND {
             auto dst = (uint8_t*)reserveSpace(maxLength);
             size_t usedLength = callback(dst);
             _available.moveStart((ssize_t)usedLength - (ssize_t)maxLength);

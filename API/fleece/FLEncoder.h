@@ -153,6 +153,13 @@ extern "C" {
     /** Writes a Fleece Value to an Encoder. */
     FLEECE_PUBLIC bool FLEncoder_WriteValue(FLEncoder, FLValue) FLAPI;
 
+    /** Writes an Array or Dict to the encoder, as per the format string and printf-style arguments.
+        For details, see documentation of \ref FLValue_NewWithFormat. */
+    FLEECE_PUBLIC bool FLEncoder_WriteFormatted(FLEncoder, const char* format, ...) FLAPI __printflike(2, 3);
+
+    /** Writes an Array or Dict to the encoder, as per the format string and `va_list`.
+        For details, see documentation of \ref FLValue_NewWithFormat. */
+    FLEECE_PUBLIC bool FLEncoder_WriteFormattedArgs(FLEncoder, const char* format, va_list args) FLAPI;
 
     /** Begins writing an array value to an encoder. This pushes a new state where each
         subsequent value written becomes an array item, until FLEncoder_EndArray is called.
@@ -206,7 +213,6 @@ extern "C" {
 
     /** Ends encoding; if there has been no error, it returns the encoded data, else null.
         This does not free the FLEncoder; call FLEncoder_Free (or FLEncoder_Reset) next. */
-    NODISCARD
     FLEECE_PUBLIC FLSliceResult FLEncoder_Finish(FLEncoder, FLError* FL_NULLABLE outError) FLAPI;
 
     /** @} */
@@ -219,7 +225,7 @@ extern "C" {
     FLEECE_PUBLIC FLError FLEncoder_GetError(FLEncoder) FLAPI;
 
     /** Returns the error message of an encoder, or NULL if there's no error. */
-    FLEECE_PUBLIC const char* FL_NULLABLE FLEncoder_GetErrorMessage(FLEncoder) FLAPI;
+    FLEECE_PUBLIC const char* FL_NULLABLE FLEncoder_GetErrorMessage(FLEncoder e LIFETIMEBOUND) FLAPI;
 
     /** @} */
     /** @} */

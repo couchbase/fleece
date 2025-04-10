@@ -14,6 +14,8 @@
 #import "fleece/Fleece+CoreFoundation.h"
 #import <Foundation/Foundation.h>
 
+using namespace fleece;
+using namespace fleece::impl;
 
 NSString* const FLErrorDomain = @"Fleece";
 

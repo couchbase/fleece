@@ -29,7 +29,8 @@
     #define srandom srand
 #endif
 
-using namespace fleece;
+using slice = fleece::slice;
+using alloc_slice = fleece::alloc_slice;
 
 #if FL_HAVE_FILESYSTEM
     #ifdef _MSC_VER
@@ -84,12 +85,11 @@ namespace fleece_test {
     static inline std::string json5(const std::string &s)      {return fleece::ConvertJSON5(s);}
 }
 
-using namespace fleece_test;
 
 namespace fleece {
     // to make slice work with Catch's logging. This has to be in the 'fleece' namespace.
     static inline std::ostream& operator<< (std::ostream& o, slice s) {
-        return dumpSlice(o, s);
+        return fleece_test::dumpSlice(o, s);
     }
 
     static inline bool DoubleEquals(double left, double right) {

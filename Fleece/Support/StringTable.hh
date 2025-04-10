@@ -44,8 +44,8 @@ namespace fleece {
         void clear() noexcept;
 
         /// Looks up an existing key, returning a pointer to its entry (or NULL.)
-        const entry_t* find(key_t key) const noexcept FLPURE   {return find(key, hashCode(key));}
-        const entry_t* find(key_t key, hash_t) const noexcept FLPURE;
+        const entry_t* find(key_t key) const noexcept LIFETIMEBOUND FLPURE   {return find(key, hashCode(key));}
+        const entry_t* find(key_t key, hash_t) const noexcept LIFETIMEBOUND FLPURE;
 
         using insertResult = std::pair<entry_t*, bool>;
 

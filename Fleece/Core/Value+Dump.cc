@@ -105,8 +105,9 @@ namespace fleece { namespace impl {
             intptr_t pos = valueToOffset(value).value_or(intptr_t(value));
             constexpr size_t bufSize = 64;
             char buf[bufSize];
-            snprintf(buf, bufSize, "%c%04zx: %02x %02x",
-                    (pos < 0 ? '-' : ' '), std::abs(pos), value->_byte[0], value->_byte[1]);
+            snprintf(buf, bufSize, "%c%04x: %02x %02x",
+                    (pos < 0 ? '-' : ' '), unsigned(std::abs(pos)),
+                    value->_byte[0], value->_byte[1]);
             _out << buf;
             auto size = value->dataSize();
             if (wide && size < kWide)
@@ -173,9 +174,9 @@ namespace fleece { namespace impl {
                     constexpr size_t bufSize = 32;
                     char buf[bufSize];
                     if (offset >= 0)
-                        snprintf(buf, bufSize, " @%04llx", offset);
+                        snprintf(buf, bufSize, " @%04llx", (unsigned long long)offset);
                     else
-                        snprintf(buf, bufSize, " @-%04llx", -offset);
+                        snprintf(buf, bufSize, " @-%04llx", (unsigned long long)(-offset));
                     _out << buf;
                     if (legacy)
                         _out << " [legacy ptr]";

@@ -166,14 +166,16 @@ namespace fleece { namespace impl { namespace internal {
 
     HeapCollection* HeapDict::getMutable(slice stringKey, tags ifType) {
         key_t key = encodeKey(stringKey);
-        Retained<HeapCollection> result;
+        HeapCollection* result = nullptr;
         ValueSlot* mval = _findValueFor(key);
         if (mval) {
             result = mval->makeMutable(ifType);
         } else if (_source) {
-            result = HeapCollection::mutableCopy(_source->get(key), ifType);
-            if (result)
-                _map.emplace(_allocateKey(key), result.get());
+            Retained<HeapCollection> copied = HeapCollection::mutableCopy(_source->get(key), ifType);
+            if (copied) {
+                _map.emplace(_allocateKey(key), copied.get());  // Retains `copied`, making it safe to return `result`
+                result = copied;
+            }
         }
         if (result)
             markChanged();

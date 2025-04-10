@@ -34,6 +34,7 @@
 
 
 namespace fleece_test {
+    using namespace fleece;
 
     std::string sliceToHex(slice result) {
         std::string hex;

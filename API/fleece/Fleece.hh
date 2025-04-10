@@ -17,6 +17,8 @@
 #include "Fleece.h"
 #endif
 #include "slice.hh"
+#include <cstdarg>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -37,7 +39,6 @@ namespace fleece {
     class Value {
     public:
         Value()                                         =default;
-        Value(const Value &) noexcept                   =default;
         Value(FLValue FL_NULLABLE v)                    :_val(v) { }
         operator FLValue FL_NULLABLE () const           {return _val;}
 
@@ -77,8 +78,7 @@ namespace fleece {
 
         bool isEqual(Value v) const                     {return FLValue_IsEqual(_val, v);}
 
-        Value& operator= (Value v)                      {_val = v._val; return *this;}
-        Value& operator= (std::nullptr_t)               {_val = nullptr; return *this;}
+        Value& operator= (std::nullptr_t) &             {_val = nullptr; return *this;}
 
         inline Value operator[] (const KeyPath &kp) const;
 
@@ -115,7 +115,6 @@ namespace fleece {
     public:
         Array()                                         :Value() { }
         Array(FLArray FL_NULLABLE a)                    :Value((FLValue)a) { }
-        Array(const Array&) noexcept = default;
         operator FLArray FL_NULLABLE () const           {return (FLArray)_val;}
 
         static Array emptyArray()                       {return Array(kFLEmptyArray);}
@@ -127,8 +126,7 @@ namespace fleece {
         inline Value operator[] (int index) const       {return get(index);}
         inline Value operator[] (const KeyPath &kp) const {return Value::operator[](kp);}
 
-        Array& operator= (Array a)                      {_val = a._val; return *this;}
-        Array& operator= (std::nullptr_t)               {_val = nullptr; return *this;}
+        Array& operator= (std::nullptr_t) &             {_val = nullptr; return *this;}
         Value& operator= (Value v)                      =delete;
 
         [[nodiscard]] inline MutableArray asMutable() const;
@@ -147,7 +145,7 @@ namespace fleece {
             inline Value operator * () const            {return value();}
             inline explicit operator bool() const       {return (bool)value();}
             inline iterator& operator++ ()              {next(); return *this;}
-            inline bool operator!= (const iterator&)    {return value() != nullptr;}
+            inline bool operator!= (const iterator&) const    {return value() != nullptr;}
             inline Value operator[] (unsigned n) const  {return FLArrayIterator_GetValueAt(this,n);}
         private:
             iterator() =default;
@@ -169,7 +167,6 @@ namespace fleece {
     public:
         Dict()                                          :Value() { }
         Dict(FLDict FL_NULLABLE d)                      :Value((FLValue)d) { }
-        Dict(const Dict&) noexcept = default;
         operator FLDict FL_NULLABLE () const            {return (FLDict)_val;}
 
         static Dict emptyDict()                         {return Dict(kFLEmptyDict);}
@@ -185,8 +182,7 @@ namespace fleece {
         inline Value operator[] (const char *key) const {return get(key);}
         inline Value operator[] (const KeyPath &kp) const {return Value::operator[](kp);}
 
-        Dict& operator= (Dict d)                        {_val = d._val; return *this;}
-        Dict& operator= (std::nullptr_t)                {_val = nullptr; return *this;}
+        Dict& operator= (std::nullptr_t) &              {_val = nullptr; return *this;}
         Value& operator= (Value v)                      =delete;
 
         [[nodiscard]] inline MutableDict asMutable() const;
@@ -255,36 +251,47 @@ namespace fleece {
         property name (but not yet in the middle of a name.) */
     class KeyPath {
     public:
-        KeyPath(slice_NONNULL spec, FLError* FL_NULLABLE err)       :_path(FLKeyPath_New(spec, err)) { }
+        KeyPath()                                       :_path(FLKeyPath_NewEmpty()) { }
+        KeyPath(slice_NONNULL spec, FLError* FL_NULLABLE err) :_path(FLKeyPath_New(spec, err)) { }
         ~KeyPath()                                      {FLKeyPath_Free(_path);}
 
-        KeyPath(KeyPath &&kp)                           :_path(kp._path) {kp._path = nullptr;}
-        KeyPath& operator=(KeyPath &&kp)                {FLKeyPath_Free(_path); _path = kp._path;
+        KeyPath(KeyPath &&kp) noexcept                  :_path(kp._path) {kp._path = nullptr;}
+        KeyPath& operator=(KeyPath &&kp) & noexcept     {FLKeyPath_Free(_path); _path = kp._path;
                                                          kp._path = nullptr; return *this;}
 
         KeyPath(const KeyPath &kp)                      :KeyPath(std::string(kp), nullptr) { }
 
+
         explicit operator bool() const                  {return _path != nullptr;}
         operator FLKeyPath FL_NONNULL () const          {return _path;}
 
-        Value eval(Value root) const {
-            return FLKeyPath_Eval(_path, root);
-        }
+        size_t count() const                            {return FLKeyPath_GetCount(_path);}
+
+        inline std::pair<slice,int> get(size_t i) const;
+
+        Value eval(Value root) const                    {return FLKeyPath_Eval(_path, root);}
 
         static Value eval(slice_NONNULL specifier, Value root, FLError* FL_NULLABLE error) {
             return FLKeyPath_EvalOnce(specifier, root, error);
         }
 
-        explicit operator std::string() const {
-            return std::string(alloc_slice(FLKeyPath_ToString(_path)));
-        }
+        alloc_slice toString() const                    {return FLKeyPath_ToString(_path);}
+        explicit operator std::string() const           {return std::string(toString());}
 
         bool operator== (const KeyPath &kp) const       {return FLKeyPath_Equals(_path, kp._path);}
+
+        void addProperty(slice key)                     {FLKeyPath_AddProperty(_path, key);}
+        void addIndex(int index)                        {FLKeyPath_AddIndex(_path, index);}
+        bool addComponents(slice components, FLError* FL_NULLABLE err) {
+            return FLKeyPath_AddComponents(_path, components, err);
+        }
+        void dropComponents(size_t n)                   {FLKeyPath_DropComponents(_path, n);}
+
     private:
         KeyPath& operator=(const KeyPath&) =delete;
         friend class Value;
 
-        FLKeyPath _path;
+        FLKeyPath FL_NULLABLE _path;
     };
 
 
@@ -321,7 +328,7 @@ namespace fleece {
         external pointers to. */
     class Doc {
     public:
-        Doc(alloc_slice fleeceData,
+        Doc(const alloc_slice& fleeceData,
             FLTrust trust =kFLUntrusted,
             FLSharedKeys FL_NULLABLE sk =nullptr,
             slice externDest =nullslice) noexcept
@@ -343,28 +350,28 @@ namespace fleece {
         Doc& operator=(Doc &&other) noexcept;
         ~Doc()                                      {FLDoc_Release(_doc);}
 
-        slice data() const                          {return FLDoc_GetData(_doc);}
+        slice data() const LIFETIMEBOUND            {return FLDoc_GetData(_doc);}
         alloc_slice allocedData() const             {return FLDoc_GetAllocedData(_doc);}
         FLSharedKeys sharedKeys() const             {return FLDoc_GetSharedKeys(_doc);}
 
-        Value root() const                          {return FLDoc_GetRoot(_doc);}
+        Value root() const LIFETIMEBOUND            {return FLDoc_GetRoot(_doc);}
         explicit operator bool () const             {return root() != nullptr;}
         Array asArray() const                       {return root().asArray();}
         Dict asDict() const                         {return root().asDict();}
 
-        operator Value () const                     {return root();}
-        operator Dict () const                      {return asDict();}
-        operator FLDict FL_NULLABLE () const        {return asDict();}
+        operator Value () const LIFETIMEBOUND                     {return root();}
+        operator Dict () const LIFETIMEBOUND                      {return asDict();}
+        operator FLDict FL_NULLABLE () const LIFETIMEBOUND        {return asDict();}
 
-        Value operator[] (int index) const          {return asArray().get(index);}
-        Value operator[] (slice key) const          {return asDict().get(key);}
-        Value operator[] (const char *key) const    {return asDict().get(key);}
-        Value operator[] (const KeyPath &kp) const  {return root().operator[](kp);}
+        Value operator[] (int index) const LIFETIMEBOUND          {return asArray().get(index);}
+        Value operator[] (slice key) const LIFETIMEBOUND          {return asDict().get(key);}
+        Value operator[] (const char *key) const LIFETIMEBOUND    {return asDict().get(key);}
+        Value operator[] (const KeyPath &kp) const LIFETIMEBOUND  {return root().operator[](kp);}
 
         bool operator== (const Doc &d) const        {return _doc == d._doc;}
 
         operator FLDoc FL_NULLABLE () const         {return _doc;}
-        FLDoc detach()                              {auto d = _doc; _doc = nullptr; return d;}
+        FLDoc FL_NULLABLE detach()                  {auto d = _doc; _doc = nullptr; return d;}
 
         static Doc containing(Value v)              {return Doc(FLValue_FindDoc(v), false);}
         bool setAssociated(void * FL_NULLABLE p, const char *t) {return FLDoc_SetAssociated(_doc, p, t);}
@@ -402,7 +409,7 @@ namespace fleece {
         explicit Encoder(FLSharedKeys FL_NULLABLE sk)   :Encoder() {setSharedKeys(sk);}
 
         explicit Encoder(FLEncoder enc)                 :_enc(enc) { }
-        Encoder(Encoder&& enc)                          :_enc(enc._enc) {enc._enc = nullptr;}
+        Encoder(Encoder&& enc) noexcept                 :_enc(enc._enc) {enc._enc = nullptr;}
 
         void detach()                                   {_enc = nullptr;}
         
@@ -421,11 +428,14 @@ namespace fleece {
         inline bool writeDouble(double);
         inline bool writeString(slice);
         inline bool writeString(const char *s)          {return writeString(slice(s));}
-        inline bool writeString(std::string s)          {return writeString(slice(s));}
+        inline bool writeString(const std::string& s)   {return writeString(slice(s));}
         inline bool writeDateString(FLTimestamp, bool asUTC =true);
         inline bool writeData(slice);
         inline bool writeValue(Value);
         inline bool convertJSON(slice_NONNULL);
+
+        inline bool writeFormatted(const char* format, ...) __printflike(2, 3);
+        inline bool writeFormattedArgs(const char* format, va_list args);
 
         inline bool beginArray(size_t reserveCount =0);
         inline bool endArray();
@@ -436,6 +446,11 @@ namespace fleece {
 
         template <class T>
         inline void write(slice_NONNULL key, T value)       {writeKey(key); *this << value;}
+
+        template <typename FN>
+        bool writeArray(FN const& fn) {return beginArray() && (fn(), endArray());}
+        template <typename FN>
+        bool writeDict(FN const& fn) {return beginDict() && (fn(), endDict());}
 
         [[nodiscard]] inline Doc finishDoc(FLError* FL_NULLABLE =nullptr);
         [[nodiscard]] inline alloc_slice finish(FLError* FL_NULLABLE =nullptr);
@@ -516,6 +531,10 @@ namespace fleece {
 
     //====== IMPLEMENTATION GUNK:
 
+    static_assert(std::is_trivially_copyable_v<Value>);
+    static_assert(std::is_trivially_copyable_v<Array>);
+    static_assert(std::is_trivially_copyable_v<Dict>);
+
     inline FLValueType Value::type() const      {return FLValue_GetType(_val);}
     inline bool Value::isInteger() const        {return FLValue_IsInteger(_val);}
     inline bool Value::isUnsigned() const       {return FLValue_IsUnsigned(_val);}
@@ -592,9 +611,31 @@ namespace fleece {
     inline FLError Encoder::error() const       {return FLEncoder_GetError(_enc);}
     inline const char* Encoder::errorMessage() const {return FLEncoder_GetErrorMessage(_enc);}
 
+    inline bool Encoder::writeFormatted(const char* format, ...) {
+        va_list args;
+        va_start(args, format);
+        bool ok = FLEncoder_WriteFormattedArgs(_enc, format, args);
+        va_end(args);
+        return ok;
+    }
+    
+    inline bool Encoder::writeFormattedArgs(const char* format, va_list args) {
+        return FLEncoder_WriteFormattedArgs(_enc, format, args);
+    }
+
     // specialization for assigning bool value since there is no Encoder<<bool
     template<>
     inline void Encoder::keyref::operator= (bool value) {_enc.writeKey(_key); _enc.writeBool(value);}
+
+    inline std::pair<slice,int> KeyPath::get(size_t i) const {
+        FLSlice key = {};
+        int32_t index = 0;
+        if (FLKeyPath_GetElement(_path, i, &key, &index))
+            return {key, index};
+        else
+            throw std::domain_error("invalid KeyPath index");
+    }
+
 
     inline Doc Doc::fromJSON(slice_NONNULL json, FLError * FL_NULLABLE outError) {
         return Doc(FLDoc_FromJSON(json, outError), false);

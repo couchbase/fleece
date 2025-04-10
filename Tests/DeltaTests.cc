@@ -21,6 +21,7 @@ namespace fleece { namespace impl {
 
 using namespace fleece;
 using namespace fleece::impl;
+using namespace fleece_test;
 
 
 static bool isValidUTF8(fleece::slice sl) noexcept;
@@ -66,6 +67,11 @@ static void checkDelta(const char *json1, const char *json2, const char *deltaEx
     }
 }
 
+#ifdef __cpp_char8_t
+static void checkDelta(const char8_t *json1, const char8_t *json2, const char8_t *deltaExpected) {
+    checkDelta((const char*)json1, (const char*)json2, (const char*)deltaExpected);
+}
+#endif
 
 TEST_CASE("Delta scalars", "[delta]") {
     checkDelta("null", "null", nullptr);
@@ -132,7 +138,7 @@ TEST_CASE("Delta strings UTF-8", "[delta]") {
 
     checkDelta(u8"'யாமறிந்த மொழிகளிலே தமிழ்மொழி போல் இனிதாவது எங்கும் காணோம், பாமரராய் விலங்குகளாய், உலகனைத்தும் இகழ்ச்சிசொலப் பான்மை கெட்டு, நாமமது தமிழரெனக் கொண்டு இங்கு வாழ்ந்திடுதல் நன்றோ? சொல்லீர்! தேமதுரத் இகழ்ச்சிசொலப் உலகமெலாம் பரவும்வகை செய்தல் வேண்டும்.'",
                u8"'யாமறிந்த மொழிகளிலே தமிழ்மொழி போல் இனிதாவது எங்கும் காணோம், பாமரராய் விலங்குகளாய், உலகனைத்தும் இகழ்ச்சிசொலப் பான்மை கெட்டு, நாமமது தமிழரெனக் கொண்டு இங்கு வாழ்ந்திடுதல் நன்றோ? கொண்டு! தேமதுரத் தமிழோசை உலகமெலாம் பரவும்வகை செய்தல் வேண்டும்.'",
-               "[\"476=3-3+க|3=3-3+ண|3=12-6+டு|27=21-6+தம|3=15-12+ழோசை|104=\",0,2]");
+               u8"[\"476=3-3+க|3=3-3+ண|3=12-6+டு|27=21-6+தம|3=15-12+ழோசை|104=\",0,2]");
 
     JSONDelta::gMinStringDiffLength = 60;
 }
@@ -205,7 +211,7 @@ static void checkDelta(const Value *left, const Value *right, const Value *expec
     if (expectedDelta)
         CHECK(expectedDelta->isEqual(delta));
     else
-        CHECK(delta == 0);
+        CHECK(delta == nullptr);
 }
 
 

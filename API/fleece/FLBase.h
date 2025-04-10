@@ -72,7 +72,8 @@ extern "C" {
             storage.
             If invalid data is read by this call, subsequent calls to Value accessor functions can
             crash or return bogus results (including data from arbitrary memory locations.) */
-        kFLTrusted
+        kFLTrusted,
+        _kFLTrustInternalUseOnly = -1
     } FLTrust;
 
 

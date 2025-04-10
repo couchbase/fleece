@@ -121,7 +121,7 @@ namespace fleece { namespace impl {
         /** Returns the exact contents of a binary data value. Other types return a null slice. */
         slice asData() const noexcept FLPURE;
 
-        typedef int64_t FLTimestamp;
+        using FLTimestamp = int64_t;
         #define FLTimestampNone INT64_MIN
 
         /** Converts a value to a timestamp, in milliseconds since Unix epoch, or INT64_MIN on failure.
@@ -142,7 +142,7 @@ namespace fleece { namespace impl {
         alloc_slice toString() const;
 
         /** Returns true if this value is a mutable array or dict. */
-        bool isMutable() const FLPURE              {return ((size_t)this & 1) != 0;}
+        bool isMutable() const FLPURE;
 
         /** Looks up the SharedKeys from the enclosing Doc (if any.) */
         SharedKeys* sharedKeys() const noexcept FLPURE;
@@ -260,6 +260,16 @@ namespace fleece { namespace impl {
         template <bool WIDE> friend struct dictImpl;
     };
 
+    // explicit template instantiations
+    extern template float Value::asFloatOfType<float>() const noexcept;
+    extern template double Value::asFloatOfType<double>() const noexcept;
+    extern template void Value::toJSON<1>(Writer&) const;
+    extern template void Value::toJSON<5>(Writer&) const;
+    extern template alloc_slice Value::toJSON<1>(bool canonical) const;
+    extern template alloc_slice Value::toJSON<5>(bool canonical) const;
+    extern template const Value* Value::deref<false>() const;
+    extern template const Value* Value::deref<true>() const;
+
 
     // Some glue needed to make RefCounted<Value> work (see RefCounted.hh)
     void release(const Value *val) noexcept;
@@ -267,7 +277,7 @@ namespace fleece { namespace impl {
     NOINLINE void assignRef(const Value* &holder, const Value *newValue) noexcept;
 
     template <typename T>
-    static inline void assignRef(T* &holder, const Value *newValue) noexcept {
+    inline void assignRef(T* &holder, const Value *newValue) noexcept {
         assignRef((const Value*&)holder, newValue);
     }
 

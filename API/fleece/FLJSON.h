@@ -24,7 +24,8 @@ extern "C" {
 
     // This is the C API! For the C++ API, see Fleece.hh.
 
-    /** \defgroup json   JSON Interoperability */
+    /** \defgroup json   JSON Interoperability
+        @{ */
 
      /** \name Converting to JSON
         @{
@@ -75,7 +76,7 @@ extern "C" {
     FLEECE_PUBLIC bool FLEncoder_ConvertJSON(FLEncoder, FLSlice json) FLAPI;
 
     /** @} */
-
+    /** @} */
 
 #ifdef __cplusplus
 }

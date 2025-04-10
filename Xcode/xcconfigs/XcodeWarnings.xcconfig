@@ -6,7 +6,7 @@
 
 //BEGIN Added by Jens
 // Other Clang warnings that don't have Xcode names:
-WARNING_CFLAGS = -Woverriding-method-mismatch -Weffc++ -Wcall-to-pure-virtual-from-ctor-dtor -Wmemset-transposed-args -Wreturn-std-move -Wsizeof-pointer-div -Wdefaulted-function-deleted -Wtautological-unsigned-zero-compare -Wtautological-unsigned-enum-zero-compare -Wmismatched-tags -Wformat -Wformat-nonliteral -Wformat-security
+WARNING_CFLAGS = -Woverriding-method-mismatch -Weffc++ -Wcall-to-pure-virtual-from-ctor-dtor -Wmemset-transposed-args -Wreturn-std-move -Wsizeof-pointer-div -Wdefaulted-function-deleted -Wtautological-unsigned-zero-compare -Wtautological-unsigned-enum-zero-compare -Wmismatched-tags -Wformat -Wformat-nonliteral -Wformat-security -Wimplicit-fallthrough
 //END Added by Jens
 
 

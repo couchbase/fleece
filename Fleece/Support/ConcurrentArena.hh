@@ -43,11 +43,11 @@ namespace fleece {
 
         /** Allocates a new block of the given size.
             @return The new block, or nullptr if there's no space. */
-        void* alloc(size_t size);
+        void* alloc(size_t size) LIFETIMEBOUND;
 
         /** Allocates and zeroes a new block of the given size.
             @return The new block, or nullptr if there's no space. */
-        void* calloc(size_t size);
+        void* calloc(size_t size) LIFETIMEBOUND;
 
         /** _Attempts_ to free the given block. This only works if it's the latest allocated block.
              @param allocatedBlock  A block allocated by `alloc` or `calloc`.
@@ -68,7 +68,7 @@ namespace fleece {
         }
 
         /** Converts a heap offset back into a pointer. */
-        void* toPointer(size_t off) const FLPURE {
+        void* toPointer(size_t off) const LIFETIMEBOUND FLPURE {
             void *ptr = _heap.get() + off;
             assert(ptr < _heapEnd);
             return ptr;

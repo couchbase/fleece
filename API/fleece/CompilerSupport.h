@@ -14,13 +14,22 @@
 #ifndef _FLEECE_COMPILER_SUPPORT_H
 #define _FLEECE_COMPILER_SUPPORT_H
 
+#ifdef __APPLE__
+#include <sys/cdefs.h>  // include this first to avoid conflict with our definition of __printflike
+#endif
+
+
 // The __has_xxx() macros are supported by [at least] Clang and GCC.
 // Define them to return 0 on other compilers.
 // https://clang.llvm.org/docs/AttributeReference.html
 // https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html
 
 #ifndef __has_attribute
-    #define __has_attribute(x) 0
+#define __has_attribute(x) 0
+#endif
+
+#ifndef __has_cpp_attribute
+#define __has_cpp_attribute(x) 0
 #endif
 
 #ifndef __has_builtin
@@ -43,24 +52,22 @@
 #  define RETURNS_NONNULL
 #endif
 
-// deprecated; use NODISCARD instead
-#if __has_attribute(returns_nonnull)
-#  define MUST_USE_RESULT               __attribute__((warn_unused_result))
-#else
-#  define MUST_USE_RESULT
-#endif
 
-// NODISCARD expands to the C++17/C23 `[[nodiscard]]` attribute, or else MUST_USE_RESULT.
-// (We can't just redefine MUST_USE_RESULT as `[[nodiscard]]` unfortunately, because the former is
-// already in use in positions where `[[nodiscard]]` isn't valid, like at the end of a declaration.)
+// NODISCARD expands to the C++17/C23 `[[nodiscard]]` attribute.
+// Use it before a function declaration when it's a mistake to ignore the function's result.
 #if (__cplusplus >= 201700L) || (__STDC_VERSION__ >= 202000)
 #  define NODISCARD                     [[nodiscard]]
+#elif __has_attribute(warn_unused_result)
+#  define NODISCARD                     __attribute__((warn_unused_result))
 #else
-#  define NODISCARD                     MUST_USE_RESULT
+#  define NODISCARD
 #endif
+
 
 // These have no effect on behavior, but they hint to the optimizer which branch of an 'if'
 // statement to make faster.
+// Note: In C++20 the standard attributes `[[likely]]` and `[[unlikely]]` can be used instead,
+// but they're not syntactically identical.
 #if __has_builtin(__builtin_expect)
 #define _usuallyTrue(VAL)               __builtin_expect(VAL, true)
 #define _usuallyFalse(VAL)              __builtin_expect(VAL, false)
@@ -70,7 +77,7 @@
 #endif
 
 
-// Nullability annotations, for function parameters and struct fields.
+// Clang nullability annotations, for function parameters and struct fields.
 // In between FL_ASSUME_NONNULL_BEGIN and FL_ASSUME_NONNULL_END, all pointer declarations implicitly
 // disallow NULL values, unless annotated with FL_NULLABLE (which must come after the `*`.)
 // (FL_NONNULL is occasionally necessary when there are multiple levels of pointers.)
@@ -96,7 +103,7 @@
 // GCC also has an attribute with this name, but it's incompatible: it can't be applied to a
 // parameter, it has to come after the function and list parameters by number. Oh well.
 // TODO: Replace this with the better nullability annotations above.
-#if __has_attribute(nonnull)
+#if defined(__clang__)
 #  define NONNULL                       __attribute__((nonnull))
 #else
 #  define NONNULL
@@ -144,18 +151,6 @@
 #else
 #  define FLCONST
 #endif
-
-
-// `constexpr14` is for uses of `constexpr` that are valid in C++14 but not earlier.
-// In constexpr functions this includes `if`, `for`, `while` statements; or multiple `return`s.
-// The macro expands to `constexpr` in C++14 or later, otherwise to nothing.
-#ifdef __cplusplus
-    #if __cplusplus >= 201400L || _MSVC_LANG >= 201400L
-        #define constexpr14 constexpr
-    #else
-        #define constexpr14
-    #endif
-#endif // __cplusplus
 
 
 // STEPOVER is for trivial little glue functions that are annoying to step into in the debugger
@@ -233,6 +228,25 @@
 #   endif
 #endif /* __cold */
 
+// Declares this function takes a printf-like format string, and the subsequent args should
+// be type-checked against it.
+#ifndef __printflike
+#  if __has_attribute(__format__)
+#    define __printflike(fmtarg, firstvararg) \
+                          __attribute__((__format__ (__printf__, fmtarg, firstvararg)))
+#  else
+#    define __printflike(fmtarg, firstvararg)
+#  endif
+#endif
+
+
+// Suppresses sanitizers in a function
+#ifndef _MSC_VER
+#   define __no_sanitize(X)     __attribute__((no_sanitize(X)))
+#else
+#   define __no_sanitize(X)
+#endif
+
 
 #ifndef _MSC_VER
     #define WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) 0
@@ -255,10 +269,33 @@
 #endif
 
 #ifdef __cplusplus
-    #define FLAPI noexcept
+#   define FLAPI noexcept
+
+    // `LIFETIMEBOUND` helps Clang detect value lifetime errors, where one value's lifetime is tied to another and the
+    // dependent value is used after the value it depends on exits scope. For examples of usage, see slice.hh.
+    // "The `lifetimebound` attribute on a function parameter or implicit object parameter indicates that objects that are
+    // referred to by that parameter may also be referred to by the return value of the annotated function (or, for a
+    // parameter of a constructor, by the value of the constructed object)."
+    // -- https://clang.llvm.org/docs/AttributeReference.html#lifetimebound
+#   if __has_cpp_attribute(clang::lifetimebound)
+#       define LIFETIMEBOUND [[clang::lifetimebound]]
+#   else
+#       define LIFETIMEBOUND
+#   endif
 #else
-    #define FLAPI
+#   define FLAPI
+#   define LIFETIMEBOUND
 #endif
+
+// Type-checking for printf-style vararg functions:
+#ifndef __printflike
+#   if __has_attribute(__format__)
+#        define __printflike(fmtarg, firstvararg) __attribute__((__format__(__printf__, fmtarg, firstvararg)))
+#   else
+#       define __printflike(A, B)
+#   endif
+#endif
+
 
 #else // _FLEECE_COMPILER_SUPPORT_H
 #warn "Compiler is not honoring #pragma once"

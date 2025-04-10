@@ -17,7 +17,7 @@
 #include <algorithm>
 #include "betterassert.hh"
 
-namespace fleece { namespace impl {
+namespace fleece::impl {
 
     void JSONEncoder::writeString(slice str) {
         comma();
@@ -173,4 +173,25 @@ namespace fleece { namespace impl {
         }
     }
 
-} }
+    void JSONEncoder::comma() {
+        if (_first)
+            _first = false;
+        else
+            _out << ',';
+    }
+
+    void JSONEncoder::nest() {
+        ++_nesting;
+    }
+
+    void JSONEncoder::unnest() {
+        if (--_nesting < 0)
+            FleeceException::_throw(JSONError, "Too many endArray/endDictionary calls");
+    }
+
+    void JSONEncoder::requireUnnested() {
+        if (_nesting != 0)
+            FleeceException::_throw(JSONError, "Unclosed array or dictionary");
+    }
+
+}

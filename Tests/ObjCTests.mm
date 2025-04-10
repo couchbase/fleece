@@ -14,6 +14,7 @@
 #include "FleeceTests.hh"
 #include "FleeceImpl.hh"
 
+using namespace fleece;
 using namespace fleece::impl;
 
 static void checkIt(id obj, const char* json) {
@@ -63,8 +64,8 @@ TEST_CASE("Obj-C Ints", "[Encoder]") {
     checkIt(@123456789012,  "123456789012");
     checkIt(@(INT64_MAX),   "9223372036854775807");
     // It was found that @() may not turn UINT64_MAX to unsigned. In the following,
-    // we apply an explicit conversion
-    checkIt(@([@UINT64_MAX unsignedLongLongValue]), "18446744073709551615");
+    // we create unsignedLongLong explicitly
+    checkIt([NSNumber numberWithUnsignedLongLong:UINT64_MAX], "18446744073709551615");
 }
 
 TEST_CASE("Obj-C Floats", "[Encoder]") {
@@ -190,11 +191,9 @@ TEST_CASE("Obj-C PerfReadNamesNS", "[.Perf]") {
 
         Stopwatch st;
         for (int j = 0; j < 10000; j++) {
-            int i = 0;
             for (NSDictionary *person in people) {
                 if (person[@"name"] == nil)
                     abort();
-                i++;
             }
         }
         fprintf(stderr, "Iterating people (NS) took %g ms\n", st.elapsedMS()/10000);

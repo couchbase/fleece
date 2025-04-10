@@ -17,11 +17,17 @@
 #include "JSON5.hh"
 #include "FleeceException.hh"
 #include "TempArray.hh"
-#include "diff_match_patch.hh"
 #include "NumConversion.hh"
 #include <sstream>
 #include <unordered_set>
 #include "betterassert.hh"
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdouble-promotion"
+#pragma clang diagnostic ignored "-Wdocumentation"
+#pragma clang diagnostic ignored "-Wdocumentation-unknown-command"
+#include "diff_match_patch.hh"
+#pragma clang diagnostic pop
 
 
 namespace fleece { namespace impl {
@@ -30,6 +36,7 @@ namespace fleece { namespace impl {
 
     // Set this to true to create deltas compatible with JsonDiffPatch.
     // (this is really just here for test purposes so we can use the JDP unit test dataset...)
+    extern bool gCompatibleDeltas;
     bool gCompatibleDeltas = false;
 
     size_t JSONDelta::gMinStringDiffLength = 60;
@@ -161,12 +168,12 @@ namespace fleece { namespace impl {
                         char key[bufSize];
                         for (Array::iterator iOld(oldArray), iNew(nuuArray); index < minCount;
                              ++iOld, ++iNew, ++index) {
-                            snprintf(key, bufSize, "%d", index);
+                            snprintf(key, bufSize, "%u", index);
                             curLevel.key = slice(key);
                             _write(iOld.value(), iNew.value(), &curLevel);
                         }
                         if (oldCount != nuuCount) {
-                            snprintf(key, bufSize, "%d-", index);
+                            snprintf(key, bufSize, "%u-", index);
                             curLevel.key = slice(key);
                             writePath(&curLevel);
                             _encoder->beginArray();
@@ -381,7 +388,7 @@ namespace fleece { namespace impl {
         for (Array::iterator iOld(old); iOld; ++iOld, ++index) {
             auto oldItem = iOld.value();
             char key[bufSize];
-            snprintf(key, bufSize, "%d", index);
+            snprintf(key, bufSize, "%u", index);
             auto replacement = delta->get(slice(key));
             if (replacement) {
                 // Patch this array item:
@@ -400,7 +407,7 @@ namespace fleece { namespace impl {
 
         if (!remainder) {
             char key[bufSize];
-            snprintf(key, bufSize, "%d-", old->count());
+            snprintf(key, bufSize, "%u-", old->count());
             remainder = delta->get(slice(key));
         }
         if (remainder) {

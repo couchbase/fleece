@@ -7,6 +7,8 @@ For details, see http://sourceforge.net/projects/libb64
 
 #include "cencode.h"
 
+#pragma clang diagnostic ignored "-Wimplicit-fallthrough"
+
 const int DEFAULT_CHARS_PER_LINE = 72;
 
 void base64_init_encodestate(base64_encodestate* state_in)

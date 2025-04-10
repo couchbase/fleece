@@ -18,7 +18,9 @@
 #include <limits.h>
 
 using namespace std;
+using namespace fleece;
 using namespace fleece::impl;
+using namespace fleece_test;
 
 
 TEST_CASE("basic", "[SharedKeys]") {

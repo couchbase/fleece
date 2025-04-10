@@ -59,6 +59,9 @@ _FLValue_ToJSON5
 _FLValue_FindDoc
 _FLValue_Retain
 _FLValue_Release
+_FLValue_NewWithFormat
+_FLValue_NewWithFormatV
+_FLValue_UpdateWithFormatV
 
 _FLData_ConvertJSON
 _FLJSON5_ToJSON
@@ -85,6 +88,7 @@ _FLMutableArray_Remove
 _FLMutableArray_Resize
 _FLMutableArray_GetMutableArray
 _FLMutableArray_GetMutableDict
+_FLMutableArray_UpdateWithFormat
 
 _FLDict_Count
 _FLDict_IsEmpty
@@ -111,6 +115,7 @@ _FLMutableDict_Remove
 _FLMutableDict_RemoveAll
 _FLMutableDict_GetMutableArray
 _FLMutableDict_GetMutableDict
+_FLMutableDict_UpdateWithFormat
 
 _FLSlot_SetNull
 _FLSlot_SetBool
@@ -158,6 +163,9 @@ _FLEncoder_FinishItem
 _FLEncoder_GetBase
 _FLEncoder_GetNextWritePos
 _FLEncoder_SuppressTrailer
+_FLEncoder_ConvertJSON
+_FLEncoder_WriteFormatted
+_FLEncoder_WriteFormattedArgs
 
 _FLKeyPath_New
 _FLKeyPath_Free

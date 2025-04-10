@@ -11,6 +11,7 @@
 //
 
 #pragma once
+#include "fleece/CompilerSupport.h"
 #include "fleece/function_ref.hh"
 #include <cstddef> //for size_t
 #include <atomic>
@@ -47,9 +48,9 @@ namespace fleece {
 
     protected:
         InstanceCounted(size_t offset)              {track(offset);}
+        void untrack() const;
     private:
         void track(size_t offset =0) const;
-        void untrack() const;
         static void dumpInstances(function_ref<void(const InstanceCounted*)>*);
 
 #else
@@ -77,19 +78,26 @@ namespace fleece {
     class InstanceCountedIn : public InstanceCounted {
     public:
 #if INSTANCECOUNTED_TRACK
+        __no_sanitize("undefined")
         InstanceCountedIn()
-        :InstanceCounted((size_t)this - (size_t)(BASE*)this)
+        :InstanceCounted(myOffset())
         { }
 
+        __no_sanitize("undefined")
         InstanceCountedIn(const InstanceCountedIn&)
-        :InstanceCounted((size_t)this - (size_t)(BASE*)this)
+        :InstanceCounted(myOffset())
         { }
 
+        __no_sanitize("undefined")
         InstanceCountedIn(InstanceCountedIn &&old)
-        :InstanceCounted((size_t)this - (size_t)(BASE*)this)
+        :InstanceCounted(myOffset())
         {
             old.untrack();
         }
+
+    private:
+        __no_sanitize("undefined")
+        size_t myOffset() {return (size_t)this - (size_t)static_cast<BASE*>(this);}
 #endif
     };
 
