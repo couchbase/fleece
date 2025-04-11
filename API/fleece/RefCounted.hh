@@ -274,6 +274,13 @@ namespace fleece {
     }
 
 
+    /** `retained_cast<T>(...)` is like `dynamic_cast` but on pointers wrapped in Retained. */
+    template <class T, class U>
+    Retained<T> retained_cast(Retained<U> const& r) {
+        return dynamic_cast<T*>(r.get());
+    }
+
+
     /** Extracts the pointer from a Retained. It must later be released via `release`.
         This is used in bridging functions that return a direct pointer for a C API. */
     template <typename REFCOUNTED>
