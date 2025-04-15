@@ -252,7 +252,6 @@ namespace fleece {
         inline constexpr slice(nullslice_t) noexcept STEPOVER;
         constexpr slice(const void* FL_NULLABLE b LIFETIMEBOUND, size_t s) noexcept STEPOVER    :pure_slice(b, s) {}
         inline constexpr slice(const void* start LIFETIMEBOUND, const void* end) noexcept STEPOVER;
-        inline slice(const alloc_slice& LIFETIMEBOUND) noexcept STEPOVER;
 
         constexpr slice(std::string_view str) noexcept STEPOVER                       :pure_slice(str) {}
         slice(const std::string& str LIFETIMEBOUND) noexcept STEPOVER                 :pure_slice(str) {}
@@ -261,7 +260,7 @@ namespace fleece {
         slice& operator= (const char* s) & noexcept           {return *this = slice(s);}
         slice& operator= (alloc_slice&&) =delete;   // Disallowed: might lead to ptr to freed buf
         slice& operator= (std::string&&) =delete;   // Disallowed: might lead to ptr to freed buf
-        slice& operator= (const alloc_slice &s LIFETIMEBOUND) & noexcept    {return *this = slice(s);}
+        inline slice& operator= (const alloc_slice &s LIFETIMEBOUND) & noexcept;
         slice& operator= (std::nullptr_t) & noexcept          {set(nullptr, 0); return *this;}
         inline slice& operator= (nullslice_t) & noexcept;
 
@@ -355,6 +354,9 @@ namespace fleece {
             std::swap((slice&)*this, (slice&)s);
             return *this;
         }
+
+        operator slice() const noexcept LIFETIMEBOUND STEPOVER {return slice(buf, size);}
+        operator FLSlice() const noexcept LIFETIMEBOUND STEPOVER {return FLSlice{buf, size};}
 
         /** Creates an alloc_slice that has an extra null (0) byte immediately after the end of the
             data. This allows the contents of the alloc_slice to be used as a C string. */
@@ -721,7 +723,6 @@ namespace fleece {
 
 
     inline constexpr slice::slice(nullslice_t) noexcept           :pure_slice() {}
-    inline slice::slice(const alloc_slice &s LIFETIMEBOUND) noexcept  :pure_slice(s) { }
 
 
     inline constexpr slice::slice(const void* start, const void* end) noexcept
@@ -733,6 +734,12 @@ namespace fleece {
 
     inline slice& slice::operator= (nullslice_t) & noexcept {
         set(nullptr, 0);
+        return *this;
+    }
+
+
+    slice& slice::operator= (alloc_slice const& s) & noexcept {
+        set(s.buf, s.size);
         return *this;
     }
 
