@@ -69,6 +69,7 @@ if(FLEECE_WARNINGS_HARDCORE)
             -Wno-switch-default # "'switch' missing 'default' label"
             -Wno-switch-enum
             -Wno-undef      # `#if X` where X isn't defined
+            -Wno-unknown-warning-option # So older Clang doesn't barf on newer warnings listed here :(
             -Wno-unused-macros
             -Wno-unused-parameter # Unused fn parameter
             -Wno-weak-vtables # "Class has no out-of-line virtual method definitions; its vtable will be emitted in every translation unit"
