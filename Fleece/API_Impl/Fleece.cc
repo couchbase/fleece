@@ -37,10 +37,10 @@ using namespace fleece;
 using namespace fleece::impl;
 
 
-FLEECE_PUBLIC const FLValue kFLNullValue  = Value::kNullValue;
-FLEECE_PUBLIC const FLValue kFLUndefinedValue  = Value::kUndefinedValue;
-FLEECE_PUBLIC const FLArray kFLEmptyArray = Array::kEmpty;
-FLEECE_PUBLIC const FLDict kFLEmptyDict   = Dict::kEmpty;
+FLEECE_PUBLIC_IMPL const FLValue kFLNullValue  = Value::kNullValue;
+FLEECE_PUBLIC_IMPL const FLValue kFLUndefinedValue  = Value::kUndefinedValue;
+FLEECE_PUBLIC_IMPL const FLArray kFLEmptyArray = Array::kEmpty;
+FLEECE_PUBLIC_IMPL const FLDict kFLEmptyDict   = Dict::kEmpty;
 
 
 FLTimestamp FLTimestamp_Now() FLAPI {
