@@ -1,5 +1,4 @@
-cmake_minimum_required (VERSION 3.9)
-cmake_policy(VERSION 3.9)
+cmake_minimum_required (VERSION 3.9...4.0)
 project (Fleece)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
