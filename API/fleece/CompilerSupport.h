@@ -259,13 +259,19 @@
 // implementation) with FLEECE_PUBLIC.  See kFLNullValue below and in Fleece.cc
 // for an example.
 #if defined(_MSC_VER)
-#ifdef FLEECE_EXPORTS
-#define FLEECE_PUBLIC __declspec(dllexport)
+#   ifdef FLEECE_EXPORTS
+#       define FLEECE_PUBLIC __declspec(dllexport)
+#   else
+#       define FLEECE_PUBLIC __declspec(dllimport)
+#   endif
+#   define FLEECE_PUBLIC_IMPL FLEECE_PUBLIC
 #else
-#define FLEECE_PUBLIC __declspec(dllimport)
-#endif
-#else
-#define FLEECE_PUBLIC __attribute__((visibility("default")))
+#   define FLEECE_PUBLIC __attribute__((visibility("default")))
+#   ifdef __clang__
+#       define FLEECE_PUBLIC_IMPL FLEECE_PUBLIC
+#   else
+#       define FLEECE_PUBLIC_IMPL
+#   endif
 #endif
 
 #ifdef __cplusplus
