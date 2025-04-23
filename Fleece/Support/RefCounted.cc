@@ -34,7 +34,7 @@ namespace fleece {
         if (r) r->_release();
     }
 
-    
+
     __hot void assignRef(RefCounted* &holder, RefCounted *newValue) noexcept {
         RefCounted *oldValue = holder;
         if (_usuallyTrue(newValue != oldValue)) {
@@ -68,7 +68,7 @@ namespace fleece {
     }
 
 
-    RefCounted::~RefCounted() {
+    RefCounted::~RefCounted() noexcept {
         // Store a garbage value to detect use-after-free
         int32_t oldRef = _refCount.exchange(-9999999);
         if (_usuallyFalse(oldRef != 0)) {
@@ -123,5 +123,13 @@ namespace fleece {
         // If the refCount just went to 0, delete the object:
         if (oldRef == 1) delete this;
     }
+
+
+    // Called by Retained<>. Broken out so it's not duplicated in each instantiaton of the template.
+    __cold void _failNullRef() {
+        throw std::invalid_argument("storing nullptr in a non-nullable Retained");
+    }
+
+
 
 }

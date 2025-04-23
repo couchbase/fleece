@@ -13,9 +13,15 @@
 #pragma once
 #include "fleece/PlatformCompat.hh"
 #include <atomic>
+#include <concepts>
+#include <stdexcept>
 #include <utility>
 
+FL_ASSUME_NONNULL_BEGIN
+
 namespace fleece {
+
+    enum Nullability {NonNull, MaybeNull};
 
     /** Simple thread-safe ref-counting implementation.
         `RefCounted` objects should be managed by \ref Retained smart-pointers:
@@ -29,17 +35,17 @@ namespace fleece {
         int refCount() const FLPURE             {return _refCount;}
 
     protected:
-        RefCounted(const RefCounted &)          { }
+        RefCounted(const RefCounted &)          { } // must not copy the refCount!
 
         /** Destructor is accessible only so that it can be overridden.
             **Never call `delete`**, only `release`! Overrides should be made protected or private. */
-        virtual ~RefCounted();
+        virtual ~RefCounted() noexcept;
 
     private:
-        template <typename T>
-        friend T* retain(T*) noexcept;
-        friend void release(const RefCounted*) noexcept;
-        friend void assignRef(RefCounted* &dst, RefCounted *src) noexcept;
+        template <typename T, Nullability N> friend class Retained;
+        template <typename T> friend T* FL_NULLABLE retain(T* FL_NULLABLE) noexcept;
+        friend void release(const RefCounted* FL_NULLABLE) noexcept;
+        friend void assignRef(RefCounted* FL_NULLABLE &dst, RefCounted* FL_NULLABLE src) noexcept;
 
 #if DEBUG
         void _retain() const noexcept           {_careful_retain();}
@@ -61,13 +67,15 @@ namespace fleece {
 #endif
     };
 
+    template <class T> concept RefCountedType = std::derived_from<T, RefCounted>;
+
 
     /** Retains a RefCounted object and returns the object. Does nothing given a null pointer.
         (See also `retain(Retained&&)`, below.)
         \warning Manual retain/release is error prone. This function is intended mostly for interfacing
         with C code that can't use \ref Retained. */
-    template <typename REFCOUNTED>
-    ALWAYS_INLINE REFCOUNTED* retain(REFCOUNTED *r) noexcept {
+    template <typename T>
+    ALWAYS_INLINE T* FL_NULLABLE retain(T* FL_NULLABLE r) noexcept {
         if (r) r->_retain();
         return r;
     }
@@ -75,84 +83,121 @@ namespace fleece {
     /** Releases a RefCounted object. Does nothing given a null pointer.
         \warning Manual retain/release is error prone. This function is intended mostly for interfacing
         with C code that can't use \ref Retained. */
-    NOINLINE void release(const RefCounted *r) noexcept;
-
-    
-    // Used internally by Retained's operator=. Marked noinline to prevent code bloat.
-    NOINLINE void assignRef(RefCounted* &holder, RefCounted *newValue) noexcept;
+    void release(const RefCounted* FL_NULLABLE) noexcept;
 
     // Makes `assignRef` polymorphic with RefCounted subclasses.
-    template <typename T>
-    inline void assignRef(T* &holder, RefCounted *newValue) noexcept {
-        assignRef((RefCounted*&)holder, newValue);
+    template <RefCountedType T>
+    inline void assignRef(T* FL_NULLABLE &holder, RefCounted* FL_NULLABLE newValue) noexcept {
+        assignRef((RefCounted* FL_NULLABLE&)holder, newValue);
     }
 
+    [[noreturn]] void _failNullRef();
 
+    /** A smart pointer that retains the RefCounted instance it holds, similar to `std::shared_ptr`.
 
-    /** A smart pointer that retains the RefCounted instance it holds. */
-    template <typename T>
+        Comes in two flavors: if `N` is `MaybeNull` (the default), it may hold a null pointer.
+        This is the typical `Retained<T>` that's been around for years.
+
+        If `N` is `NonNull`, it may not hold a null pointer, and any attempt to store one will
+        throw a `std::invalid_argument` exception, and/or trigger UBSan if it's enabled.
+        In some cases nullability violations will be caught at compile time.
+        This flavor is commonly abbreviated `Ref<T>`.
+
+        There is no implicit conversion from `Retained<T>` to `Ref<T>`. Use the `asRef` method,
+        which throws if the value is nullptr. */
+    template <class T, Nullability N = MaybeNull>
     class Retained {
     public:
-        Retained() noexcept                             :_ref(nullptr) { }
-        Retained(T *t) noexcept                         :_ref(retain(t)) { }
+        #if __has_feature(nullability)
+        template <typename X, Nullability> struct nullable_if;
+        template <typename X> struct nullable_if<X,MaybeNull>   {using ptr = X* _Nullable;};
+        template <typename X> struct nullable_if<X,NonNull>     {using ptr = X* _Nonnull;};
+        #else
+        template <typename X, Nullability> struct nullable_if {using ptr = X*;};
+        #endif
 
-        Retained(const Retained &r) noexcept            :_ref(retain(r._ref)) { }
-        Retained(Retained &&r) noexcept                 :_ref(std::move(r).detach()) { }
+        using T_ptr = typename nullable_if<T,N>::ptr; // This is `T*` with appropriate nullability
 
-        template <typename U>
-        Retained(const Retained<U> &r) noexcept         :_ref(retain(r._ref)) { }
+        Retained() noexcept requires (N==MaybeNull)             :_ref(nullptr) { }
+        Retained(nullptr_t) noexcept requires (N==MaybeNull)    :Retained() { } // optimization
+        Retained(T_ptr t) noexcept                              :_ref(_retain(t)) { }
 
-        template <typename U>
-        Retained(Retained<U> &&r) noexcept              :_ref(std::move(r).detach()) { }
+        Retained(const Retained &r) noexcept                    :_ref(_retain(r.get())) { }
+        Retained(Retained &&r) noexcept                         :_ref(std::move(r).detach()) { }
 
-        ~Retained()                                     {release(_ref);}
+        template <typename U, Nullability UN> requires (std::derived_from<U,T> && N >= UN)
+        Retained(const Retained<U,UN> &r) noexcept              :_ref(_retain(r.get())) { }
+        template <typename U, Nullability UN> requires (std::derived_from<U,T> && N >= UN)
+        Retained(Retained<U,UN> &&r) noexcept                   :_ref(std::move(r).detach()) { }
 
-        operator T* () const & noexcept LIFETIMEBOUND FLPURE STEPOVER {return _ref;}
-        T* operator-> () const noexcept LIFETIMEBOUND FLPURE STEPOVER {return _ref;}
-        T* get() const noexcept LIFETIMEBOUND FLPURE STEPOVER         {return _ref;}
+        ~Retained() noexcept                                    {release(_ref);}
 
-        explicit operator bool () const FLPURE          {return (_ref != nullptr);}
-
-        Retained& operator=(T *t) & noexcept            {assignRef(_ref, t); return *this;}
-
-        Retained& operator=(const Retained &r) & noexcept {return *this = r._ref;}
-
-        template <typename U>
-        Retained& operator=(const Retained<U> &r) & noexcept {return *this = r._ref;}
-
-        Retained& operator= (Retained &&r) & noexcept {
-            // Unexpectedly, the simplest & most efficient way to implement this is by simply
-            // swapping the refs, instead of the commented-out code below.
-            // The reason this works is that `r` is going to get destructed anyway when it goes
-            // out of scope in the caller's stack frame, and at that point it will contain my
-            // previous `_ref`, ensuring it gets cleaned up.
-            std::swap(_ref, r._ref);
-            // Older code:
-            //   auto oldRef = _ref;
-            //   _ref = std::move(r).detach();
-            //   release(oldRef);
+        Retained& operator=(T_ptr t) & noexcept {
+            _retain(t);
+            std::swap(_ref, t);
+            release(t);
             return *this;
         }
 
-        template <typename U>
-        Retained& operator= (Retained<U> &&r) & noexcept {
+        Retained& operator=(nullptr_t) & noexcept requires(N==MaybeNull) { // optimized assignment
             auto oldRef = _ref;
-            if (oldRef != r._ref) { // necessary to avoid premature release
+            _ref = nullptr;
+            release(oldRef);
+            return *this;
+        }
+
+        Retained& operator=(const Retained &r) & noexcept       {*this = r.get(); return *this;}
+
+        template <typename U, Nullability UN> requires(std::derived_from<U,T> && N >= UN)
+        Retained& operator=(const Retained<U,UN> &r) & noexcept {*this = r.get(); return *this;}
+
+        Retained& operator= (Retained &&r) & noexcept {
+            std::swap(_ref, r._ref);   // old _ref will be released by r's destructor
+            return *this;
+        }
+
+        template <typename U, Nullability UN> requires(std::derived_from<U,T> && N >= UN)
+        Retained& operator= (Retained<U,UN> &&r) & noexcept {
+            if ((void*)&r != this) {
+                auto oldRef = _ref;
                 _ref = std::move(r).detach();
-                release(oldRef);
+                _release(oldRef);
             }
             return *this;
+        }
+        
+        explicit operator bool () const FLPURE          {return N==NonNull || (_ref != nullptr);}
+
+        // typical dereference operations:
+        operator T_ptr () const & noexcept LIFETIMEBOUND FLPURE STEPOVER {return _ref;}
+        T_ptr operator-> () const noexcept LIFETIMEBOUND FLPURE STEPOVER {return _ref;}
+        T_ptr get() const noexcept LIFETIMEBOUND FLPURE STEPOVER         {return _ref;}
+
+        /// Converts any Retained to non-nullable form (Ref), or throws if its value is nullptr.
+        Retained<T,NonNull> asRef() const & noexcept(!N) {return Retained<T,NonNull>(_ref);}
+        Retained<T,NonNull> asRef() && noexcept(!N) {
+            Retained<T,NonNull> result(_ref, false);
+            _ref = nullptr;
+            return result;
         }
 
         /// Converts a Retained into a raw pointer with a +1 reference that must be released.
         /// Used in C++ functions that bridge to C and return C references.
+        /// @note  The opposite of this is \ref adopt.
         [[nodiscard]]
-        T* detach() && noexcept                  {auto r = _ref; _ref = nullptr; return r;}
+        T_ptr detach() && noexcept                  {auto r = _ref; _ref = nullptr; return r;}
+
+        /// Converts a raw pointer with a +1 reference into a Retained object.
+        /// This has no effect on the object's ref-count; the existing +1 ref will be released when
+        /// the Retained destructs. */
+        [[nodiscard]] static Retained adopt(T_ptr t) noexcept {
+            return Retained(t, false);
+        }
 
         /// Equivalent to `get` but without the `LIFETIMEBOUND` attribute. For use in rare cases where you have
         /// a `Retained<T>` and need to return it as a `T*`, which is normally illegal, but you know that there's
         /// another `Retained` value keeping the object alive even after this function returns.
-        T* unsafe_get() const noexcept          {return _ref;}
+        T_ptr unsafe_get() const noexcept          {return _ref;}
 
         // The operator below is often a dangerous mistake, so it's deliberately made impossible.
         // It happens in these sorts of contexts, where it can produce a dangling pointer to a
@@ -177,123 +222,95 @@ namespace fleece {
         //      void handleFoo(Retained<Foo>);
         //      ...
         //      handleFoo( createFoo() );           // OK!
-        operator T* () const && =delete; // see above^
+        operator T_ptr () const && =delete; // see above^
 
     private:
-        template <class U> friend class Retained;
-        template <class U> friend class RetainedConst;
-        template <class U> friend Retained<U> adopt(U*) noexcept;
+        template <class U, Nullability UN> friend class Retained;
 
-        Retained(T *t, bool) noexcept                   :_ref(t) { } // private no-retain ctor
+        Retained(T_ptr t, bool) noexcept(N==MaybeNull) // private no-retain ctor
+        :_ref(t) {
+            if constexpr (N == NonNull) {
+                if (t == nullptr) [[unlikely]]
+                    _failNullRef();
+            }
+        }
 
-        T *_ref;
+        static T_ptr _retain(T_ptr t) noexcept {
+            if constexpr (N == NonNull && std::derived_from<T, Retained>)
+                t->_retain(); // this is faster, and it detects illegal null (by signal)
+            else
+                retain(t);
+            return t;
+        }
+
+        static void _release(T_ptr t) noexcept {
+            if constexpr (N == NonNull && std::derived_from<T, Retained>)
+                t->_release(); // this is faster, and it detects illegal null (by signal)
+            else
+                release(t);
+        }
+
+        // _ref has to be declared nullable, even when N==NonNull, because a move assignment
+        // sets the moved-from _ref to nullptr. The Retained may not used any more in this state,
+        // but it will be destructed, which is why the destructor also checks for nullptr.
+        T* FL_NULLABLE _ref;
     };
 
-
-    /** Same as Retained, but when you only have a const pointer to the object. */
-    template <typename T>
-    class RetainedConst {
-    public:
-        RetainedConst() noexcept                        :_ref(nullptr) { }
-        RetainedConst(const T *t) noexcept              :_ref(retain(t)) { }
-        RetainedConst(const RetainedConst &r) noexcept  :_ref(retain(r._ref)) { }
-        RetainedConst(RetainedConst &&r) noexcept       :_ref(std::move(r).detach()) { }
-        RetainedConst(const Retained<T> &r) noexcept    :_ref(retain(r._ref)) { }
-        RetainedConst(Retained<T> &&r) noexcept         :_ref(std::move(r).detach()) { }
-        ALWAYS_INLINE ~RetainedConst()                  {release(_ref);}
-
-        operator const T* () const & noexcept LIFETIMEBOUND FLPURE STEPOVER   {return _ref;}
-        const T* operator-> () const noexcept LIFETIMEBOUND FLPURE STEPOVER   {return _ref;}
-        const T* get() const noexcept LIFETIMEBOUND FLPURE STEPOVER           {return _ref;}
-
-        RetainedConst& operator=(const T *t) & noexcept {
-            auto oldRef = _ref;
-            _ref = retain(t);
-            release(oldRef);
-            return *this;
-        }
-
-        RetainedConst& operator=(const RetainedConst &r) & noexcept {
-            return *this = r._ref;
-        }
-
-        RetainedConst& operator= (RetainedConst &&r) & noexcept {
-            std::swap(_ref, r._ref);
-            return *this;
-        }
-
-        template <typename U>
-        RetainedConst& operator=(const Retained<U> &r) & noexcept {
-            return *this = r._ref;
-        }
-
-        template <typename U>
-        RetainedConst& operator= (Retained<U> &&r) & noexcept {
-            std::swap(_ref, r._ref);
-            return *this;
-        }
-
-        [[nodiscard]]
-        const T* detach() && noexcept                   {auto r = _ref; _ref = nullptr; return r;}
-
-        operator const T* () const && =delete; // Usually a mistake; see above under Retained
-
-    private:
-        const T *_ref;
-    };
+    template <class T> Retained(T* FL_NULLABLE) -> Retained<T>; // deduction guide
 
 
-    /** Easy instantiation of a ref-counted object: `auto f = retained(new Foo());`*/
-    template <typename REFCOUNTED>
-    [[nodiscard]] inline Retained<REFCOUNTED> retained(REFCOUNTED *r) noexcept {
-        return Retained<REFCOUNTED>(r);
+    /// Ref<T> is an alias for a non-nullable Retained<T>.
+    template <class T> using Ref = Retained<T, NonNull>;
+
+    /// NullableRef<T> is an alias for a (default) nullable Retained<T>.
+    template <class T> using NullableRef = Retained<T, MaybeNull>;
+
+    /// RetainedConst is an alias for a Retained that holds a const pointer.
+    template <class T> using RetainedConst = Retained<const T>;
+
+
+    /** Wraps a pointer in a Retained. */
+    template <RefCountedType T>
+    [[nodiscard]] Retained<T> retained(T* FL_NULLABLE r) noexcept {
+        return Retained<T>(r);
     }
 
-    /** Easy instantiation of a const ref-counted object: `auto f = retained(new Foo());`*/
-    template <typename REFCOUNTED>
-    [[nodiscard]] inline RetainedConst<REFCOUNTED> retained(const REFCOUNTED *r) noexcept {
-        return RetainedConst<REFCOUNTED>(r);
+    /** Wraps a non-null pointer in a Ref. */
+    template <RefCountedType T>
+    [[nodiscard]] Ref<T> retainedRef(T* FL_NONNULL r) noexcept {
+        return Ref<T>(r);
     }
 
     /** Converts a raw pointer with a +1 reference into a Retained object.
         This has no effect on the object's ref-count; the existing +1 ref will be released when the
         Retained destructs. */
-    template <typename REFCOUNTED>
-    [[nodiscard]] inline Retained<REFCOUNTED> adopt(REFCOUNTED *r) noexcept {
-        return Retained<REFCOUNTED>(r, false);
+    template <RefCountedType T>
+    [[nodiscard]] Retained<T> adopt(T* FL_NULLABLE r) noexcept {
+        return Retained<T>::adopt(r);
     }
 
-
-
-    /** make_retained<T>(...) is equivalent to `std::make_unique` and `std::make_shared`.
-        It constructs a new RefCounted object, passing params to the constructor, returning a `Retained`. */
-    template<class T, class... _Args>
-    [[nodiscard]] inline Retained<T>
-    make_retained(_Args&&... __args) {
-        return Retained<T>(new T(std::forward<_Args>(__args)...));
+    /** make_retained<T>(...) is similar to `std::make_unique` and `std::make_shared`.
+        It constructs a new RefCounted object, passing params to the constructor, returning a `Ref`. */
+    template<RefCountedType T, class... Args>
+    [[nodiscard]] Ref<T> make_retained(Args&&... args) {
+        return Ref<T>(new T(std::forward<Args>(args)...));
     }
 
-
-    /** `retained_cast<T>(...)` is like `dynamic_cast` but on pointers wrapped in Retained. */
-    template <class T, class U>
-    Retained<T> retained_cast(Retained<U> const& r) {
-        return dynamic_cast<T*>(r.get());
+    /** `retained_cast<T>(...)` is like `dynamic_cast` but on pointers wrapped in Retained.
+        If the arg is not an instance of T, the result will be empty/null. */
+    template <RefCountedType T, RefCountedType U, Nullability Nullable>
+    [[nodiscard]] Retained<T,Nullable> retained_cast(Retained<U,Nullable> r) noexcept {
+        return adopt<T>(dynamic_cast<T*>(std::move(r).detach()));
     }
 
 
     /** Extracts the pointer from a Retained. It must later be released via `release`.
         This is used in bridging functions that return a direct pointer for a C API. */
-    template <typename REFCOUNTED>
-    [[nodiscard]] ALWAYS_INLINE REFCOUNTED* retain(Retained<REFCOUNTED> &&retained) noexcept {
-        return std::move(retained).detach();
-    }
-
-    /** Extracts the pointer from a RetainedConst. It must later be released via `release`.
-        This is used in bridging functions that return a direct pointer for a C API. */
-    template <typename REFCOUNTED>
-    [[nodiscard]]
-    ALWAYS_INLINE const REFCOUNTED* retain(RetainedConst<REFCOUNTED> &&retained) noexcept {
+    template <typename T, Nullability N>
+    [[nodiscard]] ALWAYS_INLINE T* FL_NULLABLE retain(Retained<T,N> &&retained) noexcept {
         return std::move(retained).detach();
     }
 
 }
+
+FL_ASSUME_NONNULL_END
