@@ -77,6 +77,7 @@ namespace fleece { namespace impl {
 
         /** Sets the maximum length of string that can be mapped. (Defaults to 16 bytes.) */
         void setMaxKeyLength(size_t m)          {_maxKeyLength = m;}
+        size_t maxKeyLength() const FLPURE      {return _maxKeyLength;}
 
         /** The number of stored keys. */
         size_t count() const FLPURE;
@@ -106,6 +107,10 @@ namespace fleece { namespace impl {
 
         bool isUnknownKey(int key) const FLPURE;
 
+        /** Determines whether a new string can be added.
+         *  Returns true if the string contains only alphanumeric characters, '_' or '-'. */
+        static bool isEligibleToEncode(slice str) FLPURE;
+
         virtual bool refresh()                          {return false;}
 
         static const size_t kMaxCount = 2048;               // Max number of keys to store
@@ -129,10 +134,6 @@ namespace fleece { namespace impl {
         void enableCaching()            { _isCacheable = true; }
 
         virtual ~SharedKeys();
-
-        /** Determines whether a new string should be added. Default implementation returns true
-            if the string contains only alphanumeric characters, '_' or '-'. */
-        virtual bool isEligibleToEncode(slice str) const FLPURE;
 
     private:
         friend class PersistentSharedKeys;
