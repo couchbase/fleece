@@ -48,7 +48,7 @@ namespace fleece::impl::builder {
                         its `%`-specifiers, if the compiler supports that.
         @return  A new non-null mutable Fleece value, either an array or dict depending on the outer
                         delimiter of the format string.
-        @throw  A \ref FleeceException with code `InvalidData` if there's a syntax error in the
+        @throws  FleeceException with code `InvalidData` if there's a syntax error in the
         format string, either in JSON5 or a `%`-specifier. The exception message highlights the
         location where the error occurred. */
     RetainedConst<Value> Build(const char *format, ...) __printflike(1, 2);
