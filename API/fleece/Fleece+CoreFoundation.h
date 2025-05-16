@@ -37,7 +37,7 @@ extern "C" {
     NODISCARD FLEECE_PUBLIC CFTypeRef FLValue_CopyCFObject(FLValue FL_NULLABLE) FLAPI;
 
     /** Copies a CoreFoundation object to a standalone Fleece object, if possible.
-        @throws an NSException if the object is not of a class that can be converted, or if it
+        @throws NSException if the object is not of a class that can be converted, or if it
                 contains such an object.
         \note  You must call \ref FLValue_Release when finished with the result. */
     FLValue FLValue_FromCFValue(CFTypeRef);
@@ -79,7 +79,7 @@ extern "C" {
     FLEECE_PUBLIC NSData* FLEncoder_FinishWithNSData(FLEncoder, NSError** FL_NULLABLE) FLAPI;
 
     /** Copies a Foundation object to a standalone Fleece object, if possible.
-        @throws an NSException if the object is not of a class that can be converted, or if it
+        @throws NSException if the object is not of a class that can be converted, or if it
                 contains such an object.
         \note  You must call \ref FLValue_Release when finished with the result. */
     FLValue FLValue_FromNSObject(id);
