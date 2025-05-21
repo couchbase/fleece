@@ -23,23 +23,26 @@ namespace fleece { namespace impl {
 
     /** Describes a location in a Fleece object tree, as a path from the root that follows
         dictionary properties and array elements.
-        Similar to a JSONPointer or an Objective-C KeyPath, but simpler (so far.)
-        It looks like "foo.bar[2][-3].baz" -- that is, properties prefixed with a ".", and array
-        indexes in brackets. (Negative indexes count from the end of the array.)
-        A leading JSONPath-like "$." is allowed but ignored.
-        A '\' can be used to escape a special character ('.', '[' or '$') at the start of a
-        property name (but not yet in the middle of a name.) */
+
+        The specifier syntax is similar to JSONPath or a Swift/Objective-C KeyPath, but simpler.
+        It looks like `foo.bar[2][-3].baz` -- that is, properties prefixed with a ".", and array
+        indexes in brackets.
+
+        - A leading JSONPath-like "$." is allowed but ignored.
+        - Negative array indexes count from the end of the array; i.e. `[-1]` is the last element.
+        - A '\' can be used to escape a special character ('.', '[' or '$') at the start of a
+          property name (but not yet in the middle of a name.) */
     class Path {
     public:
         class Element;
 
-        //// Construction from a string: (throws FleeceException with code PathSyntaxError)
+        /// Construction from a path specifier string.
+        /// @throws FleeceException (with code PathSyntaxError)
+        explicit Path(slice specifier)                 {addComponents(specifier);}
 
-        Path(slice specifier)                       {addComponents(specifier);}
+        //---- Step-by-step construction:
 
-        //// Step-by-step construction:
-
-        Path()                                      =default;
+        Path()                                         =default;
         void addProperty(slice key);
         void addIndex(int index);
         void addComponents(slice components);
@@ -50,7 +53,7 @@ namespace fleece { namespace impl {
         Path& operator += (const Path&);
         void drop(size_t numToDropFromStart);
 
-        //// Path element accessors:
+        //---- Path element accessors:
 
         const smallVector<Element,4>& path() const      {return _path;}
         smallVector<Element,4>& path()                  {return _path;}
@@ -60,7 +63,7 @@ namespace fleece { namespace impl {
         const Element& operator[] (size_t i) const      {return _path[i];}
         Element& operator[] (size_t i)                  {return _path[i];}
 
-        //// Evaluation:
+        //---- Evaluation:
 
         const Value* eval(const Value *root) const noexcept;
 
@@ -69,12 +72,13 @@ namespace fleece { namespace impl {
                                  const Value *root NONNULL);
 
         /** Evaluates a JSONPointer string (RFC 6901), which has a different syntax.
-            This can only be done one-shot since JSONPointer path components are ambiguous unless
-            the actual JSON is present (a number could be an array index or dict key.) */
+            @note This can only be done one-shot, since JSONPointer path components are ambiguous
+                  unless the actual JSON is present (digits could be an array index or dict key.)
+            @throws FleeceException (with code PathSyntaxError) */
         static const Value* evalJSONPointer(slice specifier,
                                             const Value* root NONNULL);
 
-        //// Converting to string:
+        //---- Converting to string:
 
         explicit operator std::string();
 
