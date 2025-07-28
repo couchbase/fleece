@@ -127,6 +127,8 @@ namespace fleece {
         FLSharedKeys FL_NULLABLE _sk {nullptr};
     };
 
+    inline Dict::iterator::iterator(Dict d, FLSharedKeys sk)     {FLDictIterator_BeginShared(d, sk, this);}
+
 
     //====== DEPRECATED:
 

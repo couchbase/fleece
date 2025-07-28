@@ -27,7 +27,7 @@ namespace fleece { namespace impl {
     /** Parses JSON data and writes the values in it to a Fleece encoder. */
     class JSONConverter {
     public:
-        JSONConverter(Encoder&) noexcept;
+        explicit JSONConverter(Encoder&) noexcept;
         ~JSONConverter();
 
         /** Parses JSON data and writes the values to the encoder.
@@ -71,6 +71,7 @@ namespace fleece { namespace impl {
         std::string _errorMessage;
         size_t _errorPos {0};               // Byte index where parse error occurred
         slice _input;                       // Current JSON being parsed
+        bool _ignoreOuterBrace {false};     // Part of workaround for parsing scalars
     };
 
 } }
