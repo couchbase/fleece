@@ -118,19 +118,19 @@ namespace fleece {
 
         using T_ptr = typename nullable_if<T,N>::ptr; // This is `T*` with appropriate nullability
 
-        Retained() noexcept requires (N==MaybeNull)             :_ref(nullptr) { }
-        Retained(nullptr_t) noexcept requires (N==MaybeNull)    :Retained() { } // optimization
-        Retained(T_ptr t) noexcept                              :_ref(_retain(t)) { }
+        Retained() noexcept requires (N==MaybeNull)                 :_ref(nullptr) { }
+        Retained(std::nullptr_t) noexcept requires (N==MaybeNull)   :Retained() { } // optimization
+        Retained(T_ptr t) noexcept                                  :_ref(_retain(t)) { }
 
-        Retained(const Retained &r) noexcept                    :_ref(_retain(r.get())) { }
-        Retained(Retained &&r) noexcept                         :_ref(std::move(r).detach()) { }
+        Retained(const Retained &r) noexcept                        :_ref(_retain(r.get())) { }
+        Retained(Retained &&r) noexcept                             :_ref(std::move(r).detach()) { }
 
         template <typename U, Nullability UN> requires (std::derived_from<U,T> && N >= UN)
-        Retained(const Retained<U,UN> &r) noexcept              :_ref(_retain(r.get())) { }
+        Retained(const Retained<U,UN> &r) noexcept                  :_ref(_retain(r.get())) { }
         template <typename U, Nullability UN> requires (std::derived_from<U,T> && N >= UN)
-        Retained(Retained<U,UN> &&r) noexcept                   :_ref(std::move(r).detach()) { }
+        Retained(Retained<U,UN> &&r) noexcept                       :_ref(std::move(r).detach()) { }
 
-        ~Retained() noexcept                                    {release(_ref);}
+        ~Retained() noexcept                                        {release(_ref);}
 
         Retained& operator=(T_ptr t) & noexcept {
             _retain(t);
@@ -139,7 +139,7 @@ namespace fleece {
             return *this;
         }
 
-        Retained& operator=(nullptr_t) & noexcept requires(N==MaybeNull) { // optimized assignment
+        Retained& operator=(std::nullptr_t) & noexcept requires(N==MaybeNull) { // optimized assignment
             auto oldRef = _ref;
             _ref = nullptr;
             release(oldRef);
