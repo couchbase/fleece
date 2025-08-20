@@ -119,7 +119,7 @@ namespace fleece {
         using T_ptr = typename nullable_if<T,N>::ptr; // This is `T*` with appropriate nullability
 
         Retained() noexcept requires (N==MaybeNull)             :_ref(nullptr) { }
-        Retained(nullptr_t) noexcept requires (N==MaybeNull)    :Retained() { } // optimization
+        Retained(std::nullptr_t) noexcept requires (N==MaybeNull)    :Retained() { } // optimization
         Retained(T_ptr t) noexcept                              :_ref(_retain(t)) { }
 
         Retained(const Retained &r) noexcept                    :_ref(_retain(r.get())) { }
@@ -139,7 +139,7 @@ namespace fleece {
             return *this;
         }
 
-        Retained& operator=(nullptr_t) & noexcept requires(N==MaybeNull) { // optimized assignment
+        Retained& operator=(std::nullptr_t) & noexcept requires(N==MaybeNull) { // optimized assignment
             auto oldRef = _ref;
             _ref = nullptr;
             release(oldRef);
