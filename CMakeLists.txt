@@ -70,6 +70,8 @@ if(FLEECE_WARNINGS_HARDCORE)
             -Wno-objc-messaging-id
             -Wno-old-style-cast
             -Wno-padded # "padding size of X with N bytes to alignment boundary"
+            -Wno-reserved-identifier
+            -Wno-reserved-macro-identifier
             -Wno-sign-conversion
             -Wno-suggest-destructor-override # "'~Foo' overrides a destructor but is not marked 'override'"
             -Wno-super-class-method-mismatch # Obj-C "method parameter type does not match super class method parameter type"

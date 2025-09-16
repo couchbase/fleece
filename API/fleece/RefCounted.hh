@@ -14,6 +14,7 @@
 #include "fleece/PlatformCompat.hh"
 #include <atomic>
 #include <concepts>
+#include <cstddef>
 #include <stdexcept>
 #include <utility>
 
