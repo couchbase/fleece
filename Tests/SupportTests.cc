@@ -14,6 +14,7 @@
 #include "fleece/InstanceCounted.hh"
 #include "FleeceTests.hh"
 #include "FleeceImpl.hh"
+#include "AtomicRetained.hh"
 #include "Backtrace.hh"
 #include "ConcurrentMap.hh"
 #include "Bitmap.hh"
@@ -234,7 +235,7 @@ TEST_CASE("ConcurrentMap concurrency", "[ConcurrentMap]") {
     constexpr size_t bufSize = 10;
     for (int i = 0; i < kSize; i++) {
         char keybuf[bufSize];
-        snprintf(keybuf, bufSize, "%x", i);
+        snprintf(keybuf, bufSize, "%x", unsigned(i));
         keys.push_back(keybuf);
     }
 
@@ -399,4 +400,23 @@ TEST_CASE("InstanceCounted") {
         CHECK(InstanceCounted::liveInstanceCount() == n + 2);
     }
     CHECK(InstanceCounted::liveInstanceCount() == n);
+}
+
+
+struct AtomicRetainedTest : RefCounted {
+    int i = 0;
+    string str;
+};
+
+
+TEST_CASE("AtomicRetained") {
+    // This is mostly to check for compile errors.
+    AtomicRetained r = new AtomicRetainedTest();
+    CHECK(r->i == 0);
+    AtomicRetained r2 = r;
+    AtomicRetained r3 = std::move(r2);
+    CHECK(r->refCount() == 3);
+    // `r` is one reference, `r3` is another, and the temporary created by `->` was the third.
+
+    AtomicRef<AtomicRetainedTest> rr = new AtomicRetainedTest();
 }
