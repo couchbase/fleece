@@ -22,7 +22,7 @@
 
 namespace fleece {
 
-#if !DEBUG
+#if 0
     __hot void RefCounted::_release() const noexcept {
         if (--_refCount <= 0)
             delete this;
@@ -51,7 +51,7 @@ namespace fleece {
         char *message = nullptr;
         int n = asprintf(&message,
                  "RefCounted object <%s @ %p> %s while it had an invalid refCount of %d (0x%x)",
-                 Unmangle(typeid(*obj)).c_str(), obj, what, refCount, unsigned(refCount));
+                 (refCount <= 0 ? "deleted" : Unmangle(typeid(*obj)).c_str()), obj, what, refCount, unsigned(refCount));
         if (n < 0)
             throw std::runtime_error("RefCounted object has an invalid refCount");
 #ifdef WarnError
@@ -72,7 +72,7 @@ namespace fleece {
         // Store a garbage value to detect use-after-free
         int32_t oldRef = _refCount.exchange(-9999999);
         if (_usuallyFalse(oldRef != 0)) {
-#if DEBUG
+#if 1
             if (oldRef != kCarefulInitialRefCount)
 #endif
             {

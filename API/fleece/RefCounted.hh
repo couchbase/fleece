@@ -47,7 +47,7 @@ namespace fleece {
         friend void release(const RefCounted* FL_NULLABLE) noexcept;
         friend void assignRef(RefCounted* FL_NULLABLE &dst, RefCounted* FL_NULLABLE src) noexcept;
 
-#if DEBUG
+#if 1
         void _retain() const noexcept           {_careful_retain();}
         void _release() const noexcept          {_careful_release();}
 #else
@@ -60,7 +60,7 @@ namespace fleece {
         void _careful_release() const noexcept;
 
         mutable std::atomic<int32_t> _refCount
-#if DEBUG
+#if 1
                                                {kCarefulInitialRefCount};
 #else
                                                {0};
