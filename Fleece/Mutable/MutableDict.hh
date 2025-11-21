@@ -21,11 +21,11 @@ namespace fleece { namespace impl {
     class MutableDict : public Dict {
     public:
 
-        static Retained<MutableDict> newDict(const Dict *d =nullptr, CopyFlags flags =kDefaultCopy) {
+        static Ref<MutableDict> newDict(const Dict *d =nullptr, CopyFlags flags =kDefaultCopy) {
             return retained(new internal::HeapDict(d, flags))->asMutableDict();
         }
 
-        Retained<MutableDict> copy(CopyFlags f =kDefaultCopy) {return newDict(this, f);}
+        Ref<MutableDict> copy(CopyFlags f =kDefaultCopy) {return newDict(this, f);}
 
         const Dict* source() const                          {return heapDict()->_source;}
         bool isChanged() const                              {return heapDict()->isChanged();}

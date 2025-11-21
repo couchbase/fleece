@@ -109,8 +109,8 @@ namespace fleece { namespace impl {
             slice subData,
             Trust =kUntrusted) noexcept;
 
-        static Retained<Doc> fromFleece(const alloc_slice &fleece, Trust =kUntrusted);
-        static Retained<Doc> fromJSON(slice json, SharedKeys* =nullptr);
+        static Ref<Doc> fromFleece(const alloc_slice &fleece, Trust =kUntrusted);
+        static Ref<Doc> fromJSON(slice json, SharedKeys* =nullptr);
 
         static RetainedConst<Doc> containing(const Value* NONNULL) noexcept;
 
