@@ -58,7 +58,6 @@
  */
 
 #include "ParseDate.hh"
-#include "date/date.h"
 #include "FleeceException.hh"
 #include <cstdint>
 #include <cstdarg>
@@ -66,6 +65,7 @@
 #include <cstring>
 #include <cmath>
 #include <ctime>
+#include <format>
 #include <mutex>
 #include <chrono>
 #include <sstream>
@@ -400,10 +400,10 @@ namespace fleece {
     DateTime FromMillis(const int64_t timestamp) {
         const milliseconds millis{timestamp};
         const time_point   tp{millis};
-        const auto         td = date::floor<date::days>(tp);
+        const auto         td = floor<days>(tp);
 
-        const date::year_month_day ymd{td};
-        const date::hh_mm_ss       hms{floor<milliseconds>(tp - td)};
+        const year_month_day ymd{td};
+        const hh_mm_ss       hms{floor<milliseconds>(tp - td)};
 
         const double ms = static_cast<double>(hms.subseconds().count()) / 1000.0;
 
@@ -446,9 +446,9 @@ namespace fleece {
         if ( asUTC ) {
             return FormatISO8601Date(buf, timestamp, minutes{0}, format);
         } else {
-            const milliseconds  millis{timestamp};
-            auto          temp           = FromTimestamp(floor<seconds>(millis));
-            const seconds offset_seconds = GetLocalTZOffset(&temp, false);
+            const milliseconds millis{timestamp};
+            auto               temp           = FromTimestamp(floor<seconds>(millis));
+            const seconds      offset_seconds = GetLocalTZOffset(&temp, false);
             return FormatISO8601Date(buf, timestamp, duration_cast<minutes>(offset_seconds), format);
         }
     }
@@ -462,9 +462,7 @@ namespace fleece {
         }
 
         const milliseconds millis{milliseconds{timestamp} + duration_cast<milliseconds>(tzoffset)};
-        const auto         tm = date::local_time<milliseconds>{millis};
-
-        const seconds offset_seconds{tzoffset};
+        const auto         tm = local_time<milliseconds>{millis};
 
         const bool has_milli = millis.count() % 1000 != 0;
         bool       ymd       = true;
@@ -478,23 +476,25 @@ namespace fleece {
             separator = format->separator;
         }
 
-        if ( ymd ) { stream << date::format("%F", tm); }
+        if ( ymd ) { stream << std::format("{:%F}", tm); }
 
         if ( hms ) {
             if ( ymd ) { stream << separator; }
 
             if ( has_milli ) {
-                stream << date::format("%T", tm);
+                stream << std::format("{:%T}", tm);
             } else {
                 const auto secs = duration_cast<seconds>(millis);
-                stream << date::format("%T", date::local_seconds(secs));
+                stream << std::format("{:%T}", local_seconds{secs});
             }
 
             if ( zone ) {
-                if ( offset_seconds.count() == 0 ) {
+                if ( tzoffset.count() == 0 ) {
                     stream << 'Z';
                 } else {
-                    to_stream(stream, "%z", tm, nullptr, &offset_seconds);
+                    char     sign = tzoffset.count() < 0 ? '-' : '+';
+                    hh_mm_ss hhmmss{sign == '-' ? -tzoffset : tzoffset};
+                    stream << std::format("{}{:02}:{:02}", sign, hhmmss.hours().count(), hhmmss.minutes().count());
                 }
             }
         }
@@ -506,10 +506,10 @@ namespace fleece {
     }
 
     struct tm FromTimestamp(seconds timestamp) {
-        date::local_seconds  tp{timestamp};
-        auto           dp = floor<date::days>(tp);
-        date::year_month_day ymd{dp};
-        auto           hhmmss = date::make_time(tp - dp);
+        local_seconds  tp{timestamp};
+        auto           dp = floor<days>(tp);
+        year_month_day ymd{dp};
+        hh_mm_ss       hhmmss{tp - dp};
 
         struct tm local_time {};
 

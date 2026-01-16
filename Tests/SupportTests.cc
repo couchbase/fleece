@@ -17,13 +17,17 @@
 #include "Backtrace.hh"
 #include "ConcurrentMap.hh"
 #include "Bitmap.hh"
+#include "ParseDate.hh"
 #include "TempArray.hh"
 #include "sliceIO.hh"
 #include "Base64.hh"
+#include <chrono>
 #include <iostream>
 #include <future>
+#include <format>
 
 using namespace std;
+using namespace std::chrono;
 using namespace fleece;
 
 
@@ -54,20 +58,18 @@ TEST_CASE("Slice safety") {
 
 template <class T>
 static void stackEm(size_t n, bool expectedOnHeap) {
-    cerr << "TempArray[" << n << "] -- " << n*sizeof(T) << " bytes, on "
-         << (expectedOnHeap ? "heap" : "stack") << "\n";
+    cerr << "TempArray[" << n << "] -- " << n * sizeof(T) << " bytes, on " << (expectedOnHeap ? "heap" : "stack")
+         << "\n";
     int64_t before = -1;
     TempArray(myArray, T, n);
     int64_t after = -1;
 
     CHECK((sizeof(myArray[0]) == sizeof(T)));
     CHECK(myArray._onHeap == expectedOnHeap);
-    for (size_t i = 0; i < n; i++)
-        myArray[i] = 0;
+    for ( size_t i = 0; i < n; i++ ) myArray[i] = 0;
     REQUIRE(before == -1);
     REQUIRE(after == -1);
 }
-
 
 TEST_CASE("TempArray") {
     // Edge cases:
@@ -76,17 +78,15 @@ TEST_CASE("TempArray") {
     stackEm<uint8_t>(1023, false);
     stackEm<uint8_t>(1024, true);
 
-#if FL_EMBEDDED
+#    if FL_EMBEDDED
     static constexpr size_t kBigSize = 10000;
-#else
+#    else
     static constexpr size_t kBigSize = 10000000;
-#endif
+#    endif
 
     // A range of sizes:
-    for (size_t n = 1; n < kBigSize; n *= 7)
-        stackEm<uint8_t>(n, n >= 1024);
-    for (size_t n = 1; n < kBigSize; n *= 7)
-        stackEm<uint64_t>(n, n >= 1024/8);
+    for ( size_t n = 1; n < kBigSize; n *= 7 ) stackEm<uint8_t>(n, n >= 1024);
+    for ( size_t n = 1; n < kBigSize; n *= 7 ) stackEm<uint64_t>(n, n >= 1024 / 8);
 }
 
 #endif
@@ -94,26 +94,26 @@ TEST_CASE("TempArray") {
 
 #if FL_HAVE_FILESYSTEM
 TEST_CASE("Slice I/O") {
-    const char *filePath = kTempDir "slicefile";
-    slice data = "This is some data to write to a file."_sl;
+    const char* filePath = kTempDir "slicefile";
+    slice       data     = "This is some data to write to a file."_sl;
     writeToFile(data, filePath);
     alloc_slice readBack = readFile(filePath);
     CHECK(readBack == data);
 
-#if FL_HAVE_MMAP
-    FILE *f = fopen(filePath, "r");
+#    if FL_HAVE_MMAP
+    FILE*      f = fopen(filePath, "r");
     mmap_slice mappedData(f, 300);
     CHECK(slice(mappedData.buf, data.size) == data);
-#endif
+#    endif
 
     appendToFile(" More data appended."_sl, filePath);
     readBack = readFile(filePath);
     CHECK(readBack == "This is some data to write to a file. More data appended."_sl);
 
-#if FL_HAVE_MMAP
+#    if FL_HAVE_MMAP
     CHECK(slice(mappedData.buf, readBack.size) == readBack);
     fclose(f);
-#endif
+#    endif
 }
 #endif
 
@@ -122,9 +122,9 @@ TEST_CASE("Bitmap") {
     CHECK(popcount(0) == 0);
     CHECK(popcount(0l) == 0);
     CHECK(popcount(0ll) == 0);
-    CHECK(popcount(-1) == sizeof(int)*8);
-    CHECK(popcount(-1l) == sizeof(long)*8);
-    CHECK(popcount(-1ll) == sizeof(long long)*8);
+    CHECK(popcount(-1) == sizeof(int) * 8);
+    CHECK(popcount(-1l) == sizeof(long) * 8);
+    CHECK(popcount(-1ll) == sizeof(long long) * 8);
 
     Bitmap<uint32_t> b(0x12345678);
     CHECK(Bitmap<uint32_t>::capacity == 32);
@@ -133,26 +133,23 @@ TEST_CASE("Bitmap") {
     CHECK(b.indexOfBit(8) == 4);
 }
 
-
 TEST_CASE("Hash distribution") {
     static constexpr int kSize = 4096, kNKeys = 2048;
-    int bucket[kSize] = {0};
-    constexpr size_t bufSize = 10;
-    for (int i = 0; i < kNKeys; ++i) {
+    int                  bucket[kSize] = {0};
+    constexpr size_t     bufSize       = 10;
+    for ( int i = 0; i < kNKeys; ++i ) {
         char keybuf[bufSize];
         snprintf(keybuf, bufSize, "k-%04d", i);
-        int hash = slice(keybuf).hash();
-        int index = hash & (kSize-1);
+        int hash  = slice(keybuf).hash();
+        int index = hash & (kSize - 1);
         ++bucket[index];
     }
 
     int hist[kSize] = {0};
-    for (int i = 0; i < kSize; ++i) {
-        ++hist[bucket[i]];
-    }
+    for ( int i = 0; i < kSize; ++i ) { ++hist[bucket[i]]; }
     int total = 0;
-    for (int i = kSize - 1; i >= 0; --i) {
-        if (hist[i] > 0 || total > 0) {
+    for ( int i = kSize - 1; i >= 0; --i ) {
+        if ( hist[i] > 0 || total > 0 ) {
             cout << hist[i] << " buckets have " << i << " keys\n";
             total += i * hist[i];
             CHECK(i <= 7);
@@ -161,9 +158,7 @@ TEST_CASE("Hash distribution") {
     CHECK(total == kNKeys);
 }
 
-
 #pragma mark - CONCURRENT MAP:
-
 
 TEST_CASE("ConcurrentMap basic", "[ConcurrentMap]") {
     ConcurrentMap map(2048);
@@ -194,9 +189,9 @@ TEST_CASE("ConcurrentMap basic", "[ConcurrentMap]") {
     CHECK(!map.remove("durian"));
 
     constexpr size_t bufSize = 10;
-    
-    for (int pass = 1; pass <= 2; ++pass) { // insert on 1st pass, read on 2nd
-        for (uint16_t i = 0; i < 2046; ++i) {
+
+    for ( int pass = 1; pass <= 2; ++pass ) {  // insert on 1st pass, read on 2nd
+        for ( uint16_t i = 0; i < 2046; ++i ) {
             char keybuf[bufSize];
             snprintf(keybuf, bufSize, "k-%04d", i);
             auto result = (pass == 1) ? map.insert(keybuf, i) : map.find(keybuf);
@@ -210,8 +205,7 @@ TEST_CASE("ConcurrentMap basic", "[ConcurrentMap]") {
     found = map.find("apple");
     CHECK(!found.key);
 
-    cout << "Afterwards: count = " << map.count()
-         << ", string bytes used = " << map.stringBytesCount() << '\n';
+    cout << "Afterwards: count = " << map.count() << ", string bytes used = " << map.stringBytesCount() << '\n';
 
     CHECK(map.count() == 2046);
     CHECK(map.stringBytesCount() > 0);
@@ -219,20 +213,18 @@ TEST_CASE("ConcurrentMap basic", "[ConcurrentMap]") {
     //map.dump();
 }
 
-
 TEST_CASE("ConcurrentMap concurrency", "[ConcurrentMap]") {
     static constexpr size_t kSize = 6000;
-    ConcurrentMap map(kSize);
+    ConcurrentMap           map(kSize);
     cout << "table size = " << map.tableSize() << ", capacity = " << map.capacity() << '\n';
-    cout << "string capacity = " << map.stringBytesCapacity()
-         << ", used = " << map.stringBytesCount() << "\n";
+    cout << "string capacity = " << map.stringBytesCapacity() << ", used = " << map.stringBytesCount() << "\n";
     CHECK(map.count() == 0);
     CHECK(map.capacity() >= kSize);
     CHECK(map.stringBytesCapacity() >= 65535);
 
-    vector<string> keys;
+    vector<string>   keys;
     constexpr size_t bufSize = 10;
-    for (int i = 0; i < kSize; i++) {
+    for ( int i = 0; i < kSize; i++ ) {
         char keybuf[bufSize];
         snprintf(keybuf, bufSize, "%x", i);
         keys.push_back(keybuf);
@@ -243,9 +235,9 @@ TEST_CASE("ConcurrentMap concurrency", "[ConcurrentMap]") {
 
     auto reader = [&](int step) {
         size_t index = random() % kSize;
-        for (int n = 0; n < 2 * kSize; n++) {
+        for ( int n = 0; n < 2 * kSize; n++ ) {
             auto e = map.find(keys[index].c_str());
-            if (e.key) {
+            if ( e.key ) {
                 assert(e.key == keys[index].c_str());
                 assert(e.value == index);
             }
@@ -253,24 +245,24 @@ TEST_CASE("ConcurrentMap concurrency", "[ConcurrentMap]") {
         }
     };
 
-    auto writer = [&](int step, bool deleteToo) { // step must be coprime with kSize
+    auto writer = [&](int step, bool deleteToo) {  // step must be coprime with kSize
         unsigned const startIndex = (unsigned)random() % kSize;
-        auto index = startIndex;
-        for (int n = 0; n < kSize; n++) {
+        auto           index      = startIndex;
+        for ( int n = 0; n < kSize; n++ ) {
             auto value = uint16_t(index & 0xFFFF);
-            auto e = map.insert(keys[index].c_str(), value);
-            if (e.key == nullslice) {
-                cerr << "CONCURRENTMAP OVERFLOW, strings used=" << map.stringBytesCount()
-                     << ", keys = " << map.count() << "\n";
+            auto e     = map.insert(keys[index].c_str(), value);
+            if ( e.key == nullslice ) {
+                cerr << "CONCURRENTMAP OVERFLOW, strings used=" << map.stringBytesCount() << ", keys = " << map.count()
+                     << "\n";
                 throw runtime_error("ConcurrentMap overflow");
             }
             assert(e.key == keys[index].c_str());
             assert(e.value == value);
             index = (index + step) % kSize;
         }
-        if (deleteToo) {
+        if ( deleteToo ) {
             index = startIndex;
-            for (int n = 0; n < kSize; n++) {
+            for ( int n = 0; n < kSize; n++ ) {
                 map.remove(keys[index].c_str());
                 index = (index + step) % kSize;
             }
@@ -291,14 +283,12 @@ TEST_CASE("ConcurrentMap concurrency", "[ConcurrentMap]") {
     CHECK(map.count() == 0);
 }
 
-
 #pragma mark - SMALLVECTOR:
 
-
 TEST_CASE("SmallVector, small", "[SmallVector]") {
-    smallVector<alloc_slice,2> movedStrings;
+    smallVector<alloc_slice, 2> movedStrings;
     {
-        smallVector<alloc_slice,2> strings;
+        smallVector<alloc_slice, 2> strings;
         strings.emplace_back("string 1"_sl);
         strings.emplace_back("string 2"_sl);
         CHECK(strings.size() == 2);
@@ -316,11 +306,10 @@ TEST_CASE("SmallVector, small", "[SmallVector]") {
     CHECK(movedStrings[1] == "string 2"_sl);
 }
 
-
 TEST_CASE("SmallVector, big", "[SmallVector]") {
-    smallVector<alloc_slice,2> movedStrings;
+    smallVector<alloc_slice, 2> movedStrings;
     {
-        smallVector<alloc_slice,2> strings;
+        smallVector<alloc_slice, 2> strings;
         strings.emplace_back("string 1"_sl);
         strings.emplace_back("string 2"_sl);
         strings.emplace_back("string 3"_sl);
@@ -341,12 +330,11 @@ TEST_CASE("SmallVector, big", "[SmallVector]") {
     CHECK(movedStrings[2] == "string 3"_sl);
 }
 
-
 TEST_CASE("Base64 encode and decode", "[Base64]") {
-    vector<string> inputs = {"a", "ab", "abc", "abcd", "abcde"};
+    vector<string> inputs          = {"a", "ab", "abc", "abcd", "abcde"};
     vector<string> encodingResults = {"YQ==", "YWI=", "YWJj", "YWJjZA==", "YWJjZGU="};
-    int i = 0;
-    for (auto in : inputs) {
+    int            i               = 0;
+    for ( auto in : inputs ) {
         auto encoded = base64::encode(slice(in));
         CHECK(encoded == encodingResults[i++]);
         auto decoded = base64::decode(slice(encoded));
@@ -354,41 +342,32 @@ TEST_CASE("Base64 encode and decode", "[Base64]") {
     }
 }
 
-
 TEST_CASE("Timestamp Conversions", "[Timestamps]") {
-    FLTimestamp ts = FLTimestamp_Now();
-    bool asUTC = true;
-    SECTION("UTC") {
-        asUTC = true;
-    }
-    SECTION("Not UTC") {
-        asUTC = false;
-    }
+    FLTimestamp ts    = FLTimestamp_Now();
+    bool        asUTC = true;
+    SECTION("UTC") { asUTC = true; }
+    SECTION("Not UTC") { asUTC = false; }
     FLStringResult str = FLTimestamp_ToString(ts, asUTC);
-    FLTimestamp ts2 = FLTimestamp_FromString((FLString)str);
+    FLTimestamp    ts2 = FLTimestamp_FromString((FLString)str);
     CHECK(ts == ts2);
     FLSliceResult_Release(str);
 }
 
-
-static Backtrace makeBacktrace() {
-    return Backtrace();
-}
-
+static Backtrace makeBacktrace() { return Backtrace(); }
 
 TEST_CASE("Backtrace") {
-    Backtrace bt = makeBacktrace();
-    string str = bt.toString();
+    Backtrace bt  = makeBacktrace();
+    string    str = bt.toString();
     cout << str << endl;
     CHECK(std::count(str.begin(), str.end(), '\n') >= 4);
 }
 
-
-class ICTest : public RefCounted, public InstanceCountedIn<ICTest> {
-public:
+class ICTest
+    : public RefCounted
+    , public InstanceCountedIn<ICTest> {
+  public:
     ICTest() noexcept = default;
 };
-
 
 TEST_CASE("InstanceCounted") {
     auto n = InstanceCounted::liveInstanceCount();
@@ -399,4 +378,49 @@ TEST_CASE("InstanceCounted") {
         CHECK(InstanceCounted::liveInstanceCount() == n + 2);
     }
     CHECK(InstanceCounted::liveInstanceCount() == n);
+}
+
+TEST_CASE("FormatISO8601Date") {
+    year_month_day ymd = 2025y / June / 12;
+    hh_mm_ss       tod{10h + 5min + 30s + 123456us};
+    sys_days       days            = ymd;
+    auto           systime         = days + tod.to_duration();
+    auto           utctimestamp    = systime.time_since_epoch();
+    milliseconds   timestamp_milli = duration_cast<milliseconds>(utctimestamp);
+
+    char   str[kFormattedISO8601DateMaxSize];
+    string isoStrUtc = FormatISO8601Date(str, timestamp_milli.count(), true, nullptr).asString();
+    CHECK(isoStrUtc == "2025-06-12T10:05:30.123Z");
+
+    string isoStrLocal = FormatISO8601Date(str, timestamp_milli.count(), false, nullptr).asString();
+    // Eg., "2025-06-12T03:05:30.123-07:00" Actual offset depdends on the location.
+    int  Y, M, D, h, m, sec;
+    int  tzh, tzm;
+    char sign = 0;
+    printf("Datetime in local time: %s\n", isoStrLocal.c_str());
+    // The field of sub-seconds is ignored.
+    int n = std::sscanf(isoStrLocal.c_str(), "%d-%d-%dT%d:%d:%d.%*d%c%d:%d", &Y, &M, &D, &h, &m, &sec, &sign, &tzh,
+                        &tzm);
+
+    if ( n != 9 ) {
+        n = std::sscanf(isoStrLocal.c_str(), "%d-%d-%dT%d:%d:%d.%*dZ", &Y, &M, &D, &h, &m, &sec);
+        REQUIRE(n == 6);
+        tzh  = 0;
+        tzm  = 0;
+        sign = 0;
+    }
+
+    seconds offset_seconds{tzh * 3600 + tzm * 60};
+    if ( sign == '-' ) offset_seconds = -offset_seconds;
+
+    year_month_day localYMD{year{Y}, month{static_cast<unsigned>(M)}, day{static_cast<unsigned>(D)}};
+    sys_days       localDays = localYMD;
+    sys_seconds    localSec  = localDays + hours{h} + minutes{m} + seconds{sec};
+
+    // UTC seconds + offset == Local seconds
+    CHECK(duration_cast<seconds>(utctimestamp + offset_seconds) == localSec.time_since_epoch());
+
+    std::tm tm = FromTimestamp(duration_cast<seconds>(utctimestamp));
+    CHECK((tm.tm_year == (2025 - 1900) && tm.tm_mon == 5 && tm.tm_mday == 12));
+    CHECK((tm.tm_hour == 10 && tm.tm_min == 5 && tm.tm_sec == 30));
 }
