@@ -1524,7 +1524,7 @@ static int isLessThan128x128(swift_uint128_t lhs, swift_uint128_t rhs) {
                                 && (lhs.low < rhs.low)))))));
 }
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
 // Not going to alter third party code
 // Warning	C4319	'~': zero extending 'uint32_t' to 'uint64_t' of greater size
 #pragma warning(push)
@@ -1544,7 +1544,7 @@ static void subtract128x128(swift_uint128_t *lhs, swift_uint128_t rhs) {
 }
 #endif
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
 #pragma warning(pop)
 #endif
 

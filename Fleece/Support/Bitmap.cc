@@ -68,7 +68,7 @@ namespace fleece {
         return can_popcnt() ? __popcnt(v) : popcount_c(v);
 #else
         return popcount_c(v);
-#endif;
+#endif
     }
 
     int _popcountl(unsigned long v) noexcept {
@@ -76,7 +76,7 @@ namespace fleece {
         return can_popcnt() ? __popcnt(v) : popcount_c(v);
 #else
         return popcount_c(v);
-#endif;
+#endif
     }
 
     int _popcountll(unsigned long long v) noexcept {

@@ -102,12 +102,19 @@ if (LITECORE_SANITIZE AND NOT CODE_COVERAGE_ENABLED AND (CMAKE_CXX_COMPILER_ID M
         -fsanitize=address
         -fsanitize=undefined
     )
-else()
+elseif(NOT MSVC)
     set(FLEECE_COMPILE_OPTIONS
         -fstack-protector
         -D_FORTIFY_SOURCE=2
     )
     set(FLEECE_LINK_OPTIONS "")
+else()
+    set(FLEECE_COMPILE_OPTIONS /GS /sdl /guard:cf)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        list(APPEND FLEECE_COMPILE_OPTIONS /analyze)
+    endif()
+
+    set(FLEECE_LINK_OPTIONS /GUARD:CF)
 endif()
 
 set_source_files(RESULT FLEECE_SRC)

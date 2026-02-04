@@ -47,7 +47,8 @@ TEST_CASE("GetUVarint performance", "[.Perf]") {
     uint8_t buf[100];
     fprintf(stderr, "buf = %p\n", &buf);
     double d = 1.0;
-    while (d <= UINT64_MAX) {
+    double max = double(UINT64_MAX);
+    while (d <= max) {
         auto n = (uint64_t)d;
         size_t nBytes = PutUVarInt(buf, n);
         uint64_t result = 0;

@@ -252,7 +252,7 @@ namespace fleece {
         inline constexpr slice(nullslice_t) noexcept STEPOVER;
         constexpr slice(const void* FL_NULLABLE b LIFETIMEBOUND, size_t s) noexcept STEPOVER    :pure_slice(b, s) {}
         inline constexpr slice(const void* start LIFETIMEBOUND, const void* end) noexcept STEPOVER;
-        inline slice(const alloc_slice& LIFETIMEBOUND) noexcept STEPOVER;
+        inline slice(const alloc_slice& s LIFETIMEBOUND) noexcept STEPOVER;
 
         constexpr slice(std::string_view str) noexcept STEPOVER                       :pure_slice(str) {}
         slice(const std::string& str LIFETIMEBOUND) noexcept STEPOVER                 :pure_slice(str) {}
