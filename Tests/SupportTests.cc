@@ -234,7 +234,7 @@ TEST_CASE("ConcurrentMap concurrency", "[ConcurrentMap]") {
     constexpr size_t bufSize = 10;
     for (int i = 0; i < kSize; i++) {
         char keybuf[bufSize];
-        snprintf(keybuf, bufSize, "%x", i);
+        snprintf(keybuf, bufSize, "%x", unsigned(i));
         keys.push_back(keybuf);
     }
 
