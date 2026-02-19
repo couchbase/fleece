@@ -141,7 +141,7 @@ namespace fleece {
         /// calls the function `fn` with a pointer to it, then returns true.
         /// Otherwise just returns false.
         template <std::invocable<T*> FN>
-        [[nodiscard]] bool use(FN&& fn) requires(std::is_void_v<std::invoke_result_t<FN,T*>>) {
+        [[nodiscard]] bool use(FN&& fn) const requires(std::is_void_v<std::invoke_result_t<FN,T*>>) {
             if (auto ref = tryGet()) {
                 fn(ref.get());
                 return true;
@@ -154,7 +154,7 @@ namespace fleece {
         /// calls the function `fn` with a pointer to it, returning whatever it returned.
         /// Otherwise calls `elsefn` with no arguments, returning whatever it returned.
         template <std::invocable<T*> FN, std::invocable<> ELSEFN>
-        auto use(FN&& fn, ELSEFN&& elsefn) {
+        auto use(FN&& fn, ELSEFN&& elsefn) const {
             if (auto ref = tryGet()) {
                 return fn(ref.get());
             } else {
@@ -206,8 +206,57 @@ namespace fleece {
     /// NullableWeakRef<T> is an alias for a (default) nullable WeakRetained<T>.
     template <class T> using NullableWeakRef = WeakRetained<T, MaybeNull>;
 
-    /// WeakRetainedConst is an alias for a WeakRetained that holds a const pointer.
-    template <class T> using WeakRetainedConst = WeakRetained<const T>;
+
+    /** The weak-reference equivalent of \ref RetainedBySubclass. */
+    template <class T>
+    class WeakRetainedBySubclass {
+    public:
+        WeakRetainedBySubclass() = default;
+
+        template <std::derived_from<T> Sub>
+        explicit WeakRetainedBySubclass(Sub* FL_NULLABLE sub) noexcept
+            requires (std::derived_from<Sub,RefCounted>)
+            :_ptr{sub}, _ref{sub} { }
+
+        template <std::derived_from<T> Sub, Nullability N>
+        explicit WeakRetainedBySubclass(Retained<Sub,N> sub) noexcept
+            requires (std::derived_from<Sub,RefCounted>)
+            :WeakRetainedBySubclass{sub.get()} { }
+
+        explicit operator bool() const noexcept FLPURE  {return _ptr != nullptr;}
+
+        bool invalidated() const noexcept               {return _ref.invalidated();}
+
+        /// If this holds a non-null pointer, and the object pointed to still exists,
+        /// returns a `RetainedBySubclass` instance holding a new strong reference to it.
+        /// Otherwise returns an empty (nullptr) result.
+        /// @warning You **must** check the result for null before dereferencing it!
+        RetainedBySubclass<T> tryGet() const noexcept {
+            if (auto strongRef = _ref.tryGet())
+                return {_ptr, std::move(strongRef)};
+            else
+                return {};
+        }
+
+        /// An alternative to \ref tryGet. If the object pointed to still exists,
+        /// calls the function `fn` with a pointer to it, then returns true.
+        /// Otherwise just returns false.
+        template <std::invocable<T*> FN>
+        bool use(FN&& fn) const requires(std::is_void_v<std::invoke_result_t<FN,T*>>) {
+            if (auto ref = tryGet()) {
+                fn(ref.get());
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        void clear() noexcept                           {_ref = nullptr; _ptr = nullptr;}
+
+    private:
+        T* FL_NULLABLE           _ptr = nullptr;
+        WeakRetained<RefCounted> _ref;
+    };
 
 }
 

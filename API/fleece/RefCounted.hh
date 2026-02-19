@@ -317,6 +317,49 @@ namespace fleece {
         return std::move(retained).detach();
     }
 
+
+    /** A ref-counted smart pointer to an arbitrary type `T` which does not have to derive from
+     *  \ref RefCounted. However, it has to be instantiated with an instance of a subclass which
+     *  _does_ derive from RefCounted.
+     *
+     *  This is useful when you have something like a pure-virtual delegate interface and want to
+     *  manage delegates with ref-counting. Making the interface derive from RefCounted would be
+     *  awkward for classes that want to implement it, if they already derive from RefCounted
+     *  through another base class. Instead, the delegate can be passed as a RetainedBySubclass.
+     *
+     *  PS: If you need a _weak_ reference, use \ref WeakRetainedBySubclass. */
+    template <class T>
+    class RetainedBySubclass {
+    public:
+        RetainedBySubclass() = default;
+
+        template <std::derived_from<T> Sub>
+        explicit RetainedBySubclass(Sub* FL_NULLABLE sub) noexcept
+            requires (std::derived_from<Sub,RefCounted>)
+            :_ptr{sub}, _ref{sub} { }
+
+        template <std::derived_from<T> Sub, Nullability N>
+        explicit RetainedBySubclass(Retained<Sub,N> sub) noexcept
+            requires (std::derived_from<Sub,RefCounted>)
+            :_ptr{sub}, _ref{std::move(sub)} { }
+
+        explicit operator bool() const noexcept FLPURE      {return _ptr != nullptr;}
+
+        T* FL_NULLABLE get() const noexcept FLPURE          {return _ptr;}
+        T* FL_NULLABLE operator*() const noexcept FLPURE    {return _ptr;}
+        T* FL_NULLABLE operator->() const noexcept FLPURE   {return _ptr;}
+
+        void clear()                                        {_ref = nullptr; _ptr = nullptr;}
+
+    private:
+        template <class U> friend class WeakRetainedBySubclass;
+        RetainedBySubclass(T* FL_NULLABLE ptr, Retained<RefCounted> sub)
+            :_ptr(ptr), _ref(std::move(sub)) { }
+
+        T* FL_NULLABLE       _ptr = nullptr;
+        Retained<RefCounted> _ref;
+    };
+
 }
 
 FL_ASSUME_NONNULL_END

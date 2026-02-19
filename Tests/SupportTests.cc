@@ -403,7 +403,7 @@ TEST_CASE("InstanceCounted") {
 }
 
 
-TEST_CASE("WeakRef") {
+TEST_CASE("WeakRef", "[RefCounted]") {
     auto n = InstanceCounted::liveInstanceCount();
     {
         Retained<ICTest> i1 = make_retained<ICTest>();
@@ -458,7 +458,7 @@ public:
 };
 
 
-TEST_CASE("WeakRef Cycle") {
+TEST_CASE("WeakRef Cycle", "[RefCounted]") {
     auto n = InstanceCounted::liveInstanceCount();
 
     Retained<CycleTest> master = make_retained<CycleTest>();
@@ -473,4 +473,41 @@ TEST_CASE("WeakRef Cycle") {
 
     CHECK(InstanceCounted::liveInstanceCount() == n);
     CHECK(RefCounted::zombieCount() == 0);
+}
+
+
+struct TestDelegate {
+    virtual int grooviness() = 0;
+    virtual ~TestDelegate() = default;
+};
+
+static int callDelegate(RetainedBySubclass<TestDelegate> const& delegate) {
+    return delegate->grooviness();
+}
+
+struct TestDelegateImpl final : RefCounted, TestDelegate, InstanceCountedIn<TestDelegateImpl> {
+    int grooviness() override {return 9000;}
+};
+
+
+TEST_CASE("RetainedSubclass", "[RefCounted]") {
+    auto n = InstanceCounted::liveInstanceCount();
+    {
+        auto delegate = make_retained<TestDelegateImpl>();
+        CHECK(callDelegate(RetainedBySubclass<TestDelegate>(delegate)) == 9000);
+    }
+    CHECK(InstanceCounted::liveInstanceCount() == n);
+}
+
+
+TEST_CASE("WeakRetainedSubclass", "[RefCounted]") {
+    auto n = InstanceCounted::liveInstanceCount();
+    {
+        Retained<TestDelegateImpl> delegate = make_retained<TestDelegateImpl>();
+        auto weakRef = WeakRetainedBySubclass<TestDelegate>(delegate);
+        CHECK(callDelegate(weakRef.tryGet()) == 9000);
+        delegate = nullptr;
+        CHECK(!weakRef.tryGet());
+    }
+    CHECK(InstanceCounted::liveInstanceCount() == n);
 }
