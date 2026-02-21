@@ -10,6 +10,7 @@ function(set_source_files_base)
         Fleece/API_Impl/Fleece.cc
         Fleece/API_Impl/FLEncoder.cc
         Fleece/API_Impl/FLSlice.cc
+        Fleece/API_Impl/JSONSchema.cc
         Fleece/Core/Array.cc
         Fleece/Core/Builder.cc
         Fleece/Core/DeepIterator.cc

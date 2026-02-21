@@ -14,7 +14,7 @@
 #ifndef _FLOBSCURE_H
 #define _FLOBSCURE_H
 
-#include "FLValue.h"
+#include "FLCollections.h"
 
 FL_ASSUME_NONNULL_BEGIN
 
@@ -165,6 +165,14 @@ extern "C" {
     FLEECE_PUBLIC void FLSharedKeys_Release(FLSharedKeys FL_NULLABLE) FLAPI;
 
 
+    /** Initializes a Dict iterator, providing the Dict's FLSharedKeys instance.
+        This is an optimization that saves FLDictIterator_GetKeyString from the overhead of having
+        to look up the SharedKeys when the first shared key is encountered.
+        @warning The FLSharedKeys MUST be the same instance associated with the Dict, or incorrect
+                 key strings will be returned. */
+    FLEECE_PUBLIC void FLDictIterator_BeginShared(FLDict FL_NULLABLE, FLSharedKeys, FLDictIterator*) FLAPI;
+
+
     typedef struct _FLSharedKeyScope* FLSharedKeyScope;
 
     /** Registers a range of memory containing Fleece data that uses the given shared keys.
@@ -305,6 +313,11 @@ extern "C" {
 
     /** @} */
 
+    /** Follows a JSON Pointer [RFC 6901] from a root Value
+        @returns the resolved Value, or NULL if not found (or the JSON Pointer is invalid.) */
+    FLEECE_PUBLIC FLValue FL_NULLABLE FLEvalJSONPointer(FLString jsonPointer,
+                                                        FLValue root,
+                                                        FLError* outError) FLAPI;
 
     /** @} */
 

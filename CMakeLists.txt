@@ -33,6 +33,19 @@ else()
     message(FATAL_ERROR "Unsupported platform ${CMAKE_SYSTEM_NAME}!")
 endif()
 
+
+if(NOT "${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+    include(CheckIPOSupported)
+    check_ipo_supported(RESULT supported OUTPUT error)
+    if( supported )
+        message(STATUS "LTO enabled")
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+    else()
+        message(STATUS "LTO not supported: <${error}>")
+    endif()
+endif()
+
+
 set(FLEECE_CXX_WARNINGS "")
 if(FLEECE_WARNINGS_HARDCORE)
     if (CMAKE_CXX_COMPILER_ID MATCHES Clang)
@@ -149,9 +162,11 @@ add_executable(FleeceTests EXCLUDE_FROM_ALL
     ${FLEECE_TEST_SRC}
     vendor/catch/catch_amalgamated.cpp
     vendor/catch/CaseListReporter.cc
+        Tests/SchemaTests.cc
 )
 setup_test_build()
 target_include_directories(FleeceTests PRIVATE
+        Experimental
         Tests
         vendor/catch
 )

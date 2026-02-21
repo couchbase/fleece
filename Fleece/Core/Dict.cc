@@ -97,12 +97,24 @@ namespace fleece { namespace impl {
         __hot
         inline const Value* get(int keyToFind) const noexcept {
             assert_precondition(keyToFind >= 0);
-            return finishGet(search(keyToFind), keyToFind);
+            if (auto n = _count; n <= 8) {
+                // For smallish Dicts, a linear search is faster:
+                uint16_t encodedKey = endian::enc16(uint16_t(keyToFind));
+                const Value* item = _first;
+                while (n-- > 0) {
+                    if (*reinterpret_cast<const uint16_t *>(item) == encodedKey)
+                        return finishGet(item, keyToFind);
+                    item = offsetby(item, 2 * kWidth);
+                }
+                return finishGet(nullptr, keyToFind);
+            } else {
+                return finishGet(search(keyToFind), keyToFind);
+            }
         }
 
         __hot
         inline const Value* get(slice keyToFind, SharedKeys *sharedKeys =nullptr) const noexcept {
-            if (!sharedKeys && usesSharedKeys()) {
+            if (!sharedKeys && usesSharedKeys() && SharedKeys::isEligibleToEncode(keyToFind)) {
                 sharedKeys = findSharedKeys();
                 assert_precondition(sharedKeys || gDisableNecessarySharedKeysCheck);
             }
@@ -114,26 +126,38 @@ namespace fleece { namespace impl {
 
         __hot
         const Value* get(Dict::key &keyToFind) const noexcept {
-            auto sharedKeys = keyToFind._sharedKeys;
-            if (!sharedKeys && usesSharedKeys()) {
-                sharedKeys = findSharedKeys();
-                keyToFind.setSharedKeys(sharedKeys);
-                assert_precondition(sharedKeys || gDisableNecessarySharedKeysCheck);
-            }
-            if (_usuallyTrue(sharedKeys != nullptr)) {
-                // Look for a numeric key first:
-                if (_usuallyTrue(keyToFind._hasNumericKey))
-                    return get(keyToFind._numericKey);
-                // Key was not registered last we checked; see if dict contains any new keys:
-                if (_usuallyFalse(_count == 0))
-                    return nullptr;
-                if (lookupSharedKey(keyToFind._rawString, sharedKeys, keyToFind._numericKey)) {
-                    // If the SharedKeys are in a transaction we don't mark the key as having a
-                    // shared key, because the transaction might be rolled back. If the found
-                    // shared key is rolled back as part of rolling back the transaction, continuing
-                    // to use it would lead to incorrect lookup results.
-                    keyToFind._hasNumericKey = sharedKeys->isCacheable();
-                    return get(keyToFind._numericKey);
+            if (_usuallyTrue(keyToFind._hasNumericKey > 0)) {
+                // Already know the numeric key:
+                return get(keyToFind._numericKey);
+            } else if (_usuallyTrue(keyToFind._hasNumericKey == 0)) {
+                // Haven't found a numeric key (nor given up) yet:
+                if (_usuallyTrue(SharedKeys::isEligibleToEncode(keyToFind._rawString))) {
+                    auto sharedKeys = keyToFind._sharedKeys;
+                    if (!sharedKeys && usesSharedKeys()) {
+                        // Look up this Dict's associated SharedKeys (slow!) and save in keyToFind:
+                        sharedKeys = findSharedKeys();
+                        keyToFind.setSharedKeys(sharedKeys);
+                        assert_precondition(sharedKeys || gDisableNecessarySharedKeysCheck);
+                    }
+                    if (_usuallyTrue(sharedKeys != nullptr)) {
+                        if (_usuallyFalse(keyToFind._rawString.size > sharedKeys->maxKeyLength()))
+                            keyToFind._hasNumericKey = -1;  // this key cannot be a shared key
+                        else if (_usuallyFalse(_count == 0))
+                            return nullptr;
+                        // Key was not registered last we checked; see if dict contains any new keys:
+                        else if (lookupSharedKey(keyToFind._rawString, sharedKeys,
+                                                 keyToFind._numericKey)) {
+                            // If the SharedKeys are in a transaction we don't mark the key as having a
+                            // shared key, because the transaction might be rolled back. If the found
+                            // shared key is rolled back as part of rolling back the transaction, continuing
+                            // to use it would lead to incorrect lookup results.
+                            keyToFind._hasNumericKey = sharedKeys->isCacheable();
+                            return get(keyToFind._numericKey);
+                        }
+                    }
+                } else {
+                    // This key can't be used as a shared key (not alphanumeric):
+                    keyToFind._hasNumericKey = -1;  // this key cannot be a shared key
                 }
             }
 

@@ -1,0 +1,207 @@
+{
+    "$comment": "JSON Schema for Couchbase's travel-sample database.",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+
+    "type": "object",
+
+    "if": {
+        "properties": {"type": {"const": "route"}}
+    },
+    "then":
+        {"$ref": "#/$defs/route"},
+    "else": {
+        "if": {
+            "properties": {"type": {"const": "airline"}}
+        },
+        "then": {
+            "$ref": "#/$defs/airline"
+        },
+        "else": {
+            "if": {
+                "properties": {"type": {"const": "airport"}}
+            },
+            "then": {
+                "$ref": "#/$defs/airport"
+            },
+            "else": {
+                "if": {
+                    "properties": {"type": {"const": "hotel"}}
+                },
+                "then": {
+                    "$ref": "#/$defs/hotel"
+                },
+                "else": {
+                    "$ref": "#/$defs/landmark"
+                }
+            }
+        }
+    },
+
+
+    "$defs": {
+        "airline": {
+            "properties": {
+                "type": {"const": "airline"},
+                "id": {"type":  "number"},
+                "_id": {"type":  "string", "$comment": "Used in some JSON dumps"},
+                "callsign": {"type": ["string", "null"], "minLength": 2, "maxLength": 20},
+                "country": {"type": "string"},
+                "iata": {"type": ["string", "null"], "minLength": 2, "maxLength": 4},
+                "icao": {"type": "string", "minLength": 2, "maxLength": 4},
+                "name": {"type": "string"}
+            },
+            "required": ["id", "type", "name", "callsign", "country"],
+            "additionalProperties": false
+        },
+
+        "airport": {
+            "properties": {
+                "type": {"const": "airport"},
+                "id": {"type":  "number"},
+                "_id": {"type":  "string"},
+                "airportname": {"type": "string"},
+                "city": {"type": "string"},
+                "country": {"type": "string"},
+                "faa": {"type": ["string", "null"], "minLength": 3, "maxLength": 3},
+                "geo": {"$ref": "#/$defs/geo"},
+                "icao": {"type": ["string", "null"], "minLength": 2, "maxLength": 4},
+                "tz": {"type": "string"}
+            },
+            "required": ["id", "type", "airportname", "city", "country", "icao", "tz", "geo"],
+            "additionalProperties": false
+        },
+
+        "hotel": {
+            "properties": {
+                "type": {"const": "hotel"},
+                "id": {"type":  "number"},
+                "_id": {"type":  "string"},
+                "address": {"type": ["string", "null"]},
+                "alias": {"type": ["string", "null"]},
+                "checkin": {"type": ["string", "null"]},
+                "checkout": {"type": ["string", "null"]},
+                "city": {"type": ["string", "null"]},
+                "country": {"type": "string"},
+                "description": {"type": "string"},
+                "directions": {"type": ["string", "null"]},
+                "email": {"$ref":  "#/$defs/email"},
+                "fax": {"type": ["string", "null"]},
+                "free_breakfast": {"type": "boolean"},
+                "free_internet": {"type": "boolean"},
+                "free_parking": {"type": "boolean"},
+                "geo": {"$ref": "#/$defs/geo"},
+                "name": {"type": "string"},
+                "pets_ok": {"type": "boolean"},
+                "phone": {"type": ["string", "null"]},
+                "price": {"type":  ["string", "null"]},
+                "public_likes": {
+                    "type": ["array"],
+                    "items": {"type": "string"}
+                },
+                "reviews": {
+                    "type": "array",
+                    "items": {"$ref":  "#/$defs/review"}
+                },
+                "state": {"type": ["string", "null"]},
+                "title": {"type": "string"},
+                "tollfree": {"type": ["string", "null"]},
+                "url": {"$ref":  "#/$defs/url"},
+                "vacancy": {"type": "boolean"}
+            },
+            "required": ["id", "type", "name", "country", "city", "geo"],
+            "additionalProperties": false
+        },
+
+        "landmark": {
+            "properties": {
+                "type": {"const": "landmark"},
+                "id": {"type":  "number"},
+                "_id": {"type":  "string"},
+                "activity": {"enum": ["buy", "do", "drink", "eat", "listing", "see"]},
+                "address": {"type": ["string", "null"]},
+                "alt": {"type": ["string", "null"]},
+                "city": {"type": ["string", "null"]},
+                "content": {"type": "string"},
+                "country": {"type": "string"},
+                "directions": {"type": ["string", "null"]},
+                "email": {"$ref":  "#/$defs/email"},
+                "geo": {"$ref": "#/$defs/geo"},
+                "hours": {"type": ["string", "null"]},
+                "image": {"type": ["string", "null"]},
+                "image_direct_url": {"$ref": "#/$defs/url"},
+                "name": {"type": "string"},
+                "phone": {"type": ["string", "null"]},
+                "price": {"type":  ["string", "null"]},
+                "state": {"type": ["string", "null"]},
+                "title": {"type": "string"},
+                "tollfree": {"type": ["string", "null"]},
+                "url": {"$ref":  "#/$defs/url"}
+            },
+            "required": ["id", "type", "name", "country", "city", "geo", "content", "activity"],
+            "additionalProperties": false
+        },
+
+        "route": {
+            "properties": {
+                "type": {"const": "route"},
+                "id": {"type":  "number"},
+                "_id": {"type":  "string"},
+                "airline": {"type": "string"},
+                "airlineid": {"type": "string"},
+                "destinationairport": {"type": "string"},
+                "distance": {"type": "number", "exclusiveMinimum": 0.0},
+                "equipment": {"type": ["string", "null"]},
+                "sourceairport": {"type": "string"},
+                "stops": {"type": "integer", "minimum": 0},
+                "schedule": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "day": {"type": "integer", "minimum": 0, "maximum": 6},
+                            "utc": {"type": "string", "pattern": "^\\d\\d:\\d\\d:\\d\\d$"},
+                            "flight": {"type": "string"}
+                        },
+                        "required": ["day", "utc", "flight"],
+                        "additionalProperties": false
+                    },
+                    "minItems": 1
+                }
+            },
+            "required": ["id", "type", "airline", "airlineid", "distance", "equipment",
+                "sourceairport", "destinationairport", "schedule", "stops"],
+            "additionalProperties": false
+        },
+
+        "geo": {
+            "type": "object",
+            "properties": {
+                "lat": {"type": "number", "minimum": -90.0, "maximum": 90.0},
+                "lon": {"type": "number", "minimum": -180.0, "maximum": 180.0},
+                "alt": {"type": "number"},
+                "accuracy": {"enum": ["ROOFTOP", "RANGE_INTERPOLATED", "APPROXIMATE"]}
+            },
+            "required": ["lat", "lon"],
+            "additionalProperties": false
+        },
+
+        "review": {
+            "type": "object",
+            "properties": {
+                "author": {"type": "string"},
+                "content": {"type": "string"},
+                "date": {"type": "string"},
+                "ratings": {
+                    "type": "object",
+                    "additionalProperties": {"type": "integer", "minimum": -1, "maximum": 5}
+                }
+            },
+            "required": ["author", "content", "date"],
+            "additionalProperties": false
+        },
+
+        "email": {"type": ["string", "null"], "pattern": "@"},
+
+        "url": {"type": ["string", "null"], "pattern": "^([hH]ttps?://.*)?$"}
+    }
+}

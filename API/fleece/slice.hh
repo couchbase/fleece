@@ -183,6 +183,12 @@ namespace fleece {
             will not overflow the buffer. Returns false if the slice was truncated. */
         inline bool toCString(char *buf, size_t bufSize) const noexcept;
 
+        /** Computes the number of characters in a UTF-8 string, and detects invalid UTF-8.
+            @returns On success, a pair with the character count and `true`.
+                     On failure, a pair with the byte offset of the error and `false`. */
+        std::pair<size_t,bool> UTF8Length() const FLPURE;
+
+
         constexpr operator FLSlice () const noexcept {return {buf, size};}
 
 #ifdef __APPLE__
@@ -580,6 +586,30 @@ namespace fleece {
             result += kDigits[byte & 0xF];
         }
         return result;
+    }
+
+
+    inline std::pair<size_t,bool> pure_slice::UTF8Length() const {
+        // See <https://en.wikipedia.org/wiki/UTF-8>
+        size_t length = 0;
+        uint8_t const* cp = begin(), *e = end();
+        while (cp < e) {
+            ++length;
+            uint8_t c = *cp;
+            if ((c & 0x80) == 0) [[likely]]
+                cp += 1;
+            else if ((c & 0xE0) == 0xC0)
+                cp += 2;
+            else if ((c & 0xF0) == 0xE0)
+                cp += 3;
+            else if ((c & 0xF8) == 0xF0)
+                cp += 4;
+            else [[unlikely]]
+                return {cp - begin(), false};
+        }
+        if (cp != e) [[unlikely]]
+            return {cp - begin(), false};
+        return {length, true};
     }
 
 

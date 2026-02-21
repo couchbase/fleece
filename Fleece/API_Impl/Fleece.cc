@@ -332,6 +332,10 @@ void FLDictIterator_Begin(FLDict FL_NULLABLE d, FLDictIterator* i) FLAPI {
     // Note: this is safe even if d is null.
 }
 
+void FLDictIterator_BeginShared(FLDict FL_NULLABLE d, FLSharedKeys sk, FLDictIterator* i) FLAPI {
+    new (i) Dict::iterator(d, sk);
+}
+
 FLValue FL_NULLABLE FLDictIterator_GetKey(const FLDictIterator* i) FLAPI {
     return ((Dict::iterator*)i)->key();
 }
@@ -617,6 +621,14 @@ bool FLKeyPath_AddComponents(FLKeyPath path, FLString specifier, FLError* FL_NUL
 
 void FLKeyPath_DropComponents(FLKeyPath path, size_t n) FLAPI {
     path->drop(n);
+}
+
+FLValue FL_NULLABLE FLEvalJSONPointer(FLString jsonPointer, FLValue root, FLError* outError) FLAPI {
+    try {
+        *outError = kFLNoError;
+        return Path::evalJSONPointer(jsonPointer, root);
+    } catchError(outError)
+    return nullptr;
 }
 
 

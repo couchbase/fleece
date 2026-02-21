@@ -75,6 +75,17 @@ namespace fleece { namespace impl {
         _errorCode = NoError;
         _jsonError = JSONSL_ERROR_SUCCESS;
         _errorPos = 0;
+        _ignoreOuterBrace = false;
+
+        std::string wrapped;
+        if (auto cp = json.findByteNotIn(" \t\r\n"); cp && *cp != '{' && *cp != '[') {
+            // Input is not a valid object or array, but it could be a scalar value.
+            // jsonsl does not support top-level scalars. Work around this by wrapping the input
+            // in `[...]` to make it an array, but tell my callbacks to ignore the outer braces.
+            wrapped = std::string("[").append(json).append("]");
+            _input = wrapped;
+            _ignoreOuterBrace = true;
+        }
 
         _jsn->data = this;
         _jsn->action_callback_PUSH = writePushCallback;
@@ -82,12 +93,15 @@ namespace fleece { namespace impl {
         _jsn->error_callback = errorCallback;
         jsonsl_enable_all_callbacks(_jsn);
 
-        jsonsl_feed(_jsn, (char*)json.buf, json.size);
+        jsonsl_feed(_jsn, (char*)_input.buf, _input.size);
+
         if (_jsn->level > 0 && !_jsonError) {
             // Input is valid JSON so far, but truncated:
             _jsonError = kErrTruncatedJSON;
             _errorCode = JSONError;
             _errorPos = json.size;
+        } else if (_ignoreOuterBrace && _jsonError) {
+            --_errorPos;
         }
         jsonsl_reset(_jsn);
         return (_jsonError == JSONSL_ERROR_SUCCESS);
@@ -104,7 +118,8 @@ namespace fleece { namespace impl {
     inline void JSONConverter::push(struct jsonsl_state_st *state) {
         switch (state->type) {
             case JSONSL_T_LIST:
-                _encoder.beginArray();
+                if (!_ignoreOuterBrace || state->level != 1) [[likely]]
+                    _encoder.beginArray();
                 break;
             case JSONSL_T_OBJECT:
                 _encoder.beginDictionary();
@@ -187,7 +202,8 @@ namespace fleece { namespace impl {
                 break;
             }
             case JSONSL_T_LIST:
-                _encoder.endArray();
+                if (!_ignoreOuterBrace || state->level != 1) [[likely]]
+                   _encoder.endArray();
                 break;
             case JSONSL_T_OBJECT:
                 _encoder.endDictionary();
