@@ -224,6 +224,40 @@ public:
         enc.writeKey(key);
     }
 
+    void create100PeopleFleeceFile() {
+        auto input = readTestFile(kBigJSONTestFileName);
+
+        enc.uniqueStrings(true);
+
+        JSONConverter jr(enc);
+        if (!jr.encodeJSON(input))
+            FAIL("JSON parse error at " << jr.errorPos());
+
+        #if 0
+        // Dump the string table and some statistics:
+        auto &strings = enc.strings();
+        strings.dump();
+        #endif
+
+        enc.end();
+        result = enc.finish();
+
+        #if FL_HAVE_TEST_FILES
+        REQUIRE(result.buf);
+        writeToFile(result, kTestFilesDir "1000people.fleece");
+        #endif
+        sCreated1000PeopleFile = true;
+
+        fprintf(stderr, "\nJSON size: %zu bytes; Fleece size: %zu bytes (%.2f%%)\n",
+                input.size, result.size, (result.size*100.0/input.size));
+        #ifndef NDEBUG
+        fprintf(stderr, "Narrow: %u, Wide: %u (total %u)\n", enc._numNarrow, enc._numWide, enc._numNarrow+enc._numWide);
+        fprintf(stderr, "Narrow count: %u, Wide count: %u (total %u)\n", enc._narrowCount, enc._wideCount, enc._narrowCount+enc._wideCount);
+        fprintf(stderr, "Used %u pointers to shared strings\n", enc._numSavedStrings);
+        #endif
+    }
+
+    static inline bool sCreated1000PeopleFile = false;
 };
 
 #pragma mark - TESTS
@@ -682,35 +716,7 @@ public:
     }
 
     TEST_CASE_METHOD(EncoderTests, "ConvertPeople", "[Encoder]") {
-        auto input = readTestFile(kBigJSONTestFileName);
-
-        enc.uniqueStrings(true);
-
-        JSONConverter jr(enc);
-        if (!jr.encodeJSON(input))
-            FAIL("JSON parse error at " << jr.errorPos());
-
-#if 0
-        // Dump the string table and some statistics:
-        auto &strings = enc.strings();
-        strings.dump();
-#endif
-
-        enc.end();
-        result = enc.finish();
-
-#if FL_HAVE_TEST_FILES
-        REQUIRE(result.buf);
-        writeToFile(result, kTestFilesDir "1000people.fleece");
-#endif
-
-        fprintf(stderr, "\nJSON size: %zu bytes; Fleece size: %zu bytes (%.2f%%)\n",
-                input.size, result.size, (result.size*100.0/input.size));
-#ifndef NDEBUG
-        fprintf(stderr, "Narrow: %u, Wide: %u (total %u)\n", enc._numNarrow, enc._numWide, enc._numNarrow+enc._numWide);
-        fprintf(stderr, "Narrow count: %u, Wide count: %u (total %u)\n", enc._narrowCount, enc._wideCount, enc._narrowCount+enc._wideCount);
-        fprintf(stderr, "Used %u pointers to shared strings\n", enc._numSavedStrings);
-#endif
+        create100PeopleFleeceFile();
     }
 
 #if FL_HAVE_TEST_FILES
@@ -737,6 +743,8 @@ public:
 
 #if FL_HAVE_TEST_FILES
     TEST_CASE_METHOD(EncoderTests, "FindPersonByIndexSorted", "[Encoder]") {
+        if (!sCreated1000PeopleFile)
+            create100PeopleFleeceFile();
         auto doc = readTestFile("1000people.fleece");
         auto root = Value::fromTrustedData(doc)->asArray();
         auto person = root->get(123)->asDict();
@@ -785,6 +793,8 @@ public:
             // Now try a wide Dict:
             Dict::key nameKey(slice("name"));
 
+            if (!sCreated1000PeopleFile)
+                create100PeopleFleeceFile();
             auto doc = readTestFile("1000people.fleece");
             auto root = Value::fromTrustedData(doc)->asArray();
             auto person = root->get(123)->asDict();

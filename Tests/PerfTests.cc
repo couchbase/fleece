@@ -59,8 +59,8 @@ TEST_CASE("GetUVarint performance", "[.Perf]") {
         }
         bench.stop();
         CHECK(result != 1); // bogus
-        fprintf(stderr, "n = %16llx; %2zd bytes; time = %.3f ns\n",
-                (long long)n, nBytes,
+        fprintf(stderr, "n = %16llx; %2zu bytes; time = %.3f ns\n",
+                (unsigned long long)n, nBytes,
                 bench.elapsed() / kNRounds * 1.0e9);
          d *= 1.5;
     }
