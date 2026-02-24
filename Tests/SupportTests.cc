@@ -14,6 +14,7 @@
 #include "fleece/InstanceCounted.hh"
 #include "FleeceTests.hh"
 #include "FleeceImpl.hh"
+#include "AtomicRetained.hh"
 #include "Backtrace.hh"
 #include "ConcurrentMap.hh"
 #include "Bitmap.hh"
@@ -399,4 +400,23 @@ TEST_CASE("InstanceCounted") {
         CHECK(InstanceCounted::liveInstanceCount() == n + 2);
     }
     CHECK(InstanceCounted::liveInstanceCount() == n);
+}
+
+
+struct AtomicRetainedTest : RefCounted {
+    int i = 0;
+    string str;
+};
+
+
+TEST_CASE("AtomicRetained") {
+    // This is mostly to check for compile errors.
+    AtomicRetained r = new AtomicRetainedTest();
+    CHECK(r->i == 0);
+    AtomicRetained r2 = r;
+    AtomicRetained r3 = std::move(r2);
+    CHECK(r->refCount() == 3);
+    // `r` is one reference, `r3` is another, and the temporary created by `->` was the third.
+
+    AtomicRef<AtomicRetainedTest> rr = new AtomicRetainedTest();
 }
