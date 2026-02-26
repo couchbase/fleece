@@ -48,13 +48,13 @@ namespace fleece::impl::builder {
         RetainedConst<Value> buildValue() {
             switch (peekToken()) {
                 case '[': {
-                    Retained<MutableArray> array = MutableArray::newArray();
+                    Ref<MutableArray> array = MutableArray::newArray();
                     _buildInto(array);
                     finished();
                     return array.get();
                 }
                 case '{': {
-                    Retained<MutableDict> dict = MutableDict::newDict();
+                    Ref<MutableDict> dict = MutableDict::newDict();
                     _buildInto(dict);
                     finished();
                     return dict.get();
@@ -82,13 +82,13 @@ namespace fleece::impl::builder {
         bool _buildValue(ValueSlot &inSlot) {
             switch (peekValue()) {
                 case ValueType::array: {
-                    Retained<MutableArray> array = MutableArray::newArray();
+                    Ref<MutableArray> array = MutableArray::newArray();
                     _buildInto(array);
                     inSlot.set(array);
                     break;
                 }
                 case ValueType::dict: {
-                    Retained<MutableDict> dict = MutableDict::newDict();
+                    Ref<MutableDict> dict = MutableDict::newDict();
                     _buildInto(dict);
                     inSlot.set(dict);
                     break;
