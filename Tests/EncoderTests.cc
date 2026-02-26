@@ -721,7 +721,9 @@ public:
 
 #if FL_HAVE_TEST_FILES
     TEST_CASE_METHOD(EncoderTests, "Encode To File", "[Encoder]") {
-    	auto doc = readTestFile("1000people.fleece");
+        if (!sCreated1000PeopleFile)
+            create100PeopleFleeceFile();
+        auto doc = readTestFile("1000people.fleece");
         auto root = Value::fromTrustedData(doc)->asArray();
 
         {
