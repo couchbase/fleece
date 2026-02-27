@@ -49,14 +49,22 @@ using alloc_slice = fleece::alloc_slice;
 // Directory containing test files:
 #if FL_HAVE_TEST_FILES
     #if defined(LITECORE_CPP_TESTS)
-        #if defined(_MSC_VER) && !defined(__clang__)
-            #define kTestFilesDir "..\\vendor\\fleece\\Tests\\"
+        #ifdef _MSC_VER
+            #ifdef __clang__
+                #define kTestFilesDir "vendor\\fleece\\Tests\\"
+            #else
+                #define kTestFilesDir "..\\vendor\\fleece\\Tests\\"
+            #endif
         #else
             #define kTestFilesDir "vendor/fleece/Tests/"
         #endif
     #else
         #ifdef _MSC_VER
-            #define kTestFilesDir "Tests\\"
+            #ifdef __clang__
+                #define kTestFilesDir "Tests\\"
+            #else
+                #define kTestFilesDir "..\\Tests\\"
+            #endif
         #else
             #define kTestFilesDir "Tests/"
         #endif
