@@ -20,6 +20,7 @@
 namespace fleece { namespace impl {
     class SharedKeys;
     class Value;
+    class Doc;
     namespace internal {
         class Pointer;
     }

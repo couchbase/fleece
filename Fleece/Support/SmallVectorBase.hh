@@ -57,7 +57,7 @@ namespace fleece {
 
         // Moves `sv` to myself.
         void _moveFrom(smallVectorBase &&sv, size_t instanceSize) noexcept {
-            ::memcpy(this, &sv, instanceSize);
+            ::memcpy((void *)this, &sv, instanceSize);
             std::move(sv).release();
         }
 
