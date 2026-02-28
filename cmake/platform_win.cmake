@@ -35,7 +35,7 @@ endfunction()
 function(setup_build)
     setup_build_base()
 
-    foreach(target FleeceObjects FleeceBase)
+    foreach(target FleeceObjects FleeceBase fleeceTool)
         target_include_directories(
             ${target} PRIVATE
             MSVC
@@ -59,7 +59,7 @@ function(setup_build)
     #   5105 ("macro expansion producing 'defined' has undefined behavior")
     # Disable warning about "insecure" C runtime functions (strcpy vs strcpy_s)
     # Enable Control Flow Guard (https://learn.microsoft.com/en-us/cpp/build/reference/guard-enable-control-flow-guard)
-     foreach(platform FleeceObjects FleeceBase)
+     foreach(platform FleeceObjects FleeceBase fleeceTool)
         target_compile_options(
             ${platform} PRIVATE
             "/utf-8"
