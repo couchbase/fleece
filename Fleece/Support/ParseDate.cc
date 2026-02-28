@@ -550,7 +550,7 @@ namespace fleece {
         //
         // NOTE: These values are the opposite of what you would expect, being defined
         // as seconds WEST of GMT (so UTC-8 would be 28,800, not -28,800)
-#ifdef WIN32
+#ifdef _MSC_VER
         long s{};
         throwIf(_get_timezone(&s) != 0, fleece::InternalError, "Unable to query local system time zone");
         auto offset = seconds(-s);
