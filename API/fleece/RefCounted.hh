@@ -24,7 +24,7 @@ namespace fleece {
 
     enum Nullability {NonNull, MaybeNull};
 
-    /** Simple thread-safe ref-counting implementation.
+    /** Thread-safe ref-counting implementation.
         `RefCounted` objects should be managed by \ref Retained smart-pointers:
         `Retained<Foo> foo = new Foo(...)` or `auto foo = make_retained<Foo>(...)`.
         \note The ref-count starts at 0, so you must call retain() on an instance, or assign it
@@ -32,8 +32,15 @@ namespace fleece {
     class RefCounted {
     public:
         RefCounted()                            =default;
-        
-        int refCount() const FLPURE             {return _refCount;}
+
+        /// The number of (strong) references to this object.
+        int refCount() const FLPURE;
+
+        /// Returns the strong and the weak reference count.
+        std::pair<int,int> refCounts() const FLPURE;
+
+        /// The global number of objects with weak references but no strong references.
+        static size_t zombieCount();
 
     protected:
         RefCounted(const RefCounted &)          { } // must not copy the refCount!
@@ -44,28 +51,25 @@ namespace fleece {
 
     private:
         template <typename T, Nullability N> friend class Retained;
+        template <typename T, Nullability N> friend class WeakRetained;
         template <typename T> friend T* FL_NULLABLE retain(T* FL_NULLABLE) noexcept;
         friend void release(const RefCounted* FL_NULLABLE) noexcept;
         friend void assignRef(RefCounted* FL_NULLABLE &dst, RefCounted* FL_NULLABLE src) noexcept;
 
 #if DEBUG
-        void _retain() const noexcept           {_careful_retain();}
-        void _release() const noexcept          {_careful_release();}
+        void _retain() const noexcept;
+        static constexpr uint64_t kInitialRefCount = 0x66666666;
 #else
-        ALWAYS_INLINE void _retain() const noexcept   { ++_refCount; }
+        ALWAYS_INLINE void _retain() const noexcept   { ++_bothRefCounts; }
+        static constexpr uint64_t kInitialRefCount = 1;
+#endif
         void _release() const noexcept;
-#endif
 
-        static constexpr int32_t kCarefulInitialRefCount = -6666666;
-        void _careful_retain() const noexcept;
-        void _careful_release() const noexcept;
+        void _weakRetain() const noexcept;
+        void _weakRelease() const noexcept;
+        bool _weakToStrong() const noexcept;
 
-        mutable std::atomic<int32_t> _refCount
-#if DEBUG
-                                               {kCarefulInitialRefCount};
-#else
-                                               {0};
-#endif
+        mutable std::atomic<uint64_t> _bothRefCounts {kInitialRefCount};
     };
 
     template <class T> concept RefCountedType = std::derived_from<T, RefCounted>;
@@ -92,6 +96,15 @@ namespace fleece {
         assignRef((RefCounted* FL_NULLABLE&)holder, newValue);
     }
 
+    // Type `nullable_if<T,Nullability>::ptr` is a pointer to T with the appropriate nullability.
+#if __has_feature(nullability)
+    template <typename X, Nullability> struct nullable_if;
+    template <typename X> struct nullable_if<X,MaybeNull>   {using ptr = X* _Nullable;};
+    template <typename X> struct nullable_if<X,NonNull>     {using ptr = X* _Nonnull;};
+#else
+    template <typename X, Nullability> struct nullable_if   {using ptr = X*;};
+#endif
+
     [[noreturn]] void _failNullRef();
 
     /** A smart pointer that retains the RefCounted instance it holds, similar to `std::shared_ptr`.
@@ -109,14 +122,6 @@ namespace fleece {
     template <class T, Nullability N = MaybeNull>
     class Retained {
     public:
-        #if __has_feature(nullability)
-        template <typename X, Nullability> struct nullable_if;
-        template <typename X> struct nullable_if<X,MaybeNull>   {using ptr = X* _Nullable;};
-        template <typename X> struct nullable_if<X,NonNull>     {using ptr = X* _Nonnull;};
-        #else
-        template <typename X, Nullability> struct nullable_if {using ptr = X*;};
-        #endif
-
         using T_ptr = typename nullable_if<T,N>::ptr; // This is `T*` with appropriate nullability
 
         Retained() noexcept requires (N==MaybeNull)                 :_ref(nullptr) { }
@@ -311,6 +316,49 @@ namespace fleece {
     [[nodiscard]] ALWAYS_INLINE T* FL_NULLABLE retain(Retained<T,N> &&retained) noexcept {
         return std::move(retained).detach();
     }
+
+
+    /** A ref-counted smart pointer to an arbitrary type `T` which does not have to derive from
+     *  \ref RefCounted. However, it has to be instantiated with an instance of a subclass which
+     *  _does_ derive from RefCounted.
+     *
+     *  This is useful when you have something like a pure-virtual delegate interface and want to
+     *  manage delegates with ref-counting. Making the interface derive from RefCounted would be
+     *  awkward for classes that want to implement it, if they already derive from RefCounted
+     *  through another base class. Instead, the delegate can be passed as a RetainedBySubclass.
+     *
+     *  PS: If you need a _weak_ reference, use \ref WeakRetainedBySubclass. */
+    template <class T>
+    class RetainedBySubclass {
+    public:
+        RetainedBySubclass() = default;
+
+        template <std::derived_from<T> Sub>
+        explicit RetainedBySubclass(Sub* FL_NULLABLE sub) noexcept
+            requires (std::derived_from<Sub,RefCounted>)
+            :_ptr{sub}, _ref{sub} { }
+
+        template <std::derived_from<T> Sub, Nullability N>
+        explicit RetainedBySubclass(Retained<Sub,N> sub) noexcept
+            requires (std::derived_from<Sub,RefCounted>)
+            :_ptr{sub}, _ref{std::move(sub)} { }
+
+        explicit operator bool() const noexcept FLPURE      {return _ptr != nullptr;}
+
+        T* FL_NULLABLE get() const noexcept FLPURE          {return _ptr;}
+        T* FL_NULLABLE operator*() const noexcept FLPURE    {return _ptr;}
+        T* FL_NULLABLE operator->() const noexcept FLPURE   {return _ptr;}
+
+        void clear()                                        {_ref = nullptr; _ptr = nullptr;}
+
+    private:
+        template <class U> friend class WeakRetainedBySubclass;
+        RetainedBySubclass(T* FL_NULLABLE ptr, Retained<RefCounted> sub)
+            :_ptr(ptr), _ref(std::move(sub)) { }
+
+        T* FL_NULLABLE       _ptr = nullptr;
+        Retained<RefCounted> _ref;
+    };
 
 }
 
