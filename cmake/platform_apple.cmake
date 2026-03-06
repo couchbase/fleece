@@ -18,6 +18,7 @@ function(set_source_files)
         Fleece/Integration/ObjC/MArray+ObjC.mm
         Fleece/Integration/ObjC/MDict+ObjC.mm
         Fleece/Integration/ObjC/MValue+ObjC.mm
+        Fleece/Support/Backtrace+signals-posix.cc
         ObjC/Encoder+ObjC.mm
         ObjC/Fleece+CoreFoundation.mm
         ObjC/slice+CoreFoundation.cc
@@ -36,6 +37,7 @@ function(set_base_platform_files)
 
       set(
          ${APPLE_SSS_RESULT}
+         Fleece/Support/Backtrace+signals-posix.cc
          ObjC/slice+CoreFoundation.cc
          ObjC/slice+ObjC.mm
          PARENT_SCOPE
