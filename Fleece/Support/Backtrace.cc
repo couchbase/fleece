@@ -20,7 +20,7 @@
 #include <algorithm>
 #include "betterassert.hh"
 
-fleece::BacktraceSignalHandler& getSignalHandler();
+fleece::BacktraceSignalHandler&         getSignalHandler();
 std::function<void(const std::string&)> fleece::BacktraceSignalHandler::sLogger;
 
 #ifndef _MSC_VER
@@ -275,7 +275,7 @@ namespace fleece {
 
     static void initialize_symbols() {
         static bool initialized = false;
-        if (!initialized) {
+        if ( !initialized ) {
             auto process = GetCurrentProcess();
             SymInitialize(process, nullptr, TRUE);
             DWORD symOptions = SymGetOptions();
@@ -286,9 +286,9 @@ namespace fleece {
     }
 
     static int backtrace(void** buffer, int max, void* context) {
-        CONTEXT localCtx;
+        CONTEXT  localCtx;
         CONTEXT* myCtx;
-        if (context) {
+        if ( context ) {
             memcpy(&localCtx, context, sizeof(CONTEXT));
             myCtx = &localCtx;
         } else {
@@ -303,8 +303,8 @@ namespace fleece {
 
         // StackWalk64 needs a valid thread handle. If we have a captured context,
         // we use GetCurrentThread() since we're walking while in a valid thread context.
-        HANDLE thread = GetCurrentThread();
-        auto process = GetCurrentProcess();
+        HANDLE       thread  = GetCurrentThread();
+        auto         process = GetCurrentProcess();
         STACKFRAME64 s;
         memset(&s, 0, sizeof(STACKFRAME64));
 
@@ -312,7 +312,7 @@ namespace fleece {
         s.AddrFrame.Mode = AddrModeFlat;
         s.AddrPC.Mode    = AddrModeFlat;
 #    if defined(_M_X64)
-        s.AddrPC.Offset = myCtx->Rip;
+        s.AddrPC.Offset    = myCtx->Rip;
         s.AddrStack.Offset = myCtx->Rsp;
         s.AddrFrame.Offset = myCtx->Rbp;
         auto machine_type  = IMAGE_FILE_MACHINE_AMD64;
@@ -326,15 +326,14 @@ namespace fleece {
 #    endif
 
         auto size = 0;
-        for (int i = 0; i < max; i++) {
+        for ( int i = 0; i < max; i++ ) {
             SetLastError(0);
-            if (!StackWalk64(machine_type, process, thread, &s, myCtx, NULL, SymFunctionTableAccess64, SymGetModuleBase64, NULL)) {
+            if ( !StackWalk64(machine_type, process, thread, &s, myCtx, NULL, SymFunctionTableAccess64,
+                              SymGetModuleBase64, NULL) ) {
                 break;
             }
 
-            if ( s.AddrReturn.Offset == 0 ) {
-                break;
-            }
+            if ( s.AddrReturn.Offset == 0 ) { break; }
 
             buffer[i] = (void*)s.AddrReturn.Offset;
             size++;
@@ -436,15 +435,33 @@ namespace fleece {
         return bt;
     }
 
-    Backtrace::Backtrace(unsigned skipFrames, unsigned maxFrames) {
-        if ( maxFrames > 0 ) _capture(skipFrames + 1, maxFrames);
+    shared_ptr<Backtrace> Backtrace::capture(void* from, unsigned maxFrames, void* context) {
+        auto bt = make_shared<Backtrace>(0, 0);
+        bt->_capture(from, maxFrames, context);
+        return bt;
+    }
+
+    Backtrace::Backtrace(unsigned skipFrames, unsigned maxFrames, void* context) {
+        if ( maxFrames > 0 ) _capture(skipFrames + 1, maxFrames, context);
     }
 
     void Backtrace::_capture(unsigned skipFrames, unsigned maxFrames, void* context) {
         _addrs.resize(++skipFrames + maxFrames);  // skip this frame
-        auto n = backtrace(&_addrs[0], skipFrames + maxFrames, context);
+        auto n = backtrace(&_addrs[0], skipFrames + maxFrames);
         _addrs.resize(n);
         skip(skipFrames);
+    }
+
+    void Backtrace::_capture(void* from, unsigned maxFrames, void* context) {
+        _addrs.resize(maxFrames + 8);
+        auto n = backtrace(&_addrs[0], maxFrames + 8);
+        _addrs.resize(n);
+        for ( int i = 0; i < n; ++i ) {
+            if ( _addrs[i] == from ) {
+                skip(i);
+                break;
+            }
+        }
     }
 
     void Backtrace::skip(unsigned nFrames) {

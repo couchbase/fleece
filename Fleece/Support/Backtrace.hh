@@ -21,10 +21,10 @@
 
 namespace fleece {
     class BacktraceSignalHandler {
-    public:
+      public:
         static void setLogger(std::function<void(const std::string&)> logger) { sLogger = std::move(logger); }
 
-    protected:
+      protected:
         static std::function<void(const std::string&)> sLogger;
     };
 
@@ -32,12 +32,19 @@ namespace fleece {
     class Backtrace {
       public:
         /// Captures a backtrace and returns a shared pointer to the instance.
-        [[nodiscard]] static std::shared_ptr<Backtrace> capture(unsigned skipFrames = 0, unsigned maxFrames = 50, void* context = nullptr);
+        [[nodiscard]] static std::shared_ptr<Backtrace> capture(unsigned skipFrames = 0, unsigned maxFrames = 50,
+                                                                void* context = nullptr);
+
+        /// Captures a backtrace from the given starting point and returns a shared pointer to the instance.
+        [[nodiscard]] static std::shared_ptr<Backtrace> capture(void* from, unsigned maxFrames = 50,
+                                                                void* context = nullptr);
 
         /// Captures a backtrace, unless maxFrames is zero.
         /// @param skipFrames  Number of frames to skip at top of stack
         /// @param maxFrames  Maximum number of frames to capture
-        explicit Backtrace(unsigned skipFrames = 0, unsigned maxFrames = 50);
+        /// @param context     If non-null, a platform-specific context to capture from
+        /// @param from       If non-null, the address to start from instead of the current frame
+        explicit Backtrace(unsigned skipFrames = 0, unsigned maxFrames = 50, void* context = nullptr);
 
         ~Backtrace();
 
@@ -53,10 +60,13 @@ namespace fleece {
         // Direct access to stack frames:
 
         struct frameInfo {
-            const void* pc;        ///< Program counter
-            size_t      offset;    ///< Byte offset of pc in function
-            const char* function;  ///< Name of (nearest) known function
-            const char* library;   ///< Name of dynamic library containing the function
+            const void* pc;           ///< Program counter
+            size_t      offset;       ///< Byte offset of pc in function
+            const char* function;     ///< Name of (nearest) known function
+            const char* library;      ///< Name of dynamic library containing the function
+            size_t      imageOffset;  ///< Byte offset of pc in the library/image
+            const char* file;         ///< Source file name, if available
+            int         line;         ///< Source line number, if available
         };
 
         /// The number of stack frames captured.
@@ -78,10 +88,11 @@ namespace fleece {
         static void installTerminateHandler(std::function<void(const std::string&)> logger);
 
       private:
-        void                _capture(unsigned skipFrames = 0, unsigned maxFrames = 50, void* context = nullptr);
-        const char*         getSymbol(unsigned i) const;
-        static void         writeCrashLog(std::ostream&);
-        static void         handleTerminate(const std::function<void(const std::string&)>& logger);
+        void        _capture(unsigned skipFrames = 0, unsigned maxFrames = 50, void* context = nullptr);
+        void        _capture(void* from, unsigned maxFrames = 50, void* context = nullptr);
+        const char* getSymbol(unsigned i) const;
+        static void writeCrashLog(std::ostream&);
+        static void handleTerminate(const std::function<void(const std::string&)>& logger);
 
         std::vector<void*> _addrs;  // Array of PCs in backtrace, top first
         mutable char**     _symbols{nullptr};
