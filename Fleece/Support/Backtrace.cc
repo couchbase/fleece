@@ -193,6 +193,7 @@ namespace fleece {
     } kAbbreviations[] = {
             {"(anonymous namespace)", "(anon)"},
             {"std::__1::", "std::"},
+            {"std::__cxx11::", "std::"},
             {"std::basic_string<char, std::char_traits<char>, std::allocator<char> >", "std::string"},
     };
 
@@ -447,14 +448,14 @@ namespace fleece {
 
     void Backtrace::_capture(unsigned skipFrames, unsigned maxFrames, void* context) {
         _addrs.resize(++skipFrames + maxFrames);  // skip this frame
-        auto n = backtrace(&_addrs[0], skipFrames + maxFrames);
+        auto n = backtrace(&_addrs[0], skipFrames + maxFrames, context);
         _addrs.resize(n);
         skip(skipFrames);
     }
 
     void Backtrace::_capture(void* from, unsigned maxFrames, void* context) {
         _addrs.resize(maxFrames + 8);
-        auto n = backtrace(&_addrs[0], maxFrames + 8);
+        auto n = backtrace(&_addrs[0], maxFrames + 8, context);
         _addrs.resize(n);
         for ( int i = 0; i < n; ++i ) {
             if ( _addrs[i] == from ) {

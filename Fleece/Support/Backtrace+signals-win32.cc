@@ -73,7 +73,7 @@ namespace fleece {
         NOINLINE static void crash_handler_immediate(int skip, CONTEXT* ct = nullptr) {
             shared_ptr<Backtrace> bt;
             if ( ct != nullptr ) {
-                bt = Backtrace::capture(0, 32, ct);
+                bt = Backtrace::capture(0u, 32, ct);
             } else {
                 bt = Backtrace::capture(skip, 32 + skip);
             }
