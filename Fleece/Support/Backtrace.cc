@@ -96,6 +96,40 @@ static ResolvedInfo backtraceResolve(uintptr_t pc) {
 }
 #        endif  // HAVE_LIBBACKTRACE
 
+#    elif defined(__APPLE__)
+#        define HAVE_EXECINFO
+#        include <execinfo.h>
+#        include <sys/ucontext.h>
+
+int cbl_backtrace(void** buffer, int max, void* context) {
+    if (max == 0) return 0;
+    if (context == nullptr) {
+        return backtrace(buffer, max);
+    }
+
+    auto* uc = static_cast<ucontext_t*>(context);
+#if defined (__x86_64__)
+    buffer[0] = reinterpret_cast<void*>(uc->uc_mcontext->__ss.__rip);
+    void** fp = (void**)uc->uc_mcontext->__ss.__rbp;
+#elif defined(__aarch64__) || defined(__arm64__)
+    buffer[0] = reinterpret_cast<void*>(uc->uc_mcontext->__ss.__pc);
+    void** fp = reinterpret_cast<void**>(uc->uc_mcontext->__ss.__fp);
+#else
+    #error "Unsupported architecture"
+#endif
+
+    int i = 1;
+    while (fp && i < max) {
+        void* next_fp = *fp;
+        if ( reinterpret_cast<uintptr_t>(next_fp) <= reinterpret_cast<uintptr_t>(fp) ) break;  // invalid frame pointer
+        void* ret_addr = *(fp + 1);
+        if ( !ret_addr ) break;
+        buffer[i++] = ret_addr;
+        fp          = static_cast<void**>(next_fp);
+    }
+
+    return i;
+}
 #    else
 #        define HAVE_EXECINFO
 #        include <execinfo.h>
@@ -448,14 +482,14 @@ namespace fleece {
 
     void Backtrace::_capture(unsigned skipFrames, unsigned maxFrames, void* context) {
         _addrs.resize(++skipFrames + maxFrames);  // skip this frame
-        auto n = backtrace(&_addrs[0], skipFrames + maxFrames, context);
+        auto n = cbl_backtrace(&_addrs[0], skipFrames + maxFrames, context);
         _addrs.resize(n);
         skip(skipFrames);
     }
 
     void Backtrace::_capture(void* from, unsigned maxFrames, void* context) {
         _addrs.resize(maxFrames + 8);
-        auto n = backtrace(&_addrs[0], maxFrames + 8, context);
+        auto n = cbl_backtrace(&_addrs[0], maxFrames + 8, context);
         _addrs.resize(n);
         for ( int i = 0; i < n; ++i ) {
             if ( _addrs[i] == from ) {
@@ -493,7 +527,9 @@ namespace fleece {
         bt.writeTo(out);
     }
 
+#if !TARGET_OS_IOS
     static BacktraceSignalHandler sSignalHandler = getSignalHandler();
+#endif
 
     void Backtrace::handleTerminate(const function<void(const string&)>& logger) {
         // ---- Code below gets called by C++ runtime on an uncaught exception ---
@@ -517,16 +553,6 @@ namespace fleece {
                 handleTerminate(sLogger);
                 // Chain to old handler:
                 sOldHandler();
-                // Just in case the old handler doesn't abort:
-                abort();
-                // ---- End of handler ----
-            });
-
-            static unexpected_handler const sOldUnexpectedHandler = set_unexpected([] {
-                // ---- Code below gets called by C++ runtime on an unexpected exception (e.g. noexcept violation) ---
-                handleTerminate(sLogger);
-                // Chain to old handler:
-                sOldUnexpectedHandler();
                 // Just in case the old handler doesn't abort:
                 abort();
                 // ---- End of handler ----

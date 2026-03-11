@@ -2,9 +2,14 @@
 #include <cstring>
 #include <iostream>
 #include <memory>
-#include <signal.h>
+#include <csignal>
+#include <unistd.h>
 #include <sstream>
+#ifdef __APPLE__
+#include <sys/ucontext.h>
+#else
 #include <ucontext.h>
+#endif
 
 namespace fleece {
     using namespace std;
@@ -81,10 +86,10 @@ namespace fleece {
 #endif
         }
 
-        NOINLINE static void crash_handler_immediate(void* error_addr) {
+        NOINLINE static void crash_handler_immediate(void* context) {
             shared_ptr<Backtrace> bt;
-            if ( error_addr ) {
-                bt = Backtrace::capture(error_addr);
+            if ( context ) {
+                bt = Backtrace::capture(extract_pc(context), 50, context);
             } else {
                 bt = Backtrace::capture();
             }
@@ -106,11 +111,12 @@ namespace fleece {
             const char* name = strsignal(signo);
             violation_type() = name ? name : "Signal " + to_string(signo);
 
-            crash_handler_immediate(extract_pc(context));
+            crash_handler_immediate(context);
 
-            raise(info->si_signo);
+            signal(signo, SIG_DFL);
+            raise(signo);
 
-            _exit(EXIT_FAILURE);
+            _exit(128 + signo);
         }
     };
 }  // namespace fleece
