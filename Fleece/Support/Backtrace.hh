@@ -18,9 +18,11 @@
 #include <string>
 #include <typeinfo>
 #include <vector>
+#include <csignal>
+#include <fstream>
+#ifndef _WIN32
 #include <unistd.h>
 #include <sys/fcntl.h>
-#include <csignal>
 
 namespace signal_safe {
     void write_long(long long value, int fd);
@@ -28,6 +30,7 @@ namespace signal_safe {
     void write_hex_offset(size_t value, int fd);
     void write_to_and_stderr(int fd, const char* str, size_t len = 0);
 }  // namespace signal_safe
+#endif
 
 namespace fleece {
     class BacktraceSignalHandler {
@@ -35,7 +38,11 @@ namespace fleece {
         static void setLogPath(const char* path);
 
       protected:
+#ifdef _WIN32
+        static std::ofstream sCrashStream;
+#else
         static volatile sig_atomic_t sLogFD;
+#endif
     };
 
     /** Captures a backtrace of the current thread, and can convert it to human-readable form. */
@@ -92,16 +99,6 @@ namespace fleece {
         static frameInfo getFrame(const void* pc, bool stack_top);
 
         frameInfo operator[](unsigned i) { return getFrame(i); }
-
-        /// Installs a C++ terminate_handler that will log a backtrace and info about any uncaught
-        /// exception. By default it then calls the preexisting terminate_handler, which usually
-        /// calls abort().
-        ///
-        /// Since the OS will not usually generate a crash report upon a SIGABORT, you can set
-        /// `andRaise` to a different signal ID such as SIGILL to force a crash.
-        ///
-        /// Only the first call to this function has any effect; subsequent calls are ignored.
-        static void installTerminateHandler(std::function<void(const std::string&)> logger);
 
       private:
         void        _capture(unsigned skipFrames = 0, unsigned maxFrames = 50, void* context = nullptr);

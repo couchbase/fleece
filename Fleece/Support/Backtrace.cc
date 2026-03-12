@@ -330,7 +330,7 @@ namespace fleece {
 
 #    pragma comment(lib, "Dbghelp.lib")
 #    include <Windows.h>
-#    include <Dbghelp.h>
+#    include <DbgHelp.h>
 #    include "asprintf.h"
 #    include <sstream>
 #    include <iomanip>
@@ -350,7 +350,7 @@ namespace fleece {
         }
     }
 
-    static int backtrace(void** buffer, int max, void* context) {
+    int Backtrace::raw_capture(void** buffer, int max, void* context) {
         CONTEXT  localCtx;
         CONTEXT* myCtx;
         if ( context ) {
@@ -370,8 +370,7 @@ namespace fleece {
         // we use GetCurrentThread() since we're walking while in a valid thread context.
         HANDLE       thread  = GetCurrentThread();
         auto         process = GetCurrentProcess();
-        STACKFRAME64 s;
-        memset(&s, 0, sizeof(STACKFRAME64));
+        STACKFRAME64 s{};
 
         s.AddrStack.Mode = AddrModeFlat;
         s.AddrFrame.Mode = AddrModeFlat;
@@ -400,7 +399,7 @@ namespace fleece {
 
             if ( s.AddrReturn.Offset == 0 ) { break; }
 
-            buffer[i] = (void*)s.AddrReturn.Offset;
+            buffer[i] = reinterpret_cast<void*>(s.AddrReturn.Offset);
             size++;
         }
 
@@ -467,11 +466,10 @@ namespace fleece {
     exit:
         free(symbol);
         free(line);
-        SymCleanup(process);
         return success;
     }
 
-    static char* unmangle(const char* function) { return (char*)function; }
+    static char* unmangle(const char* function) { return const_cast<char*>(function); }
 
 }  // namespace fleece
 
@@ -552,25 +550,9 @@ namespace fleece {
             cerr << "\n******************** Now terminating ********************\n";
         }
     }
-
-    void Backtrace::installTerminateHandler(function<void(const string&)> logger) {
-        static once_flag sOnce;
-        call_once(sOnce, [&] {
-            static auto const              sLogger     = std::move(logger);
-            static terminate_handler const sOldHandler = set_terminate([] {
-                // ---- Code below gets called by C++ runtime on a call to terminate ---
-                handleTerminate(sLogger);
-                // Chain to old handler:
-                sOldHandler();
-                // Just in case the old handler doesn't abort:
-                abort();
-                // ---- End of handler ----
-            });
-        });
-    }
-
 }  // namespace fleece
 
+#ifndef _WIN32
 namespace signal_safe {
     void write_long(long long value, int fd) {
         // NOTE: This function assumes buffer is at least 21 bytes long
@@ -628,3 +610,4 @@ namespace signal_safe {
         write(STDERR_FILENO, str, n ? n : strlen(str));
     }
 }  // namespace signal_safe
+#endif
