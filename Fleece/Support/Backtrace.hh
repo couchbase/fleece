@@ -18,14 +18,23 @@
 #include <string>
 #include <typeinfo>
 #include <vector>
+#include <unistd.h>
+#include <sys/fcntl.h>
+
+namespace signal_safe {
+    void write_long(long long value, int fd);
+    void write_ulong(unsigned long long value, int fd);
+    void write_hex_offset(size_t value, int fd);
+    void write_to_and_stderr(int fd, const char* str, size_t len = 0);
+}
 
 namespace fleece {
     class BacktraceSignalHandler {
       public:
-        static void setLogger(std::function<void(const std::string&)> logger) { sLogger = std::move(logger); }
+        static void setLogPath(const char* path);
 
       protected:
-        static std::function<void(const std::string&)> sLogger;
+        static volatile sig_atomic_t sLogFD;
     };
 
     /** Captures a backtrace of the current thread, and can convert it to human-readable form. */
@@ -38,6 +47,8 @@ namespace fleece {
         /// Captures a backtrace from the given starting point and returns a shared pointer to the instance.
         [[nodiscard]] static std::shared_ptr<Backtrace> capture(void* from, unsigned maxFrames = 50,
                                                                 void* context = nullptr);
+
+        static int raw_capture(void** buffer, int max, void* context = nullptr);
 
         /// Captures a backtrace, unless maxFrames is zero.
         /// @param skipFrames  Number of frames to skip at top of stack
@@ -53,6 +64,8 @@ namespace fleece {
 
         /// Writes the human-readable backtrace to a stream.
         bool writeTo(std::ostream&) const;
+
+        static void writeTo(void** addresses, int size, int fd);
 
         /// Returns the human-readable backtrace.
         std::string toString() const;
@@ -74,6 +87,8 @@ namespace fleece {
 
         /// Returns info about a stack frame. 0 is the top.
         frameInfo getFrame(unsigned) const;
+
+        static frameInfo getFrame(const void* pc, bool stack_top);
 
         frameInfo operator[](unsigned i) { return getFrame(i); }
 

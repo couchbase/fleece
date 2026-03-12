@@ -37,7 +37,6 @@ function(set_base_platform_files)
 
       set(
          ${APPLE_SSS_RESULT}
-         Fleece/Support/Backtrace+signals-posix.cc
          ObjC/slice+CoreFoundation.cc
          ObjC/slice+ObjC.mm
          PARENT_SCOPE

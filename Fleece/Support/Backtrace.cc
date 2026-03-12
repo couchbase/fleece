@@ -20,9 +20,6 @@
 #include <algorithm>
 #include "betterassert.hh"
 
-fleece::BacktraceSignalHandler&         getSignalHandler();
-std::function<void(const std::string&)> fleece::BacktraceSignalHandler::sLogger;
-
 #ifndef _MSC_VER
 #    include <dlfcn.h>   // dladdr()
 #    include <cxxabi.h>  // abi::__cxa_demangle()
@@ -101,7 +98,7 @@ static ResolvedInfo backtraceResolve(uintptr_t pc) {
 #        include <execinfo.h>
 #        include <sys/ucontext.h>
 
-int cbl_backtrace(void** buffer, int max, void* context) {
+int fleece::Backtrace::raw_capture(void** buffer, int max, void* context) {
     if (max == 0) return 0;
     if (context == nullptr) {
         return backtrace(buffer, max);
@@ -138,6 +135,7 @@ int cbl_backtrace(void** buffer, int max, void* context) {
 
 namespace fleece {
     using namespace std;
+    using namespace signal_safe;
 
     static char* unmangle(const char* function) {
         int    status;
@@ -148,10 +146,18 @@ namespace fleece {
         return (char*)function;
     }
 
-    Backtrace::frameInfo Backtrace::getFrame(unsigned i) const {
-        precondition(i < _addrs.size());
+    static const char* unmangle_safe(const char* function) {
+        static char buffer[1024];
+        int    status;
+        size_t unmangledLen;
+        char*  unmangled = abi::__cxa_demangle(function, buffer, &unmangledLen, &status);
+        if ( unmangled && status == 0 ) return unmangled;
+        return function;
+    }
+
+    Backtrace::frameInfo Backtrace::getFrame(const void* pc, bool stack_top) {
         frameInfo frame = {};
-        frame.pc        = _addrs[i];
+        frame.pc        = pc;
 
         // dladdr gives us the library name regardless of symbol visibility,
         // and a fallback saddr/sname for exported symbols.
@@ -163,7 +169,7 @@ namespace fleece {
         }
 #    if defined(HAVE_LIBBACKTRACE)
         uintptr_t pc = reinterpret_cast<uintptr_t>(frame.pc);
-        if ( i > 0 ) pc -= 1;  // return address → call site
+        if ( !stack_top ) pc -= 1;  // return address → call site
         if ( dlInfo.dli_fbase ) frame.imageOffset = pc - reinterpret_cast<uintptr_t>(dlInfo.dli_fbase);
         auto resolved  = backtraceResolve(pc);
         frame.function = resolved.function;
@@ -179,11 +185,16 @@ namespace fleece {
         if ( dlInfo.dli_saddr ) frame.offset = (size_t)frame.pc - (size_t)dlInfo.dli_saddr;
         if ( dlInfo.dli_fbase ) {
             uintptr_t pc = reinterpret_cast<uintptr_t>(frame.pc);
-            if ( i > 0 ) pc -= 1;
+            if ( !stack_top ) pc -= 1;
             frame.imageOffset = pc - reinterpret_cast<uintptr_t>(dlInfo.dli_fbase);
         }
 #    endif
         return frame;
+    }
+
+    Backtrace::frameInfo Backtrace::getFrame(unsigned i) const {
+        precondition(i < _addrs.size());
+        return getFrame(_addrs[i], i == 0);
     }
 
     const char* Backtrace::getSymbol(unsigned i) const {
@@ -254,12 +265,15 @@ namespace fleece {
                     if ( name.find(fn) != string::npos ) stop = true;
                 for ( auto& abbrev : kAbbreviations ) replace(name, abbrev.old, abbrev.nuu);
             }
+#ifndef __APPLE__
             if ( frame.file ) {
                 const char* fileBase = strrchr(frame.file, '/');
                 fileBase             = fileBase ? fileBase + 1 : frame.file;
                 len = asprintf(&cstr, "%2u  %-25s %s + %zu  (%s:%d)", i, lib, name.empty() ? "?" : name.c_str(),
                                frame.offset, fileBase, frame.line);
-            } else {
+            } else
+#endif
+            {
                 len = asprintf(&cstr, "%2u  %-25s %s + %zu  [0x%zx]", i, lib, name.empty() ? "?" : name.c_str(),
                                frame.offset, frame.imageOffset);
             }
@@ -277,6 +291,43 @@ namespace fleece {
             }
         }
         return true;
+    }
+
+    void Backtrace::writeTo(void** addresses, int size, int fd) {
+        for ( unsigned i = 0; i < unsigned(size); ++i ) {
+            if ( i > 0 ) write_to_and_stderr(fd, "\n", 1);
+            write_to_and_stderr(fd, "\t", 1);
+            auto        frame = getFrame(addresses[i], i == 0);
+            const char* lib  = frame.library ? frame.library : "?";
+            const char* name = frame.function ? unmangle(frame.function) : nullptr;
+#ifndef __APPLE__
+            if ( frame.file ) {
+                const char* fileBase = strrchr(frame.file, '/');
+                fileBase             = fileBase ? fileBase + 1 : frame.file;
+                len = snprintf(cstr, 1024, "%2u  %-25s %s + %zu  (%s:%d)", i, lib, !name ? "?" : name,
+                               frame.offset, fileBase, frame.line);
+            } else
+#endif
+            {
+                if (i < 10) write_to_and_stderr(fd, " ", 1);
+                write_ulong(i, fd);
+                const size_t lib_len = strlen(lib);
+                write_to_and_stderr(fd, " ", 1);
+                write_to_and_stderr(fd, lib, lib_len);
+                for (size_t j = lib_len; j < 26; ++j) write_to_and_stderr(fd, " ", 1);
+                if (name) {
+                    write_to_and_stderr(fd, name, strlen(name));
+                } else {
+                    write_to_and_stderr(fd, "?", 1);
+                }
+
+                write_to_and_stderr(fd, " + ", 3);
+                write_ulong(frame.offset, fd);
+                write_to_and_stderr(fd, " [", 2);
+                write_hex_offset(frame.imageOffset, fd);
+                write_to_and_stderr(fd, "]", 1);
+            }
+        }
     }
 
     std::string FunctionName(const void* pc) {
@@ -482,14 +533,14 @@ namespace fleece {
 
     void Backtrace::_capture(unsigned skipFrames, unsigned maxFrames, void* context) {
         _addrs.resize(++skipFrames + maxFrames);  // skip this frame
-        auto n = cbl_backtrace(&_addrs[0], skipFrames + maxFrames, context);
+        auto n = raw_capture(&_addrs[0], skipFrames + maxFrames, context);
         _addrs.resize(n);
         skip(skipFrames);
     }
 
     void Backtrace::_capture(void* from, unsigned maxFrames, void* context) {
         _addrs.resize(maxFrames + 8);
-        auto n = cbl_backtrace(&_addrs[0], maxFrames + 8, context);
+        auto n = raw_capture(&_addrs[0], maxFrames + 8, context);
         _addrs.resize(n);
         for ( int i = 0; i < n; ++i ) {
             if ( _addrs[i] == from ) {
@@ -527,10 +578,6 @@ namespace fleece {
         bt.writeTo(out);
     }
 
-#if !TARGET_OS_IOS
-    static BacktraceSignalHandler sSignalHandler = getSignalHandler();
-#endif
-
     void Backtrace::handleTerminate(const function<void(const string&)>& logger) {
         // ---- Code below gets called by C++ runtime on an uncaught exception ---
         if ( logger ) {
@@ -557,9 +604,71 @@ namespace fleece {
                 abort();
                 // ---- End of handler ----
             });
-
-            BacktraceSignalHandler::setLogger(sLogger);
         });
     }
 
 }  // namespace fleece
+
+namespace signal_safe {
+    void write_long(long long value, int fd) {
+        // NOTE: This function assumes buffer is at least 21 bytes long
+        if (value == 0) {
+            write_to_and_stderr(fd, "0", 1);
+        } else {
+            if (value < 0) write_to_and_stderr(fd, "-", 1);
+            char temp[20];
+            char* p = temp;
+            while (value > 0) {
+                *p++ = static_cast<char>(value % 10 + '0');
+                value /= 10;
+            }
+
+            while (p != temp) {
+                write_to_and_stderr(fd, --p, 1);
+            }
+        }
+    }
+
+    void write_ulong(unsigned long long value, int fd) {
+        // NOTE: This function assumes buffer is at least 21 bytes long
+        if (value == 0) {
+            write_to_and_stderr(fd, "0", 1);
+        } else {
+            char temp[20];
+            char* p = temp;
+            while (value > 0) {
+                *p++ = static_cast<char>(value % 10 + '0');
+                value /= 10;
+            }
+
+            while (p != temp) {
+                write_to_and_stderr(fd, --p, 1);
+            }
+        }
+    }
+
+    void write_hex_offset(size_t value, int fd) {
+        static const char* hexDigits = "0123456789abcdef";
+        const int num_digits = sizeof(size_t) * 2;
+        write_to_and_stderr(fd, "0x", 2);
+        if (value == 0) {
+            write_to_and_stderr(fd, "0", 1);
+        } else {
+            char temp[num_digits];
+            char* p = temp;
+            while (value > 0) {
+                *p++ = hexDigits[value & 0xF];
+                value >>= 4;
+            }
+
+            while (p != temp) {
+                write_to_and_stderr(fd, --p, 1);
+            }
+        }
+    }
+
+    void write_to_and_stderr(int fd, const char* str, size_t n) {
+        if (fd != -1) write(fd, str, n ? n : strlen(str));
+        write(STDERR_FILENO, str, n ? n : strlen(str));
+    }
+}

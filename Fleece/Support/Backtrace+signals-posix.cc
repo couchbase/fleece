@@ -13,6 +13,7 @@
 
 namespace fleece {
     using namespace std;
+    using namespace signal_safe;
 
     class BacktraceSignalHandlerPosix : public BacktraceSignalHandler {
       public:
@@ -86,24 +87,29 @@ namespace fleece {
 #endif
         }
 
-        NOINLINE static void crash_handler_immediate(void* context) {
-            shared_ptr<Backtrace> bt;
-            if ( context ) {
-                bt = Backtrace::capture(extract_pc(context), 50, context);
+        NOINLINE static void crash_handler_immediate(siginfo_t* info, void* context) {
+            void* buffer[50];
+            int n = Backtrace::raw_capture(buffer, 50, context);
+            const char* name = strsignal(info->si_signo);
+            write_to_and_stderr(sLogFD, "\n\n******************** Process Crash: ", 38);
+            if (name) {
+                write_to_and_stderr(sLogFD, name);
             } else {
-                bt = Backtrace::capture();
+                write_to_and_stderr(sLogFD, "Signal: ", 8);
+                write_long(info->si_signo, sLogFD);
             }
 
-            if ( sLogger ) {
-                stringstream out;
-                out << "\n\n******************** Process Crash: " << violation_type() << " ********************\n";
-                bt->writeTo(out);
-                out << "\n******************** Now terminating ********************\n";
-                sLogger(out.str());
-            } else {
-                cerr << "\n\n******************** Process Crash: " << violation_type() << " ********************\n";
-                bt->writeTo(cerr);
-                cerr << "\n******************** Now terminating ********************\n";
+            write_to_and_stderr(sLogFD, " Timestamp: ", 12);
+            char timestamp[20];
+            snprintf(timestamp, 20, "%lld", static_cast<long long>(time(nullptr)));
+            write_long(time(nullptr), sLogFD);
+
+            write_to_and_stderr(sLogFD, " *******************\n", 21);
+            Backtrace::writeTo(buffer, n, sLogFD);
+            write_to_and_stderr(sLogFD, "\n******************** Now terminating ********************\n", 59);
+            if (sLogFD != -1) {
+                fsync(sLogFD);
+                close(sLogFD);
             }
         }
 
@@ -111,7 +117,7 @@ namespace fleece {
             const char* name = strsignal(signo);
             violation_type() = name ? name : "Signal " + to_string(signo);
 
-            crash_handler_immediate(context);
+            crash_handler_immediate(info, context);
 
             signal(signo, SIG_DFL);
             raise(signo);
@@ -119,9 +125,20 @@ namespace fleece {
             _exit(128 + signo);
         }
     };
+
+    // Awkwardly defined here to avoid FleeceBase getting its own copy since it also compiles Backtrace.cc
+    volatile sig_atomic_t BacktraceSignalHandler::sLogFD = -1;
+
+    void BacktraceSignalHandler::setLogPath(const char* path) {
+        if (sLogFD != -1) {
+            close(sLogFD);
+        }
+
+        sLogFD = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    }
 }  // namespace fleece
 
-fleece::BacktraceSignalHandler& getSignalHandler() {
-    static fleece::BacktraceSignalHandlerPosix handler;
-    return handler;
-}
+#if !TARGET_OS_IOS
+[[maybe_unused]]
+static fleece::BacktraceSignalHandlerPosix handler;
+#endif
