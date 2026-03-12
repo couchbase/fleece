@@ -6,9 +6,9 @@
 #include <unistd.h>
 #include <sstream>
 #ifdef __APPLE__
-#include <sys/ucontext.h>
+#    include <sys/ucontext.h>
 #else
-#include <ucontext.h>
+#    include <ucontext.h>
 #endif
 
 namespace fleece {
@@ -88,11 +88,11 @@ namespace fleece {
         }
 
         NOINLINE static void crash_handler_immediate(siginfo_t* info, void* context) {
-            void* buffer[50];
-            int n = Backtrace::raw_capture(buffer, 50, context);
+            void*       buffer[50];
+            int         n    = Backtrace::raw_capture(buffer, 50, context);
             const char* name = strsignal(info->si_signo);
             write_to_and_stderr(sLogFD, "\n\n******************** Process Crash: ", 38);
-            if (name) {
+            if ( name ) {
                 write_to_and_stderr(sLogFD, name);
             } else {
                 write_to_and_stderr(sLogFD, "Signal: ", 8);
@@ -105,9 +105,9 @@ namespace fleece {
             write_long(time(nullptr), sLogFD);
 
             write_to_and_stderr(sLogFD, " *******************\n", 21);
-            Backtrace::writeTo(buffer, n, sLogFD);
+            Backtrace::writeTo(buffer + 3, n - 3, sLogFD);
             write_to_and_stderr(sLogFD, "\n******************** Now terminating ********************\n", 59);
-            if (sLogFD != -1) {
+            if ( sLogFD != -1 ) {
                 fsync(sLogFD);
                 close(sLogFD);
             }
@@ -130,9 +130,7 @@ namespace fleece {
     volatile sig_atomic_t BacktraceSignalHandler::sLogFD = -1;
 
     void BacktraceSignalHandler::setLogPath(const char* path) {
-        if (sLogFD != -1) {
-            close(sLogFD);
-        }
+        if ( sLogFD != -1 ) { close(sLogFD); }
 
         sLogFD = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     }

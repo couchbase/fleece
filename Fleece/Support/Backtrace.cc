@@ -11,7 +11,6 @@
 //
 
 #include "Backtrace.hh"
-#include <csignal>
 #include <exception>
 #include <iostream>
 #include <mutex>
@@ -30,6 +29,7 @@
 #            include <backtrace.h>
 #        endif
 
+// Generic _Unwind_Backtrace implementation:
 struct BacktraceState {
     void** current;
     void** end;
@@ -45,7 +45,7 @@ static _Unwind_Reason_Code unwindCallback(struct _Unwind_Context* context, void*
     return _URC_NO_REASON;
 }
 
-static int backtrace(void** buffer, int max, void* context = nullptr) {
+int fleece::Backtrace::raw_capture(void** buffer, int max, void* context) {
     BacktraceState state = {buffer, buffer + max};
     _Unwind_Backtrace(unwindCallback, &state);
     return int(state.current - buffer);
@@ -96,36 +96,10 @@ static ResolvedInfo backtraceResolve(uintptr_t pc) {
 #    elif defined(__APPLE__)
 #        define HAVE_EXECINFO
 #        include <execinfo.h>
-#        include <sys/ucontext.h>
 
 int fleece::Backtrace::raw_capture(void** buffer, int max, void* context) {
-    if (max == 0) return 0;
-    if (context == nullptr) {
-        return backtrace(buffer, max);
-    }
-
-    auto* uc = static_cast<ucontext_t*>(context);
-#if defined (__x86_64__)
-    buffer[0] = reinterpret_cast<void*>(uc->uc_mcontext->__ss.__rip);
-    void** fp = (void**)uc->uc_mcontext->__ss.__rbp;
-#elif defined(__aarch64__) || defined(__arm64__)
-    buffer[0] = reinterpret_cast<void*>(uc->uc_mcontext->__ss.__pc);
-    void** fp = reinterpret_cast<void**>(uc->uc_mcontext->__ss.__fp);
-#else
-    #error "Unsupported architecture"
-#endif
-
-    int i = 1;
-    while (fp && i < max) {
-        void* next_fp = *fp;
-        if ( reinterpret_cast<uintptr_t>(next_fp) <= reinterpret_cast<uintptr_t>(fp) ) break;  // invalid frame pointer
-        void* ret_addr = *(fp + 1);
-        if ( !ret_addr ) break;
-        buffer[i++] = ret_addr;
-        fp          = static_cast<void**>(next_fp);
-    }
-
-    return i;
+    if ( max == 0 ) return 0;
+    return backtrace(buffer, max);
 }
 #    else
 #        define HAVE_EXECINFO
@@ -148,16 +122,16 @@ namespace fleece {
 
     static const char* unmangle_safe(const char* function) {
         static char buffer[1024];
-        int    status;
-        size_t unmangledLen;
-        char*  unmangled = abi::__cxa_demangle(function, buffer, &unmangledLen, &status);
+        int         status;
+        size_t      unmangledLen = 1024;
+        char*       unmangled    = abi::__cxa_demangle(function, buffer, &unmangledLen, &status);
         if ( unmangled && status == 0 ) return unmangled;
         return function;
     }
 
-    Backtrace::frameInfo Backtrace::getFrame(const void* pc, bool stack_top) {
+    Backtrace::frameInfo Backtrace::getFrame(const void* addr, bool stack_top) {
         frameInfo frame = {};
-        frame.pc        = pc;
+        frame.pc        = addr;
 
         // dladdr gives us the library name regardless of symbol visibility,
         // and a fallback saddr/sname for exported symbols.
@@ -265,14 +239,14 @@ namespace fleece {
                     if ( name.find(fn) != string::npos ) stop = true;
                 for ( auto& abbrev : kAbbreviations ) replace(name, abbrev.old, abbrev.nuu);
             }
-#ifndef __APPLE__
+#    ifndef __APPLE__
             if ( frame.file ) {
                 const char* fileBase = strrchr(frame.file, '/');
                 fileBase             = fileBase ? fileBase + 1 : frame.file;
                 len = asprintf(&cstr, "%2u  %-25s %s + %zu  (%s:%d)", i, lib, name.empty() ? "?" : name.c_str(),
                                frame.offset, fileBase, frame.line);
             } else
-#endif
+#    endif
             {
                 len = asprintf(&cstr, "%2u  %-25s %s + %zu  [0x%zx]", i, lib, name.empty() ? "?" : name.c_str(),
                                frame.offset, frame.imageOffset);
@@ -298,31 +272,36 @@ namespace fleece {
             if ( i > 0 ) write_to_and_stderr(fd, "\n", 1);
             write_to_and_stderr(fd, "\t", 1);
             auto        frame = getFrame(addresses[i], i == 0);
-            const char* lib  = frame.library ? frame.library : "?";
-            const char* name = frame.function ? unmangle(frame.function) : nullptr;
-#ifndef __APPLE__
+            const char* lib   = frame.library ? frame.library : "?";
+            const char* name  = frame.function ? unmangle_safe(frame.function) : nullptr;
+
+            if ( i < 10 ) write_to_and_stderr(fd, " ", 1);
+            write_ulong(i, fd);
+            const size_t lib_len = strlen(lib);
+            write_to_and_stderr(fd, " ", 1);
+            write_to_and_stderr(fd, lib, lib_len);
+            for ( size_t j = lib_len; j < 26; ++j ) write_to_and_stderr(fd, " ", 1);
+            if ( name ) {
+                write_to_and_stderr(fd, name, strlen(name));
+            } else {
+                write_to_and_stderr(fd, "?", 1);
+            }
+
+            write_to_and_stderr(fd, " + ", 3);
+            write_ulong(frame.offset, fd);
+
+#    ifndef __APPLE__
             if ( frame.file ) {
                 const char* fileBase = strrchr(frame.file, '/');
                 fileBase             = fileBase ? fileBase + 1 : frame.file;
-                len = snprintf(cstr, 1024, "%2u  %-25s %s + %zu  (%s:%d)", i, lib, !name ? "?" : name,
-                               frame.offset, fileBase, frame.line);
+                write_to_and_stderr(fd, " (", 2);
+                write_to_and_stderr(fd, fileBase);
+                write_to_and_stderr(fd, ":", 1);
+                write_long(frame.line, fd);
+                write_to_and_stderr(fd, ")", 1);
             } else
-#endif
+#    endif
             {
-                if (i < 10) write_to_and_stderr(fd, " ", 1);
-                write_ulong(i, fd);
-                const size_t lib_len = strlen(lib);
-                write_to_and_stderr(fd, " ", 1);
-                write_to_and_stderr(fd, lib, lib_len);
-                for (size_t j = lib_len; j < 26; ++j) write_to_and_stderr(fd, " ", 1);
-                if (name) {
-                    write_to_and_stderr(fd, name, strlen(name));
-                } else {
-                    write_to_and_stderr(fd, "?", 1);
-                }
-
-                write_to_and_stderr(fd, " + ", 3);
-                write_ulong(frame.offset, fd);
                 write_to_and_stderr(fd, " [", 2);
                 write_hex_offset(frame.imageOffset, fd);
                 write_to_and_stderr(fd, "]", 1);
@@ -521,33 +500,16 @@ namespace fleece {
         return bt;
     }
 
-    shared_ptr<Backtrace> Backtrace::capture(void* from, unsigned maxFrames, void* context) {
-        auto bt = make_shared<Backtrace>(0, 0);
-        bt->_capture(from, maxFrames, context);
-        return bt;
-    }
-
     Backtrace::Backtrace(unsigned skipFrames, unsigned maxFrames, void* context) {
         if ( maxFrames > 0 ) _capture(skipFrames + 1, maxFrames, context);
     }
 
     void Backtrace::_capture(unsigned skipFrames, unsigned maxFrames, void* context) {
-        _addrs.resize(++skipFrames + maxFrames);  // skip this frame
+        skipFrames += 2;  // skip this frame and its child
+        _addrs.resize(skipFrames + maxFrames);
         auto n = raw_capture(&_addrs[0], skipFrames + maxFrames, context);
         _addrs.resize(n);
         skip(skipFrames);
-    }
-
-    void Backtrace::_capture(void* from, unsigned maxFrames, void* context) {
-        _addrs.resize(maxFrames + 8);
-        auto n = raw_capture(&_addrs[0], maxFrames + 8, context);
-        _addrs.resize(n);
-        for ( int i = 0; i < n; ++i ) {
-            if ( _addrs[i] == from ) {
-                skip(i);
-                break;
-            }
-        }
     }
 
     void Backtrace::skip(unsigned nFrames) {
@@ -612,63 +574,57 @@ namespace fleece {
 namespace signal_safe {
     void write_long(long long value, int fd) {
         // NOTE: This function assumes buffer is at least 21 bytes long
-        if (value == 0) {
+        if ( value == 0 ) {
             write_to_and_stderr(fd, "0", 1);
         } else {
-            if (value < 0) write_to_and_stderr(fd, "-", 1);
-            char temp[20];
+            if ( value < 0 ) write_to_and_stderr(fd, "-", 1);
+            char  temp[20];
             char* p = temp;
-            while (value > 0) {
+            while ( value > 0 ) {
                 *p++ = static_cast<char>(value % 10 + '0');
                 value /= 10;
             }
 
-            while (p != temp) {
-                write_to_and_stderr(fd, --p, 1);
-            }
+            while ( p != temp ) { write_to_and_stderr(fd, --p, 1); }
         }
     }
 
     void write_ulong(unsigned long long value, int fd) {
         // NOTE: This function assumes buffer is at least 21 bytes long
-        if (value == 0) {
+        if ( value == 0 ) {
             write_to_and_stderr(fd, "0", 1);
         } else {
-            char temp[20];
+            char  temp[20];
             char* p = temp;
-            while (value > 0) {
+            while ( value > 0 ) {
                 *p++ = static_cast<char>(value % 10 + '0');
                 value /= 10;
             }
 
-            while (p != temp) {
-                write_to_and_stderr(fd, --p, 1);
-            }
+            while ( p != temp ) { write_to_and_stderr(fd, --p, 1); }
         }
     }
 
     void write_hex_offset(size_t value, int fd) {
-        static const char* hexDigits = "0123456789abcdef";
-        const int num_digits = sizeof(size_t) * 2;
+        static const char* hexDigits  = "0123456789abcdef";
+        const int          num_digits = sizeof(size_t) * 2;
         write_to_and_stderr(fd, "0x", 2);
-        if (value == 0) {
+        if ( value == 0 ) {
             write_to_and_stderr(fd, "0", 1);
         } else {
-            char temp[num_digits];
+            char  temp[num_digits];
             char* p = temp;
-            while (value > 0) {
+            while ( value > 0 ) {
                 *p++ = hexDigits[value & 0xF];
                 value >>= 4;
             }
 
-            while (p != temp) {
-                write_to_and_stderr(fd, --p, 1);
-            }
+            while ( p != temp ) { write_to_and_stderr(fd, --p, 1); }
         }
     }
 
     void write_to_and_stderr(int fd, const char* str, size_t n) {
-        if (fd != -1) write(fd, str, n ? n : strlen(str));
+        if ( fd != -1 ) write(fd, str, n ? n : strlen(str));
         write(STDERR_FILENO, str, n ? n : strlen(str));
     }
-}
+}  // namespace signal_safe

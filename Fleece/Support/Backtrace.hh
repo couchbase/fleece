@@ -20,13 +20,14 @@
 #include <vector>
 #include <unistd.h>
 #include <sys/fcntl.h>
+#include <csignal>
 
 namespace signal_safe {
     void write_long(long long value, int fd);
     void write_ulong(unsigned long long value, int fd);
     void write_hex_offset(size_t value, int fd);
     void write_to_and_stderr(int fd, const char* str, size_t len = 0);
-}
+}  // namespace signal_safe
 
 namespace fleece {
     class BacktraceSignalHandler {
