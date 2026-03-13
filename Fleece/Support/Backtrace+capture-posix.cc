@@ -191,7 +191,17 @@ namespace signal_safe {
     }
 
     void write_to_and_stderr(int fd, const char* str, size_t n) {
+#ifdef __clang__
+// There is nothing we can do at this point anyway if the return fails
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wunused-result"
+#endif
+
         if ( fd != -1 ) write(fd, str, n ? n : strlen(str));
         write(STDERR_FILENO, str, n ? n : strlen(str));
+
+#ifdef __clang__
+#    pragma clang diagnostic pop
+#endif
     }
 }  // namespace signal_safe
