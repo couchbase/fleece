@@ -27,6 +27,35 @@ namespace fleece {
         return _URC_NO_REASON;
     }
 
+    Backtrace::frameInfo getFrame(const void* addr, bool stack_top) {
+        frameInfo frame = {};
+        frame.pc        = addr;
+
+        // dladdr gives us the library name regardless of symbol visibility,
+        // and a fallback saddr/sname for exported symbols.
+        Dl_info dlInfo = {};
+        dladdr(frame.pc, &dlInfo);
+        if ( dlInfo.dli_fname ) {
+            frame.library = dlInfo.dli_fname;
+            if ( const char* slash = strrchr(frame.library, '/') ) frame.library = slash + 1;
+        }
+
+        uintptr_t pc = reinterpret_cast<uintptr_t>(frame.pc);
+        if ( !stack_top ) pc -= 1;  // return address → call site
+        if ( dlInfo.dli_fbase ) frame.imageOffset = pc - reinterpret_cast<uintptr_t>(dlInfo.dli_fbase);
+        auto resolved  = backtraceResolve(pc);
+        frame.function = resolved.function;
+        frame.file     = resolved.file;
+        frame.line     = resolved.line;
+        // Prefer symval from libbacktrace (works for hidden-visibility symbols);
+        // fall back to dladdr's saddr for exported symbols.
+        if ( resolved.symval ) frame.offset = reinterpret_cast<uintptr_t>(frame.pc) - resolved.symval;
+        else if ( dlInfo.dli_saddr )
+            frame.offset = (size_t)frame.pc - (size_t)dlInfo.dli_saddr;
+
+        return frame;
+    }
+
     int Backtrace::raw_capture(void** buffer, int max, void* context) {
         BacktraceState state = {buffer, buffer + max};
         _Unwind_Backtrace(unwindCallback, &state);
@@ -72,35 +101,6 @@ namespace fleece {
                 },
                 nullptr, &info);
         return info;
-    }
-
-    Backtrace::frameInfo Backtrace::getFrame(const void* addr, bool stack_top) {
-        frameInfo frame = {};
-        frame.pc        = addr;
-
-        // dladdr gives us the library name regardless of symbol visibility,
-        // and a fallback saddr/sname for exported symbols.
-        Dl_info dlInfo = {};
-        dladdr(frame.pc, &dlInfo);
-        if ( dlInfo.dli_fname ) {
-            frame.library = dlInfo.dli_fname;
-            if ( const char* slash = strrchr(frame.library, '/') ) frame.library = slash + 1;
-        }
-
-        uintptr_t pc = reinterpret_cast<uintptr_t>(frame.pc);
-        if ( !stack_top ) pc -= 1;  // return address → call site
-        if ( dlInfo.dli_fbase ) frame.imageOffset = pc - reinterpret_cast<uintptr_t>(dlInfo.dli_fbase);
-        auto resolved  = backtraceResolve(pc);
-        frame.function = resolved.function;
-        frame.file     = resolved.file;
-        frame.line     = resolved.line;
-        // Prefer symval from libbacktrace (works for hidden-visibility symbols);
-        // fall back to dladdr's saddr for exported symbols.
-        if ( resolved.symval ) frame.offset = reinterpret_cast<uintptr_t>(frame.pc) - resolved.symval;
-        else if ( dlInfo.dli_saddr )
-            frame.offset = (size_t)frame.pc - (size_t)dlInfo.dli_saddr;
-
-        return frame;
     }
 
     const char* Backtrace::getSymbol(unsigned i) const {

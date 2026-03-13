@@ -21,17 +21,6 @@
 
 namespace fleece {
     using namespace std;
-    using namespace signal_safe;
-
-    Backtrace::frameInfo Backtrace::getFrame(unsigned i) const {
-        precondition(i < _addrs.size());
-        return getFrame(_addrs[i], i == 0);
-    }
-
-
-}  // namespace fleece
-
-namespace fleece {
 
     char* unmangle(const char* function);
 

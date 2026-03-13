@@ -3,9 +3,28 @@
 #endif
 
 #include "Backtrace.hh"
+#include "asprintf.h"
 #include <Windows.h>
+#include <DbgHelp.h>
+#include <cstring>
+
+#pragma comment(lib, "Dbghelp.lib")
 
 namespace fleece {
+    using namespace std;
+
+    static void initialize_symbols() {
+        static bool initialized = false;
+        if ( !initialized ) {
+            auto process = GetCurrentProcess();
+            SymInitialize(process, nullptr, TRUE);
+            DWORD symOptions = SymGetOptions();
+            symOptions |= SYMOPT_LOAD_LINES | SYMOPT_UNDNAME;
+            SymSetOptions(symOptions);
+            initialized = true;
+        }
+    }
+
     char* unmangle(const char* function) { return const_cast<char*>(function); }
 
     int Backtrace::raw_capture(void** buffer, int max, void* context) {

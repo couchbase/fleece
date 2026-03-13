@@ -93,19 +93,15 @@ namespace fleece {
         /// The number of stack frames captured.
         unsigned size() const { return (unsigned)_addrs.size(); }
 
-        /// Returns info about a stack frame. 0 is the top.
-        frameInfo getFrame(unsigned) const;
-
-        static frameInfo getFrame(const void* pc, bool stack_top);
-
-        frameInfo operator[](unsigned i) { return getFrame(i); }
-
       private:
         void        _capture(unsigned skipFrames = 0, unsigned maxFrames = 50, void* context = nullptr);
+#ifndef _WIN32
         void        _capture(void* from, unsigned maxFrames = 50, void* context = nullptr);
         const char* getSymbol(unsigned i) const;
         static void writeCrashLog(std::ostream&);
         static void handleTerminate(const std::function<void(const std::string&)>& logger);
+        frameInfo   getFrame(unsigned) const;
+#endif
 
         std::vector<void*> _addrs;  // Array of PCs in backtrace, top first
         mutable char**     _symbols{nullptr};
