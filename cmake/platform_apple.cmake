@@ -19,6 +19,8 @@ function(set_source_files)
         Fleece/Integration/ObjC/MDict+ObjC.mm
         Fleece/Integration/ObjC/MValue+ObjC.mm
         Fleece/Support/Backtrace+signals-posix.cc
+        Fleece/Support/Backtrace+capture-posix.cc
+        Fleece/Support/Backtrace+capture-darwin.cc
         ObjC/Encoder+ObjC.mm
         ObjC/Fleece+CoreFoundation.mm
         ObjC/slice+CoreFoundation.cc
@@ -37,6 +39,8 @@ function(set_base_platform_files)
 
       set(
          ${APPLE_SSS_RESULT}
+         Fleece/Support/Backtrace+capture-posix.cc
+         Fleece/Support/Backtrace+capture-darwin.cc
          ObjC/slice+CoreFoundation.cc
          ObjC/slice+ObjC.mm
          PARENT_SCOPE
@@ -45,14 +49,14 @@ endfunction()
 
 function(set_test_source_files)
     set(oneValueArgs RESULT)
-    cmake_parse_arguments(WIN_SSS "" "${oneValueArgs}" "" ${ARGN})
-    if(NOT DEFINED WIN_SSS_RESULT)
+    cmake_parse_arguments(APPLE_SSS "" "${oneValueArgs}" "" ${ARGN})
+    if(NOT DEFINED APPLE_SSS_RESULT)
         message(FATAL_ERROR "set_source_files_base needs to be called with RESULT")
     endif()
 
     set_test_source_files_base(RESULT BASE_SRC_FILES)
     set(
-        ${WIN_SSS_RESULT}
+        ${APPLE_SSS_RESULT}
         ${BASE_SRC_FILES}
         Tests/ObjCTests.mm
         Fleece/Integration/ObjC/MTests.mm

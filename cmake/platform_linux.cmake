@@ -44,12 +44,25 @@ function(set_source_files)
         ${LINUX_SSS_RESULT} 
         ${BASE_SRC_FILES} 
         Fleece/Support/Backtrace+signals-posix.cc
+        Fleece/Support/Backtrace+capture-posix.cc
+        Fleece/Support/Backtrace+capture-linux.cc
         PARENT_SCOPE
     )
 endfunction()
 
 function(set_base_platform_files)
-    # No-op
+    set(oneValueArgs RESULT)
+    cmake_parse_arguments(LINUX_SSS "" "${oneValueArgs}" "" ${ARGN})
+    if(NOT DEFINED LINUX_SSS_RESULT)
+        message(FATAL_ERROR "set_source_files_base needs to be called with RESULT")
+    endif()
+
+    set(
+        ${LINUX_SSS_RESULT}
+        Fleece/Support/Backtrace+capture-posix.cc
+        Fleece/Support/Backtrace+capture-linux.cc
+        PARENT_SCOPE
+    )
 endfunction()
 
 function(set_test_source_files)
