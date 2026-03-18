@@ -50,6 +50,13 @@ namespace fleece { namespace impl {
         slice data() const FLPURE                      {return _data;}
         alloc_slice allocedData() const FLPURE         {return _alloced;}
 
+        void dontValidate() {
+#if DEBUG
+            // c.f. FleeceCursor::resetScope where we ask to skip validation.
+            _dontValidate = true;
+#endif
+        }
+
         SharedKeys* sharedKeys() const FLPURE          {return _sk;}
         slice externDestination() const FLPURE         {return _externDestination;}
 
@@ -79,6 +86,7 @@ namespace fleece { namespace impl {
         std::atomic_flag    _unregistered ATOMIC_FLAG_INIT; // False if registered in sMemoryMap
 #if DEBUG
         uint32_t            _dataHash;                  // hash of _data, for troubleshooting
+        bool                _dontValidate{false};       // the check on the hash can be omitted
 #endif
     protected:
         bool                _isDoc {false};             // True if I am a field of a Doc
