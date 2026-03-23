@@ -52,10 +52,6 @@ namespace fleece {
         [[nodiscard]] static std::shared_ptr<Backtrace> capture(unsigned skipFrames = 0, unsigned maxFrames = 50,
                                                                 void* context = nullptr);
 
-        /// Captures a backtrace from the given starting point and returns a shared pointer to the instance.
-        [[nodiscard]] static std::shared_ptr<Backtrace> capture(void* from, unsigned maxFrames = 50,
-                                                                void* context = nullptr);
-
         static int raw_capture(void** buffer, int max, void* context = nullptr);
 
         /// Captures a backtrace, unless maxFrames is zero.
@@ -96,7 +92,6 @@ namespace fleece {
       private:
         void _capture(unsigned skipFrames = 0, unsigned maxFrames = 50, void* context = nullptr);
 #ifndef _WIN32
-        void             _capture(void* from, unsigned maxFrames = 50, void* context = nullptr);
         const char*      getSymbol(unsigned i) const;
         static void      writeCrashLog(std::ostream&);
         static void      handleTerminate(const std::function<void(const std::string&)>& logger);

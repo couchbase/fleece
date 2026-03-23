@@ -1,5 +1,5 @@
 #ifdef _WIN32
-#    error "This implementation is not meant to be used on Windows
+#    error "This implementation is not meant to be used on Windows"
 #endif
 
 #include "Backtrace.hh"
