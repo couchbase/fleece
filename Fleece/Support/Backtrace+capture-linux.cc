@@ -1,5 +1,5 @@
 #if !defined(__linux__) && !defined(__ANDROID__)
-#    error "This implementation is meant for Linux and Android only
+#    error "This implementation is meant for Linux and Android only"
 #endif
 
 #include "Backtrace.hh"
@@ -74,19 +74,31 @@ namespace fleece {
         return info;
     }
 
-    Backtrace::frameInfo getFrame(const void* addr, bool stack_top) {
+    Backtrace::frameInfo Backtrace::getFrame(const void* addr, bool stack_top) {
         Backtrace::frameInfo frame = {};
-        frame.pc        = addr;
+        frame.pc                   = addr;
 
         // dladdr gives us the library name regardless of symbol visibility,
         // and a fallback saddr/sname for exported symbols.
         Dl_info dlInfo = {};
-        dladdr(frame.pc, &dlInfo);
+        if ( !dladdr(frame.pc, &dlInfo) ) { return frame; }
+
         if ( dlInfo.dli_fname ) {
             frame.library = dlInfo.dli_fname;
             if ( const char* slash = strrchr(frame.library, '/') ) frame.library = slash + 1;
         }
 
+#ifdef __ANDROID__
+        frame.function = info.dli_sname;
+        if ( info.dli_saddr )
+            frame.offset = reinterpret_cast<size_t>(frame.pc) - reinterpret_cast<size_t>(info.dli_saddr);
+
+        if ( info.dli_fbase ) {
+            auto pc = reinterpret_cast<uintptr_t>(frame.pc);
+            if ( !stack_top ) pc -= 1;
+            frame.imageOffset = pc - reinterpret_cast<uintptr_t>(info.dli_fbase);
+        }
+#else
         uintptr_t pc = reinterpret_cast<uintptr_t>(frame.pc);
         if ( !stack_top ) pc -= 1;  // return address → call site
         if ( dlInfo.dli_fbase ) frame.imageOffset = pc - reinterpret_cast<uintptr_t>(dlInfo.dli_fbase);
@@ -99,6 +111,7 @@ namespace fleece {
         if ( resolved.symval ) frame.offset = reinterpret_cast<uintptr_t>(frame.pc) - resolved.symval;
         else if ( dlInfo.dli_saddr )
             frame.offset = (size_t)frame.pc - (size_t)dlInfo.dli_saddr;
+#endif
 
         return frame;
     }

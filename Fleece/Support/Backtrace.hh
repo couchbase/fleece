@@ -21,8 +21,8 @@
 #include <csignal>
 #include <fstream>
 #ifndef _WIN32
-#include <unistd.h>
-#include <sys/fcntl.h>
+#    include <unistd.h>
+#    include <sys/fcntl.h>
 
 namespace signal_safe {
     void write_long(long long value, int fd);
@@ -94,13 +94,15 @@ namespace fleece {
         unsigned size() const { return (unsigned)_addrs.size(); }
 
       private:
-        void        _capture(unsigned skipFrames = 0, unsigned maxFrames = 50, void* context = nullptr);
+        void _capture(unsigned skipFrames = 0, unsigned maxFrames = 50, void* context = nullptr);
 #ifndef _WIN32
-        void        _capture(void* from, unsigned maxFrames = 50, void* context = nullptr);
-        const char* getSymbol(unsigned i) const;
-        static void writeCrashLog(std::ostream&);
-        static void handleTerminate(const std::function<void(const std::string&)>& logger);
-        frameInfo   getFrame(unsigned) const;
+        void             _capture(void* from, unsigned maxFrames = 50, void* context = nullptr);
+        const char*      getSymbol(unsigned i) const;
+        static void      writeCrashLog(std::ostream&);
+        static void      handleTerminate(const std::function<void(const std::string&)>& logger);
+        frameInfo        getFrame(unsigned) const;
+        static frameInfo getFrame(const void* pc, bool stack_top);
+        static char*     unmangle(const char* function NONNULL);
 #endif
 
         std::vector<void*> _addrs;  // Array of PCs in backtrace, top first

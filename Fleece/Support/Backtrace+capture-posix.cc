@@ -11,8 +11,6 @@ namespace fleece {
     using namespace std;
     using namespace signal_safe;
 
-    Backtrace::frameInfo getFrame(const void* addr, bool isTopFrame);
-
     static constexpr struct {
         const char *old, *nuu;
     } kAbbreviations[] = {
@@ -49,7 +47,7 @@ namespace fleece {
 
     Backtrace::frameInfo Backtrace::getFrame(unsigned i) const {
         precondition(i < _addrs.size());
-        return fleece::getFrame(_addrs[i], i == 0);
+        return getFrame(_addrs[i], i == 0);
     }
 
     bool Backtrace::writeTo(ostream& out) const {
@@ -99,7 +97,7 @@ namespace fleece {
         for ( unsigned i = 0; i < unsigned(size); ++i ) {
             if ( i > 0 ) write_to_and_stderr(fd, "\n", 1);
             write_to_and_stderr(fd, "\t", 1);
-            auto        frame = fleece::getFrame(addresses[i], i == 0);
+            auto        frame = getFrame(addresses[i], i == 0);
             const char* lib   = frame.library ? frame.library : "?";
             const char* name  = frame.function;
 

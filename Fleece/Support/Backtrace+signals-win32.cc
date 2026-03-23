@@ -14,7 +14,7 @@ namespace fleece {
             SetUnhandledExceptionFilter(crash_handler);
             previous_sig_handler() = signal(SIGABRT, signal_handler);
             _set_abort_behavior(0, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
-            previous_purecall_handler() = _set_purecall_handler(&terminator);
+            previous_purecall_handler()          = _set_purecall_handler(&terminator);
             previous_invalid_parameter_handler() = _set_invalid_parameter_handler(&invalid_parameter_handler);
         }
 
@@ -97,7 +97,8 @@ namespace fleece {
             }
 
             if ( sCrashStream ) {
-                sCrashStream << "\n\n******************** Process Crash: " << violation_type() << " ********************\n";
+                sCrashStream << "\n\n******************** Process Crash: " << violation_type()
+                             << " ********************\n";
                 bt->writeTo(sCrashStream);
                 sCrashStream << "\n******************** Now terminating ********************\n";
             }

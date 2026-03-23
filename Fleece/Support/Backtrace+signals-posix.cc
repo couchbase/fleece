@@ -1,10 +1,12 @@
 #include "Backtrace.hh"
 #include <cstring>
+#include <cstddef>
 #include <iostream>
 #include <memory>
 #include <csignal>
 #include <unistd.h>
 #include <sstream>
+#include <unordered_map>
 #ifdef __APPLE__
 #    include <sys/ucontext.h>
 #else
@@ -26,12 +28,24 @@ namespace fleece {
             };
         }
 
+        static struct sigaction defaultActionFor(int signal) {
+            if ( default_actions().find(signal) == default_actions().end() ) {
+                struct sigaction sa{};
+                sigemptyset(&sa.sa_mask);
+                sa.sa_flags   = 0;
+                sa.sa_handler = SIG_DFL;
+                return sa;
+            } else {
+                return default_actions()[signal];
+            }
+        }
+
         BacktraceSignalHandlerPosix() {
             constexpr size_t stack_size = 1024 * 1024 * 8;
-            _stack_content              = malloc(stack_size);
+            _stack_content              = make_unique<byte[]>(stack_size);
             if ( _stack_content ) {
                 stack_t ss;
-                ss.ss_sp    = _stack_content;
+                ss.ss_sp    = _stack_content.get();
                 ss.ss_size  = stack_size;
                 ss.ss_flags = 0;
                 sigaltstack(&ss, nullptr);
@@ -53,7 +67,9 @@ namespace fleece {
 #    pragma clang diagnostic pop
 #endif
 
-                sigaction(signal_vector[i], &action, nullptr);
+                struct sigaction old_action;
+                sigaction(signal_vector[i], &action, &old_action);
+                default_actions()[signal_vector[i]] = old_action;
             }
         }
 
@@ -63,7 +79,12 @@ namespace fleece {
         BacktraceSignalHandlerPosix& operator=(BacktraceSignalHandlerPosix&&)      = delete;
 
       private:
-        void* _stack_content;
+        unique_ptr<byte[]> _stack_content;
+
+        static unordered_map<int, struct sigaction>& default_actions() {
+            static unordered_map<int, struct sigaction> da;
+            return da;
+        }
 
         static string& violation_type() {
             static string type;
@@ -114,12 +135,10 @@ namespace fleece {
         }
 
         [[noreturn]] static void sig_handler(int signo, siginfo_t* info, void* context) {
-            const char* name = strsignal(signo);
-            violation_type() = name ? name : "Signal " + to_string(signo);
-
             crash_handler_immediate(info, context);
 
-            signal(signo, SIG_DFL);
+            auto default_action = BacktraceSignalHandlerPosix::defaultActionFor(signo);
+            sigaction(signo, &default_action, nullptr);
             raise(signo);
 
             _exit(128 + signo);
