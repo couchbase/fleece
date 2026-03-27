@@ -164,7 +164,7 @@ namespace fleece {
 
         uint32_t    _size;                      // Current item count
         uint32_t    _capacity :31;              // Current max size before I have to realloc
-        bool        _isBig    : 1;              // True if storage is heap-allocated
+        uint32_t    _isBig    : 1;              // True if storage is heap-allocated [effectively bool]
         union {
             void*   _dataPointer;               // Malloced pointer to data (when _isBig)
             uint8_t _inlineData[kBaseInlineCap];// Data starts here (when !_isBig)

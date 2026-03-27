@@ -111,7 +111,7 @@ namespace fleece { namespace impl {
             return;
 
 #if DEBUG
-        if (_data.size < 1e6)
+        if (_data.size < 1'000'000)
             _dataHash = _data.hash();
 #endif
         lock_guard<mutex> lock(sMutex);
@@ -190,7 +190,7 @@ namespace fleece { namespace impl {
         if (!_unregistered.test_and_set()) {            // this is atomic
 #if DEBUG
             // Assert that the data hasn't been changed since I was created:
-            if (_data.size < 1e6 && _data.hash() != _dataHash)
+            if (_data.size < 1'000'000 && _data.hash() != _dataHash)
                 FleeceException::_throw(InternalError,
                     "Memory range (%p .. %p) was altered while Scope %p (sk=%p) was active. "
                     "This usually means the Scope's data was freed/invalidated before the Scope "

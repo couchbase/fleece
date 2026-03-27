@@ -194,6 +194,8 @@
 		27E3DD4C1DB6C32400F2872D /* CaseListReporter.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27E3DD4A1DB6C32400F2872D /* CaseListReporter.hh */; };
 		27E3DD4D1DB6C32400F2872D /* CatchHelper.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27E3DD4B1DB6C32400F2872D /* CatchHelper.hh */; };
 		27E3DD531DB7DB1C00F2872D /* SharedKeysTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27E3DD521DB7DB1C00F2872D /* SharedKeysTests.cc */; };
+		27EBACF42F76015D00A62315 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C4CEAC2127741000470DE9 /* CoreFoundation.framework */; };
+		27EBACF52F76017500A62315 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C4CEAE2127743200470DE9 /* Foundation.framework */; };
 		27F25A8420A6560A00E181FA /* LibC++Debug.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27F25A8320A6560900E181FA /* LibC++Debug.cc */; };
 		27F25A8E20AA053D00E181FA /* Pointer.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27F25A8C20AA053D00E181FA /* Pointer.cc */; };
 		27F25A8F20AA053D00E181FA /* Pointer.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27F25A8D20AA053D00E181FA /* Pointer.hh */; };
@@ -517,6 +519,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27EBACF52F76017500A62315 /* Foundation.framework in Frameworks */,
+				27EBACF42F76015D00A62315 /* CoreFoundation.framework in Frameworks */,
 				279AC5381C096B5C002C80DB /* libfleeceStatic.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
