@@ -12,6 +12,7 @@
 
 #include "fleece/FLBase.h"
 #include "fleece/InstanceCounted.hh"
+#include "fleece/WeakRef.hh"
 #include "FleeceTests.hh"
 #include "FleeceImpl.hh"
 #include "Backtrace.hh"
@@ -397,6 +398,116 @@ TEST_CASE("InstanceCounted") {
         auto i2 = make_retained<ICTest>();
         InstanceCounted::dumpInstances();
         CHECK(InstanceCounted::liveInstanceCount() == n + 2);
+    }
+    CHECK(InstanceCounted::liveInstanceCount() == n);
+}
+
+
+TEST_CASE("WeakRef", "[RefCounted]") {
+    auto n = InstanceCounted::liveInstanceCount();
+    {
+        Retained<ICTest> i1 = make_retained<ICTest>();
+        WeakRetained<ICTest> weak1{i1};
+        {
+            Retained<ICTest> r1 = weak1.tryGet();
+            CHECK(r1 == i1);
+        }
+
+        bool called = false;
+        bool result = weak1.use([&](ICTest* test) {CHECK(test == i1); called = true;});
+        CHECK(result);
+        CHECK(called);
+
+        unsigned v = weak1.use(
+            [&](ICTest* test) {CHECK(test == i1); return 0x1337;},
+            [&]() {return 0xdead;});
+        CHECK(v == 0x1337);
+
+        CHECK(RefCounted::zombieCount() == 0);
+
+        // Release the strong ref:
+        i1 = nullptr;
+
+        CHECK(RefCounted::zombieCount() == 1);
+
+        {
+            Retained<ICTest> r1 = weak1.tryGet();
+            CHECK(r1 == nullptr);
+        }
+
+        called = false;
+        result = weak1.use([&](ICTest* test) {CHECK(test == i1); called = true;});
+        CHECK_FALSE(result);
+        CHECK_FALSE(called);
+
+        v = weak1.use(
+            [&](ICTest* test) {CHECK(test == i1); return 0x1337;},
+            [&]() {return 0xdead;});
+        CHECK(v == 0xdead);
+
+    }
+    CHECK(InstanceCounted::liveInstanceCount() == n);
+    CHECK(RefCounted::zombieCount() == 0);
+}
+
+
+class CycleTest : public ICTest {
+public:
+    Retained<CycleTest> strongRef;
+    WeakRetained<CycleTest> weakRef;
+};
+
+
+TEST_CASE("WeakRef Cycle", "[RefCounted]") {
+    auto n = InstanceCounted::liveInstanceCount();
+
+    Retained<CycleTest> master = make_retained<CycleTest>();
+    Retained<CycleTest> servant = make_retained<CycleTest>();
+    master->strongRef = servant;
+    servant->weakRef = master;
+
+    master = nullptr;
+    CHECK(RefCounted::zombieCount() == 1);
+    CHECK(servant->weakRef.invalidated());
+    servant = nullptr;
+
+    CHECK(InstanceCounted::liveInstanceCount() == n);
+    CHECK(RefCounted::zombieCount() == 0);
+}
+
+
+struct TestDelegate {
+    virtual int grooviness() = 0;
+    virtual ~TestDelegate() = default;
+};
+
+static int callDelegate(RetainedBySubclass<TestDelegate> const& delegate) {
+    return delegate->grooviness();
+}
+
+struct TestDelegateImpl final : RefCounted, TestDelegate, InstanceCountedIn<TestDelegateImpl> {
+    int grooviness() override {return 9000;}
+};
+
+
+TEST_CASE("RetainedSubclass", "[RefCounted]") {
+    auto n = InstanceCounted::liveInstanceCount();
+    {
+        auto delegate = make_retained<TestDelegateImpl>();
+        CHECK(callDelegate(RetainedBySubclass<TestDelegate>(delegate)) == 9000);
+    }
+    CHECK(InstanceCounted::liveInstanceCount() == n);
+}
+
+
+TEST_CASE("WeakRetainedSubclass", "[RefCounted]") {
+    auto n = InstanceCounted::liveInstanceCount();
+    {
+        Retained<TestDelegateImpl> delegate = make_retained<TestDelegateImpl>();
+        auto weakRef = WeakRetainedBySubclass<TestDelegate>(delegate);
+        CHECK(callDelegate(weakRef.tryGet()) == 9000);
+        delegate = nullptr;
+        CHECK(!weakRef.tryGet());
     }
     CHECK(InstanceCounted::liveInstanceCount() == n);
 }
