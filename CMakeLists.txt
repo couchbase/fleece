@@ -45,6 +45,7 @@ if(FLEECE_WARNINGS_HARDCORE)
             -Wno-sign-compare # TODO "comparison of integers of different signs"
             -Wno-undefined-func-template # TODO: Can't figure out how to fix MValue.hh
             -Wno-alloca
+            -Wno-allocator-wrappers # "function might be an allocator wrapper"
             -Wno-atomic-implicit-seq-cst # "implicit use of sequentially-consistent atomic may incur stronger memory barriers than necessary"
             -Wno-c++98-compat
             -Wno-c++98-compat-pedantic
@@ -63,9 +64,11 @@ if(FLEECE_WARNINGS_HARDCORE)
             -Wno-global-constructors
             -Wno-gnu-anonymous-struct # "anonymous structs are a GNU extension"
             -Wno-gnu-zero-variadic-macro-arguments # "token pasting of ',' and __VA_ARGS__ is a GNU extension"
+            -Wno-implicit-int-float-conversion # "implicit conversion from ... to 'float' may lose precision"
             -Wno-missing-designated-field-initializers # "missing field 'x' initializer"
             -Wno-missing-field-initializers # "missing field 'x' initializer"
             -Wno-nested-anon-types # "anonymous types declared in an anonymous union are an extension"
+            -Wno-nrvo # "not eliding copy on return" -- useful but common, and Catch triggers it
             -Wno-nullability-extension
             -Wno-objc-messaging-id
             -Wno-old-style-cast
@@ -77,6 +80,7 @@ if(FLEECE_WARNINGS_HARDCORE)
             -Wno-super-class-method-mismatch # Obj-C "method parameter type does not match super class method parameter type"
             -Wno-switch-default # "'switch' missing 'default' label"
             -Wno-switch-enum
+            -Wno-thread-safety-negative # "acquiring mutex '_mutex' requires negative capability '!_mutex'"
             -Wno-undef      # `#if X` where X isn't defined
             -Wno-unknown-warning-option # So older Clang doesn't barf on newer warnings listed here :(
             -Wno-unused-macros

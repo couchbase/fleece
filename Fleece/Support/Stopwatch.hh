@@ -82,7 +82,7 @@ public:
     }
 
     static double timeScale(double t, const char* &unit) {
-        static const char* kTimeScales[] = {"sec", "ms", "us", "ns"};
+        static constexpr const char* kTimeScales[] = {"sec", "ms", "us", "ns"};
         double scale = 1.0;
         for (unsigned i = 0; i < sizeof(kTimeScales)/sizeof(char*); ++i) {
             unit = kTimeScales[i];

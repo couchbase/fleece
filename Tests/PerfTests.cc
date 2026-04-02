@@ -27,9 +27,9 @@
 
 // Catch's REQUIRE is too slow for perf testing
 #undef REQUIRE
-#define REQUIRE(TEST)   while (!(TEST)) {abort();}
+#define REQUIRE(TEST)   do{ if (!(TEST)) abort();} while (false)
 #undef CHECK
-#define CHECK(TEST)     while (!(TEST)) {abort();}
+#define CHECK(TEST)     do{ if (!(TEST)) abort();} while (false)
 
 
 using namespace fleece;

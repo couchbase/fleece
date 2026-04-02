@@ -84,7 +84,7 @@ namespace fleece {
     ConcurrentMap::ConcurrentMap(int capacity, int stringCapacity) {
         precondition(capacity <= kMaxCapacity);
         int size;
-        for (size = kMinInitialSize; size * kMaxLoad < capacity; size *= 2)
+        for (size = kMinInitialSize; int(floor(size * kMaxLoad)) < capacity; size *= 2)
             ;
         _capacity = int(floor(size * kMaxLoad));
         _sizeMask = size - 1;
