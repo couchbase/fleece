@@ -69,6 +69,7 @@ function(set_test_source_files_base)
     set(
         ${BASE_SSS_RESULT}
         Tests/API_ValueTests.cc
+        Tests/BacktraceTest.cc
         Tests/DeltaTests.cc
         Tests/EncoderTests.cc
         Tests/FleeceTests.cc
