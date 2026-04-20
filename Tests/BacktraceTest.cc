@@ -44,7 +44,7 @@ namespace test::backtrace {
     }
 }
 
-TEST_CASE("Backtrace crash", "[BacktraceManual]") {
+TEST_CASE("Backtrace crash", "[.BacktraceManual]") {
     // Since this test crashes the process intentionally,
     // It will fail and require manual inspection of stderr
     test::backtrace::crashOnPurpose();
