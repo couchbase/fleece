@@ -26,6 +26,7 @@ namespace fleece {
             "Catch::(anon)::TestInvokerAsFunction::invoke() const"
             "litecore::actor::Scheduler::task(unsigned)",
             "litecore::actor::GCDMailbox::safelyCall",
+            "litecore::actor::ThreadedMailbox::safelyCall"
     };
 
     static void replace(std::string& str, string_view oldStr, string_view newStr) {

@@ -371,7 +371,7 @@ TEST_CASE("Timestamp Conversions", "[Timestamps]") {
 }
 
 
-static Backtrace makeBacktrace() {
+NOINLINE static Backtrace makeBacktrace() {
     return Backtrace();
 }
 
@@ -384,8 +384,11 @@ TEST_CASE("Backtrace") {
     // for the presence of the frame we want.
     CHECK(str.find("makeBacktrace") != string::npos);
 
+#ifndef _MSC_VER
     // Since we entered from a test function we should have suppressed frames
+    // but suppression is not implemented on Windows
     CHECK(str.find("more suppressed") != std::string::npos);
+#endif
 }
 
 #ifdef DEBUG
