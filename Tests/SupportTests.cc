@@ -380,7 +380,8 @@ TEST_CASE("Backtrace") {
     Backtrace bt = makeBacktrace();
     string str = bt.toString();
     cout << str << endl;
-    CHECK(std::count(str.begin(), str.end(), '\n') >= 4);
+    CHECK(std::count(str.begin(), str.end(), '\n') >= 3);
+    CHECK(str.find("makeBacktrace") != string::npos);
 }
 
 

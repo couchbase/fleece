@@ -21,7 +21,7 @@
 
 using namespace fleece;
 
-TEST_CASE("Backtrace print", "[Backtrace]") {
+TEST_CASE("Backtrace suppress", "[Backtrace]") {
     auto bt = Backtrace::capture();
     auto trace = bt->toString();
     CHECK(trace.find("more suppressed") != std::string::npos);
