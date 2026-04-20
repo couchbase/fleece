@@ -90,7 +90,7 @@ namespace fleece {
         unsigned size() const { return (unsigned)_addrs.size(); }
 
       private:
-        void _capture(unsigned skipFrames = 0, unsigned maxFrames = 50, void* context = nullptr);
+        void _capture(void* anchor, unsigned skipFrames = 0, unsigned maxFrames = 50, void* context = nullptr);
 #ifndef _WIN32
         const char*      getSymbol(unsigned i) const;
         static void      writeCrashLog(std::ostream&);

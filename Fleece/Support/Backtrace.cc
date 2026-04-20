@@ -19,6 +19,13 @@
 #include <algorithm>
 #include "betterassert.hh"
 
+#if defined(_MSC_VER) && !defined(__clang__)
+ #  include <intrin.h>
+ #  define CAPTURE_RETURN_ADDRESS() _ReturnAddress()
+ #else
+ #  define CAPTURE_RETURN_ADDRESS() __builtin_return_address(0)
+ #endif
+
 namespace fleece {
     using namespace std;
 
@@ -35,23 +42,41 @@ namespace fleece {
 
     std::string Unmangle(const std::type_info& type) { return Unmangle(type.name()); }
 
-    shared_ptr<Backtrace> Backtrace::capture(unsigned skipFrames, unsigned maxFrames, void* context) {
+    NOINLINE shared_ptr<Backtrace> Backtrace::capture(unsigned skipFrames, unsigned maxFrames, void* context) {
         // (By capturing afterwards, we avoid the (many) stack frames associated with make_shared)
         auto bt = make_shared<Backtrace>(0, 0);
-        bt->_capture(skipFrames + 1, maxFrames, context);
+        void* anchor = CAPTURE_RETURN_ADDRESS();
+        bt->_capture(anchor, skipFrames, maxFrames, context);
         return bt;
     }
 
-    Backtrace::Backtrace(unsigned skipFrames, unsigned maxFrames, void* context) {
-        if ( maxFrames > 0 ) _capture(skipFrames + 1, maxFrames, context);
+    NOINLINE Backtrace::Backtrace(unsigned skipFrames, unsigned maxFrames, void* context) {
+        void* anchor = CAPTURE_RETURN_ADDRESS();
+        if ( maxFrames > 0 ) _capture(anchor, skipFrames, maxFrames, context);
     }
 
-    void Backtrace::_capture(unsigned skipFrames, unsigned maxFrames, void* context) {
-        skipFrames += 2;  // skip this frame and its child
-        _addrs.resize(skipFrames + maxFrames);
-        auto n = raw_capture(&_addrs[0], skipFrames + maxFrames, context);
-        _addrs.resize(n);
+    void Backtrace::_capture(void* anchor, unsigned skipFrames, unsigned maxFrames, void* context) {
+        int maxSize = static_cast<int>(skipFrames + maxFrames + 10u); // A bit of extra headroom to find the anchor
+        _addrs.resize(maxSize);
+        bool found_anchor = false;
+        auto n = raw_capture(&_addrs[0], maxSize, context);
+        for (int i = 0; i < n; i++) {
+            if (_addrs[i] == anchor ) {
+                found_anchor = true;
+                skipFrames += i + 1;
+                break;
+            }
+        }
+
+        if (_usuallyFalse(!found_anchor)) {
+            // Didn't find anchor, just try to skip an appropriate number of frames
+            // (raw_capture, this one, and the caller, which is either capture or
+            // Backtrace constructor
+            skipFrames += 3;
+        }
+
         skip(skipFrames);
+        _addrs.resize(n - skipFrames);
     }
 
     void Backtrace::skip(unsigned nFrames) {
