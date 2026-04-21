@@ -49,17 +49,11 @@ namespace fleece {
     class Backtrace {
       public:
         /// Captures a backtrace and returns a shared pointer to the instance.
+        /// This is the canonical way to use this class.  Do not use the constructor.
         [[nodiscard]] static std::shared_ptr<Backtrace> capture(unsigned skipFrames = 0, unsigned maxFrames = 50,
                                                                 void* context = nullptr);
 
         static int raw_capture(void** buffer, int max, void* context = nullptr);
-
-        /// Captures a backtrace, unless maxFrames is zero.
-        /// @param skipFrames  Number of frames to skip at top of stack
-        /// @param maxFrames  Maximum number of frames to capture
-        /// @param context     If non-null, a platform-specific context to capture from
-        /// @param from       If non-null, the address to start from instead of the current frame
-        explicit Backtrace(unsigned skipFrames = 0, unsigned maxFrames = 50, void* context = nullptr);
 
         ~Backtrace();
 

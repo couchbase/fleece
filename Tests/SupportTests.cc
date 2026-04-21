@@ -371,14 +371,14 @@ TEST_CASE("Timestamp Conversions", "[Timestamps]") {
 }
 
 
-NOINLINE static Backtrace makeBacktrace() {
-    return Backtrace();
+NOINLINE static std::shared_ptr<Backtrace> makeBacktrace() {
+    return Backtrace::capture();
 }
 
 
 TEST_CASE("Backtrace") {
-    Backtrace bt = makeBacktrace();
-    string str = bt.toString();
+    auto bt = makeBacktrace();
+    string str = bt->toString();
     cout << str << endl;
     // Checking the size doesn't seem to be reliable across platforms, so check
     // for the presence of the frame we want.

@@ -44,15 +44,10 @@ namespace fleece {
 
     NOINLINE shared_ptr<Backtrace> Backtrace::capture(unsigned skipFrames, unsigned maxFrames, void* context) {
         // (By capturing afterwards, we avoid the (many) stack frames associated with make_shared)
-        auto bt = make_shared<Backtrace>(0, 0);
+        auto bt = make_shared<Backtrace>();
         void* anchor = CAPTURE_RETURN_ADDRESS();
         bt->_capture(anchor, skipFrames, maxFrames, context);
         return bt;
-    }
-
-    NOINLINE Backtrace::Backtrace(unsigned skipFrames, unsigned maxFrames, void* context) {
-        void* anchor = CAPTURE_RETURN_ADDRESS();
-        if ( maxFrames > 0 ) _capture(anchor, skipFrames, maxFrames, context);
     }
 
     void Backtrace::_capture(void* anchor, unsigned skipFrames, unsigned maxFrames, void* context) {
@@ -63,7 +58,7 @@ namespace fleece {
         for (int i = 0; i < n; i++) {
             if (_addrs[i] == anchor ) {
                 found_anchor = true;
-                skipFrames += i + 1;
+                skipFrames += i;
                 break;
             }
         }
