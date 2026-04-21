@@ -18,19 +18,42 @@
 #include <string>
 #include <typeinfo>
 #include <vector>
+#include <csignal>
+#include <fstream>
+#ifndef _WIN32
+#    include <unistd.h>
+#    include <sys/fcntl.h>
+
+namespace signal_safe {
+    void write_long(long long value, int fd);
+    void write_ulong(unsigned long long value, int fd);
+    void write_hex_offset(size_t value, int fd);
+    void write_to_and_stderr(int fd, const char* str, size_t len = 0);
+}  // namespace signal_safe
+#endif
 
 namespace fleece {
+    class BacktraceSignalHandler {
+      public:
+        static void setLogPath(const char* path);
+
+      protected:
+#ifdef _WIN32
+        static std::ofstream sCrashStream;
+#else
+        static volatile sig_atomic_t sLogFD;
+#endif
+    };
 
     /** Captures a backtrace of the current thread, and can convert it to human-readable form. */
     class Backtrace {
-    public:
+      public:
         /// Captures a backtrace and returns a shared pointer to the instance.
-        [[nodiscard]] static std::shared_ptr<Backtrace> capture(unsigned skipFrames =0, unsigned maxFrames =50);
+        /// This is the canonical way to use this class.  Do not use the constructor.
+        [[nodiscard]] static std::shared_ptr<Backtrace> capture(unsigned skipFrames = 0, unsigned maxFrames = 50,
+                                                                void* context = nullptr);
 
-        /// Captures a backtrace, unless maxFrames is zero.
-        /// @param skipFrames  Number of frames to skip at top of stack
-        /// @param maxFrames  Maximum number of frames to capture
-        explicit Backtrace(unsigned skipFrames =0, unsigned maxFrames =50);
+        static int raw_capture(void** buffer, int max, void* context = nullptr);
 
         ~Backtrace();
 
@@ -40,54 +63,49 @@ namespace fleece {
         /// Writes the human-readable backtrace to a stream.
         bool writeTo(std::ostream&) const;
 
+        static void writeTo(void** addresses, int size, int fd);
+
         /// Returns the human-readable backtrace.
         std::string toString() const;
 
         // Direct access to stack frames:
 
         struct frameInfo {
-            const void* pc;         ///< Program counter
-            size_t offset;          ///< Byte offset of pc in function
-            const char *function;   ///< Name of (nearest) known function
-            const char *library;    ///< Name of dynamic library containing the function
+            const void* pc;           ///< Program counter
+            size_t      offset;       ///< Byte offset of pc in function
+            const char* function;     ///< Name of (nearest) known function
+            const char* library;      ///< Name of dynamic library containing the function
+            size_t      imageOffset;  ///< Byte offset of pc in the library/image
+            const char* file;         ///< Source file name, if available
+            int         line;         ///< Source line number, if available
         };
 
         /// The number of stack frames captured.
-        unsigned size() const                   {return (unsigned)_addrs.size();}
+        unsigned size() const { return (unsigned)_addrs.size(); }
 
-        /// Returns info about a stack frame. 0 is the top.
-        frameInfo getFrame(unsigned) const;
-        frameInfo operator[] (unsigned i)       {return getFrame(i);}
+      private:
+        void _capture(void* anchor, unsigned skipFrames = 0, unsigned maxFrames = 50, void* context = nullptr);
+#ifndef _WIN32
+        const char*      getSymbol(unsigned i) const;
+        static void      writeCrashLog(std::ostream&);
+        static void      handleTerminate(const std::function<void(const std::string&)>& logger);
+        frameInfo        getFrame(unsigned) const;
+        static frameInfo getFrame(const void* pc, bool stack_top);
+        static char*     unmangle(const char* function NONNULL);
+#endif
 
-        /// Installs a C++ terminate_handler that will log a backtrace and info about any uncaught
-        /// exception. By default it then calls the preexisting terminate_handler, which usually
-        /// calls abort().
-        ///
-        /// Since the OS will not usually generate a crash report upon a SIGABORT, you can set
-        /// `andRaise` to a different signal ID such as SIGILL to force a crash.
-        ///
-        /// Only the first call to this function has any effect; subsequent calls are ignored.
-        static void installTerminateHandler(std::function<void(const std::string&)> logger);
-
-    private:
-        void _capture(unsigned skipFrames =0, unsigned maxFrames =50);
-        const char* getSymbol(unsigned i) const;
-        [[nodiscard]] char* printFrame(unsigned i) const;
-        static void writeCrashLog(std::ostream&);
-
-        std::vector<void*> _addrs;          // Array of PCs in backtrace, top first
-        mutable char** _symbols { nullptr };
+        std::vector<void*> _addrs;  // Array of PCs in backtrace, top first
+        mutable char**     _symbols{nullptr};
     };
-
 
     /// Attempts to return the unmangled name of the type. (If it fails, returns the mangled name.)
     std::string Unmangle(const std::type_info&);
 
     /// Attempts to unmangle a name. (If it fails, returns the input string unaltered.)
-    std::string Unmangle(const char *name NONNULL);
+    std::string Unmangle(const char* name NONNULL);
 
     /// Returns the name of the function at the given address, or an empty string if none.
     /// The name will be unmangled, if possible.
-    std::string FunctionName(const void *pc);
+    std::string FunctionName(const void* pc);
 
-}
+}  // namespace fleece

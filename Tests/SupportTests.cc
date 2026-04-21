@@ -371,17 +371,49 @@ TEST_CASE("Timestamp Conversions", "[Timestamps]") {
 }
 
 
-static Backtrace makeBacktrace() {
-    return Backtrace();
+NOINLINE static std::shared_ptr<Backtrace> makeBacktrace() {
+    return Backtrace::capture();
 }
 
 
 TEST_CASE("Backtrace") {
-    Backtrace bt = makeBacktrace();
-    string str = bt.toString();
+    auto bt = makeBacktrace();
+    string str = bt->toString();
     cout << str << endl;
-    CHECK(std::count(str.begin(), str.end(), '\n') >= 4);
+    // Checking the size doesn't seem to be reliable across platforms, so check
+    // for the presence of the frame we want.
+    CHECK(str.find("makeBacktrace") != string::npos);
+
+#ifndef _MSC_VER
+    // Since we entered from a test function we should have suppressed frames
+    // but suppression is not implemented on Windows
+    CHECK(str.find("more suppressed") != std::string::npos);
+#endif
 }
+
+#ifdef DEBUG
+
+namespace test::backtrace {
+    static int* createInvalidRef() {
+        return nullptr;
+    }
+
+    static void doBadThings() {
+        int* landline = createInvalidRef();
+        // ReSharper disable once CppDFANullDereference
+        *landline = 0xdead;
+    }
+    static void crashOnPurpose() {
+        doBadThings();
+    }
+}
+
+TEST_CASE("Backtrace crash", "[.BacktraceManual]") {
+    // Since this test crashes the process intentionally,
+    // It will fail and require manual inspection of stderr
+    test::backtrace::crashOnPurpose();
+}
+#endif
 
 
 class ICTest : public RefCounted, public InstanceCountedIn<ICTest> {
