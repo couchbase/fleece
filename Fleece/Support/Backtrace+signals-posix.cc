@@ -39,11 +39,13 @@ namespace fleece {
         }
 
         static struct sigaction defaultActionFor(int signal) {
-            if ( !default_actions().contains(signal) ) {
+            const auto& actions = default_actions();
+            auto        it      = actions.find(signal);
+            if ( it == actions.end() ) {
                 return defaultAction();
             }
 
-            return default_actions()[signal];
+            return it->second;
         }
 
         BacktraceSignalHandlerPosix() {
