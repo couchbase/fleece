@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <sstream>
 #include <unordered_map>
+#include <array>
 #ifdef __APPLE__
 #    include <sys/ucontext.h>
 #else

@@ -416,10 +416,8 @@ static void sig_handler(int signo, siginfo_t* info, void* context) {
         write(STDERR_FILENO, "This message should be in stderr, and the backtrace should be below it.\n", 72);
     }
 
-    if (previous.sa_flags != 0) {
-        sigaction(signo, &previous, nullptr);
-        raise(signo);
-    }
+    sigaction(signo, &previous, nullptr);
+    raise(signo);
 }
 
 TEST_CASE("Backtrace crash with override", "[.BacktraceManual]") {
