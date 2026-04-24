@@ -72,8 +72,7 @@ namespace fleece {
 
                 struct sigaction old_action;
                 if ( int success = sigaction(signal, &action, &old_action); success == 0) {
-                    // Only chain back if we succeeded and are not already chained back
-                    // to ourselves
+                    // Only chain back if we succeeded
                     default_actions()[signal] = old_action;
                 }
             }

@@ -395,7 +395,6 @@ TEST_CASE("Backtrace") {
 
 namespace test::backtrace {
     static void doBadThings() {
-        // ReSharper disable once CppDFANullDereference
         raise(SIGABRT);
     }
     static void crashOnPurpose() {
@@ -408,6 +407,8 @@ TEST_CASE("Backtrace crash", "[.BacktraceManual]") {
     // It will fail and require manual inspection of stderr
     test::backtrace::crashOnPurpose();
 }
+
+#ifndef _MSC_VER
 
 static struct sigaction previous{};
 static void sig_handler(int signo, siginfo_t* info, void* context) {
@@ -439,6 +440,8 @@ TEST_CASE("Backtrace crash with override", "[.BacktraceManual]") {
     CHECK(success == 0);
     raise(SIGSEGV);
 }
+
+#endif
 #endif
 
 
