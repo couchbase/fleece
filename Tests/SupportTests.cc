@@ -394,14 +394,9 @@ TEST_CASE("Backtrace") {
 #ifdef DEBUG
 
 namespace test::backtrace {
-    static int* createInvalidRef() {
-        return nullptr;
-    }
-
     static void doBadThings() {
-        int* landline = createInvalidRef();
         // ReSharper disable once CppDFANullDereference
-        *landline = 0xdead;
+        raise(SIGABRT);
     }
     static void crashOnPurpose() {
         doBadThings();
@@ -412,6 +407,37 @@ TEST_CASE("Backtrace crash", "[.BacktraceManual]") {
     // Since this test crashes the process intentionally,
     // It will fail and require manual inspection of stderr
     test::backtrace::crashOnPurpose();
+}
+
+static struct sigaction previous{};
+static void sig_handler(int signo, siginfo_t* info, void* context) {
+    if (signo == SIGSEGV) {
+        write(STDERR_FILENO, "This message should be in stderr, and the backtrace should be below it.\n", 72);
+    }
+
+    if (previous.sa_flags != 0) {
+        sigaction(signo, &previous, nullptr);
+        raise(signo);
+    }
+}
+
+TEST_CASE("Backtrace crash with override", "[.BacktraceManual]") {
+    struct sigaction action{};
+    action.sa_flags = SA_SIGINFO | SA_NODEFER | SA_RESETHAND;
+    sigfillset(&action.sa_mask);
+    sigdelset(&action.sa_mask, SIGSEGV);
+#if defined(__clang__)
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wdisabled-macro-expansion"
+#endif
+    action.sa_sigaction = &sig_handler;
+#if defined(__clang__)
+#    pragma clang diagnostic pop
+#endif
+
+    int success = sigaction(SIGSEGV, &action, &previous);
+    CHECK(success == 0);
+    raise(SIGSEGV);
 }
 #endif
 

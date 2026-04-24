@@ -17,27 +17,32 @@ namespace fleece {
     using namespace std;
     using namespace signal_safe;
 
+    namespace {
+        template<typename T, size_t N>
+        consteval bool allUnique(const array<T, N>& arr) {
+            for (size_t i = 0; i < N; ++i)
+                for (size_t j = i + 1; j < N; ++j)
+                    if (arr[i] == arr[j]) return false;
+            return true;
+        }
+    }
+
     class BacktraceSignalHandlerPosix : public BacktraceSignalHandler {
       public:
-        static vector<int> signals() {
-            return {
-                    SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGIOT, SIGQUIT, SIGSEGV, SIGSYS, SIGTRAP, SIGXCPU, SIGXFSZ,
-#if defined(__APPLE__)
-                    SIGEMT,
-#endif
-            };
+        static struct sigaction defaultAction() {
+            struct sigaction sa{};
+            sigemptyset(&sa.sa_mask);
+            sa.sa_flags   = 0;
+            sa.sa_handler = SIG_DFL;
+            return sa;
         }
 
         static struct sigaction defaultActionFor(int signal) {
-            if ( default_actions().find(signal) == default_actions().end() ) {
-                struct sigaction sa{};
-                sigemptyset(&sa.sa_mask);
-                sa.sa_flags   = 0;
-                sa.sa_handler = SIG_DFL;
-                return sa;
-            } else {
-                return default_actions()[signal];
+            if ( !default_actions().contains(signal) ) {
+                return defaultAction();
             }
+
+            return default_actions()[signal];
         }
 
         BacktraceSignalHandlerPosix() {
@@ -51,13 +56,11 @@ namespace fleece {
                 sigaltstack(&ss, nullptr);
             }
 
-            auto signal_vector = signals();
-            for ( size_t i = 0; i < signal_vector.size(); ++i ) {
-                struct sigaction action;
-                memset(&action, 0, sizeof(action));
-                action.sa_flags = static_cast<int>(SA_SIGINFO | SA_ONSTACK | SA_NODEFER | SA_RESETHAND);
+            for ( const int signal : signals) {
+                struct sigaction action{};
+                action.sa_flags = SA_SIGINFO | SA_ONSTACK | SA_NODEFER | SA_RESETHAND;
                 sigfillset(&action.sa_mask);
-                sigdelset(&action.sa_mask, signal_vector[i]);
+                sigdelset(&action.sa_mask, signal);
 #if defined(__clang__)
 #    pragma clang diagnostic push
 #    pragma clang diagnostic ignored "-Wdisabled-macro-expansion"
@@ -68,8 +71,11 @@ namespace fleece {
 #endif
 
                 struct sigaction old_action;
-                sigaction(signal_vector[i], &action, &old_action);
-                default_actions()[signal_vector[i]] = old_action;
+                if ( int success = sigaction(signal, &action, &old_action); success == 0) {
+                    // Only chain back if we succeeded and are not already chained back
+                    // to ourselves
+                    default_actions()[signal] = old_action;
+                }
             }
         }
 
@@ -80,6 +86,19 @@ namespace fleece {
 
       private:
         unique_ptr<byte[]> _stack_content;
+
+#ifdef __APPLE__
+        static constexpr array<int, 11> signals = {
+#else
+        static constexpr array<int, 10> signals = {
+#endif
+                SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGQUIT, SIGSEGV, SIGSYS, SIGTRAP, SIGXCPU, SIGXFSZ,
+#if defined(__APPLE__)
+                SIGEMT,
+#endif
+        };
+
+        static_assert(allUnique(signals), "Signals array contains duplicate entries");
 
         static unordered_map<int, struct sigaction>& default_actions() {
             static unordered_map<int, struct sigaction> da;
