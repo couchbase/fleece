@@ -10,6 +10,7 @@
 #include <array>
 #ifdef __APPLE__
 #    include <sys/ucontext.h>
+#    include "TargetConditionals.h"
 #else
 #    include <ucontext.h>
 #endif
