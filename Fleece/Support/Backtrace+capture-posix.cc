@@ -11,6 +11,8 @@ namespace fleece {
     using namespace std;
     using namespace signal_safe;
 
+    char* unmangle(const char* function);
+
     static constexpr struct {
         const char *old, *nuu;
     } kAbbreviations[] = {

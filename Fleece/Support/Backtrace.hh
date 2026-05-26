@@ -91,7 +91,6 @@ namespace fleece {
         static void      handleTerminate(const std::function<void(const std::string&)>& logger);
         frameInfo        getFrame(unsigned) const;
         static frameInfo getFrame(const void* pc, bool stack_top);
-        static char*     unmangle(const char* function NONNULL);
 #endif
 
         std::vector<void*> _addrs;  // Array of PCs in backtrace, top first
