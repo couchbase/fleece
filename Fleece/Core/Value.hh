@@ -203,9 +203,16 @@ namespace fleece { namespace impl {
         void _release() const;
 
     protected:
-        constexpr Value(internal::tags tag, int tiny, int byte1 = 0)
+        // This constructor only writes to the first 2 bytes because this Value might be narrow.
+        Value(internal::tags tag, int tiny, int byte1 = 0) {
+            _byte[0] = uint8_t((tag<<4) | tiny);
+            _byte[1] = uint8_t(byte1);
+        }
+
+        // This constructor writes to all 4 bytes, because `constexpr` requires full initialization.
+        constexpr Value(internal::tags tag, uint8_t tiny, uint8_t byte1, uint8_t byte2, uint8_t byte3)
         :_byte {(uint8_t)((tag<<4) | tiny),
-                (uint8_t)byte1}
+                byte1, byte2, byte3}
         { }
 
         static const Value* findRoot(slice) noexcept FLPURE;

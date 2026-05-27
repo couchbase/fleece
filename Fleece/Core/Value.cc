@@ -47,8 +47,8 @@ namespace fleece { namespace impl {
 
     class ConstValue : public Value {
     public:
-        constexpr ConstValue(internal::tags tag, int tiny, int byte1 = 0)
-        :Value(tag, tiny, byte1) { }
+        constexpr ConstValue(internal::tags tag, uint8_t tiny, uint8_t byte1 = 0)
+        :Value(tag, tiny, byte1, 0, 0) { }
     };
 
     EVEN_ALIGNED static constexpr const ConstValue

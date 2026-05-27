@@ -1212,4 +1212,28 @@ public:
         }
     }
 
+    TEST_CASE("Encoder snip overflow") {
+        // Test for CBSE-22711, wherein Encoder::snip() can write past the end of a buffer.
+        // The inline buffer is 256 bytes. We don't know exactly how many bytes
+        // beginArray/items/endArray consume, so sweep a window covering every
+        // possible alignment of reserveSpace(2) within the last 8 bytes of _initialBuf.
+        for (int extraInts = 0; extraInts < 280; ++extraInts) {
+            fleece::impl::Encoder enc;
+            enc.beginArray();
+            for (int i = 0; i < extraInts; ++i)
+                enc.writeInt(i & 0x7f);             // 1 or 2 bytes each, varies tag boundary
+            enc.endArray();
+
+            // Capture _items before snip; snip's placement-new must not modify it.
+            auto itemsBefore = *(void**)((char*)&enc + 0x178); // _items offset
+            REQUIRE_NOTHROW(enc.snip());
+            auto itemsAfter  = *(void**)((char*)&enc + 0x178);
+
+            // Pre-fix: at some specific extraInts this will fail (low 2 bytes zeroed).
+            // Post-fix: itemsAfter == itemsBefore (or both null after finish/reset).
+            CAPTURE(extraInts);
+            REQUIRE(itemsBefore == itemsAfter);
+        }
+    }
+
 } }
