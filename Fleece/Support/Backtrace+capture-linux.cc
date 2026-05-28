@@ -5,8 +5,10 @@
 #include "Backtrace.hh"
 #include <dlfcn.h>   // dladdr()
 #include <unwind.h>  // part of compiler runtime, no extra link needed
-#include <backtrace.h>
 #include <mutex>
+#ifdef HAVE_LIBBACKTRACE
+#    include <backtrace.h>
+#endif
 #include <cstring>
 
 namespace fleece {
@@ -33,6 +35,7 @@ namespace fleece {
         return int(state.current - buffer);
     }
 
+#ifdef HAVE_LIBBACKTRACE
     static backtrace_state* getBacktraceState() {
         static std::once_flag   once;
         static backtrace_state* state;
@@ -73,6 +76,7 @@ namespace fleece {
                 nullptr, &info);
         return info;
     }
+#endif  // HAVE_LIBBACKTRACE
 
     Backtrace::frameInfo Backtrace::getFrame(const void* addr, bool stack_top) {
         Backtrace::frameInfo frame = {};
@@ -88,15 +92,15 @@ namespace fleece {
             if ( const char* slash = strrchr(frame.library, '/') ) frame.library = slash + 1;
         }
 
-#ifdef __ANDROID__
-        frame.function = info.dli_sname;
-        if ( info.dli_saddr )
-            frame.offset = reinterpret_cast<size_t>(frame.pc) - reinterpret_cast<size_t>(info.dli_saddr);
+#ifndef HAVE_LIBBACKTRACE
+        frame.function = dlInfo.dli_sname;
+        if ( dlInfo.dli_saddr )
+            frame.offset = reinterpret_cast<size_t>(frame.pc) - reinterpret_cast<size_t>(dlInfo.dli_saddr);
 
-        if ( info.dli_fbase ) {
+        if ( dlInfo.dli_fbase ) {
             auto pc = reinterpret_cast<uintptr_t>(frame.pc);
             if ( !stack_top ) pc -= 1;
-            frame.imageOffset = pc - reinterpret_cast<uintptr_t>(info.dli_fbase);
+            frame.imageOffset = pc - reinterpret_cast<uintptr_t>(dlInfo.dli_fbase);
         }
 #else
         uintptr_t pc = reinterpret_cast<uintptr_t>(frame.pc);
@@ -129,7 +133,7 @@ namespace fleece {
     }
 
     string FunctionName(const void* pc) {
-#if !defined(__ANDROID__)
+#ifdef HAVE_LIBBACKTRACE
         uintptr_t addr = reinterpret_cast<uintptr_t>(pc) - 1;
         if ( const char* name = backtraceResolve(addr).function ) return Unmangle(name);
         return {};

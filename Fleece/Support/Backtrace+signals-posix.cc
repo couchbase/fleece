@@ -10,6 +10,7 @@
 #include <array>
 #ifdef __APPLE__
 #    include <sys/ucontext.h>
+#    include "TargetConditionals.h"
 #else
 #    include <ucontext.h>
 #endif
@@ -105,28 +106,6 @@ namespace fleece {
         static unordered_map<int, struct sigaction>& default_actions() {
             static unordered_map<int, struct sigaction> da;
             return da;
-        }
-
-        static string& violation_type() {
-            static string type;
-            return type;
-        }
-
-        static void* extract_pc(void* context) {
-            auto* uctx = static_cast<ucontext_t*>(context);
-#ifdef REG_RIP  // x86_64 Linux
-            return reinterpret_cast<void*>(uctx->uc_mcontext.gregs[REG_RIP]);
-#elif defined(__aarch64__)
-#    if defined(__APPLE__)
-            return reinterpret_cast<void*>(uctx->uc_mcontext->__ss.__pc);
-#    else
-            return reinterpret_cast<void*>(uctx->uc_mcontext.pc);
-#    endif
-#elif defined(__APPLE__) && defined(__x86_64__)
-            return reinterpret_cast<void*>(uctx->uc_mcontext->__ss.__rip);
-#else
-#    error "Unsupported architecture"
-#endif
         }
 
         NOINLINE static void crash_handler_immediate(siginfo_t* info, void* context) {
