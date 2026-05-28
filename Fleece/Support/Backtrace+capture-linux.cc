@@ -36,10 +36,12 @@ namespace fleece {
     }
 
 #ifdef HAVE_LIBBACKTRACE
+    static void btErrorNoop(void*, const char*, int) {}
+
     static backtrace_state* getBacktraceState() {
         static std::once_flag   once;
         static backtrace_state* state;
-        std::call_once(once, [] { state = backtrace_create_state(nullptr, /*threaded=*/1, nullptr, nullptr); });
+        std::call_once(once, [] { state = backtrace_create_state(nullptr, /*threaded=*/1, btErrorNoop, nullptr); });
         return state;
     }
 
@@ -51,9 +53,11 @@ namespace fleece {
     };
 
     static ResolvedInfo backtraceResolve(uintptr_t pc) {
-        ResolvedInfo info;
+        ResolvedInfo info{};
+        auto state = getBacktraceState();
+        if (!state) return info;
         backtrace_pcinfo(
-                getBacktraceState(), pc,
+                state, pc,
                 [](void* data, uintptr_t, const char* file, int line, const char* fn) -> int {
                     auto* r = static_cast<ResolvedInfo*>(data);
                     if ( fn && !r->function ) r->function = fn;
@@ -63,17 +67,17 @@ namespace fleece {
                     }
                     return 0;
                 },
-                nullptr, &info);
+                btErrorNoop, &info);
 
         // Always call syminfo: provides symval (function start) for offset, and function name fallback
         backtrace_syminfo(
-                getBacktraceState(), pc,
+                state, pc,
                 [](void* data, uintptr_t, const char* sym, uintptr_t symval, uintptr_t) {
                     auto* r = static_cast<ResolvedInfo*>(data);
                     if ( !r->function && sym ) r->function = sym;
                     if ( symval ) r->symval = symval;
                 },
-                nullptr, &info);
+                btErrorNoop, &info);
         return info;
     }
 #endif  // HAVE_LIBBACKTRACE
