@@ -60,7 +60,7 @@ namespace fleece {
 #elif defined(_M_ARM64)
         s.AddrPC.Offset    = myCtx->Pc;
         s.AddrStack.Offset = myCtx->Sp;
-        s.AddrFrame.Offset = myCtx->R11;
+        s.AddrFrame.Offset = myCtx->Fp;
         auto machine_type  = IMAGE_FILE_MACHINE_ARM64;
 #else
 #    error Unsupported architecture
