@@ -375,11 +375,15 @@ NOINLINE static std::shared_ptr<Backtrace> makeBacktrace() {
     return Backtrace::capture();
 }
 
-
+#ifdef DEBUG
+// This test is not reliable in release mode because the symbol information might
+// be stripped.  PR validation will check that this is functioning correctly.
 TEST_CASE("Backtrace") {
     auto bt = makeBacktrace();
     string str = bt->toString();
     cout << str << endl;
+
+
     // Checking the size doesn't seem to be reliable across platforms, so check
     // for the presence of the frame we want.
     CHECK(str.find("makeBacktrace") != string::npos);
@@ -390,8 +394,6 @@ TEST_CASE("Backtrace") {
     CHECK(str.find("more suppressed") != std::string::npos);
 #endif
 }
-
-#ifdef DEBUG
 
 namespace test::backtrace {
     static void doBadThings() {
