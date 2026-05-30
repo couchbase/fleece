@@ -377,8 +377,9 @@ NOINLINE static std::shared_ptr<Backtrace> makeBacktrace() {
 
 #ifdef DEBUG
 // This test is not reliable in release mode because the symbol information might
-// be stripped.  PR validation will check that this is functioning correctly.
-TEST_CASE("Backtrace") {
+// be stripped.  It also has to be manual since not all machines are capable of
+// runtime symbolication and if they aren't this test will fail.
+TEST_CASE("Backtrace", "[.BacktraceManual]") {
     auto bt = makeBacktrace();
     string str = bt->toString();
     cout << str << endl;
