@@ -62,9 +62,10 @@ namespace fleece {
 
             for ( const int signal : signals) {
                 struct sigaction action{};
-                action.sa_flags = SA_SIGINFO | SA_ONSTACK | SA_NODEFER | SA_RESETHAND;
+                // NOTE: No SA_RESETHAND since on managed platforms signals are recoverable and
+                // we want our handler to keep working in the event that they are not
+                action.sa_flags = SA_SIGINFO | SA_ONSTACK;
                 sigfillset(&action.sa_mask);
-                sigdelset(&action.sa_mask, signal);
 #if defined(__clang__)
 #    pragma clang diagnostic push
 #    pragma clang diagnostic ignored "-Wdisabled-macro-expansion"
@@ -91,11 +92,11 @@ namespace fleece {
         unique_ptr<byte[]> _stack_content;
 
 #ifdef __APPLE__
-        static constexpr array<int, 11> signals = {
-#else
         static constexpr array<int, 10> signals = {
+#else
+        static constexpr array<int, 9> signals = {
 #endif
-                SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGQUIT, SIGSEGV, SIGSYS, SIGTRAP, SIGXCPU, SIGXFSZ,
+                SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGQUIT, SIGSEGV, SIGSYS, SIGTRAP, SIGXFSZ,
 #if defined(__APPLE__)
                 SIGEMT,
 #endif
@@ -111,37 +112,41 @@ namespace fleece {
         NOINLINE static void crash_handler_immediate(siginfo_t* info, void* context) {
             void*       buffer[50];
             int         n    = Backtrace::raw_capture(buffer, 50, context);
-            const char* name = strsignal(info->si_signo);
-            write_to_and_stderr(sLogFD, "\n\n******************** Process Crash: ", 38);
-            if ( name ) {
-                write_to_and_stderr(sLogFD, name);
-            } else {
-                write_to_and_stderr(sLogFD, "Signal: ", 8);
-                write_long(info->si_signo, sLogFD);
-            }
+            write_to_and_stderr(sLogFD, "\n\n******************** Signal caught: ", 38);
+            write_long(info->si_signo, sLogFD);
 
             write_to_and_stderr(sLogFD, " Timestamp: ", 12);
-            char timestamp[20];
-            snprintf(timestamp, 20, "%lld", static_cast<long long>(time(nullptr)));
             write_long(time(nullptr), sLogFD);
 
             write_to_and_stderr(sLogFD, " *******************\n", 21);
             Backtrace::writeTo(buffer + 3, n - 3, sLogFD);
-            write_to_and_stderr(sLogFD, "\n******************** Now terminating ********************\n", 59);
             if ( sLogFD != -1 ) {
                 fsync(sLogFD);
-                close(sLogFD);
             }
         }
 
-        [[noreturn]] static void sig_handler(int signo, siginfo_t* info, void* context) {
+        static void chain_to_previous(int signo, siginfo_t* info, void* context) {
+            const auto& prev = defaultActionFor(signo);
+            if ((prev.sa_flags & SA_SIGINFO) && prev.sa_sigaction && prev.sa_sigaction != &sig_handler) {
+                // Original fault context: the runtime can recover (and modify *context,
+                // which our return then resumes into) or die inside this call.
+                prev.sa_sigaction(signo, info, context);
+            } else if (prev.sa_handler && prev.sa_handler != SIG_IGN
+                 && prev.sa_handler != SIG_DFL) {
+                // SIG_IGN and SIG_DFL are not actual functions, don't try to call them
+                prev.sa_handler(signo);
+            } else if (prev.sa_handler == SIG_DFL) {
+                sigaction(signo, &prev, nullptr);   // restore default and let it act
+                raise(signo);                       // fatal default terminates here
+            }
+            //SIG_IGN means ignore, so do just that
+        }
+
+        static void sig_handler(int signo, siginfo_t* info, void* context) {
             crash_handler_immediate(info, context);
-
-            auto default_action = BacktraceSignalHandlerPosix::defaultActionFor(signo);
-            sigaction(signo, &default_action, nullptr);
-            raise(signo);
-
-            _exit(128 + signo);
+            chain_to_previous(signo, info, context);
+            write_to_and_stderr(sLogFD,
+                "\n********** Signal handled; execution continuing **********\n", 60);
         }
     };
 
