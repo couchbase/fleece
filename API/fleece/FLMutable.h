@@ -349,7 +349,7 @@ extern "C" {
     /** \defgroup builder   Fleece Formatted Value Builder
          @{
         These functions use the `printf` idiom to make it convenient to create structured Fleece
-        values in memory with one call. They create or modify a `FLMutableArray` or `FLMutableDict
+        values in memory with one call. They create or modify a `FLMutableArray` or `FLMutableDict`
         by reading the given format string and the following arguments.
 
         The format string is basically JSON5, except that any value in it may be a printf-style
