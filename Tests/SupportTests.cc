@@ -473,7 +473,7 @@ struct AtomicRetainedTest : RefCounted {
 
 TEST_CASE("AtomicRetained") {
     // This is mostly to check for compile errors.
-    AtomicRetained r = new AtomicRetainedTest();
+    AtomicRef r = new AtomicRetainedTest();
     CHECK(r->i == 0);
     AtomicRetained r2 = r;
     AtomicRetained r3 = std::move(r2);

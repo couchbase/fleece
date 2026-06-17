@@ -99,16 +99,23 @@ namespace fleece {
             release(oldRef);
             return *this;
         }
-        
-        explicit operator bool () const FLPURE          {return N==NonNull || (get() != nullptr);}
 
-        // AtomicRetained doesn't dereference to `T*`, rather to `Retained<T>`.
-        // This prevents a concurrent mutation from releasing the object out from under you,
-        // since that temporary Retained object keeps it alive for the duration of the expression.
+        /// `get()` returns a `Retained<T>`, not directly a `T*`. This is so that you have a stable
+        /// reference that won't get nulled or freed out from under you.
+        Retained<T,N> get() const noexcept LIFETIMEBOUND FLPURE STEPOVER         {return _get();}
+
+        /// `->` doesn't dereference to `T*`, rather to `Retained<T>`.
+        /// This prevents a concurrent mutation from releasing the object out from under you,
+        /// since that temporary Retained object keeps it alive for the duration of the expression.
+        /// This operator is not available if the value is nullable, because you cannot safely
+        /// preflight it to avoid a null-dereference. Instead, call `get()` and check + deref that.
+        Retained<T,N> operator-> () const noexcept requires (N==NonNull) FLPURE STEPOVER {return _get();}
 
         operator Retained<T,N> () const & noexcept LIFETIMEBOUND FLPURE STEPOVER {return _get();}
-        Retained<T,N> operator-> () const noexcept LIFETIMEBOUND FLPURE STEPOVER {return _get();}
-        Retained<T,N> get() const noexcept LIFETIMEBOUND FLPURE STEPOVER         {return _get();}
+
+        /// Deleted because the result of this check could become invalid immediately after.
+        /// Instead, call `get()` to acquire a stable `Retained<T>` and then check that.
+        explicit operator bool () const FLPURE = delete;
 
         /// Converts any AtomicRetained to non-nullable form (AtomicRef), or throws if its value is nullptr.
         AtomicRetained<T,NonNull> asRef() const & noexcept(!N) {return AtomicRetained<T,NonNull>(get());}
@@ -189,5 +196,7 @@ namespace fleece {
     template <class T> using AtomicRetainedConst = AtomicRetained<const T>;
 
 
-    template <class T> AtomicRetained(T* FL_NULLABLE) -> AtomicRetained<T>; // deduction guide
+    // deduction guides:
+    template <class T> AtomicRetained(T* FL_NULLABLE) -> AtomicRetained<T, MaybeNull>;
+    template <class T> AtomicRetained(T* FL_NONNULL) -> AtomicRetained<T, NonNull>;
 }
