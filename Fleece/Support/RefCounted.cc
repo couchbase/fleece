@@ -171,7 +171,7 @@ namespace fleece {
         /// MUST only be called after `getAndLock`.
         void AtomicWrapper::setAndUnlock(uintptr_t oldRef, uintptr_t newRef) const noexcept {
             uintptr_t r = oldRef | kBusyMask;
-            bool ok = _ref.compare_exchange_strong(r, newRef, std::memory_order_release);
+            [[maybe_unused]] bool ok = _ref.compare_exchange_strong(r, newRef, std::memory_order_release);
             assert(ok);
         }
     }
