@@ -89,7 +89,7 @@ namespace fleece { namespace impl {
 
         const Value* get(const key_t&) const noexcept;
 
-        constexpr Dict()  :Value(internal::kDictTag, 0, 0) { }
+        constexpr Dict()  :Value(internal::kDictTag, 0, 0, 0, 0) { }
 
     protected:
         internal::HeapDict* heapDict() const noexcept FLPURE;

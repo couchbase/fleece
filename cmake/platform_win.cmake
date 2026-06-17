@@ -13,12 +13,24 @@ function(set_source_files)
         ${BASE_SRC_FILES}
         MSVC/vasprintf-msvc.c
         MSVC/asprintf.c
+        Fleece/Support/Backtrace+signals-win32.cc
+        Fleece/Support/Backtrace+capture-win32.cc
         PARENT_SCOPE
     )
 endfunction()
 
 function(set_base_platform_files)
-    # No-op
+    set(oneValueArgs RESULT)
+    cmake_parse_arguments(WIN_SSS "" "${oneValueArgs}" "" ${ARGN})
+    if(NOT DEFINED WIN_SSS_RESULT)
+        message(FATAL_ERROR "set_source_files_base needs to be called with RESULT")
+    endif()
+
+    set(
+        ${WIN_SSS_RESULT}
+        Fleece/Support/Backtrace+capture-win32.cc
+        PARENT_SCOPE
+    )
 endfunction()
 
 function(set_test_source_files)
@@ -35,7 +47,7 @@ endfunction()
 function(setup_build)
     setup_build_base()
 
-    foreach(target FleeceObjects FleeceBase)
+    foreach(target FleeceObjects FleeceBase fleeceTool FleeceTests)
         target_include_directories(
             ${target} PRIVATE
             MSVC
@@ -59,7 +71,7 @@ function(setup_build)
     #   5105 ("macro expansion producing 'defined' has undefined behavior")
     # Disable warning about "insecure" C runtime functions (strcpy vs strcpy_s)
     # Enable Control Flow Guard (https://learn.microsoft.com/en-us/cpp/build/reference/guard-enable-control-flow-guard)
-     foreach(platform FleeceObjects FleeceBase)
+     foreach(platform FleeceObjects FleeceBase fleeceTool FleeceTests)
         target_compile_options(
             ${platform} PRIVATE
             "/utf-8"

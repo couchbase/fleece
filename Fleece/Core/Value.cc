@@ -47,8 +47,8 @@ namespace fleece { namespace impl {
 
     class ConstValue : public Value {
     public:
-        constexpr ConstValue(internal::tags tag, int tiny, int byte1 = 0)
-        :Value(tag, tiny, byte1) { }
+        constexpr ConstValue(internal::tags tag, uint8_t tiny, uint8_t byte1 = 0)
+        :Value(tag, tiny, byte1, 0, 0) { }
     };
 
     EVEN_ALIGNED static constexpr const ConstValue
@@ -348,7 +348,7 @@ namespace fleece { namespace impl {
             // If the root is a direct value there better not be any data before it:
             if (_usuallyFalse(s.size != kNarrow))
                 return nullptr;
-        };
+        }
         return root;
     }
 

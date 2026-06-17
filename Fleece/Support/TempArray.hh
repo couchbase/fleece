@@ -58,6 +58,6 @@
 
     #define TempArray(NAME, TYPE, SIZE) \
         _TempArray<TYPE> NAME(SIZE); \
-        if (!NAME._onHeap && (SIZE) > 0) NAME._array = (TYPE*)alloca((SIZE)*sizeof(TYPE));
+        do { if (!NAME._onHeap && (SIZE) > 0) NAME._array = (TYPE*)alloca((SIZE)*sizeof(TYPE)); } while(false)
 
 #endif

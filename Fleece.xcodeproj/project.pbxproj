@@ -194,6 +194,8 @@
 		27E3DD4C1DB6C32400F2872D /* CaseListReporter.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27E3DD4A1DB6C32400F2872D /* CaseListReporter.hh */; };
 		27E3DD4D1DB6C32400F2872D /* CatchHelper.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27E3DD4B1DB6C32400F2872D /* CatchHelper.hh */; };
 		27E3DD531DB7DB1C00F2872D /* SharedKeysTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27E3DD521DB7DB1C00F2872D /* SharedKeysTests.cc */; };
+		27EBACF42F76015D00A62315 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C4CEAC2127741000470DE9 /* CoreFoundation.framework */; };
+		27EBACF52F76017500A62315 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C4CEAE2127743200470DE9 /* Foundation.framework */; };
 		27F25A8420A6560A00E181FA /* LibC++Debug.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27F25A8320A6560900E181FA /* LibC++Debug.cc */; };
 		27F25A8E20AA053D00E181FA /* Pointer.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27F25A8C20AA053D00E181FA /* Pointer.cc */; };
 		27F25A8F20AA053D00E181FA /* Pointer.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27F25A8D20AA053D00E181FA /* Pointer.hh */; };
@@ -201,6 +203,9 @@
 		27F666472017FE7C00A8ED31 /* TempArray.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27F666462017FE7C00A8ED31 /* TempArray.hh */; };
 		27FE87F31E53E43200C5CF3F /* JSONEncoder.cc in Sources */ = {isa = PBXBuildFile; fileRef = 27FE87F11E53E43200C5CF3F /* JSONEncoder.cc */; };
 		27FE87F41E53E43200C5CF3F /* JSONEncoder.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27FE87F21E53E43200C5CF3F /* JSONEncoder.hh */; };
+		422342E32FC579C200DAC424 /* Backtrace+capture-darwin.cc in Sources */ = {isa = PBXBuildFile; fileRef = 422342E22FC579C200DAC424 /* Backtrace+capture-darwin.cc */; };
+		422342E62FC579E000DAC424 /* Backtrace+capture-posix.cc in Sources */ = {isa = PBXBuildFile; fileRef = 422342E52FC579E000DAC424 /* Backtrace+capture-posix.cc */; };
+		422342E82FC579EA00DAC424 /* Backtrace+signals-posix.cc in Sources */ = {isa = PBXBuildFile; fileRef = 422342E72FC579EA00DAC424 /* Backtrace+signals-posix.cc */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -485,6 +490,9 @@
 		27F666462017FE7C00A8ED31 /* TempArray.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = TempArray.hh; sourceTree = "<group>"; };
 		27FE87F11E53E43200C5CF3F /* JSONEncoder.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSONEncoder.cc; sourceTree = "<group>"; };
 		27FE87F21E53E43200C5CF3F /* JSONEncoder.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = JSONEncoder.hh; sourceTree = "<group>"; };
+		422342E22FC579C200DAC424 /* Backtrace+capture-darwin.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "Backtrace+capture-darwin.cc"; sourceTree = "<group>"; };
+		422342E52FC579E000DAC424 /* Backtrace+capture-posix.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "Backtrace+capture-posix.cc"; sourceTree = "<group>"; };
+		422342E72FC579EA00DAC424 /* Backtrace+signals-posix.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "Backtrace+signals-posix.cc"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -517,6 +525,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27EBACF52F76017500A62315 /* Foundation.framework in Frameworks */,
+				27EBACF42F76015D00A62315 /* CoreFoundation.framework in Frameworks */,
 				279AC5381C096B5C002C80DB /* libfleeceStatic.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -810,6 +820,9 @@
 			children = (
 				2700BBA0218B949900797537 /* Backtrace.hh */,
 				2700BBA1218B949900797537 /* Backtrace.cc */,
+				422342E22FC579C200DAC424 /* Backtrace+capture-darwin.cc */,
+				422342E52FC579E000DAC424 /* Backtrace+capture-posix.cc */,
+				422342E72FC579EA00DAC424 /* Backtrace+signals-posix.cc */,
 				273CD2D625E874CD00B93C59 /* Base64.hh */,
 				273CD2D725E874CD00B93C59 /* Base64.cc */,
 				2746DD3B1D931BE9000517BC /* Benchmark.hh */,
@@ -1422,6 +1435,7 @@
 				273CD2D925E874CD00B93C59 /* Base64.cc in Sources */,
 				27DE2EEB2125FC9300123597 /* FleeceException.cc in Sources */,
 				275B3596234BE12800FE9CF0 /* FLSlice.cc in Sources */,
+				422342E32FC579C200DAC424 /* Backtrace+capture-darwin.cc in Sources */,
 				27DE2E962125FA1700123597 /* RefCounted.cc in Sources */,
 				2700BBA3218B949900797537 /* Backtrace.cc in Sources */,
 				2718B3912CAF22F8006C09CB /* ConcurrentArena.cc in Sources */,
@@ -1429,12 +1443,14 @@
 				2779BA1124CB4A4900BCEA8F /* ConcurrentMap.cc in Sources */,
 				27DFAE13219F83AB00DF57EB /* InstanceCounted.cc in Sources */,
 				27DE2E9D2125FA1700123597 /* slice+CoreFoundation.cc in Sources */,
+				422342E82FC579EA00DAC424 /* Backtrace+signals-posix.cc in Sources */,
 				27D965692339595700F4A51C /* NumConversion.cc in Sources */,
 				27DE2EEA2125FC5A00123597 /* Writer.cc in Sources */,
 				275F0460261E46E9005261C0 /* slice_stream.cc in Sources */,
 				27DE2E922125FA1700123597 /* varint.cc in Sources */,
 				27DE2EE82125FB2100123597 /* cdecode.c in Sources */,
 				27DE2EE92125FB2100123597 /* cencode.c in Sources */,
+				422342E62FC579E000DAC424 /* Backtrace+capture-posix.cc in Sources */,
 				2700BB9D217E8C0D00797537 /* ParseDate.cc in Sources */,
 				27D9656E23397EF700F4A51C /* SwiftDtoa.cc in Sources */,
 			);

@@ -103,10 +103,10 @@ namespace fleece { namespace impl { namespace internal {
 // Array::kEmpty and Dict::kEmpty. But in those cases it's essential that they be aligned
 // on a 2-byte boundary, i.e. have even addresses, because Fleece treats the LSB of a pointer
 // as a flag indicating a mutable value.
-#ifndef _MSC_VER
-    #define EVEN_ALIGNED __attribute__((aligned(2)))
+#if defined(_MSC_VER)
+    #define EVEN_ALIGNED __declspec(align(2))
 #else
-    #define EVEN_ALIGNED
+    #define EVEN_ALIGNED __attribute__((aligned(2)))
 #endif
 
 

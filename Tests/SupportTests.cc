@@ -372,17 +372,79 @@ TEST_CASE("Timestamp Conversions", "[Timestamps]") {
 }
 
 
-static Backtrace makeBacktrace() {
-    return Backtrace();
+NOINLINE static std::shared_ptr<Backtrace> makeBacktrace() {
+    return Backtrace::capture();
 }
 
-
-TEST_CASE("Backtrace") {
-    Backtrace bt = makeBacktrace();
-    string str = bt.toString();
+#ifdef DEBUG
+// This test is not reliable in release mode because the symbol information might
+// be stripped.  It also has to be manual since not all machines are capable of
+// runtime symbolication and if they aren't this test will fail.
+TEST_CASE("Backtrace", "[.BacktraceManual]") {
+    auto bt = makeBacktrace();
+    string str = bt->toString();
     cout << str << endl;
-    CHECK(std::count(str.begin(), str.end(), '\n') >= 4);
+
+
+    // Checking the size doesn't seem to be reliable across platforms, so check
+    // for the presence of the frame we want.
+    CHECK(str.find("makeBacktrace") != string::npos);
+
+#ifndef _MSC_VER
+    // Since we entered from a test function we should have suppressed frames
+    // but suppression is not implemented on Windows
+    CHECK(str.find("more suppressed") != std::string::npos);
+#endif
 }
+
+namespace test::backtrace {
+    static void doBadThings() {
+        raise(SIGABRT);
+    }
+    static void crashOnPurpose() {
+        doBadThings();
+    }
+}
+
+TEST_CASE("Backtrace crash", "[.BacktraceManual]") {
+    // Since this test crashes the process intentionally,
+    // It will fail and require manual inspection of stderr
+    test::backtrace::crashOnPurpose();
+}
+
+#ifndef _MSC_VER
+
+static struct sigaction previous{};
+static void sig_handler(int signo, siginfo_t* info, void* context) {
+    if (signo == SIGSEGV) {
+        write(STDERR_FILENO, "This message should be in stderr, and the backtrace should be below it.\n", 72);
+    }
+
+    sigaction(signo, &previous, nullptr);
+    raise(signo);
+}
+
+TEST_CASE("Backtrace crash with override", "[.BacktraceManual]") {
+    struct sigaction action{};
+    action.sa_flags = SA_SIGINFO | SA_NODEFER | SA_RESETHAND;
+    sigfillset(&action.sa_mask);
+    sigdelset(&action.sa_mask, SIGSEGV);
+#if defined(__clang__)
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wdisabled-macro-expansion"
+#endif
+    action.sa_sigaction = &sig_handler;
+#if defined(__clang__)
+#    pragma clang diagnostic pop
+#endif
+
+    int success = sigaction(SIGSEGV, &action, &previous);
+    CHECK(success == 0);
+    raise(SIGSEGV);
+}
+
+#endif
+#endif
 
 
 class ICTest : public RefCounted, public InstanceCountedIn<ICTest> {

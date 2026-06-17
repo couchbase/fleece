@@ -670,7 +670,7 @@ FLDoc FLDoc_FromResultData(FLSliceResult data, FLTrust trust, FLSharedKeys FL_NU
 FLDoc FL_NULLABLE FLDoc_FromJSON(FLSlice json, FLError* FL_NULLABLE outError) FLAPI {
     try {
         return retain(Doc::fromJSON(json));
-    } catchError(outError);
+    } catchError(outError)
     return nullptr;
 }
 
@@ -721,7 +721,7 @@ bool FLEncodeJSONDelta(FLValue FL_NULLABLE old, FLValue FL_NULLABLE nuu, FLEncod
 FLSliceResult FLApplyJSONDelta(FLValue FL_NULLABLE old, FLSlice jsonDelta, FLError * FL_NULLABLE outError) FLAPI {
     try {
         return FLSliceResult(JSONDelta::apply(old, jsonDelta));
-    } catchError(outError);
+    } catchError(outError)
     return {};
 }
 

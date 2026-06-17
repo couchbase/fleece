@@ -314,4 +314,13 @@ namespace fleece {
 
 }
 
+
+// This makes Retained and Ref hashable, for use as keys in unordered_map and unordered_set.
+template <class T, fleece::Nullability N>
+struct std::hash<fleece::Retained<T,N>> {
+    std::size_t operator()(fleece::Retained<T,N> const& r) const noexcept {
+        return std::hash<T*>{}(r.get());
+    }
+};
+
 FL_ASSUME_NONNULL_END

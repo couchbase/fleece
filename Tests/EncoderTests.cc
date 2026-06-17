@@ -224,6 +224,40 @@ public:
         enc.writeKey(key);
     }
 
+    void create100PeopleFleeceFile() {
+        auto input = readTestFile(kBigJSONTestFileName);
+
+        enc.uniqueStrings(true);
+
+        JSONConverter jr(enc);
+        if (!jr.encodeJSON(input))
+            FAIL("JSON parse error at " << jr.errorPos());
+
+        #if 0
+        // Dump the string table and some statistics:
+        auto &strings = enc.strings();
+        strings.dump();
+        #endif
+
+        enc.end();
+        result = enc.finish();
+
+        #if FL_HAVE_TEST_FILES
+        REQUIRE(result.buf);
+        writeToFile(result, kTestFilesDir "1000people.fleece");
+        #endif
+        sCreated1000PeopleFile = true;
+
+        fprintf(stderr, "\nJSON size: %zu bytes; Fleece size: %zu bytes (%.2f%%)\n",
+                input.size, result.size, (result.size*100.0/input.size));
+        #ifndef NDEBUG
+        fprintf(stderr, "Narrow: %u, Wide: %u (total %u)\n", enc._numNarrow, enc._numWide, enc._numNarrow+enc._numWide);
+        fprintf(stderr, "Narrow count: %u, Wide count: %u (total %u)\n", enc._narrowCount, enc._wideCount, enc._narrowCount+enc._wideCount);
+        fprintf(stderr, "Used %u pointers to shared strings\n", enc._numSavedStrings);
+        #endif
+    }
+
+    static inline bool sCreated1000PeopleFile = false;
 };
 
 #pragma mark - TESTS
@@ -682,40 +716,14 @@ public:
     }
 
     TEST_CASE_METHOD(EncoderTests, "ConvertPeople", "[Encoder]") {
-        auto input = readTestFile(kBigJSONTestFileName);
-
-        enc.uniqueStrings(true);
-
-        JSONConverter jr(enc);
-        if (!jr.encodeJSON(input))
-            FAIL("JSON parse error at " << jr.errorPos());
-
-#if 0
-        // Dump the string table and some statistics:
-        auto &strings = enc.strings();
-        strings.dump();
-#endif
-
-        enc.end();
-        result = enc.finish();
-
-#if FL_HAVE_TEST_FILES
-        REQUIRE(result.buf);
-        writeToFile(result, kTestFilesDir "1000people.fleece");
-#endif
-
-        fprintf(stderr, "\nJSON size: %zu bytes; Fleece size: %zu bytes (%.2f%%)\n",
-                input.size, result.size, (result.size*100.0/input.size));
-#ifndef NDEBUG
-        fprintf(stderr, "Narrow: %u, Wide: %u (total %u)\n", enc._numNarrow, enc._numWide, enc._numNarrow+enc._numWide);
-        fprintf(stderr, "Narrow count: %u, Wide count: %u (total %u)\n", enc._narrowCount, enc._wideCount, enc._narrowCount+enc._wideCount);
-        fprintf(stderr, "Used %u pointers to shared strings\n", enc._numSavedStrings);
-#endif
+        create100PeopleFleeceFile();
     }
 
 #if FL_HAVE_TEST_FILES
     TEST_CASE_METHOD(EncoderTests, "Encode To File", "[Encoder]") {
-    	auto doc = readTestFile("1000people.fleece");
+        if (!sCreated1000PeopleFile)
+            create100PeopleFleeceFile();
+        auto doc = readTestFile("1000people.fleece");
         auto root = Value::fromTrustedData(doc)->asArray();
 
         {
@@ -737,6 +745,8 @@ public:
 
 #if FL_HAVE_TEST_FILES
     TEST_CASE_METHOD(EncoderTests, "FindPersonByIndexSorted", "[Encoder]") {
+        if (!sCreated1000PeopleFile)
+            create100PeopleFleeceFile();
         auto doc = readTestFile("1000people.fleece");
         auto root = Value::fromTrustedData(doc)->asArray();
         auto person = root->get(123)->asDict();
@@ -785,6 +795,8 @@ public:
             // Now try a wide Dict:
             Dict::key nameKey(slice("name"));
 
+            if (!sCreated1000PeopleFile)
+                create100PeopleFleeceFile();
             auto doc = readTestFile("1000people.fleece");
             auto root = Value::fromTrustedData(doc)->asArray();
             auto person = root->get(123)->asDict();
@@ -1197,6 +1209,30 @@ public:
             enc.endDict();
             alloc_slice res = enc.finish();
             CHECK(res.asString() == R"r({"intKey":123,"strKey":"abc"})r");
+        }
+    }
+
+    TEST_CASE("Encoder snip overflow") {
+        // Test for CBSE-22711, wherein Encoder::snip() can write past the end of a buffer.
+        // The inline buffer is 256 bytes. We don't know exactly how many bytes
+        // beginArray/items/endArray consume, so sweep a window covering every
+        // possible alignment of reserveSpace(2) within the last 8 bytes of _initialBuf.
+        for (int extraInts = 0; extraInts < 280; ++extraInts) {
+            fleece::impl::Encoder enc;
+            enc.beginArray();
+            for (int i = 0; i < extraInts; ++i)
+                enc.writeInt(i & 0x7f);             // 1 or 2 bytes each, varies tag boundary
+            enc.endArray();
+
+            // Capture _items before snip; snip's placement-new must not modify it.
+            auto itemsBefore = *(void**)((char*)&enc + 0x178); // _items offset
+            REQUIRE_NOTHROW(enc.snip());
+            auto itemsAfter  = *(void**)((char*)&enc + 0x178);
+
+            // Pre-fix: at some specific extraInts this will fail (low 2 bytes zeroed).
+            // Post-fix: itemsAfter == itemsBefore (or both null after finish/reset).
+            CAPTURE(extraInts);
+            REQUIRE(itemsBefore == itemsAfter);
         }
     }
 

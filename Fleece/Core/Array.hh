@@ -59,7 +59,7 @@ namespace fleece { namespace impl {
 
         inline iterator begin() const noexcept;
 
-        constexpr Array()  :Value(internal::kArrayTag, 0, 0) { }
+        constexpr Array()  :Value(internal::kArrayTag, 0, 0, 0, 0) { }
 
     protected:
         internal::HeapArray* heapArray() const;

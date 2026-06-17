@@ -261,8 +261,10 @@
 #if defined(_MSC_VER)
 #   ifdef FLEECE_EXPORTS
 #       define FLEECE_PUBLIC __declspec(dllexport)
-#   else
+#   elif !defined(FLEECE_STATIC)
 #       define FLEECE_PUBLIC __declspec(dllimport)
+#   else
+#       define FLEECE_PUBLIC
 #   endif
 #   define FLEECE_PUBLIC_IMPL FLEECE_PUBLIC
 #else

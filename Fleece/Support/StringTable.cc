@@ -62,8 +62,8 @@ namespace fleece {
         
         _count = s._count;
         _maxDistance = s._maxDistance;
-        memcpy(_hashes, s._hashes, _count * sizeof(hash_t));
-        memcpy(_entries, s._entries, _count * sizeof(entry_t));
+        memcpy((void *)_hashes, s._hashes, _count * sizeof(hash_t));
+        memcpy((void *)_entries, s._entries, _count * sizeof(entry_t));
 
         return *this;
     }

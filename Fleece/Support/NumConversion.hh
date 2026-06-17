@@ -13,7 +13,7 @@
 #pragma once
 #include "fleece/PlatformCompat.hh"
 
-#if __has_include("Error.hh")
+#if __has_include("Error.hh") && !defined(NO_FLEECE_ASSERT)
 #include "Error.hh"
 #else
 #include "FleeceException.hh"
@@ -81,7 +81,7 @@ namespace fleece {
             // the input could underflow the output.  The reverse situation does not appear to be true.
             bool min_ok = std::is_signed<Out>::value && !std::is_signed<In>::value;
 
-#ifdef Assert
+#if !defined(NO_FLEECE_ASSERT) && defined(Assert)
             if constexpr (::std::is_floating_point<In>::value) {
                 Assert(val >= std::numeric_limits<Out>::min() && val <= ::std::numeric_limits<Out>::max(),
                     "Invalid narrow_cast %g -> %s", (double)val, typeid(Out).name());
