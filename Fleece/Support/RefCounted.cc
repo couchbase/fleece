@@ -11,7 +11,9 @@
 //
 
 #include "fleece/RefCounted.hh"
+#include "AtomicRetained.hh"
 #include "Backtrace.hh"
+#include "betterassert.hh"
 #include <stdexcept>
 #include <stdio.h>
 #include <stdlib.h>
@@ -131,5 +133,47 @@ namespace fleece {
     }
 
 
+    namespace internal {
+        /// Tag bit that's added to `_ref` while accessing it.
+        /// We can't use the low bit (1) because mutable Fleece Values already use that as a tag.
+        static constexpr uintptr_t kBusyMask = uintptr_t(1) << 63;
+
+        AtomicWrapper::AtomicWrapper(uintptr_t ref) noexcept
+        :_ref(ref)
+        {
+            assert((ref & kBusyMask) == 0);
+        }
+
+
+        uintptr_t AtomicWrapper::exchangeWith(uintptr_t newRef) noexcept {
+            uintptr_t oldRef = getAndLock();
+            setAndUnlock(oldRef, newRef);
+            return oldRef;
+        }
+
+        /// Loads and returns the value of `_ref`, while atomically setting `_ref`s high bit
+        /// to mark it as busy. If the high bit is set, busy-waits until it's cleared.
+        /// (The busy-wait should be OK since the high bit will only be set very briefly.)
+        /// @warning This MUST be followed ASAP by `setAndUnlock`.
+        uintptr_t AtomicWrapper::getAndLock() const noexcept {
+            uintptr_t r = _ref.load(std::memory_order_acquire);
+            while (true) {
+                if (r & kBusyMask)
+                    r = _ref.load(std::memory_order_acquire);
+                else if (_ref.compare_exchange_strong(r, r | kBusyMask, std::memory_order_acquire))
+                    break;
+            }
+            assert((r & kBusyMask) == 0);
+            return r;
+        }
+
+        /// Changes `_ref`s value from `oldRef` to `newRef`, clearing the busy bit.
+        /// MUST only be called after `getAndLock`.
+        void AtomicWrapper::setAndUnlock(uintptr_t oldRef, uintptr_t newRef) const noexcept {
+            uintptr_t r = oldRef | kBusyMask;
+            bool ok = _ref.compare_exchange_strong(r, newRef, std::memory_order_release);
+            assert(ok);
+        }
+    }
 
 }
