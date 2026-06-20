@@ -135,8 +135,11 @@ namespace fleece {
 
     namespace internal {
         /// Tag bit that's added to `_ref` while accessing it.
-        /// We can't use the low bit (1) because mutable Fleece Values already use that as a tag.
-        static constexpr uintptr_t kBusyMask = uintptr_t(1) << (8 * sizeof(uintptr_t) - 1);
+        /// We use bit 1 (value 2): RefCounted has an `atomic<int32_t>` member, so it's always
+        /// >= 4-aligned, guaranteeing bits 0 and 1 are zero in any stored pointer on every ABI.
+        /// Bit 0 (value 1) is reserved because mutable Fleece Values already use it as a tag.
+        /// (The previous high-bit choice collided with Android's arm64 tagged pointers; see CBL-8494.)
+        static constexpr uintptr_t kBusyMask = 0b10;
 
         AtomicWrapper::AtomicWrapper(uintptr_t ref) noexcept
         :_ref(ref)
