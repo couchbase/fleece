@@ -199,7 +199,8 @@ namespace signal_safe {
 #endif
 
         if ( fd != -1 ) write(fd, str, n ? n : strlen(str));
-        write(STDERR_FILENO, str, n ? n : strlen(str));
+        if (getenv("CBL_BACKTRACE_TO_STDERR") != nullptr)
+            write(STDERR_FILENO, str, n ? n : strlen(str));
 
 #ifdef __clang__
 #    pragma clang diagnostic pop
