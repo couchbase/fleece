@@ -409,7 +409,11 @@ namespace test::backtrace {
 TEST_CASE("Backtrace crash", "[.BacktraceManual]") {
     // Since this test crashes the process intentionally,
     // It will fail and require manual inspection of stderr
+#ifdef _MSC_VER
+    SetEnvironmentVariable("CBL_BACKTRACE_TO_STDERR", "1");
+#else
     setenv("CBL_BACKTRACE_TO_STDERR", "1", 1);
+#endif
     test::backtrace::crashOnPurpose();
 }
 
