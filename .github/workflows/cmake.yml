@@ -32,9 +32,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            cc: clang
+            cxx: clang++
+          - os: macOS-latest
+          - os: windows-latest
     runs-on: ${{ matrix.os }}
-
+    env:
+      CC: ${{ matrix.cc }}
+      CXX: ${{ matrix.cxx }}
 
     steps:
     - uses: actions/checkout@v2
