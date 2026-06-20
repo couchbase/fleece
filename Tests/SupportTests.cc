@@ -10,7 +10,6 @@
 // the file licenses/APL2.txt.
 //
 
-#include "TestsCommon.hh"
 #include "fleece/FLBase.h"
 #include "fleece/InstanceCounted.hh"
 #include "FleeceTests.hh"
@@ -22,7 +21,6 @@
 #include "TempArray.hh"
 #include "sliceIO.hh"
 #include "Base64.hh"
-#include "c4Log.h"
 #include <iostream>
 #include <future>
 
@@ -411,7 +409,6 @@ namespace test::backtrace {
 TEST_CASE("Backtrace crash", "[.BacktraceManual]") {
     // Since this test crashes the process intentionally,
     // It will fail and require manual inspection of stderr
-    InitTestLogging(kC4LogInfo);
     setenv("CBL_BACKTRACE_TO_STDERR", "1", 1);
     test::backtrace::crashOnPurpose();
 }
