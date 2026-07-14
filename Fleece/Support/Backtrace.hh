@@ -39,7 +39,7 @@ namespace fleece {
 
       protected:
 #ifdef _WIN32
-        static std::ofstream sCrashStream;
+        static std::string sLogPath;
 #else
         static volatile sig_atomic_t sLogFD;
 #endif

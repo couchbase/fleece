@@ -96,11 +96,14 @@ namespace fleece {
                 bt = Backtrace::capture(skip, 32 + skip);
             }
 
-            if ( sCrashStream ) {
-                sCrashStream << "\n\n******************** Process Crash: " << violation_type()
-                             << " ********************\n";
-                bt->writeTo(sCrashStream);
-                sCrashStream << "\n******************** Now terminating ********************\n";
+            if ( !sLogPath.empty() ) {
+                ofstream crashStream(sLogPath, ios::out | ios::trunc | ios::binary);
+                if ( crashStream ) {
+                    crashStream << "\n\n******************** Process Crash: " << violation_type()
+                                << " ********************\n";
+                    bt->writeTo(crashStream);
+                    crashStream << "\n******************** Now terminating ********************\n";
+                }
             }
 
             cerr << "\n\n******************** Process Crash: " << violation_type() << " ********************\n";
@@ -110,11 +113,9 @@ namespace fleece {
     };
 
     // Awkwardly defined here to avoid FleeceBase getting its own copy since it also compiles Backtrace.cc
-    ofstream BacktraceSignalHandler::sCrashStream;
+    string BacktraceSignalHandler::sLogPath;
 
-    void BacktraceSignalHandler::setLogPath(const char* path) {
-        sCrashStream = ofstream(path, ios::out | ios::trunc | ios::binary);
-    }
+    void BacktraceSignalHandler::setLogPath(const char* path) { sLogPath = path; }
 }  // namespace fleece
 
 static fleece::BacktraceSignalHandlerWin32 handler;
