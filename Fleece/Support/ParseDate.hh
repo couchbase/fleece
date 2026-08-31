@@ -15,8 +15,78 @@
 #include "fleece/slice.hh"
 #include <chrono>
 #include <ctime>
+#include <string>
+
+#if defined(__linux__)
+// Linux libstdc++ falls back to the hand-written formatter below; minimum Linux toolchain to
+// drop this and make USE_STD_FORMAT unconditional: libstdc++ 13+ (e.g. Ubuntu 24.04 LTS's
+// default toolchain). libstdc++ 12 and earlier don't have <format> at all; libstdc++ 13 has
+// full std::format chrono support (%F/%T/%c/%A, including fractional seconds), verified with
+// both g++-13 and clang-18.
+#    define USE_STD_FORMAT 0
+#else
+#    define USE_STD_FORMAT 1
+#    include <format>
+#endif
 
 namespace fleece {
+
+#if !USE_STD_FORMAT
+    /** Hand-written substitute for date::format/std::format's chrono formatter, covering exactly
+        the specifiers this codebase actually uses (%F, %T, %Y, %m, %d, %H, %M, %S, %A, %c);
+        everything else in `fmt` is copied through literally. Takes an already-decomposed
+        calendar/time-of-day breakdown (see the format() overloads below) rather than a
+        time_point directly, so this one non-template function serves every Duration without
+        needing separate instantiations; defined in ParseDate.cc. */
+    std::string formatChronoFields(const char* fmt, std::chrono::year_month_day date, std::chrono::weekday wd,
+                                    long long hours, long long minutes, long long seconds, long long subseconds,
+                                    int fractionalWidth);
+
+    /** Decomposes any time_point (local_time or sys_time, any Duration) into calendar fields and
+        calls formatChronoFields. Shared by both format() overloads below so the decomposition
+        logic -- portable, no toolchain variance -- isn't duplicated between them. */
+    template <class TimePoint>
+    std::string formatViaFields(const char* fmt, TimePoint tp) {
+        using namespace std::chrono;
+        const auto           day  = floor<days>(tp);
+        const year_month_day date{day};
+        const hh_mm_ss       time{tp - day};
+        const weekday        wd{day};
+        return formatChronoFields(fmt, date, wd, time.hours().count(), time.minutes().count(), time.seconds().count(),
+                                   decltype(time)::fractional_width > 0 ? time.subseconds().count() : 0,
+                                   decltype(time)::fractional_width);
+    }
+#endif
+
+    /** Formats a local or UTC time_point using a strftime-like format string (e.g. "%F", "%T",
+        "%c", "%A"). This is the single seam for platform variance in std::format's chrono
+        support: it calls std::format directly where available (see USE_STD_FORMAT above), and
+        falls back to formatChronoFields (a small hand-written formatter covering just the
+        specifiers this codebase uses elsewhere) otherwise. Callers don't need their own #if --
+        the branch lives here, once.
+        This overload (rather than one generic template accepting any type) exists deliberately:
+        it constrains the accepted type to local_time, so misuse fails cleanly at the call site
+        via overload resolution instead of deep inside a template body. */
+    template <class Duration>
+    std::string format(const char* fmt, std::chrono::local_time<Duration> tp) {
+#if USE_STD_FORMAT
+        return std::vformat(std::string("{:") + fmt + "}", std::make_format_args(tp));
+#else
+        return formatViaFields(fmt, tp);
+#endif
+    }
+
+    /** Formats a UTC time_point using a strftime-like format string. See the local_time overload
+        above (including why this is a separate overload rather than one generic template). */
+    template <class Duration>
+    std::string format(const char* fmt, std::chrono::sys_time<Duration> tp) {
+#if USE_STD_FORMAT
+        return std::vformat(std::string("{:") + fmt + "}", std::make_format_args(tp));
+#else
+        return formatViaFields(fmt, tp);
+#endif
+    }
+
     static constexpr int64_t kInvalidDate = INT64_MIN;
 
     typedef enum {

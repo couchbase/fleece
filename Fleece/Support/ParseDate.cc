@@ -58,12 +58,13 @@
  */
 
 #include "ParseDate.hh"
-#include "date/date.h"
 #include "FleeceException.hh"
+#include "betterassert.hh"
 #include <cstdint>
 #include <cstdarg>
 #include <cctype>
 #include <cstring>
+#include <iomanip>
 #include <cmath>
 #include <ctime>
 #include <mutex>
@@ -350,6 +351,99 @@ static int parseYyyyMmDd(const char* zDate, fleece::DateTime* p, bool doJD) {
 #pragma mark -
 
 namespace fleece {
+
+#if !USE_STD_FORMAT
+    string formatChronoFields(const char* fmt, year_month_day date, weekday wd, long long hours, long long minutes,
+                               long long seconds, long long subseconds, int fractionalWidth) {
+        // Fixed English weekday/month names -- deliberately not locale-dependent, unlike
+        // std::put_time/date::format's %A/%c. Nothing in this codebase asserts on the exact text
+        // of %A or %c (checked: %A is matched by a generic \w+ in tests, %c is unused), so a
+        // fixed table is simpler than threading locale through here, and portable by construction.
+        static constexpr const char* kWeekdayNames[7] = {"Sunday",   "Monday", "Tuesday", "Wednesday",
+                                                          "Thursday", "Friday", "Saturday"};
+        static constexpr const char* kMonthNames[12]   = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                                                           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+
+        auto appendPadded = [](string& out, long long value, int width) {
+            string digits = to_string(value);
+            for ( int pad = width - int(digits.size()); pad > 0; --pad ) out += '0';
+            out += digits;
+        };
+
+        string out;
+        for ( const char* p = fmt; *p; ++p ) {
+            if ( *p != '%' || !p[1] ) {
+                out += *p;
+                continue;
+            }
+            switch ( *++p ) {
+                case 'F':
+                    appendPadded(out, int(date.year()), 4);
+                    out += '-';
+                    appendPadded(out, unsigned(date.month()), 2);
+                    out += '-';
+                    appendPadded(out, unsigned(date.day()), 2);
+                    break;
+                case 'T':
+                    appendPadded(out, hours, 2);
+                    out += ':';
+                    appendPadded(out, minutes, 2);
+                    out += ':';
+                    appendPadded(out, seconds, 2);
+                    if ( fractionalWidth > 0 ) {
+                        out += '.';
+                        appendPadded(out, subseconds, fractionalWidth);
+                    }
+                    break;
+                case 'Y':
+                    appendPadded(out, int(date.year()), 4);
+                    break;
+                case 'm':
+                    appendPadded(out, unsigned(date.month()), 2);
+                    break;
+                case 'd':
+                    appendPadded(out, unsigned(date.day()), 2);
+                    break;
+                case 'H':
+                    appendPadded(out, hours, 2);
+                    break;
+                case 'M':
+                    appendPadded(out, minutes, 2);
+                    break;
+                case 'S':
+                    appendPadded(out, seconds, 2);
+                    if ( fractionalWidth > 0 ) {
+                        out += '.';
+                        appendPadded(out, subseconds, fractionalWidth);
+                    }
+                    break;
+                case 'A':
+                    out += kWeekdayNames[wd.c_encoding()];
+                    break;
+                case 'c':
+                    out += kWeekdayNames[wd.c_encoding()];
+                    out += ' ';
+                    out += kMonthNames[unsigned(date.month()) - 1];
+                    out += ' ';
+                    appendPadded(out, unsigned(date.day()), 2);
+                    out += ' ';
+                    appendPadded(out, hours, 2);
+                    out += ':';
+                    appendPadded(out, minutes, 2);
+                    out += ':';
+                    appendPadded(out, seconds, 2);
+                    out += ' ';
+                    appendPadded(out, int(date.year()), 4);
+                    break;
+                default:
+                    precondition(false && "unsupported format specifier passed to fleece::formatChronoFields");
+                    break;
+            }
+        }
+        return out;
+    }
+#endif
+
     static map<string, DateComponent> dateComponentMap = {{"millennium", kDateComponentMillennium},
                                                           {"century", kDateComponentCentury},
                                                           {"decade", kDateComponentDecade},
@@ -400,10 +494,10 @@ namespace fleece {
     DateTime FromMillis(const int64_t timestamp) {
         const milliseconds millis{timestamp};
         const time_point   tp{millis};
-        const auto         td = date::floor<date::days>(tp);
+        const auto         td = floor<days>(tp);
 
-        const date::year_month_day ymd{td};
-        const date::hh_mm_ss       hms{floor<milliseconds>(tp - td)};
+        const year_month_day ymd{td};
+        const hh_mm_ss       hms{floor<milliseconds>(tp - td)};
 
         const double ms = static_cast<double>(hms.subseconds().count()) / 1000.0;
 
@@ -462,7 +556,7 @@ namespace fleece {
         }
 
         const milliseconds millis{milliseconds{timestamp} + duration_cast<milliseconds>(tzoffset)};
-        const auto         tm = date::local_time<milliseconds>{millis};
+        const auto         tm = local_time<milliseconds>{millis};
 
         const seconds offset_seconds{tzoffset};
 
@@ -478,23 +572,35 @@ namespace fleece {
             separator = format->separator;
         }
 
-        if ( ymd ) { stream << date::format("%F", tm); }
+        if ( ymd ) { stream << fleece::format("%F", tm); }
 
         if ( hms ) {
             if ( ymd ) { stream << separator; }
 
             if ( has_milli ) {
-                stream << date::format("%T", tm);
+                stream << fleece::format("%T", tm);
             } else {
                 const auto secs = duration_cast<seconds>(millis);
-                stream << date::format("%T", date::local_seconds(secs));
+                stream << fleece::format("%T", local_seconds{secs});
             }
 
             if ( zone ) {
                 if ( offset_seconds.count() == 0 ) {
                     stream << 'Z';
                 } else {
-                    to_stream(stream, "%z", tm, nullptr, &offset_seconds);
+                    // std::chrono::to_stream (and the std::chrono::format built on it) isn't
+                    // implemented by libc++ yet, so format the "%z" offset manually. This is a
+                    // direct port of date::to_stream's own (unmodified, no ':') %z logic.
+                    auto offMinutes = duration_cast<minutes>(offset_seconds);
+                    bool neg        = offMinutes < minutes{0};
+                    offMinutes      = abs(offMinutes);
+                    auto offHours   = duration_cast<hours>(offMinutes);
+                    offMinutes -= offHours;
+                    stream << (neg ? '-' : '+');
+                    if ( offHours < hours{10} ) stream << '0';
+                    stream << offHours.count();
+                    if ( offMinutes < minutes{10} ) stream << '0';
+                    stream << offMinutes.count();
                 }
             }
         }
@@ -506,10 +612,10 @@ namespace fleece {
     }
 
     struct tm FromTimestamp(seconds timestamp) {
-        date::local_seconds  tp{timestamp};
-        auto           dp = floor<date::days>(tp);
-        date::year_month_day ymd{dp};
-        auto           hhmmss = date::make_time(tp - dp);
+        local_seconds  tp{timestamp};
+        auto           dp = floor<days>(tp);
+        year_month_day ymd{dp};
+        hh_mm_ss       hhmmss{tp - dp};
 
         struct tm local_time {};
 

@@ -1,7 +1,13 @@
 cmake_minimum_required (VERSION 3.9...4.0)
 
 # Mac/apple setup -- must appear before the first "project()" line"
-set(CMAKE_OSX_DEPLOYMENT_TARGET "13.0")
+if(NOT DEFINED CMAKE_OSX_DEPLOYMENT_TARGET)
+    # Only used when Fleece is configured standalone; a parent project (e.g.
+    # couchbase-lite-core) sets this before adding Fleece as a subdirectory, and this
+    # must not clobber that value -- otherwise Fleece's own targets silently build
+    # against a different deployment target than the rest of the parent project.
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "13.0")
+endif()
 if(NOT DEFINED CMAKE_OSX_SYSROOT)
     # Tells Mac builds to use the current SDK's headers & libs, not what's in the OS.
     set(CMAKE_OSX_SYSROOT macosx)
@@ -187,7 +193,6 @@ foreach(platform FleeceObjects Fleece FleeceStatic FleeceBase fleeceTool FleeceT
         Fleece/Integration
         Fleece/Mutable
         Fleece/Support
-        vendor/date/include
         vendor/jsonsl
         vendor/libb64
         vendor/SwiftDtoa
