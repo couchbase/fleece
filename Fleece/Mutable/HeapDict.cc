@@ -115,13 +115,21 @@ namespace fleece { namespace impl { namespace internal {
     ValueSlot& HeapDict::setting(slice stringKey) {
         key_t key;
         ValueSlot *slotp = _findValueFor(stringKey);
+        bool newSlot = false;
         if (slotp) {
             key = stringKey;
         } else {
             key = encodeKey(stringKey);
             slotp = &_makeValueFor(key);
+            newSlot = true;
         }
-        if (slotp->empty() && !(_source && _source->get(key)))
+        // An empty slot can mean two different things for a key that exists in _source, and
+        // they must not be conflated: a slot just created above to shadow that source key for
+        // the first time (already counted, don't increment), or a tombstone left behind by an
+        // earlier remove()/removeAll() (which already decremented _count, so re-setting it must
+        // increment). newSlot tells them apart: if the slot isn't new, it can only be the
+        // latter, so increment. (CBL-8812)
+        if (slotp->empty() && !(newSlot && _source && _source->get(key)))
             ++_count;
         markChanged();
         return *slotp;
