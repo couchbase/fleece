@@ -427,6 +427,77 @@ namespace fleece {
     }
 
 
+    TEST_CASE("MutableDict remove then re-set a source key (CBL-8812)", "[Mutable]") {
+        // A key that exists in the immutable `_source` dict, removed and then set again, must
+        // bring count() back to what it was -- the empty slot left by remove() is a tombstone
+        // (which already decremented count), not a fresh shadow of a source key (which wouldn't
+        // need to increment count at all). HeapDict::setting() couldn't tell those two cases
+        // apart, silently leaving count() one too low forever afterward.
+        Retained<Doc> doc = Doc::fromJSON("{\"a\":1,\"b\":2,\"c\":3}"_sl);
+        const Dict*   source = doc->root()->asDict();
+        REQUIRE(source->count() == 3);
+
+        Retained<MutableDict> copy = MutableDict::newDict(source);
+        REQUIRE(copy->count() == 3);
+
+        copy->remove("b"_sl);
+        CHECK(copy->count() == 2);
+
+        copy->set("b"_sl, 20);
+        CHECK(copy->count() == 3);
+
+        // The bug doesn't just mis-report count(): kvArray() sizes its cache array from count(),
+        // then the (correct) iterator overruns it, corrupting the heap. So also confirm the
+        // iterator itself still yields all 3 keys, matching the now-correct count().
+        int  n     = 0;
+        bool sawA = false, sawB = false, sawC = false;
+        for (MutableDict::iterator i(copy); i; ++i) {
+            ++n;
+            slice key = i.keyString();
+            if (key == "a"_sl) sawA = true;
+            else if (key == "b"_sl) sawB = true;
+            else if (key == "c"_sl) sawC = true;
+        }
+        CHECK(n == copy->count());
+        CHECK(n == 3);
+        CHECK(sawA);
+        CHECK(sawB);
+        CHECK(sawC);
+        CHECK(copy->get("b"_sl)->asInt() == 20);
+    }
+
+
+    TEST_CASE("MutableDict removeAll then re-set a source key (CBL-8812)", "[Mutable]") {
+        // Same underlying bug as above, reached via removeAll() instead of remove(): it shadows
+        // every source key with an empty tombstone slot in one call and resets count() to 0
+        // directly, so re-setting any one of those keys must bring count() back up by one --
+        // but setting() can't distinguish that tombstone from a fresh shadow slot either.
+        Retained<Doc> doc = Doc::fromJSON("{\"a\":1,\"b\":2,\"c\":3}"_sl);
+        const Dict*   source = doc->root()->asDict();
+        REQUIRE(source->count() == 3);
+
+        Retained<MutableDict> copy = MutableDict::newDict(source);
+        REQUIRE(copy->count() == 3);
+
+        copy->removeAll();
+        CHECK(copy->count() == 0);
+
+        copy->set("b"_sl, 20);
+        CHECK(copy->count() == 1);
+
+        int n = 0;
+        for (MutableDict::iterator i(copy); i; ++i) {
+            ++n;
+            CHECK(i.keyString() == "b"_sl);
+        }
+        CHECK(n == copy->count());
+        CHECK(n == 1);
+        CHECK(copy->get("b"_sl)->asInt() == 20);
+        CHECK(copy->get("a"_sl) == nullptr);
+        CHECK(copy->get("c"_sl) == nullptr);
+    }
+
+
     TEST_CASE("MutableDict as Dict", "[Mutable]") {
         Retained<MutableDict> md = MutableDict::newDict();
         const Dict *d = md;
