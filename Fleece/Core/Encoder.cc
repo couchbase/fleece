@@ -146,12 +146,11 @@ namespace fleece { namespace impl {
         return out;
     }
 
-    Retained<Doc> Encoder::finishDoc() {
-        Retained<Doc> doc = new Doc(finish(),
-                                    Doc::kTrusted,
-                                    _sharedKeys,
-                                    (_markExternPtrs ? _base : slice()));
-        return doc;
+    Ref<Doc> Encoder::finishDoc() {
+        return new Doc(finish(),
+                          Doc::kTrusted,
+                          _sharedKeys,
+                          (_markExternPtrs ? _base : slice()));
     }
 
     // Returns position in the stream of the next write. Pads stream to even pos if necessary.

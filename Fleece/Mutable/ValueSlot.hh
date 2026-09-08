@@ -57,9 +57,8 @@ namespace fleece { namespace impl {
 
         // These methods allow set(Value*) to be called, without allowing any other pointer type
         // to be used; without them, set(Foo*) would incorrectly call set(bool).
-        template <class T> void set(const T* t)                 {setValue(t);}
-        template <class T> void set(const Retained<T> &t)       {setValue(t);}
-        template <class T> void set(const RetainedConst<T> &t)  {setValue(t);}
+        template <class T> void set(const T* t)                             {setValue(t);}
+        template <class T, Nullability N> void set(const Retained<T,N> &t)  {setValue(t);}
 
         /** Replaces an external value with a copy of itself. */
         void copyValue(CopyFlags);

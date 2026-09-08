@@ -350,11 +350,11 @@ namespace fleece { namespace impl {
     }
 
 
-    Retained<Doc> Doc::fromFleece(const alloc_slice &fleece, Trust trust) {
+    Ref<Doc> Doc::fromFleece(const alloc_slice &fleece, Trust trust) {
         return new Doc(fleece, trust);
     }
 
-    Retained<Doc> Doc::fromJSON(slice json, SharedKeys *sk) {
+    Ref<Doc> Doc::fromJSON(slice json, SharedKeys *sk) {
         return new Doc(JSONConverter::convertJSON(json, sk), kTrusted, sk);
     }
 

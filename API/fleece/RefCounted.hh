@@ -166,8 +166,29 @@ namespace fleece {
             }
             return *this;
         }
-        
-        explicit operator bool () const FLPURE          {return N==NonNull || (_ref != nullptr);}
+
+#if 1
+        explicit operator bool () const noexcept FLPURE         {return (_ref != nullptr);}
+#else
+        explicit operator bool () const noexcept requires(N==MaybeNull) FLPURE {return (_ref != nullptr);}
+        [[deprecated("A Ref<> is non-null")]] explicit operator bool () const noexcept requires(N==NonNull) FLPURE {return (_ref != nullptr);}
+#endif
+
+        /// Releases the reference. Afterwards this Ref MUST NOT be used again.
+        /// @warning This method should be used with caution!
+        /// Its purpose is to support classes with a `close` or `finalize` method that releases all
+        /// references before it's destructed. Those references might always be non-null until the
+        /// close; they can be (accurately) declared as `Ref` instead of `Retained` by having the
+        /// close method use `destroy` to release them.
+        /// @note Calling `destroy` requires an explicit `std::move`; this is to make it clear
+        ///       that the object's lifetime is effectively ended by the call.
+        void destroy() && noexcept requires(N==NonNull) {
+            release(_ref);
+            _ref = nullptr;
+        }
+
+        /// Returns true if \ref destroy has been called on this Ref.
+        bool isDestroyed() const noexcept requires(N==NonNull) FLPURE    {return _ref == nullptr;}
 
         // typical dereference operations:
         operator T_ptr () const & noexcept LIFETIMEBOUND FLPURE STEPOVER {return _ref;}
