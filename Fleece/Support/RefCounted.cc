@@ -24,14 +24,6 @@
 
 namespace fleece {
 
-#if !DEBUG
-    __hot void RefCounted::_release() const noexcept {
-        if (--_refCount <= 0)
-            delete this;
-    }
-#endif
-
-
     __hot void release(const RefCounted *r) noexcept {
         if (r) r->_release();
     }
@@ -74,9 +66,7 @@ namespace fleece {
         // Store a garbage value to detect use-after-free
         int32_t oldRef = _refCount.exchange(-9999999);
         if (_usuallyFalse(oldRef != 0)) {
-#if DEBUG
             if (oldRef != kCarefulInitialRefCount)
-#endif
             {
                 // Detect if the destructor is not called from _release, i.e. the object still has
                 // references. This is probably a direct call to delete, which is illegal.
@@ -96,7 +86,7 @@ namespace fleece {
     // the object.
 
 
-    void RefCounted::_careful_retain() const noexcept {
+    void RefCounted::_retain() const noexcept {
         auto oldRef = _refCount++;
 
         // Special case: the initial retain of a new object that takes it to refCount 1
@@ -113,7 +103,7 @@ namespace fleece {
     }
 
 
-    void RefCounted::_careful_release() const noexcept {
+    void RefCounted::_release() const noexcept {
         auto oldRef = _refCount--;
 
         // If the refCount was 0 we have a bug where another thread is destructing
