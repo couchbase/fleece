@@ -48,24 +48,11 @@ namespace fleece {
         friend void release(const RefCounted* FL_NULLABLE) noexcept;
         friend void assignRef(RefCounted* FL_NULLABLE &dst, RefCounted* FL_NULLABLE src) noexcept;
 
-#if DEBUG
-        void _retain() const noexcept           {_careful_retain();}
-        void _release() const noexcept          {_careful_release();}
-#else
-        ALWAYS_INLINE void _retain() const noexcept   { ++_refCount; }
-        void _release() const noexcept;
-#endif
-
         static constexpr int32_t kCarefulInitialRefCount = -6666666;
-        void _careful_retain() const noexcept;
-        void _careful_release() const noexcept;
+        void _retain() const noexcept;
+        void _release() const noexcept;
 
-        mutable std::atomic<int32_t> _refCount
-#if DEBUG
-                                               {kCarefulInitialRefCount};
-#else
-                                               {0};
-#endif
+        mutable std::atomic<int32_t> _refCount {kCarefulInitialRefCount};
     };
 
     template <class T> concept RefCountedType = std::derived_from<T, RefCounted>;
