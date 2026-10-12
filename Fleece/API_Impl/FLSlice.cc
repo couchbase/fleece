@@ -117,7 +117,7 @@ namespace fleece {
         uint8_t _buf[4];
 
         static inline void* operator new(size_t basicSize, size_t bufferSize) noexcept {
-            return malloc(basicSize - sizeof(sharedBuffer::_buf) + bufferSize);
+            return malloc(basicSize - sizeof(sharedBuffer::_buf) + std::max(bufferSize, sizeof(sharedBuffer::_buf)));
         }
 
         static inline void operator delete(void *self) {
