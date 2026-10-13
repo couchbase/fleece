@@ -67,7 +67,7 @@ namespace fleece { namespace impl {
         alloc_slice finish();
 
         /** Returns the encoded data as a Doc. This implicitly calls end(). */
-        Retained<Doc> finishDoc();
+        Ref<Doc> finishDoc();
 
         /** Resets the encoder so it can be used again. */
         void reset();
