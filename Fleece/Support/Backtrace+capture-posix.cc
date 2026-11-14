@@ -25,7 +25,7 @@ namespace fleece {
     // If any of these strings occur in a backtrace, suppress further frames.
     static constexpr const char* kTerminalFunctions[] = {
             "CATCH2_INTERNAL_TEST_",
-            "Catch::(anon)::TestInvokerAsFunction::invoke() const"
+            "Catch::(anon)::TestInvokerAsFunction::invoke() const",
             "litecore::actor::Scheduler::task(unsigned)",
             "litecore::actor::GCDMailbox::safelyCall",
             "litecore::actor::ThreadedMailbox::safelyCall"

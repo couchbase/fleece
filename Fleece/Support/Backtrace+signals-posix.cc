@@ -21,7 +21,7 @@ namespace fleece {
 
     namespace {
         template<typename T, size_t N>
-        consteval bool allUnique(const array<T, N>& arr) {
+        constexpr bool allUnique(const array<T, N>& arr) {
             for (size_t i = 0; i < N; ++i)
                 for (size_t j = i + 1; j < N; ++j)
                     if (arr[i] == arr[j]) return false;
