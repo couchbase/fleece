@@ -364,10 +364,13 @@ namespace fleece {
                                                           {"millisecond", kDateComponentMillisecond}};
 
     DateTime ParseISO8601DateRaw(const char* dateStr) {
-        DateTime x{0, 0, 0, 0, 0, 0, 0, 0.0, 0, 0, 0, 0, 0};
-        if ( parseYyyyMmDd(dateStr, &x, false) ) { parseHhMmSs(dateStr, &x); }
-
-        return x;
+        const DateTime invalid{0, 0, 0, 0, 0, 0, 0, 0.0, 0, 0, 0, 0, 0};
+        DateTime       x = invalid;
+        // The parse helpers return 0 on success and give their result through the DateTime out-parameter,
+        // which is valid only on success. A failed helper may still have written to it (e.g. the time of
+        // "2018-10-23T18:33:01junk"), so return `x` only after a parse succeeded, else an invalid DateTime.
+        if ( !parseYyyyMmDd(dateStr, &x, false) || !parseHhMmSs(dateStr, &x) ) { return x; }
+        return invalid;
     }
 
     DateTime ParseISO8601DateRaw(slice date) {
