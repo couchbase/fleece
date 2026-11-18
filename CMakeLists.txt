@@ -65,7 +65,7 @@ if(FLEECE_WARNINGS_HARDCORE)
             -Wno-format-pedantic # "format specifies type 'void *' but the argument has type 'C4Document *'"
             -Wno-global-constructors
             -Wno-gnu-anonymous-struct # "anonymous structs are a GNU extension"
-            -Wno-gnu-include-next # "#include_next is a language extension", in GCC's own stdint.h on Linux (a system header)
+            -Wno-gnu-include-next # "#include_next is a language extension": the GCC 11 stdint.h that Clang picks up on the Linux CI node (a system header)
             -Wno-gnu-zero-variadic-macro-arguments # "token pasting of ',' and __VA_ARGS__ is a GNU extension"
             -Wno-implicit-int-float-conversion # "implicit conversion from ... to 'float' may lose precision"
             -Wno-missing-designated-field-initializers # "missing field 'x' initializer"
