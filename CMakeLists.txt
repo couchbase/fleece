@@ -40,6 +40,7 @@ if(FLEECE_WARNINGS_HARDCORE)
             -Werror
             -Weverything            # "WARN ALL THE THINGS!!!"
             -Wformat=2
+            -ferror-limit=0         # TODO: temporary, so that a CI run reports every error. Remove once the build is clean.
             # Disabled C++ warnings:
             -Wno-nullable-to-nonnull-conversion # TODO: "implicit conversion from nullable pointer to non-nullable pointer type"
             -Wno-sign-compare # TODO "comparison of integers of different signs"
@@ -57,12 +58,14 @@ if(FLEECE_WARNINGS_HARDCORE)
             -Wno-custom-atomic-properties # "[Obj-C] atomic by default property 'X' has a user defined getter"
             -Wno-date-time # "expansion of date or time macro is not reproducible"
             -Wno-direct-ivar-access # "[Obj-C] instance variable '_x' is being directly accessed"
+            -Wno-disabled-macro-expansion # glibc defines sa_handler and sa_sigaction as macros that contain themselves (Backtrace+signals-posix.cc)
             -Wno-double-promotion # "implicit conversion increases floating-point precision: 'float' to 'double'"
             -Wno-exit-time-destructors # "declaration requires an exit-time destructor"
             -Wno-float-equal
             -Wno-format-pedantic # "format specifies type 'void *' but the argument has type 'C4Document *'"
             -Wno-global-constructors
             -Wno-gnu-anonymous-struct # "anonymous structs are a GNU extension"
+            -Wno-gnu-include-next # "#include_next is a language extension", in GCC's own stdint.h on Linux (a system header)
             -Wno-gnu-zero-variadic-macro-arguments # "token pasting of ',' and __VA_ARGS__ is a GNU extension"
             -Wno-implicit-int-float-conversion # "implicit conversion from ... to 'float' may lose precision"
             -Wno-missing-designated-field-initializers # "missing field 'x' initializer"
@@ -83,9 +86,11 @@ if(FLEECE_WARNINGS_HARDCORE)
             -Wno-thread-safety-negative # "acquiring mutex '_mutex' requires negative capability '!_mutex'"
             -Wno-undef      # `#if X` where X isn't defined
             -Wno-unknown-warning-option # So older Clang doesn't barf on newer warnings listed here :(
+            -Wno-unsafe-buffer-usage # "unsafe pointer arithmetic / buffer access": every raw pointer or array use, in third-party code and in slice.hh
             -Wno-unused-macros
             -Wno-unused-parameter # Unused fn parameter
             -Wno-weak-vtables # "Class has no out-of-line virtual method definitions; its vtable will be emitted in every translation unit"
+            -Wno-zero-as-null-pointer-constant # NULL in third-party headers (jsonsl.h, diff_match_patch.hh); Clang 15 warns on it, Clang 16+ doesn't
         )
     endif()
 endif()
