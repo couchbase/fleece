@@ -86,7 +86,7 @@ if(FLEECE_WARNINGS_HARDCORE)
             -Wno-unused-macros
             -Wno-unused-parameter # Unused fn parameter
             -Wno-weak-vtables # "Class has no out-of-line virtual method definitions; its vtable will be emitted in every translation unit"
-            -Wno-zero-as-null-pointer-constant # NULL in third-party headers (jsonsl.h, diff_match_patch.hh); Clang 15 warns on it, Clang 16+ doesn't
+            -Wno-zero-as-null-pointer-constant # NULL in third-party headers (jsonsl.h, diff_match_patch.hh). Only Clang 15 warns on it. TODO: remove once Clang 15 is no longer supported
         )
 
         # Linux only, so that the macOS build keeps checking for these.
