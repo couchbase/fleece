@@ -40,7 +40,6 @@ if(FLEECE_WARNINGS_HARDCORE)
             -Werror
             -Weverything            # "WARN ALL THE THINGS!!!"
             -Wformat=2
-            -ferror-limit=0         # TODO: temporary, so that a CI run reports every error. Remove once the build is clean.
             # Disabled C++ warnings:
             -Wno-nullable-to-nonnull-conversion # TODO: "implicit conversion from nullable pointer to non-nullable pointer type"
             -Wno-sign-compare # TODO "comparison of integers of different signs"
