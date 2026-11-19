@@ -86,7 +86,17 @@ if(FLEECE_WARNINGS_HARDCORE)
             -Wno-unused-macros
             -Wno-unused-parameter # Unused fn parameter
             -Wno-weak-vtables # "Class has no out-of-line virtual method definitions; its vtable will be emitted in every translation unit"
+            -Wno-zero-as-null-pointer-constant # NULL in third-party headers (jsonsl.h, diff_match_patch.hh). Only Clang 15 warns on it. TODO: remove once Clang 15 is no longer supported
         )
+
+        # Linux only, so that the macOS build keeps checking for these.
+        if("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
+            list(APPEND FLEECE_CXX_WARNINGS
+                -Wno-disabled-macro-expansion # glibc defines sa_handler and sa_sigaction as macros that contain themselves (Backtrace+signals-posix.cc)
+                -Wno-gnu-include-next # "#include_next is a language extension": the GCC 11 stdint.h that Clang picks up on the Linux CI node (a system header)
+                -Wno-unsafe-buffer-usage # "unsafe pointer arithmetic / buffer access": raw pointer and array use throughout, including third-party code
+            )
+        endif()
     endif()
 endif()
 
